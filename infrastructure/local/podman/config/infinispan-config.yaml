@@ -1,0 +1,21 @@
+infinispan:
+  server:
+    interfaces:
+      public:
+        inet-address: "0.0.0.0"
+    socket-bindings:
+      default:
+        port: 11222
+      resp:
+        port: 6379
+    endpoints:
+      - name: default
+        security-realm: default
+        socket-binding: default
+        connectors:
+          rest:
+          hotrod:
+      - name: redis-endpoint
+        socket-binding: resp
+        connectors:
+          resp:

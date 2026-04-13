@@ -1,0 +1,45 @@
+# Base configuration for Wazuh SIEM
+wazuh:
+  manager:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+    podSecurityContext:
+      runAsUser: 1000
+    securityContext:
+      capabilities:
+        drop: ["SYS_CHROOT"]
+        
+  indexer:
+    # Resolve OpenShift SCC limitation (Issue #241) 
+    # Mencegah penggunaan sysctl initialization privileged yang di-block oleh OpenShift
+    sysctlInitContainer:
+      enabled: false
+    resources:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+    podSecurityContext:
+      runAsUser: 1000
+    securityContext:
+      capabilities:
+        drop: ["SYS_CHROOT"]
+
+  dashboard:
+    enabled: true
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    podSecurityContext:
+      runAsUser: 1000
+    securityContext:
+      capabilities:
+        drop: ["SYS_CHROOT"]

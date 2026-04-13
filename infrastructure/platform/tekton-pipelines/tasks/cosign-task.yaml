@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cosign-sign
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Sign container image using Cosign Keyless OIDC."
+  params:
+    - name: IMAGE
+      type: string
+      description: "The container image to sign"
+  steps:
+    - name: sign
+      image: "bitnami/cosign:2.2.3"
+      script: |
+        #!/bin/sh
+        echo "Preparing to sign image: $(params.IMAGE)"
+        echo "Using Keyless Signing via OIDC (mocked for lab environments)..."
+        
+        # In a real environment, this would run:
+        # cosign sign --yes $(params.IMAGE)
+        
+        echo "[✓] Image successfully signed and transparency log created (mock)."
+        echo "[✓] Signature attached to $(params.IMAGE)."

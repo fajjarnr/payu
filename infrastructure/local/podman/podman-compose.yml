@@ -1,0 +1,1632 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    container_name: payu-postgres
+    command: postgres -c max_connections=300 -c shared_buffers=256MB
+    podman_networks:
+      - name: payu-network
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-payu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-payu_account}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U payu -d payu_account
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  infinispan:
+    image: quay.io/infinispan/server:16.0
+    container_name: payu-infinispan
+    networks:
+      payu-network:
+        aliases:
+          - redis
+    environment:
+      USER: developer
+      PASS: payu-cache-dev
+    ports:
+      - 6379:6379
+      - 11222:11222
+    volumes:
+      - ./config/infinispan-config.yaml:/opt/infinispan/server/conf/infinispan.yaml:z
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11222/rest/v2/cache-managers/default/health/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  kafka:
+    image: docker.io/confluentinc/cp-kafka:7.8.7
+    container_name: payu-kafka
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      # KRaft mode (no Zookeeper) - aligned with AMQ Streams on OpenShift
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: -Xmx1G -Xms1G
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test:
+        - CMD
+        - kafka-broker-api-versions
+        - --bootstrap-server
+        - localhost:9092
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+  kafka-ui:
+    image: docker.io/provectuslabs/kafka-ui:v0.7.2
+    container_name: payu-kafka-ui
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8088:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: payu-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      JAVA_OPTS: -Xmx512M -Xms256M
+    depends_on:
+      - kafka
+  vault:
+    image: docker.io/hashicorp/vault:1.21
+    container_name: payu-vault
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8200:8200
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-only-token}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_ADDR: http://127.0.0.1:8200
+    cap_add:
+      - IPC_LOCK
+    security_opt:
+      - label=disable
+    volumes:
+      - vault_data:/vault/data
+    healthcheck:
+      test:
+        - CMD
+        - vault
+        - status
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5
+    container_name: payu-keycloak
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8099:8080
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-payu}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-payu_secret}
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_APPEND: -Xmx1024M -Xms512M
+    volumes:
+      - ../../infrastructure/keycloak/payu-realm-export.json:/opt/keycloak/data/import/payu-realm.json:ro,z
+    command: start-dev --import-realm
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+  account-service:
+    build:
+      context: ../../backend/account-service
+      dockerfile: Containerfile
+    container_name: payu-account-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8001:8080
+    environment:
+      SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
+      SERVICES_AUTH_URL: http://auth-service:8080
+      GATEWAY_URL: http://gateway-service:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_account
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_account
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_account
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-payu-dev-encryption-key-change-in-production-minimum-32-chars}
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-account-service:1.5.0
+  auth-service:
+    build:
+      context: ../../backend/auth-service
+      dockerfile: Containerfile
+    container_name: payu-auth-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8002:8080
+    environment:
+      PAYU_KEYCLOAK_SERVER_URL: http://keycloak:8080
+      PAYU_KEYCLOAK_REALM: payu
+      PAYU_KEYCLOAK_CLIENT_ID: payu-backend
+      PAYU_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-secret}
+      PAYU_KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      PAYU_KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_auth
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_auth
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_auth
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - keycloak
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-auth-service:1.5.0
+  transaction-service:
+    build:
+      context: ../../backend/transaction-service
+      dockerfile: Containerfile
+    container_name: payu-transaction-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8003:8080
+    environment:
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
+      SERVICES_QRIS_URL: http://qris-simulator:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_transaction
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_transaction
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_transaction
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-transaction-service:1.5.0
+  wallet-service:
+    build:
+      context: ../../backend/wallet-service
+      dockerfile: Containerfile
+    container_name: payu-wallet-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8004:8080
+    environment:
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_wallet
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_wallet
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_wallet
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-wallet-service:1.5.0
+  compliance-service:
+    build:
+      context: ../../backend/compliance-service
+      dockerfile: Containerfile
+    container_name: payu-compliance-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8087:8087
+    environment:
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_compliance
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_compliance
+      SERVER_PORT: "8087"
+      PORT: "8087"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_compliance
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8087/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-compliance-service:1.5.0
+  investment-service:
+    build:
+      context: ../../backend/investment-service
+      dockerfile: Containerfile
+    container_name: payu-investment-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8009:8080
+    environment:
+      WALLET_SERVICE_URL: http://wallet-service:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_investment
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_investment
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_investment
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-investment-service:1.5.0
+  lending-service:
+    build:
+      context: ../../backend/lending-service
+      dockerfile: Containerfile
+    container_name: payu-lending-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8010:8087
+    environment:
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_lending
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_lending
+      SERVER_PORT: "8087"
+      PORT: "8087"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - keycloak
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8087/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-lending-service:1.5.0
+  bi-fast-simulator:
+    build:
+      context: ../../backend/simulators/bi-fast-simulator
+      dockerfile: Containerfile
+    container_name: payu-bifast-simulator
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8090:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/payu_bifast
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_bifast
+      QUARKUS_HTTP_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_bifast
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-bi-fast-simulator:1.5.0
+  dukcapil-simulator:
+    build:
+      context: ../../backend/simulators/dukcapil-simulator
+      dockerfile: Containerfile
+    container_name: payu-dukcapil-simulator
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8091:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
+      QUARKUS_HTTP_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-dukcapil-simulator:1.5.0
+  qris-simulator:
+    build:
+      context: ../../backend/simulators/qris-simulator
+      dockerfile: Containerfile
+    container_name: payu-qris-simulator
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8092:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/payu_qris
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_qris
+      QUARKUS_HTTP_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_qris
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-qris-simulator:1.5.0
+  billing-service:
+    build:
+      context: ../../backend/billing-service
+      dockerfile: Containerfile
+    container_name: payu-billing-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8005:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_billing
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_billing
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_billing
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-billing-service:1.5.0
+  notification-service:
+    build:
+      context: ../../backend/notification-service
+      dockerfile: Containerfile
+    container_name: payu-notification-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8006:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/payu_notification
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_notification
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
+      QUARKUS_OIDC_ENABLED: "false"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_notification
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-notification-service:1.5.0
+  gateway-service:
+    image: localhost/payu-gateway-service:1.5.0
+    build:
+      context: ../../backend/gateway-service
+      dockerfile: Containerfile
+    container_name: payu-gateway-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KEYCLOAK_URL: http://keycloak:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      ROUTES_ACCOUNT_URL: http://account-service:8080
+      ROUTES_AUTH_URL: http://auth-service:8080
+      ROUTES_TRANSACTION_URL: http://transaction-service:8080
+      ROUTES_WALLET_URL: http://wallet-service:8080
+      ROUTES_BILLING_URL: http://billing-service:8080
+      ROUTES_NOTIFICATION_URL: http://notification-service:8080
+      ROUTES_KYC_URL: http://kyc-service:8080
+      ROUTES_ANALYTICS_URL: http://analytics-service:8080
+      ROUTES_COMPLIANCE_URL: http://compliance-service:8087
+      ROUTES_INVESTMENT_URL: http://investment-service:8080
+      ROUTES_LENDING_URL: http://lending-service:8087
+      ROUTES_BACKOFFICE_URL: http://backoffice-service:8080
+      ROUTES_PARTNER_URL: http://partner-service:8080
+      ROUTES_PROMOTION_URL: http://promotion-service:8080
+      ROUTES_SUPPORT_URL: http://support-service:8080
+      ROUTES_STATEMENT_URL: http://statement-service:8080
+      ROUTES_DISPUTE_URL: http://dispute-service:8080
+      ROUTES_INTEGRATION_URL: http://integration-service:8080
+      ROUTES_PRODUCT_CATALOG_URL: http://product-catalog-service:8080
+      ROUTES_FX_URL: http://fx-service:8080/fx-api
+      ROUTES_CMS_URL: http://cms-service:8080
+      # Service URLs for gateway.services.* config mapping
+      ACCOUNT_SERVICE_URL: http://account-service:8080
+      AUTH_SERVICE_URL: http://auth-service:8080
+      TRANSACTION_SERVICE_URL: http://transaction-service:8080
+      WALLET_SERVICE_URL: http://wallet-service:8080
+      BILLING_SERVICE_URL: http://billing-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
+      KYC_SERVICE_URL: http://kyc-service:8080
+      ANALYTICS_SERVICE_URL: http://analytics-service:8080
+      PARTNER_SERVICE_URL: http://partner-service:8080
+      PROMOTION_SERVICE_URL: http://promotion-service:8080
+      LENDING_SERVICE_URL: http://lending-service:8087
+      INVESTMENT_SERVICE_URL: http://investment-service:8080
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      BACKOFFICE_SERVICE_URL: http://backoffice-service:8080
+      SUPPORT_SERVICE_URL: http://support-service:8080
+      STATEMENT_SERVICE_URL: http://statement-service:8080
+      CMS_SERVICE_URL: http://cms-service:8080
+      DISPUTE_SERVICE_URL: http://dispute-service:8080
+      INTEGRATION_SERVICE_URL: http://integration-service:8080
+      PRODUCT_CATALOG_SERVICE_URL: http://product-catalog-service:8080
+      FX_SERVICE_URL: http://fx-service:8080
+      WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
+      GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
+      BIFAST_SIMULATOR_URL: http://bi-fast-simulator:8080
+      DUKCAPIL_SIMULATOR_URL: http://dukcapil-simulator:8080
+      QRIS_SIMULATOR_URL: http://qris-simulator:8080
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/payu_gateway
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_gateway
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_URL: redis://redis:6379
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_gateway
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - infinispan
+      - keycloak
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+  backoffice-service:
+    build:
+      context: ../../backend/backoffice-service
+      dockerfile: Containerfile
+    container_name: payu-backoffice-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8011:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_KYC_URL: http://kyc-service:8080
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_backoffice
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_backoffice
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_backoffice
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-backoffice-service:1.5.0
+  partner-service:
+    build:
+      context: ../../backend/partner-service
+      dockerfile: Containerfile
+    container_name: payu-partner-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8012:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_partner
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_partner
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_partner
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 240s
+    image: localhost/payu-partner-service:1.5.0
+  promotion-service:
+    build:
+      context: ../../backend/promotion-service
+      dockerfile: Containerfile
+    container_name: payu-promotion-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8013:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_promotion
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_promotion
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_promotion
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-promotion-service:1.5.0
+  support-service:
+    build:
+      context: ../../backend/support-service
+      dockerfile: Containerfile
+    container_name: payu-support-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8014:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      DB_URL: jdbc:postgresql://postgres:5432/payu_support
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_support
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_support
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-support-service:1.5.0
+  api-portal-service:
+    build:
+      context: ../../backend/api-portal-service
+      dockerfile: Containerfile
+    container_name: payu-api-portal-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8021:8080
+    environment:
+      ACCOUNT_SERVICE_URL: http://account-service:8080
+      AUTH_SERVICE_URL: http://auth-service:8080
+      TRANSACTION_SERVICE_URL: http://transaction-service:8080
+      WALLET_SERVICE_URL: http://wallet-service:8080
+      BILLING_SERVICE_URL: http://billing-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
+      KYC_SERVICE_URL: http://kyc-service:8080
+      ANALYTICS_SERVICE_URL: http://analytics-service:8080
+      PARTNER_SERVICE_URL: http://partner-service:8080
+      PROMOTION_SERVICE_URL: http://promotion-service:8080
+      LENDING_SERVICE_URL: http://lending-service:8087
+      INVESTMENT_SERVICE_URL: http://investment-service:8080
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      BACKOFFICE_SERVICE_URL: http://backoffice-service:8080
+      SUPPORT_SERVICE_URL: http://support-service:8080
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DB_URL: jdbc:postgresql://postgres:5432/payu_api_portal
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
+      SERVER_PORT: "8080"
+      PORT: "8021"
+      QUARKUS_HTTP_PORT: "8021"
+      KEYCLOAK_URL: http://keycloak:8080
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+    depends_on:
+      - account-service
+      - auth-service
+      - transaction-service
+      - wallet-service
+      - billing-service
+      - notification-service
+      - kyc-service
+      - analytics-service
+      - partner-service
+      - promotion-service
+      - lending-service
+      - investment-service
+      - compliance-service
+      - backoffice-service
+      - support-service
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/q/health
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: localhost/payu-api-portal-service:1.5.0
+  statement-service:
+    image: localhost/payu-statement-service:1.5.0
+    build:
+      context: ../../backend/statement-service
+      dockerfile: Containerfile
+    container_name: payu-statement-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8015:8080
+    environment:
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      SERVICES_TRANSACTION_URL: http://transaction-service:8080
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      DB_URL: jdbc:postgresql://postgres:5432/payu_statement
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_statement
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_PROFILES_ACTIVE: container
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BROKERS: kafka:29092
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_statement
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      STATEMENT_STORAGE_TYPE: s3
+      STATEMENT_STORAGE_S3_BUCKET: payu-statements
+      STATEMENT_STORAGE_S3_REGION: ap-southeast-1
+      STATEMENT_STORAGE_S3_ENDPOINT: http://rustfs:9000
+      STATEMENT_STORAGE_S3_ACCESS_KEY: ${S3_ACCESS_KEY:-payu-admin}
+      STATEMENT_STORAGE_S3_SECRET_KEY: ${S3_SECRET_KEY:-payu-secret-key-change-me}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+      - rustfs
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health/liveness
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+  kyc-service:
+    build:
+      context: ../../backend/kyc-service
+      dockerfile: Containerfile
+    container_name: payu-kyc-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8007:8080
+    environment:
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_kyc
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      DUKCAPIL_URL: http://dukcapil-simulator:8080/api/v1
+      OTLP_ENDPOINT: http://jaeger:4317
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      OTEL_ENDPOINT: http://jaeger:4317
+      PORT: "8080"
+      SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    image: localhost/payu-kyc-service:1.5.0
+  analytics-service:
+    build:
+      context: ../../backend/analytics-service
+      dockerfile: Containerfile
+    container_name: payu-analytics-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8008:8080
+    environment:
+      QUARKUS_HEALTH_SECURITY_ENABLED: "false"
+      DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_analytics
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTLP_ENDPOINT: http://jaeger:4317
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      OTEL_ENDPOINT: http://jaeger:4317
+      PORT: "8080"
+      SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
+    depends_on:
+      - postgres
+      - kafka
+      - jaeger
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    image: localhost/payu-analytics-service:1.5.0
+  cms-service:
+    build:
+      context: ../../backend/cms-service
+      dockerfile: Containerfile
+    container_name: payu-cms-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8095:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_cms
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_cms
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_USERNAME: payu
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - infinispan
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-cms-service:1.5.0
+  fx-service:
+    image: localhost/payu-fx-service:1.5.0
+    build:
+      context: ../../backend/fx-service
+      dockerfile: Containerfile
+    container_name: payu-fx-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8096:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: payu_fx
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_fx
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/payu
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+    depends_on:
+      - postgres
+      - infinispan
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/fx-api/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+  dispute-service:
+    build:
+      context: ../../backend/dispute-service
+      dockerfile: Containerfile
+    container_name: payu-dispute-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8098:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: payu_dispute
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_dispute
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_dispute
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/payu
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-dispute-service:1.5.0
+  integration-service:
+    build:
+      context: ../../backend/integration-service
+      dockerfile: Containerfile
+    container_name: payu-integration-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8101:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: payu_integration
+      DB_USER: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_integration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_integration
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BOOTSTRAP: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-integration-service:1.5.0
+  product-catalog-service:
+    build:
+      context: ../../backend/product-catalog-service
+      dockerfile: Containerfile
+    container_name: payu-product-catalog-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8100:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_products
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_products
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - infinispan
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-product-catalog-service:1.5.0
+  web-app:
+    build:
+      context: ../../frontend/web-app
+      dockerfile: Containerfile
+    container_name: payu-web-app
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 3001:3000
+    environment:
+      NEXT_PUBLIC_API_URL: /api/v1
+      GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
+      NODE_ENV: production
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - gateway-service
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:3000/api/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    image: localhost/payu-web-app:1.5.0
+  jaeger:
+    image: docker.io/jaegertracing/all-in-one:1.76.0
+    container_name: payu-jaeger
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 14250:14250
+      - 4317:4317
+      - 4318:4318
+      - 9411:9411
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    command:
+      - --collector.otlp.enabled=true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:16686/api/services
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  prometheus:
+    image: docker.io/prom/prometheus:v2.55.1
+    container_name: payu-prometheus
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 9090:9090
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:9090/-/healthy
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  loki:
+    image: docker.io/grafana/loki:3.5.12
+    container_name: payu-loki
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 3100:3100
+    volumes:
+      - ./config/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:3100/ready
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  promtail:
+    image: docker.io/grafana/promtail:3.5.12
+    container_name: payu-promtail
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - ./config/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/containers:/var/lib/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+  grafana:
+    image: docker.io/grafana/grafana:11.6.13
+    container_name: payu-grafana
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 3000:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  alertmanager:
+    image: docker.io/prom/alertmanager:v0.31.1
+    container_name: payu-alertmanager
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 9093:9093
+    volumes:
+      - ./config/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:9093/-/healthy
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  rustfs:
+    image: docker.io/rustfs/rustfs:latest
+    container_name: payu-rustfs
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-payu-admin}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-payu-secret-key-change-me}
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+    # Uses image defaults: RUSTFS_VOLUMES=/data, RUSTFS_CONSOLE_ADDRESS=:9001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sf http://localhost:9000/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  vault_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  loki_data:
+    driver: local
+  grafana_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  rustfs_data:
+    driver: local
+  rustfs_logs:
+    driver: local
+networks:
+  payu-network:
+    driver: bridge

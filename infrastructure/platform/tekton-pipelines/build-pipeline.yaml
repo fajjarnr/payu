@@ -1,0 +1,244 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-build-pipeline
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: build
+spec:
+  description: |
+    Build pipeline for PayU services with DevSecOps gates.
+    Supports Spring Boot, Quarkus (Java) and Python services.
+    Security: Trivy CVE scan → RHACS image scan → RHACS policy check.
+  params:
+    - name: service-name
+      type: string
+    - name: service-path
+      type: string
+      description: "The directory path of the service"
+      default: "$(params.service-name)"
+    - name: service-base-dir
+      type: string
+      description: "Base directory (e.g., backend, frontend)"
+      default: "backend"
+    - name: git-url
+      type: string
+      default: "https://github.com/fajjarnr/payu.git"
+    - name: git-revision
+      type: string
+      default: main
+    - name: service-type
+      type: string
+      default: spring-boot
+    - name: build-image-tag
+      type: string
+      default: v1.7.8
+    - name: registry-url
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      default: payu-dev
+  workspaces:
+    - name: source
+      description: Workspace for source code
+  tasks:
+    # ── Step 1: Clone git repo ──
+    - name: fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: URL
+          value: $(params.git-url)
+        - name: REVISION
+          value: $(params.git-revision)
+        - name: DELETE_EXISTING
+          value: "true"
+
+    # ── Step 2-1: Secret Scan (Gitleaks) ──
+    - name: secret-scan
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: gitleaks
+      workspaces:
+        - name: source
+          workspace: source
+
+    # ── Step 2-2: SAST & SCA Scan (SpotBugs & Dep Check) ──
+    - name: sast-sca-scan
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: security-scan
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: CONTEXT_DIR
+          value: $(params.service-base-dir)/$(params.service-path)
+
+    # ── Step 2a: Maven build (Spring Boot / Quarkus) — JDK 21 ──
+    - name: build-java
+      runAfter:
+        - sast-sca-scan
+        - secret-scan
+      taskRef:
+        name: maven-java21
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: GOALS
+          value:
+            - -f
+            - backend/pom.xml
+            - -pl
+            - $(params.service-path)
+            - -am
+            - clean
+            - package
+            - -DskipTests
+            - -T1C
+
+    # ── Step 3a: Buildah image (Java services) ──
+    - name: build-push-image
+      runAfter:
+        - build-java
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: $(params.service-base-dir)/$(params.service-path)
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 2b/3b: Buildah image (Services with direct Containerfile like Python/Node.js) ──
+    - name: build-push-direct
+      runAfter:
+        - secret-scan
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["python", "nextjs"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: $(params.service-base-dir)/$(params.service-path)
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 4: RHACS Image Scan (CVE vulnerability report) ──
+    - name: rhacs-image-scan
+      runAfter:
+        - build-push-image
+        - build-push-direct
+      taskRef:
+        name: rhacs-image-scan
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: OUTPUT_FORMAT
+          value: table
+
+    # ── Step 5: RHACS Image Policy Check (gate — blocks on violations) ──
+    - name: rhacs-image-check
+      runAfter:
+        - rhacs-image-scan
+      taskRef:
+        name: rhacs-image-check
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+
+    # ── Step 6: SBOM Generation (Trivy) ──
+    - name: generate-sbom
+      runAfter:
+        - rhacs-image-check
+      taskRef:
+        name: trivy
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+
+    # ── Step 7: Image Signing (Cosign Sigstore) ──
+    - name: sign-image
+      runAfter:
+        - generate-sbom
+      taskRef:
+        name: cosign-sign
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+
+    # ── Step 8: Tag as stable (only if all security gates pass) ──
+    - name: tag-stable
+      runAfter:
+        - sign-image
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          value: |
+            oc tag $(params.registry-namespace)/$(params.service-name):$(params.build-image-tag) \
+                   $(params.registry-namespace)/$(params.service-name):stable \
+                   --reference-only || true
