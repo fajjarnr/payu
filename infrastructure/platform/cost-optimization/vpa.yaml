@@ -2,7 +2,7 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: account-service-vpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: account-service
@@ -32,7 +32,7 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: transaction-service-vpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: transaction-service
@@ -60,7 +60,7 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: billing-service-vpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: billing-service

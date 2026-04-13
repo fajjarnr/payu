@@ -40,7 +40,6 @@ spec:
         - api.payu.local
         # Per-environment wildcard domains (Gateway API pattern)
         - "*.dev.payu.fajjjar.my.id" # Development
-        - "*.staging.payu.fajjjar.my.id" # Staging
         - "*.sit.payu.fajjjar.my.id" # SIT
         - "*.uat.payu.fajjjar.my.id" # UAT
         - "*.preprod.payu.fajjjar.my.id" # Pre-production
@@ -64,7 +63,6 @@ spec:
   hosts:
     - "api.payu.local"
     - "api.dev.payu.fajjjar.my.id"
-    - "api.staging.payu.fajjjar.my.id"
     - "api.sit.payu.fajjjar.my.id"
     - "api.uat.payu.fajjjar.my.id"
     - "api.preprod.payu.fajjjar.my.id"
@@ -93,7 +91,7 @@ spec:
         uri: /v1/auth
       route:
         - destination:
-            host: auth-service.payu-prod.svc.cluster.local
+            host: auth-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -108,7 +106,7 @@ spec:
         uri: /v1/accounts
       route:
         - destination:
-            host: account-service.payu-prod.svc.cluster.local
+            host: account-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -127,7 +125,7 @@ spec:
         uri: /v1/transactions
       route:
         - destination:
-            host: transaction-service.payu-prod.svc.cluster.local
+            host: transaction-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -146,7 +144,7 @@ spec:
         uri: /v1/wallet
       route:
         - destination:
-            host: wallet-service.payu-prod.svc.cluster.local
+            host: wallet-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -161,7 +159,7 @@ spec:
         uri: /v1/billing
       route:
         - destination:
-            host: billing-service.payu-prod.svc.cluster.local
+            host: billing-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -176,7 +174,7 @@ spec:
         uri: /v1/notifications
       route:
         - destination:
-            host: notification-service.payu-prod.svc.cluster.local
+            host: notification-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -191,7 +189,7 @@ spec:
         uri: /v1/kyc
       route:
         - destination:
-            host: kyc-service.payu-prod.svc.cluster.local
+            host: kyc-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -206,7 +204,7 @@ spec:
         uri: /v1/analytics
       route:
         - destination:
-            host: analytics-service.payu-prod.svc.cluster.local
+            host: analytics-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -221,7 +219,7 @@ spec:
         uri: /v1/partner
       route:
         - destination:
-            host: gateway-service.payu-prod.svc.cluster.local
+            host: gateway-service.payu.svc.cluster.local
             port:
               number: 8080
             subset: v1
@@ -249,7 +247,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: internal-services
-  namespace: payu-prod
+  namespace: payu
 spec:
   hosts:
     - "*"
@@ -365,7 +363,7 @@ spec:
         # Require client certificate for production
         - key: source.namespace
           values:
-            - payu-prod
+            - payu
 ---
 # Rate Limiting at Gateway (using Envoy's rate limit service)
 apiVersion: networking.istio.io/v1beta1

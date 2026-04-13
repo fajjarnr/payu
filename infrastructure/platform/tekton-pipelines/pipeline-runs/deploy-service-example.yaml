@@ -1,13 +1,13 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: account-service-deploy-staging-$(TIMESTAMP)
+  name: account-service-deploy-sit-$(TIMESTAMP)
   namespace: payu-cicd
   labels:
     app: payu
     service: account-service
     type: deploy
-    environment: staging
+    environment: sit
 spec:
   pipelineRef:
     name: payu-deploy-pipeline
@@ -15,11 +15,11 @@ spec:
     - name: service-name
       value: account-service
     - name: environment
-      value: staging
+      value: sit
     - name: image-tag
       value: latest
     - name: namespace
-      value: payu-staging
+      value: payu-sit
     - name: replicas
       value: "3"
     - name: deployment-strategy

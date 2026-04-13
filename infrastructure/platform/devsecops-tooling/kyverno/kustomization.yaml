@@ -1,0 +1,20 @@
+# Kyverno — Policy-as-Code (Admission Controller)
+#
+# Referenced in: DEVSECOPS_ARCHITECTURE.md §4.4.2
+# Purpose: Operational/mutation K8s policies (NOT security — that's ACS)
+#
+# Policy Boundary (MUST avoid overlap with ACS):
+#   ACS  → Security: image signature, CVE threshold, runtime behavior
+#   Kyverno → Operational: auto-add labels, resource limits, namespace lifecycle
+#
+# See DEVSECOPS_ARCHITECTURE.md §4.4.2 for the complete policy matrix
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - require-labels.yaml
+  - require-resource-limits.yaml
+  - readonly-root-filesystem.yaml
+  - default-deny-networkpolicy.yaml
+  - disallow-host-namespaces.yaml

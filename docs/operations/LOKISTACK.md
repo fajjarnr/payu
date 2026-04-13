@@ -103,34 +103,34 @@ export S3_SECRET_KEY="your-secret-key"
 
 ```bash
 # 1. Create namespaces
-oc apply -f infrastructure/openshift/base/logging/logging-namespace.yaml
+oc apply -f infrastructure/platform/observability/logging/logging-namespace.yaml
 
 # 2. Deploy operators
-oc apply -f infrastructure/openshift/base/logging/logging-operator.yaml
+oc apply -f infrastructure/platform/observability/logging/logging-operator.yaml
 
 # 3. Wait for operators to be ready
 oc wait --for=condition=ready pod -l name=loki-operator -n openshift-logging --timeout=300s
 
 # 4. Configure storage secrets
-# Edit infrastructure/openshift/base/logging/lokistack-storage-secret.yaml
+# Edit infrastructure/platform/observability/logging/lokistack-storage-secret.yaml
 # with your S3 credentials
-oc apply -f infrastructure/openshift/base/logging/lokistack-storage-secret.yaml
+oc apply -f infrastructure/platform/observability/logging/lokistack-storage-secret.yaml
 
 # 5. Deploy LokiStack
-oc apply -f infrastructure/openshift/base/logging/lokistack.yaml
+oc apply -f infrastructure/platform/observability/logging/lokistack.yaml
 
 # 6. Wait for LokiStack to be ready
 oc wait --for=condition=ready lokistack loki -n openshift-logging --timeout=600s
 
 # 7. Deploy ClusterLogging
-oc apply -f infrastructure/openshift/base/logging/clusterlogging.yaml
+oc apply -f infrastructure/platform/observability/logging/clusterlogging.yaml
 
 # 8. Deploy ClusterLogForwarder
-oc apply -f infrastructure/openshift/base/logging/clusterlogforwarder.yaml
+oc apply -f infrastructure/platform/observability/logging/clusterlogforwarder.yaml
 
 # 9. Deploy alert rules and route
-oc apply -f infrastructure/openshift/base/logging/loki-alert-rules.yaml
-oc apply -f infrastructure/openshift/base/logging/loki-route.yaml
+oc apply -f infrastructure/platform/observability/logging/loki-alert-rules.yaml
+oc apply -f infrastructure/platform/observability/logging/loki-route.yaml
 ```
 
 ## Configuration
@@ -215,7 +215,7 @@ curl -s -G http://localhost:3100/loki/api/v1/query_range \
 {app_kubernetes_io_part_of="payu"}
 
 # Error logs from account-service
-{namespace="payu-prod", app="account-service", level="error"}
+{namespace="payu", app="account-service", level="error"}
 
 # 5xx errors with latency
 {level="error"} |= "5xx" | unwrap duration
@@ -227,7 +227,7 @@ topk(10, sum by (message) (count_over_time({level="error"}[5m])))
 {app_kubernetes_io_part_of="payu"} |= "database"
 
 # Service downtime (no logs in last 5m)
-absent({namespace="payu-prod", app="account-service"}[5m])
+absent({namespace="payu", app="account-service"}[5m])
 ```
 
 ## Monitoring
@@ -415,7 +415,7 @@ pytest tests/infrastructure/test_lokistack.py --cov=. --cov-report=html
 ./scripts/deploy_lokistack.sh delete
 
 # Or manually
-oc delete -f infrastructure/openshift/base/logging/
+oc delete -f infrastructure/platform/observability/logging/
 ```
 
 ## References

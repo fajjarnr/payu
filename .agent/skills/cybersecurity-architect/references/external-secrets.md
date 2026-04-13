@@ -11,7 +11,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: vault-backend
-  namespace: payu-prod
+  namespace: payu
 spec:
   provider:
     vault:
@@ -22,7 +22,7 @@ spec:
         # Authenticate via Kubernetes ServiceAccount
         kubernetes:
           mountPath: "kubernetes"
-          role: "payu-prod-role"
+          role: "payu-role"
           serviceAccountRef:
             name: output-vault-sa
 ```
@@ -36,7 +36,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: db-credentials
-  namespace: payu-prod
+  namespace: payu
 spec:
   refreshInterval: 1h
   secretStoreRef:

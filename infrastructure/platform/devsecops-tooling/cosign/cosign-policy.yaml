@@ -1,0 +1,42 @@
+# Cosign Image Verification Policy
+# Enforces that all images in payu namespaces must be signed
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.2.3 — Keyless signing via OIDC
+# ---
+# This ConfigMap defines the signing policy that ACS/Kyverno references.
+# Actual enforcement happens via:
+#   - ACS Admission Controller (primary)
+#   - Kyverno ClusterPolicy (complement)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cosign-verification-policy
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: supply-chain-security
+data:
+  policy.yaml: |
+    # Cosign Verification Policy for PayU
+    verification:
+      # Keyless verification via OpenShift OIDC
+      keyless:
+        issuer: "https://oauth-openshift.apps.payu.example.com"
+        subject: "system:serviceaccount:openshift-pipelines:pipeline"
+
+      # Trusted registries that require signed images
+      registries:
+        - "image-registry.openshift-image-registry.svc:5000/payu-dev/*"
+        - "image-registry.openshift-image-registry.svc:5000/payu-sit/*"
+        - "image-registry.openshift-image-registry.svc:5000/payu/*"
+
+      # Rekor transparency log for audit trail
+      rekor:
+        url: "https://rekor.sigstore.dev"
+
+      # Namespaces requiring signed images (all payu namespaces)
+      enforced_namespaces:
+        - payu-dev
+        - payu-sit
+        - payu-uat
+        - payu-preprod
+        - payu

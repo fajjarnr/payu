@@ -1,0 +1,180 @@
+# ArgoCD Projects — RBAC per Namespace
+# Ref: DEVSECOPS_ARCHITECTURE.md §3.1 Namespace Matrix
+# Each project maps to a namespace with appropriate RBAC and source restrictions
+
+# ============================================================
+# Development Project — payu-dev
+# RBAC: Dev + SRE
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-dev
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU Development Environment"
+  sourceRepos:
+    - "https://github.com/payu-digital/payu-platform.git"
+  destinations:
+    - namespace: payu-dev
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: developer
+      description: "Development team access"
+      policies:
+        - p, proj:payu-dev:developer, applications, *, payu-dev/*, allow
+      groups:
+        - payu-developers
+        - payu-sre
+---
+# ============================================================
+# SIT Project — payu-sit
+# RBAC: QA + Dev + SRE
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-sit
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU System Integration Testing"
+  sourceRepos:
+    - "https://github.com/payu-digital/payu-platform.git"
+  destinations:
+    - namespace: payu-sit
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: qa-team
+      description: "QA and Development team access"
+      policies:
+        - p, proj:payu-sit:qa-team, applications, get, payu-sit/*, allow
+        - p, proj:payu-sit:qa-team, applications, sync, payu-sit/*, allow
+      groups:
+        - payu-qa
+        - payu-developers
+        - payu-sre
+---
+# ============================================================
+# UAT Project — payu-uat
+# RBAC: QA + PM + SRE
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-uat
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU User Acceptance Testing"
+  sourceRepos:
+    - "https://github.com/payu-digital/payu-platform.git"
+  destinations:
+    - namespace: payu-uat
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: uat-team
+      description: "UAT approval team"
+      policies:
+        - p, proj:payu-uat:uat-team, applications, get, payu-uat/*, allow
+        - p, proj:payu-uat:uat-team, applications, sync, payu-uat/*, allow
+      groups:
+        - payu-qa
+        - payu-pm
+        - payu-sre
+---
+# ============================================================
+# Pre-Production Project — payu-preprod
+# RBAC: SRE + Security
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-preprod
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU Pre-Production (Production Mirror)"
+  sourceRepos:
+    - "https://github.com/payu-digital/payu-platform.git"
+  destinations:
+    - namespace: payu-preprod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: sre-team
+      description: "SRE and Security team"
+      policies:
+        - p, proj:payu-preprod:sre-team, applications, *, payu-preprod/*, allow
+      groups:
+        - payu-sre
+        - payu-security
+---
+# ============================================================
+# Production Project — payu
+# RBAC: SRE only (break-glass)
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU Production — SRE Only (Break-Glass)"
+  sourceRepos:
+    - "https://github.com/payu-digital/payu-platform.git"
+  destinations:
+    - namespace: payu
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
+  roles:
+    - name: sre-prod
+      description: "Production SRE access (break-glass only)"
+      policies:
+        - p, proj:payu:sre-prod, applications, get, payu/*, allow
+        - p, proj:payu:sre-prod, applications, sync, payu/*, allow
+      groups:
+        - payu-sre

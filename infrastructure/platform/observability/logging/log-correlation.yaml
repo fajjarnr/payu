@@ -95,7 +95,7 @@ data:
           '''
           .level == "ERROR"
           || .level == "WARN"
-          || .namespace == "payu-prod"
+          || .namespace == "payu"
           '''
 
       # Add enrichment
@@ -163,7 +163,7 @@ data:
         # Only alert on critical errors
         condition = '''
           .level == "ERROR"
-          && (.namespace == "payu-prod" || .namespace == "payu-staging")
+          && (.namespace == "payu" || .namespace == "payu-sit")
         '''
 
         [sinks.alerts.batch]

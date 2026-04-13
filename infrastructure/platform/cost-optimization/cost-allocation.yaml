@@ -12,16 +12,16 @@ data:
     # Based on resource usage and business units
 
     namespace_cost_allocation:
-      payu-prod:
+      payu:
         business_unit: "core_banking"
         cost_center: "CC-1001"
         environment: "production"
         owner: "platform-team@payu.fajjjar.my.id"
 
-      payu-staging:
+      payu-sit:
         business_unit: "platform"
         cost_center: "CC-2001"
-        environment: "staging"
+        environment: "sit"
         owner: "platform-team@payu.fajjjar.my.id"
 
       payu-dev:
@@ -30,11 +30,17 @@ data:
         environment: "development"
         owner: "platform-team@payu.fajjjar.my.id"
 
-      payu-ml:
-        business_unit: "data_science"
-        cost_center: "CC-4001"
-        environment: "production"
-        owner: "ml-team@payu.fajjjar.my.id"
+      payu-uat:
+        business_unit: "platform"
+        cost_center: "CC-2002"
+        environment: "uat"
+        owner: "platform-team@payu.fajjjar.my.id"
+
+      payu-preprod:
+        business_unit: "core_banking"
+        cost_center: "CC-1002"
+        environment: "preproduction"
+        owner: "platform-team@payu.fajjjar.my.id"
 
     service_cost_allocation:
       account-service:
@@ -229,103 +235,103 @@ spec:
         spec:
           serviceAccountName: cost-reporter-sa
           containers:
-          - name: cost-reporter
-            image: prom/prometheus:latest
-            command:
-            - /bin/bash
-            - -c
-            - |
-              #!/bin/bash
-              set -e
+            - name: cost-reporter
+              image: prom/prometheus:latest
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  #!/bin/bash
+                  set -e
 
-              REPORT_DATE=$(date +%Y-%m)
-              REPORT_FILE="/tmp/cost-report-${REPORT_DATE}.json"
+                  REPORT_DATE=$(date +%Y-%m)
+                  REPORT_FILE="/tmp/cost-report-${REPORT_DATE}.json"
 
-              echo "Generating cost report for ${REPORT_DATE}"
+                  echo "Generating cost report for ${REPORT_DATE}"
 
-              # Query resource usage
-              cat > $REPORT_FILE <<EOF
-              {
-                "report_date": "$REPORT_DATE",
-                "report_generated_at": "$(date -Iseconds)",
-                "currency": "USD",
-                "namespaces": [
-              EOF
-
-              # Get list of PayU namespaces
-              NAMESPACES=$(oc get namespaces -l app=payu -o jsonpath='{.items[*].metadata.name}')
-
-              for namespace in $NAMESPACES; do
-                # Get CPU usage
-                CPU_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
-                  -d "query=sum(rate(container_cpu_usage_seconds_total{namespace='$namespace'}[30d]))" | \
-                  jq -r '.data.result[0].value[1]')
-
-                # Get memory usage
-                MEM_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
-                  -d "query=sum(avg_over_time(container_memory_working_set_bytes{namespace='$namespace'}[30d]))" | \
-                  jq -r '.data.result[0].value[1]')
-
-                # Calculate costs
-                CPU_COST=$(echo "$CPU_USAGE * 720 * 0.192" | bc -l)
-                MEM_COST=$(echo "($MEM_USAGE / 1073741824) * 720 * 0.00765" | bc -l)
-                TOTAL_COST=$(echo "$CPU_COST + $MEM_COST" | bc -l)
-
-                # Add to report
-                cat >> $REPORT_FILE <<EOF
+                  # Query resource usage
+                  cat > $REPORT_FILE <<EOF
                   {
-                    "namespace": "$namespace",
-                    "cpu_usage_core_hours": "$CPU_USAGE",
-                    "memory_usage_gb_hours": "$(echo "scale=2; $MEM_USAGE / 1073741824" | bc)",
-                    "cpu_cost": "$CPU_COST",
-                    "memory_cost": "$MEM_COST",
-                    "total_cost": "$TOTAL_COST"
-                  },
-              EOF
-              done
+                    "report_date": "$REPORT_DATE",
+                    "report_generated_at": "$(date -Iseconds)",
+                    "currency": "USD",
+                    "namespaces": [
+                  EOF
 
-              # Close JSON array
-              sed -i '$ s/,$//' $REPORT_FILE
-              echo "]" >> $REPORT_FILE
-              echo "}" >> $REPORT_FILE
+                  # Get list of PayU namespaces
+                  NAMESPACES=$(oc get namespaces -l app=payu -o jsonpath='{.items[*].metadata.name}')
 
-              # Upload to S3
-              aws s3 cp $REPORT_FILE \
-                s3://payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json
+                  for namespace in $NAMESPACES; do
+                    # Get CPU usage
+                    CPU_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                      -d "query=sum(rate(container_cpu_usage_seconds_total{namespace='$namespace'}[30d]))" | \
+                      jq -r '.data.result[0].value[1]')
 
-              # Send email notification
-              curl -X POST "$MAILGUN_API_URL" \
-                -u "api:$MAILGUN_API_KEY" \
-                -F from="cost-reports@payu.fajjjar.my.id" \
-                -F to="finance@payu.fajjjar.my.id,platform-team@payu.fajjjar.my.id" \
-                -F subject="Monthly Cost Report - ${REPORT_DATE}" \
-                -F text="Cost report is available at https://s3.amazonaws.com/payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json"
+                    # Get memory usage
+                    MEM_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                      -d "query=sum(avg_over_time(container_memory_working_set_bytes{namespace='$namespace'}[30d]))" | \
+                      jq -r '.data.result[0].value[1]')
 
-              # Cleanup
-              rm -f $REPORT_FILE
+                    # Calculate costs
+                    CPU_COST=$(echo "$CPU_USAGE * 720 * 0.192" | bc -l)
+                    MEM_COST=$(echo "($MEM_USAGE / 1073741824) * 720 * 0.00765" | bc -l)
+                    TOTAL_COST=$(echo "$CPU_COST + $MEM_COST" | bc -l)
 
-              echo "Cost report generation completed"
-            env:
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws-credentials
-                  key: access_key
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: aws-credentials
-                  key: secret_key
-            - name: MAILGUN_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: mailgun-credentials
-                  key: api_key
-            - name: MAILGUN_API_URL
-              valueFrom:
-                secretKeyRef:
-                  name: mailgun-credentials
-                  key: api_url
+                    # Add to report
+                    cat >> $REPORT_FILE <<EOF
+                      {
+                        "namespace": "$namespace",
+                        "cpu_usage_core_hours": "$CPU_USAGE",
+                        "memory_usage_gb_hours": "$(echo "scale=2; $MEM_USAGE / 1073741824" | bc)",
+                        "cpu_cost": "$CPU_COST",
+                        "memory_cost": "$MEM_COST",
+                        "total_cost": "$TOTAL_COST"
+                      },
+                  EOF
+                  done
+
+                  # Close JSON array
+                  sed -i '$ s/,$//' $REPORT_FILE
+                  echo "]" >> $REPORT_FILE
+                  echo "}" >> $REPORT_FILE
+
+                  # Upload to S3
+                  aws s3 cp $REPORT_FILE \
+                    s3://payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json
+
+                  # Send email notification
+                  curl -X POST "$MAILGUN_API_URL" \
+                    -u "api:$MAILGUN_API_KEY" \
+                    -F from="cost-reports@payu.fajjjar.my.id" \
+                    -F to="finance@payu.fajjjar.my.id,platform-team@payu.fajjjar.my.id" \
+                    -F subject="Monthly Cost Report - ${REPORT_DATE}" \
+                    -F text="Cost report is available at https://s3.amazonaws.com/payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json"
+
+                  # Cleanup
+                  rm -f $REPORT_FILE
+
+                  echo "Cost report generation completed"
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: access_key
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: secret_key
+                - name: MAILGUN_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: mailgun-credentials
+                      key: api_key
+                - name: MAILGUN_API_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: mailgun-credentials
+                      key: api_url
           restartPolicy: OnFailure
           backoffLimit: 3
 ---

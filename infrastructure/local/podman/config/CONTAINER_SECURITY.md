@@ -7,6 +7,7 @@ This document outlines container security best practices for the PayU Digital Ba
 ## Important Note: Podman Compatibility
 
 This guide has been updated to use Podman instead of Docker. Podman provides enhanced security features:
+
 - Rootless container execution by default
 - Pod management for multi-container applications
 - No daemon dependency
@@ -14,6 +15,7 @@ This guide has been updated to use Podman instead of Docker. Podman provides enh
 - Compatible with Docker command interface for most operations
 
 Key changes:
+
 - `podman` commands replaced with `podman`
 - Rootless execution is default behavior in Podman
 - Podman supports all container security features mentioned in this document
@@ -485,6 +487,7 @@ echo "Scan complete. Results in $OUTPUT_DIR"
 ### Why Sign Containers?
 
 Container signing ensures:
+
 - **Image authenticity** - verify the image source
 - **Image integrity** - detect tampering
 - **Supply chain security** - meet compliance requirements
@@ -625,7 +628,7 @@ Apply OpenShift Pod Security Standards:
 
 ```bash
 # Apply restricted profile
-oc label ns payu-production \
+oc label ns payu \
     pod-security.kubernetes.io/enforce=restricted \
     pod-security.kubernetes.io/audit=restricted \
     pod-security.kubernetes.io/warn=restricted
@@ -664,8 +667,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: payu/service:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: "sarif"
+          output: "trivy-results.sarif"
 
       - name: Sign with cosign
         run: |
@@ -707,6 +710,7 @@ spec:
 Podman provides several security advantages over traditional container runtimes:
 
 ### Rootless Execution
+
 All containers run as non-root by default, reducing attack surface:
 
 ```bash
@@ -718,6 +722,7 @@ podman run --user root payu/account-service:latest
 ```
 
 ### Enhanced Security Features
+
 ```bash
 # Run with read-only root filesystem
 podman run --read-only --tmpfs /tmp payu/service:latest
@@ -733,6 +738,7 @@ podman run --security-opt label=disable payu/service:latest  # Only if needed
 ```
 
 ### Pod Isolation
+
 Pods provide better isolation for multi-container applications:
 
 ```bash
@@ -748,6 +754,7 @@ podman run --pod secure-pod --name auth-service -d payu/auth-service:latest
 ```
 
 ### Containerfile Security
+
 Using Containerfile instead of Dockerfile for future-proofing:
 
 ```dockerfile

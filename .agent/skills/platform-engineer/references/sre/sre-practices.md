@@ -16,12 +16,12 @@ You are the **Lead Reliability Engineer (AI)** for the **PayU Platform**. You en
 
 ## 🎯 Core Domains
 
-| Domain | Focus Area | Key Deliverables |
-|:-------|:-----------|:-----------------|
-| **Observability** | Metrics, Logs, Traces | Grafana dashboards, Loki queries, Jaeger traces |
-| **Chaos Engineering** | Resilience Testing | Game Days, Fault Injection, Blast Radius Control |
-| **Disaster Recovery** | Business Continuity | RTO/RPO matrices, Failover runbooks, DR drills |
-| **Incident Response** | MTTR Reduction | War room protocols, Post-mortems, SLO burn rates |
+| Domain                | Focus Area            | Key Deliverables                                 |
+| :-------------------- | :-------------------- | :----------------------------------------------- |
+| **Observability**     | Metrics, Logs, Traces | Grafana dashboards, Loki queries, Jaeger traces  |
+| **Chaos Engineering** | Resilience Testing    | Game Days, Fault Injection, Blast Radius Control |
+| **Disaster Recovery** | Business Continuity   | RTO/RPO matrices, Failover runbooks, DR drills   |
+| **Incident Response** | MTTR Reduction        | War room protocols, Post-mortems, SLO burn rates |
 
 ---
 
@@ -29,12 +29,12 @@ You are the **Lead Reliability Engineer (AI)** for the **PayU Platform**. You en
 
 ### The 4 Golden Signals
 
-| Signal | Query | Target |
-|:-------|:------|:-------|
-| **Latency** | `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` | P95 < 300ms |
-| **Traffic** | `sum(rate(http_requests_total[5m]))` | Baseline ± 20% |
-| **Errors** | `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))` | < 0.1% |
-| **Saturation** | `container_memory_working_set_bytes / container_spec_memory_limit_bytes` | < 80% |
+| Signal         | Query                                                                                    | Target         |
+| :------------- | :--------------------------------------------------------------------------------------- | :------------- |
+| **Latency**    | `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))`               | P95 < 300ms    |
+| **Traffic**    | `sum(rate(http_requests_total[5m]))`                                                     | Baseline ± 20% |
+| **Errors**     | `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))` | < 0.1%         |
+| **Saturation** | `container_memory_working_set_bytes / container_spec_memory_limit_bytes`                 | < 80%          |
 
 ### SLO/SLI Framework
 
@@ -43,26 +43,26 @@ You are the **Lead Reliability Engineer (AI)** for the **PayU Platform**. You en
 slo:
   name: wallet-service-availability
   description: Wallet API availability for payment operations
-  
+
   sli:
     type: availability
     good_events: status_code < 500
     valid_events: all_requests
-    
+
   objective: 99.9%
   window: 30d
-  
+
   error_budget:
-    total_minutes: 43.2  # (100% - 99.9%) * 30 * 24 * 60
-    
+    total_minutes: 43.2 # (100% - 99.9%) * 30 * 24 * 60
+
   burn_rate_alerts:
     - name: fast_burn
       window: 1h
-      burn_rate: 14.4  # Exhausts budget in 2 hours
+      burn_rate: 14.4 # Exhausts budget in 2 hours
       severity: critical
     - name: slow_burn
       window: 6h
-      burn_rate: 6.0   # Exhausts budget in 5 days
+      burn_rate: 6.0 # Exhausts budget in 5 days
       severity: warning
 ```
 
@@ -96,19 +96,19 @@ groups:
 ```java
 @Component
 public class TracingInterceptor implements HandlerInterceptor {
-    
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         Span span = Span.current();
-        
+
         // Add business context for debugging
         span.setAttribute("user.id", SecurityContext.getUserId());
         span.setAttribute("account.id", request.getHeader("X-Account-Id"));
         span.setAttribute("transaction.type", determineTransactionType(request));
-        
+
         // Propagate trace context
         response.setHeader("X-Trace-Id", span.getSpanContext().getTraceId());
-        
+
         return true;
     }
 }
@@ -120,12 +120,12 @@ public class TracingInterceptor implements HandlerInterceptor {
 
 ### Chaos Maturity Model
 
-| Level | Description | Experiments |
-|:------|:------------|:------------|
-| **1 - Basic** | Manual, ad-hoc | Pod kills in staging |
-| **2 - Structured** | Scheduled Game Days | Network delays, resource stress |
-| **3 - Automated** | CI/CD integrated | Continuous chaos in staging |
-| **4 - Advanced** | Production chaos | Controlled production experiments |
+| Level              | Description         | Experiments                       |
+| :----------------- | :------------------ | :-------------------------------- |
+| **1 - Basic**      | Manual, ad-hoc      | Pod kills in SIT                  |
+| **2 - Structured** | Scheduled Game Days | Network delays, resource stress   |
+| **3 - Automated**  | CI/CD integrated    | Continuous chaos in SIT           |
+| **4 - Advanced**   | Production chaos    | Controlled production experiments |
 
 ### Steady-State Hypothesis
 
@@ -135,13 +135,13 @@ hypothesis:
   steady_state:
     - metric: availability
       baseline: 99.9%
-      tolerance: 0.1%  # Can drop to 99.8%
+      tolerance: 0.1% # Can drop to 99.8%
     - metric: latency_p95
       baseline: 150ms
-      tolerance: 100ms  # Can increase to 250ms
+      tolerance: 100ms # Can increase to 250ms
     - metric: error_rate
       baseline: 0.1%
-      tolerance: 0.4%  # Can increase to 0.5%
+      tolerance: 0.4% # Can increase to 0.5%
 ```
 
 ### Chaos Experiments
@@ -158,7 +158,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - payu-prod
+      - payu
     labelSelectors:
       app: wallet-service
   scheduler:
@@ -178,7 +178,7 @@ spec:
   mode: all
   selector:
     namespaces:
-      - payu-prod
+      - payu
     labelSelectors:
       app: wallet-service
   delay:
@@ -250,12 +250,12 @@ spec:
 
 ### RTO/RPO Matrix
 
-| Tier | Services | RTO | RPO | Strategy |
-|:-----|:---------|:----|:----|:---------|
-| **Tier-1** | wallet, transaction, auth | < 15 min | 0 | Active-Active, Sync Replication |
-| **Tier-2** | account, billing, gateway | < 1 hour | < 5 min | Active-Passive, Async Replication |
-| **Tier-3** | notification, cms, promo | < 4 hours | < 1 hour | Warm Standby |
-| **Tier-4** | analytics, statement | < 24 hours | < 24 hours | Cold Standby |
+| Tier       | Services                  | RTO        | RPO        | Strategy                          |
+| :--------- | :------------------------ | :--------- | :--------- | :-------------------------------- |
+| **Tier-1** | wallet, transaction, auth | < 15 min   | 0          | Active-Active, Sync Replication   |
+| **Tier-2** | account, billing, gateway | < 1 hour   | < 5 min    | Active-Passive, Async Replication |
+| **Tier-3** | notification, cms, promo  | < 4 hours  | < 1 hour   | Warm Standby                      |
+| **Tier-4** | analytics, statement      | < 24 hours | < 24 hours | Cold Standby                      |
 
 ### Multi-Region Architecture
 
@@ -328,12 +328,12 @@ echo "$(date) - Failover from $PRIMARY_HOST to $STANDBY_NODE" >> /var/log/failov
 
 ### Quarterly DR Drill Schedule
 
-| Quarter | Drill Type | Scope | Success Criteria |
-|:--------|:-----------|:------|:-----------------|
-| Q1 | Database Failover | Tier-1 databases | RTO < 15 min achieved |
-| Q2 | Full Region Failover | All services | Traffic shift < 5 min |
-| Q3 | Ransomware Simulation | Backup restore | Full restore < 4 hours |
-| Q4 | Chaos Day | Random failures | SLO maintained |
+| Quarter | Drill Type            | Scope            | Success Criteria       |
+| :------ | :-------------------- | :--------------- | :--------------------- |
+| Q1      | Database Failover     | Tier-1 databases | RTO < 15 min achieved  |
+| Q2      | Full Region Failover  | All services     | Traffic shift < 5 min  |
+| Q3      | Ransomware Simulation | Backup restore   | Full restore < 4 hours |
+| Q4      | Chaos Day             | Random failures  | SLO maintained         |
 
 ---
 
@@ -341,12 +341,12 @@ echo "$(date) - Failover from $PRIMARY_HOST to $STANDBY_NODE" >> /var/log/failov
 
 ### Severity Matrix
 
-| Severity | Definition | Response Time | Escalation |
-|:---------|:-----------|:--------------|:-----------|
-| **P1** | Core banking down, data loss risk | < 5 min | CTO + VP Eng |
-| **P2** | Degraded service, no data loss | < 15 min | Engineering Lead |
-| **P3** | Non-critical feature affected | < 1 hour | On-call Engineer |
-| **P4** | Minor issues | Next business day | Sprint backlog |
+| Severity | Definition                        | Response Time     | Escalation       |
+| :------- | :-------------------------------- | :---------------- | :--------------- |
+| **P1**   | Core banking down, data loss risk | < 5 min           | CTO + VP Eng     |
+| **P2**   | Degraded service, no data loss    | < 15 min          | Engineering Lead |
+| **P3**   | Non-critical feature affected     | < 1 hour          | On-call Engineer |
+| **P4**   | Minor issues                      | Next business day | Sprint backlog   |
 
 ### War Room Protocol
 
@@ -385,25 +385,33 @@ echo "$(date) - Failover from $PRIMARY_HOST to $STANDBY_NODE" >> /var/log/failov
 ## 🔍 Reliability Engineer Checklist
 
 ### Observability
+
 - [ ] Are all services emitting metrics, logs, and traces?
 - [ ] Are SLOs defined with multi-window burn rate alerts?
 - [ ] Can you trace a request end-to-end across all services?
 
 ### Chaos Engineering
+
 - [ ] Is there a steady-state hypothesis documented?
-- [ ] Are chaos experiments running in staging continuously?
+- [ ] Are chaos experiments running in SIT continuously?
 - [ ] Has a Game Day been conducted this quarter?
 
 ### Disaster Recovery
+
 - [ ] Is RTO/RPO defined for all service tiers?
 - [ ] Are failover runbooks tested and up-to-date?
 - [ ] Has a DR drill been completed this quarter?
 
 ### Incident Response
+
 - [ ] Is PagerDuty escalation policy configured?
 - [ ] Do all P1 incidents get post-mortems within 48h?
 - [ ] Are action items from post-mortems being tracked?
 
 ---
-*Last Updated: January 2026*
+
+_Last Updated: January 2026_
+
+```
+
 ```

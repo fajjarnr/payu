@@ -27,7 +27,7 @@ spec:
         - values-prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: payu-prod
+    namespace: payu
   syncPolicy:
     automated:
       prune: true

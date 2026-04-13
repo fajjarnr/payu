@@ -8,7 +8,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaMirrorMaker2
 metadata:
   name: kafka-mirror-primary-to-secondary
-  namespace: payu-prod
+  namespace: payu
   labels:
     region: primary
   annotations:
@@ -19,7 +19,7 @@ spec:
   connectCluster: "secondary"
   clusters:
     - alias: "primary"
-      bootstrapServers: "kafka-primary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      bootstrapServers: "kafka-primary-kafka-bootstrap.payu.svc.cluster.local:9092"
       config:
         config.storage.replication.factor: 3
         offset.storage.replication.factor: 3
@@ -40,7 +40,7 @@ spec:
             certificate: ca.crt
 
     - alias: "secondary"
-      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu.svc.cluster.local:9092"
       config:
         config.storage.replication.factor: 3
         offset.storage.replication.factor: 3
@@ -93,7 +93,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaMirrorMaker2
 metadata:
   name: kafka-mirror-secondary-to-primary
-  namespace: payu-prod
+  namespace: payu
   labels:
     region: secondary
   annotations:
@@ -104,7 +104,7 @@ spec:
   connectCluster: "primary"
   clusters:
     - alias: "secondary"
-      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu.svc.cluster.local:9092"
       config:
         config.storage.replication.factor: 3
         offset.storage.replication.factor: 3
@@ -125,7 +125,7 @@ spec:
             certificate: ca.crt
 
     - alias: "primary"
-      bootstrapServers: "kafka-primary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      bootstrapServers: "kafka-primary-kafka-bootstrap.payu.svc.cluster.local:9092"
       config:
         config.storage.replication.factor: 3
         offset.storage.replication.factor: 3
@@ -167,7 +167,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: kafka-mirror-health-check
-  namespace: payu-prod
+  namespace: payu
 spec:
   schedule: "*/5 * * * *"  # Every 5 minutes
   successfulJobsHistoryLimit: 3
@@ -190,7 +190,7 @@ spec:
               echo "Checking MirrorMaker2 replication status..."
 
               # Check if MirrorMaker2 pods are running
-              MIRROR_PODS=$(oc get pods -n payu-prod -l strimzi.io/kind=KafkaMirrorMaker2 -o name)
+              MIRROR_PODS=$(oc get pods -n payu -l strimzi.io/kind=KafkaMirrorMaker2 -o name)
               if [ -z "$MIRROR_PODS" ]; then
                 echo "ERROR: No MirrorMaker2 pods found"
                 exit 1
@@ -202,7 +202,7 @@ spec:
               # List mirrored topics
               echo "Checking mirrored topics on secondary cluster..."
               kafka-topics.sh \
-                --bootstrap-server kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092 \
+                --bootstrap-server kafka-secondary-kafka-bootstrap.payu.svc.cluster.local:9092 \
                 --list \
                 --command-config /tmp/mirror-client.properties | grep -v "^__" || true
 
@@ -223,7 +223,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kafka-mirror-client-config
-  namespace: payu-prod
+  namespace: payu
 data:
   mirror-client.properties: |
     security.protocol=SASL_SSL
@@ -236,7 +236,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka-mirror-metrics
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: kafka-mirror
 spec:
@@ -255,7 +255,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kafka-mirror-metrics
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: kafka-mirror
 spec:
@@ -274,7 +274,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: kafka-mirrormaker2-netpol
-  namespace: payu-prod
+  namespace: payu
 spec:
   podSelector:
     matchLabels:
@@ -305,7 +305,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: kafka-replication-alerts
-  namespace: payu-prod
+  namespace: payu
   labels:
     prometheus: kube-prometheus
     role: alert-rules

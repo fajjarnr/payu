@@ -32,22 +32,22 @@ echo "scale=4; (1 - $current_availability) / 0.001 * 100" | bc
 ### 1. Stop Non-Essential Changes
 ```bash
 # Pause all deployments
-oc patch deploymentconfig -n payu-prod -l app=payu -p '{"spec":{"paused":true}}'
+oc patch deploymentconfig -n payu -l app=payu -p '{"spec":{"paused":true}}'
 
 # Cancel running rollouts
-oc rollout cancel dc/account-service -n payu-prod
-oc rollout cancel dc/transaction-service -n payu-prod
+oc rollout cancel dc/account-service -n payu
+oc rollout cancel dc/transaction-service -n payu
 ```
 
 ### 2. Scale Up Services
 ```bash
 # Increase replicas for better fault tolerance
-for dc in $(oc get dc -n payu-prod -l app=payu -o name); do
-  oc scale -n payu-prod $dc --replicas=5
+for dc in $(oc get dc -n payu -l app=payu -o name); do
+  oc scale -n payu $dc --replicas=5
 done
 
 # Verify scaling
-oc get pods -n payu-prod -w
+oc get pods -n payu -w
 ```
 
 ### 3. Enable Enhanced Monitoring
@@ -72,7 +72,7 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
   -d 'query=sum(rate(http_server_requests_seconds_count{status=~"5.."}[1h]))' | jq '.data.result[0].value[1]'
 
 # Check timeouts
-oc logs -n payu-prod --all-containers=true | grep -i "timeout\|connection refused" | tail -50
+oc logs -n payu --all-containers=true | grep -i "timeout\|connection refused" | tail -50
 ```
 
 ### Analyze Error Patterns
@@ -82,7 +82,7 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
   -d 'query=topk(10, sum(rate(http_server_requests_seconds_count{status=~"5.."}[1h])) by (endpoint))' | jq '.data.result[]'
 
 # Check for specific error types
-oc get events -n payu-prod --field-selector reason=Error --sort-by='.lastTimestamp'
+oc get events -n payu --field-selector reason=Error --sort-by='.lastTimestamp'
 ```
 
 ## Recovery Strategies
@@ -90,18 +90,18 @@ oc get events -n payu-prod --field-selector reason=Error --sort-by='.lastTimesta
 ### Strategy 1: Reduce Load
 ```bash
 # Enable rate limiting
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "add", "path": "/spec/template/spec/containers/0/env/-", "value": {"name": "RATE_LIMIT_ENABLED", "value": "true"}}]'
 
 # Reduce batch job frequency
-oc scale cronjob/batch-processing-job -n payu-prod --replicas=0
+oc scale cronjob/batch-processing-job -n payu --replicas=0
 ```
 
 ### Strategy 2: Improve Fault Tolerance
 ```bash
 # Increase resource limits
-for dc in $(oc get dc -n payu-prod -l app=payu -o name); do
-  oc set resources -n payu-prod $dc \
+for dc in $(oc get dc -n payu -l app=payu -o name); do
+  oc set resources -n payu $dc \
     --limits=cpu=2000m,memory=4Gi \
     --requests=cpu=1000m,memory=2Gi
 done
@@ -112,7 +112,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: payu-services-pdb
-  namespace: payu-prod
+  namespace: payu
 spec:
   minAvailable: 2
   selector:
@@ -124,11 +124,11 @@ EOF
 ### Strategy 3: Optimize Dependencies
 ```bash
 # Increase connection pool sizes
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/env/1/value", "value": "50"}]'
 
 # Enable caching
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "add", "path": "/spec/template/spec/containers/0/env/-", "value": {"name": "CACHE_ENABLED", "value": "true"}}]'
 ```
 
@@ -146,7 +146,7 @@ watch -n 5 'curl -s http://prometheus.payu.svc:9090/api/v1/query \
 # Run comprehensive health checks
 for service in account-service transaction-service wallet-service auth-service; do
   echo "Checking $service..."
-  curl -f http://$service.payu-prod.svc.cluster.local:80/actuator/health
+  curl -f http://$service.payu.svc.cluster.local:80/actuator/health
   echo ""
 done
 ```

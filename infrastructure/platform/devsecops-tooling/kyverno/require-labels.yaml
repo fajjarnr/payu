@@ -1,0 +1,41 @@
+# Require standard labels on all PayU resources
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Kyverno operational policy
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-payu-labels
+  annotations:
+    policies.kyverno.io/title: Require PayU Standard Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Ensures all Deployments in PayU namespaces have required labels
+      for cost allocation, ownership tracking, and observability.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: check-required-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+              namespaces:
+                - "payu-dev"
+                - "payu-sit"
+                - "payu-uat"
+                - "payu-preprod"
+                - "payu"
+      validate:
+        message: >-
+          Deployments in PayU namespaces must have labels:
+          app.kubernetes.io/name, app.kubernetes.io/part-of,
+          app.kubernetes.io/version, team
+        pattern:
+          metadata:
+            labels:
+              app.kubernetes.io/name: "?*"
+              app.kubernetes.io/part-of: "payu"
+              app.kubernetes.io/version: "?*"
+              team: "?*"

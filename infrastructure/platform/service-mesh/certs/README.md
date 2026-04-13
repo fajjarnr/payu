@@ -16,7 +16,6 @@ This directory contains TLS certificates for the PayU Digital Banking Platform S
 
 - `api.payu.local` (local development)
 - `*.dev.payu.fajjjar.my.id` (development wildcard)
-- `*.staging.payu.fajjjar.my.id` (staging wildcard)
 - `*.sit.payu.fajjjar.my.id` (SIT wildcard)
 - `*.uat.payu.fajjjar.my.id` (UAT wildcard)
 - `*.preprod.payu.fajjjar.my.id` (pre-production wildcard)
@@ -35,7 +34,7 @@ openssl req -new -key tls.key -out ingress.csr -subj "/C=ID/ST=Jakarta/L=Jakarta
 # Generate self-signed certificate (for development)
 openssl x509 -req -days 365 -in ingress.csr -signkey tls.key -out tls.crt \
   -extfile <(cat <<EOF
-subjectAltName=DNS:api.payu.local,DNS:*.dev.payu.fajjjar.my.id,DNS:*.staging.payu.fajjjar.my.id,DNS:*.sit.payu.fajjjar.my.id,DNS:*.uat.payu.fajjjar.my.id,DNS:*.preprod.payu.fajjjar.my.id,DNS:*.payu.fajjjar.my.id,DNS:payu.fajjjar.my.id
+subjectAltName=DNS:api.payu.local,DNS:*.dev.payu.fajjjar.my.id,DNS:*.sit.payu.fajjjar.my.id,DNS:*.uat.payu.fajjjar.my.id,DNS:*.preprod.payu.fajjjar.my.id,DNS:*.payu.fajjjar.my.id,DNS:payu.fajjjar.my.id
 EOF
 )
 
@@ -124,7 +123,6 @@ spec:
     - payu.fajjjar.my.id
     - "*.payu.fajjjar.my.id"
     - "*.dev.payu.fajjjar.my.id"
-    - "*.staging.payu.fajjjar.my.id"
     - "*.sit.payu.fajjjar.my.id"
     - "*.uat.payu.fajjjar.my.id"
     - "*.preprod.payu.fajjjar.my.id"
@@ -153,7 +151,7 @@ openssl verify -CAfile ca.crt tls.crt
 
 ```bash
 # Test mTLS connection
-oc exec -it account-service-xxx -n payu-prod -c istio-proxy -- \
+oc exec -it account-service-xxx -n payu -c istio-proxy -- \
   openssl s_client -connect auth-service:8082 -alpn istio
 
 # Should show:
@@ -189,7 +187,7 @@ openssl x509 -in tls.crt -noout -enddate
 oc get configmap -n istio-system istio-ca-root-cert -o yaml
 
 # Restart pods to reload certificates
-oc rollout restart deployment/account-service -n payu-prod
+oc rollout restart deployment/account-service -n payu
 ```
 
 ### Issue: Inbound Connections Fail

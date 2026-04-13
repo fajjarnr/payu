@@ -1,0 +1,34 @@
+# Pod Delete Experiment — tests service auto-recovery
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosExperiment
+metadata:
+  name: pod-delete
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  definition:
+    scope: Namespaced
+    permissions:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["create", "delete", "get", "list", "patch", "update"]
+      - apiGroups: ["apps"]
+        resources: ["deployments", "replicasets"]
+        verbs: ["get", "list"]
+    image: litmuschaos/go-runner:latest
+    args:
+      - -c
+      - ./experiments -name pod-delete
+    command:
+      - /bin/bash
+    env:
+      - name: TOTAL_CHAOS_DURATION
+        value: "30"
+      - name: CHAOS_INTERVAL
+        value: "10"
+      - name: FORCE
+        value: "false"
+    labels:
+      name: pod-delete
+      app.kubernetes.io/part-of: litmus

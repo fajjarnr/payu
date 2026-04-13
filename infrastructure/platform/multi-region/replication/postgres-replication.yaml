@@ -8,7 +8,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-primary-replication-config
-  namespace: payu-prod
+  namespace: payu
 data:
   postgresql.conf: |
     # PostgreSQL Configuration for Logical Replication
@@ -72,7 +72,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-secondary-replication-config
-  namespace: payu-prod
+  namespace: payu
 data:
   postgresql.conf: |
     # PostgreSQL Configuration for Standby/Replica
@@ -120,7 +120,7 @@ data:
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_subscription WHERE subname = 'payu_subscription') THEN
         CREATE SUBSCRIPTION payu_subscription
-        CONNECTION 'host=postgres-primary.payu-prod.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
+        CONNECTION 'host=postgres-primary.payu.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
         PUBLICATION payu_publication
         WITH (create_slot = false, slot_name = 'payu_slot');
       END IF;
@@ -137,7 +137,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: postgres-replication-monitor
-  namespace: payu-prod
+  namespace: payu
 spec:
   schedule: "*/5 * * * *"  # Every 5 minutes
   successfulJobsHistoryLimit: 3
@@ -196,7 +196,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-replication-metrics
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: postgres
     component: replication
@@ -216,7 +216,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-exporter
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: postgres-exporter
 spec:
@@ -265,7 +265,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-exporter-queries
-  namespace: payu-prod
+  namespace: payu
 data:
   queries.yaml: |
     pg_replication:

@@ -8,16 +8,28 @@ commonLabels:
   app.kubernetes.io/managed-by: kustomize
 
 resources:
+  # Namespace & Operator
   - logging-namespace.yaml
   - logging-operator.yaml
+
+  # LokiStack & Storage
   - lokistack.yaml
   - lokistack-storage-secret.yaml
-  - clusterlogforwarder.yaml
-  - loki-rbac.yaml
-  - clusterlogging.yaml
   - lokistack-token-secret.yaml
-  - loki-alert-rules.yaml
   - loki-route.yaml
+
+  # Cluster Logging & Forwarding
+  - clusterlogging.yaml
+  - clusterlogforwarder.yaml
+
+  # RBAC
+  - loki-rbac.yaml
+  - cluster-logging-rbac.yaml
+
+  # Alerts & Correlation
+  - loki-alert-rules.yaml
+  - log-alerts.yaml
+  - log-correlation.yaml
 
 configMapGenerator:
   - name: loki-deployment-config

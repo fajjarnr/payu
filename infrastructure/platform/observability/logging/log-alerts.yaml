@@ -16,9 +16,9 @@ data:
           - alert: CriticalErrorRateSpike
             expr: |
               (
-                sum(rate({namespace="payu-prod", level="ERROR"}[5m])) by (service)
+                sum(rate({namespace="payu", level="ERROR"}[5m])) by (service)
                 /
-                sum(rate({namespace="payu-prod"}[5m])) by (service)
+                sum(rate({namespace="payu"}[5m])) by (service)
               ) > 0.05
             for: 5m
             labels:
@@ -32,7 +32,7 @@ data:
           # Security Alert: Authentication Failures
           - alert: AuthenticationFailureSpike
             expr: |
-              sum(rate({namespace="payu-prod", service="auth-service"} |~ ".*authentication failed.*"[5m])) > 100
+              sum(rate({namespace="payu", service="auth-service"} |~ ".*authentication failed.*"[5m])) > 100
             for: 2m
             labels:
               severity: warning
@@ -45,7 +45,7 @@ data:
           # Security Alert: Authorization Failures
           - alert: AuthorizationFailureSpike
             expr: |
-              sum(rate({namespace="payu-prod"} |~ ".*access denied.*|.*unauthorized.*"[5m])) > 50
+              sum(rate({namespace="payu"} |~ ".*access denied.*|.*unauthorized.*"[5m])) > 50
             for: 5m
             labels:
               severity: warning
@@ -58,9 +58,9 @@ data:
           - alert: PaymentFailureRateSpike
             expr: |
               (
-                sum(rate({namespace="payu-prod", service="transaction-service"} |~ ".*payment failed.*"[5m]))
+                sum(rate({namespace="payu", service="transaction-service"} |~ ".*payment failed.*"[5m]))
                 /
-                sum(rate({namespace="payu-prod", service="transaction-service"} |~ ".*payment.*"[5m]))
+                sum(rate({namespace="payu", service="transaction-service"} |~ ".*payment.*"[5m]))
               ) > 0.1
             for: 5m
             labels:
@@ -73,7 +73,7 @@ data:
           # Infrastructure Alert: Database Connection Errors
           - alert: DatabaseConnectionErrors
             expr: |
-              sum(rate({namespace="payu-prod"} |~ ".*connection refused.*|.*could not connect to database.*"[5m])) > 10
+              sum(rate({namespace="payu"} |~ ".*connection refused.*|.*could not connect to database.*"[5m])) > 10
             for: 2m
             labels:
               severity: critical
@@ -85,7 +85,7 @@ data:
           # Infrastructure Alert: OutOfMemory Errors
           - alert: OutOfMemoryErrors
             expr: |
-              sum(rate({namespace="payu-prod"} |~ ".*OutOfMemoryError.*|.*OOM.*"[5m])) > 0
+              sum(rate({namespace="payu"} |~ ".*OutOfMemoryError.*|.*OOM.*"[5m])) > 0
             for: 1m
             labels:
               severity: critical
@@ -97,7 +97,7 @@ data:
           # Business Alert: Transaction Timeout
           - alert: TransactionTimeoutSpike
             expr: |
-              sum(rate({namespace="payu-prod", service="transaction-service"} |~ ".*timeout.*"[5m])) > 10
+              sum(rate({namespace="payu", service="transaction-service"} |~ ".*timeout.*"[5m])) > 10
             for: 5m
             labels:
               severity: warning
@@ -109,7 +109,7 @@ data:
           # Compliance Alert: PII Data Leakage
           - alert: PIDataLeakage
             expr: |
-              sum(count_over_time({namespace="payu-prod"} |~ ".*NIK.*|.*KTP.*|.*[0-9]{16}.*"[5m])) > 0
+              sum(count_over_time({namespace="payu"} |~ ".*NIK.*|.*KTP.*|.*[0-9]{16}.*"[5m])) > 0
             for: 1m
             labels:
               severity: critical
@@ -124,7 +124,7 @@ data:
           # Log Volume Alert
           - alert: ExcessiveLogVolume
             expr: |
-              sum(rate({namespace="payu-prod"}[5m])) > 10000
+              sum(rate({namespace="payu"}[5m])) > 10000
             for: 10m
             labels:
               severity: warning
@@ -137,9 +137,9 @@ data:
           - alert: MissingTraceIds
             expr: |
               (
-                sum(rate({namespace="payu-prod", trace_id="unknown"}[5m]))
+                sum(rate({namespace="payu", trace_id="unknown"}[5m]))
                 /
-                sum(rate({namespace="payu-prod"}[5m]))
+                sum(rate({namespace="payu"}[5m]))
               ) > 0.5
             for: 5m
             labels:
@@ -156,12 +156,12 @@ data:
           - alert: UnusualLogPattern
             expr: |
               (
-                sum(rate({namespace="payu-prod"}[5m]))
+                sum(rate({namespace="payu"}[5m]))
                 -
-                avg_over_time(sum(rate({namespace="payu-prod"}[5m]))[1h:5m])
+                avg_over_time(sum(rate({namespace="payu"}[5m]))[1h:5m])
               )
               /
-              avg_over_time(sum(rate({namespace="payu-prod"}[5m]))[1h:5m])
+              avg_over_time(sum(rate({namespace="payu"}[5m]))[1h:5m])
               > 2
             for: 10m
             labels:

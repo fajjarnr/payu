@@ -61,19 +61,19 @@ spec:
         }
 
         # Check critical resources
-        check_drift deployment account-service payu-prod
-        check_drift deployment transaction-service payu-prod
-        check_drift deployment wallet-service payu-prod
-        check_drift deployment auth-service payu-prod
-        check_drift deployment gateway-service payu-prod
+        check_drift deployment account-service payu
+        check_drift deployment transaction-service payu
+        check_drift deployment wallet-service payu
+        check_drift deployment auth-service payu
+        check_drift deployment gateway-service payu
 
         # Check Secrets
-        check_drift secret db-credentials payu-prod
-        check_drift secret oauth-client-secret payu-prod
+        check_drift secret db-credentials payu
+        check_drift secret oauth-client-secret payu
 
         # Check ConfigMaps
-        check_drift configmap application-config payu-prod
-        check_drift configmap feature-flags payu-prod
+        check_drift configmap application-config payu
+        check_drift configmap feature-flags payu
 
         echo ""
         echo "=== Drift Detection Complete ==="
@@ -88,18 +88,18 @@ spec:
         echo "Validating resources against policies..."
 
         # Check for disallowed changes
-        if oc get deployment -n payu-prod -o json | jq -e '.items[] | select(.spec.replicas < 2)' > /dev/null; then
+        if oc get deployment -n payu -o json | jq -e '.items[] | select(.spec.replicas < 2)' > /dev/null; then
           echo "ERROR: Deployment with replicas < 2 detected in production"
           exit 1
         fi
 
         # Check for missing labels
-        if oc get pods -n payu-prod -l app!=payu --no-headers 2>/dev/null | grep -q .; then
+        if oc get pods -n payu -l app!=payu --no-headers 2>/dev/null | grep -q .; then
           echo "WARNING: Found pods without required app=payu label"
         fi
 
         # Check resource limits
-        if oc get deployment -n payu-prod -o json | \
+        if oc get deployment -n payu -o json | \
            jq -e '.items[] | select(.spec.template.spec.containers[]?.resources.limits == null)' > /dev/null; then
           echo "ERROR: Deployment without resource limits detected"
           exit 1

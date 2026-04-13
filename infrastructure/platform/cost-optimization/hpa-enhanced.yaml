@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: account-service-hpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: account-service
@@ -63,7 +63,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: transaction-service-hpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: transaction-service
@@ -117,7 +117,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: gateway-service-hpa
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     service: gateway-service
@@ -166,7 +166,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: custom-metrics-api
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     type: metrics
@@ -183,7 +183,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: payu-services-metrics
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: payu
     type: monitoring

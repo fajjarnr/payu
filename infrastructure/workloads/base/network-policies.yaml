@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -17,7 +17,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-from-router
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -41,7 +41,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-from-gateway
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -64,7 +64,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-intra-namespace
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -84,7 +84,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-prometheus-scrape
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -107,7 +107,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-keycloak-from-auth
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:
@@ -133,7 +133,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-egress
-  namespace: payu-prod
+  namespace: payu
   labels:
     app.kubernetes.io/part-of: payu
 spec:

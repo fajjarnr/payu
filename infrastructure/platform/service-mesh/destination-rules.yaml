@@ -12,7 +12,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: account-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: account-service
   # Traffic policy for account-service
@@ -58,7 +58,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: auth-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: auth-service
   trafficPolicy:
@@ -89,7 +89,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: transaction-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: transaction-service
   trafficPolicy:
@@ -129,7 +129,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: wallet-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: wallet-service
   trafficPolicy:
@@ -163,7 +163,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: billing-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: billing-service
   trafficPolicy:
@@ -194,7 +194,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: notification-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: notification-service
   trafficPolicy:
@@ -225,7 +225,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: kyc-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: kyc-service
   trafficPolicy:
@@ -256,7 +256,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: analytics-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: analytics-service
   trafficPolicy:
@@ -287,7 +287,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: gateway-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: gateway-service
   trafficPolicy:
@@ -320,7 +320,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: bi-fast-simulator
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: bi-fast-simulator
   trafficPolicy:
@@ -347,7 +347,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: dukcapil-simulator
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: dukcapil-simulator
   trafficPolicy:
@@ -373,7 +373,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: qris-simulator
-  namespace: payu-prod
+  namespace: payu
 spec:
   host: qris-simulator
   trafficPolicy:
@@ -399,9 +399,9 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: global-default
-  namespace: payu-prod
+  namespace: payu
 spec:
-  host: "*.payu-prod.svc.cluster.local"
+  host: "*.payu.svc.cluster.local"
   trafficPolicy:
     # Default mTLS for all services
     tls:

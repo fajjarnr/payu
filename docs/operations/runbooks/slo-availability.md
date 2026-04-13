@@ -14,7 +14,7 @@ Service availability has dropped below the 99.9% threshold over a 30-day rolling
 ### 1. Check Affected Services
 ```bash
 # Get all services with availability issues
-oc get pods -n payu-prod -l app=payu --field-selector=status.phase!=Running
+oc get pods -n payu -l app=payu --field-selector=status.phase!=Running
 
 # Check service availability metrics
 curl -s http://prometheus.payu.svc:9090/api/v1/query \
@@ -24,10 +24,10 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
 ### 2. Identify Root Cause
 ```bash
 # Check for recent pod restarts
-oc describe pods -n payu-prod -l app=payu | grep -A 10 "Restart Count"
+oc describe pods -n payu -l app=payu | grep -A 10 "Restart Count"
 
 # Check for OOMKilled events
-oc get events -n payu-prod --field-selector reason=OOMKilling
+oc get events -n payu --field-selector reason=OOMKilling
 
 # Check node health
 oc get nodes
@@ -39,39 +39,39 @@ oc describe nodes | grep -A 5 "Conditions:"
 ### Step 1: Verify Infrastructure Health
 ```bash
 # Check PostgreSQL connectivity
-oc exec -n payu-prod -it $(oc get pods -n payu-prod -l app=postgresql -o name | head -1) -- \
+oc exec -n payu -it $(oc get pods -n payu -l app=postgresql -o name | head -1) -- \
   pg_isready -U postgres
 
 # Check Redis connectivity
-oc exec -n payu-prod -it $(oc get pods -n payu-prod -l app=redis -o name | head -1) -- \
+oc exec -n payu -it $(oc get pods -n payu -l app=redis -o name | head -1) -- \
   redis-cli ping
 
 # Check Kafka connectivity
-oc exec -n payu-prod -it $(oc get pods -n payu-prod -l app=kafka -o name | head -1) -- \
+oc exec -n payu -it $(oc get pods -n payu -l app=kafka -o name | head -1) -- \
   kafka-broker-api-versions --bootstrap-server localhost:9092
 ```
 
 ### Step 2: Check Application Logs
 ```bash
 # Get logs from failing pods
-oc logs -n payu-prod $(oc get pods -n payu-prod -l app=payu,service=account-service -o name | head -1) --tail=100
+oc logs -n payu $(oc get pods -n payu -l app=payu,service=account-service -o name | head -1) --tail=100
 
 # Check for error patterns
-oc logs -n payu-prod $(oc get pods -n payu-prod -l app=payu,service=account-service -o name | head -1) | \
+oc logs -n payu $(oc get pods -n payu -l app=payu,service=account-service -o name | head -1) | \
   grep -i "error\|exception\|failed" | tail -20
 ```
 
 ### Step 3: Verify Resource Availability
 ```bash
 # Check resource quotas
-oc describe quota -n payu-prod
+oc describe quota -n payu
 
 # Check resource usage
 oc top nodes
-oc top pods -n payu-prod
+oc top pods -n payu
 
 # Check for resource constraints
-oc get pods -n payu-prod -o json | jq '.items[] | select(.status.phase!="Running") | .metadata.name'
+oc get pods -n payu -o json | jq '.items[] | select(.status.phase!="Running") | .metadata.name'
 ```
 
 ## Resolution Strategies
@@ -79,38 +79,38 @@ oc get pods -n payu-prod -o json | jq '.items[] | select(.status.phase!="Running
 ### Strategy 1: Scale Up Resources
 ```bash
 # Increase replicas for affected services
-oc scale dc/account-service -n payu-prod --replicas=5
-oc scale dc/transaction-service -n payu-prod --replicas=5
+oc scale dc/account-service -n payu --replicas=5
+oc scale dc/transaction-service -n payu --replicas=5
 
 # Verify scaling
-oc get pods -n payu-prod -w
+oc get pods -n payu -w
 ```
 
 ### Strategy 2: Restart Affected Services
 ```bash
 # Rollout restart for stuck deployments
-oc rollout restart dc/account-service -n payu-prod
-oc rollout status dc/account-service -n payu-prod
+oc rollout restart dc/account-service -n payu
+oc rollout status dc/account-service -n payu
 
 # Monitor the restart
-oc logs -f -n payu-prod $(oc get pods -n payu-prod -l app=payu,service=account-service -o name | head -1)
+oc logs -f -n payu $(oc get pods -n payu -l app=payu,service=account-service -o name | head -1)
 ```
 
 ### Strategy 3: Adjust Resource Limits
 ```bash
 # Update resource requests/limits
-oc set resources dc/account-service -n payu-prod \
+oc set resources dc/account-service -n payu \
   --requests=cpu=1000m,memory=2Gi \
   --limits=cpu=2000m,memory=4Gi
 
 # Apply changes
-oc rollout latest dc/account-service -n payu-prod
+oc rollout latest dc/account-service -n payu
 ```
 
 ### Strategy 4: Enable Additional Capacity
 ```bash
 # Scale up cluster nodes (if using cluster autoscaler)
-oc autoscale dc/account-service -n payu-prod --min=3 --max=10 --cpu-percent=70
+oc autoscale dc/account-service -n payu --min=3 --max=10 --cpu-percent=70
 
 # Enable cluster autoscaler (if not already enabled)
 oc edit clusterresourcequota
@@ -122,7 +122,7 @@ oc edit clusterresourcequota
 ```bash
 # Run smoke tests
 for service in account-service transaction-service wallet-service; do
-  curl -f http://$service.payu-prod.svc.cluster.local:80/actuator/health || echo "FAIL: $service"
+  curl -f http://$service.payu.svc.cluster.local:80/actuator/health || echo "FAIL: $service"
 done
 
 # Check availability metrics

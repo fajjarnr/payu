@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: payu-prod
+  name: payu
   labels:
     env: prod
     region: primary
@@ -16,7 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: account-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: account-service
     region: primary
@@ -64,11 +64,11 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-primary.payu.svc.cluster.local:9092"
         - name: REDIS_HOST
-          value: "redis-primary.payu-prod.svc.cluster.local"
+          value: "redis-primary.payu.svc.cluster.local"
         - name: JAVA_OPTS
           value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
         resources:
@@ -109,7 +109,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: auth-service
     region: primary
@@ -136,7 +136,7 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: KEYCLOAK_URL
           value: "https://sso-primary.example.com"
         resources:
@@ -165,7 +165,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: transaction-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: transaction-service
     region: primary
@@ -192,9 +192,9 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-primary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "1Gi"
@@ -219,7 +219,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wallet-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: wallet-service
     region: primary
@@ -246,11 +246,11 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-primary.payu.svc.cluster.local:9092"
         - name: REDIS_HOST
-          value: "redis-primary.payu-prod.svc.cluster.local"
+          value: "redis-primary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "1Gi"
@@ -275,7 +275,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: billing-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: billing-service
     region: primary
@@ -302,9 +302,9 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-primary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "128Mi"
@@ -329,7 +329,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notification-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: notification-service
     region: primary
@@ -356,7 +356,7 @@ spec:
         - name: REGION
           value: "primary"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-primary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "128Mi"
@@ -381,7 +381,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gateway-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: gateway-service
     region: primary
@@ -431,7 +431,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kyc-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: kyc-service
     region: primary
@@ -458,7 +458,7 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "512Mi"
@@ -483,7 +483,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: analytics-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: analytics-service
     region: primary
@@ -510,7 +510,7 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "1Gi"
@@ -535,7 +535,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: compliance-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: compliance-service
     region: primary
@@ -562,7 +562,7 @@ spec:
         - name: REGION
           value: "primary"
         - name: DB_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "512Mi"
@@ -587,7 +587,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres-primary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: postgres
     role: primary
@@ -680,7 +680,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: kafka-primary
-  namespace: payu-prod
+  namespace: payu
   labels:
     region: primary
 spec:
@@ -743,7 +743,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-primary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: redis
     role: primary
@@ -822,7 +822,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: redis-primary-data
-  namespace: payu-prod
+  namespace: payu
 spec:
   accessModes:
   - ReadWriteOnce

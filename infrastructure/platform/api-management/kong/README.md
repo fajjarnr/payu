@@ -46,9 +46,9 @@ Partner Apps
 
 ## Files
 
-| File | Description |
-| :--- | :--- |
-| `values.yaml` | Helm values override for Kong Ingress Controller |
+| File                    | Description                                          |
+| :---------------------- | :--------------------------------------------------- |
+| `values.yaml`           | Helm values override for Kong Ingress Controller     |
 | `kong-plugin-payu.yaml` | KongPlugin CRD for PayU header injection and routing |
 
 ## Installation Steps
@@ -101,9 +101,11 @@ oc apply -f kong-plugin-payu.yaml -n payu-api-management
 ```bash
 # Create a Kong Service pointing to PayU gateway
 # (if not using KongIngress CRDs — otherwise, use annotations on Ingress/Route)
+# Default upstream below targets production. For non-prod, substitute one of:
+# payu-dev, payu-sit, payu-uat, payu-preprod.
 curl -s http://kong-admin.payu-api-management.svc:8001/services \
   -d name=payu-gateway \
-  -d url=http://gateway-service.payu-gateway.svc:8080
+  -d url=http://gateway-service.payu.svc.cluster.local:8080
 
 # Create a route
 curl -s http://kong-admin.payu-api-management.svc:8001/services/payu-gateway/routes \
@@ -137,6 +139,7 @@ Since Kong OSS does not include a developer portal, partner onboarding is manual
 5. PayU gateway-service handles banking-specific auth (HMAC, JWT)
 
 For self-service portal, consider:
+
 - Building a custom portal using the Kong Admin API
 - Using an open-source portal like [Backstage](https://backstage.io) (already deployed as Red Hat Developer Hub)
 
@@ -148,4 +151,5 @@ For self-service portal, consider:
 - Use OpenShift NetworkPolicy to restrict pod-to-pod communication
 
 ---
-*Template created: 2026-03-02 | See ADR-0014 for decision context*
+
+Template created: 2026-03-02 | See ADR-0014 for decision context.

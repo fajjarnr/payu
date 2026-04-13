@@ -6,12 +6,13 @@ resources:
   - config/configmaps.yaml
   - secrets/secrets-template.yaml
 
-namespace: payu-staging
+namespace: payu-sit
 
-# Staging: 1 replica per service, relaxed resource limits
+# SIT: 1 replica per service, relaxed resource limits
+# Ref: DEVSECOPS_ARCHITECTURE.md §3.1 — payu-sit namespace
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev
-    newName: image-registry.openshift-image-registry.svc:5000/payu-staging
+    newName: image-registry.openshift-image-registry.svc:5000/payu-sit
 
 patches:
   # Scale down to 1 replica for cost savings
@@ -24,7 +25,7 @@ patches:
       labelSelector: "app.kubernetes.io/part-of=payu"
 
 configMapGenerator:
-  - name: staging-shared-config
+  - name: sit-shared-config
     literals:
       - SPRING_PROFILES_ACTIVE=container
       - LOG_LEVEL=DEBUG

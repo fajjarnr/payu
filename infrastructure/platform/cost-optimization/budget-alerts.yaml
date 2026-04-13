@@ -16,8 +16,8 @@ data:
           - alert: BudgetExceeded
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
               ) > 15000
             for: 5m
             labels:
@@ -33,8 +33,8 @@ data:
           - alert: BudgetWarning80
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
               ) / 15000 > 0.8
             for: 10m
             labels:
@@ -49,8 +49,8 @@ data:
           - alert: BudgetWarning90
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
               ) / 15000 > 0.9
             for: 10m
             labels:
@@ -65,14 +65,14 @@ data:
           - alert: NamespaceBudgetExceeded
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace="payu-prod", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
-                sum(kube_pod_container_resource_requests{namespace="payu-prod", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+                sum(kube_pod_container_resource_requests{namespace="payu", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace="payu", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
               ) > 10000
             for: 5m
             labels:
               severity: warning
               budget_type: namespace
-              namespace: payu-prod
+              namespace: payu
               team: platform
             annotations:
               summary: "Production namespace budget exceeded"
@@ -82,8 +82,8 @@ data:
           - alert: ServiceBudgetExceeded
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
               ) by (namespace) > 3000
             for: 5m
             labels:
@@ -99,19 +99,19 @@ data:
             expr: |
               abs(
                 (
-                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
-                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                  sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"}) +
+                  sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824)
                 ) -
                 avg_over_time(
                   (
-                    sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
-                    sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                    sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"}) +
+                    sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824)
                   )[7d:1h]
                 )
               ) / avg_over_time(
                 (
-                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
-                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                  sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"}) +
+                  sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824)
                 )[7d:1h]
               ) > 0.5
             for: 1h
@@ -126,8 +126,8 @@ data:
           # Idle resource alert
           - alert: IdleResourcesDetected
             expr: |
-              sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu"}) -
-              sum(rate(container_cpu_usage_seconds_total{namespace=~"payu-.*"}[1h])) * 1.5 > 10
+              sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu"}) -
+              sum(rate(container_cpu_usage_seconds_total{namespace=~"payu($|-.*)"}[1h])) * 1.5 > 10
             for: 1d
             labels:
               severity: info
@@ -145,16 +145,16 @@ data:
           - record: payu_monthly_cost_forecast
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) * 720 * 0.192 +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824) * 720 * 0.00765
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"}) * 720 * 0.192 +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824) * 720 * 0.00765
               ) * 30
 
           # Budget burn rate
           - record: payu_budget_burn_rate
             expr: |
               (
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) * 24 * 0.192 +
-                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824) * 24 * 0.00765
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="cpu", unit="core"}) * 24 * 0.192 +
+                sum(kube_pod_container_resource_requests{namespace=~"payu($|-.*)", resource="memory", unit="byte"} / 1073741824) * 24 * 0.00765
               ) / 15000
 
           # Days until budget exhaustion

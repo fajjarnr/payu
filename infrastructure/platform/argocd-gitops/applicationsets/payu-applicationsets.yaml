@@ -8,14 +8,15 @@ metadata:
     type: applicationset
 spec:
   generators:
-    # Git Directory Generator - Auto-discover services
+    # Git Directory Generator - Auto-discover workload overlays
     - git:
         repoURL: https://github.com/payu-digital/payu-platform.git
         revision: main
         directories:
-          - path: infrastructure/openshift/overlays/*
+          - path: infrastructure/workloads/overlays/*
         values:
-          environment: staging
+          environment: sit
+          namespace: payu-sit
 
     # Cluster Generator - Multi-environment support
     - clusters:
@@ -24,25 +25,26 @@ spec:
             argocd.argoproj.io/secret-type: cluster
         values:
           environment: prod
+          namespace: payu
 
   template:
     metadata:
-      name: '{{path.basename}}-{{values.environment}}'
+      name: "{{path.basename}}-{{values.environment}}"
       labels:
         app: payu
-        service: '{{path.basename}}'
-        environment: '{{values.environment}}'
+        service: "{{path.basename}}"
+        environment: "{{values.environment}}"
     spec:
-      project: payu
+      project: "{{values.namespace}}"
       source:
         repoURL: https://github.com/payu-digital/payu-platform.git
         targetRevision: main
-        path: infrastructure/openshift/overlays/{{path.basename}}
+        path: infrastructure/workloads/overlays/{{path.basename}}
         # Uses Kustomize (auto-detected from kustomization.yaml)
 
       destination:
-        namespace: 'payu-{{values.environment}}'
-        server: '{{server}}'
+        namespace: "{{values.namespace}}"
+        server: "{{server}}"
 
       syncPolicy:
         automated:
@@ -62,7 +64,7 @@ spec:
         managedNamespaceMetadata:
           labels:
             app: payu
-            environment: '{{values.environment}}'
+            environment: "{{values.environment}}"
           annotations:
             argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 
@@ -91,11 +93,11 @@ spec:
         repoURL: https://github.com/payu-digital/payu-platform.git
         revision: main
         directories:
-          - path: infrastructure/openshift/monitoring/*
+          - path: infrastructure/platform/observability
 
   template:
     metadata:
-      name: 'monitoring-{{path.basename}}'
+      name: "monitoring-{{path.basename}}"
       labels:
         app: payu
         component: monitoring
@@ -104,7 +106,7 @@ spec:
       source:
         repoURL: https://github.com/payu-digital/payu-platform.git
         targetRevision: main
-        path: '{{path}}'
+        path: "{{path}}"
       destination:
         namespace: openshift-monitoring
         server: https://kubernetes.default.svc
@@ -137,31 +139,31 @@ spec:
 
   template:
     metadata:
-      name: 'pr-{{number}}-{{head_short_sha}}'
+      name: "pr-{{number}}-{{head_short_sha}}"
       labels:
         app: payu
         type: pr-preview
-        pr-number: '{{number}}'
-        commit-sha: '{{head_short_sha}}'
+        pr-number: "{{number}}"
+        commit-sha: "{{head_short_sha}}"
       annotations:
         argocd.argoproj.io/preview-environment: "true"
-        pr-url: '{{url}}'
-        branch-name: '{{branch}}'
+        pr-url: "{{url}}"
+        branch-name: "{{branch}}"
     spec:
       project: payu-preview
       source:
         repoURL: https://github.com/payu-digital/payu-platform.git
-        targetRevision: '{{head_sha}}'
-        path: infrastructure/openshift/base/account-service
+        targetRevision: "{{head_sha}}"
+        path: infrastructure/workloads/overlays/dev
         helm:
           parameters:
             - name: image.tag
-              value: 'pr-{{number}}'
+              value: "pr-{{number}}"
             - name: namespace
-              value: 'payu-pr-{{number}}'
+              value: "payu-pr-{{number}}"
 
       destination:
-        namespace: 'payu-pr-{{number}}'
+        namespace: "payu-pr-{{number}}"
         server: https://kubernetes.default.svc
 
       syncPolicy:
@@ -173,7 +175,7 @@ spec:
         managedNamespaceMetadata:
           labels:
             type: pr-preview
-            pr-number: '{{number}}'
+            pr-number: "{{number}}"
             auto-cleanup: "true"
 
       # Prune resources when PR is closed

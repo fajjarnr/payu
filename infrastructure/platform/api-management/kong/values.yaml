@@ -20,7 +20,7 @@ gateway:
 
   image:
     repository: kong/kong-gateway
-    tag: "3.9"  # Pin to specific version
+    tag: "3.9" # Pin to specific version
 
   env:
     # Database mode (set to "off" for DB-less/declarative mode)
@@ -60,7 +60,7 @@ gateway:
 
   proxy:
     enabled: true
-    type: ClusterIP  # Use OpenShift Route for external access
+    type: ClusterIP # Use OpenShift Route for external access
     annotations:
       # OpenShift Route will be created separately
       route.openshift.io/termination: edge
@@ -81,7 +81,7 @@ gateway:
 
   admin:
     enabled: true
-    type: ClusterIP  # NEVER expose externally
+    type: ClusterIP # NEVER expose externally
     # PRODUCTION: Disable admin HTTP and use only HTTPS with mTLS
     http:
       enabled: true
@@ -116,7 +116,11 @@ controller:
     # Watch all namespaces or restrict to specific ones
     watchNamespaces:
       - payu-api-management
-      - payu-gateway
+      - payu-dev
+      - payu-sit
+      - payu-uat
+      - payu-preprod
+      - payu
 
   resources:
     requests:

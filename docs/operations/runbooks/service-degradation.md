@@ -19,12 +19,12 @@ Service is experiencing degraded performance. The service is still operational b
 
 ```bash
 # Check service health endpoint
-curl http://account-service.payu-prod.svc:8080/actuator/health
+curl http://account-service.payu.svc:8080/actuator/health
 
 # Check all services health
 for service in account-service transaction-service wallet-service; do
   echo "=== $service ==="
-  curl -s http://${service}.payu-prod.svc:8080/actuator/health | jq '.status'
+  curl -s http://${service}.payu.svc:8080/actuator/health | jq '.status'
 done
 ```
 
@@ -50,25 +50,25 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
 
 ```bash
 # Check CPU usage
-oc top pods -n payu-prod -l app=account-service
+oc top pods -n payu -l app=account-service
 
 # Check memory usage
-oc exec -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1) -- \
+oc exec -n payu $(oc get pods -n payu -l app=account-service -o name | head -1) -- \
   free -h
 
 # Check thread pool usage
-curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/tomcat.threads.busy | jq '.measurements[0].value'
+curl -s http://account-service.payu.svc:8080/actuator/metrics/tomcat.threads.busy | jq '.measurements[0].value'
 ```
 
 ### Step 2: Check Database Performance
 
 ```bash
 # Check database connections
-oc exec -n payu-prod postgres-0 -- \
+oc exec -n payu postgres-0 -- \
   psql -U payu -c "SELECT count(*) FROM pg_stat_activity WHERE datname='payu_account';"
 
 # Check slow queries
-oc exec -n payu-prod postgres-0 -- \
+oc exec -n payu postgres-0 -- \
   psql -U payu -c "SELECT query, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;"
 ```
 
@@ -76,12 +76,12 @@ oc exec -n payu-prod postgres-0 -- \
 
 ```bash
 # Check Kafka connectivity
-oc exec -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1) -- \
-  curl -s http://kafka.payu-prod.svc:9092
+oc exec -n payu $(oc get pods -n payu -l app=account-service -o name | head -1) -- \
+  curl -s http://kafka.payu.svc:9092
 
 # Check Redis connectivity
-oc exec -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1) -- \
-  redis-cli -h redis.payu-prod.svc ping
+oc exec -n payu $(oc get pods -n payu -l app=account-service -o name | head -1) -- \
+  redis-cli -h redis.payu.svc ping
 ```
 
 ## Resolution Strategies
@@ -90,10 +90,10 @@ oc exec -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name |
 
 ```bash
 # Increase replicas
-oc scale dc/account-service -n payu-prod --replicas=5
+oc scale dc/account-service -n payu --replicas=5
 
 # Increase resource limits
-oc set resources dc/account-service -n payu-prod \
+oc set resources dc/account-service -n payu \
   --requests=cpu=500m,memory=1Gi \
   --limits=cpu=2000m,memory=4Gi
 ```
@@ -102,19 +102,19 @@ oc set resources dc/account-service -n payu-prod \
 
 ```bash
 # Enable Redis cache
-oc set env dc/account-service -n payu-prod \
+oc set env dc/account-service -n payu \
   CACHE_ENABLED=true \
   CACHE_TTL=300
 
 # Rollout restart to apply changes
-oc rollout restart dc/account-service -n payu-prod
+oc rollout restart dc/account-service -n payu
 ```
 
 ### Strategy 3: Optimize Database Queries
 
 ```bash
 # Check for missing indexes
-oc exec -n payu-prod postgres-0 -- \
+oc exec -n payu postgres-0 -- \
   psql -U payu -d payu_account -c "SELECT schemaname, tablename, indexname FROM pg_indexes WHERE indexname NOT LIKE 'pg_toast%';"
 
 # Create missing indexes via migration
@@ -125,11 +125,11 @@ oc exec -n payu-prod postgres-0 -- \
 
 ```bash
 # Configure circuit breaker for external calls
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "add", "path": "/spec/template/spec/containers/0/env/-", "value": {"name": "CIRCUIT_BREAKER_ENABLED", "value": "true"}}]'
 
 # Configure failure threshold
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "add", "path": "/spec/template/spec/containers/0/env/-", "value": {"name": "CIRCUIT_BREAKER_FAILURE_THRESHOLD", "value": "50"}}]'
 ```
 
@@ -147,7 +147,7 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
   -d 'query=sum(rate(http_server_requests_seconds_count{service="account-service",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{service="account-service"}[5m]))' | jq '.data.result[0].value[1]'
 
 # Run smoke test
-curl -f http://account-service.payu-prod.svc:8080/actuator/health
+curl -f http://account-service.payu.svc:8080/actuator/health
 ```
 
 ## Prevention
@@ -167,7 +167,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: account-service-hpa
-  namespace: payu-prod
+  namespace: payu
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

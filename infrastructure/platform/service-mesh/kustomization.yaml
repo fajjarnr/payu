@@ -56,7 +56,7 @@ patches:
     target:
       kind: PeerAuthentication
       name: strict-mtls
-      namespace: payu-prod
+      namespace: payu
 
   # Patch for development (PERMISSIVE mTLS)
   - patch: |-

@@ -163,13 +163,13 @@ openssl s_client -connect api.payu.fajjjar.my.id:443 2>/dev/null | openssl x509 
 
 # 2. Check cert-manager status
 oc get certificates -A
-oc describe certificate payu-tls -n payu-prod
+oc describe certificate payu-tls -n payu
 ```
 
 ### Mitigation
 ```bash
 # Force certificate renewal
-oc delete secret payu-tls -n payu-prod
+oc delete secret payu-tls -n payu
 # cert-manager will auto-regenerate
 ```
 

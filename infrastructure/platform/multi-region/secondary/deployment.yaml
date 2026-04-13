@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: payu-prod
+  name: payu
   labels:
     env: prod
     region: secondary
@@ -16,7 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: account-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: account-service
     region: secondary
@@ -68,11 +68,11 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-secondary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-secondary.payu.svc.cluster.local:9092"
         - name: REDIS_HOST
-          value: "redis-secondary.payu-prod.svc.cluster.local"
+          value: "redis-secondary.payu.svc.cluster.local"
         - name: JAVA_OPTS
           value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
         resources:
@@ -113,7 +113,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: auth-service
     region: secondary
@@ -144,7 +144,7 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         - name: KEYCLOAK_URL
           value: "https://sso-secondary.example.com"
         resources:
@@ -173,7 +173,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: transaction-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: transaction-service
     region: secondary
@@ -204,9 +204,9 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-secondary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-secondary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "1Gi"
@@ -231,7 +231,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wallet-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: wallet-service
     region: secondary
@@ -262,11 +262,11 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-secondary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-secondary.payu.svc.cluster.local:9092"
         - name: REDIS_HOST
-          value: "redis-secondary.payu-prod.svc.cluster.local"
+          value: "redis-secondary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "1Gi"
@@ -291,7 +291,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: billing-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: billing-service
     region: secondary
@@ -322,9 +322,9 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-secondary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-secondary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "128Mi"
@@ -349,7 +349,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notification-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: notification-service
     region: secondary
@@ -380,7 +380,7 @@ spec:
         - name: REGION
           value: "secondary"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-secondary.payu-prod.svc.cluster.local:9092"
+          value: "kafka-secondary.payu.svc.cluster.local:9092"
         resources:
           requests:
             memory: "128Mi"
@@ -405,7 +405,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gateway-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: gateway-service
     region: secondary
@@ -459,7 +459,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kyc-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: kyc-service
     region: secondary
@@ -490,7 +490,7 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "512Mi"
@@ -515,7 +515,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: analytics-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: analytics-service
     region: secondary
@@ -546,7 +546,7 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "1Gi"
@@ -571,7 +571,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: compliance-service
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: compliance-service
     region: secondary
@@ -602,7 +602,7 @@ spec:
         - name: REGION
           value: "secondary"
         - name: DB_HOST
-          value: "postgres-secondary.payu-prod.svc.cluster.local"
+          value: "postgres-secondary.payu.svc.cluster.local"
         resources:
           requests:
             memory: "512Mi"
@@ -627,7 +627,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres-secondary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: postgres
     role: secondary
@@ -672,7 +672,7 @@ spec:
               name: postgres-secret
               key: replication-password
         - name: POSTGRESQL_MASTER_HOST
-          value: "postgres-primary.payu-prod.svc.cluster.local"
+          value: "postgres-primary.payu.svc.cluster.local"
         - name: POSTGRESQL_MASTER_PORT
           value: "5432"
         volumeMounts:
@@ -724,7 +724,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: kafka-secondary
-  namespace: payu-prod
+  namespace: payu
   labels:
     region: secondary
 spec:
@@ -787,7 +787,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-secondary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: redis
     role: secondary
@@ -829,7 +829,7 @@ spec:
         - name: REDIS_REPLICATION_MODE
           value: "slave"
         - name: REDIS_MASTER_HOST
-          value: "redis-primary.payu-prod.svc.cluster.local"
+          value: "redis-primary.payu.svc.cluster.local"
         - name: REDIS_MASTER_PORT
           value: "6379"
         volumeMounts:
@@ -872,7 +872,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: redis-secondary-data
-  namespace: payu-prod
+  namespace: payu
 spec:
   accessModes:
   - ReadWriteOnce

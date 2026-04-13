@@ -31,7 +31,7 @@ spec:
   proxy:
     networking:
       # Configure proxy networking
-      namespace: payu-prod
+      namespace: payu
   policy:
     type: Istiod # Use Istiod for policy enforcement
   telemetry:
@@ -293,7 +293,7 @@ spec:
     - payu-sit
     - payu-uat
     - payu-preprod
-    - payu-prod
+    - payu
     # Infrastructure namespace (if needed for mesh-wide services)
     # - payu-infrastructure
 ---

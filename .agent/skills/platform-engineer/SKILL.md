@@ -11,7 +11,9 @@ description: **Master Skill**: Unified Platform, SRE & Release Engineering. Cove
 ---
 
 ## 📚 Reference Implementation Patterns
+
 For detailed patterns and historical context on PayU infrastructure, see:
+
 - [Infrastructure & Container Patterns](./references/INFRASTRUCTURE_PATTERNS.md)
 - [Deployment & Release Patterns](./references/DEPLOYMENT_PATTERNS.md)
 
@@ -57,12 +59,12 @@ spec:
                 - env: dev
                   cluster: https://dev.ocp.payu.internal
                   namespace: payu-dev
-                - env: staging
-                  cluster: https://staging.ocp.payu.internal
-                  namespace: payu-staging
+                - env: sit
+                  cluster: https://sit.ocp.payu.internal
+                  namespace: payu-sit
                 - env: prod
                   cluster: https://prod.ocp.payu.internal
-                  namespace: payu-prod
+                  namespace: payu
   template:
     metadata:
       name: "{{service}}-{{env}}"
@@ -99,15 +101,15 @@ spec:
   syncWindows:
     # Allow syncs only during business hours
     - kind: allow
-      schedule: "0 9 * * 1-5"  # Mon-Fri 9AM
+      schedule: "0 9 * * 1-5" # Mon-Fri 9AM
       duration: 8h
       applications:
         - "*-prod"
       namespaces:
-        - payu-prod
+        - payu
     # Deny weekend deployments
     - kind: deny
-      schedule: "0 0 * * 0,6"  # Sat-Sun
+      schedule: "0 0 * * 0,6" # Sat-Sun
       duration: 48h
       applications:
         - "*-prod"
@@ -138,7 +140,7 @@ spec:
     - group: apps
       kind: Deployment
       jsonPointers:
-        - /spec/replicas  # Allow HPA to manage
+        - /spec/replicas # Allow HPA to manage
 ```
 
 ---
@@ -233,7 +235,7 @@ spec:
         - name: SEVERITY
           value: "HIGH,CRITICAL"
         - name: EXIT_CODE
-          value: "1"  # Fail on vulnerabilities
+          value: "1" # Fail on vulnerabilities
 
     - name: build-push-image
       taskRef:
@@ -334,7 +336,7 @@ spec:
 
 ## 🏗️ Container Hardening (Podman/UBI9)
 
-PayU menggunakan **Podman** secara eksklusif karena arsitekturnya yang *daemonless* dan kemampuan eksekusi *rootless* secara native, yang jauh lebih aman dibanding Docker.
+PayU menggunakan **Podman** secara eksklusif karena arsitekturnya yang _daemonless_ dan kemampuan eksekusi _rootless_ secara native, yang jauh lebih aman dibanding Docker.
 
 ### 1. Production Containerfile Template
 
@@ -416,14 +418,14 @@ spec:
 
 ### 3. SELinux Guardrails (Red Hat Best Practices)
 
-Platform PayU mengandalkan SELinux untuk pertahanan *Enforced* secara default. Jangan pernah mematikan SELinux (`setenforce 0`) di lingkungan produksi.
+Platform PayU mengandalkan SELinux untuk pertahanan _Enforced_ secara default. Jangan pernah mematikan SELinux (`setenforce 0`) di lingkungan produksi.
 
 #### Volume Labeling (`:Z` vs `:z`)
 
 Saat mounting volume di Podman, label SELinux harus dikelola agar proses kontainer memiliki izin akses.
 
-* **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
-* **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
+- **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
+- **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
 
 ```bash
 # Contoh running rootless podman dengan SELinux labeling
@@ -454,22 +456,22 @@ Jika terjadi `Permission Denied` meskipun permission file di host (Linux) sudah 
 
 ## ⚓ Platform Port Standardization
 
- All PayU backend services follow the **8080 Standard** for internal container networking. This reduces configuration complexity and aligns with OpenShift/Kubernetes networking patterns.
+All PayU backend services follow the **8080 Standard** for internal container networking. This reduces configuration complexity and aligns with OpenShift/Kubernetes networking patterns.
 
 ### 1. Port Mapping Principles
 
-* **Internal Port**: Always **8080**. All applications (Spring Boot, Quarkus, FastAPI) must listen on this port inside the container.
-* **External Port**: Managed via `docker-compose` or `podman-compose` host mapping (e.g., `8001:8080`).
-* **Service Discovery**: Internal communication between containers uses the service name and port 8080 (e.g., `http://account-service:8080`).
+- **Internal Port**: Always **8080**. All applications (Spring Boot, Quarkus, FastAPI) must listen on this port inside the container.
+- **External Port**: Managed via `docker-compose` or `podman-compose` host mapping (e.g., `8001:8080`).
+- **Service Discovery**: Internal communication between containers uses the service name and port 8080 (e.g., `http://account-service:8080`).
 
 ### 2. Implementation Checklist
 
-* [x] **Dockerfile**: `EXPOSE 8080`.
-* [x] **Application Config**: `server.port=8080` (Spring) or `quarkus.http.port=8080`.
-* [x] **Health Check**: Endpoint must be matched to port 8080 (e.g., `http://localhost:8080/actuator/health`).
-* [x] **Gateway Routes**: All `ROUTES_URL` must point to port 8080 of the target service.
+- [x] **Dockerfile**: `EXPOSE 8080`.
+- [x] **Application Config**: `server.port=8080` (Spring) or `quarkus.http.port=8080`.
+- [x] **Health Check**: Endpoint must be matched to port 8080 (e.g., `http://localhost:8080/actuator/health`).
+- [x] **Gateway Routes**: All `ROUTES_URL` must point to port 8080 of the target service.
 
- ---
+  ***
 
 ### 4. OCI & Metadata Standards (Legacy Container Engineer)
 
@@ -503,17 +505,17 @@ LABEL id.payu.service.tier="1" \
 metadata:
   annotations:
     # Build Info
-    image.openshift.io/triggers: "[{'from':{'kind':'ImageStreamTag','name':'wallet-service:latest'},'fieldPath':'spec.template.spec.containers[?(@.name==\"app\")].image'}]"
-    
+    image.openshift.io/triggers: '[{''from'':{''kind'':''ImageStreamTag'',''name'':''wallet-service:latest''},''fieldPath'':''spec.template.spec.containers[?(@.name=="app")].image''}]'
+
     # Ownership & Contact
     start.payu.fajjjar.my.id/owner: "Wallet Team <wallet@payu.fajjjar.my.id>"
     start.payu.fajjjar.my.id/slack-channel: "#dev-wallet"
-    
+
     # Operational Metadata
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
     prometheus.io/path: "/actuator/prometheus"
-    
+
     # Documentation
     link.argocd.argoproj.io/external-link: "https://docs.payu.internal/services/wallet"
 ```
@@ -530,7 +532,7 @@ helm/
     ├── Chart.yaml
     ├── values.yaml
     ├── values-dev.yaml
-    ├── values-staging.yaml
+  ├── values-sit.yaml
     ├── values-prod.yaml
     ├── templates/
     │   ├── _helpers.tpl
@@ -662,7 +664,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: payu-prod
+  namespace: payu
 spec:
   mtls:
     mode: STRICT
@@ -671,7 +673,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: wallet-service-authz
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -680,8 +682,8 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/gateway-service
-              - cluster.local/ns/payu-prod/sa/transaction-service
+              - cluster.local/ns/payu/sa/gateway-service
+              - cluster.local/ns/payu/sa/transaction-service
       to:
         - operation:
             methods: ["GET", "POST", "PUT"]
@@ -819,9 +821,9 @@ RUN mvn clean package -DskipTests
 
 **Root Cause:**
 
-* Parallel builds (`-T 1C`) causing deadlock in certain services
-* Network issues accessing Maven Central during container build
-* Large dependency downloads timing out
+- Parallel builds (`-T 1C`) causing deadlock in certain services
+- Network issues accessing Maven Central during container build
+- Large dependency downloads timing out
 
 **Fix - Use Pre-Built JARs:**
 
@@ -917,12 +919,12 @@ cat .dockerignore | grep target
 
 ### Build Performance Optimization
 
-| Strategy | Build Time | Disk Space | Use When |
-|----------|------------|------------|----------|
-| **Full container build** | 10-30 min/service | High | Initial setup, CI/CD |
-| **Pre-built JARs** | 1-2 min/service | Medium | Development, fast iteration |
-| **Multi-stage with cache** | 5-10 min/service | Medium | Production, optimized |
-| **Runtime-only (local JAR)** | <1 min/service | Low | Debugging, testing |
+| Strategy                     | Build Time        | Disk Space | Use When                    |
+| ---------------------------- | ----------------- | ---------- | --------------------------- |
+| **Full container build**     | 10-30 min/service | High       | Initial setup, CI/CD        |
+| **Pre-built JARs**           | 1-2 min/service   | Medium     | Development, fast iteration |
+| **Multi-stage with cache**   | 5-10 min/service  | Medium     | Production, optimized       |
+| **Runtime-only (local JAR)** | <1 min/service    | Low        | Debugging, testing          |
 
 ### PayU Build Standards
 
@@ -934,23 +936,23 @@ cat .dockerignore | grep target
 
 ### Known Working Services
 
-| Service | Image | Build Method |
-|---------|-------|--------------|
-| account-service | ✅ payu-account-service:test | Pre-built JAR |
-| auth-service | ✅ payu-auth-service:test | Pre-built JAR |
-| wallet-service | ✅ payu-wallet-service:test | Pre-built JAR |
+| Service             | Image                            | Build Method  |
+| ------------------- | -------------------------------- | ------------- |
+| account-service     | ✅ payu-account-service:test     | Pre-built JAR |
+| auth-service        | ✅ payu-auth-service:test        | Pre-built JAR |
+| wallet-service      | ✅ payu-wallet-service:test      | Pre-built JAR |
 | transaction-service | ✅ payu-transaction-service:test | Pre-built JAR |
-| investment-service | ✅ payu-investment-service:test | Pre-built JAR |
-| gateway-service | ✅ payu-gateway-service:test | Pre-built JAR |
-| bi-fast-simulator | ✅ payu-bifast-simulator:test | Pre-built JAR |
-| dukcapil-simulator | ✅ payu-dukcapil-simulator:test | Full build |
-| qris-simulator | ✅ payu-qris-simulator:test | Pre-built JAR |
+| investment-service  | ✅ payu-investment-service:test  | Pre-built JAR |
+| gateway-service     | ✅ payu-gateway-service:test     | Pre-built JAR |
+| bi-fast-simulator   | ✅ payu-bifast-simulator:test    | Pre-built JAR |
+| dukcapil-simulator  | ✅ payu-dukcapil-simulator:test  | Full build    |
+| qris-simulator      | ✅ payu-qris-simulator:test      | Pre-built JAR |
 
 ### References
 
-* [Podman Documentation](https://docs.podman.io/)
-* [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-* [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
+- [Podman Documentation](https://docs.podman.io/)
+- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
+- [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
 
 ---
 
@@ -958,36 +960,36 @@ cat .dockerignore | grep target
 
 ### Security
 
-* [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
+- [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
 
-* [ ] Dijalankan menggunakan Podman rootless (UID 1001)
-* [ ] SecurityContext drops all capabilities
-* [ ] NetworkPolicies isolate service traffic
-* [ ] Secrets managed via Vault/SealedSecrets (not Git)
+- [ ] Dijalankan menggunakan Podman rootless (UID 1001)
+- [ ] SecurityContext drops all capabilities
+- [ ] NetworkPolicies isolate service traffic
+- [ ] Secrets managed via Vault/SealedSecrets (not Git)
 
 ### Delivery
 
-* [ ] Service deployed via ArgoCD (GitOps)
+- [ ] Service deployed via ArgoCD (GitOps)
 
-* [ ] Sync windows configured for production
-* [ ] Automated rollback enabled
-* [ ] Tekton pipeline includes security scanning
+- [ ] Sync windows configured for production
+- [ ] Automated rollback enabled
+- [ ] Tekton pipeline includes security scanning
 
 ### Observability
 
-* [ ] PodMonitor/ServiceMonitor configured
+- [ ] PodMonitor/ServiceMonitor configured
 
-* [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
-* [ ] Log aggregation configured (Loki)
-* [ ] eBPF probes enabled for network visibility
+- [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
+- [ ] Log aggregation configured (Loki)
+- [ ] eBPF probes enabled for network visibility
 
 ### Resilience
 
-* [ ] PodDisruptionBudget defined
+- [ ] PodDisruptionBudget defined
 
-* [ ] HPA configured with appropriate thresholds
-* [ ] Multi-region DR tested quarterly
-* [ ] Chaos testing run in staging automatically
+- [ ] HPA configured with appropriate thresholds
+- [ ] Multi-region DR tested quarterly
+- [ ] Chaos testing run in SIT automatically
 
 ---
 
@@ -995,29 +997,30 @@ cat .dockerignore | grep target
 
 ### Merged Skill References (Consolidated)
 
-| Category | Topic | File |
-|----------|-------|------|
+| Category     | Topic                                                  | File                                                                   |
+| ------------ | ------------------------------------------------------ | ---------------------------------------------------------------------- |
 | **Releases** | Feature Flags, Progressive Rollouts, Blue-Green/Canary | [release-engineering.md](./references/releases/release-engineering.md) |
-| **SRE** | Observability, SLO/SLI, Chaos Engineering, DR | [sre-practices.md](./references/sre/sre-practices.md) |
-| **K8s** | Kubernetes manifest generator patterns | [k8s-manifest-generator.md](./references/k8s-manifest-generator.md) |
+| **SRE**      | Observability, SLO/SLI, Chaos Engineering, DR          | [sre-practices.md](./references/sre/sre-practices.md)                  |
+| **K8s**      | Kubernetes manifest generator patterns                 | [k8s-manifest-generator.md](./references/k8s-manifest-generator.md)    |
 
 ### External Documentation
 
-* [OpenShift Documentation](https://docs.openshift.com/)
-* [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
-* [Tekton Documentation](https://tekton.dev/docs/)
-* [Helm Documentation](https://helm.sh/docs/)
-* [Istio Documentation](https://istio.io/latest/docs/)
-* [Strimzi Kafka Operator](https://strimzi.io/documentation/)
-* [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-* [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
-* [CNCF Landscape](https://landscape.cncf.io/)
-* [FinOps Foundation](https://www.finops.org/)
-* [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
-* [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
+- [OpenShift Documentation](https://docs.openshift.com/)
+- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
+- [Tekton Documentation](https://tekton.dev/docs/)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Istio Documentation](https://istio.io/latest/docs/)
+- [Strimzi Kafka Operator](https://strimzi.io/documentation/)
+- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
+- [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
+- [CNCF Landscape](https://landscape.cncf.io/)
+- [FinOps Foundation](https://www.finops.org/)
+- [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
+- [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
 
 ---
-*Last Updated: January 2026*
+
+_Last Updated: January 2026_
 
 ## 🧠 Lessons Learned (Session Log)
 
@@ -1026,6 +1029,7 @@ cat .dockerignore | grep target
 **Date**: February 26, 2026 | **Severity**: High | **Domain**: Platform
 
 UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
+
 - PaddleOCR, OpenCV, PyTorch — prebuilt wheels expect Debian/glibc paths
 - Missing shared libraries (`libGL`, `libglib`, `libgomp`) require different package names on RHEL
 - `site-packages` path differs (`/opt/app-root/lib/` vs `/usr/local/lib/`)
@@ -1038,11 +1042,11 @@ UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
 
 **Dual-ingress architecture** separating application traffic from platform traffic:
 
-| Traffic Type      | Ingress Controller | Domain Pattern | Example |
-| :--- | :--- | :--- | :--- |
-| **App (Prod)**    | Istio Ingress Gateway | `payu.fajjjar.my.id` + `*.payu.fajjjar.my.id` | `api.payu.fajjjar.my.id` |
-| **App (Dev)**     | Istio Ingress Gateway | `*.dev.payu.fajjjar.my.id` | `api.dev.payu.fajjjar.my.id` |
-| **OCP Platform**  | OCP Ingress Controller (HAProxy) | `*.apps.payu.ocp.fajjjar.my.id` | `console-openshift-console.apps.payu.ocp.fajjjar.my.id` |
+| Traffic Type     | Ingress Controller               | Domain Pattern                                | Example                                                 |
+| :--------------- | :------------------------------- | :-------------------------------------------- | :------------------------------------------------------ |
+| **App (Prod)**   | Istio Ingress Gateway            | `payu.fajjjar.my.id` + `*.payu.fajjjar.my.id` | `api.payu.fajjjar.my.id`                                |
+| **App (Dev)**    | Istio Ingress Gateway            | `*.dev.payu.fajjjar.my.id`                    | `api.dev.payu.fajjjar.my.id`                            |
+| **OCP Platform** | OCP Ingress Controller (HAProxy) | `*.apps.payu.ocp.fajjjar.my.id`               | `console-openshift-console.apps.payu.ocp.fajjjar.my.id` |
 
 **Rule**: ALL environments use Istio Ingress Gateway for application traffic. `*.apps.payu.ocp.*` is exclusively for OCP platform components.
 
@@ -1051,6 +1055,7 @@ UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
 **Date**: February 26, 2026 | **Severity**: High | **Domain**: DevOps
 
 When doing bulk domain replacement across a monorepo:
+
 1. **Order matters**: Replace most-specific patterns first (`staging-api.payu.id` before `payu.id`)
 2. **Preserve intentionally different domains**: `payu.local` (mesh trust), `payu.internal` (internal DNS)
 3. **Always verify with negative grep**: After replacement, confirm zero stray references remain
@@ -1060,6 +1065,7 @@ When doing bulk domain replacement across a monorepo:
 **Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Platform
 
 Never use `:latest` in compose files or Quadlet containers. Pin to specific versions:
+
 - Keycloak: `:26.1`
 - kafka-ui: `:v0.7.2`
 - timescaledb: `:2.17.2-pg16`
@@ -1071,6 +1077,7 @@ Never use `:latest` in compose files or Quadlet containers. Pin to specific vers
 **Date**: February 26, 2026 | **Severity**: High | **Domain**: Infrastructure
 
 When running both OCP Ingress Controller and Istio Ingress Gateway on the same cluster:
+
 - 3 router nodes with taint `node-role.kubernetes.io/router:NoSchedule`
 - Istio Ingress Gateway pods must explicitly opt-in with `nodeSelector` + `tolerations`.
 - Use separate LB VIPs with different ports (80/443 vs 8080/8443).
@@ -1088,6 +1095,7 @@ A root `.gitignore` entry `out/` matched all `port/out/` directories in the Hexa
 
 Local development with 22+ services rapidly consumes disk space.
 **Cleanup Ritual**:
+
 1. `podman system prune -f`
 2. `podman builder prune -f`
 3. `rm -rf ~/.m2/repository` (if corrupted)

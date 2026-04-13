@@ -196,7 +196,7 @@ public class TransferService {
 
 SERVICE=$1
 NEW_VERSION=$2
-NAMESPACE=${3:-payu-prod}
+NAMESPACE=${3:-payu}
 
 CURRENT_COLOR=$(oc get service $SERVICE -n $NAMESPACE -o jsonpath='{.spec.selector.color}')
 NEW_COLOR=$([[ "$CURRENT_COLOR" == "blue" ]] && echo "green" || echo "blue")
@@ -238,7 +238,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: wallet-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   hosts:
     - wallet-service
@@ -286,7 +286,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: wallet-service
-  namespace: payu-prod
+  namespace: payu
 spec:
   replicas: 10
   selector:
@@ -393,14 +393,14 @@ kind: Application
 metadata:
   name: wallet-service
 spec:
-  project: payu-prod
+  project: payu
   source:
     repoURL: https://github.com/payu/wallet-service
     targetRevision: HEAD
     path: k8s/overlays/prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: payu-prod
+    namespace: payu
   syncPolicy:
     automated:
       prune: true
@@ -420,19 +420,19 @@ spec:
 
 ```bash
 # Argo Rollouts - Instant rollback
-kubectl argo rollouts undo wallet-service -n payu-prod
+kubectl argo rollouts undo wallet-service -n payu
 
 # Argo Rollouts - Abort current rollout
-kubectl argo rollouts abort wallet-service -n payu-prod
+kubectl argo rollouts abort wallet-service -n payu
 
 # Standard Kubernetes rollback
-oc rollout undo deployment/wallet-service -n payu-prod
+oc rollout undo deployment/wallet-service -n payu
 
 # Rollback to specific revision
-oc rollout undo deployment/wallet-service -n payu-prod --to-revision=5
+oc rollout undo deployment/wallet-service -n payu --to-revision=5
 
 # Blue-Green instant switch
-oc patch service wallet-service -n payu-prod \
+oc patch service wallet-service -n payu \
   -p '{"spec":{"selector":{"color":"blue"}}}'
 ```
 
@@ -454,7 +454,7 @@ oc patch service wallet-service -n payu-prod \
 
 ```promql
 # Deployment frequency (deployments per day)
-increase(argocd_app_sync_total{dest_namespace="payu-prod"}[24h])
+increase(argocd_app_sync_total{dest_namespace="payu"}[24h])
 
 # Change failure rate
 sum(increase(argocd_app_sync_total{phase="Failed"}[30d]))

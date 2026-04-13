@@ -1,0 +1,37 @@
+# Auto-generate default-deny NetworkPolicy per namespace
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — NetworkPolicy default deny
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: generate-default-deny-networkpolicy
+  annotations:
+    policies.kyverno.io/title: Generate Default Deny NetworkPolicy
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Automatically generates a default-deny NetworkPolicy when a new
+      PayU namespace is created. Ensures zero-trust network posture.
+spec:
+  background: false
+  rules:
+    - name: generate-deny-all
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+              selector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
+      generate:
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        name: default-deny-all
+        namespace: "{{request.object.metadata.name}}"
+        synchronize: true
+        data:
+          spec:
+            podSelector: {}
+            policyTypes:
+              - Ingress
+              - Egress

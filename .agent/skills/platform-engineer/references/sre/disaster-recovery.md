@@ -68,7 +68,7 @@ aws route53 change-resource-record-sets \
   --change-batch file://dr-dns-failover.json
 
 # 3. Scale up DR workloads
-oc scale deployment --all --replicas=3 -n payu-prod
+oc scale deployment --all --replicas=3 -n payu
 
 # 4. Verify services healthy
 for svc in account wallet transaction; do

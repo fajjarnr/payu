@@ -24,7 +24,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: strict-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -90,7 +90,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: account-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -106,7 +106,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: auth-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -122,7 +122,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: transaction-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -138,7 +138,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: wallet-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -154,7 +154,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: billing-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -170,7 +170,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: notification-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -186,7 +186,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: kyc-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -202,7 +202,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: analytics-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -218,7 +218,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: gateway-service-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -234,7 +234,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: bi-fast-simulator-no-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -246,7 +246,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: dukcapil-simulator-no-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -258,7 +258,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: qris-simulator-no-mtls
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -272,7 +272,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: deny-all
-  namespace: payu-prod
+  namespace: payu
 spec: {}
   # Empty spec = default deny all traffic not explicitly allowed
 ---
@@ -281,7 +281,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: allow-same-namespace
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -291,14 +291,14 @@ spec:
     - from:
         - source:
             namespaces:
-              - payu-prod
+              - payu
 ---
 # AuthorizationPolicy: Allow from Istio System (control plane)
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: allow-istio-system
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -318,7 +318,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: allow-gateway
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -337,7 +337,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: account-service-policy
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -349,7 +349,7 @@ spec:
         - source:
             namespaces:
               - istio-system
-              - payu-prod
+              - payu
       to:
         - operation:
             methods:
@@ -363,7 +363,7 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/auth-service
+              - cluster.local/ns/payu/sa/auth-service
       to:
         - operation:
             methods:
@@ -376,7 +376,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: transaction-service-policy
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -399,7 +399,7 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/wallet-service
+              - cluster.local/ns/payu/sa/wallet-service
       to:
         - operation:
             methods:
@@ -410,7 +410,7 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/account-service
+              - cluster.local/ns/payu/sa/account-service
       to:
         - operation:
             methods:
@@ -423,7 +423,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: wallet-service-policy
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -446,7 +446,7 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/transaction-service
+              - cluster.local/ns/payu/sa/transaction-service
       to:
         - operation:
             methods:
@@ -460,7 +460,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: auth-service-policy
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -483,7 +483,7 @@ spec:
     - from:
         - source:
             namespaces:
-              - payu-prod
+              - payu
       to:
         - operation:
             methods:
@@ -497,7 +497,7 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: kyc-service-policy
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -520,7 +520,7 @@ spec:
     - from:
         - source:
             principals:
-              - cluster.local/ns/payu-prod/sa/account-service
+              - cluster.local/ns/payu/sa/account-service
       to:
         - operation:
             methods:
@@ -534,7 +534,7 @@ apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
 metadata:
   name: account-service-jwt
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -553,7 +553,7 @@ apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
 metadata:
   name: transaction-service-jwt
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:
@@ -572,7 +572,7 @@ apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
 metadata:
   name: wallet-service-jwt
-  namespace: payu-prod
+  namespace: payu
 spec:
   selector:
     matchLabels:

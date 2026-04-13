@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Optional package: apply separately from ../kustomization.yaml.
+# This avoids hostname conflicts with the legacy networking.istio.io Gateway.
+resources:
+  - gateway.yaml
+  - routes.yaml

@@ -14,7 +14,7 @@ spec:
     - name: service-name
       value: account-service
     - name: namespace
-      value: payu-prod
+      value: payu
     - name: rollback-to
       value: ""
     - name: create-backup

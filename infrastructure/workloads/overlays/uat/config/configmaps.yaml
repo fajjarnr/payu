@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uat-environment-config
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+data:
+  SPRING_PROFILES_ACTIVE: "container"
+  LOG_LEVEL: "INFO"
+  DB_HOST: "payu-postgres-primary.payu-uat.svc"
+  DB_PORT: "5432"
+  REDIS_HOST: "payu-datagrid.payu-uat.svc"
+  REDIS_PORT: "11222"
+  KAFKA_BOOTSTRAP_SERVERS: "payu-kafka-bootstrap.payu-uat.svc:9092"
+  KEYCLOAK_URL: "https://sso.uat.payu.fajjjar.my.id"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.payu-uat.svc:4317"

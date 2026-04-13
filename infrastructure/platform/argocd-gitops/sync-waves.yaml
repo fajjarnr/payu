@@ -190,14 +190,16 @@ spec:
     - https://github.com/payu-digital/payu-infrastructure.git
 
   destinations:
-    - namespace: 'payu-*'
+    - namespace: "payu"
+      server: https://kubernetes.default.svc
+    - namespace: "payu-*"
       server: https://kubernetes.default.svc
     - namespace: openshift-*
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: "*"
+      kind: "*"
 
   namespaceResourceWhitelist:
     - group: apps.openshift.io
@@ -218,13 +220,13 @@ spec:
       kind: HorizontalPodAutoscaler
     - group: autoscaling.k8s.io
       kind: VerticalPodAutoscaler
-    - group: ''
+    - group: ""
       kind: Service
-    - group: ''
+    - group: ""
       kind: ConfigMap
-    - group: ''
+    - group: ""
       kind: Secret
-    - group: ''
+    - group: ""
       kind: PersistentVolumeClaim
     - group: networking.k8s.io
       kind: Ingress
@@ -236,11 +238,11 @@ spec:
 
   syncWindows:
     - kind: allow
-      schedule: '0 22 * * *'
+      schedule: "0 22 * * *"
       duration: 2h
       applications:
-        - '*-prod'
-        - '*-production'
+        - "*-prod"
+        - "*-production"
       manualSync: true
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -257,12 +259,12 @@ spec:
     - https://github.com/payu-digital/payu-platform.git
 
   destinations:
-    - namespace: 'payu-pr-*'
+    - namespace: "payu-pr-*"
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: "*"
+      kind: "*"
 
   orphanedResources:
     warn: false

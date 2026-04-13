@@ -41,11 +41,11 @@ curl -s http://prometheus.payu.svc:9090/api/v1/query \
 
 ```bash
 # Get recent error logs
-oc logs -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1) \
+oc logs -n payu $(oc get pods -n payu -l app=account-service -o name | head -1) \
   --tail=500 | grep -i "error\|exception" | tail -50
 
 # Follow logs in real-time
-oc logs -f -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1)
+oc logs -f -n payu $(oc get pods -n payu -l app=account-service -o name | head -1)
 ```
 
 ### Step 2: Check for Common Issues
@@ -54,29 +54,29 @@ oc logs -f -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o nam
 
 ```bash
 # Check database connectivity
-oc exec -n payu-prod postgres-0 -- \
+oc exec -n payu postgres-0 -- \
   psql -U payu -c "SELECT count(*) FROM pg_stat_activity WHERE datname='payu_account';"
 
 # Check for connection pool exhaustion
-curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/hikaricp.connections.active | jq '.measurements[0].value'
+curl -s http://account-service.payu.svc:8080/actuator/metrics/hikaricp.connections.active | jq '.measurements[0].value'
 ```
 
 #### Out of Memory Issues
 
 ```bash
 # Check for OOMKilled events
-oc get events -n payu-prod --field-selector reason=OOMKilling --sort-by='.lastTimestamp'
+oc get events -n payu --field-selector reason=OOMKilling --sort-by='.lastTimestamp'
 
 # Check heap memory usage
-curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/jvm_memory_used_bytes{area="heap"} | jq '.measurements[0].value'
+curl -s http://account-service.payu.svc:8080/actuator/metrics/jvm_memory_used_bytes{area="heap"} | jq '.measurements[0].value'
 ```
 
 #### Thread Pool Exhaustion
 
 ```bash
 # Check thread pool usage
-curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/tomcat.threads.busy | jq '.measurements[0].value'
-curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/tomcat.threads.config.max | jq '.measurements[0].value'
+curl -s http://account-service.payu.svc:8080/actuator/metrics/tomcat.threads.busy | jq '.measurements[0].value'
+curl -s http://account-service.payu.svc:8080/actuator/metrics/tomcat.threads.config.max | jq '.measurements[0].value'
 ```
 
 ## Resolution Strategies
@@ -85,23 +85,23 @@ curl -s http://account-service.payu-prod.svc:8080/actuator/metrics/tomcat.thread
 
 ```bash
 # Rollout restart for affected service
-oc rollout restart dc/account-service -n payu-prod
+oc rollout restart dc/account-service -n payu
 
 # Monitor restart progress
-oc rollout status dc/account-service -n payu-prod
+oc rollout status dc/account-service -n payu
 
 # Watch logs during restart
-oc logs -f -n payu-prod $(oc get pods -n payu-prod -l app=account-service -o name | head -1)
+oc logs -f -n payu $(oc get pods -n payu -l app=account-service -o name | head -1)
 ```
 
 ### Strategy 2: Scale Up Resources
 
 ```bash
 # Increase replicas
-oc scale dc/account-service -n payu-prod --replicas=5
+oc scale dc/account-service -n payu --replicas=5
 
 # Increase resource limits
-oc set resources dc/account-service -n payu-prod \
+oc set resources dc/account-service -n payu \
   --limits=cpu=2000m,memory=4Gi \
   --requests=cpu=1000m,memory=2Gi
 ```
@@ -110,11 +110,11 @@ oc set resources dc/account-service -n payu-prod \
 
 ```bash
 # Increase connection pool size
-oc patch dc/account-service -n payu-prod --type=json \
+oc patch dc/account-service -n payu --type=json \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/env/1/value", "value": "50"}]'
 
 # Configure HikariCP settings
-oc set env dc/account-service -n payu-prod \
+oc set env dc/account-service -n payu \
   SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=50 \
   SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=10
 ```
@@ -123,12 +123,12 @@ oc set env dc/account-service -n payu-prod \
 
 ```bash
 # Enable circuit breaker
-oc set env dc/account-service -n payu-prod \
+oc set env dc/account-service -n payu \
   RESILIENCE4J_CIRCUITBREAKER_ENABLED=true \
   RESILIENCE4J_CIRCUITBREAKER_FAILURE_THRESHOLD=50
 
 # Enable retry with fallback
-oc set env dc/account-service -n payu-prod \
+oc set env dc/account-service -n payu \
   RESILIENCE4J_RETRY_ENABLED=true \
   RESILIENCE4J_RETRY_MAX_ATTEMPTS=3
 ```
@@ -149,7 +149,7 @@ watch -n 5 'curl -s http://prometheus.payu.svc:9090/api/v1/query \
 # Run comprehensive health checks
 for service in account-service transaction-service wallet-service; do
   echo "=== $service ==="
-  curl -f http://$service.payu-prod.svc.cluster.local:8080/actuator/health
+  curl -f http://$service.payu.svc.cluster.local:8080/actuator/health
   echo ""
 done
 ```

@@ -1,0 +1,52 @@
+# Falco Configuration for PayU
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.5.1
+# Deployed as DaemonSet via Helm (falcosecurity/falco chart)
+# This ConfigMap provides custom overrides on top of default Falco config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: runtime-security
+data:
+  falco.yaml: |
+    # Output channels
+    json_output: true
+    json_include_output_property: true
+    log_stderr: true
+    log_syslog: false
+    log_level: info
+
+    # gRPC server for Falco sidekick
+    grpc:
+      enabled: true
+      bind_address: "0.0.0.0:5060"
+      threadiness: 8
+
+    grpc_output:
+      enabled: true
+
+    # HTTP output → Prometheus metrics + Wazuh SIEM
+    http_output:
+      enabled: true
+      url: "http://falcosidekick.falco-system:2801/"
+
+    # Watch payu namespaces specifically
+    watch_config_files: true
+
+    # Syscall event source
+    syscall_event_drops:
+      threshold: 0.1
+      actions:
+        - log
+        - alert
+
+    # Priority filter — only alert on notice and above
+    priority: notice
+
+    # Buffered outputs for performance
+    buffered_outputs: true
+    outputs_queue:
+      capacity: 0

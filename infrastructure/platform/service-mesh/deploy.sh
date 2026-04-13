@@ -122,7 +122,7 @@ deploy_peer_authentication() {
 enable_sidecar_injection() {
     log_info "Enabling sidecar injection for namespaces..."
 
-    local namespaces=("payu-prod" "payu-preprod" "payu-uat" "payu-sit" "payu-dev")
+    local namespaces=("payu" "payu-preprod" "payu-uat" "payu-sit" "payu-dev")
 
     for ns in "${namespaces[@]}"; do
         if [ "$DRY_RUN" = "true" ]; then
@@ -163,13 +163,13 @@ print_next_steps() {
     echo ""
     echo "Next steps:"
     echo "1. Restart your deployments to inject sidecars:"
-    echo "   oc rollout restart deployment/account-service -n payu-prod"
-    echo "   oc rollout restart deployment/auth-service -n payu-prod"
-    echo "   oc rollout restart deployment/transaction-service -n payu-prod"
-    echo "   oc rollout restart deployment/wallet-service -n payu-prod"
+    echo "   oc rollout restart deployment/account-service -n payu"
+    echo "   oc rollout restart deployment/auth-service -n payu"
+    echo "   oc rollout restart deployment/transaction-service -n payu"
+    echo "   oc rollout restart deployment/wallet-service -n payu"
     echo ""
     echo "2. Verify sidecar injection:"
-    echo "   oc get pods -n payu-prod"
+    echo "   oc get pods -n payu"
     echo "   # Each pod should have 2/2 containers"
     echo ""
     echo "3. Access Kiali dashboard:"

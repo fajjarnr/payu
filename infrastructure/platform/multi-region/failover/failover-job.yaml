@@ -8,7 +8,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: dr-failover-primary-to-secondary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: dr-failover
     type: failover
@@ -36,7 +36,7 @@ spec:
           # Configuration
           PRIMARY_REGION="primary"
           SECONDARY_REGION="secondary"
-          NAMESPACE="payu-prod"
+          NAMESPACE="payu"
           SERVICES="account-service auth-service transaction-service wallet-service billing-service notification-service gateway-service kyc-service analytics-service compliance-service"
 
           # Function to log with timestamp
@@ -176,7 +176,7 @@ spec:
         - name: SECONDARY_REGION
           value: "secondary"
         - name: NAMESPACE
-          value: "payu-prod"
+          value: "payu"
         volumeMounts:
         - name: failover-scripts
           mountPath: /scripts
@@ -192,7 +192,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: dr-failback-secondary-to-primary
-  namespace: payu-prod
+  namespace: payu
   labels:
     app: dr-failover
     type: failback
@@ -217,7 +217,7 @@ spec:
           set -e
           set -o pipefail
 
-          NAMESPACE="payu-prod"
+          NAMESPACE="payu"
           PRIMARY_REGION="primary"
           SECONDARY_REGION="secondary"
           SERVICES="account-service auth-service transaction-service wallet-service billing-service notification-service gateway-service kyc-service analytics-service compliance-service"
@@ -247,7 +247,7 @@ spec:
           oc exec -n ${NAMESPACE} postgres-primary-0 -- psql -U payu -d payudb <<EOF
           DROP SUBSCRIPTION IF EXISTS payu_subscription_reverse;
           CREATE SUBSCRIPTION payu_subscription_reverse
-          CONNECTION 'host=postgres-secondary.payu-prod.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
+          CONNECTION 'host=postgres-secondary.payu.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
           PUBLICATION payu_publication
           WITH (create_slot = true);
           EOF
@@ -302,7 +302,7 @@ spec:
         - name: SECONDARY_REGION
           value: "secondary"
         - name: NAMESPACE
-          value: "payu-prod"
+          value: "payu"
 
 ---
 # ServiceAccount for failover operations
@@ -310,7 +310,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: failover-sa
-  namespace: payu-prod
+  namespace: payu
 
 ---
 # ClusterRole for failover operations
@@ -357,7 +357,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: failover-sa
-  namespace: payu-prod
+  namespace: payu
 
 ---
 # Failover scripts ConfigMap
@@ -365,7 +365,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: failover-scripts
-  namespace: payu-prod
+  namespace: payu
 data:
   pre-flight-check.sh: |
     #!/bin/bash
@@ -397,7 +397,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: failover-config
-  namespace: payu-prod
+  namespace: payu
 data:
   failover.yaml: |
     # Failover configuration

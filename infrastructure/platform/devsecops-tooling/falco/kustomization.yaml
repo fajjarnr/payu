@@ -1,0 +1,18 @@
+# Falco — Runtime Security Monitoring
+#
+# Referenced in: DEVSECOPS_ARCHITECTURE.md §4.5.1 (CWPP)
+# Purpose: Syscall-level threat detection, cloud-native runtime alerting engine
+# Integration: DaemonSet + Prometheus metrics + Wazuh SIEM forwarding
+#
+# Note: Using Falco (not Tetragon) due to OVN-Kubernetes conflict on OCP 4.20+
+#   (Tetragon requires Cilium CNI — see DEVSECOPS_ARCHITECTURE.md §4.5.1)
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: falco-system
+
+resources:
+  - namespace.yaml
+  - falco-config.yaml
+  - falco-rules.yaml

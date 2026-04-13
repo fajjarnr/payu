@@ -33,6 +33,7 @@ The CI/CD infrastructure consists of four main pipelines:
 **Location**: `/infrastructure/pipelines/build-pipeline.yaml`
 
 **Features**:
+
 - Multi-language support (Spring Boot, Quarkus, Python)
 - Parallel compilation with Maven `-T1C`
 - Container image building with Buildah
@@ -40,6 +41,7 @@ The CI/CD infrastructure consists of four main pipelines:
 - SBOM generation with Syft
 
 **Usage**:
+
 ```bash
 # Trigger build for account-service
 tkn pipeline start payu-build-pipeline \
@@ -55,6 +57,7 @@ tkn pipeline start payu-build-pipeline \
 **Location**: `/infrastructure/pipelines/test-pipeline.yaml`
 
 **Features**:
+
 - Parallel test execution (unit, integration, architecture)
 - Test coverage validation (80% threshold)
 - SonarQube quality gate integration
@@ -62,12 +65,14 @@ tkn pipeline start payu-build-pipeline \
 - Test report generation
 
 **Quality Gates**:
+
 - Minimum code coverage: 80%
 - SonarQube quality gate: Must pass
 - Critical vulnerabilities: 0 allowed
 - High vulnerabilities: Max 3 allowed
 
 **Usage**:
+
 ```bash
 # Run tests for account-service
 tkn pipeline start payu-test-pipeline \
@@ -83,6 +88,7 @@ tkn pipeline start payu-test-pipeline \
 **Location**: `/infrastructure/pipelines/deploy-pipeline.yaml`
 
 **Features**:
+
 - Blue-green deployment strategy
 - Automated health checks
 - HPA integration
@@ -90,12 +96,13 @@ tkn pipeline start payu-test-pipeline \
 - Automatic rollback on failure
 
 **Usage**:
+
 ```bash
-# Deploy to staging
+# Deploy to SIT
 tkn pipeline start payu-deploy-pipeline \
   -p service-name=account-service \
-  -p environment=staging \
-  -p namespace=payu-staging \
+  -p environment=sit \
+  -p namespace=payu-sit \
   -p deployment-strategy=bluegreen \
   -workspace manifest-dir=manifests-pvc
 ```
@@ -105,6 +112,7 @@ tkn pipeline start payu-deploy-pipeline \
 **Location**: `/infrastructure/pipelines/rollback-pipeline.yaml`
 
 **Features**:
+
 - Automatic backup creation
 - Deployment history tracking
 - Quick rollback to previous version
@@ -112,11 +120,12 @@ tkn pipeline start payu-deploy-pipeline \
 - Slack notification
 
 **Usage**:
+
 ```bash
 # Rollback production service
 tkn pipeline start payu-rollback-pipeline \
   -p service-name=account-service \
-  -p namespace=payu-prod \
+  -p namespace=payu \
   -p rollback-to= \
   -p notify-slack=true
 ```
@@ -127,28 +136,31 @@ tkn pipeline start payu-rollback-pipeline \
 
 ### ApplicationSet Configuration
 
-**Location**: `/infrastructure/openshift/argocd/applicationset.yaml`
+**Location**: `/infrastructure/platform/argocd-gitops/applicationsets/payu-applicationsets.yaml`
 
 **Features**:
+
 - Auto-discovery of services from Git
-- Multi-environment support (dev, staging, prod)
+- Multi-environment support (dev, sit, prod)
 - PR preview environments
 - Sync waves for dependency ordering
 
 **Structure**:
-```
+
+```text
 payu-services (ApplicationSet)
-├── account-service-staging
-├── transaction-service-staging
+├── account-service-sit
+├── transaction-service-sit
 ├── account-service-prod
 └── transaction-service-prod
 ```
 
 ### Sync Waves
 
-**Location**: `/infrastructure/openshift/argocd/sync-waves.yaml`
+**Location**: `/infrastructure/platform/argocd-gitops/sync-waves.yaml`
 
 **Deployment Order**:
+
 1. **Wave -10**: Infrastructure (Namespaces)
 2. **Wave -5**: Dependencies (PostgreSQL, Redis, Kafka)
 3. **Wave 0**: Configuration (ConfigMaps, Secrets)
@@ -160,9 +172,10 @@ payu-services (ApplicationSet)
 
 ### Drift Detection
 
-**Location**: `/infrastructure/openshift/argocd/drift-detection.yaml`
+**Location**: `/infrastructure/platform/argocd-gitops/drift-detection.yaml`
 
 **Features**:
+
 - Automated drift detection every 30 minutes
 - Alert on configuration drift
 - Automatic remediation suggestions
@@ -173,9 +186,10 @@ payu-services (ApplicationSet)
 
 ### Business Metrics Dashboard
 
-**Location**: `/infrastructure/openshift/monitoring/grafana/dashboards/business-metrics.json`
+**Location**: `/infrastructure/platform/observability/monitoring/grafana/dashboards/business-metrics.json`
 
 **Metrics Tracked**:
+
 - Total Payment Volume (TPV)
 - Transaction Count (24h)
 - Success Rate
@@ -186,9 +200,10 @@ payu-services (ApplicationSet)
 
 ### SLA Dashboard
 
-**Location**: `/infrastructure/openshift/monitoring/grafana/dashboards/sla-dashboard.json`
+**Location**: `/infrastructure/platform/observability/monitoring/grafana/dashboards/sla-dashboard.json`
 
 **Metrics Tracked**:
+
 - Overall Availability (30d)
 - Error Budget Remaining
 - MTTR (Mean Time To Recover)
@@ -199,9 +214,10 @@ payu-services (ApplicationSet)
 
 ### Cost Dashboard
 
-**Location**: `/infrastructure/openshift/monitoring/grafana/dashboards/cost-dashboard.json`
+**Location**: `/infrastructure/platform/observability/monitoring/grafana/dashboards/cost-dashboard.json`
 
 **Metrics Tracked**:
+
 - Total Monthly Cost Estimate
 - Cost per Service
 - Budget Utilization
@@ -213,9 +229,10 @@ payu-services (ApplicationSet)
 
 ### User Journey Dashboard
 
-**Location**: `/infrastructure/openshift/monitoring/grafana/dashboards/user-journey.json`
+**Location**: `/infrastructure/platform/observability/monitoring/grafana/dashboards/user-journey.json`
 
 **Metrics Tracked**:
+
 - Active Users (24h)
 - New Registrations (24h)
 - Session Duration (avg)
@@ -231,9 +248,10 @@ payu-services (ApplicationSet)
 
 ### SLO Alerts
 
-**Location**: `/infrastructure/openshift/monitoring/alerts/slo-alerts.yaml`
+**Location**: `/infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml`
 
 **SLO Targets**:
+
 - **Availability**: 99.9% (43.2 minutes/month downtime)
 - **Latency**: p95 < 1s
 - **Freshness**: Critical data < 5 minutes
@@ -241,6 +259,7 @@ payu-services (ApplicationSet)
 - **API Success Rate**: 99.9%
 
 **Alerts**:
+
 - `SLOAvailabilityBreached` - Critical
 - `ErrorBudgetExhausted` - Critical (< 10% remaining)
 - `SLOLatencyBreached` - Warning
@@ -249,9 +268,10 @@ payu-services (ApplicationSet)
 
 ### PagerDuty Integration
 
-**Location**: `/infrastructure/openshift/monitoring/alerts/pagerduty-integration.yaml`
+**Location**: `/infrastructure/platform/observability/monitoring/alerts/pagerduty-integration.yaml`
 
 **Service Keys**:
+
 - **Critical Incidents**: 24/7 on-call
 - **SLO Breaches**: 24/7 on-call
 - **Platform Team**: 24/7 on-call
@@ -262,10 +282,12 @@ payu-services (ApplicationSet)
 **Location**: `/docs/operations/runbooks/`
 
 **Available Runbooks**:
+
 1. [SLO Availability Breach](/docs/operations/runbooks/slo-availability.md)
 2. [Error Budget Exhaustion](/docs/operations/runbooks/error-budget.md)
 
 **Runbook Structure**:
+
 - Alert Information
 - Initial Diagnosis
 - Troubleshooting Steps
@@ -283,12 +305,14 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/logging/log-correlation.yaml`
 
 **Features**:
+
 - Trace ID injection for all logs
 - Structured JSON logging
 - Log aggregation with Vector
 - Enrichment with service metadata
 
 **Log Format**:
+
 ```json
 {
   "timestamp": "2026-01-24T10:30:45.123Z",
@@ -307,6 +331,7 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/logging/log-alerts.yaml`
 
 **Alerts**:
+
 - `CriticalErrorRateSpike` - Error rate > 5%
 - `AuthenticationFailureSpike` - Security alert
 - `AuthorizationFailureSpike` - Security alert
@@ -320,6 +345,7 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/logging/log-alerts.yaml`
 
 **Features**:
+
 - Automated export every 6 hours
 - Critical logs only
 - Compressed with gzip
@@ -335,11 +361,13 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/vpa.yaml`
 
 **Services with VPA**:
+
 - account-service
 - transaction-service
 - billing-service
 
 **Resource Limits**:
+
 - CPU: 100m - 4000m
 - Memory: 256Mi - 8Gi
 
@@ -348,11 +376,13 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/hpa-enhanced.yaml`
 
 **Scaling Metrics**:
+
 - CPU utilization (70-80%)
 - Memory utilization (80%)
 - Request rate (custom metrics)
 
 **Replica Ranges**:
+
 - Account Service: 2-10 replicas
 - Transaction Service: 3-15 replicas
 - Gateway Service: 4-20 replicas
@@ -362,6 +392,7 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/cluster-autoscaler.yaml`
 
 **Configuration**:
+
 - Min Nodes: 3
 - Max Nodes: 20
 - Scale Down Delay: 10m
@@ -372,12 +403,14 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/cost-allocation.yaml`
 
 **Cost Centers**:
+
 - Core Banking: CC-1001
 - Platform: CC-2001
 - Development: CC-3001
 - Data Science: CC-4001
 
 **Monthly Reports**:
+
 - Generated on the 1st of each month
 - Exported to S3
 - Emailed to finance and platform teams
@@ -387,12 +420,14 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/budget-alerts.yaml`
 
 **Budget Thresholds**:
+
 - Monthly Budget: $15,000
 - Warning at 80%: $12,000
 - Warning at 90%: $13,500
 - Critical at 100%: $15,000
 
 **Alerts**:
+
 - `BudgetExceeded` - Warning
 - `BudgetWarning80` - Info
 - `BudgetWarning90` - Warning
@@ -403,6 +438,7 @@ payu-services (ApplicationSet)
 **Location**: `/infrastructure/openshift/cost-optimization/idle-resource-detector.yaml`
 
 **Detection Criteria**:
+
 - CPU utilization < 20%
 - Memory utilization < 30%
 - No traffic in 24h
@@ -440,18 +476,18 @@ EOF
 
 ```bash
 # Install OpenShift GitOps Operator
-oc apply -f infrastructure/openshift/argocd/
+oc apply -k infrastructure/platform/argocd-gitops/bootstrap
 
 # Create App of Apps
-oc apply -f infrastructure/openshift/argocd/app-of-apps.yaml
+oc apply -f infrastructure/platform/argocd-gitops/app-of-apps.yaml
 ```
 
 ### 3. Deploy Monitoring Stack
 
 ```bash
 # Apply monitoring configurations
-oc apply -f infrastructure/openshift/monitoring/alerts/
-oc apply -f infrastructure/openshift/monitoring/grafana/dashboards/
+oc apply -f infrastructure/platform/observability/monitoring/alerts/
+oc apply -f infrastructure/platform/observability/monitoring/grafana/dashboards/
 ```
 
 ### 4. Configure Cost Optimization
@@ -508,21 +544,25 @@ oc create secret generic sonarqube-credentials \
 ## Maintenance
 
 ### Daily Tasks
+
 - Review Grafana dashboards for anomalies
 - Check alert history in Alertmanager
 - Monitor cost dashboard for budget utilization
 
 ### Weekly Tasks
+
 - Review idle resource detector output
 - Optimize resource allocation based on VPA recommendations
 - Review incident reports and update runbooks
 
 ### Monthly Tasks
+
 - Generate cost reports and distribute to stakeholders
 - Review SLO compliance and adjust targets if needed
 - Conduct post-incident reviews for major incidents
 
 ### Quarterly Tasks
+
 - Review and update budget thresholds
 - Conduct capacity planning for next quarter
 - Review and optimize CI/CD pipeline performance
@@ -534,6 +574,7 @@ oc create secret generic sonarqube-credentials \
 ### Pipeline Failures
 
 **Build Pipeline**:
+
 ```bash
 # Check pipeline logs
 tkn pipeline logs payu-build-pipeline -f
@@ -543,17 +584,19 @@ oc get pvc -n payu-cicd tekton-workspace-pvc
 ```
 
 **Deploy Pipeline**:
+
 ```bash
 # Check deployment status
-oc rollout status dc/account-service -n payu-prod
+oc rollout status dc/account-service -n payu
 
 # Check deployment logs
-oc logs -f -n payu-prod $(oc get pods -n payu-prod -l app=payu -o name | head -1)
+oc logs -f -n payu $(oc get pods -n payu -l app=payu -o name | head -1)
 ```
 
 ### Alert Issues
 
 **False Positives**:
+
 ```bash
 # Check Prometheus query in UI
 oc port-forward -n openshift-monitoring svc/prometheus-operated 9090:9090
@@ -563,6 +606,7 @@ curl 'http://localhost:9090/api/v1/query?query=up{job=~"payu-.*"}'
 ```
 
 **Missing Alerts**:
+
 ```bash
 # Check Alertmanager configuration
 oc get configmap alertmanager-main -n openshift-monitoring

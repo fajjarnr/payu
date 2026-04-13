@@ -214,8 +214,8 @@ oc login --server=primary-cluster.example.com
 oc apply -f infrastructure/openshift/multi-region/primary/deployment.yaml
 
 # Verify
-oc get pods -n payu-prod
-oc get statefulset -n payu-prod
+oc get pods -n payu
+oc get statefulset -n payu
 ```
 
 #### 2. Deploy Secondary Region
@@ -228,7 +228,7 @@ oc login --server=secondary-cluster.example.com
 oc apply -f infrastructure/openshift/multi-region/secondary/deployment.yaml
 
 # Verify all pods are scaled to 0
-oc get deployments -n payu-prod
+oc get deployments -n payu
 ```
 
 #### 3. Configure Replication
@@ -239,10 +239,10 @@ oc apply -f infrastructure/openshift/multi-region/replication/postgres-replicati
 oc apply -f infrastructure/openshift/multi-region/replication/kafka-mirroring.yaml
 
 # Verify PostgreSQL publication
-oc exec -n payu-prod postgres-primary-0 -- psql -U payu -d payudb -c "\dRp+"
+oc exec -n payu postgres-primary-0 -- psql -U payu -d payudb -c "\dRp+"
 
 # Verify Kafka MirrorMaker2
-oc get kafkamirrormaker2 -n payu-prod
+oc get kafkamirrormaker2 -n payu
 ```
 
 #### 4. Deploy Monitoring
@@ -252,7 +252,7 @@ oc get kafkamirrormaker2 -n payu-prod
 oc apply -f infrastructure/openshift/multi-region/monitoring/replication-lag-service-monitor.yaml
 
 # Verify ServiceMonitors
-oc get servicemonitor -n payu-prod
+oc get servicemonitor -n payu
 ```
 
 #### 5. Prepare Failover
@@ -262,7 +262,7 @@ oc get servicemonitor -n payu-prod
 oc apply -f infrastructure/openshift/multi-region/failover/failover-job.yaml
 
 # Verify permissions
-oc auth can-i scale deployment --as=system:serviceaccount:payu-prod:failover-sa
+oc auth can-i scale deployment --as=system:serviceaccount:payu:failover-sa
 ```
 
 ### Ongoing Operations
@@ -271,11 +271,11 @@ oc auth can-i scale deployment --as=system:serviceaccount:payu-prod:failover-sa
 
 ```bash
 # Check PostgreSQL replication lag
-oc exec -n payu-prod postgres-secondary-0 -- psql -U payu -d payudb -c \
+oc exec -n payu postgres-secondary-0 -- psql -U payu -d payudb -c \
   "SELECT slot_name, pg_wal_lag_diff(pg_current_wal_lsn(), replay_lsn) as lag_bytes FROM pg_stat_replication;"
 
 # Check Kafka consumer lag
-oc exec -n payu-prod kafka-secondary-kafka-0 -- kafka-consumer-groups.sh \
+oc exec -n payu kafka-secondary-kafka-0 -- kafka-consumer-groups.sh \
   --bootstrap-server localhost:9092 --describe --group mirrormaker2-cluster
 ```
 
@@ -283,13 +283,13 @@ oc exec -n payu-prod kafka-secondary-kafka-0 -- kafka-consumer-groups.sh \
 
 ```bash
 # 1. Run failover job
-oc create job dr-failover-test --from=cronjob/dr-failover-primary-to-secondary -n payu-prod
+oc create job dr-failover-test --from=cronjob/dr-failover-primary-to-secondary -n payu
 
 # 2. Monitor job progress
-oc logs -f job/dr-failover-test -n payu-prod
+oc logs -f job/dr-failover-test -n payu
 
 # 3. Verify services are running on secondary
-oc get pods -n payu-prod -l region=secondary
+oc get pods -n payu -l region=secondary
 
 # 4. Test application endpoints
 curl https://secondary-gateway.example.com/actuator/health
@@ -299,13 +299,13 @@ curl https://secondary-gateway.example.com/actuator/health
 
 ```bash
 # 1. Run failback job
-oc create job dr-failback-test --from=cronjob/dr-failback-secondary-to-primary -n payu-prod
+oc create job dr-failback-test --from=cronjob/dr-failback-secondary-to-primary -n payu
 
 # 2. Monitor progress
-oc logs -f job/dr-failback-test -n payu-prod
+oc logs -f job/dr-failback-test -n payu
 
 # 3. Verify services are back on primary
-oc get pods -n payu-prod -l region=primary
+oc get pods -n payu -l region=primary
 ```
 
 ## Network Configuration
@@ -351,7 +351,7 @@ Configure external DNS with health-based routing:
 3. **Execution**
    ```bash
    oc create job dr-failover-$(date +%s) \
-     --from=cronjob/dr-failover-primary-to-secondary -n payu-prod
+     --from=cronjob/dr-failover-primary-to-secondary -n payu
    ```
 
 4. **Verification**
@@ -391,7 +391,7 @@ Configure external DNS with health-based routing:
 2. **Execution**
    ```bash
    oc create job dr-failback-$(date +%s) \
-     --from=cronjob/dr-failback-secondary-to-primary -n payu-prod
+     --from=cronjob/dr-failback-secondary-to-primary -n payu
    ```
 
 3. **Verification**
@@ -423,11 +423,11 @@ Estimated cost savings: **~70%** compared to active-active
 
 ```bash
 # Check replication status
-oc exec -n payu-prod postgres-secondary-0 -- psql -U payu -d payudb -c \
+oc exec -n payu postgres-secondary-0 -- psql -U payu -d payudb -c \
   "SELECT * FROM pg_stat_subscription;"
 
 # Restart subscription
-oc exec -n payu-prod postgres-secondary-0 -- psql -U payu -d payudb -c \
+oc exec -n payu postgres-secondary-0 -- psql -U payu -d payudb -c \
   "ALTER SUBSCRIPTION payu_subscription RESTART;"
 ```
 
@@ -435,11 +435,11 @@ oc exec -n payu-prod postgres-secondary-0 -- psql -U payu -d payudb -c \
 
 ```bash
 # Check primary is accepting connections
-oc exec -n payu-prod postgres-primary-0 -- psql -U payu -d payudb -c \
+oc exec -n payu postgres-primary-0 -- psql -U payu -d payudb -c \
   "SELECT * FROM pg_stat_replication;"
 
 # Verify replication slot exists
-oc exec -n payu-prod postgres-primary-0 -- psql -U payu -d payudb -c \
+oc exec -n payu postgres-primary-0 -- psql -U payu -d payudb -c \
   "SELECT * FROM pg_replication_slots;"
 ```
 
@@ -449,24 +449,24 @@ oc exec -n payu-prod postgres-primary-0 -- psql -U payu -d payudb -c \
 
 ```bash
 # Check connector status
-oc get kafkacconnector -n payu-prod
+oc get kafkacconnector -n payu
 
 # Check MirrorMaker2 logs
-oc logs -n payu-prod kafka-mirror-primary-to-secondary-0 -c mirrormaker2
+oc logs -n payu kafka-mirror-primary-to-secondary-0 -c mirrormaker2
 
 # Restart MirrorMaker2
-oc delete pod -n payu-prod -l strimzi.io/kind=KafkaMirrorMaker2
+oc delete pod -n payu -l strimzi.io/kind=KafkaMirrorMaker2
 ```
 
 **Problem**: High consumer lag
 
 ```bash
 # Check consumer group lag
-oc exec -n payu-prod kafka-secondary-kafka-0 -- kafka-consumer-groups.sh \
+oc exec -n payu kafka-secondary-kafka-0 -- kafka-consumer-groups.sh \
   --bootstrap-server localhost:9092 --describe --group mirrormaker2-cluster
 
 # Check topic sizes
-oc exec -n payu-prod kafka-secondary-kafka-0 -- kafka-topics.sh \
+oc exec -n payu kafka-secondary-kafka-0 -- kafka-topics.sh \
   --bootstrap-server localhost:9092 --describe
 ```
 
@@ -476,13 +476,13 @@ oc exec -n payu-prod kafka-secondary-kafka-0 -- kafka-topics.sh \
 
 ```bash
 # Check job status
-oc describe job/dr-failover-xxx -n payu-prod
+oc describe job/dr-failover-xxx -n payu
 
 # Check pod logs
-oc logs -f job/dr-failover-xxx -n payu-prod
+oc logs -f job/dr-failover-xxx -n payu
 
 # Manual steps if automated fails
-oc scale deployment/account-service --replicas=3 -n payu-prod
+oc scale deployment/account-service --replicas=3 -n payu
 ```
 
 ## Security Considerations

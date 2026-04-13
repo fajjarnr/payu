@@ -1,0 +1,55 @@
+# LitmusChaos Engine for PayU SIT Environment
+# Runs as part of SIT promotion gate (payu-dev → payu-sit)
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-sit-chaos
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  appinfo:
+    appns: payu-sit
+    applabel: app.kubernetes.io/part-of=payu
+    appkind: deployment
+  chaosServiceAccount: litmus-admin
+  monitoring: true
+  jobCleanUpPolicy: retain
+  experiments:
+    - name: pod-delete
+      spec:
+        probe:
+          - name: healthcheck
+            type: httpProbe
+            mode: Continuous
+            httpProbe/inputs:
+              url: "http://gateway-service.payu-sit:8000/q/health"
+              insecureSkipVerify: false
+              method:
+                get:
+                  criteria: ==
+                  responseCode: "200"
+            runProperties:
+              probeTimeout: 5s
+              interval: 5s
+              retry: 3
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"
+            - name: CHAOS_INTERVAL
+              value: "10"
+            - name: FORCE
+              value: "false"
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "60"
+            - name: NETWORK_LATENCY
+              value: "200"
+            - name: NETWORK_INTERFACE
+              value: "eth0"

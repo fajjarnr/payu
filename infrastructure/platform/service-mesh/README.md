@@ -54,12 +54,13 @@ This directory contains the complete Service Mesh (Istio) configuration for the 
 
 ## Files
 
-| File | Description |
-|------|-------------|
-| `control-plane.yaml` | ServiceMeshControlPlane, ServiceMeshMemberRoll, HPA, PDB |
-| `gateway.yaml` | Ingress Gateway, VirtualServices, AuthorizationPolicy, JWT |
-| `destination-rules.yaml` | DestinationRules, traffic policies, load balancing |
-| `peer-authentication.yaml` | PeerAuthentication, AuthorizationPolicies, RequestAuthN |
+| File                       | Description                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `control-plane.yaml`       | ServiceMeshControlPlane, ServiceMeshMemberRoll, HPA, PDB                      |
+| `gateway.yaml`             | Ingress Gateway, VirtualServices, AuthorizationPolicy, JWT                    |
+| `gateway-api/`             | Optional Kubernetes Gateway API package that reuses the Istio ingress service |
+| `destination-rules.yaml`   | DestinationRules, traffic policies, load balancing                            |
+| `peer-authentication.yaml` | PeerAuthentication, AuthorizationPolicies, RequestAuthN                       |
 
 ## Prerequisites
 
@@ -103,6 +104,7 @@ oc get pods -n istio-system
 ```
 
 Expected output:
+
 ```
 NAME                          READY   STATUS    RESTARTS   AGE
 istiod-xxx                    1/1     Running   0          2m
@@ -119,6 +121,25 @@ oc apply -f infrastructure/openshift/service-mesh/gateway.yaml
 # Verify gateway is ready
 oc get pods -n istio-system -l app=istio-ingressgateway
 ```
+
+### Optional: Deploy Kubernetes Gateway API
+
+Use this package if you want Gateway API resources (`Gateway`, `HTTPRoute`) instead of the legacy Istio `Gateway` and `VirtualService` manifests.
+
+Do not apply both packages on the same hostnames at the same time.
+
+The package reuses the existing `istio-ingressgateway` Service that is already provisioned by the Service Mesh control plane.
+
+```bash
+# Install Gateway API CRDs if the cluster does not have them yet
+kubectl get crd gateways.gateway.networking.k8s.io >/dev/null 2>&1 || \
+  kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.4.0" | kubectl apply -f -
+
+# Apply the optional Gateway API package
+oc apply -k infrastructure/platform/service-mesh/gateway-api
+```
+
+This package keeps the PayU application gateway pattern intact: external traffic enters through the Gateway API listener, then routes into `gateway-service` inside each environment namespace.
 
 ### Step 4: Deploy Destination Rules
 
@@ -144,7 +165,7 @@ oc get peerauthentication -A
 
 ```bash
 # Enable automatic sidecar injection for namespaces
-oc label namespace payu-prod maistra.io/member-of=istio-system
+oc label namespace payu maistra.io/member-of=istio-system
 oc label namespace payu-uat maistra.io/member-of=istio-system
 oc label namespace payu-sit maistra.io/member-of=istio-system
 oc label namespace payu-dev maistra.io/member-of=istio-system
@@ -157,17 +178,18 @@ oc get namespace -L maistra.io/member-of
 
 ```bash
 # Restart deployments to inject Envoy sidecar
-oc rollout restart deployment/account-service -n payu-prod
-oc rollout restart deployment/auth-service -n payu-prod
-oc rollout restart deployment/transaction-service -n payu-prod
-oc rollout restart deployment/wallet-service -n payu-prod
-oc rollout restart deployment/gateway-service -n payu-prod
+oc rollout restart deployment/account-service -n payu
+oc rollout restart deployment/auth-service -n payu
+oc rollout restart deployment/transaction-service -n payu
+oc rollout restart deployment/wallet-service -n payu
+oc rollout restart deployment/gateway-service -n payu
 
 # Verify sidecar injection (2 containers per pod)
-oc get pods -n payu-prod
+oc get pods -n payu
 ```
 
 Expected output:
+
 ```
 account-service-xxx-xxx   2/2     Running   0          1m
 auth-service-xxx-xxx      2/2     Running   0          1m
@@ -177,29 +199,29 @@ auth-service-xxx-xxx      2/2     Running   0          1m
 
 ### Control Plane Settings
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| **Version** | v2.6 | Red Hat OpenShift Service Mesh version |
-| **mTLS Mode** | STRICT | Enforce mTLS for production |
-| **Tracing** | Jaeger | 10% sampling rate |
-| **Replicas** | 2 | High availability |
+| Setting       | Value  | Description                            |
+| ------------- | ------ | -------------------------------------- |
+| **Version**   | v2.6   | Red Hat OpenShift Service Mesh version |
+| **mTLS Mode** | STRICT | Enforce mTLS for production            |
+| **Tracing**   | Jaeger | 10% sampling rate                      |
+| **Replicas**  | 2      | High availability                      |
 
 ### Gateway Settings
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| **Type** | LoadBalancer | External access |
-| **HTTP** | Port 80 → Redirect to HTTPS |
-| **HTTPS** | Port 443 → Main ingress |
-| **TLS Mode** | SIMPLE | Server-side TLS |
+| Setting      | Value                       | Description     |
+| ------------ | --------------------------- | --------------- |
+| **Type**     | LoadBalancer                | External access |
+| **HTTP**     | Port 80 → Redirect to HTTPS |
+| **HTTPS**    | Port 443 → Main ingress     |
+| **TLS Mode** | SIMPLE                      | Server-side TLS |
 
 ### mTLS Modes
 
-| Mode | Environment | Description |
-|------|-------------|-------------|
-| **STRICT** | prod, uat, preprod | Only mTLS connections allowed |
-| **PERMISSIVE** | dev, sit | Allow both mTLS and plain text |
-| **DISABLE** | External services | No mTLS (simulators) |
+| Mode           | Environment        | Description                    |
+| -------------- | ------------------ | ------------------------------ |
+| **STRICT**     | prod, uat, preprod | Only mTLS connections allowed  |
+| **PERMISSIVE** | dev, sit           | Allow both mTLS and plain text |
+| **DISABLE**    | External services  | No mTLS (simulators)           |
 
 ## Verification
 
@@ -207,14 +229,14 @@ auth-service-xxx-xxx      2/2     Running   0          1m
 
 ```bash
 # Check peer authentication
-oc get peerauthentication -n payu-prod
+oc get peerauthentication -n payu
 
 # Check mTLS between services
-oc exec -it account-service-xxx -n payu-prod -c istio-proxy \
+oc exec -it account-service-xxx -n payu -c istio-proxy \
   -- openssl s_client -connect auth-service:8082 -alpn istio
 
 # View proxy configuration
-oc exec -it account-service-xxx -n payu-prod -c istio-proxy \
+oc exec -it account-service-xxx -n payu -c istio-proxy \
   -- pilot-agent request GET config
 ```
 
@@ -235,7 +257,7 @@ curl -k https://api.payu.local/health
 
 ```bash
 # Check metrics
-oc exec -it account-service-xxx -n payu-prod -c istio-proxy \
+oc exec -it account-service-xxx -n payu -c istio-proxy \
   -- curl -s localhost:15090/stats/prometheus | grep istio
 
 # View traces in Jaeger
@@ -270,7 +292,7 @@ oc apply -f https://raw.githubusercontent.com/istio/istio/release-1.23/manifests
 
 ```bash
 # Check if namespace is labeled
-oc get namespace payu-prod -L maistra.io/member-of
+oc get namespace payu -L maistra.io/member-of
 
 # Check webhook configuration
 oc get mutatingwebhookconfigurations | grep istio
@@ -283,13 +305,13 @@ istioctl kube-inject -f deployment.yaml | oc apply -f -
 
 ```bash
 # Check peer authentication mode
-oc get peerauthentication -n payu-prod -o yaml
+oc get peerauthentication -n payu -o yaml
 
 # Check destination rule TLS mode
-oc get destinationrules -n payu-prod -o yaml
+oc get destinationrules -n payu -o yaml
 
 # View proxy logs
-oc logs -f account-service-xxx -n payu-prod -c istio-proxy
+oc logs -f account-service-xxx -n payu -c istio-proxy
 ```
 
 #### Issue: Gateway Not Routing
@@ -321,11 +343,11 @@ spec:
         - destination:
             host: account-service
             subset: v1
-          weight: 90  # 90% to version 1
+          weight: 90 # 90% to version 1
         - destination:
             host: account-service
             subset: v2
-          weight: 10  # 10% to version 2 (canary)
+          weight: 10 # 10% to version 2 (canary)
 ```
 
 ### Fault Injection

@@ -1,0 +1,35 @@
+# Mutate containers to set readOnlyRootFilesystem: true
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — ReadOnly root filesystem policy
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: set-readonly-root-filesystem
+  annotations:
+    policies.kyverno.io/title: Set ReadOnly Root Filesystem
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Mutates all containers in PayU namespaces to set
+      readOnlyRootFilesystem: true for defense-in-depth.
+spec:
+  background: false
+  rules:
+    - name: set-readonly-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - "payu-dev"
+                - "payu-sit"
+                - "payu-uat"
+                - "payu-preprod"
+                - "payu"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - (name): "*"
+                securityContext:
+                  readOnlyRootFilesystem: true

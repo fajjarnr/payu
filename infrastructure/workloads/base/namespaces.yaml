@@ -33,7 +33,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: payu-prod
+  name: payu
   labels:
     app.kubernetes.io/part-of: payu
     environment: prod

@@ -1,0 +1,21 @@
+# Cosign — Container Image Signing (Sigstore)
+#
+# Referenced in: DEVSECOPS_ARCHITECTURE.md §4.2.3
+# Purpose: Sign every container image with keyless signing via OIDC provider
+# Integration: ACS/Kyverno admission controller verifies signatures before pod runs
+#
+# Implementation Status: STUB — Awaiting cluster OIDC provider setup
+# Prerequisites:
+#   - OpenShift OAuth configured as OIDC issuer
+#   - Rekor transparency log endpoint accessible
+#   - ACS admission policy for signature verification
+#
+# Usage:
+#   Tekton task: tasks/cosign-task.yaml (already implemented)
+#   This folder: cluster-wide signing policy & verification config
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - cosign-policy.yaml

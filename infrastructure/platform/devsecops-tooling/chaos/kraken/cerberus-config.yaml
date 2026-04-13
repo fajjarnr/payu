@@ -1,0 +1,37 @@
+# Cerberus — Cluster Health Guardian for Kraken Chaos
+# Provides go/no-go signal before each chaos scenario progresses
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cerberus-config
+  namespace: payu-preprod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+data:
+  config.yaml: |
+    cerberus:
+      distribution: openshift
+      kubeconfig_path: /root/.kube/config
+      port: 8080
+      watch_url_routes:
+        - https://console-openshift-console.apps.payu.example.com
+      watch_namespaces:
+        - payu-preprod
+        - openshift-etcd
+        - openshift-apiserver
+        - openshift-kube-apiserver
+      watch_master_schedulable:
+        enabled: true
+      watch_nodes:
+        enabled: true
+      cerberus_publish_status: true
+      inspect_components: true
+      prometheus_url: ""
+      prometheus_bearer_token: ""
+      slack_integration:
+        slack_api_token: ""
+        slack_channel: "#payu-chaos-alerts"
+      iterations: -1
+      sleep_time: 30
+      daemon_mode: true

@@ -1,0 +1,18 @@
+# Chaos Engineering for PayU
+#
+# Referenced in: DEVSECOPS_ARCHITECTURE.md §4.3.3
+#
+# Strategy:
+#   payu-sit    → LitmusChaos (app-level): pod kill, network latency, disk fill
+#   payu-preprod → Kraken + Cerberus (infra-level): etcd kill, node crash, API server disruption
+#
+# LitmusChaos experiments run as part of SIT promotion gate
+# Kraken experiments run as part of preprod promotion gate
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - litmus/
+  - kraken/

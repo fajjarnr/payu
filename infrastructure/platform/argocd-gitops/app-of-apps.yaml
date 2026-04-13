@@ -14,7 +14,7 @@ spec:
   source:
     repoURL: https://github.com/payu-digital/payu-platform.git
     targetRevision: main
-    path: infrastructure/openshift/argocd/apps
+    path: infrastructure/platform/argocd-gitops/bootstrap
   destination:
     namespace: openshift-gitops
     server: https://kubernetes.default.svc
@@ -156,17 +156,17 @@ data:
     g, platform-team, role:admin
 
     # Backend team - access to backend services only
-    p, role:backend-dev, applications, get, payu-staging/*, allow
-    p, role:backend-dev, applications, create, payu-staging/*, allow
-    p, role:backend-dev, applications, update, payu-staging/*, allow
-    p, role:backend-dev, applications, sync, payu-staging/*, allow
-    p, role:backend-dev, applications, override, payu-staging/*, allow
-    p, role:backend-dev, applications, deploy, delete, payu-staging/*, deny
+    p, role:backend-dev, applications, get, payu-sit/*, allow
+    p, role:backend-dev, applications, create, payu-sit/*, allow
+    p, role:backend-dev, applications, update, payu-sit/*, allow
+    p, role:backend-dev, applications, sync, payu-sit/*, allow
+    p, role:backend-dev, applications, override, payu-sit/*, allow
+    p, role:backend-dev, applications, deploy, delete, payu-sit/*, deny
     g, backend-team, role:backend-dev
 
     # QA team - read-only access to all environments
     p, role:qa-dev, applications, get, */*, allow
-    p, role:qa-dev, applications, sync, payu-staging/*, allow
+    p, role:qa-dev, applications, sync, payu-sit/*, allow
     g, qa-team, role:qa-dev
 
     # DevOps team - full access

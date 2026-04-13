@@ -46,10 +46,10 @@ Partner Apps
 
 ## Files
 
-| File | Description |
-| :--- | :--- |
-| `apimanager.yaml` | 3scale APIManager Custom Resource (Operator-managed) |
-| `apicast-policy.yaml` | Custom APIcast policy for PayU header forwarding |
+| File                  | Description                                          |
+| :-------------------- | :--------------------------------------------------- |
+| `apimanager.yaml`     | 3scale APIManager Custom Resource (Operator-managed) |
+| `apicast-policy.yaml` | Custom APIcast policy for PayU header forwarding     |
 
 ## Installation Steps
 
@@ -119,7 +119,8 @@ oc apply -f apicast-policy.yaml -n payu-api-management
 ### 5. Configure PayU Gateway as Backend
 
 In the 3scale Admin Portal:
-1. Create a **Backend** pointing to `http://gateway-service.payu-gateway.svc:8080`
+
+1. Create a **Backend** pointing to `http://gateway-service.payu.svc.cluster.local:8080` for prod, or switch the namespace to `payu-dev`, `payu-sit`, `payu-uat`, or `payu-preprod` for non-prod.
 2. Create a **Product** (e.g., "PayU Payment API")
 3. Configure **Application Plans** per partner tier (Basic, Premium, Enterprise)
 4. Set rate limits per plan
@@ -142,4 +143,5 @@ In the 3scale Admin Portal:
 - Never expose the 3scale Admin Portal externally in production
 
 ---
-*Template created: 2026-03-02 | See ADR-0014 for decision context*
+
+Template created: 2026-03-02 | See ADR-0014 for decision context.

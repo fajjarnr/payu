@@ -1,0 +1,18 @@
+# Kraken — Infrastructure-Level Chaos (payu-preprod)
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.3.3
+#
+# Experiments (OCP-specific):
+#   - Kill etcd pod
+#   - Disrupt openshift-apiserver
+#   - Node crash/reboot
+#   - Cluster network partition
+#
+# Integrated with Cerberus as cluster health guardian:
+#   Cerberus provides go/no-go signal for experiment progression.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - kraken-config.yaml
+  - cerberus-config.yaml

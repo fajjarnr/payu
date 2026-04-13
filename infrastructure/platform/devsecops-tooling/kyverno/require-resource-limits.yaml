@@ -1,0 +1,41 @@
+# Require resource requests/limits on all containers
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Resource requests/limits policy
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Require Resource Requests and Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      All containers in PayU namespaces must specify CPU and memory
+      requests and limits for capacity planning and cost optimization.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - "payu-dev"
+                - "payu-sit"
+                - "payu-uat"
+                - "payu-preprod"
+                - "payu"
+      validate:
+        message: "All containers must have CPU and memory requests/limits defined."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    memory: "?*"
+                    cpu: "?*"
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"

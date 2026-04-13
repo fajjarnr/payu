@@ -326,12 +326,12 @@ C4Container
 
 #### 3.2.1 Account Service
 
-| Attribute            | Value                                                 |
-| -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                            |
-| **Database**         | PostgreSQL                                            |
-| **Port**             | 8001                                                  |
-| **Responsibilities** | User accounts, multi-pocket, profile management       |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8001                                            |
+| **Responsibilities** | User accounts, multi-pocket, profile management |
 
 ```text
 account-service/
@@ -372,12 +372,12 @@ account-service/
 
 #### 3.2.2 Auth Service
 
-| Attribute            | Value                                                 |
-| -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak                  |
-| **Database**         | PostgreSQL                                            |
-| **Port**             | 8002                                                  |
-| **Responsibilities** | Authentication, MFA, OAuth2, session management       |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak            |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8002                                            |
+| **Responsibilities** | Authentication, MFA, OAuth2, session management |
 
 **Security Features:**
 
@@ -452,14 +452,14 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.6 Notification Service
 
-| Attribute            | Value                                                 |
-| -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                         |
-| **Database**         | PostgreSQL                                            |
-| **Cache**            | Red Hat Data Grid (RESP mode)                         |
-| **Messaging**        | AMQ Broker (AMQP 1.0)                                 |
-| **Port**             | 8006                                                  |
-| **Responsibilities** | Push notifications, SMS, Email, in-app messages       |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                   |
+| **Database**         | PostgreSQL                                      |
+| **Cache**            | Red Hat Data Grid (RESP mode)                   |
+| **Messaging**        | AMQ Broker (AMQP 1.0)                           |
+| **Port**             | 8006                                            |
+| **Responsibilities** | Push notifications, SMS, Email, in-app messages |
 
 **Notification Channels:**
 
@@ -665,12 +665,12 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.23 Integration Service
 
-| Attribute            | Value                                                 |
-| -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                            |
-| **Database**         | PostgreSQL                                            |
-| **Port**             | 8101                                                  |
-| **Responsibilities** | External system integration, adapter management       |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8101                                            |
+| **Responsibilities** | External system integration, adapter management |
 
 ---
 
@@ -1310,7 +1310,7 @@ payu-helm/
 │   └── ...
 ├── values/
 │   ├── production.yaml
-│   ├── staging.yaml
+│   ├── sit.yaml
 │   └── development.yaml
 └── Chart.yaml
 ```
@@ -1916,7 +1916,7 @@ Features:
 | **SIT**     | Integration testing  | Synthetic    | `payu-sit`          |
 | **UAT**     | Business validation  | Anonymized   | `payu-uat`          |
 | **PREPROD** | Production rehearsal | Prod copy    | `payu-preprod`      |
-| **PROD**    | Live production      | Real         | `payu-prod`         |
+| **PROD**    | Live production      | Real         | `payu`              |
 
 ### 14.2 Infrastructure Decisions
 
