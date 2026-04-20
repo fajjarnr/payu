@@ -20,12 +20,9 @@ spec:
           - resources:
               kinds:
                 - Pod
-              namespaces:
-                - "payu-dev"
-                - "payu-sit"
-                - "payu-uat"
-                - "payu-preprod"
-                - "payu"
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
       mutate:
         patchStrategicMerge:
           spec:

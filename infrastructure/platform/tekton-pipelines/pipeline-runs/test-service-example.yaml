@@ -14,7 +14,7 @@ spec:
     - name: service-name
       value: account-service
     - name: git-url
-      value: https://github.com/payu-digital/payu-platform.git
+      value: https://github.com/fajjarnr/payu.git
     - name: git-revision
       value: main
     - name: service-type

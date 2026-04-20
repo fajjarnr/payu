@@ -1,0 +1,60 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: litmus-chaos-gate
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Apply LitmusChaos resources and wait for the ChaosEngine verdict to pass."
+  params:
+    - name: KUSTOMIZE_DIR
+      type: string
+      description: "Path to the Litmus Kustomize overlay"
+      default: infrastructure/platform/devsecops-tooling/chaos/litmus
+    - name: NAMESPACE
+      type: string
+      description: "Namespace where the ChaosEngine is created"
+      default: payu-sit
+    - name: CHAOSENGINE_NAME
+      type: string
+      description: "ChaosEngine resource name"
+      default: payu-sit-chaos
+    - name: TIMEOUT_SECONDS
+      type: string
+      description: "Maximum wait time in seconds"
+      default: "900"
+  workspaces:
+    - name: source
+      description: "Workspace containing infrastructure manifests"
+  steps:
+    - name: execute
+      image: quay.io/openshift/origin-cli:4.20
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        oc apply -k "$(workspaces.source.path)/$(params.KUSTOMIZE_DIR)"
+
+        deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
+        while [ "$(date +%s)" -lt "$deadline" ]; do
+          verdict=$(oc get chaosengine "$(params.CHAOSENGINE_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.experiments[0].verdict}' 2>/dev/null || true)
+          engine_status=$(oc get chaosengine "$(params.CHAOSENGINE_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.engineStatus}' 2>/dev/null || true)
+
+          echo "[*] engineStatus=${engine_status:-Unknown} verdict=${verdict:-Unknown}"
+          if [ "$verdict" = "Pass" ]; then
+            echo "[✓] Litmus chaos gate passed"
+            exit 0
+          fi
+
+          if [ "$verdict" = "Fail" ] || [ "$engine_status" = "stopped" ]; then
+            echo "[✗] Litmus chaos gate failed"
+            exit 1
+          fi
+
+          sleep 10
+        done
+
+        echo "[✗] Timed out waiting for Litmus verdict"
+        exit 1

@@ -1,51 +1,55 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: payu-services
+  name: payu-environments
   namespace: openshift-gitops
   labels:
-    app: payu
-    type: applicationset
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gitops
 spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
   generators:
-    # Git Directory Generator - Auto-discover workload overlays
-    - git:
-        repoURL: https://github.com/payu-digital/payu-platform.git
-        revision: main
-        directories:
-          - path: infrastructure/workloads/overlays/*
-        values:
-          environment: sit
-          namespace: payu-sit
-
-    # Cluster Generator - Multi-environment support
-    - clusters:
-        selector:
-          matchLabels:
-            argocd.argoproj.io/secret-type: cluster
-        values:
-          environment: prod
-          namespace: payu
+    - list:
+        elements:
+          - name: dev
+            path: infrastructure/workloads/overlays/dev
+            namespace: payu-dev
+            project: payu-dev
+          - name: sit
+            path: infrastructure/workloads/overlays/sit
+            namespace: payu-sit
+            project: payu-sit
+          - name: uat
+            path: infrastructure/workloads/overlays/uat
+            namespace: payu-uat
+            project: payu-uat
+          - name: preprod
+            path: infrastructure/workloads/overlays/preprod
+            namespace: payu-preprod
+            project: payu-preprod
+          - name: prod
+            path: infrastructure/workloads/overlays/prod
+            namespace: payu
+            project: payu
 
   template:
     metadata:
-      name: "{{path.basename}}-{{values.environment}}"
+      name: "payu-{{.name}}"
       labels:
-        app: payu
-        service: "{{path.basename}}"
-        environment: "{{values.environment}}"
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: environment
+        payu.io/environment: "{{.name}}"
     spec:
-      project: "{{values.namespace}}"
+      project: "{{.project}}"
       source:
-        repoURL: https://github.com/payu-digital/payu-platform.git
+        repoURL: https://github.com/fajjarnr/payu.git
         targetRevision: main
-        path: infrastructure/workloads/overlays/{{path.basename}}
-        # Uses Kustomize (auto-detected from kustomization.yaml)
-
+        path: "{{.path}}"
       destination:
-        namespace: "{{values.namespace}}"
-        server: "{{server}}"
-
+        namespace: "{{.namespace}}"
+        server: https://kubernetes.default.svc
       syncPolicy:
         automated:
           prune: true
@@ -55,6 +59,7 @@ spec:
           - CreateNamespace=true
           - PrunePropagationPolicy=foreground
           - PruneLast=true
+          - RespectIgnoreDifferences=true
         retry:
           limit: 5
           backoff:
@@ -63,21 +68,16 @@ spec:
             maxDuration: 3m
         managedNamespaceMetadata:
           labels:
-            app: payu
-            environment: "{{values.environment}}"
+            app.kubernetes.io/part-of: payu
+            payu.io/environment: "{{.name}}"
+            payu.io/environment-class: stable
           annotations:
             argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-
-      # Sync Waves for dependency ordering
       ignoreDifferences:
         - group: apps
           kind: Deployment
           jqPathExpressions:
             - .spec.template.metadata.annotations
-
-      # Health checks
-      healthCheck:
-        timeout: 300
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -85,30 +85,30 @@ metadata:
   name: payu-monitoring
   namespace: openshift-gitops
   labels:
-    app: payu
-    type: monitoring
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: observability
 spec:
   generators:
-    - git:
-        repoURL: https://github.com/payu-digital/payu-platform.git
-        revision: main
-        directories:
-          - path: infrastructure/platform/observability
+    - list:
+        elements:
+          - name: observability
+            path: infrastructure/platform/observability
+            namespace: openshift-monitoring
 
   template:
     metadata:
-      name: "monitoring-{{path.basename}}"
+      name: "monitoring-{{name}}"
       labels:
-        app: payu
-        component: monitoring
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: observability
     spec:
       project: payu-monitoring
       source:
-        repoURL: https://github.com/payu-digital/payu-platform.git
+        repoURL: https://github.com/fajjarnr/payu.git
         targetRevision: main
         path: "{{path}}"
       destination:
-        namespace: openshift-monitoring
+        namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
         automated:
@@ -120,18 +120,77 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
+  name: payu-devsecops-platform
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: security-platform
+spec:
+  generators:
+    - list:
+        elements:
+          - name: kyverno
+            path: infrastructure/platform/devsecops-tooling/kyverno
+            namespace: payu-security
+          - name: falco
+            path: infrastructure/platform/devsecops-tooling/falco
+            namespace: payu-security
+          - name: wazuh
+            path: infrastructure/platform/devsecops-tooling/wazuh
+            namespace: payu-security
+          - name: vault
+            path: infrastructure/platform/devsecops-tooling/vault
+            namespace: payu-dev
+          - name: acs
+            path: infrastructure/platform/devsecops-tooling/acs
+            namespace: stackrox
+          - name: cosign
+            path: infrastructure/platform/devsecops-tooling/cosign
+            namespace: payu-cicd
+          - name: compliance-operator
+            path: infrastructure/platform/devsecops-tooling/compliance-operator
+            namespace: openshift-compliance
+
+  template:
+    metadata:
+      name: "platform-{{name}}"
+      labels:
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: security-platform
+    spec:
+      project: payu-platform
+      source:
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{path}}"
+      destination:
+        namespace: "{{namespace}}"
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - SkipDryRunOnMissingResource=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
   name: payu-pr-previews
   namespace: openshift-gitops
   labels:
-    app: payu
-    type: pr-preview
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: pr-preview
 spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
   generators:
-    # Pull Request Generator
     - pullRequest:
         github:
-          owner: payu-digital
-          repo: payu-platform
+          owner: fajjarnr
+          repo: payu
           tokenRef:
             secretName: github-token
             key: token
@@ -139,33 +198,31 @@ spec:
 
   template:
     metadata:
-      name: "pr-{{number}}-{{head_short_sha}}"
+      name: "payu-preview-pr-{{.number}}"
       labels:
-        app: payu
-        type: pr-preview
-        pr-number: "{{number}}"
-        commit-sha: "{{head_short_sha}}"
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: pr-preview
+        payu.io/pr-number: "{{.number}}"
+        payu.io/commit-sha: "{{.head_short_sha}}"
       annotations:
         argocd.argoproj.io/preview-environment: "true"
-        pr-url: "{{url}}"
-        branch-name: "{{branch}}"
+        pr-url: "{{.url}}"
+        branch-name: "{{.branch}}"
     spec:
       project: payu-preview
       source:
-        repoURL: https://github.com/payu-digital/payu-platform.git
-        targetRevision: "{{head_sha}}"
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: "{{.head_sha}}"
         path: infrastructure/workloads/overlays/dev
-        helm:
-          parameters:
-            - name: image.tag
-              value: "pr-{{number}}"
-            - name: namespace
-              value: "payu-pr-{{number}}"
-
+        kustomize:
+          namespace: "payu-dev-pr-{{.number}}"
+          commonLabels:
+            app.kubernetes.io/part-of: payu
+            payu.io/environment: preview
+            payu.io/pr-number: "{{.number}}"
       destination:
-        namespace: "payu-pr-{{number}}"
+        namespace: "payu-dev-pr-{{.number}}"
         server: https://kubernetes.default.svc
-
       syncPolicy:
         automated:
           prune: true
@@ -174,11 +231,11 @@ spec:
           - CreateNamespace=true
         managedNamespaceMetadata:
           labels:
-            type: pr-preview
-            pr-number: "{{number}}"
+            app.kubernetes.io/part-of: payu
+            payu.io/environment: preview
+            payu.io/environment-class: ephemeral
+            payu.io/pr-number: "{{.number}}"
             auto-cleanup: "true"
-
-      # Prune resources when PR is closed
       ignoreDifferences:
         - group: argoproj.io
           kind: Application

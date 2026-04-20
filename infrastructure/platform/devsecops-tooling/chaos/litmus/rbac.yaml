@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: litmus-admin
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: litmus-admin
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "configmaps", "secrets", "services"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "patch", "update", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["chaosengines", "chaosexperiments", "chaosresults"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: litmus-admin
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+subjects:
+  - kind: ServiceAccount
+    name: litmus-admin
+    namespace: payu-sit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: litmus-admin

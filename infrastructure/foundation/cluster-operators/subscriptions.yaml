@@ -74,16 +74,16 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 6. Vault Secrets Operator (HashiCorp)
+# 6. External Secrets Operator
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: vault-secrets-operator
+  name: openshift-external-secrets-operator
   namespace: openshift-operators
 spec:
-  channel: stable
-  name: vault-secrets-operator
-  source: certified-operators
+  channel: stable-v1
+  name: openshift-external-secrets-operator
+  source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
 
@@ -123,7 +123,7 @@ metadata:
   name: 3scale-operator
   namespace: openshift-operators
 spec:
-  channel: threescale-2.13
+  channel: threescale-2.16
   name: 3scale-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace

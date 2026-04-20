@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Operator Subscriptions (cluster-scoped)
-# Apply with: oc apply -k infrastructure/openshift/operators/
+# Apply with: oc apply -k infrastructure/foundation/cluster-operators/
 # Requires: cluster-admin or operator installation privileges
 # Note: Most operators are installed in openshift-operators (global).
 #        RHBK (Red Hat Build of Keycloak) is namespace-scoped in payu-dev.

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — DevSecOps Bootstrap Alignment (2026-04-20)
+
+- Aligned GitOps bootstrap manifests under `infrastructure/platform/argocd-gitops/` with the active repository URL, added a root Kustomize entrypoint, and normalized preview namespace handling to `payu-dev-pr-*`.
+- Completed Tekton DevSecOps gate wiring under `infrastructure/platform/tekton-pipelines/` with executable tasks for ArgoCD sync wait, Semgrep, TruffleHog, Syft, Grype, ZAP baseline, Schemathesis, k6, Litmus, and Kraken; fixed the Kraken gate job-name mismatch.
+- Reworked secret-management alignment to use External Secrets Operator semantics in Vault/RHACS manifests and switched the foundational operator subscription from Vault Secrets Operator to `openshift-external-secrets-operator`.
+- Added missing operator bootstrap namespaces/operator groups for GitOps and RHACS foundations, plus compliance/Vault/ACS Kustomize entrypoints required by the DevSecOps architecture.
+- Cleaned platform skill guidance and stale example manifests so repo documentation now matches the environment-based overlay model and current GitOps/Tekton flow.
+
 ### Fixed — CRUD Validation & Multi-Service Bug Fixes (2026-04-09)
 
 #### Wallet-Service (tag: `crudfix6` → `authfix2`)

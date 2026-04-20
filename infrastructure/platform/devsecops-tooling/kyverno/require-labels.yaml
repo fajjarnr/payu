@@ -12,7 +12,7 @@ metadata:
       Ensures all Deployments in PayU namespaces have required labels
       for cost allocation, ownership tracking, and observability.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   background: true
   rules:
     - name: check-required-labels
@@ -21,12 +21,9 @@ spec:
           - resources:
               kinds:
                 - Deployment
-              namespaces:
-                - "payu-dev"
-                - "payu-sit"
-                - "payu-uat"
-                - "payu-preprod"
-                - "payu"
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
       validate:
         message: >-
           Deployments in PayU namespaces must have labels:

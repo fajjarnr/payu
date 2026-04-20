@@ -12,10 +12,10 @@ data:
   config.yaml: |
     cerberus:
       distribution: openshift
-      kubeconfig_path: /root/.kube/config
       port: 8080
       watch_url_routes:
-        - https://console-openshift-console.apps.payu.example.com
+        - https://console-openshift-console.apps.payu.ocp.fajjjar.my.id
+        - https://oauth-openshift.apps.payu.ocp.fajjjar.my.id
       watch_namespaces:
         - payu-preprod
         - openshift-etcd

@@ -1,0 +1,49 @@
+apiVersion: compliance.openshift.io/v1alpha1
+kind: ScanSetting
+metadata:
+  name: payu-weekly
+  namespace: openshift-compliance
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: compliance
+spec:
+  schedule: "0 3 * * 1"
+  roles:
+    - master
+    - worker
+  strictNodeScan: true
+  debug: false
+  autoApplyRemediations: false
+  rawResultStorage:
+    rotation: 5
+    size: 20Gi
+    storageClassName: gp3-csi
+    pvAccessModes:
+      - ReadWriteOnce
+  showNotApplicable: false
+---
+apiVersion: compliance.openshift.io/v1alpha1
+kind: ScanSettingBinding
+metadata:
+  name: payu-weekly-binding
+  namespace: openshift-compliance
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: compliance
+profiles:
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: Profile
+    name: ocp4-cis
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: Profile
+    name: ocp4-cis-node
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: Profile
+    name: ocp4-moderate
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: Profile
+    name: ocp4-moderate-node
+settingsRef:
+  apiGroup: compliance.openshift.io/v1alpha1
+  kind: ScanSetting
+  name: payu-weekly

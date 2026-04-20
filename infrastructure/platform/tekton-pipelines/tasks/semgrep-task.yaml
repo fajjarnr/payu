@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: semgrep
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run Semgrep OSS across service sources as the primary multi-language SAST gate."
+  params:
+    - name: CONTEXT_DIR
+      type: string
+      description: "Directory to scan"
+      default: "."
+    - name: RULESET
+      type: string
+      description: "Semgrep ruleset"
+      default: "auto"
+  workspaces:
+    - name: source
+      description: "Workspace containing source code"
+  steps:
+    - name: scan
+      image: docker.io/returntocorp/semgrep:1.75.0
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+      script: |
+        #!/bin/sh
+        set -eu
+        semgrep scan \
+          --config "$(params.RULESET)" \
+          --error \
+          --exclude node_modules \
+          --exclude target \
+          --exclude dist \
+          "$(workspaces.source.path)/$(params.CONTEXT_DIR)"

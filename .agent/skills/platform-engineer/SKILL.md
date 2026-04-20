@@ -2,7 +2,7 @@
 name: platform-engineer
 version: 3.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-04-20
 author: payu-platform-team
 requires: []
 tags: [devops, k8s, openshift, infrastructure, gitops, argocd, tekton, helm, sre, reliability, releases, feature-flags]
@@ -36,111 +36,120 @@ You are the **Lead Platform Engineer** for the **PayU Platform**. You design and
 ### 1. ApplicationSet for Multi-Environment
 
 ```yaml
-# argocd/applicationsets/payu-services.yaml
+# infrastructure/platform/argocd-gitops/applicationsets/payu-applicationsets.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: payu-services
-  namespace: argocd
+  name: payu-environments
+  namespace: openshift-gitops
 spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
   generators:
-    - matrix:
-        generators:
-          - list:
-              elements:
-                - service: wallet-service
-                  path: backend/wallet-service
-                - service: transaction-service
-                  path: backend/transaction-service
-                - service: account-service
-                  path: backend/account-service
-          - list:
-              elements:
-                - env: dev
-                  cluster: https://dev.ocp.payu.internal
-                  namespace: payu-dev
-                - env: sit
-                  cluster: https://sit.ocp.payu.internal
-                  namespace: payu-sit
-                - env: prod
-                  cluster: https://prod.ocp.payu.internal
-                  namespace: payu
+    - list:
+        elements:
+          - name: dev
+            path: infrastructure/workloads/overlays/dev
+            namespace: payu-dev
+            project: payu-dev
+          - name: sit
+            path: infrastructure/workloads/overlays/sit
+            namespace: payu-sit
+            project: payu-sit
+          - name: uat
+            path: infrastructure/workloads/overlays/uat
+            namespace: payu-uat
+            project: payu-uat
+          - name: preprod
+            path: infrastructure/workloads/overlays/preprod
+            namespace: payu-preprod
+            project: payu-preprod
+          - name: prod
+            path: infrastructure/workloads/overlays/prod
+            namespace: payu
+            project: payu
   template:
     metadata:
-      name: "{{service}}-{{env}}"
+      name: "payu-{{.name}}"
     spec:
-      project: payu
+      project: "{{.project}}"
       source:
-        repoURL: https://github.com/payu/platform
-        targetRevision: "{{env}}"
-        path: "infrastructure/helm/{{path}}"
-        helm:
-          valueFiles:
-            - values-{{env}}.yaml
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{.path}}"
       destination:
-        server: "{{cluster}}"
-        namespace: "{{namespace}}"
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+          - RespectIgnoreDifferences=true
 ```
+
+Repo alignment note:
+- Stable environments are generated from `infrastructure/workloads/overlays/{dev,sit,uat,preprod,prod}`.
+- Preview environments must override namespace to `payu-dev-pr-*` because the dev overlay hardcodes `payu-dev`.
 
 ### 2. Sync Windows for Production Safety
 
 ```yaml
-# argocd/appproject-payu.yaml
+# infrastructure/platform/argocd-gitops/projects/payu-projects.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: payu
-  namespace: argocd
+  namespace: openshift-gitops
 spec:
+  sourceRepos:
+    - https://github.com/fajjarnr/payu.git
+  destinations:
+    - namespace: payu
+      server: https://kubernetes.default.svc
   syncWindows:
-    # Allow syncs only during business hours
     - kind: allow
-      schedule: "0 9 * * 1-5" # Mon-Fri 9AM
+      schedule: "0 1 * * 1-5"
       duration: 8h
       applications:
-        - "*-prod"
+        - payu-prod
       namespaces:
         - payu
-    # Deny weekend deployments
     - kind: deny
-      schedule: "0 0 * * 0,6" # Sat-Sun
-      duration: 48h
+      schedule: "0 0 * * 0,6"
+      duration: 24h
       applications:
-        - "*-prod"
-  sourceRepos:
-    - https://github.com/payu/*
-  destinations:
-    - namespace: payu-*
-      server: "*"
+        - payu-prod
+      namespaces:
+        - payu
 ```
 
 ### 3. Automated Rollback
 
 ```yaml
-# Application with automated rollback
+# infrastructure/platform/argocd-gitops/applicationsets/payu-applicationsets.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
 spec:
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
-  # Health checks
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas # Allow HPA to manage
+  template:
+    spec:
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jqPathExpressions:
+            - .spec.template.metadata.annotations
 ```
 
 ---
@@ -150,125 +159,72 @@ spec:
 ### 1. Modular Pipeline Structure
 
 ```yaml
-# tekton/pipelines/java-service-pipeline.yaml
-apiVersion: tekton.dev/v1beta1
+# infrastructure/platform/tekton-pipelines/build-pipeline.yaml
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: java-service-pipeline
+  name: payu-build-pipeline
+  namespace: payu-cicd
 spec:
-  params:
-    - name: git-url
-      type: string
-    - name: git-revision
-      type: string
-      default: main
-    - name: image-name
-      type: string
-    - name: service-name
-      type: string
-  workspaces:
-    - name: source
-    - name: maven-cache
-    - name: container-credentials
   tasks:
-    - name: git-clone
+    - name: fetch-repository
       taskRef:
         name: git-clone
-        kind: ClusterTask
-      params:
-        - name: url
-          value: $(params.git-url)
-        - name: revision
-          value: $(params.git-revision)
-      workspaces:
-        - name: output
-          workspace: source
 
-    - name: maven-build
+    - name: secret-scan
+      runAfter: [fetch-repository]
       taskRef:
-        name: maven
-        kind: ClusterTask
-      runAfter:
-        - git-clone
-      params:
-        - name: GOALS
-          value: ["clean", "package", "-DskipTests"]
-      workspaces:
-        - name: source
-          workspace: source
-        - name: maven-settings
-          workspace: maven-cache
+        name: gitleaks
 
-    - name: unit-test
+    - name: deep-secret-scan
+      runAfter: [fetch-repository]
       taskRef:
-        name: maven
-        kind: ClusterTask
-      runAfter:
-        - maven-build
-      params:
-        - name: GOALS
-          value: ["test", "-Dmaven.test.failure.ignore=false"]
-      workspaces:
-        - name: source
-          workspace: source
+        name: trufflehog
 
-    - name: sonar-scan
+    - name: semgrep-scan
+      runAfter: [fetch-repository]
       taskRef:
-        name: sonarqube-scanner
-      runAfter:
-        - unit-test
-      params:
-        - name: SONAR_HOST_URL
-          value: https://sonar.payu.internal
-      workspaces:
-        - name: source
-          workspace: source
+        name: semgrep
 
-    - name: trivy-scan
+    - name: service-sast-sca
+      runAfter: [semgrep-scan]
       taskRef:
-        name: trivy-scanner
-      runAfter:
-        - maven-build
-      params:
-        - name: IMAGE
-          value: $(params.image-name):$(params.git-revision)
-        - name: SEVERITY
-          value: "HIGH,CRITICAL"
-        - name: EXIT_CODE
-          value: "1" # Fail on vulnerabilities
+        name: security-scan
 
-    - name: build-push-image
+    - name: build-image
+      runAfter: [secret-scan, deep-secret-scan, service-sast-sca]
       taskRef:
         name: buildah
-        kind: ClusterTask
-      runAfter:
-        - trivy-scan
-      params:
-        - name: IMAGE
-          value: $(params.image-name):$(params.git-revision)
-        - name: TLSVERIFY
-          value: "false"
-        - name: DOCKERFILE
-          value: ./Containerfile
-      workspaces:
-        - name: source
-          workspace: source
-        - name: dockerconfig
-          workspace: container-credentials
 
-    - name: update-manifests
+    - name: trivy-image-scan
+      runAfter: [build-image]
       taskRef:
-        name: git-update-deployment
-      runAfter:
-        - build-push-image
-      params:
-        - name: GIT_REPOSITORY
-          value: https://github.com/payu/platform-manifests
-        - name: IMAGE_TAG
-          value: $(params.git-revision)
-        - name: SERVICE_NAME
-          value: $(params.service-name)
+        name: trivy
+
+    - name: rhacs-policy-check
+      runAfter: [trivy-image-scan]
+      taskRef:
+        name: rhacs-image-check
+
+    - name: generate-sbom
+      runAfter: [rhacs-policy-check]
+      taskRef:
+        name: syft-sbom
+
+    - name: grype-sbom-check
+      runAfter: [generate-sbom]
+      taskRef:
+        name: grype-scan
+
+    - name: sign-image
+      runAfter: [grype-sbom-check]
+      taskRef:
+        name: cosign-sign
 ```
+
+Repo alignment note:
+- PayU build pipelines in `payu-cicd` enforce `gitleaks -> trufflehog -> semgrep -> service SAST/SCA -> build -> trivy -> RHACS -> Syft -> Grype -> Cosign`.
+- Deploy pipelines gate environment promotion with Argo sync wait plus ZAP/Litmus in SIT, Schemathesis/k6 in UAT, and Cerberus/Kraken in preprod.
 
 ### 2. Pipeline Trigger for Git Events
 
@@ -965,7 +921,7 @@ cat .dockerignore | grep target
 - [ ] Dijalankan menggunakan Podman rootless (UID 1001)
 - [ ] SecurityContext drops all capabilities
 - [ ] NetworkPolicies isolate service traffic
-- [ ] Secrets managed via Vault/SealedSecrets (not Git)
+- [ ] Secrets managed via Vault + External Secrets Operator (not Git)
 
 ### Delivery
 
@@ -973,7 +929,7 @@ cat .dockerignore | grep target
 
 - [ ] Sync windows configured for production
 - [ ] Automated rollback enabled
-- [ ] Tekton pipeline includes security scanning
+- [ ] Tekton pipeline includes secret scan, SAST/SCA, SBOM, vulnerability gating, and Cosign signing
 
 ### Observability
 

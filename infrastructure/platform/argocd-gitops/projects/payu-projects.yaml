@@ -16,7 +16,7 @@ metadata:
 spec:
   description: "PayU Development Environment"
   sourceRepos:
-    - "https://github.com/payu-digital/payu-platform.git"
+    - "https://github.com/fajjarnr/payu.git"
   destinations:
     - namespace: payu-dev
       server: https://kubernetes.default.svc
@@ -49,7 +49,7 @@ metadata:
 spec:
   description: "PayU System Integration Testing"
   sourceRepos:
-    - "https://github.com/payu-digital/payu-platform.git"
+    - "https://github.com/fajjarnr/payu.git"
   destinations:
     - namespace: payu-sit
       server: https://kubernetes.default.svc
@@ -84,7 +84,7 @@ metadata:
 spec:
   description: "PayU User Acceptance Testing"
   sourceRepos:
-    - "https://github.com/payu-digital/payu-platform.git"
+    - "https://github.com/fajjarnr/payu.git"
   destinations:
     - namespace: payu-uat
       server: https://kubernetes.default.svc
@@ -119,7 +119,7 @@ metadata:
 spec:
   description: "PayU Pre-Production (Production Mirror)"
   sourceRepos:
-    - "https://github.com/payu-digital/payu-platform.git"
+    - "https://github.com/fajjarnr/payu.git"
   destinations:
     - namespace: payu-preprod
       server: https://kubernetes.default.svc
@@ -152,7 +152,7 @@ metadata:
 spec:
   description: "PayU Production — SRE Only (Break-Glass)"
   sourceRepos:
-    - "https://github.com/payu-digital/payu-platform.git"
+    - "https://github.com/fajjarnr/payu.git"
   destinations:
     - namespace: payu
       server: https://kubernetes.default.svc
@@ -178,3 +178,79 @@ spec:
         - p, proj:payu:sre-prod, applications, sync, payu/*, allow
       groups:
         - payu-sre
+---
+# ============================================================
+# Preview Project — payu-dev-*
+# RBAC: Dev + QA
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-preview
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU Preview Environments for pull requests"
+  sourceRepos:
+    - "https://github.com/fajjarnr/payu.git"
+  destinations:
+    - namespace: payu-dev-*
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: preview-team
+      description: "Preview environment access for developers and QA"
+      policies:
+        - p, proj:payu-preview:preview-team, applications, get, payu-preview/*, allow
+        - p, proj:payu-preview:preview-team, applications, sync, payu-preview/*, allow
+      groups:
+        - payu-developers
+        - payu-qa
+---
+# ============================================================
+# Platform Project — shared DevSecOps tooling
+# RBAC: SRE + Security
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-platform
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "PayU shared platform and DevSecOps tooling"
+  sourceRepos:
+    - "https://github.com/fajjarnr/payu.git"
+  destinations:
+    - namespace: payu-cicd
+      server: https://kubernetes.default.svc
+    - namespace: payu-security
+      server: https://kubernetes.default.svc
+    - namespace: payu-dev
+      server: https://kubernetes.default.svc
+    - namespace: stackrox
+      server: https://kubernetes.default.svc
+    - namespace: openshift-compliance
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  roles:
+    - name: platform-team
+      description: "Platform SRE and security tooling operators"
+      policies:
+        - p, proj:payu-platform:platform-team, applications, get, payu-platform/*, allow
+        - p, proj:payu-platform:platform-team, applications, sync, payu-platform/*, allow
+      groups:
+        - payu-sre
+        - payu-security

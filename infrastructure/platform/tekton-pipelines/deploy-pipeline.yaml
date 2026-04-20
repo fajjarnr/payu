@@ -9,11 +9,11 @@ metadata:
 spec:
   description: |
     Enterprise GitOps Deployment Pipeline compliant with PayU DevSecOps PRD.
-    Replaces imperative 'oc apply' with strictly declarative Kustomize Git write-back.
-    Incorporates mandatory security gates per environment:
-    - SIT: Litmus Chaos + ZAP DAST
-    - UAT: Schemathesis Fuzzing + k6 Load Test
-    - PREPROD: Kraken Infra Chaos
+    Replaces imperative 'oc apply' with declarative Kustomize Git write-back.
+    Mandatory gates per environment:
+    - SIT: Argo sync wait → ZAP baseline → LitmusChaos
+    - UAT: Argo sync wait → Schemathesis → k6
+    - PREPROD: Argo sync wait → Cerberus + Kraken
   params:
     - name: service-name
       type: string
@@ -25,13 +25,42 @@ spec:
     - name: image-tag
       type: string
       description: Image tag to promote
+      default: ""
+    - name: image-digest
+      type: string
+      description: Optional immutable image digest (sha256:...) used instead of image-tag
+      default: ""
     - name: registry-url
       type: string
-      default: image-registry.openshift-image-registry.svc:5000/payu
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      description: Registry namespace containing the image to promote
+      default: payu-dev
     - name: infra-repo-url
       type: string
-      description: GitOps infrastructure repository HTTP/SSH URL
-      default: "https://github.com/fajjarnr/payu-infrastructure.git" # Example gitops repo
+      description: GitOps repository URL
+      default: "https://github.com/fajjarnr/payu.git"
+    - name: git-revision
+      type: string
+      description: Git revision to update and optionally push
+      default: main
+    - name: push-changes
+      type: string
+      description: Whether the pipeline should push the Git write-back commit
+      default: "false"
+    - name: environment-base-url
+      type: string
+      description: Base URL of the deployed environment, used by DAST/fuzzing tasks
+      default: ""
+    - name: schema-url
+      type: string
+      description: OpenAPI schema URL for Schemathesis in UAT
+      default: ""
+    - name: k6-script-path
+      type: string
+      description: Repository-relative k6 script path for UAT load testing
+      default: tests/performance/k6/crud-load-test.js
   workspaces:
     - name: source
       description: Workspace to hold the cloned infrastructure git repository
@@ -54,7 +83,7 @@ spec:
         - name: URL
           value: $(params.infra-repo-url)
         - name: REVISION
-          value: main
+          value: $(params.git-revision)
         - name: DELETE_EXISTING
           value: "true"
 
@@ -82,47 +111,55 @@ spec:
             echo "[*] Updating Kustomize image overlay for $(params.service-name) in environment $(params.environment)"
             
             cd $(workspaces.source.path)
-            # Switch to local repo path structure
-            TARGET_DIR="workloads/overlays/$(params.environment)"
+            TARGET_DIR="infrastructure/workloads/overlays/$(params.environment)"
             
             if [ ! -d "$TARGET_DIR" ]; then
               echo "[✗] Overlay directory $TARGET_DIR not found!"
               exit 1
             fi
             
+            if [ -z "$(params.image-tag)" ] && [ -z "$(params.image-digest)" ]; then
+              echo "[✗] Either image-tag or image-digest must be provided"
+              exit 1
+            fi
+
             cd $TARGET_DIR
-            IMAGE_REF="$(params.registry-url)/$(params.service-name):$(params.image-tag)"
-            kustomize edit set image $(params.service-name)=$IMAGE_REF
+            IMAGE_NAME="$(params.registry-url)/$(params.registry-namespace)/$(params.service-name)"
+            if [ -n "$(params.image-digest)" ]; then
+              IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
+            else
+              IMAGE_REF="${IMAGE_NAME}:$(params.image-tag)"
+            fi
+
+            kustomize edit set image "${IMAGE_NAME}=${IMAGE_REF}"
             
             # Commit and push changes
             git config --global user.email "gitops-bot@payu.internal"
             git config --global user.name "Tekton GitOps Bot"
             git add kustomization.yaml
-            git commit -m "chore(gitops): promote $(params.service-name) to $(params.image-tag) in $(params.environment)" || echo "No changes to commit"
-            # git push origin main  # MOCKED FOR LAB EXECUTION
-            echo "[✓] GitOps Write-back simulated/completed successfully."
+            git commit -m "chore(gitops): promote $(params.service-name) to ${IMAGE_REF} in $(params.environment)" || echo "No changes to commit"
+
+            if [ "$(params.push-changes)" = "true" ]; then
+              git push origin HEAD:$(params.git-revision)
+              echo "[✓] GitOps write-back pushed to $(params.git-revision)"
+            else
+              echo "[*] push-changes=false, commit retained locally in workspace only"
+            fi
 
     # ── Step 3: ArgoCD Sync Wait ──
     - name: argocd-sync-wait
       runAfter:
         - gitops-writeback
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: argocd-task-sync-and-wait
-          - name: namespace
-            value: openshift-pipelines
+        name: argocd-sync-wait
       params:
-        - name: application-name
-          value: "payu-workloads-$(params.environment)"
-        - name: flags
-          value: "--async"
+        - name: APPLICATION_NAME
+          value: "payu-$(params.environment)"
+        - name: NAMESPACE
+          value: openshift-gitops
 
     # ── Step 4A: Security Gate (SIT) - DAST & App Chaos ──
-    - name: sit-security-gates
+    - name: sit-zap-baseline
       runAfter:
         - argocd-sync-wait
       when:
@@ -130,26 +167,29 @@ spec:
           operator: in
           values: ["sit"]
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
+        name: zap-baseline
+      workspaces:
+        - name: source
+          workspace: source
       params:
-        - name: SCRIPT
-          value: |
-            echo "Running DAST Sweep using OWASP ZAP Headless..."
-            # Implementation mapped to ZAP CLI...
-            echo "[✓] DAST Clear."
-            echo "Triggering LitmusChaos Pod-Delete Experiment..."
-            # kubectl apply -f litmus-experiment.yaml
-            echo "[✓] LitmusChaos Clear."
+        - name: TARGET_URL
+          value: $(params.environment-base-url)
+
+    - name: sit-litmus-gate
+      runAfter:
+        - sit-zap-baseline
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["sit"]
+      taskRef:
+        name: litmus-chaos-gate
+      workspaces:
+        - name: source
+          workspace: source
 
     # ── Step 4B: Security Gate (UAT) - API Fuzzing ──
-    - name: uat-security-gates
+    - name: uat-schemathesis
       runAfter:
         - argocd-sync-wait
       when:
@@ -157,24 +197,38 @@ spec:
           operator: in
           values: ["uat"]
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
+        name: schemathesis-scan
+      workspaces:
+        - name: source
+          workspace: source
       params:
-        - name: SCRIPT
-          value: |
-            echo "Running Schemathesis API Fuzzing against UAT endpoints..."
-            echo "[✓] Schemathesis Clear."
-            echo "Running k6 baseline capacity tests..."
-            echo "[✓] k6 Clear."
+        - name: SCHEMA_URL
+          value: $(params.schema-url)
+        - name: BASE_URL
+          value: $(params.environment-base-url)
+
+    - name: uat-k6-load-test
+      runAfter:
+        - uat-schemathesis
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["uat"]
+      taskRef:
+        name: k6-load-test
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SCRIPT_PATH
+          value: $(params.k6-script-path)
+        - name: VUS
+          value: "50"
+        - name: DURATION
+          value: "5m"
 
     # ── Step 4C: Security Gate (PREPROD) - Infra Chaos ──
-    - name: preprod-security-gates
+    - name: preprod-kraken-gate
       runAfter:
         - argocd-sync-wait
       when:
@@ -182,16 +236,7 @@ spec:
           operator: in
           values: ["preprod"]
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: SCRIPT
-          value: |
-            echo "Initiating Kraken infrastructure-level chaos injection..."
-            echo "[✓] Kraken Clear. Cerberus green."
+        name: kraken-chaos-gate
+      workspaces:
+        - name: source
+          workspace: source

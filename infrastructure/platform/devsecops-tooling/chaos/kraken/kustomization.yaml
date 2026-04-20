@@ -16,3 +16,4 @@ kind: Kustomization
 resources:
   - kraken-config.yaml
   - cerberus-config.yaml
+  - runtime.yaml

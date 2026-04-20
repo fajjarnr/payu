@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: trufflehog
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Scan git history and workspace contents for secrets using TruffleHog."
+  params:
+    - name: CONTEXT_DIR
+      type: string
+      description: "Directory to scan when .git metadata is unavailable"
+      default: "."
+    - name: RESULTS
+      type: string
+      description: "TruffleHog result classes to fail on"
+      default: "verified,unknown"
+  workspaces:
+    - name: source
+      description: "Workspace containing the cloned repository"
+  steps:
+    - name: scan
+      image: docker.io/trufflesecurity/trufflehog:3.90.5
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        if [ -d "$(workspaces.source.path)/.git" ]; then
+          trufflehog git "file://$(workspaces.source.path)" --results=$(params.RESULTS) --fail --no-update
+        else
+          trufflehog filesystem "$(workspaces.source.path)/$(params.CONTEXT_DIR)" --results=$(params.RESULTS) --fail --no-update
+        fi

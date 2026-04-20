@@ -10,7 +10,9 @@ spec:
   description: |
     Build pipeline for PayU services with DevSecOps gates.
     Supports Spring Boot, Quarkus (Java) and Python services.
-    Security: Trivy CVE scan → RHACS image scan → RHACS policy check.
+    Security gate order:
+    Gitleaks → TruffleHog → Semgrep → service-specific SAST/SCA → Buildah build
+    → Trivy → RHACS scan/policy → Syft SBOM → Grype → Cosign signing.
   params:
     - name: service-name
       type: string
@@ -43,6 +45,10 @@ spec:
   workspaces:
     - name: source
       description: Workspace for source code
+    - name: maven-settings
+      description: Optional Maven settings.xml workspace
+    - name: dockerconfig
+      description: Optional container registry credentials workspace
   tasks:
     # ── Step 1: Clone git repo ──
     - name: fetch-repository
@@ -76,10 +82,33 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 2-2: SAST & SCA Scan (SpotBugs & Dep Check) ──
-    - name: sast-sca-scan
+    # ── Step 2-2: Deep Secret Scan (TruffleHog) ──
+    - name: deep-secret-scan
       runAfter:
         - fetch-repository
+      taskRef:
+        name: trufflehog
+      workspaces:
+        - name: source
+          workspace: source
+
+    # ── Step 2-3: Primary SAST (Semgrep OSS) ──
+    - name: semgrep-scan
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: semgrep
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: CONTEXT_DIR
+          value: $(params.service-base-dir)/$(params.service-path)
+
+    # ── Step 2-4: Service-specific SAST & SCA (SpotBugs + Dep Check for Java) ──
+    - name: sast-sca-scan
+      runAfter:
+        - semgrep-scan
       taskRef:
         name: security-scan
       when:
@@ -89,6 +118,8 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: maven-settings
+          workspace: maven-settings
       params:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
@@ -98,6 +129,8 @@ spec:
       runAfter:
         - sast-sca-scan
         - secret-scan
+        - deep-secret-scan
+        - semgrep-scan
       taskRef:
         name: maven-java21
       when:
@@ -107,6 +140,8 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: maven-settings
+          workspace: maven-settings
       params:
         - name: GOALS
           value:
@@ -125,14 +160,7 @@ spec:
       runAfter:
         - build-java
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: buildah
-          - name: namespace
-            value: openshift-pipelines
+        name: buildah
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -140,29 +168,26 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
           value: $(params.service-base-dir)/$(params.service-path)
-        - name: DOCKERFILE
-          value: Containerfile
-        - name: TLS_VERIFY
+        - name: CONTAINERFILE
+          value: $(params.service-base-dir)/$(params.service-path)/Containerfile
+        - name: TLSVERIFY
           value: "false"
 
     # ── Step 2b/3b: Buildah image (Services with direct Containerfile like Python/Node.js) ──
     - name: build-push-direct
       runAfter:
         - secret-scan
+        - deep-secret-scan
+        - semgrep-scan
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: buildah
-          - name: namespace
-            value: openshift-pipelines
+        name: buildah
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -170,21 +195,37 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
           value: $(params.service-base-dir)/$(params.service-path)
-        - name: DOCKERFILE
-          value: Containerfile
-        - name: TLS_VERIFY
+        - name: CONTAINERFILE
+          value: $(params.service-base-dir)/$(params.service-path)/Containerfile
+        - name: TLSVERIFY
           value: "false"
 
-    # ── Step 4: RHACS Image Scan (CVE vulnerability report) ──
-    - name: rhacs-image-scan
+    # ── Step 4: Image Scan (Trivy) ──
+    - name: trivy-image-scan
       runAfter:
         - build-push-image
         - build-push-direct
+      taskRef:
+        name: trivy
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: SEVERITY
+          value: "CRITICAL,HIGH"
+        - name: EXIT_CODE
+          value: "1"
+
+    # ── Step 5: RHACS Image Scan (CVE vulnerability report) ──
+    - name: rhacs-image-scan
+      runAfter:
+        - trivy-image-scan
       taskRef:
         name: rhacs-image-scan
       params:
@@ -193,7 +234,7 @@ spec:
         - name: OUTPUT_FORMAT
           value: table
 
-    # ── Step 5: RHACS Image Policy Check (gate — blocks on violations) ──
+    # ── Step 6: RHACS Image Policy Check (gate — blocks on violations) ──
     - name: rhacs-image-check
       runAfter:
         - rhacs-image-scan
@@ -203,42 +244,43 @@ spec:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
 
-    # ── Step 6: SBOM Generation (Trivy) ──
+    # ── Step 7: SBOM Generation (Syft) ──
     - name: generate-sbom
       runAfter:
         - rhacs-image-check
       taskRef:
-        name: trivy
+        name: syft-sbom
+      workspaces:
+        - name: source
+          workspace: source
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: OUTPUT_FILE
+          value: $(workspaces.source.path)/reports/$(params.service-name)-sbom.cdx.json
 
-    # ── Step 7: Image Signing (Cosign Sigstore) ──
-    - name: sign-image
+    # ── Step 8: SBOM Vulnerability Gate (Grype) ──
+    - name: grype-sbom-check
       runAfter:
         - generate-sbom
+      taskRef:
+        name: grype-scan
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: SBOM_PATH
+          value: $(tasks.generate-sbom.results.SBOM_PATH)
+        - name: FAIL_ON
+          value: critical
+
+    # ── Step 9: Image Signing (Cosign Sigstore) ──
+    - name: sign-image
+      runAfter:
+        - grype-sbom-check
       taskRef:
         name: cosign-sign
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-
-    # ── Step 8: Tag as stable (only if all security gates pass) ──
-    - name: tag-stable
-      runAfter:
-        - sign-image
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: SCRIPT
-          value: |
-            oc tag $(params.registry-namespace)/$(params.service-name):$(params.build-image-tag) \
-                   $(params.registry-namespace)/$(params.service-name):stable \
-                   --reference-only || true
+        - name: SBOM_PATH
+          value: $(tasks.generate-sbom.results.SBOM_PATH)

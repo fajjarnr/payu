@@ -3,16 +3,26 @@ kind: Kustomization
 
 resources:
   # Tasks
+  - tasks/argocd-sync-task.yaml
   - tasks/buildah-task.yaml
   - tasks/cosign-task.yaml
   - tasks/deploy-task.yaml
   - tasks/gitleaks-task.yaml
+  - tasks/grype-task.yaml
+  - tasks/k6-task.yaml
+  - tasks/kraken-gate-task.yaml
+  - tasks/litmus-gate-task.yaml
   - tasks/maven-task.yaml
   - tasks/maven-java21-task.yaml
   - tasks/pytest-task.yaml
   - tasks/rhacs-tasks.yaml
+  - tasks/schemathesis-task.yaml
   - tasks/security-scan-task.yaml
+  - tasks/semgrep-task.yaml
+  - tasks/syft-task.yaml
   - tasks/trivy-task.yaml
+  - tasks/trufflehog-task.yaml
+  - tasks/zap-baseline-task.yaml
 
   # Pipelines
   - build-pipeline.yaml
@@ -23,3 +33,4 @@ resources:
 
   # Triggers and Webhooks (require triggers.tekton.dev/v1beta1)
   - triggers/git-webhook-trigger.yaml
+  - triggers/tekton-triggers-rbac.yaml

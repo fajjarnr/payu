@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: schemathesis-scan
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run Schemathesis against an OpenAPI schema and fail on crashes or auth regressions."
+  params:
+    - name: SCHEMA_URL
+      type: string
+      description: "OpenAPI schema URL"
+    - name: BASE_URL
+      type: string
+      description: "Base URL where the API is reachable"
+  workspaces:
+    - name: source
+      description: "Workspace used to persist reports"
+  steps:
+    - name: run
+      image: docker.io/schemathesis/schemathesis:3.39.16
+      script: |
+        #!/bin/sh
+        set -eu
+
+        REPORT_DIR="$(workspaces.source.path)/reports"
+        mkdir -p "$REPORT_DIR"
+
+        schemathesis run \
+          "$(params.SCHEMA_URL)" \
+          --base-url "$(params.BASE_URL)" \
+          --checks all \
+          --phases examples,coverage,fuzzing \
+          --report-junit "$REPORT_DIR/schemathesis.junit.xml"

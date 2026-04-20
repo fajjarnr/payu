@@ -12,6 +12,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - rbac.yaml
   - chaosengine.yaml
   - pod-delete-experiment.yaml
   - network-latency-experiment.yaml

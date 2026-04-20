@@ -10,7 +10,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cosign-verification-policy
-  namespace: payu
+  namespace: payu-cicd
   labels:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: supply-chain-security
@@ -18,15 +18,17 @@ data:
   policy.yaml: |
     # Cosign Verification Policy for PayU
     verification:
-      # Keyless verification via OpenShift OIDC
+      # Support both keyless OIDC and key-pair signing during bootstrap.
       keyless:
-        issuer: "https://oauth-openshift.apps.payu.example.com"
-        subject: "system:serviceaccount:openshift-pipelines:pipeline"
+        issuer: "https://oauth-openshift.apps.payu.ocp.fajjjar.my.id"
+        subject: "system:serviceaccount:payu-cicd:pipeline"
 
       # Trusted registries that require signed images
       registries:
         - "image-registry.openshift-image-registry.svc:5000/payu-dev/*"
         - "image-registry.openshift-image-registry.svc:5000/payu-sit/*"
+        - "image-registry.openshift-image-registry.svc:5000/payu-uat/*"
+        - "image-registry.openshift-image-registry.svc:5000/payu-preprod/*"
         - "image-registry.openshift-image-registry.svc:5000/payu/*"
 
       # Rekor transparency log for audit trail
@@ -36,6 +38,7 @@ data:
       # Namespaces requiring signed images (all payu namespaces)
       enforced_namespaces:
         - payu-dev
+        - payu-dev-*
         - payu-sit
         - payu-uat
         - payu-preprod

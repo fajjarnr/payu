@@ -4,7 +4,7 @@
 # Purpose: Sign every container image with keyless signing via OIDC provider
 # Integration: ACS/Kyverno admission controller verifies signatures before pod runs
 #
-# Implementation Status: STUB — Awaiting cluster OIDC provider setup
+# Implementation Status: Active bootstrap policy — signing workflow lives in Tekton tasks
 # Prerequisites:
 #   - OpenShift OAuth configured as OIDC issuer
 #   - Rekor transparency log endpoint accessible

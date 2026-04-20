@@ -21,12 +21,9 @@ spec:
           - resources:
               kinds:
                 - Pod
-              namespaces:
-                - "payu-dev"
-                - "payu-sit"
-                - "payu-uat"
-                - "payu-preprod"
-                - "payu"
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
       validate:
         message: "All containers must have CPU and memory requests/limits defined."
         pattern:

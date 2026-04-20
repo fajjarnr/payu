@@ -186,8 +186,7 @@ metadata:
 spec:
   description: PayU Digital Banking Platform
   sourceRepos:
-    - https://github.com/payu-digital/payu-platform.git
-    - https://github.com/payu-digital/payu-infrastructure.git
+    - https://github.com/fajjarnr/payu.git
 
   destinations:
     - namespace: "payu"
@@ -256,10 +255,10 @@ metadata:
 spec:
   description: PayU PR Preview Environments
   sourceRepos:
-    - https://github.com/payu-digital/payu-platform.git
+    - https://github.com/fajjarnr/payu.git
 
   destinations:
-    - namespace: "payu-pr-*"
+    - namespace: "payu-dev-pr-*"
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:

@@ -11,35 +11,29 @@ metadata:
 data:
   config.yaml: |
     kraken:
-      distribution: openshift
-      kubeconfig_path: /root/.kube/config
       exit_on_failure: true
       publish_kraken_status: true
-      signal_state: GO
-      litmus_install: false
-      cerberus:
-        cerberus_enabled: true
-        cerberus_url: "http://cerberus.payu-preprod:8080"
+      signal_state: RUN
+      signal_address: 0.0.0.0
+      port: 8081
+      chaos_scenarios:
+        - pod_disruption_scenarios:
+            - scenarios/openshift/etcd.yml
+            - scenarios/openshift/openshift-apiserver.yml
+            - scenarios/openshift/openshift-kube-apiserver.yml
 
-    scenarios:
-      # Scenario 1: Pod disruption (etcd, apiserver)
-      - pod_scenarios:
-          - namespace: openshift-etcd
-            label_selector: app=etcd
-            action: delete
-            expected_recovery_time: 120
-          - namespace: openshift-apiserver
-            label_selector: app=openshift-apiserver
-            action: delete
-            expected_recovery_time: 90
-
-      # Scenario 2: Node drain & reboot
-      - node_scenarios:
-          - action: node_drain_reboot
-            node_count: 1
-            expected_recovery_time: 300
+    cerberus:
+      cerberus_enabled: true
+      cerberus_url: "http://cerberus.payu-preprod.svc.cluster.local:8080"
+      check_applicaton_routes: false
 
     tunings:
       wait_duration: 60
       iterations: 1
       daemon_mode: false
+
+    health_checks:
+      interval: 5
+      config:
+        - url: https://console-openshift-console.apps.payu.ocp.fajjjar.my.id
+          exit_on_failure: true

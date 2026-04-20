@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: syft-sbom
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Generate a CycloneDX SBOM for a built image using Syft."
+  params:
+    - name: IMAGE
+      type: string
+      description: "Image reference to inventory"
+    - name: OUTPUT_FILE
+      type: string
+      description: "Path where the generated SBOM should be written"
+    - name: FORMAT
+      type: string
+      description: "Syft output format"
+      default: "cyclonedx-json"
+  workspaces:
+    - name: source
+      description: "Workspace used to persist the generated SBOM"
+  results:
+    - name: SBOM_PATH
+      description: "Path to the generated SBOM file"
+  steps:
+    - name: generate
+      image: docker.io/anchore/syft:v1.20.0
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        mkdir -p "$(dirname "$(params.OUTPUT_FILE)")"
+        syft "$(params.IMAGE)" -o "$(params.FORMAT)" > "$(params.OUTPUT_FILE)"
+        echo -n "$(params.OUTPUT_FILE)" | tee $(results.SBOM_PATH.path)

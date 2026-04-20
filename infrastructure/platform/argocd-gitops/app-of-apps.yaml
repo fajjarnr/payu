@@ -12,7 +12,7 @@ metadata:
 spec:
   project: payu
   source:
-    repoURL: https://github.com/payu-digital/payu-platform.git
+    repoURL: https://github.com/fajjarnr/payu.git
     targetRevision: main
     path: infrastructure/platform/argocd-gitops/bootstrap
   destination:
@@ -117,8 +117,8 @@ data:
   # Repositories configuration
   repositories: |
     - type: git
-      url: https://github.com/payu-digital/payu-platform.git
-      name: payu-platform
+      url: https://github.com/fajjarnr/payu.git
+      name: payu
     - type: helm
       url: https://charts.bitnami.com/bitnami
       name: bitnami

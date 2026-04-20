@@ -1,0 +1,44 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: argocd-sync-wait
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Wait for an ArgoCD Application to reach Synced and Healthy state."
+  params:
+    - name: APPLICATION_NAME
+      type: string
+      description: "ArgoCD Application name"
+    - name: NAMESPACE
+      type: string
+      description: "Namespace where the Application exists"
+      default: openshift-gitops
+    - name: TIMEOUT_SECONDS
+      type: string
+      description: "Maximum wait time in seconds"
+      default: "900"
+  steps:
+    - name: wait
+      image: quay.io/openshift/origin-cli:4.20
+      script: |
+        #!/bin/sh
+        set -eu
+
+        deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
+        while [ "$(date +%s)" -lt "$deadline" ]; do
+          sync_status=$(oc get application "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
+          health_status=$(oc get application "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.health.status}' 2>/dev/null || true)
+
+          echo "[*] sync=${sync_status:-Unknown} health=${health_status:-Unknown}"
+          if [ "$sync_status" = "Synced" ] && [ "$health_status" = "Healthy" ]; then
+            echo "[✓] Application $(params.APPLICATION_NAME) is synced and healthy"
+            exit 0
+          fi
+
+          sleep 10
+        done
+
+        echo "[✗] Timed out waiting for $(params.APPLICATION_NAME)"
+        exit 1

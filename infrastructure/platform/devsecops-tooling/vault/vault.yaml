@@ -1,19 +1,21 @@
-# PayU Platform - HashiCorp Vault (Dev Mode)
-# Secret management with VSO (Vault Secrets Operator)
-# Prerequisite: vault-secrets-operator subscription installed
+# PayU Platform - HashiCorp Vault OSS + External Secrets Operator bridge
+# Prerequisites:
+# 1. External Secrets Operator is installed in the cluster.
+# 2. Secret payu-dev/vault-bootstrap exists and contains key root-token.
 # ============================================================
 #
-# IMPORTANT: This is a dev-mode Vault. For production, use:
-# - Persistent storage backend (Raft or Consul)
-# - Auto-unseal (AWS KMS, Azure Key Vault, etc.)
-# - HA mode with 3+ replicas
+# IMPORTANT: This remains a lab/dev Vault topology. For production use:
+# - Raft storage with PVC-backed HA replicas
+# - Auto-unseal via KMS/HSM
+# - Non-root bootstrap workflow with short-lived admin token
 # ============================================================
 
-# Vault Deployment (dev mode)
+# Vault Deployment (dev mode for lab bootstrap)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vault
+  namespace: payu-dev
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/part-of: payu
@@ -27,15 +29,22 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: vault
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: secrets
     spec:
       containers:
         - name: vault
           image: docker.io/hashicorp/vault:1.15
           env:
             - name: VAULT_ADDR
-              value: "http://0.0.0.0:8200"
+              value: http://127.0.0.1:8200
+            - name: VAULT_DEV_LISTEN_ADDRESS
+              value: 0.0.0.0:8200
             - name: VAULT_DEV_ROOT_TOKEN_ID
-              value: "payu-dev-root-token"
+              valueFrom:
+                secretKeyRef:
+                  name: vault-bootstrap
+                  key: root-token
             - name: SKIP_SETCAP
               value: "1"
             - name: HOME
@@ -45,17 +54,17 @@ spec:
               name: http
           readinessProbe:
             httpGet:
-              path: /v1/sys/health
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
               port: 8200
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: 128Mi
+              cpu: 100m
             limits:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: 256Mi
+              cpu: 250m
 
 ---
 # Vault Service
@@ -63,6 +72,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: vault
+  namespace: payu-dev
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/part-of: payu
@@ -77,118 +87,137 @@ spec:
       name: http
 
 ---
-# VaultConnection - VSO connects to Vault
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultConnection
+# ClusterSecretStore - ESO bridge to Vault
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
 metadata:
-  name: vault-connection
+  name: payu-vault
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
 spec:
-  address: http://vault.payu-dev.svc.cluster.local:8200
-  skipTLSVerify: true
+  provider:
+    vault:
+      server: http://vault.payu-dev.svc.cluster.local:8200
+      path: secret
+      version: v2
+      auth:
+        tokenSecretRef:
+          name: vault-bootstrap
+          key: root-token
+          namespace: payu-dev
 
 ---
-# VaultAuth - Kubernetes auth method
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultAuth
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
-  name: vault-auth
+  name: db-credentials
+  namespace: payu-dev
 spec:
-  method: kubernetes
-  mount: kubernetes
-  vaultConnectionRef: vault-connection
-  kubernetes:
-    role: payu-dev
-    serviceAccount: default
-    audiences:
-      - vault
-
----
-# VaultStaticSecret - db-credentials
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
-metadata:
-  name: vault-db-credentials
-spec:
-  type: kv-v2
-  mount: secret
-  path: payu/db-credentials
-  refreshAfter: 60s
-  destination:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
     name: db-credentials
-    create: true
-    labels:
-      app.kubernetes.io/component: secrets
-      app.kubernetes.io/part-of: payu
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: secrets
+          app.kubernetes.io/part-of: payu
+  dataFrom:
+    - extract:
+        key: payu/db-credentials
 
 ---
-# VaultStaticSecret - jwt-secret
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
-  name: vault-jwt-secret
+  name: jwt-secret
+  namespace: payu-dev
 spec:
-  type: kv-v2
-  mount: secret
-  path: payu/jwt-secret
-  refreshAfter: 60s
-  destination:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
     name: jwt-secret
-    create: true
-    labels:
-      app.kubernetes.io/component: secrets
-      app.kubernetes.io/part-of: payu
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: secrets
+          app.kubernetes.io/part-of: payu
+  dataFrom:
+    - extract:
+        key: payu/jwt-secret
 
 ---
-# VaultStaticSecret - encryption-keys
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
-  name: vault-encryption-keys
+  name: encryption-keys
+  namespace: payu-dev
 spec:
-  type: kv-v2
-  mount: secret
-  path: payu/encryption-keys
-  refreshAfter: 60s
-  destination:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
     name: encryption-keys
-    create: true
-    labels:
-      app.kubernetes.io/component: secrets
-      app.kubernetes.io/part-of: payu
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: secrets
+          app.kubernetes.io/part-of: payu
+  dataFrom:
+    - extract:
+        key: payu/encryption-keys
 
 ---
-# VaultStaticSecret - keycloak-credentials
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
-  name: vault-keycloak-credentials
+  name: keycloak-credentials
+  namespace: payu-dev
 spec:
-  type: kv-v2
-  mount: secret
-  path: payu/keycloak-credentials
-  refreshAfter: 60s
-  destination:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
     name: keycloak-credentials
-    create: true
-    labels:
-      app.kubernetes.io/component: secrets
-      app.kubernetes.io/part-of: payu
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: secrets
+          app.kubernetes.io/part-of: payu
+  dataFrom:
+    - extract:
+        key: payu/keycloak-credentials
 
 ---
-# VaultStaticSecret - keycloak-db-secret
-# IMPORTANT: Vault path must contain FQDN for POSTGRES_EXTERNAL_ADDRESS
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
-  name: vault-keycloak-db-secret
+  name: keycloak-db-secret
+  namespace: payu-dev
 spec:
-  type: kv-v2
-  mount: secret
-  path: payu/keycloak-db
-  refreshAfter: 60s
-  destination:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
     name: keycloak-db-secret
-    create: true
-    labels:
-      app.kubernetes.io/component: secrets
-      app.kubernetes.io/part-of: payu
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: secrets
+          app.kubernetes.io/part-of: payu
+  dataFrom:
+    - extract:
+        key: payu/keycloak-db

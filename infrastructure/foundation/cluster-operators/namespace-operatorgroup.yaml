@@ -33,6 +33,30 @@ metadata:
   labels:
     openshift.io/cluster-monitoring: "true"
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-gitops-operator
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gitops
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rhacs-operator
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: security
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rhdh-operator
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: developer-hub
+---
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:

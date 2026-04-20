@@ -31,6 +31,7 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 | L-023 | Bulk Audit Approach — Verify Before Fixing | Mar 17, 2026 | Audit | `principal-architect`, `quality-engineer` |
 | L-024 | Auth Parameter Changes Break Unit Tests | Mar 17, 2026 | Testing | `core-banking-engineer`, `quality-engineer` |
 | L-025 | Constructor Signature Changes Cascade | Mar 17, 2026 | Shared Libs | `core-banking-engineer`, `quality-engineer` |
+| L-026 | DevSecOps Bootstrap — CRD Source Must Match Runtime Manifests | Apr 20, 2026 | Platform | `platform-engineer`, `cybersecurity-architect` |
 
 ---
-*Last Updated: March 17, 2026*
+*Last Updated: April 20, 2026*
