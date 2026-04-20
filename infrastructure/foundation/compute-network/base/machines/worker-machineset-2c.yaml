@@ -25,11 +25,11 @@ spec:
             id: ami-0b264801b0e00009c
           apiVersion: machine.openshift.io/v1beta1
           blockDevices:
-          - ebs:
-              encrypted: true
-              iops: 0
-              volumeSize: 100
-              volumeType: gp3
+            - ebs:
+                encrypted: true
+                iops: 0
+                volumeSize: 100
+                volumeType: gp3
           credentialsSecret:
             name: aws-cloud-credentials
           deviceIndex: 0
@@ -43,18 +43,18 @@ spec:
             availabilityZone: us-east-2c
             region: us-east-2
           securityGroups:
-          - filters:
-            - name: tag:Name
-              values:
-              - payu-hxftx-node
-          - filters:
-            - name: tag:Name
-              values:
-              - payu-hxftx-lb
+            - filters:
+                - name: tag:Name
+                  values:
+                    - payu-hxftx-node
+            - filters:
+                - name: tag:Name
+                  values:
+                    - payu-hxftx-lb
           subnet:
             id: subnet-005f6e6e10472e966
           tags:
-          - name: kubernetes.io/cluster/payu-hxftx
-            value: owned
+            - name: kubernetes.io/cluster/payu-hxftx
+              value: owned
           userDataSecret:
             name: worker-user-data

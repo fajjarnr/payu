@@ -1,6 +1,6 @@
 resource "aws_key_pair" "bastion_key" {
   key_name   = "bastion-key"
-  public_key = var.bastion_public_key
+  public_key = file(pathexpand(var.bastion_public_key))
 }
 
 module "bastion" {

@@ -9,7 +9,7 @@ compute:
         rootVolume:
           size: 100
           type: gp3
-        type: m5.2xlarge
+        type: r6a.2xlarge
         metadataService:
           authentication: Required
         zones:
@@ -37,7 +37,6 @@ controlPlane:
 metadata:
   name: payu
 networking:
-  machineCIDR: 10.0.0.0/16
   machineNetwork:
     - cidr: 10.0.0.0/16
   clusterNetwork:
@@ -50,13 +49,14 @@ platform:
   aws:
     region: ap-southeast-1
     lbType: NLB
-    subnets:
-      - subnet-04cf697252c780068
-      - subnet-0fcef0f9c65774796
-      - subnet-078577e5ff7cb145f
-      - subnet-0568db878c4e65b02
-      - subnet-046358054e0a9f1e9
-      - subnet-0a904e9b9fe840684
+    vpc:
+      subnets:
+        - id: subnet-0b7a5d88e3ca54d83
+        - id: subnet-0f77f63cad500cfa4
+        - id: subnet-0d4fce9c46243d294
+        - id: subnet-0a3ab903e9b914976
+        - id: subnet-05252b7e295378733
+        - id: subnet-092dd4ff46a20cb20
 publish: External
 sshKey: ""
 pullSecret: ""

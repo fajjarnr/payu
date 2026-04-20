@@ -1,7 +1,7 @@
 variable "region" {
   description = "The AWS region to create resources in."
   type        = string
-  default     = "us-east-2"
+  default     = "ap-southeast-1"
 }
 
 variable "name_prefix" {
