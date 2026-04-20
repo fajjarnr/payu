@@ -1,0 +1,140 @@
+# NetworkPolicies for Wazuh on OpenShift (OVN-Kubernetes)
+#
+# IMPORTANT: All policies are Ingress-only (policyTypes: [Ingress]).
+#
+# OVN-Kubernetes bug/limitation:
+#   OVN-K does NOT properly handle egress NetworkPolicy rules for DNS
+#   when mixed with other selectors. We tested:
+#     - Port 53 with namespaceSelector for openshift-dns → DNS fails
+#     - Port 53 with ipBlock to 172.30.0.10/32 → DNS fails
+#     - Port 53 with no 'to' restriction → DNS fails
+#   Only removing Egress from policyTypes entirely allows DNS to work.
+#   This is a known OVN-K behavior on OpenShift 4.x.
+#
+# Security note: Egress is NOT restricted by these policies.
+# Use OpenShift Service Mesh or Kyverno for egress controls.
+
+# --- Dashboard: accept traffic on port 5601 from any source ---
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wazuh-dashboard
+  namespace: payu-security
+spec:
+  podSelector:
+    matchLabels:
+      app: wazuh-dashboard
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 5601
+          protocol: TCP
+
+# --- Indexer: 9300 from other indexers, 9200 from dashboard/manager/indexer/job ---
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wazuh-indexer
+  namespace: payu-security
+spec:
+  podSelector:
+    matchLabels:
+      app: wazuh-indexer
+  policyTypes:
+    - Ingress
+  ingress:
+    # Inter-node transport (9300) — indexer-to-indexer only
+    - from:
+        - podSelector:
+            matchLabels:
+              app: wazuh-indexer
+      ports:
+        - port: 9300
+          protocol: TCP
+    # REST API (9200) — from dashboard, manager, indexer, init job
+    - from:
+        - podSelector:
+            matchLabels:
+              app: wazuh-dashboard
+        - podSelector:
+            matchLabels:
+              app: wazuh-manager
+        - podSelector:
+            matchLabels:
+              app: wazuh-indexer
+        - podSelector:
+            matchLabels:
+              job-name: wazuh-indexer
+      ports:
+        - port: 9200
+          protocol: TCP
+
+# --- Manager Master: 1515/55000 from dashboard+agents, 1516 from workers ---
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wazuh-manager-master
+  namespace: payu-security
+spec:
+  podSelector:
+    matchLabels:
+      app: wazuh-manager
+      node-type: master
+  policyTypes:
+    - Ingress
+  ingress:
+    # Agent registration (1515) + API (55000)
+    - from:
+        - podSelector:
+            matchLabels:
+              app: wazuh-dashboard
+        - podSelector:
+            matchLabels:
+              app: wazuh-agent
+              node-type: agent
+      ports:
+        - port: 1515
+          protocol: TCP
+        - port: 55000
+          protocol: TCP
+    # Cluster sync (1516) — worker-to-master
+    - from:
+        - podSelector:
+            matchLabels:
+              app: wazuh-manager
+              node-type: worker
+      ports:
+        - port: 1516
+          protocol: TCP
+
+# --- Manager Worker: 1514 from agents (any), 1516 from manager cluster ---
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wazuh-manager-worker
+  namespace: payu-security
+spec:
+  podSelector:
+    matchLabels:
+      app: wazuh-manager
+      node-type: worker
+  policyTypes:
+    - Ingress
+  ingress:
+    # Agent data (1514) — from any pod (agents connect here)
+    - ports:
+        - port: 1514
+          protocol: TCP
+    # Cluster sync (1516) — manager-to-manager
+    - from:
+        - podSelector:
+            matchLabels:
+              app: wazuh-manager
+      ports:
+        - port: 1516
+          protocol: TCP

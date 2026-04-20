@@ -1,45 +1,210 @@
-# Base configuration for Wazuh SIEM
+# Wazuh Helm Chart values for OpenShift 4.20+
+# Chart: morgoved/wazuh-helm v1.0.22 (appVersion 4.14.1)
+#
+# OpenShift SCC Strategy:
+#   - Custom SCC 'wazuh-manager-scc' for manager (master+worker):
+#       allows SYS_CHROOT (required by wazuh-analysisd chroot()),
+#       fsGroup MustRunAs 101 (wazuh group)
+#   - 'anyuid' SCC for indexer and dashboard (no special caps needed)
+#   - 'privileged' SCC for agent DaemonSet (hostPath + privileged container)
+#   - All SCC bindings defined in rbac.yaml
+#
+# OVN-Kubernetes NetworkPolicy Workaround:
+#   - All NetworkPolicies are Ingress-only (policyTypes: [Ingress])
+#   - OVN-K does NOT properly handle egress rules for DNS when mixed
+#     with other selectors. Removing Egress from policyTypes is the
+#     only reliable workaround. See networkpolicy.yaml.
+#
+# Probes:
+#   - Dashboard needs generous probe timing (120s+ initial delay)
+#     because it takes 60-90s to connect to indexer on startup.
+
+# =============================================================
+# Indexer (top-level key, NOT under wazuh:)
+# =============================================================
+indexer:
+  enabled: true
+  replicas: 1  # Lab: single node (chart default: 3)
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: "wazuh-indexer"
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+  # OpenShift: let 'anyuid' SCC handle security context
+  securityContext: {}
+
+  # Disable privileged sysctl init container (blocked by OpenShift SCC)
+  sysctlImage:
+    enabled: false
+
+  storageSize: 20Gi
+  storageClass: gp3-csi
+
+  env:
+    OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m -Dlog4j2.formatMsgNoLookups=true"
+    CLUSTER_NAME: "wazuh"
+    NETWORK_HOST: "0.0.0.0"
+    DISABLE_INSTALL_DEMO_CONFIG: "true"
+
+  networkPolicy:
+    enabled: false  # Managed separately in networkpolicy.yaml
+
+# =============================================================
+# Dashboard (top-level key)
+# =============================================================
+dashboard:
+  enabled: true
+  replicas: 1
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: "wazuh-dashboard"
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  # OpenShift: let 'anyuid' SCC handle security context
+  securityContext: {}
+
+  # Dashboard takes 60-90s to connect to indexer + API on startup.
+  # Default probes are too aggressive and cause restart loops.
+  livenessProbe:
+    httpGet:
+      path: /api/status
+      port: 5601
+      scheme: HTTP
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 15
+
+  readinessProbe:
+    httpGet:
+      path: /api/status
+      port: 5601
+      scheme: HTTP
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 20
+
+  networkPolicy:
+    enabled: false  # Managed separately in networkpolicy.yaml
+
+# =============================================================
+# Wazuh Manager (top-level key "wazuh:")
+# =============================================================
 wazuh:
-  manager:
+  enabled: true
+  syslog_enable: false  # Lab: disable syslog
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: "wazuh-manager"
+
+  # Master node
+  master:
+    replicas: 1
     resources:
       requests:
-        cpu: 500m
-        memory: 2Gi
+        cpu: 250m
+        memory: 512Mi
       limits:
-        cpu: 2
-        memory: 4Gi
-    podSecurityContext:
-      runAsUser: 1000
-    securityContext:
-      capabilities:
-        drop: ["SYS_CHROOT"]
-        
-  indexer:
-    # Resolve OpenShift SCC limitation (Issue #241) 
-    # Mencegah penggunaan sysctl initialization privileged yang di-block oleh OpenShift
-    sysctlInitContainer:
-      enabled: false
-    resources:
-      requests:
         cpu: 1
         memory: 2Gi
-      limits:
-        cpu: 2
-        memory: 4Gi
-    podSecurityContext:
-      runAsUser: 1000
+
+    # CRITICAL: wazuh-analysisd calls chroot('/var/ossec') at startup.
+    # Without SYS_CHROOT, ALL manager daemons fail to start and the
+    # API on port 55000 is unreachable.
     securityContext:
       capabilities:
-        drop: ["SYS_CHROOT"]
+        add:
+          - SYS_CHROOT
 
-  dashboard:
-    enabled: true
+    storageSize: 20Gi
+    storageClass: gp3-csi
+
+    networkPolicy:
+      enabled: false  # Managed separately in networkpolicy.yaml
+
+  # Worker nodes
+  worker:
+    replicas: 1
     resources:
       requests:
-        cpu: 500m
-        memory: 1Gi
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+    # fsGroup 101 = wazuh group. Required for worker data directory
+    # permissions. Enforced by custom SCC 'wazuh-manager-scc'.
     podSecurityContext:
-      runAsUser: 1000
+      fsGroup: 101
+
+    # Same SYS_CHROOT requirement as master
     securityContext:
       capabilities:
-        drop: ["SYS_CHROOT"]
+        add:
+          - SYS_CHROOT
+
+    storageSize: 20Gi
+    storageClass: gp3-csi
+
+    networkPolicy:
+      enabled: false  # Managed separately in networkpolicy.yaml
+
+  # Agent DaemonSet — monitors all worker nodes
+  # Requires 'privileged' SCC (hostPath volumes + privileged container)
+  # Uses dedicated 'wazuh-agent' SA (defined in rbac.yaml)
+  agent:
+    enabled: true
+
+    image:
+      repository: kinseii/wazuh-agent
+      tag: "4.14.1"
+
+    serviceAccount:
+      name: "wazuh-agent"
+
+    securityContext:
+      privileged: true
+
+  # Init container for config updates
+  initContainer:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+# =============================================================
+# Cert-manager (TLS certificates)
+# =============================================================
+certManager:
+  enabled: true
+
+# =============================================================
+# External Indexer — not used (we deploy our own)
+# =============================================================
+externalIndexer:
+  enabled: false

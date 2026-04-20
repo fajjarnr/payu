@@ -1,0 +1,57 @@
+# Custom SCC for Wazuh Manager (master + worker)
+#
+# Why custom SCC instead of 'anyuid':
+#   - wazuh-analysisd calls chroot('/var/ossec') at startup, requiring
+#     the SYS_CHROOT Linux capability. The 'anyuid' SCC does not allow
+#     any capabilities (allowedCapabilities: null).
+#   - Without this SCC, ALL Wazuh manager daemons fail to start:
+#       CRITICAL: (1132): Unable to chroot to directory '/var/ossec'
+#   - This affects: API (55000), analysisd, authd, remoted, etc.
+#
+# Priority 11 ensures this SCC is selected over 'anyuid' (priority 10)
+# when the pod requests SYS_CHROOT.
+#
+# fsGroup MustRunAs 101: The 'wazuh' group GID used for data files.
+# The worker StatefulSet sets fsGroup: 101 explicitly; the master
+# gets it assigned automatically by MustRunAs.
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: wazuh-manager-scc
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: false
+allowedCapabilities:
+  - SYS_CHROOT
+defaultAddCapabilities: null
+requiredDropCapabilities:
+  - MKNOD
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 101
+      max: 101
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+priority: 11
+readOnlyRootFilesystem: false
+users:
+  - system:serviceaccount:payu-security:wazuh-manager
+volumes:
+  - configMap
+  - csi
+  - downwardAPI
+  - emptyDir
+  - ephemeral
+  - persistentVolumeClaim
+  - projected
+  - secret

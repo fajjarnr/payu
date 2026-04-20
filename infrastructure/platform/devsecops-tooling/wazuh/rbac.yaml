@@ -1,0 +1,71 @@
+# RBAC for Wazuh on OpenShift — SCC bindings
+#
+# SCC assignment strategy:
+#   wazuh-manager SA  → wazuh-manager-scc (custom, via users list in scc.yaml)
+#   wazuh-indexer SA  → anyuid (via RoleBinding below)
+#   wazuh-dashboard SA → anyuid (via RoleBinding below)
+#   wazuh-agent SA    → privileged (via ClusterRoleBinding — required for
+#                        hostPath volumes and privileged: true container)
+#
+# Why wazuh-agent uses ClusterRoleBinding:
+#   OpenShift requires ClusterRoleBinding (not RoleBinding) for the
+#   'privileged' SCC because the SCC admission controller evaluates
+#   cluster-wide bindings for privileged access.
+
+# --- ServiceAccount for wazuh-agent (not created by Helm chart) ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: wazuh-agent
+  namespace: payu-security
+  labels:
+    app: wazuh-agent
+
+# --- anyuid SCC → wazuh-indexer ---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wazuh-indexer-anyuid
+  namespace: payu-security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+subjects:
+  - kind: ServiceAccount
+    name: wazuh-indexer
+    namespace: payu-security
+
+# --- anyuid SCC → wazuh-dashboard ---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wazuh-dashboard-anyuid
+  namespace: payu-security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+subjects:
+  - kind: ServiceAccount
+    name: wazuh-dashboard
+    namespace: payu-security
+
+# --- privileged SCC → wazuh-agent ---
+# Agent DaemonSet needs: hostPath volumes, privileged: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: wazuh-agent-privileged
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+  - kind: ServiceAccount
+    name: wazuh-agent
+    namespace: payu-security

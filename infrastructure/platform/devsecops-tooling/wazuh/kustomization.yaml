@@ -3,10 +3,23 @@ kind: Kustomization
 
 namespace: payu-security
 
+# Wazuh Helm chart (manager, indexer, dashboard, agents)
 helmCharts:
   - name: wazuh
-    repo: https://wazuh.github.io/wazuh-kubernetes/
-    version: 4.14.4 # Updated per user request
+    repo: https://morgoved.github.io/wazuh-helm/
+    version: 1.0.22 # Chart version for app version 4.14.1
     releaseName: wazuh
     namespace: payu-security
     valuesFile: values.yaml
+
+# Additional resources not managed by the Helm chart.
+# These encode OpenShift-specific fixes discovered during deployment:
+#   - scc.yaml:           Custom SCC for SYS_CHROOT (manager daemons)
+#   - rbac.yaml:          SA + SCC bindings (anyuid, privileged)
+#   - networkpolicy.yaml: Ingress-only policies (OVN-K DNS workaround)
+#   - route.yaml:         Dashboard edge-terminated route
+resources:
+  - scc.yaml
+  - rbac.yaml
+  - networkpolicy.yaml
+  - route.yaml
