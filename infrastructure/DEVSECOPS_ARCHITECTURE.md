@@ -4,9 +4,9 @@
 
 | Field               | Value                                               |
 | ------------------- | --------------------------------------------------- |
-| **Versi**           | **1.1.0** _(Updated from 1.0.0)_                    |
+| **Versi**           | **1.2.0** _(Updated from 1.1.0)_                    |
 | **Status**          | Draft — Internal Review                             |
-| **Tanggal**         | April 2025                                          |
+| **Tanggal**         | April 2026                                          |
 | **Author**          | Platform Engineering Team                           |
 | **Klasifikasi**     | CONFIDENTIAL _(Internal Personal Project Use Only)_ |
 | **Target Audience** | Engineering Lead, CISO, Platform Team               |
@@ -33,7 +33,7 @@
 
 ## 1. Executive Summary
 
-Dokumen ini mendefinisikan kebutuhan produk untuk implementasi pipeline DevSecOps enterprise-grade pada platform OpenShift Container Platform (OCP) yang digunakan oleh Payu. Pipeline ini dirancang untuk memastikan keamanan end-to-end mulai dari commit kode hingga deployment production, dengan kepatuhan penuh terhadap **OWASP Top 10 2021**, **OWASP API Security Top 10 2023**, standar **SLSA Level 2+**, dan regulasi keamanan finansial (**PCI-DSS v4.0**, ISO 27001, Bank Indonesia).
+Dokumen ini mendefinisikan kebutuhan produk untuk implementasi pipeline DevSecOps enterprise-grade pada platform OpenShift Container Platform (OCP) yang digunakan oleh Payu. Pipeline ini dirancang untuk memastikan keamanan end-to-end mulai dari commit kode hingga deployment production, dengan kepatuhan penuh terhadap **OWASP Top 10 2025**, **OWASP API Security Top 10 2023**, standar **SLSA Level 2+**, dan regulasi keamanan finansial (**PCI-DSS v4.0**, ISO 27001, Bank Indonesia).
 
 > **Scope:** Semua aplikasi yang di-deploy di namespace `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, dan `payu` (production) wajib melewati pipeline ini tanpa pengecualian.
 
@@ -149,7 +149,7 @@ graph LR
 
 ### Stage 1 — Source & Commit Security
 
-**OWASP Coverage:** A03 (Injection) · A05 (Misconfig) · A06 (Vulnerable Components) · A08 (Integrity) · A09 (Logging) · **API1:2023 (Broken Object Level Authorization)**
+**OWASP Coverage:** A05 (Injection) · A02 (Security Misconfig) · A03 (Software Supply Chain Failures) · A08 (Integrity) · A09 (Logging & Alerting) · **API1:2023 (Broken Object Level Authorization)**
 
 #### 4.1.1 Pre-Commit Hooks (Recommended, Not Blocking)
 
@@ -176,11 +176,11 @@ graph LR
 
 | Tool                       | Tipe        | Bahasa      | OWASP Coverage              | Rekomendasi                                          |
 | -------------------------- | ----------- | ----------- | --------------------------- | ---------------------------------------------------- |
-| **Semgrep OSS**            | Open Source | 30+         | A03, A04, A05, API1-10      | ✅ **Utama** — fast, rule-based, easy custom rules   |
-| **SonarQube CE**           | Open Source | 27+         | A03, A04, A06, Code Quality | ✅ **Komplemen** — quality gate + tech debt tracking |
-| **Bandit**                 | Open Source | Python only | A03, A05                    | ✅ Wajib untuk service Python                        |
-| **Gosec**                  | Open Source | Go only     | A03, A05, A08               | ✅ Wajib untuk service Go                            |
-| **SpotBugs + FindSecBugs** | Open Source | Java/Kotlin | A03, A04, A06               | ✅ Wajib untuk service Java                          |
+| **Semgrep OSS**            | Open Source | 30+         | A02, A05, A06, A10, API1-10 | ✅ **Utama** — fast, rule-based, easy custom rules   |
+| **SonarQube CE**           | Open Source | 27+         | A03, A05, A06, Code Quality | ✅ **Komplemen** — quality gate + tech debt tracking |
+| **Bandit**                 | Open Source | Python only | A02, A05                    | ✅ Wajib untuk service Python                        |
+| **Gosec**                  | Open Source | Go only     | A02, A05, A08               | ✅ Wajib untuk service Go                            |
+| **SpotBugs + FindSecBugs** | Open Source | Java/Kotlin | A03, A05, A06               | ✅ Wajib untuk service Java                          |
 
 #### 4.1.4 SCA & SBOM (Software Composition Analysis)
 
@@ -195,7 +195,7 @@ graph LR
 
 ### Stage 2 — Build & Image Security
 
-**OWASP Coverage:** A04 (Insecure Design) · A06 (Vulnerable Components) · A08 (Integrity Failures) · **SLSA L2+**
+**OWASP Coverage:** A03 (Software Supply Chain Failures) · A06 (Insecure Design) · A08 (Integrity Failures) · **SLSA L2+**
 
 #### 4.2.1 Build Requirements
 
@@ -227,14 +227,14 @@ graph LR
 
 ### Stage 3 — Test (payu-dev, payu-dev-\*, payu-sit)
 
-**OWASP Coverage:** A01 (Access Control) · A02 (Crypto) · A03 (Injection) · A07 (Auth) · A10 (SSRF) · **API Security Top 10**
+**OWASP Coverage:** A01 (Access Control) · A04 (Crypto) · A05 (Injection) · A07 (Auth) · A10 (Mishandling Except.) · **API Security Top 10**
 
 #### 4.3.1 DAST (Dynamic Application Security Testing)
 
 | Tool                     | Tipe        | Mode                              | OWASP Coverage                           | Rekomendasi                                              |
 | ------------------------ | ----------- | --------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
-| **OWASP ZAP (Headless)** | Open Source | Active + Passive scan             | A01, A03, A05, A07, A10, API1-10         | ✅ **Wajib** — baseline DAST otomatis di payu-dev        |
-| **Nuclei**               | Open Source | Template-based vulnerability scan | A05, A06, A07, exposed panels, misconfig | ✅ **Wajib** — fast scanning untuk known CVE & misconfig |
+| **OWASP ZAP (Headless)** | Open Source | Active + Passive scan             | A01, A02, A05, A07, A10, API1-10         | ✅ **Wajib** — baseline DAST otomatis di payu-dev        |
+| **Nuclei**               | Open Source | Template-based vulnerability scan | A02, A03, A07, exposed panels, misconfig | ✅ **Wajib** — fast scanning untuk known CVE & misconfig |
 | **Schemathesis**         | Open Source | Schema-based API fuzzing          | API1, API2, API3, API5, API7             | ✅ **Wajib** — automatic fuzzing dari OpenAPI spec       |
 
 - ZAP dijalankan dalam mode headless di Tekton task setiap deploy ke `payu-dev`
@@ -263,7 +263,7 @@ graph LR
 
 ### Stage 4 — Deploy & Policy Gate
 
-**OWASP Coverage:** A05 (Security Misconfig) · A08 (Software Integrity) · GitOps drift prevention
+**OWASP Coverage:** A02 (Security Misconfig) · A08 (Software Integrity) · GitOps drift prevention
 
 #### 4.4.1 GitOps Requirements
 
@@ -300,7 +300,7 @@ graph LR
 
 ### Stage 5 — Runtime Security
 
-**OWASP Coverage:** A02 (Crypto via mTLS) · A07 (Auth via RBAC) · A09 (Logging via Falco) · Zero-trust enforcement
+**OWASP Coverage:** A04 (Crypto via mTLS) · A07 (Auth via RBAC) · A09 (Logging & Alerting via Falco) · Zero-trust enforcement
 
 #### 4.5.1 Cloud Workload Protection Platform (CWPP)
 
@@ -337,7 +337,7 @@ graph LR
 
 ### Stage 6 — Observability & Compliance
 
-**OWASP Coverage:** A09 (Security Logging & Monitoring Failures) — stage paling sering diabaikan namun kritikal
+**OWASP Coverage:** A09 (Security Logging and Alerting Failures) — stage paling sering diabaikan namun kritikal
 
 #### 4.6.1 Logging & SIEM
 
@@ -372,20 +372,20 @@ graph LR
 
 ## 5. OWASP Top 10 & API Security Compliance Matrix
 
-### 5.1 OWASP Web Top 10 2021
+### 5.1 OWASP Web Top 10 2025
 
 | OWASP ID | Kategori                                 | Stage Mitigasi  | Tool Utama                                                               | Status    |
 | -------- | ---------------------------------------- | --------------- | ------------------------------------------------------------------------ | --------- |
-| A01:2021 | Broken Access Control                    | Stage 3 + 4 + 5 | ZAP + Kyverno + ACS RBAC + OSSM AuthPolicy                               | **Wajib** |
-| A02:2021 | Cryptographic Failures                   | Stage 2 + 5     | Cosign + Vault + mTLS OSSM + TLS 1.3 enforcement                         | **Wajib** |
-| A03:2021 | Injection                                | Stage 1 + 3     | Semgrep + SonarQube + ZAP DAST + parameterized query enforcement         | **Wajib** |
-| A04:2021 | Insecure Design                          | Stage 1 + 2     | Threat model template + distroless base + secure coding guideline        | **Wajib** |
-| A05:2021 | Security Misconfiguration                | Stage 1 + 4 + 6 | Semgrep + Kyverno + ComplianceOperator + Wazuh FIM                       | **Wajib** |
-| A06:2021 | Vulnerable Components                    | Stage 1 + 2     | Grype + Trivy + Syft SBOM + Renovate Bot                                 | **Wajib** |
-| A07:2021 | Identification & Authentication Failures | Stage 3 + 5     | Schemathesis + mTLS + RBAC + MFA enforcement via OAuth                   | **Wajib** |
-| A08:2021 | Software & Data Integrity Failures       | Stage 1 + 2 + 4 | Signed commit + Cosign + Admission controller + SBOM attestation         | **Wajib** |
-| A09:2021 | Security Logging & Monitoring Failures   | Stage 6         | Loki + Wazuh + Falco + SIEM correlation rules                            | **Wajib** |
-| A10:2021 | Server-Side Request Forgery (SSRF)       | Stage 3 + 5     | ZAP DAST active scan + NetworkPolicy egress control + OSSM authorization | **Wajib** |
+| A01:2025 | Broken Access Control                    | Stage 3 + 4 + 5 | ZAP + Kyverno + ACS RBAC + OSSM AuthPolicy                               | **Wajib** |
+| A02:2025 | Security Misconfiguration                | Stage 1 + 4 + 6 | Semgrep + Kyverno + ComplianceOperator + Wazuh FIM                       | **Wajib** |
+| A03:2025 | Software Supply Chain Failures           | Stage 1 + 2     | Grype + Trivy + Syft SBOM + Renovate Bot                                 | **Wajib** |
+| A04:2025 | Cryptographic Failures                   | Stage 2 + 5     | Cosign + Vault + mTLS OSSM + TLS 1.3 enforcement                         | **Wajib** |
+| A05:2025 | Injection                                | Stage 1 + 3     | Semgrep + SonarQube + ZAP DAST + parameterized query enforcement         | **Wajib** |
+| A06:2025 | Insecure Design                          | Stage 1 + 2     | Threat model template + distroless base + secure coding guideline        | **Wajib** |
+| A07:2025 | Authentication Failures                  | Stage 3 + 5     | Schemathesis + mTLS + RBAC + MFA enforcement via OAuth                   | **Wajib** |
+| A08:2025 | Software or Data Integrity Failures      | Stage 1 + 2 + 4 | Signed commit + Cosign + Admission controller + SBOM attestation         | **Wajib** |
+| A09:2025 | Security Logging and Alerting Failures   | Stage 6         | Loki + Wazuh + Falco + SIEM correlation rules                            | **Wajib** |
+| A10:2025 | Mishandling of Exceptional Conditions    | Stage 1 + 3     | Semgrep + SonarQube + ZAP DAST error detection                           | **Wajib** |
 
 ### 5.2 OWASP API Security Top 10 2023 _(Payu: API-Heavy Platform)_
 
@@ -747,13 +747,13 @@ spec:
 
 ---
 
-_Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2025_  
-_Versi 1.1.0 — Updated dengan: 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment._
+_Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2026_  
+_Versi 1.2.0 — Updated dengan: OWASP Top 10 2025, 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment._
 
           attempt: 3
 ```
 
 ---
 
-*Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2025*  
-*Versi 1.1.0 — Updated dengan: 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment.*
+*Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2026*  
+*Versi 1.2.0 — Updated dengan: OWASP Top 10 2025, 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment.*
