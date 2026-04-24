@@ -4,7 +4,7 @@
 
 | Field               | Value                                               |
 | ------------------- | --------------------------------------------------- |
-| **Versi**           | **1.2.0** _(Updated from 1.1.0)_                    |
+| **Versi**           | **1.3.0** _(Updated from 1.2.0)_                    |
 | **Status**          | Draft — Internal Review                             |
 | **Tanggal**         | April 2026                                          |
 | **Author**          | Platform Engineering Team                           |
@@ -25,11 +25,34 @@
 6. [Tool Stack — 100% Open Source](#6-tool-stack--100-open-source)
 7. [Implementation Roadmap](#7-implementation-roadmap)
 8. [Non-Functional Requirements](#8-non-functional-requirements)
-9. [Risiko & Mitigasi](#9-risiko--mitigasi)
-10. [Developer Experience (DevEx)](#10-developer-experience-devex)
-11. [Glosarium](#11-glosarium)
+9. [Backup & Disaster Recovery](#9-backup--disaster-recovery) 🔵
+10. [Cost Management & FinOps](#10-cost-management--finops) 🟡
+11. [Multi-Cluster & Federation Strategy](#11-multi-cluster--federation-strategy) 🟠
+12. [Image Registry Strategy](#12-image-registry-strategy) 🟡
+13. [Network Segmentation](#13-network-segmentation) 🔵
+14. [API Gateway & WAF](#14-api-gateway--waf) 🟡
+15. [PCI-DSS v4.0 Compliance Mapping](#15-pci-dss-v40-compliance-mapping) 🟡
+16. [Data Residency & Sovereignty](#16-data-residency--sovereignty) 🟠
+17. [Brownfield Adoption Guide](#17-brownfield-adoption-guide) 🟠
+18. [Incident Response Playbook](#18-incident-response-playbook) 🔵
+19. [Testing Strategy](#19-testing-strategy) 🔵
+20. [Risiko & Mitigasi](#20-risiko--mitigasi)
+21. [Developer Experience (DevEx)](#21-developer-experience-devex)
+22. [Version History](#22-version-history)
+23. [RACI Matrix](#23-raci-matrix)
+24. [Glosarium](#24-glosarium)
 
 ---
+
+> ### 📌 Implementation Scope Legend
+>
+> Dokumen ini mencakup arsitektur untuk **lab/personal project** maupun **production enterprise**. Setiap section dan roadmap item ditandai dengan badge berikut:
+>
+> | Badge | Arti | Kapan Implementasi |
+> |-------|------|-------------------|
+> | 🔵 **Lab Essential** | Wajib untuk lab/personal project | Segera — fondasi keamanan dasar |
+> | 🟡 **Lab Recommended** | Disarankan untuk lab, value tinggi | Jika waktu dan resource memungkinkan |
+> | 🟠 **Enterprise Target** | Aspirational — untuk production enterprise | Saat scaling ke multi-tenant/regulated environment |
 
 ## 1. Executive Summary
 
@@ -273,6 +296,9 @@ graph LR
 - Drift detection aktif — ArgoCD alert dan auto-sync jika terjadi drift dari Git (dengan approval gate untuk production)
 - App-of-Apps pattern untuk manajemen multi-namespace yang terstandardisasi
 - **ApplicationSet** untuk generate Application per namespace (termasuk preview environment `payu-dev-*`) secara otomatis
+- **Tekton Chains** — wajib diaktifkan untuk menghasilkan SLSA provenance attestation secara otomatis pada setiap TaskRun/PipelineRun. Attestation di-sign menggunakan Cosign dan disimpan di OCI registry bersama image. Kritikal untuk mencapai target SLSA Level 3.
+- **Tekton Results** — wajib dikonfigurasi untuk menyimpan audit trail dari seluruh pipeline run (logs, results, metadata). Retention policy minimum **12 bulan** untuk compliance audit trail (PCI-DSS Requirement 10). Data di-forward ke Wazuh untuk centralized audit.
+- **Migration Path**: Untuk tim yang masih menggunakan Jenkins/GitLab CI, disediakan migration strategy bertahap: (1) Jalankan Tekton pipeline paralel dengan CI lama, (2) Validasi hasil identik, (3) Cutover per-service, (4) Decommission CI lama setelah 30 hari tanpa issue.
 
 #### 4.4.2 Policy-as-Code (Admission Controller)
 
@@ -306,6 +332,8 @@ graph LR
 
 > ⚠️ **OVN-Kubernetes & Kernel Conflict Avoidance**: Karena Red Hat OpenShift 4.20 secara default menggunakan **OVN-Kubernetes**, fungsionalitas Tetragon berpotensi rentan bentrokan tanpa Cilium. Fokus penuh gunakan **Falco** sebagai sole alerting engine berbasis eBPF/syscall.
 
+> ⚠️ **Falco Kernel Compatibility**: Falco modern eBPF probe (v0.40+) memerlukan kernel ≥ 5.8 dengan BTF (BPF Type Format) support. Verifikasi RHEL CoreOS kernel version di OCP 4.20 sebelum deployment. Fallback strategy: (1) **Modern eBPF probe** (preferred, kernel ≥ 5.8 + BTF), (2) **Kernel module (kmod)** untuk kernel lama tanpa BTF, (3) **Userspace instrumentation** sebagai last resort jika eBPF/kmod tidak tersedia. Lakukan validasi kompatibilitas di `payu-dev` sebelum rollout ke seluruh cluster.
+
 | Tool                  | Tipe          | Deteksi                                               | Integrasi                      | Rekomendasi                                                    |
 | --------------------- | ------------- | ----------------------------------------------------- | ------------------------------ | -------------------------------------------------------------- |
 | **ACS / StackRox**    | Berbayar (RH) | Policy, CVE, runtime behavior, compliance             | OCP native operator            | ✅ **Sudah terpakai** — primary enforcement                    |
@@ -323,9 +351,11 @@ graph LR
 
 | Tool                                    | Tipe                 | Dynamic Secrets   | Auto-Rotate             | Rekomendasi                                  |
 | --------------------------------------- | -------------------- | ----------------- | ----------------------- | -------------------------------------------- |
-| **HashiCorp Vault OSS**                 | Open Source (BSL)    | Ya                | Manual config + CronJob | ✅ **Utama** — self-hosted, feature-complete |
+| **HashiCorp Vault OSS**                 | BSL-1.1 (lihat ⚠️)  | Ya                | Manual config + CronJob | ✅ **Utama** — self-hosted, feature-complete |
 | **External Secrets Operator**           | Open Source (Apache) | Bridge only       | Via Vault backend       | ✅ **Wajib** sebagai bridge K8s ↔ Vault      |
 | **Vault Agent Injector / CSI Provider** | Open Source          | Sidecar/CSI mount | Via Vault               | ✅ Untuk secret injection ke pod             |
+
+> ⚠️ **Vault BSL License Risk Disclaimer**: HashiCorp Vault "OSS" menggunakan **Business Source License 1.1 (BSL-1.1)**, yang **bukan open source** menurut definisi OSI. BSL memiliki restrictions untuk production use oleh organisasi di atas revenue threshold tertentu. Tim legal **wajib** melakukan compliance review sebelum production deployment. **Alternatif truly open source**: Evaluasi **OpenBao** (fork Vault di bawah MPL-2.0, Linux Foundation backed) sebagai drop-in replacement jika BSL compliance menjadi blocker.
 
 - Tidak ada secret yang boleh disimpan sebagai environment variable langsung di pod spec
 - Semua secret di-inject via **External Secrets Operator** dari Vault
@@ -446,7 +476,8 @@ graph LR
 
 | Tool                           | Lisensi                  | Dynamic Secrets   | Auto-Rotate             | Verdict                                              |
 | ------------------------------ | ------------------------ | ----------------- | ----------------------- | ---------------------------------------------------- |
-| **HashiCorp Vault OSS**        | Open Source (BSL-1.1)    | Ya                | Manual config + CronJob | ✅ Rekomendasi utama — self-hosted, feature-complete |
+| **HashiCorp Vault OSS**        | ⚠️ BSL-1.1 (bukan OSI)  | Ya                | Manual config + CronJob | ✅ Utama — tapi wajib legal review BSL compliance    |
+| **OpenBao** _(alternatif)_     | MPL-2.0 (truly OSS, LF) | Ya                | Manual config + CronJob | ⚙️ Evaluasi — drop-in replacement jika BSL blocker   |
 | **External Secrets Operator**  | Open Source (Apache-2.0) | Bridge only       | Via Vault backend       | ✅ Wajib sebagai bridge K8s ↔ Vault                  |
 | **Vault Agent Injector / CSI** | Open Source              | Sidecar/CSI mount | Via Vault TTL           | ✅ Untuk secret injection ke pod                     |
 
@@ -478,41 +509,122 @@ graph LR
 
 > Priority: wajib diselesaikan sebelum phase berikutnya.
 
-- [ ] Implementasi Gitleaks + Trufflehog di Tekton pipeline (CI enforcement)
-- [ ] Integrasi Semgrep OSS dan SonarQube CE ke pipeline Tekton yang ada
-- [ ] Setup Cosign + Sigstore (keyless OIDC) untuk image signing di semua build pipeline
-- [ ] Deploy HashiCorp Vault OSS + External Secrets Operator di cluster
-- [ ] Konfigurasi Kyverno baseline policies (no-root, resource limits, approved registry, default-deny NetworkPolicy)
-- [ ] Aktifkan ACS admission controller untuk enforce image signature policy
-- [ ] Setup LokiStack + Grafana untuk log aggregation dasar
+**Pipeline & Security Baseline:**
+- [ ] 🔵 Implementasi Gitleaks + Trufflehog di Tekton pipeline (CI enforcement)
+- [ ] 🔵 Integrasi Semgrep OSS dan SonarQube CE ke pipeline Tekton yang ada
+- [ ] 🔵 Setup Cosign + Sigstore (keyless OIDC) untuk image signing di semua build pipeline
+- [ ] 🔵 Deploy HashiCorp Vault OSS + External Secrets Operator di cluster
+- [ ] 🔵 ⚠️ **Legal review Vault BSL-1.1 compliance** — evaluasi OpenBao jika BSL blocker _(§6.5)_
+- [ ] 🔵 Konfigurasi Kyverno baseline policies (no-root, resource limits, approved registry, default-deny NetworkPolicy)
+- [ ] 🔵 Aktifkan ACS admission controller untuk enforce image signature policy
+- [ ] 🔵 Setup LokiStack + Grafana untuk log aggregation dasar
+
+**DR & Backup (§9):**
+- [ ] 🔵 Konfigurasi Vault Raft auto-snapshot (1 jam interval) ke S3 bucket terenkripsi
+- [ ] 🔵 Konfigurasi Vault auto-unseal (Transit atau KMS)
+- [ ] 🔵 Dokumentasi DR runbook untuk semua critical components (Vault, ArgoCD, ACS, Wazuh)
+
+**FinOps (§10):**
+- [ ] 🔵 Implementasi ResourceQuota + LimitRange di semua namespace sesuai matrix §10.1
+- [ ] 🔵 Kyverno policy: reject pod tanpa resource requests/limits
+
+**Network (§13):**
+- [ ] 🔵 Implementasi default-deny NetworkPolicy per namespace (Kyverno auto-generate)
+- [ ] 🟡 Definisi EgressNetworkPolicy untuk production namespace
 
 ### Phase 2 — Hardening (Bulan 3–4)
 
-- [ ] Integrasi OWASP ZAP headless + Schemathesis ke Tekton task untuk setiap deploy ke `payu-dev`
-- [ ] Setup Falco di semua node sebagai supplement ACS/StackRox (runtime alerting)
-- [ ] Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
-- [ ] Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
-- [ ] Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
-- [ ] Migrasi semua secret dari env vars ke Vault + External Secrets Operator
-- [ ] Setup ArgoCD Image Updater untuk automated image digest promotion via Git write-back
+**Security Scanning & Mesh:**
+- [ ] 🔵 Integrasi OWASP ZAP headless + Schemathesis ke Tekton task untuk setiap deploy ke `payu-dev`
+- [ ] 🔵 Setup Falco di semua node — **validasi kernel compatibility** (eBPF/kmod/userspace) di `payu-dev` dulu _(§4.5.1)_
+- [ ] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
+- [ ] 🟡 Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
+- [ ] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
+- [ ] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator
+- [ ] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion via Git write-back
+
+**Tekton Supply Chain (§4.4.1):**
+- [ ] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
+- [ ] 🟡 Konfigurasi Tekton Results untuk audit trail (retention 12 bulan)
+
+**API Gateway & WAF (§14):**
+- [ ] 🟡 Deploy Coraza WAF dengan OWASP CRS v4.x di ingress layer
+- [ ] 🔵 Konfigurasi rate limiting (global 1000 req/s per IP) via API Gateway
+- [ ] 🔵 Enforce API security headers (HSTS, CSP, X-Frame-Options) di semua response
+
+**Image Registry (§12):**
+- [ ] 🟡 Setup registry GC policy (7 hari non-prod, 30 hari prod)
+- [ ] 🟡 Konfigurasi Quay.io auto-prune policy
+
+**Incident Response (§18):**
+- [ ] 🔵 Definisi severity P1-P4 + escalation path — sosialisasi ke semua tim
+- [ ] 🔵 Konfigurasi ArgoCD auto-rollback on health check failure (5 min window)
+- [ ] 🟠 Setup PagerDuty/Opsgenie integration untuk P1/P2 alerting
 
 ### Phase 3 — Optimization (Bulan 5–6)
 
-- [ ] Integrasi LitmusChaos di `payu-sit` untuk app-level chaos engineering (CRD-based workflow)
-- [ ] Integrasi Kraken + Cerberus di `payu-preprod` untuk infra-level chaos + cluster health validation
-- [ ] Setup k6 load testing sebagai gate sebelum promote ke `payu-uat` (SLO-based)
-- [ ] Implementasi full OWASP Web + API Top 10 test suite di pipeline DAST
-- [ ] Automated compliance reporting ke CISO (weekly report via Wazuh + ComplianceOperator)
-- [ ] Setup preview environment (`payu-dev-*`) via ArgoCD ApplicationSet + auto-cleanup
+**Chaos & Performance:**
+- [ ] 🔵 Integrasi LitmusChaos di `payu-sit` untuk app-level chaos engineering (CRD-based workflow)
+- [ ] 🟡 Integrasi Kraken + Cerberus di `payu-preprod` untuk infra-level chaos + cluster health validation
+- [ ] 🔵 Setup k6 load testing sebagai gate sebelum promote ke `payu-uat` (SLO-based)
+- [ ] 🔵 Implementasi full OWASP Web + API Top 10 test suite di pipeline DAST
+- [ ] 🟡 Automated compliance reporting ke CISO (weekly report via Wazuh + ComplianceOperator)
+- [ ] 🟡 Setup preview environment (`payu-dev-*`) via ArgoCD ApplicationSet + auto-cleanup
+
+**Testing Strategy (§19):**
+- [ ] 🔵 Deploy Pact broker di cluster untuk consumer-driven contract testing
+- [ ] 🔵 Implementasi smoke test gate per environment sesuai matrix §19.3
+- [ ] 🔵 Integrasi contract test sebagai pipeline gate (break contract = PR rejected)
+
+**PCI-DSS Compliance (§15):**
+- [ ] 🟡 Implementasi signed audit logs (vector + Rekor) untuk PCI-DSS Req 10
+- [ ] 🟡 Generate PCI-DSS v4.0 evidence report dari mapping matrix §15 — validasi semua Req 1-12 tercakup
+- [ ] 🟠 Schedule quarterly pen test di `payu-preprod`
+
+**Data Residency (§16):**
+- [ ] 🟠 Validasi semua data storage in-country (PostgreSQL, Vault, Wazuh, LokiStack)
+- [ ] 🟠 Implementasi LUKS encryption untuk PersistentVolumes di production
+- [ ] 🟠 Konfigurasi Wazuh rule untuk detect data egress ke non-Indonesia IP range
+
+**FinOps (§10):**
+- [ ] 🟡 Deploy OpenCost untuk cost allocation per namespace/team/service
+- [ ] 🟡 Konfigurasi HPA wajib untuk production workload + Kyverno enforcement
+- [ ] 🟠 Setup monthly cost report dashboard di Grafana
+
+**DR Validation (§9):**
+- [ ] 🔵 Jalankan DR drill pertama — restore Vault dari snapshot di isolated namespace
+- [ ] 🔵 Validasi ArgoCD recovery dari Git (full re-sync test)
+- [ ] 🟠 Dokumentasi DNS failover procedure untuk standby cluster
 
 ### Phase 4 — Continuous Improvement (Bulan 7+)
 
-- [ ] Evaluasi dan tuning tool berdasarkan metrics, incident report, dan false positive rate
-- [ ] Implementasi pen testing terjadwal di `payu-preprod` (quarterly) dengan report ke CAB
-- [ ] Target SLSA Level 3 — hermetic builds, provenance attestation, build isolation
-- [ ] Red team exercise tahunan untuk validasi end-to-end security posture
-- [ ] Review dan update OWASP compliance matrix setiap 6 bulan
-- [ ] Developer feedback loop: survey DevEx, optimasi pipeline speed, reduce friction
+**Ongoing Security & Compliance:**
+- [ ] 🔵 Evaluasi dan tuning tool berdasarkan metrics, incident report, dan false positive rate
+- [ ] 🟡 Implementasi pen testing terjadwal di `payu-preprod` (quarterly) dengan report ke CAB
+- [ ] 🟠 Target SLSA Level 3 — hermetic builds, provenance attestation, build isolation
+- [ ] 🟠 Red team exercise tahunan untuk validasi end-to-end security posture
+- [ ] 🔵 Review dan update OWASP compliance matrix setiap 6 bulan
+- [ ] 🔵 Developer feedback loop: survey DevEx, optimasi pipeline speed, reduce friction
+
+**Brownfield Migration (§17):**
+- [ ] 🟠 Pilot: migrasi 1-2 service dari Jenkins/GitLab CI ke Tekton di `payu-dev`
+- [ ] 🟠 Bulk import legacy K8s secrets ke Vault (dry-run → execute)
+- [ ] 🟠 Cutover per-namespace sesuai strangler fig strategy §17.3
+
+**Multi-Cluster (§11) — Target Architecture:**
+- [ ] 🟠 Evaluasi kebutuhan hub-spoke model berdasarkan scale
+- [ ] 🟠 Setup ArgoCD ApplicationSet cluster generator (jika multi-cluster adopted)
+- [ ] 🟠 Implementasi image mirroring antar cluster via Skopeo + Cosign verify
+
+**DR Maturity:**
+- [ ] 🟡 Quarterly DR drill (Vault, ArgoCD, Wazuh) — automated test script
+- [ ] 🟠 Validasi cross-cluster failover < 5 menit via DNS health check
+- [ ] 🟠 Annual full-scale DR exercise dengan post-mortem report
+
+**Air-Gapped Readiness (§12.2):**
+- [ ] 🟠 Setup oc-mirror untuk operator catalog mirroring (jika financial services requirement)
+- [ ] 🟠 Dokumentasi air-gapped deployment procedure
+
 
 ---
 
@@ -561,7 +673,397 @@ graph LR
 
 ---
 
-## 9. Risiko & Mitigasi
+## 9. Backup & Disaster Recovery 🔵
+
+> 🔴 **P0 — Business Continuity**: Tanpa strategi DR yang jelas, seluruh pipeline dan security posture rentan terhadap data loss dan extended downtime.
+
+### 9.1 RTO/RPO Targets
+
+| Component       | RPO (Data Loss) | RTO (Recovery Time) | Backup Method                          | Recovery Method                        |
+| --------------- | --------------- | ------------------- | -------------------------------------- | -------------------------------------- |
+| **Vault**       | < 1 jam         | < 15 menit          | Raft auto-snapshot setiap 1 jam ke S3  | Raft restore dari snapshot + auto-unseal |
+| **ArgoCD**      | 0 (Git-backed)  | < 10 menit          | Git repo sebagai source of truth       | Re-sync dari Git + Redis cache rebuild |
+| **ACS Central** | < 4 jam         | < 30 menit          | Daily backup via ACS backup CronJob    | Restore dari backup + sensor reconnect |
+| **Wazuh**       | < 2 jam         | < 30 menit          | Indexer snapshot ke S3 setiap 2 jam    | Restore snapshot + agent re-enrollment |
+| **LokiStack**   | < 1 jam         | < 15 menit          | S3 backend (data sudah persisted)      | Redeploy stack, S3 data intact         |
+| **Tekton**      | 0 (Git-backed)  | < 10 menit          | Pipeline/Task definitions di Git       | Re-apply dari Git + PV restore         |
+
+### 9.2 Vault DR Strategy
+
+- **Auto-Unseal**: Konfigurasi Vault auto-unseal menggunakan Transit secret engine (self-managed) atau AWS KMS (cloud) untuk menghindari manual unseal saat recovery
+- **Raft Snapshot**: Automated Raft snapshot setiap 1 jam via CronJob, disimpan ke S3 bucket terenkripsi dengan versioning enabled
+- **Cross-AZ Replication**: Vault HA cluster di-deploy across minimum 2 Availability Zones
+- **DR Drill**: Quarterly DR drill wajib dilakukan — restore Vault dari snapshot di isolated namespace, validasi secret integrity
+
+### 9.3 ArgoCD DR Strategy
+
+- **Git sebagai Source of Truth**: Semua Application/ApplicationSet manifests di Git — recovery = re-apply
+- **Redis Cache**: ArgoCD Redis digunakan untuk caching saja, bukan persistent state. Rebuild otomatis saat restart
+- **S3 Backend**: ArgoCD repo-server cache ke S3 untuk mempercepat recovery
+
+### 9.4 Cross-Cluster DR 🟠
+
+> _Enterprise target — untuk lab, single cluster dengan Vault snapshot sudah cukup._
+
+- **Cluster Federation**: Jika seluruh OCP cluster fail, recovery plan menggunakan pre-provisioned standby cluster
+- **Sealed Secrets Export**: Seluruh SealedSecret/ExternalSecret manifests di Git, Vault data di S3 — recovery independen dari cluster
+- **DNS Failover**: Konfigurasi Route53/CoreDNS health check untuk automatic failover ke standby cluster (target: < 5 menit)
+
+---
+
+## 10. Cost Management & FinOps 🟡
+
+### 10.1 Resource Quota & LimitRange
+
+| Namespace        | CPU Request | CPU Limit | Memory Request | Memory Limit | PVC Limit |
+| ---------------- | ----------- | --------- | -------------- | ------------ | --------- |
+| `payu-dev`       | 8 cores     | 16 cores  | 16 Gi          | 32 Gi        | 100 Gi    |
+| `payu-dev-*`     | 2 cores     | 4 cores   | 4 Gi           | 8 Gi         | 20 Gi     |
+| `payu-sit`       | 8 cores     | 16 cores  | 16 Gi          | 32 Gi        | 100 Gi    |
+| `payu-uat`       | 8 cores     | 12 cores  | 16 Gi          | 24 Gi        | 80 Gi     |
+| `payu-preprod`   | 12 cores    | 24 cores  | 24 Gi          | 48 Gi        | 150 Gi    |
+| `payu` (prod)    | 24 cores    | 48 cores  | 48 Gi          | 96 Gi        | 500 Gi    |
+
+- **LimitRange**: Default container requests = 100m CPU / 128Mi memory; default limits = 500m / 512Mi
+- **Kyverno Enforcement**: Policy wajib menolak pod tanpa resource requests/limits (sudah di Section 4.4.2)
+
+### 10.2 Cost Visibility
+
+- **OpenCost** (atau Kubecost Community): Deploy untuk cost allocation per namespace, per team, per service
+- Integrasi dengan Grafana dashboard untuk real-time cost visibility
+- Monthly cost report per environment dikirim ke Engineering Lead
+
+### 10.3 Right-Sizing Recommendations
+
+| Tool         | Baseline Resource  | Recommended (Idle/Lab) | Notes                                    |
+| ------------ | ------------------ | ---------------------- | ---------------------------------------- |
+| **Wazuh**    | 8 CPU / 16Gi       | 4 CPU / 8Gi            | Scale up saat active indexing            |
+| **ACS**      | 6 CPU / 12Gi       | 4 CPU / 8Gi            | Sensor per-node overhead ~200m/256Mi     |
+| **Vault**    | 2 CPU / 4Gi        | 1 CPU / 2Gi            | Scale berdasarkan req/s                  |
+| **ArgoCD**   | 2 CPU / 4Gi        | 1 CPU / 2Gi            | App-of-apps overhead minimal             |
+| **LokiStack** | 4 CPU / 8Gi      | 2 CPU / 4Gi            | S3 storage mengurangi in-memory pressure |
+
+### 10.4 HPA/VPA Policies (Kyverno-enforced)
+
+- **HPA**: Wajib untuk semua production workload di `payu` namespace (min 2, max sesuai quota)
+- **VPA**: Recommend mode (bukan auto) di `payu-dev` dan `payu-sit` untuk right-sizing guidance
+- Kyverno policy: reject Deployment tanpa HPA di production namespace
+
+---
+
+## 11. Multi-Cluster & Federation Strategy 🟠
+
+### 11.1 Hub-Spoke Model
+
+```mermaid
+graph TB
+    subgraph Hub["Hub Cluster (Management)"]
+        ArgoCD["ArgoCD Central"]
+        ACS_C["ACS Central"]
+        Vault_P["Vault Primary"]
+    end
+    subgraph Spoke1["Spoke Cluster 1 (Non-Prod)"]
+        Dev["payu-dev"]
+        SIT["payu-sit"]
+        UAT["payu-uat"]
+    end
+    subgraph Spoke2["Spoke Cluster 2 (Prod)"]
+        PreProd["payu-preprod"]
+        Prod["payu (prod)"]
+    end
+    ArgoCD --> Spoke1
+    ArgoCD --> Spoke2
+    ACS_C --> Spoke1
+    ACS_C --> Spoke2
+    Vault_P --> Spoke1
+    Vault_P --> Spoke2
+```
+
+> 📌 **Catatan**: Untuk skala lab/personal project, single cluster dengan namespace isolation sudah cukup. Model ini adalah target architecture untuk production enterprise.
+
+### 11.2 ArgoCD Multi-Cluster Management
+
+- **ApplicationSet Cluster Generator**: Generate Application per cluster secara otomatis berdasarkan cluster labels
+- **Placement Rules**: Non-prod workloads hanya di Spoke 1, production hanya di Spoke 2
+- **Secret Management**: Cluster credentials di-manage via Vault, bukan ArgoCD built-in secret
+
+### 11.3 ACS Multi-Cluster
+
+- ACS Central di Hub cluster, ACS Sensor di setiap Spoke cluster
+- Policy enforcement konsisten di semua cluster via centralized policy management
+- Compliance dashboard aggregated di ACS Central
+
+### 11.4 Image Promotion Antar Cluster
+
+1. Image build & sign di Hub/Spoke 1 (non-prod registry)
+2. Image di-mirror ke prod registry (Spoke 2) via Skopeo + Cosign verify
+3. ArgoCD di Spoke 2 hanya pull dari prod registry (registry allowlist policy)
+
+---
+
+## 12. Image Registry Strategy 🟡
+
+### 12.1 Registry Architecture
+
+| Registry          | Purpose                          | Access                   | Retention          |
+| ----------------- | -------------------------------- | ------------------------ | ------------------ |
+| **Quay.io**       | Primary registry, geo-replicated | All clusters via mirror  | 90 hari (non-prod) |
+| **OCP Registry**  | Build cache, ephemeral images    | Within cluster only      | 30 hari            |
+| **Prod Registry** | Production-only, signed images   | Spoke 2 only (read-only) | 1 tahun            |
+
+### 12.2 Air-Gapped / Disconnected Environment
+
+> Relevan untuk financial services yang memerlukan network isolation.
+
+- **oc-mirror**: Digunakan untuk mirroring operator catalog dan base images ke internal registry
+- **Skopeo**: Mirror application images dari CI registry ke production registry
+- **SBOM Mirror**: SBOM artifacts di-mirror bersama image ke internal registry
+
+### 12.3 Garbage Collection Policy
+
+- Non-prod registry: GC setiap **7 hari** untuk untagged manifests
+- Prod registry: GC setiap **30 hari** untuk untagged, retain tagged images selama **1 tahun**
+- SBOM artifacts: Retain selama image masih ada di registry
+- **Quay.io Auto-Prune**: Konfigurasi repository auto-prune policy berdasarkan tag age dan count
+
+---
+
+## 13. Network Segmentation 🔵
+
+### 13.1 East-West Traffic Segmentation
+
+- **OVN-Kubernetes NetworkPolicy**: Default deny ingress/egress per namespace (auto-generated via Kyverno)
+- **Per-Service NetworkPolicy**: Explicit allow-listing per service → service communication
+- **Service Mesh (OSSM)**: Layer 7 authorization via `AuthorizationPolicy` di `payu-uat` ke atas
+
+### 13.2 Egress Control (PCI-DSS Requirement)
+
+- **EgressNetworkPolicy (OCP-specific)**: Restrict outbound traffic dari production namespace
+- Allowlist hanya untuk: external payment provider API, Bank Indonesia API, DNS resolver
+- **Egress Gateway**: Istio egress gateway untuk centralized egress monitoring dan logging
+- Semua egress traffic di-log ke Wazuh untuk audit trail
+
+### 13.3 DNS Security
+
+- **CoreDNS Policy**: Rewrite/block rules untuk mencegah DNS tunneling (data exfiltration prevention)
+- DNS query logging enabled di `payu-preprod` dan `payu` untuk threat detection
+- Block DNS resolution ke known malicious domains (threat intelligence feed via Wazuh)
+
+### 13.4 Network Segmentation Matrix
+
+| From \ To      | payu-dev | payu-sit | payu-uat | payu-preprod | payu (prod) | External |
+| -------------- | -------- | -------- | -------- | ------------ | ----------- | -------- |
+| **payu-dev**   | Allow    | Deny     | Deny     | Deny         | Deny        | Allow*   |
+| **payu-sit**   | Deny     | Allow    | Deny     | Deny         | Deny        | Allow*   |
+| **payu-uat**   | Deny     | Deny     | Allow    | Deny         | Deny        | Allow*   |
+| **payu-preprod** | Deny   | Deny     | Deny     | Allow        | Deny        | Restrict |
+| **payu (prod)** | Deny    | Deny     | Deny     | Deny         | Allow       | Restrict |
+
+> \* Allow dengan egress gateway logging. **Restrict** = hanya allowlisted endpoints.
+
+---
+
+## 14. API Gateway & WAF 🟡
+
+### 14.1 API Gateway Layer
+
+| Component              | Tool                        | Purpose                                    |
+| ---------------------- | --------------------------- | ------------------------------------------ |
+| **Ingress Controller** | OCP Route (HAProxy)         | TLS termination, basic routing             |
+| **API Gateway**        | Kong OSS atau KubeGateway   | Rate limiting, auth, API key management    |
+| **WAF**                | Coraza (open source WAF)    | OWASP CRS (Core Rule Set) enforcement      |
+
+### 14.2 WAF Configuration
+
+- **OWASP Core Rule Set (CRS)**: Deploy Coraza (atau ModSecurity) sebagai sidecar/reverse proxy di ingress
+- Rule set: OWASP CRS v4.x untuk deteksi SQL injection, XSS, SSRF, path traversal
+- **Anomaly scoring mode**: Threshold score 5 (paranoia level 1) untuk production
+- WAF logs di-forward ke Wazuh untuk SIEM correlation
+
+### 14.3 Rate Limiting & DDoS Protection
+
+- **Global rate limit**: 1000 req/s per IP di edge
+- **Per-API rate limit**: Configurable per endpoint via API Gateway policy
+- **Circuit breaker**: Istio DestinationRule outlier detection untuk backend protection
+- **Slowloris/DDoS**: HAProxy timeout tuning + connection limits di OCP Route
+
+### 14.4 API Security Headers
+
+Semua response dari API Gateway wajib include:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Content-Security-Policy: default-src 'none'`
+- `X-Request-ID` untuk traceability
+
+---
+
+## 15. PCI-DSS v4.0 Compliance Mapping 🟡
+
+> 🟡 **P1 — Audit Readiness**: Explicit mapping antara PCI-DSS v4.0 requirements dan tools/evidence format.
+
+| PCI-DSS Req | Requirement Name                         | Pipeline Stage    | Tool                                     | Evidence Format                              |
+| ----------- | ---------------------------------------- | ----------------- | ---------------------------------------- | -------------------------------------------- |
+| **Req 1**   | Install/Maintain Network Security        | Stage 4 + 5       | Kyverno NetworkPolicy + OSSM mTLS        | Policy YAML + mTLS cert audit log            |
+| **Req 2**   | Apply Secure Configurations              | Stage 1 + 4 + 6   | Semgrep + Kyverno + ComplianceOperator   | Scan report + CIS Benchmark result           |
+| **Req 3**   | Protect Stored Account Data              | Stage 5           | Vault encryption + security-starter      | Vault audit log + encryption config          |
+| **Req 4**   | Protect Data in Transit                  | Stage 5           | OSSM mTLS STRICT + TLS 1.3              | PeerAuthentication config + cert rotation    |
+| **Req 5**   | Protect Against Malicious Software       | Stage 1 + 2       | Trivy + Grype + Falco runtime            | Image scan report + Falco alert log          |
+| **Req 6**   | Develop/Maintain Secure Systems          | Stage 1 + 2 + 3   | Semgrep SAST + ZAP DAST + Schemathesis  | Pipeline scan report + quality gate result   |
+| **Req 7**   | Restrict Access by Need-to-Know          | Stage 4 + 5       | RBAC + OSSM AuthorizationPolicy          | RBAC config + AuthPolicy YAML                |
+| **Req 8**   | Identify Users and Auth Access           | Stage 5           | Keycloak + Vault auth + MFA             | Auth audit log + MFA enrollment report       |
+| **Req 9**   | Restrict Physical Access                 | N/A (cloud)       | OCP node access control                  | Node SSH audit log + break-glass log         |
+| **Req 10**  | Log/Monitor All Access                   | Stage 6           | Wazuh SIEM + LokiStack + Tekton Results | **Signed logs** + SIEM dashboard + retention |
+| **Req 11**  | Test Security Regularly                  | Stage 3 + Phase 4 | ZAP + Nuclei + Pen test + LitmusChaos   | Scan report + pen test report + chaos result |
+| **Req 12**  | Support Info Security with Policy        | All               | This document + runbooks                 | Policy document + training records           |
+
+> ⚠️ **Log Integrity (Req 10)**: Wazuh FIM saja tidak cukup. Implementasikan **signed audit logs** menggunakan `fluentd-plugin-sigdump` atau vector + Rekor untuk tamper-evident log chain.
+
+---
+
+## 16. Data Residency & Sovereignty 🟠
+
+> 🟡 **P1 — Regulatory Compliance**: Bank Indonesia dan UU PDP mensyaratkan data residency untuk data keuangan dan PII.
+
+### 16.1 Data Classification & Residency
+
+| Data Category            | Classification | Residency Requirement       | Storage Location                 |
+| ------------------------ | -------------- | --------------------------- | -------------------------------- |
+| Transaction data         | Confidential   | Indonesia only              | PostgreSQL (in-country cluster)  |
+| PII (NIK, Phone, Name)  | Restricted     | Indonesia only              | Vault-encrypted, PostgreSQL      |
+| Audit logs               | Internal       | Indonesia only (12 bulan)   | Wazuh Indexer + S3 (in-country)  |
+| Vault secrets            | Restricted     | Indonesia only              | Vault Raft storage (in-cluster)  |
+| Application logs         | Internal       | Indonesia preferred         | LokiStack + S3 (in-country)     |
+| SBOM/Attestation         | Public         | No restriction              | OCI Registry (Quay.io)          |
+
+### 16.2 Encryption Key Management
+
+- **Data-at-Rest**: Semua PersistentVolume di-encrypt menggunakan LUKS (Linux Unified Key Setup) atau storage-level encryption
+- **Key Escrow**: Encryption keys di-manage oleh Vault, dengan backup key escrow ke HSM (Hardware Security Module) untuk production
+- **Key Rotation**: Master encryption key rotate setiap **90 hari**, data encryption key (DEK) rotate setiap **30 hari**
+
+### 16.3 Cross-Border Data Flow
+
+- **Prohibited**: Data transaksi dan PII **tidak boleh** keluar dari Indonesia tanpa explicit consent dan regulatory approval
+- **Allowed**: Aggregated analytics data (non-PII) boleh di-proses di cloud region lain untuk ML/AI workload
+- **Monitoring**: Wazuh rule untuk detect dan alert jika data egress ke non-Indonesia IP range
+
+---
+
+## 17. Brownfield Adoption Guide 🟠
+
+> 🟢 **P2**: Strategi migrasi bertahap untuk tim yang sudah memiliki existing CI/CD dan secrets management.
+
+### 17.1 Namespace-by-Namespace Migration
+
+```
+Phase 1: payu-dev (non-critical, high iteration)
+  └─ Deploy Tekton pipeline paralel dengan CI lama
+  └─ Migrasi 1-2 service sebagai pilot
+  └─ Validasi hasil identik
+
+Phase 2: payu-sit (automated testing)
+  └─ Cutover security scanning ke Tekton
+  └─ Integrasi Litmus chaos
+
+Phase 3: payu-uat → payu-preprod → payu
+  └─ Full cutover dengan approval gates
+  └─ Decommission CI lama setelah 30 hari
+```
+
+### 17.2 Legacy Secrets Bulk Import
+
+```bash
+# Bulk import existing K8s secrets ke Vault
+$ vault-migrator import \
+  --source=kubernetes \
+  --namespace=payu-dev \
+  --vault-path=secret/payu/dev \
+  --dry-run  # Validate first
+
+# Generate ExternalSecret manifests
+$ vault-migrator generate-external-secrets \
+  --vault-path=secret/payu/dev \
+  --output=gitops/secrets/
+```
+
+### 17.3 Strangler Fig Pattern
+
+- Jalankan pipeline baru dan lama secara paralel selama **2 sprint (4 minggu)**
+- Bandingkan hasil scan dan deployment outcome
+- Cutover per-service, bukan big-bang
+- Rollback plan: revert ke CI lama dalam < 1 jam jika pipeline baru gagal
+
+---
+
+## 18. Incident Response Playbook 🔵
+
+### 18.1 Severity Definitions
+
+| Severity | Definition                                              | Response Time | Resolution Target | Escalation                  |
+| -------- | ------------------------------------------------------- | ------------- | ----------------- | --------------------------- |
+| **P1**   | Production down, data breach, critical CVE exploited    | < 15 menit    | < 1 jam           | CISO + Engineering Lead     |
+| **P2**   | Service degraded, high CVE in prod, compliance gap      | < 30 menit    | < 4 jam           | SRE Lead + Security Team    |
+| **P3**   | Non-prod issue, medium CVE, pipeline failure            | < 2 jam       | < 24 jam          | On-call engineer            |
+| **P4**   | Low-risk finding, improvement suggestion                | Next sprint   | < 1 minggu        | Backlog                     |
+
+### 18.2 Automated Rollback Mechanism
+
+| Trigger                              | Rollback Method                | Auto/Manual | Approval       |
+| ------------------------------------ | ------------------------------ | ----------- | -------------- |
+| Health check fail within 5 min       | ArgoCD auto-rollback           | Auto        | None           |
+| Error rate > 5% for 3 min           | ArgoCD rollback to last known  | Auto        | None           |
+| Critical CVE detected in runtime     | ACS enforce → block + rollback | Semi-auto   | SRE confirm    |
+| Vault secret compromise             | Vault lease revoke + key rotate | Manual      | CISO sign-off  |
+| Chaos experiment causes P1           | Cerberus auto-halt + restore   | Auto        | None           |
+
+### 18.3 Communication & ChatOps
+
+- **PagerDuty/Opsgenie**: Integration untuk P1/P2 alerting ke on-call rotation
+- **Slack/Teams Bot**: ChatOps untuk approve/reject hotfix deployment
+  - `/payu-hotfix deploy <service> <version>` — trigger emergency deployment
+  - `/payu-rollback <service>` — trigger ArgoCD rollback
+  - `/payu-status` — show cluster health (Cerberus) + pipeline status
+- **Post-Incident Review**: Blameless post-mortem dalam 48 jam untuk semua P1/P2 incidents
+
+---
+
+## 19. Testing Strategy 🔵
+
+### 19.1 Testing Pyramid
+
+| Layer                     | Tool                          | Stage          | Gate                                          |
+| ------------------------- | ----------------------------- | -------------- | --------------------------------------------- |
+| **Unit Tests**            | JUnit/Pytest/Jest             | Stage 1 (CI)   | Coverage ≥ 80% (core), ≥ 60% (non-critical)  |
+| **Integration Tests**     | Testcontainers + REST Assured | Stage 3 (SIT)  | All integration points verified               |
+| **Contract Tests**        | Pact (consumer-driven)        | Stage 1 + 3    | No contract breaking changes                  |
+| **SAST/SCA**              | Semgrep + Grype               | Stage 1 (CI)   | No critical/high findings                     |
+| **DAST**                  | ZAP + Schemathesis            | Stage 3 (dev)  | No high/critical findings                     |
+| **Performance Tests**     | k6                            | Stage 3 (SIT)  | P95 < 500ms, error < 0.1%, 1000 req/s         |
+| **Chaos Tests**           | LitmusChaos + Kraken          | Stage 3 (SIT/PP) | Auto-recovery within SLO                    |
+| **Smoke Tests**           | Custom health check suite     | Stage 4 (each) | All endpoints healthy                         |
+| **Pen Test**              | Manual + Nuclei               | Phase 4        | No P1/P2 findings                             |
+
+### 19.2 Contract Testing (Pact)
+
+- **Consumer-Driven Contract Testing**: Setiap consumer service define expected API contract
+- Pact broker deployed di cluster untuk manage contract versions
+- **Bi-Directional**: Provider juga verify terhadap consumer pacts
+- Pipeline gate: PR yang break existing contract **otomatis ditolak**
+
+### 19.3 Smoke Test Gate per Environment
+
+| Environment    | Smoke Test Criteria                                                       | Timeout |
+| -------------- | ------------------------------------------------------------------------- | ------- |
+| `payu-dev`     | All `/health` endpoints return 200                                        | 2 min   |
+| `payu-sit`     | Health + core transaction flow (create → process → complete)              | 5 min   |
+| `payu-uat`     | Health + full regression suite (Playwright/Pytest)                        | 15 min  |
+| `payu-preprod` | Health + load test baseline (k6 100 req/s for 5 min) + Cerberus healthy  | 10 min  |
+| `payu` (prod)  | Health + canary traffic validation (5% → 25% → 100%)                     | 10 min  |
+
+---
+
+## 20. Risiko & Mitigasi
 
 | Risiko                                              | Probabilitas | Dampak | Mitigasi                                                                                                 |
 | --------------------------------------------------- | ------------ | ------ | -------------------------------------------------------------------------------------------------------- |
@@ -573,14 +1075,16 @@ graph LR
 | Compliance gap terdeteksi audit BI                  | Rendah       | Tinggi | ComplianceOperator weekly scan + Wazuh compliance dashboard + proactive remediation sprint               |
 | Developer friction (too many gates)                 | Tinggi       | Sedang | DevEx KPI monitoring + feedback loop < 15 menit + pre-commit sebagai recommendation, CI sebagai enforcer |
 | Tool overlap/conflict (Falco+Tetragon, Kyverno+ACS) | Sedang       | Sedang | Clear boundary definition + single-owner per policy domain + integration testing di SIT                  |
+| **BSL license compliance risk (Vault)**             | Sedang       | Tinggi | Legal review + evaluasi OpenBao sebagai alternatif + monitor BSL change notice                           |
+| **Cross-cluster data inconsistency**                | Rendah       | Tinggi | Image digest promotion + Cosign verify di setiap cluster + ArgoCD drift detection                        |
 
 ---
 
-## 10. Developer Experience (DevEx)
+## 21. Developer Experience (DevEx)
 
 > 🎯 **Prinsip**: Security tidak boleh mengorbankan developer velocity. Shift-left harus berarti "detect early", bukan "block often".
 
-### 10.1 DevEx KPI
+### 21.1 DevEx KPI
 
 | KPI                                      | Target                                   | Measurement                                                     |
 | ---------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
@@ -590,7 +1094,7 @@ graph LR
 | Pre-commit hook execution time           | < **10 detik**                           | Local execution time for recommended hooks                      |
 | Documentation discoverability            | < **3 klik** dari repo README ke runbook | Navigation audit quarterly                                      |
 
-### 10.2 DevEx Enablers
+### 21.2 DevEx Enablers
 
 - **Pre-commit hooks bersifat recommended**, bukan blocking. CI pipeline adalah enforcer sesungguhnya.
 - **Pipeline as Code**: Semua Tekton Task/Pipeline disimpan di Git; developer bisa preview pipeline config di PR.
@@ -599,7 +1103,7 @@ graph LR
 - **Automated Remediation PR**: Renovate Bot + Dependabot untuk dependency update; Semgrep auto-fix rules untuk common issues.
 - **Chaos Experiment Catalog**: Developer bisa trigger LitmusChaos experiment di `payu-sit` via self-service portal (dengan quota & approval) untuk testing resiliensi.
 
-### 10.3 Developer Onboarding
+### 21.3 Developer Onboarding
 
 ```bash
 # Payu Platform Quickstart (target: < 30 menit)
@@ -620,12 +1124,47 @@ Template service sudah include:
 
 ---
 
-## 11. Glosarium
+## 22. Version History
+
+| Version | Date       | Author                     | Changes                                                                                         |
+| ------- | ---------- | -------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1.0.0   | Mar 2026   | Platform Engineering Team  | Initial DevSecOps pipeline architecture document                                                |
+| 1.1.0   | Mar 2026   | Platform Engineering Team  | Added chaos engineering strategy (Kraken + Litmus), emergency workflow                          |
+| 1.2.0   | Apr 2026   | Platform Engineering Team  | Updated OWASP Top 10 2025, 100% OSS tooling, DevEx KPI, API Security Top 10, PCI-DSS alignment |
+| 1.3.0   | Apr 2026   | Platform Engineering Team  | **Major update**: DR strategy, FinOps, multi-cluster, registry, network segmentation, API Gateway/WAF, PCI-DSS v4.0 explicit mapping, data residency, brownfield adoption, incident response, testing strategy, Vault BSL disclaimer, Falco kernel compat, Tekton Chains/Results, RACI matrix, version history |
+
+---
+
+## 23. RACI Matrix
+
+> **R** = Responsible, **A** = Accountable, **C** = Consulted, **I** = Informed
+
+| Activity                           | Platform/SRE | Security | Dev Team | QA   | Engineering Lead | CISO |
+| ---------------------------------- | ------------ | -------- | -------- | ---- | ---------------- | ---- |
+| Pipeline design & maintenance      | **R/A**      | C        | C        | I    | I                | I    |
+| Security tool configuration        | R            | **R/A**  | C        | I    | I                | I    |
+| SAST/SCA rule tuning               | C            | **R/A**  | R        | I    | I                | I    |
+| Policy-as-code (Kyverno/ACS)       | **R/A**      | R        | C        | I    | I                | I    |
+| Vault secrets management           | **R/A**      | R        | C        | I    | I                | C    |
+| Chaos experiment design            | R            | C        | R        | **A** | I                | I    |
+| Incident response (P1/P2)         | **R**        | R        | C        | I    | **A**            | I    |
+| Compliance audit & reporting       | C            | **R/A**  | I        | I    | I                | **A** |
+| DR drill execution                 | **R/A**      | C        | I        | I    | I                | I    |
+| Cost management & right-sizing     | **R/A**      | I        | C        | I    | I                | I    |
+| Production deployment approval     | R            | C        | C        | C    | **A**            | C    |
+| Multi-cluster strategy             | **R/A**      | C        | I        | I    | I                | I    |
+| Brownfield migration               | **R**        | C        | **R**    | C    | **A**            | I    |
+
+---
+
+## 24. Glosarium
 
 | Istilah               | Definisi                                                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ACS / StackRox**    | Advanced Cluster Security — platform keamanan container Red Hat yang terintegrasi ke OpenShift (termasuk dalam subscription OCP)            |
+| **BSL**               | Business Source License — lisensi dari HashiCorp yang bukan open source menurut definisi OSI; memiliki use restriction                      |
 | **Cerberus**          | Cluster health guardian untuk chaos engineering; memberikan sinyal go/no-go apakah OpenShift cluster sudah recover setelah chaos experiment |
+| **Coraza**            | Open-source WAF (Web Application Firewall) kompatibel dengan OWASP CRS; alternatif ModSecurity untuk cloud-native                         |
 | **CWPP**              | Cloud Workload Protection Platform — kategori tool untuk melindungi workload di cloud dan container runtime                                 |
 | **DAST**              | Dynamic Application Security Testing — pengujian keamanan aplikasi saat runtime dengan simulasi attack                                      |
 | **GitOps**            | Praktik menggunakan Git sebagai single source of truth untuk state infrastruktur dan deployment; perubahan hanya via merge request          |
@@ -633,6 +1172,9 @@ Template service sudah include:
 | **LitmusChaos**       | CNCF incubating project untuk chaos engineering Kubernetes-agnostic; fokus pada app-level chaos dengan CRD-based workflow                   |
 | **mTLS**              | Mutual TLS — autentikasi dua arah antara client dan server menggunakan sertifikat X.509; mandatory di zero-trust architecture               |
 | **OPA**               | Open Policy Agent — policy engine universal untuk Kubernetes dan sistem lainnya menggunakan bahasa Rego                                     |
+| **OpenBao**           | Fork open-source dari HashiCorp Vault di bawah MPL-2.0, Linux Foundation backed; drop-in replacement untuk Vault                           |
+| **OpenCost**          | Tool open-source untuk cost monitoring dan allocation di Kubernetes; alternatif Kubecost                                                    |
+| **Pact**              | Consumer-driven contract testing framework untuk memastikan kompatibilitas API antar microservices                                          |
 | **RBAC**              | Role-Based Access Control — mekanisme kontrol akses berdasarkan peran pengguna; di-enforce via Kubernetes + OSSM                            |
 | **SAST**              | Static Application Security Testing — analisis keamanan pada kode sumber tanpa eksekusi; shift-left detection                               |
 | **SBOM**              | Software Bill of Materials — daftar komponen perangkat lunak yang digunakan oleh aplikasi; format CycloneDX/SPDX                            |
@@ -640,12 +1182,16 @@ Template service sudah include:
 | **SLSA**              | Supply chain Levels for Software Artifacts — framework untuk keamanan supply chain perangkat lunak (Level 1-4)                              |
 | **SCA**               | Software Composition Analysis — analisis komponen open source untuk kerentanan, lisensi, dan maintenance status                             |
 | **Sigstore / Cosign** | Infrastruktur open-source untuk signing dan verifikasi artifact perangkat lunak secara transparan (keyless via OIDC)                        |
+| **Tekton Chains**     | Komponen Tekton untuk otomatis menghasilkan SLSA provenance attestation pada setiap pipeline run                                            |
+| **Tekton Results**    | Komponen Tekton untuk menyimpan audit trail dan hasil pipeline run secara persisten                                                         |
 | **Wazuh**             | Open-source SIEM/XDR platform dengan built-in compliance dashboard untuk PCI-DSS, NIST, ISO 27001                                           |
 | **Zero-trust**        | Model keamanan yang tidak mempercayai entitas manapun secara default — verifikasi selalu diperlukan, baik internal maupun eksternal         |
 
 ---
 
 ## Appendix A: Quick Reference — Policy Snippets
+
+> 📝 **Fallback Note**: Diagram Mermaid di dokumen ini memerlukan renderer yang mendukung Mermaid (GitHub, GitLab, VS Code plugin, dll). Jika environment Anda tidak support Mermaid, lihat deskripsi teks di setiap diagram untuk konteks.
 
 ### Kyverno: Default Deny NetworkPolicy Auto-Generate
 
@@ -747,13 +1293,5 @@ spec:
 
 ---
 
-_Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2026_  
-_Versi 1.2.0 — Updated dengan: OWASP Top 10 2025, 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment._
-
-          attempt: 3
-```
-
----
-
-*Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2026*  
-*Versi 1.2.0 — Updated dengan: OWASP Top 10 2025, 100% open-source tooling, chaos engineering strategy (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 alignment.*
+_Dokumen ini bersifat CONFIDENTIAL dan hanya untuk distribusi internal personal project development. Payu Platform Engineering — 2026_
+_Versi 1.3.0 — Updated dengan: OWASP Top 10 2025, 100% open-source tooling, chaos engineering (Kraken+Litmus), emergency workflow, DevEx KPI, OWASP API Security Top 10, PCI-DSS v4.0 explicit mapping, DR strategy, FinOps, multi-cluster, network segmentation, API Gateway/WAF, data residency, brownfield adoption, incident response, testing strategy, RACI matrix._
