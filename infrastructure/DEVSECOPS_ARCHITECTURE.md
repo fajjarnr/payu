@@ -21,6 +21,12 @@
 2. [Tujuan dan Sasaran](#2-tujuan-dan-sasaran)
 3. [Namespace Strategy & Promotion Gate](#3-namespace-strategy--promotion-gate)
 4. [Pipeline Stages — Kebutuhan Detail](#4-pipeline-stages--kebutuhan-detail)
+   - [4.1 Stage 1 — Source & Commit Security](#41-stage-1--source--commit-security)
+   - [4.2 Stage 2 — Build & Image Security](#42-stage-2--build--image-security)
+   - [4.3 Stage 3 — Test (payu-dev, payu-dev-*, payu-sit)](#43-stage-3--test-payu-dev-payu-dev--payu-sit)
+   - [4.4 Stage 4 — Deploy & Policy Gate](#44-stage-4--deploy--policy-gate)
+   - [4.5 Stage 5 — Runtime Security](#45-stage-5--runtime-security)
+   - [4.6 Stage 6 — Observability & Compliance](#46-stage-6--observability--compliance)
 5. [OWASP Top 10 & API Security Compliance Matrix](#5-owasp-top-10--api-security-compliance-matrix)
 6. [Tool Stack — 100% Open Source](#6-tool-stack--100-open-source)
 7. [Implementation Roadmap](#7-implementation-roadmap)
@@ -120,14 +126,14 @@ Setiap namespace merepresentasikan environment yang terisolasi dengan kebijakan 
 
 | Namespace      | Environment             | Deployment Mode       | Approval Gate                          | RBAC                   | Network Policy      | Chaos Strategy                                                                    |
 | -------------- | ----------------------- | --------------------- | -------------------------------------- | ---------------------- | ------------------- | --------------------------------------------------------------------------------- |
-| `payu-dev`     | Development             | Auto (CI green)       | Pipeline pass                          | Dev + SRE              | Permissive internal | None                                                                              |
-| `payu-dev-*`   | **Preview/Ephemeral**   | Auto per PR           | Pipeline pass + PR label               | Dev + QA               | Isolated per branch | None _(opsional: Litmus light)_                                                   |
+| `payu-dev-*`   | **Preview/PR Env**      | Auto per PR           | Pipeline cepat (< 10m): SAST, SCA, Unit, Smoke | Dev + QA               | Isolated per branch | None _(opsional: Litmus light)_                                                   |
+| `payu-dev`     | **Integration Env**     | Auto (merge ke develop)| Pipeline penuh: DAST, Contract, k6 (Basic)     | Dev + SRE              | Permissive internal | None                                                                              |
 | `payu-sit`     | System Integration Test | Auto + security gate  | ACS policy pass + no critical CVE      | QA + Dev + SRE         | Restricted ingress  | **LitmusChaos** (app-level: pod kill, network latency, disk fill)                 |
 | `payu-uat`     | User Acceptance Test    | Semi-auto             | Manual PO/QA + ACS + Schemathesis pass | QA + PM + SRE          | Strict — UAT only   | None                                                                              |
 | `payu-preprod` | Pre-Production          | Manual trigger        | Pen test + CAB + **Kraken chaos pass** | SRE + Security         | Mirror production   | **Kraken + Cerberus** (infra-level: etcd kill, node crash, API server disruption) |
 | `payu` (prod)  | Production              | Blue/Green via ArgoCD | CAB + CISO sign-off + health check     | SRE only (break-glass) | Zero-trust strict   | None _(red team exercise quarterly)_                                              |
 
-> 💡 **Preview Environment**: Namespace `payu-dev-{branch-name}` di-spin up otomatis via ArgoCD ApplicationSet saat PR dibuat, dan di-destroy otomatis saat PR di-merge/close. Memungkinkan QA fitur sebelum masuk `payu-dev` utama.
+> 💡 **Preview Environment**: Namespace `payu-dev-{branch-name}` di-spin up otomatis via ArgoCD ApplicationSet saat PR dibuat, dan di-destroy otomatis saat PR di-merge/close. Memungkinkan QA fitur sebelum masuk `payu-dev` utama. **Manajemen Siklus Hidup**: Untuk mencegah "zombie namespace" jika webhook GitHub gagal, terapkan label `ttl: 48h` pada namespace. Sebuah `CronJob` sederhana akan memantau label ini dan melakukan *cleanup* namespace yang melewati batas TTL secara otomatis.
 
 ### 3.2 Promotion Rules
 
@@ -146,16 +152,16 @@ Setiap namespace merepresentasikan environment yang terisolasi dengan kebijakan 
 
 ```mermaid
 graph LR
-    A[Critical Bug Detected] --> B[Create hotfix/{ticket-id} branch]
-    B --> C[CI Pipeline: SAST+SCA+Image Scan]
-    C --> D[Deploy to payu-sit: ACS + Litmus smoke test]
-    D --> E[Emergency Break-glass Bypass / Chatops]
-    E --> F[Deploy to payu-preprod: Kraken chaos smoke + Cerberus]
-    F --> G[Deploy to payu: Blue/Green with auto-rollback]
-    G --> H[Post-Deployment: Full security review dalam 24 jam]
+    A[Critical Bug Detected] --> B["Create hotfix/{ticket-id} branch"]
+    B --> C["CI Pipeline: SAST+SCA+Image Scan"]
+    C --> D["Deploy to payu-sit: ACS + Litmus smoke test"]
+    D --> E["Emergency Break-glass Bypass / Chatops"]
+    E --> F["Deploy to payu-preprod: Kraken chaos smoke + Cerberus"]
+    F --> G["Deploy to payu: Blue/Green with auto-rollback"]
+    G --> H["Post-Deployment: Full security review dalam 24 jam"]
     H --> I{Review Pass?}
-    I -->|Ya| J[Hotfix merged to main, normal workflow resumed]
-    I -->|Tidak| K[Rollback + hotfix branch quarantined]
+    I -->|Ya| J["Hotfix merged to main, normal workflow resumed"]
+    I -->|Tidak| K["Rollback + hotfix branch quarantined"]
 ```
 
 **Rules Hotfix:**
@@ -170,7 +176,7 @@ graph LR
 
 ## 4. Pipeline Stages — Kebutuhan Detail
 
-### Stage 1 — Source & Commit Security
+### 4.1 Stage 1 — Source & Commit Security
 
 **OWASP Coverage:** A05 (Injection) · A02 (Security Misconfig) · A03 (Software Supply Chain Failures) · A08 (Integrity) · A09 (Logging & Alerting) · **API1:2023 (Broken Object Level Authorization)**
 
@@ -211,12 +217,13 @@ graph LR
 - **Grype** — scan SBOM terhadap CVE database (NVD, GitHub Advisory, OSV); fail pipeline jika critical CVE ditemukan
 - **OWASP Dependency-Check** — alternatif/pendamping untuk deteksi vulnerability di dependency tree
 - **Renovate Bot** — automated dependency update PR dengan security advisory filtering
+- **License Compliance Verification** — SCA tool (Syft/Grype) diwajibkan memindai dan menandai lisensi "copyleft" yang ketat (seperti AGPL, GPL, SSPL). Pipeline harus digagalkan (fail gate) apabila dependensi tersebut melanggar kebijakan lisensi perusahaan.
 
 > 📦 **SBOM Policy**: Setiap image yang masuk registry wajib memiliki SBOM valid. SBOM digunakan untuk: (1) vulnerability tracing, (2) license compliance audit, (3) supply chain attestation (SLSA).
 
 ---
 
-### Stage 2 — Build & Image Security
+### 4.2 Stage 2 — Build & Image Security
 
 **OWASP Coverage:** A03 (Software Supply Chain Failures) · A06 (Insecure Design) · A08 (Integrity Failures) · **SLSA L2+**
 
@@ -227,7 +234,7 @@ graph LR
 - Wajib menggunakan **UBI minimal** atau **distroless image** untuk mengurangi attack surface
 - Build berjalan dalam **unprivileged mode** — tidak ada root container saat build
 - Reproducible builds: `BUILD_DATE`, `GIT_SHA`, `BUILDER_ID` tertanam sebagai image label
-- **Hermetic builds** (target SLSA L3): isolasi network saat build, dependency dari cache terverifikasi
+- **Hermetic builds** (target SLSA L3): Diperlukan penerapan **NetworkPolicy** spesifik selama `TaskRun` untuk mengisolasi pod build dari koneksi internet eksternal. Semua dependency (Maven, npm, Go modules) **wajib** ditarik melalui *caching proxy* internal (seperti Nexus, Artifactory, atau JFrog) yang telah dikunci.
 
 #### 4.2.2 Image Scanning
 
@@ -248,7 +255,7 @@ graph LR
 
 ---
 
-### Stage 3 — Test (payu-dev, payu-dev-\*, payu-sit)
+### 4.3 Stage 3 — Test (payu-dev, payu-dev-*, payu-sit)
 
 **OWASP Coverage:** A01 (Access Control) · A04 (Crypto) · A05 (Injection) · A07 (Auth) · A10 (Mishandling Except.) · **API Security Top 10**
 
@@ -284,7 +291,7 @@ graph LR
 
 ---
 
-### Stage 4 — Deploy & Policy Gate
+### 4.4 Stage 4 — Deploy & Policy Gate
 
 **OWASP Coverage:** A02 (Security Misconfig) · A08 (Software Integrity) · GitOps drift prevention
 
@@ -321,10 +328,13 @@ graph LR
 | ReadOnly root filesystem   | Kyverno     | Set `readOnlyRootFilesystem: true` untuk semua container       |
 | No host namespace          | ACS/Kyverno | Blokir `hostNetwork`, `hostPID`, `hostIPC`                     |
 | NetworkPolicy default deny | Kyverno     | Auto-generate default-deny NetworkPolicy per namespace         |
+| Block shadow namespaces    | Kyverno     | Tolak pembuatan namespace tanpa label `payu.io/managed-by: platform-team` |
+
+> 🛡️ **Pencegahan Rogue Namespace**: Terapkan Validating Webhook (Kyverno) untuk menolak pembuatan namespace apa pun yang tidak sesuai dengan pola (`payu-dev-*`, `payu-*`) atau dibuat oleh entitas tanpa otorisasi. Hanya izinkan namespace dengan label `payu.io/managed-by: platform-team`.
 
 ---
 
-### Stage 5 — Runtime Security
+### 4.5 Stage 5 — Runtime Security
 
 **OWASP Coverage:** A04 (Crypto via mTLS) · A07 (Auth via RBAC) · A09 (Logging & Alerting via Falco) · Zero-trust enforcement
 
@@ -365,7 +375,7 @@ graph LR
 
 ---
 
-### Stage 6 — Observability & Compliance
+### 4.6 Stage 6 — Observability & Compliance
 
 **OWASP Coverage:** A09 (Security Logging and Alerting Failures) — stage paling sering diabaikan namun kritikal
 
@@ -397,6 +407,11 @@ graph LR
 - **OpenSCAP** — scan OS-level compliance di node OpenShift
 - **Wazuh Compliance Module** — built-in dashboard untuk PCI-DSS v4.0, ISO 27001, NIST 800-53
 - Report compliance digenerate otomatis mingguan dan dikirim ke CISO + Security Team
+
+#### 4.6.4 Pipeline Observability
+
+- **Pipeline Metrics**: Pantau durasi eksekusi, tingkat keberhasilan/kegagalan, dan *Mean Time to Recovery* (MTTR) pipeline secara real-time. Gunakan Grafana dashboard khusus yang mengambil metrik dari `PipelineRun` Tekton.
+- **Pipeline Audit Log**: Forward seluruh log akses dan eksekusi dari Tekton serta ArgoCD (meliputi siapa yang memicu build/sync, perubahan apa yang terjadi) ke Wazuh atau Loki. Ini esensial untuk keperluan forensik, investigasi anomali, dan kepatuhan audit.
 
 ---
 
@@ -474,9 +489,11 @@ graph LR
 
 ### 6.5 Secrets Management
 
+> ⚠️ **Vault BSL License Risk Disclaimer**: HashiCorp Vault "OSS" menggunakan **Business Source License 1.1 (BSL-1.1)**, yang **bukan open source** menurut definisi OSI. BSL memiliki restrictions untuk production use oleh organisasi di atas revenue threshold tertentu. Tim legal **wajib** melakukan compliance review sebelum production deployment. Jika ini menjadi blocker, **OpenBao** direkomendasikan sebagai drop-in replacement.
+
 | Tool                           | Lisensi                  | Dynamic Secrets   | Auto-Rotate             | Verdict                                              |
 | ------------------------------ | ------------------------ | ----------------- | ----------------------- | ---------------------------------------------------- |
-| **HashiCorp Vault OSS**        | ⚠️ BSL-1.1 (bukan OSI)  | Ya                | Manual config + CronJob | ✅ Utama — tapi wajib legal review BSL compliance    |
+| **HashiCorp Vault OSS**        | BSL-1.1 (lihat ⚠️)       | Ya                | Manual config + CronJob | ✅ Utama — tapi wajib legal review BSL compliance    |
 | **OpenBao** _(alternatif)_     | MPL-2.0 (truly OSS, LF) | Ya                | Manual config + CronJob | ⚙️ Evaluasi — drop-in replacement jika BSL blocker   |
 | **External Secrets Operator**  | Open Source (Apache-2.0) | Bridge only       | Via Vault backend       | ✅ Wajib sebagai bridge K8s ↔ Vault                  |
 | **Vault Agent Injector / CSI** | Open Source              | Sidecar/CSI mount | Via Vault TTL           | ✅ Untuk secret injection ke pod                     |
@@ -757,17 +774,17 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph Hub["Hub Cluster (Management)"]
+    subgraph Hub ["Hub Cluster (Management)"]
         ArgoCD["ArgoCD Central"]
         ACS_C["ACS Central"]
         Vault_P["Vault Primary"]
     end
-    subgraph Spoke1["Spoke Cluster 1 (Non-Prod)"]
+    subgraph Spoke1 ["Spoke Cluster 1 (Non-Prod)"]
         Dev["payu-dev"]
         SIT["payu-sit"]
         UAT["payu-uat"]
     end
-    subgraph Spoke2["Spoke Cluster 2 (Prod)"]
+    subgraph Spoke2 ["Spoke Cluster 2 (Prod)"]
         PreProd["payu-preprod"]
         Prod["payu (prod)"]
     end
