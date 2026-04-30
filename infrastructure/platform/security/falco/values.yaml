@@ -19,12 +19,22 @@ driver:
 collectors:
   enabled: false  # disable kubernetes metadata collector (needs extra perms)
 
+# falcoctl — disable auto-install (causes init container crash)
+falcoctl:
+  artifact:
+    install:
+      enabled: false
+    follow:
+      enabled: false
+
 # Falco daemonset configuration
 falco:
-  # Rules files — mount custom rules from ConfigMap
+  # Disable plugin requirement for container metadata
+  # Rely on syscall-level rules only (sufficient for banking threat detection)
+  load_plugins: []
+
+  # Rules files — only custom rules (no container plugin dependency)
   rules_files:
-    - /etc/falco/falco_rules.yaml
-    - /etc/falco/falco_rules.local.yaml
     - /etc/falco/rules.d/falco-custom-rules.yaml
 
   # Output configuration
@@ -75,6 +85,20 @@ securityContext:
   readOnlyRootFilesystem: false
   runAsUser: 0
   runAsGroup: 0
+
+# Mount custom rules ConfigMap
+extraVolumes:
+  - name: custom-rules
+    configMap:
+      name: falco-custom-rules
+      items:
+        - key: payu-rules.yaml
+          path: payu-rules.yaml
+
+extraVolumeMounts:
+  - name: custom-rules
+    mountPath: /etc/falco/rules.d
+    readOnly: true
 
 # Resource limits
 resources:

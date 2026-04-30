@@ -57,6 +57,10 @@ spec:
                 - openshift-user-workload-monitoring
                 # External Secrets Operator operand namespace
                 - external-secrets
+                # Service Mesh
+                - istio-system
+                # RHACS
+                - stackrox
       validate:
         message: "Namespace must have label payu.io/managed-by: platform-team and match naming convention payu-*"
         pattern:

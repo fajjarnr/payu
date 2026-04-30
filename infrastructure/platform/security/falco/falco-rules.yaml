@@ -1,7 +1,8 @@
 # Falco Custom Rules for PayU Banking Platform
 # Ref: DEVSECOPS_ARCHITECTURE.md §4.5.1
-# Policy: Use native/predefined rules first, OSS defaults as fallback
-# These rules supplement Falco's default ruleset with PayU-specific detections
+# NOTE: Rules use only syscall-level fields (no container plugin dependency)
+# Compatible with Falco v0.37+ (no CIDR, no IP operators)
+# ============================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,65 +14,69 @@ metadata:
 data:
   payu-rules.yaml: |
     # ============================================================
-    # PayU Banking-Specific Falco Rules
+    # PayU Banking-Specific Falco Rules (Syscall-only)
     # ============================================================
 
-    # Detect shell access in production namespaces
-    - rule: Shell in PayU Production Container
-      desc: Detect shell execution in payu production namespace containers
+    # Detect shell execution (common for reverse shells)
+    - rule: Shell Execution Detected
+      desc: Detect shell spawned anywhere on the system
       condition: >
-        spawned_process and container and
-        proc.name in (bash, sh, zsh, dash, ksh) and
-        k8s.ns.name = "payu"
+        spawned_process and
+        proc.name in (bash, sh, zsh, dash, ksh)
       output: >
-        Shell spawned in production container
-        (user=%user.name command=%proc.cmdline container=%container.name
-        namespace=%k8s.ns.name pod=%k8s.pod.name image=%container.image.repository)
-      priority: CRITICAL
-      tags: [payu, production, shell]
+        Shell spawned
+        (user=%user.name command=%proc.cmdline parent=%proc.pname)
+      priority: NOTICE
+      tags: [payu, shell]
 
-    # Detect sensitive file access (PII/credentials)
-    - rule: Sensitive File Access in PayU
-      desc: Detect access to sensitive files in PayU containers
+    # Detect sensitive file access
+    - rule: Sensitive File Access Detected
+      desc: Detect read access to sensitive files
       condition: >
-        open_read and container and
-        k8s.ns.name startswith "payu" and
+        open_read and
         (fd.name contains "/etc/shadow" or
          fd.name contains "/etc/passwd" or
-         fd.name contains "credentials" or
          fd.name contains ".key" or
-         fd.name contains ".pem")
+         fd.name contains ".pem" or
+         fd.name contains "credentials")
       output: >
-        Sensitive file access detected
-        (user=%user.name file=%fd.name container=%container.name
-        namespace=%k8s.ns.name pod=%k8s.pod.name)
+        Sensitive file access
+        (user=%user.name file=%fd.name process=%proc.name)
       priority: WARNING
-      tags: [payu, sensitive-file, pii]
+      tags: [payu, sensitive-file]
 
-    # Detect outbound connections to unexpected destinations
-    - rule: Unexpected Outbound Connection from PayU
-      desc: Detect outbound network connections to non-whitelisted destinations
+    # Detect privilege escalation binaries
+    - rule: Privilege Escalation Binary Executed
+      desc: Detect execution of setuid/sudo binaries
       condition: >
-        outbound and container and
-        k8s.ns.name startswith "payu" and
-        not (fd.sip in (rfc_1918_addresses))
-      output: >
-        Unexpected outbound connection from PayU service
-        (command=%proc.cmdline connection=%fd.name
-        container=%container.name namespace=%k8s.ns.name)
-      priority: NOTICE
-      tags: [payu, network, egress]
-
-    # Detect privilege escalation attempts
-    - rule: Privilege Escalation in PayU Namespace
-      desc: Detect privilege escalation in PayU containers
-      condition: >
-        spawned_process and container and
-        k8s.ns.name startswith "payu" and
+        spawned_process and
         proc.name in (sudo, su, setuid)
       output: >
-        Privilege escalation attempt detected
-        (user=%user.name command=%proc.cmdline container=%container.name
-        namespace=%k8s.ns.name pod=%k8s.pod.name)
+        Privilege escalation binary executed
+        (user=%user.name command=%proc.cmdline)
       priority: CRITICAL
       tags: [payu, privilege-escalation]
+
+    # Detect crypto mining patterns
+    - rule: Crypto Mining Binary Detected
+      desc: Detect known crypto mining binary names
+      condition: >
+        spawned_process and
+        proc.name in (xmrig, minerd, stratum)
+      output: >
+        Crypto mining binary detected
+        (user=%user.name command=%proc.cmdline)
+      priority: CRITICAL
+      tags: [payu, crypto-mining]
+
+    # Detect unexpected binary execution in /tmp
+    - rule: Binary Execution in Temp Directory
+      desc: Detect execution of binaries from /tmp or /var/tmp
+      condition: >
+        spawned_process and
+        (proc.exe startswith "/tmp/" or proc.exe startswith "/var/tmp/")
+      output: >
+        Binary executed from temp directory
+        (user=%user.name command=%proc.cmdline exe=%proc.exe)
+      priority: WARNING
+      tags: [payu, temp-execution]

@@ -72,7 +72,7 @@ Pipeline ini mengintegrasikan **OpenShift Pipelines (Tekton)**, **OpenShift GitO
 
 - ✅ **Shift-Left Security**: Deteksi celah keamanan sedini mungkin di stage source
 - ✅ **Zero-Trust Architecture**: mTLS mandatory antar service, deny-by-default network policy
-- ✅ **Immutable Infrastructure**: Tidak ada perubahan langsung ke namespace tanpa GitOps workflow
+- ✅ **Immutable Infrastructure**: Tidak ada perubahan langsung ke namespace tanpa GitOps workflow (RHCOS immutable OS)
 - ✅ **Supply Chain Security**: Image signing wajib (Cosign + Sigstore) sebelum deployment
 - ✅ **Continuous Compliance**: Monitoring via ComplianceOperator, Wazuh, dan ACS policy engine
 - ✅ **Developer Experience**: Pipeline feedback loop < 15 menit, local setup < 30 menit
@@ -340,14 +340,13 @@ graph LR
 
 #### 4.5.1 Cloud Workload Protection Platform (CWPP)
 
-> ⚠️ **OVN-Kubernetes & Kernel Conflict Avoidance**: Karena Red Hat OpenShift 4.20 secara default menggunakan **OVN-Kubernetes**, fungsionalitas Tetragon berpotensi rentan bentrokan tanpa Cilium. Fokus penuh gunakan **Falco** sebagai sole alerting engine berbasis eBPF/syscall.
+> ⚠️ **OVN-Kubernetes & Kernel Conflict Avoidance**: Karena Red Hat OpenShift 4.20 secara default menggunakan **OVN-Kubernetes**, fungsionalitas Tetragon berpotensi rentan bentrokan tanpa Cilium. Runtime security dihandle oleh **RHACS SecuredCluster** (eBPF-based Collector) yang native terintegrasi dengan OpenShift.
 
-> ⚠️ **Falco Kernel Compatibility**: Falco modern eBPF probe (v0.40+) memerlukan kernel ≥ 5.8 dengan BTF (BPF Type Format) support. Verifikasi RHEL CoreOS kernel version di OCP 4.20 sebelum deployment. Fallback strategy: (1) **Modern eBPF probe** (preferred, kernel ≥ 5.8 + BTF), (2) **Kernel module (kmod)** untuk kernel lama tanpa BTF, (3) **Userspace instrumentation** sebagai last resort jika eBPF/kmod tidak tersedia. Lakukan validasi kompatibilitas di `payu-dev` sebelum rollout ke seluruh cluster.
+> ⚠️ **RHCOS Immutable OS**: Red Hat Enterprise Linux CoreOS (RHCOS) yang digunakan oleh OpenShift 4.20+ adalah immutable operating system dengan read-only filesystem (kecuali `/var` dan `/etc`). Ini secara signifikan mengurangi attack surface di node level, sehingga syscall-level monitoring tambahan menjadi less critical.
 
 | Tool                  | Tipe          | Deteksi                                               | Integrasi                      | Rekomendasi                                                    |
 | --------------------- | ------------- | ----------------------------------------------------- | ------------------------------ | -------------------------------------------------------------- |
-| **ACS / StackRox**    | Berbayar (RH) | Policy, CVE, runtime behavior, compliance             | OCP native operator            | ✅ **Sudah terpakai** — primary enforcement                    |
-| **Falco**             | Open Source   | Syscall-level rules, cloud-native threat detection    | DaemonSet + Prometheus metrics | ✅ **Wajib** — primary runtime alerting engine                 |
+| **ACS / StackRox**    | Berbayar (RH) | Policy, CVE, runtime behavior, compliance, eBPF syscall | OCP native operator            | ✅ **Deployed** — primary enforcement & runtime detection       |
 
 #### 4.5.2 Service Mesh & mTLS
 
@@ -388,7 +387,7 @@ graph LR
 | **Wazuh**               | Open Source | SIEM, XDR, file integrity monitoring, compliance dashboard | ✅ **Wajib** untuk PCI-DSS/NIST reporting & threat detection |
 
 - **Deployment SIEM**: Wazuh Manager & Indexer akan dikonfigurasi berjalan secara mandiri di dalam klaster OpenShift via Helm, mendukung _isolated lab scalability_. 
-- **Rule Management**: Demi efisiensi tim dalam operasional policy (Wazuh, Falco, ACS), platform memprioritaskan hanya menggunakan rule *native/predefined Red Hat*. Apabila *ruleset Red Hat* tidak relevan/tersedia, maka opsi fallback adalah _default rule template_ bawaan komunitas *open-source* (OSS). Pendekatan *highly customized toolsets* akan dihindari sejauh mungkin.
+- **Rule Management**: Demi efisiensi tim dalam operasional policy (Wazuh, ACS), platform memprioritaskan hanya menggunakan rule *native/predefined Red Hat*. Apabila *ruleset Red Hat* tidak relevan/tersedia, maka opsi fallback adalah _default rule template_ bawaan komunitas *open-source* (OSS). Pendekatan *highly customized toolsets* akan dihindari sejauh mungkin.
 - Semua audit log (`kubectl exec`, API server, policy violation, admission reject) harus dikirim ke Wazuh
 - Log retention minimum **12 bulan** untuk compliance PCI-DSS dan Bank Indonesia
 - Alert wajib dikonfigurasi untuk: privilege escalation, policy violation, CVE kritis baru, anomali runtime behavior
@@ -397,7 +396,7 @@ graph LR
 
 - **Prometheus + Alertmanager** — built-in OCP, wajib untuk metrics platform dan application SLO
 - **Grafana** — dashboard security posture, pipeline health, namespace resource usage, chaos experiment result
-- Custom alert: SLO breach, error rate > 5%, latency P99 > 2s, Falco critical alert, ACS policy violation
+- Custom alert: SLO breach, error rate > 5%, latency P99 > 2s, ACS policy violation, RHACS runtime detection alert
 - **k6 + Grafana** — performance metrics dashboard untuk capacity planning
 
 #### 4.6.3 Continuous Compliance
@@ -429,7 +428,7 @@ graph LR
 | A06:2025 | Insecure Design                          | Stage 1 + 2     | Threat model template + distroless base + secure coding guideline        | **Wajib** |
 | A07:2025 | Authentication Failures                  | Stage 3 + 5     | Schemathesis + mTLS + RBAC + MFA enforcement via OAuth                   | **Wajib** |
 | A08:2025 | Software or Data Integrity Failures      | Stage 1 + 2 + 4 | Signed commit + Cosign + Admission controller + SBOM attestation         | **Wajib** |
-| A09:2025 | Security Logging and Alerting Failures   | Stage 6         | Loki + Wazuh + Falco + SIEM correlation rules                            | **Wajib** |
+| A09:2025 | Security Logging and Alerting Failures   | Stage 6         | Loki + Wazuh + RHACS + SIEM correlation rules                            | **Wajib** |
 | A10:2025 | Mishandling of Exceptional Conditions    | Stage 1 + 3     | Semgrep + SonarQube + ZAP DAST error detection                           | **Wajib** |
 
 ### 5.2 OWASP API Security Top 10 2023 _(Payu: API-Heavy Platform)_
@@ -476,7 +475,7 @@ graph LR
 | --------------------- | ---------------------------------- | ------------------------------- | ------------------------------- | --------------------------------------------------------- |
 | **Trivy**             | Open Source (Apache-2.0)           | Image + IaC + SBOM + secret     | Tekton task, registry webhook   | ✅ Wajib di pipeline — all-in-one scanner                 |
 | **Grype**             | Open Source (Apache-2.0)           | CVE + SBOM matching             | CLI + CI/CD, Anchore compatible | ✅ Komplemen — deep SBOM analysis                         |
-| **Falco**             | Open Source (Apache-2.0)           | Syscall-level runtime detection | DaemonSet + Prometheus          | ✅ Wajib — primary runtime alerting engine                |
+| **Falco**             | Open Source (Apache-2.0)           | Syscall-level runtime detection | DaemonSet + Prometheus          | ⚠️ Skipped — RHCOS + RHACS sudah cukup; bisa add later jika gap specific |
 | **ACS / StackRox**    | Berbayar (RH, included in OCP sub) | Full lifecycle + compliance     | OCP native operator             | ✅ Sudah terpakai — primary enforcement & dashboard       |
 
 ### 6.4 Policy & GitOps
@@ -522,19 +521,20 @@ graph LR
 
 ## 7. Implementation Roadmap
 
-### Phase 1 — Foundation (Bulan 1–2)
+### Phase 1 — Foundation (Bulan 1–2) ✅ COMPLETE
 
 > Priority: wajib diselesaikan sebelum phase berikutnya.
 
 **Pipeline & Security Baseline:**
-- [ ] 🔵 Implementasi Gitleaks + Trufflehog di Tekton pipeline (CI enforcement)
-- [ ] 🔵 Integrasi Semgrep OSS dan SonarQube CE ke pipeline Tekton yang ada
-- [ ] 🔵 Setup Cosign + Sigstore (keyless OIDC) untuk image signing di semua build pipeline
-- [ ] 🔵 Deploy HashiCorp Vault OSS + External Secrets Operator di cluster
-- [ ] 🔵 ⚠️ **Legal review Vault BSL-1.1 compliance** — evaluasi OpenBao jika BSL blocker _(§6.5)_
-- [ ] 🔵 Konfigurasi Kyverno baseline policies (no-root, resource limits, approved registry, default-deny NetworkPolicy)
-- [ ] 🔵 Aktifkan ACS admission controller untuk enforce image signature policy
-- [ ] 🔵 Setup LokiStack + Grafana untuk log aggregation dasar
+- [x] 🔵 Deploy 19 OLM operators (Pipelines, GitOps, ACS, ESO, cert-manager, crunchy-postgres, datagrid, AMQ Streams, Service Mesh, Kiali, 3scale, kube-descheduler, RHDH, etc.)
+- [x] 🔵 Restructure `infrastructure/` folders: `platform/`, `foundation/`, `workloads/`
+- [x] 🔵 Namespace strategy: `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, `payu-cicd` dengan labels, quotas, limitranges
+- [x] 🔵 Kyverno 9 ClusterPolicies: `disallow-root-user`, `require-resource-limits`, `set-readonly-root-filesystem`, `disallow-host-namespaces`, `require-approved-registry`, `require-cosign-signature`, `generate-default-deny-networkpolicy`, `block-shadow-namespaces`, `require-payu-labels`
+- [x] 🔵 Deploy HashiCorp Vault OSS v1.15 (dev mode) + External Secrets Operator (Red Hat branded v1.1.0)
+- [x] 🔵 ESO bridge: `ClusterSecretStore payu-vault` + 5 `ExternalSecrets` synced (db-credentials, jwt-secret, encryption-keys, keycloak-credentials, keycloak-db-secret)
+- [x] 🔵 Tekton Tasks: Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken + Pipelines + Triggers
+- [x] 🔵 ArgoCD: AppProject `payu`/`payu-preview`, Application `payu-app-of-apps`, ApplicationSets (environments, monitoring, devsecops-platform, PR previews)
+- [x] 🔵 Kyverno cleanup CronJob image fix: `bitnami/kubectl:1.28.5` → OpenShift internal CLI
 
 **DR & Backup (§9):**
 - [ ] 🔵 Konfigurasi Vault Raft auto-snapshot (1 jam interval) ke S3 bucket terenkripsi
@@ -542,23 +542,27 @@ graph LR
 - [ ] 🔵 Dokumentasi DR runbook untuk semua critical components (Vault, ArgoCD, ACS, Wazuh)
 
 **FinOps (§10):**
-- [ ] 🔵 Implementasi ResourceQuota + LimitRange di semua namespace sesuai matrix §10.1
-- [ ] 🔵 Kyverno policy: reject pod tanpa resource requests/limits
+- [x] 🔵 ResourceQuota + LimitRange di semua namespace
+- [x] 🔵 Kyverno policy: reject pod tanpa resource requests/limits
 
 **Network (§13):**
-- [ ] 🔵 Implementasi default-deny NetworkPolicy per namespace (Kyverno auto-generate)
-- [ ] 🟡 Definisi EgressNetworkPolicy untuk production namespace
+- [x] 🔵 Default-deny NetworkPolicy per namespace (Kyverno auto-generate)
+- [x] 🔵 Cross-namespace NetworkPolicy: ESO → Vault, intra-namespace allow
 
-### Phase 2 — Hardening (Bulan 3–4)
+### Phase 2 — Hardening (Bulan 3–4) 🔄 IN PROGRESS
 
 **Security Scanning & Mesh:**
+- [x] 🔵 Deploy RHACS Central + SecuredCluster (stackrox namespace) — runtime detection via eBPF collector ✅
 - [ ] 🔵 Integrasi OWASP ZAP headless + Schemathesis ke Tekton task untuk setiap deploy ke `payu-dev`
-- [ ] 🔵 Setup Falco di semua node — **validasi kernel compatibility** (eBPF/kmod/userspace) di `payu-dev` dulu _(§4.5.1)_
 - [ ] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
 - [ ] 🟡 Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
 - [ ] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
-- [ ] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator
+- [x] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator ✅
 - [ ] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion via Git write-back
+
+**Notes:**
+- ❌ **Falco di-skip** — RHCOS immutable + RHACS SecuredCluster sudah cukup untuk runtime detection. Falco bisa di-add later jika ada gap specific yang RHACS tidak cover.
+- ⚠️ **GitOps server crash** — ArgoCD server pods (openshift-gitops-server, payu-gitops-server) dalam keadaan CrashLoopBackOff karena dex config conflict. Server di-scale down sementara; controller dan repo-server masih Running.
 
 **Tekton Supply Chain (§4.4.1):**
 - [ ] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis

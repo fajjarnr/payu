@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: payu-rhacs-pvc
+  namespace: stackrox
+  labels:
+    app.kubernetes.io/component: security
+    payu.io/managed-by: platform-team
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: scanner-v4-db
+  namespace: stackrox
+  labels:
+    app.kubernetes.io/component: security
+    payu.io/managed-by: platform-team
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

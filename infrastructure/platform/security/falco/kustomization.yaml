@@ -1,14 +1,13 @@
-# Falco — Runtime Security Monitoring
+# Falco — Runtime Security (Complement RHACS)
 #
-# Referenced in: DEVSECOPS_ARCHITECTURE.md §4.5.1 (CWPP)
-# Purpose: Syscall-level threat detection, cloud-native runtime alerting engine
-# Integration: DaemonSet + Prometheus metrics + Wazuh SIEM forwarding
+# Purpose: Cover gaps that RHACS + RHCOS don't cover:
+#   - Deep syscall-level custom rules
+#   - Container escape / privilege escalation detection
+#   - Real-time SIEM forwarding to Wazuh
+#   - Banking-specific detections
 #
-# Note: Using Falco (not Tetragon) due to OVN-Kubernetes conflict on OCP 4.20+
-#   (Tetragon requires Cilium CNI — see DEVSECOPS_ARCHITECTURE.md §4.5.1)
-#
-# Requires ArgoCD kustomize.buildOptions: --enable-helm
-# or local: kustomize build --enable-helm .
+# RHACS covers: image CVE, network policy, deployment risk, basic runtime
+# Falco covers: granular syscalls, custom rules, instant alerting
 # ============================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -19,8 +18,6 @@ namespace: falco-system
 resources:
   - namespace.yaml
   - scc.yaml
-  - falco-config.yaml
-  - falco-rules.yaml
 
 helmCharts:
   - name: falco

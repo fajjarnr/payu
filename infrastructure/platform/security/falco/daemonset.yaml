@@ -1,0 +1,75 @@
+# Falco DaemonSet — Modern eBPF (no init container, no compile)
+# Image: falcosecurity/falco-no-driver:0.40.0 with modern eBPF bundled
+# ============================================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: runtime-security
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falco
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: falco
+        app.kubernetes.io/component: runtime-security
+    spec:
+      serviceAccountName: falco
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+      containers:
+        - name: falco
+          image: docker.io/falcosecurity/falco-no-driver:latest
+          args:
+            - /usr/bin/falco
+            - -pc
+            - -c
+            - /etc/falco/falco.yaml
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: proc-vol
+              mountPath: /host/proc
+              readOnly: true
+            - name: etc-vol
+              mountPath: /host/etc
+              readOnly: true
+            - name: dev-vol
+              mountPath: /dev
+            - name: custom-rules
+              mountPath: /etc/falco/rules.d
+              readOnly: true
+          env:
+            - name: HOST_ROOT
+              value: /host
+      volumes:
+        - name: proc-vol
+          hostPath:
+            path: /proc
+        - name: etc-vol
+          hostPath:
+            path: /etc
+        - name: dev-vol
+          hostPath:
+            path: /dev
+        - name: custom-rules
+          configMap:
+            name: falco-custom-rules
+            items:
+              - key: payu-rules.yaml
+                path: payu-rules.yaml
