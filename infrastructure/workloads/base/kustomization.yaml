@@ -31,9 +31,12 @@ resources:
   # High Availability
   - hpa.yaml
   - pdb.yaml
-  # Security & Networking
-  - network-policies.yaml
-  - tls-certificates.yaml
   # Shared ConfigMaps
   - spring-config.yaml
   - service-endpoints.yaml
+  # Autoscaling
+  - hpa.yaml
+  - hpa-enhanced.yaml
+  - vpa.yaml
+  # High Availability
+  - pdb.yaml
