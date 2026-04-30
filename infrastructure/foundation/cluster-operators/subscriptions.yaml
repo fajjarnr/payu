@@ -74,7 +74,12 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 6. External Secrets Operator
+# 6. External Secrets Operator (Red Hat branded)
+# NOTE: v1.1.0 deploys controller in 'external-secrets' namespace via
+# ExternalSecretsConfig CR (operator.openshift.io/v1alpha1). Must create
+# ExternalSecretsConfig named 'cluster' after operator install.
+# CRD versions: v1 (served), v1beta1 (not served).
+# See infrastructure/platform/security/vault/vault.yaml for lessons learned.
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:

@@ -9,6 +9,17 @@
 # - Auto-unseal via KMS/HSM
 # - Non-root bootstrap workflow with short-lived admin token
 # ============================================================
+#
+# LESSONS LEARNED (Provisioning):
+# 1. Red Hat ESO v1.1.0 deploys controller in 'external-secrets' namespace
+#    (NOT openshift-operators). Requires 'ExternalSecretsConfig' CR named 'cluster'
+#    to trigger operand deployment.
+# 2. Cross-namespace traffic requires NetworkPolicy on BOTH sides:
+#    - Ingress allow in payu-dev (allow-external-secrets-to-vault)
+#    - Egress allow in external-secrets (allow-egress-to-vault)
+# 3. Vault dev mode uses inmem storage. Pod restart = data loss.
+#    Always re-seed secrets after Vault pod recreation.
+# 4. Use external-secrets.io/v1 (NOT v1beta1) for Red Hat ESO v1.1.0.
 
 # Vault Deployment (dev mode for lab bootstrap)
 apiVersion: apps/v1

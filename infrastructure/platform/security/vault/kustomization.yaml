@@ -4,4 +4,3 @@ kind: Kustomization
 resources:
   - vault.yaml
   - vault-init-job.yaml
-  - external-secrets-subscription.yaml
