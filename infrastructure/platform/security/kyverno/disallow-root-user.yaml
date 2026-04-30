@@ -1,0 +1,44 @@
+# Disallow root user (runAsNonRoot + non-zero runAsUser)
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — No root container policy
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-root-user
+  annotations:
+    policies.kyverno.io/title: Disallow Root User
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Running as root is not allowed. Containers must set runAsNonRoot: true
+      and specify a non-zero runAsUser.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-runasuser
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
+      validate:
+        message: "Running as root is not allowed. Set runAsNonRoot: true and ensure a non-zero runAsUser."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            =(initContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  =(runAsUser): ">0"
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  =(runAsUser): ">0"

@@ -1,0 +1,64 @@
+# Block shadow / rogue namespace creation
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Block shadow namespaces
+# NOTE: System/operator namespaces are excluded. Only PayU app namespaces are governed.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: block-shadow-namespaces
+  annotations:
+    policies.kyverno.io/title: Block Shadow Namespaces
+    policies.kyverno.io/category: Namespace Governance
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Only allow namespaces created by platform-team with proper labels.
+      System/operator namespaces are excluded from this policy.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: validate-namespace-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                # Kubernetes system
+                - default
+                - kube-system
+                - kube-node-lease
+                - kube-public
+                # OpenShift system
+                - openshift
+                - openshift-*
+                # Operators (OLM-managed, not PayU workloads)
+                - kyverno
+                - falco-system
+                - wazuh
+                - cert-manager
+                - cert-manager-operator
+                - rhacs-operator
+                - rhdh-operator
+                - openshift-gitops-operator
+                - openshift-kube-descheduler-operator
+                - openshift-operators
+                - openshift-operators-redhat
+                - openshift-marketplace
+                - openshift-cluster-samples-operator
+                # Tekton / GitOps system
+                - openshift-pipelines
+                - openshift-gitops
+                # Observability system
+                - openshift-monitoring
+                - openshift-logging
+                - openshift-user-workload-monitoring
+      validate:
+        message: "Namespace must have label payu.io/managed-by: platform-team and match naming convention payu-*"
+        pattern:
+          metadata:
+            name: "payu*"
+            labels:
+              payu.io/managed-by: "platform-team"

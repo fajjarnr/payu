@@ -1,0 +1,41 @@
+# Require Cosign image signature verification
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Image signature policy
+# Phase: Audit in lab until Cosign signing is fully operational
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-cosign-signature
+  annotations:
+    policies.kyverno.io/title: Require Cosign Image Signature
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Verify container images are signed with Cosign before deployment.
+spec:
+  validationFailureAction: Audit
+  background: false
+  rules:
+    - name: verify-image-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
+      verifyImages:
+        - imageReferences:
+            - "image-registry.openshift-image-registry.svc:5000/payu*"
+            - "quay.io/payu*"
+          mutateDigest: false
+          verifyDigest: true
+          required: true
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    issuer: "https://token.actions.githubusercontent.com"
+                    subject: "https://github.com/payu-platform/.github/workflows/build.yaml@refs/heads/main"
+                    rekor:
+                      url: https://rekor.sigstore.dev

@@ -1,0 +1,33 @@
+# Require approved container registries only
+# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Approved registry policy
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-approved-registry
+  annotations:
+    policies.kyverno.io/title: Approved Registry Only
+    policies.kyverno.io/category: Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Only approved container registries are allowed for image pulls.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-registries
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaceSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: payu
+      validate:
+        message: "Only approved registries are allowed."
+        pattern:
+          spec:
+            =(initContainers):
+              - image: "image-registry.openshift-image-registry.svc:5000/* | gcr.io/* | quay.io/* | registry.redhat.io/* | docker.io/library/* | docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*"
+            containers:
+              - image: "image-registry.openshift-image-registry.svc:5000/* | gcr.io/* | quay.io/* | registry.redhat.io/* | docker.io/library/* | docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*"
