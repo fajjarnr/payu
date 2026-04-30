@@ -1,0 +1,41 @@
+# SecurityContextConstraints for LitmusChaos Portal components
+# Allows arbitrary UIDs (required by hardcoded runAsUser in upstream images)
+# but does NOT allow privileged/host access.
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: litmus-portal
+  annotations:
+    kubernetes.io/description: >-
+      LitmusChaos portal SCC. Allows arbitrary UIDs for auth-server,
+      graphql-server, and mongodb containers. No privileged/host access.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: []
+fsGroup:
+  type: RunAsAny
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:litmus:default
+  - system:serviceaccount:litmus:litmus-mongodb
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret

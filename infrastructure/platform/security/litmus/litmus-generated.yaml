@@ -1,0 +1,1081 @@
+---
+# Source: litmus/charts/mongodb/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: litmus-mongodb
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+secrets:
+  - name: litmus-mongodb
+automountServiceAccountToken: true
+---
+# Source: litmus/charts/mongodb/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: litmus-mongodb
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+type: Opaque
+data:
+  mongodb-root-password: "MTIzNA=="
+  mongodb-passwords: "cFpqUWsxdmlZSw=="
+  mongodb-replica-set-key: "ZVdTeTNxUWMwUA=="
+---
+# Source: litmus/templates/controlplane-secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: litmus-admin-secret
+  namespace: litmus
+  labels:
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+    app.kubernetes.io/component: litmus-admin-secret
+data:
+  ADMIN_USERNAME: "YWRtaW4="
+  ADMIN_PASSWORD: "bGl0bXVz"
+---
+# Source: litmus/charts/mongodb/templates/common-scripts-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litmus-mongodb-common-scripts
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+data:
+  startup-probe.sh: |
+    #!/bin/bash
+    mongosh  $TLS_OPTIONS --port $MONGODB_PORT_NUMBER --eval 'db.hello().isWritablePrimary || db.hello().secondary' | grep -q 'true'
+  readiness-probe.sh: |
+    #!/bin/bash
+    # Run the proper check depending on the version
+    [[ $(mongod -version | grep "db version") =~ ([0-9]+\.[0-9]+\.[0-9]+) ]] && VERSION=${BASH_REMATCH[1]}
+    . /opt/bitnami/scripts/libversion.sh
+    VERSION_MAJOR="$(get_sematic_version "$VERSION" 1)"
+    VERSION_MINOR="$(get_sematic_version "$VERSION" 2)"
+    VERSION_PATCH="$(get_sematic_version "$VERSION" 3)"
+    if [[ "$VERSION_MAJOR" -ge 5 ]] || [[ "$VERSION_MAJOR" -ge 4 ]] && [[ "$VERSION_MINOR" -ge 4 ]] && [[ "$VERSION_PATCH" -ge 2 ]]; then
+        mongosh $TLS_OPTIONS --port $MONGODB_PORT_NUMBER --eval 'db.hello().isWritablePrimary || db.hello().secondary' | grep -q 'true'
+    else
+        mongosh  $TLS_OPTIONS --port $MONGODB_PORT_NUMBER --eval 'db.isMaster().ismaster || db.isMaster().secondary' | grep -q 'true'
+    fi
+  ping-mongodb.sh: |
+    #!/bin/bash
+    mongosh  $TLS_OPTIONS --port $MONGODB_PORT_NUMBER --eval "db.adminCommand('ping')"
+---
+# Source: litmus/charts/mongodb/templates/replicaset/scripts-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litmus-mongodb-scripts
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+data:
+  setup.sh: |-
+    #!/bin/bash
+
+    . /opt/bitnami/scripts/mongodb-env.sh
+    . /opt/bitnami/scripts/libfs.sh
+    . /opt/bitnami/scripts/liblog.sh
+    . /opt/bitnami/scripts/libvalidations.sh
+
+    if is_empty_value "$MONGODB_ADVERTISED_PORT_NUMBER"; then
+      export MONGODB_ADVERTISED_PORT_NUMBER="$MONGODB_PORT_NUMBER"
+    fi
+
+    info "Advertised Hostname: $MONGODB_ADVERTISED_HOSTNAME"
+    info "Advertised Port: $MONGODB_ADVERTISED_PORT_NUMBER"
+
+    # Check for existing replica set in case there is no data in the PVC
+    # This is for cases where the PVC is lost or for MongoDB caches without
+    # persistence
+    current_primary=""
+    if is_dir_empty "${MONGODB_DATA_DIR}/db"; then
+      info "Data dir empty, checking if the replica set already exists"
+      current_primary=$(mongosh admin --host "litmus-mongodb-0.litmus-mongodb-headless.litmus.svc.cluster.local:27017" --authenticationDatabase admin -u root -p $MONGODB_ROOT_PASSWORD --eval 'db.runCommand("ismaster")' | awk -F\' '/primary/ {print $2}')
+
+      if ! is_empty_value "$current_primary"; then
+        info "Detected existing primary: ${current_primary}"
+      fi
+    fi
+
+    if ! is_empty_value "$current_primary" && [[ "$MONGODB_ADVERTISED_HOSTNAME:$MONGODB_ADVERTISED_PORT_NUMBER" == "$current_primary" ]]; then
+        info "Advertised name matches current primary, configuring node as a primary"
+        export MONGODB_REPLICA_SET_MODE="primary"
+    elif ! is_empty_value "$current_primary" && [[ "$MONGODB_ADVERTISED_HOSTNAME:$MONGODB_ADVERTISED_PORT_NUMBER" != "$current_primary" ]]; then
+        info "Current primary is different from this node. Configuring the node as replica of ${current_primary}"
+        export MONGODB_REPLICA_SET_MODE="secondary"
+        export MONOGDB_INITIAL_PRIMARY_HOST="${current_primary%:*}"
+        export MONGODB_INITIAL_PRIMARY_PORT_NUMBER="${current_primary#*:}"
+        export MONGODB_SET_SECONDARY_OK="yes"
+    elif [[ "$MY_POD_NAME" = "litmus-mongodb-0" ]]; then
+        info "Pod name matches initial primary pod name, configuring node as a primary"
+        export MONGODB_REPLICA_SET_MODE="primary"
+    else
+        info "Pod name doesn't match initial primary pod name, configuring node as a secondary"
+        export MONGODB_REPLICA_SET_MODE="secondary"
+        export MONGODB_INITIAL_PRIMARY_PORT_NUMBER="$MONGODB_PORT_NUMBER"
+    fi
+
+    if [[ "$MONGODB_REPLICA_SET_MODE" == "secondary" ]]; then
+        export MONGODB_INITIAL_PRIMARY_ROOT_USER="$MONGODB_ROOT_USER"
+        export MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD="$MONGODB_ROOT_PASSWORD"
+        export MONGODB_ROOT_PASSWORD=""
+        export MONGODB_EXTRA_USERNAMES=""
+        export MONGODB_EXTRA_DATABASES=""
+        export MONGODB_EXTRA_PASSWORDS=""
+        export MONGODB_ROOT_PASSWORD_FILE=""
+        export MONGODB_EXTRA_USERNAMES_FILE=""
+        export MONGODB_EXTRA_DATABASES_FILE=""
+        export MONGODB_EXTRA_PASSWORDS_FILE=""
+    fi
+
+    exec /opt/bitnami/scripts/mongodb/entrypoint.sh /opt/bitnami/scripts/mongodb/run.sh
+  setup-hidden.sh: |-
+    #!/bin/bash
+
+    . /opt/bitnami/scripts/mongodb-env.sh
+
+    echo "Advertised Hostname: $MONGODB_ADVERTISED_HOSTNAME"
+    echo "Advertised Port: $MONGODB_ADVERTISED_PORT_NUMBER"
+    echo "Configuring node as a hidden node"
+    export MONGODB_REPLICA_SET_MODE="hidden"
+    export MONGODB_INITIAL_PRIMARY_ROOT_USER="$MONGODB_ROOT_USER"
+    export MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD="$MONGODB_ROOT_PASSWORD"
+    export MONGODB_INITIAL_PRIMARY_PORT_NUMBER="$MONGODB_PORT_NUMBER"
+    export MONGODB_ROOT_PASSWORD=""
+    export MONGODB_EXTRA_USERNAMES=""
+    export MONGODB_EXTRA_DATABASES=""
+    export MONGODB_EXTRA_PASSWORDS=""
+    export MONGODB_ROOT_PASSWORD_FILE=""
+    export MONGODB_EXTRA_USERNAMES_FILE=""
+    export MONGODB_EXTRA_DATABASES_FILE=""
+    export MONGODB_EXTRA_PASSWORDS_FILE=""
+    exec /opt/bitnami/scripts/mongodb/entrypoint.sh /opt/bitnami/scripts/mongodb/run.sh
+---
+# Source: litmus/templates/controlplane-configs.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litmus-admin-config
+  namespace:  litmus
+  labels:
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+    app.kubernetes.io/component: litmus-admin-config
+data:
+  DB_SERVER: "mongodb://litmus-mongodb-0.litmus-mongodb-headless:27017/admin"
+  VERSION: "3.28.0"
+  SKIP_SSL_VERIFY: "false"
+---
+# Source: litmus/templates/controlplane-configs.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litmus-frontend-nginx-configuration
+  namespace: litmus
+  labels:
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+    app.kubernetes.io/component: litmus-admin-config
+data:
+  nginx.conf: |
+    pid /tmp/nginx.pid;
+
+    events {
+      worker_connections  1024;
+    }
+
+    http {
+        map $http_upgrade $connection_upgrade {
+            default upgrade;
+            '' close;
+        }
+
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path       /tmp/proxy_temp_path;
+        fastcgi_temp_path     /tmp/fastcgi_temp;
+        uwsgi_temp_path       /tmp/uwsgi_temp;
+        scgi_temp_path        /tmp/scgi_temp;
+
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        server_tokens off;
+
+        include /etc/nginx/mime.types;
+
+        gzip on;
+        gzip_disable "msie6";
+
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+
+        server {
+            listen 8185;
+            server_name  default_server;
+            root   /opt/chaos;
+
+            location /health {
+              return 200;
+            }
+
+            location / {
+                proxy_http_version 1.1;
+                add_header Cache-Control "no-cache";
+                try_files $uri /index.html;
+                autoindex on;
+            }
+
+            # redirect server error pages to the static page /50x.html
+            #
+            error_page   500 502 503 504  /50x.html;
+            location = /50x.html {
+                root   /usr/share/nginx/html;
+            }
+
+            location /auth/ {
+                proxy_pass "http://litmus-auth-server-service:9003/";
+                proxy_http_version 1.1;
+                proxy_set_header   Host                 $host;
+                proxy_set_header   X-Real-IP            $remote_addr;
+                proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Proto    $scheme;
+            }
+
+            location /api/ {
+                proxy_pass "http://litmus-server-service:9002/";
+                proxy_http_version 1.1;
+                proxy_set_header   Host                 $host;
+                proxy_set_header   X-Real-IP            $remote_addr;
+                proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Proto    $scheme;
+                proxy_set_header   Upgrade              $http_upgrade;
+                proxy_set_header   Connection           $connection_upgrade;
+            }
+        }
+    }
+---
+# Source: litmus/charts/mongodb/templates/arbiter/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: litmus-mongodb-arbiter-headless
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: arbiter
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: tcp-mongodb
+      port: 27017
+      targetPort: mongodb
+  selector:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/component: arbiter
+---
+# Source: litmus/charts/mongodb/templates/replicaset/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: litmus-mongodb-headless
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: "mongodb"
+      port: 27017
+      targetPort: mongodb
+  selector:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/component: mongodb
+---
+# Source: litmus/templates/auth-server-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: litmus-auth-server-service
+  namespace:  litmus
+  labels:
+    app.kubernetes.io/component: litmus-auth-server
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  type: ClusterIP
+  ports:
+    - name: auth-server
+      port: 9003
+      targetPort: 3000
+    - name: auth-rpc-server
+      port: 3030
+      targetPort: 3030
+  selector:
+    app.kubernetes.io/component: litmus-auth-server
+---
+# Source: litmus/templates/frontend-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: litmus-frontend-service
+  namespace:  litmus
+  labels:
+    app.kubernetes.io/component: litmus-frontend
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9091
+      targetPort: 8185
+  selector:
+    app.kubernetes.io/component: litmus-frontend
+---
+# Source: litmus/templates/server-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: litmus-server-service
+  namespace:  litmus
+  labels:
+    app.kubernetes.io/component: litmus-server
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  type: ClusterIP
+  ports:
+    - name: graphql-server
+      port: 9002
+      targetPort: 8080
+    - name: graphql-rpc-server
+      port: 8000
+      targetPort: 8000
+  selector:
+    app.kubernetes.io/component: litmus-server
+---
+# Source: litmus/templates/auth-server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 'litmus-auth-server'
+  namespace: litmus
+  labels:
+    app.kubernetes.io/component: 'litmus-auth-server'
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: litmus-auth-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: litmus-auth-server
+        app.kubernetes.io/instance: litmus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: litmus
+        app.kubernetes.io/part-of: litmus
+        app.kubernetes.io/version: "3.28.0"
+        helm.sh/chart: litmus-3.28.0
+        litmuschaos.io/version: 3.28.0
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+        - name: wait-for-mongodb
+          image: litmuschaos.docker.scarf.sh/litmuschaos/mongo:6
+          imagePullPolicy: Always
+          command: ["/bin/bash", "-c"]
+          env:
+            - name: DB_PASSWORD
+              value: "1234"
+            - name: DB_USER
+              value: root
+            - name: DB_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: litmus-admin-config
+                  key: DB_SERVER
+          args:
+            [
+                "until  [[ $(mongosh -u ${DB_USER} -p ${DB_PASSWORD} ${DB_SERVER} --eval 'rs.status()' | grep 'ok' | wc -l) -eq 1 ]]; do sleep 5; echo 'Waiting for the MongoDB to be ready...'; done; echo 'Connection with MongoDB established'",
+            ]
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              ephemeral-storage: 500Mi
+              memory: 150Mi
+          securityContext:
+            {}
+      containers:
+        - name: auth-server
+          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-auth-server:3.28.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: auth-server
+            - containerPort: 3030
+              name: auth-rpc-server
+          resources:
+            limits:
+              cpu: 550m
+              ephemeral-storage: 1Gi
+              memory: 712Mi
+            requests:
+              cpu: 225m
+              ephemeral-storage: 500Mi
+              memory: 250Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 2000
+          envFrom:
+            - secretRef:
+                name: litmus-admin-secret
+    
+            - configMapRef:
+                name: litmus-admin-config
+          env:
+            - name: DB_PASSWORD
+              value: "1234"
+            - name: DB_USER
+              value: root
+            - name: LITMUS_GQL_GRPC_ENDPOINT
+              value: "litmus-server-service"
+            - name: "LITMUS_GQL_GRPC_PORT"
+              value: "8000"
+            - name: ENABLE_INTERNAL_TLS
+              value: "false"
+            - name: REST_PORT
+              value: "3000"
+            - name: GRPC_PORT
+              value: "3030"
+            - name: ALLOWED_ORIGINS
+              value: ".*"
+            - name: HTTP_PROXY
+              value: ""
+            - name: HTTPS_PROXY
+              value: ""
+            - name: NO_PROXY
+              value: ""
+          volumeMounts:
+      volumes:
+---
+# Source: litmus/templates/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litmus-frontend
+  namespace:  litmus
+  labels:
+    app.kubernetes.io/component: litmus-frontend
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: litmus-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: litmus-frontend
+        app.kubernetes.io/instance: litmus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: litmus
+        app.kubernetes.io/part-of: litmus
+        app.kubernetes.io/version: "3.28.0"
+        helm.sh/chart: litmus-3.28.0
+        litmuschaos.io/version: 3.28.0
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: litmus-frontend-nginx-configuration
+      containers:
+        - name: litmusportal-frontend
+          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-frontend:3.28.0
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              ephemeral-storage: 500Mi
+              memory: 128Mi
+          securityContext:
+            null
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            failureThreshold: 5
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - containerPort: 8185
+              name: http
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+---
+# Source: litmus/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litmus-server
+  namespace: litmus
+  labels:
+    app.kubernetes.io/component: litmus-server
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: litmus
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/version: "3.28.0"
+    helm.sh/chart: litmus-3.28.0
+    litmuschaos.io/version: 3.28.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: litmus-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: litmus-server
+        app.kubernetes.io/instance: litmus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: litmus
+        app.kubernetes.io/part-of: litmus
+        app.kubernetes.io/version: "3.28.0"
+        helm.sh/chart: litmus-3.28.0
+        litmuschaos.io/version: 3.28.0
+    spec:
+      automountServiceAccountToken: false
+      volumes:
+        - emptyDir: {}
+          name: gitops-storage
+        - emptyDir: {}
+          name: hub-storage
+      initContainers:
+        - name: wait-for-mongodb
+          image: litmuschaos.docker.scarf.sh/litmuschaos/mongo:6
+          imagePullPolicy: Always
+          command: ["/bin/bash", "-c"]
+          env:
+            - name: DB_PASSWORD
+              value: "1234"
+            - name: DB_USER
+              value: root
+            - name: DB_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: litmus-admin-config
+                  key: DB_SERVER
+          args:
+            [
+                "until [[ $(mongosh -u ${DB_USER} -p ${DB_PASSWORD} ${DB_SERVER} --eval 'rs.status()' | grep 'ok' | wc -l) -eq 1 ]]; do sleep 5; echo 'Waiting for the MongoDB to be ready...'; done; echo 'Connection with MongoDB established'",
+            ]
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              ephemeral-storage: 500Mi
+              memory: 150Mi
+          securityContext:
+            {}
+      containers:
+        - name: graphql-server
+          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-server:3.28.0
+          volumeMounts:
+            - mountPath: /tmp/
+              name: gitops-storage
+            - mountPath: /tmp/version
+              name: hub-storage
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: gql-server
+            - containerPort: 8000
+              name: gql-rpc-server
+          resources:
+            limits:
+              cpu: 550m
+              ephemeral-storage: 1Gi
+              memory: 712Mi
+            requests:
+              cpu: 225m
+              ephemeral-storage: 500Mi
+              memory: 250Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 2000
+          envFrom:
+            - secretRef:
+                name: litmus-admin-secret
+    
+            - configMapRef:
+                name: litmus-admin-config
+          env:
+            - name: DB_PASSWORD
+              value: "1234"
+            - name: DB_USER
+              value: root
+            - name: LITMUS_AUTH_GRPC_ENDPOINT
+              value: 'litmus-auth-server-service'
+            - name: "LITMUS_AUTH_GRPC_PORT"
+              value: "3030"
+            - name: ENABLE_INTERNAL_TLS
+              value: "false"
+            - name: REST_PORT
+              value: "8080"
+            - name: GRPC_PORT
+              value: "8000"
+            - name: ALLOWED_ORIGINS
+              value: ".*"
+            - name: HTTP_PROXY
+              value: ""
+            - name: HTTPS_PROXY
+              value: ""
+            - name: NO_PROXY
+              value: ""
+            - name: ARGO_WORKFLOW_CONTROLLER_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/workflow-controller:v3.3.1
+            - name: ARGO_WORKFLOW_EXECUTOR_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/argoexec:v3.3.1
+            - name: EVENT_TRACKER_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-event-tracker:3.28.0
+            - name: LITMUS_CHAOS_EXPORTER_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-exporter:3.28.0
+            - name: LITMUS_CHAOS_OPERATOR_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-operator:3.28.0
+            - name: LITMUS_CHAOS_RUNNER_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-runner:3.28.0
+            - name: SUBSCRIBER_IMAGE
+              value: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-subscriber:3.28.0
+            - name: CHAOS_CENTER_UI_ENDPOINT
+              value: ""
+            - name: CONTAINER_RUNTIME_EXECUTOR
+              value: "k8sapi"
+            - name: DEFAULT_HUB_BRANCH_NAME
+              value: "v3.28.x"
+            - name: ENABLE_GQL_INTROSPECTION
+              value: "false"
+            - name: INFRA_COMPATIBLE_VERSIONS
+              value: "[\"3.28.0\"]"
+            - name: INFRA_DEPLOYMENTS
+              value: "[\"app=chaos-exporter\", \"name=chaos-operator\", \"app=event-tracker\", \"app=workflow-controller\"]"
+            - name: REMOTE_HUB_MAX_SIZE
+              value: "5000000"
+            - name: TLS_CERT_64
+              value: ""
+            - name: WORKFLOW_HELPER_IMAGE_VERSION
+              value: "3.28.0"
+---
+# Source: litmus/charts/mongodb/templates/arbiter/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: litmus-mongodb-arbiter
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: arbiter
+spec:
+  serviceName: litmus-mongodb-arbiter-headless
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mongodb
+      app.kubernetes.io/instance: litmus
+      app.kubernetes.io/component: arbiter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb
+        helm.sh/chart: mongodb-12.1.11
+        app.kubernetes.io/instance: litmus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: arbiter
+    spec:
+      
+      serviceAccountName: litmus-mongodb
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: mongodb
+                    app.kubernetes.io/instance: litmus
+                    app.kubernetes.io/component: arbiter
+                namespaces:
+                  - "litmus"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        sysctls: []
+      
+      initContainers:
+      containers:
+        - name: mongodb-arbiter
+          image: docker.io/bitnamilegacy/mongodb:8.0.13-debian-12-r0
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_SERVICE_NAME
+              value: "litmus-mongodb-arbiter-headless"
+            - name: MONGODB_REPLICA_SET_MODE
+              value: "arbiter"
+            - name: MONGODB_INITIAL_PRIMARY_HOST
+              value: litmus-mongodb-0.litmus-mongodb-headless.$(MY_POD_NAMESPACE).svc.cluster.local
+            - name: MONGODB_REPLICA_SET_NAME
+              value: "rs0"
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: "$(MY_POD_NAME).$(K8S_SERVICE_NAME).$(MY_POD_NAMESPACE).svc.cluster.local"
+            - name: MONGODB_PORT_NUMBER
+              value: "27017"
+            - name: MONGODB_INITIAL_PRIMARY_ROOT_USER
+              value: "root"
+            - name: MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: litmus-mongodb
+                  key: mongodb-root-password
+            - name: MONGODB_REPLICA_SET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: litmus-mongodb
+                  key: mongodb-replica-set-key
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "no"
+          ports:
+            - containerPort: 27017
+              name: mongodb
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+            tcpSocket:
+              port: mongodb
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+            tcpSocket:
+              port: mongodb
+          resources:
+            limits: {}
+            requests: {}
+---
+# Source: litmus/charts/mongodb/templates/replicaset/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: litmus-mongodb
+  namespace: "litmus"
+  labels:
+    app.kubernetes.io/name: mongodb
+    helm.sh/chart: mongodb-12.1.11
+    app.kubernetes.io/instance: litmus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: mongodb
+spec:
+  serviceName: litmus-mongodb-headless
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mongodb
+      app.kubernetes.io/instance: litmus
+      app.kubernetes.io/component: mongodb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb
+        helm.sh/chart: mongodb-12.1.11
+        app.kubernetes.io/instance: litmus
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: mongodb
+    spec:
+      
+      serviceAccountName: litmus-mongodb
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: mongodb
+                    app.kubernetes.io/instance: litmus
+                    app.kubernetes.io/component: mongodb
+                namespaces:
+                  - "litmus"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        sysctls: []
+      
+      containers:
+        - name: mongodb
+          image: docker.io/bitnamilegacy/mongodb:8.0.13-debian-12-r0
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          command:
+            - /scripts/setup.sh
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: K8S_SERVICE_NAME
+              value: "litmus-mongodb-headless"
+            - name: MONGODB_INITIAL_PRIMARY_HOST
+              value: litmus-mongodb-0.$(K8S_SERVICE_NAME).$(MY_POD_NAMESPACE).svc.cluster.local
+            - name: MONGODB_REPLICA_SET_NAME
+              value: "rs0"
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: "$(MY_POD_NAME).$(K8S_SERVICE_NAME).$(MY_POD_NAMESPACE).svc.cluster.local"
+            - name: MONGODB_EXTRA_USERNAMES
+              value: "authuser"
+            - name: MONGODB_EXTRA_DATABASES
+              value: "authdb"
+            - name: MONGODB_EXTRA_PASSWORDS
+              valueFrom:
+                secretKeyRef:
+                  name: litmus-mongodb
+                  key: mongodb-passwords
+            - name: MONGODB_ROOT_USER
+              value: "root"
+            - name: MONGODB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: litmus-mongodb
+                  key: mongodb-root-password
+            - name: MONGODB_REPLICA_SET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: litmus-mongodb
+                  key: mongodb-replica-set-key
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "no"
+            - name: MONGODB_SYSTEM_LOG_VERBOSITY
+              value: "0"
+            - name: MONGODB_DISABLE_SYSTEM_LOG
+              value: "no"
+            - name: MONGODB_DISABLE_JAVASCRIPT
+              value: "no"
+            - name: MONGODB_ENABLE_JOURNAL
+              value: "yes"
+            - name: MONGODB_PORT_NUMBER
+              value: "27017"
+            - name: MONGODB_ENABLE_IPV6
+              value: "no"
+            - name: MONGODB_ENABLE_DIRECTORY_PER_DB
+              value: "no"
+          ports:
+            - name: mongodb
+              containerPort: 27017
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 20
+            exec:
+              command:
+                - /bitnami/scripts/ping-mongodb.sh
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 20
+            exec:
+              command:
+                - /bitnami/scripts/readiness-probe.sh
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: datadir
+              mountPath: /bitnami/mongodb
+              subPath: 
+            - name: common-scripts
+              mountPath: /bitnami/scripts
+            - name: scripts
+              mountPath: /scripts/setup.sh
+              subPath: setup.sh
+            
+      volumes:
+        - name: common-scripts
+          configMap:
+            name: litmus-mongodb-common-scripts
+            defaultMode: 0550
+        - name: scripts
+          configMap:
+            name: litmus-mongodb-scripts
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: datadir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "10Gi"
+        storageClassName: gp3-csi

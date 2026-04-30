@@ -1,0 +1,21 @@
+# OpenShift Route for LitmusChaos Portal
+# TLS termination: edge (HTTPS at router, HTTP to pod)
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: litmus-portal
+  namespace: litmus
+  labels:
+    app: litmus-portal
+spec:
+  host: litmus.apps.payu.ocp.fajjjar.my.id
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+  to:
+    kind: Service
+    name: litmus-frontend-service
+    weight: 100
+  wildcardPolicy: None

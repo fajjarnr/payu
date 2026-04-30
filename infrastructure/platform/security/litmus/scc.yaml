@@ -1,0 +1,54 @@
+# SecurityContextConstraints for LitmusChaos
+# Required for Litmus Chaos Agent/Runner to perform chaos experiments
+# (hostPath volumes, privileged containers, hostPID, NET_ADMIN/SYS_ADMIN)
+#
+# WARNING: This SCC is highly privileged. Only bind to litmus-agent SA.
+# Portal components (frontend, server, mongodb) use restricted-v2 SCC.
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: litmus-chaos
+  annotations:
+    kubernetes.io/description: >-
+      LitmusChaos agent SCC. Allows host access, privileged containers,
+      and CAP_NET_ADMIN/CAP_SYS_ADMIN required for network/pod chaos.
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: true
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities: null
+defaultAddCapabilities:
+  - NET_ADMIN
+  - SYS_ADMIN
+fsGroup:
+  type: MustRunAs
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - KILL
+  - MKNOD
+  - SETUID
+  - SETGID
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:litmus:default
+  - system:serviceaccount:litmus:litmus
+  - system:serviceaccount:litmus:litmus-admin
+  - system:serviceaccount:litmus:litmus-agent
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret
+  - hostPath

@@ -1,0 +1,81 @@
+# LitmusChaos Helm values for OpenShift 4.20+
+# Chart: litmuschaos/litmus v3.28.0
+# Namespace: litmus
+#
+# OpenShift adjustments:
+#   - Services: ClusterIP (Route provides external access)
+#   - MongoDB: persistence enabled with gp3-csi, volumePermissions disabled
+#   - Security contexts adjusted for restricted-v2 SCC
+
+portal:
+  frontend:
+    replicas: 1
+    service:
+      type: ClusterIP
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  server:
+    replicas: 1
+    service:
+      type: ClusterIP
+    graphql:
+      service:
+        type: ClusterIP
+    authServer:
+      service:
+        type: ClusterIP
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+mongodb:
+  enabled: true
+  architecture: replicaset
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: gp3-csi
+  auth:
+    enabled: true
+    existingSecret: ""
+    databases:
+      - authdb
+    usernames:
+      - authuser
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # OpenShift: disable root init container; use fsGroup instead
+  volumePermissions:
+    enabled: false
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
+# Disable ingress (use OpenShift Route instead)
+ingress:
+  enabled: false
+
+# Litmus Self-Agent (runs chaos experiments in-cluster)
+# Disabled by default; enable after initial setup
+selfAgent:
+  enabled: false
