@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+    app.kubernetes.io/part-of: argocd
+data:
+  # Registry configuration for OpenShift internal registry
+  registries.conf: |
+    registries:
+    - name: OpenShift Internal
+      api_url: https://image-registry.openshift-image-registry.svc:5000
+      prefix: image-registry.openshift-image-registry.svc:5000
+      insecure: true
+      defaultns: openshift
+
+  # Default update strategy: digest (promote by digest, not by tag)
+  applications.update-strategy: "digest"
+
+  # Git commit identity
+  git.user: "ArgoCD Image Updater"
+  git.email: "argocd-image-updater@payu.local"
+
+  # Commit message template file (mounted at /app/config/commit.template)
+  commit.template: |
+    chore(gitops): automated image update

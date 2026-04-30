@@ -1,0 +1,21 @@
+# PayU Dev - Allow all egress
+# The Kyverno-generated default-deny-all blocks all egress for pods not
+# matched by an allow policy. This blanket policy allows all pods in payu-dev
+# to initiate outbound connections (required for DNS, Kafka inter-broker
+# communication, image pulls, etc.).
+# For production, replace with fine-grained egress rules.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-egress
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: allow-all-egress
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: network
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}

@@ -1,0 +1,25 @@
+# Kyverno PolicyException for Strimzi-managed Deployments
+# The Strimzi operator creates Deployments (entity-operator, cruise-control, etc.)
+# with its own label scheme that does not include all PayU-required labels.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: payu-kafka-deployment-labels-exception
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-kafka-deployment-labels-exception
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+spec:
+  exceptions:
+    - policyName: require-payu-labels
+      ruleNames:
+        - check-required-labels
+  match:
+    any:
+      - resources:
+          kinds:
+            - Deployment
+          selector:
+            matchLabels:
+              strimzi.io/cluster: payu-kafka

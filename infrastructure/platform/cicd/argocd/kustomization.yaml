@@ -6,3 +6,4 @@ resources:
   - drift-detection.yaml
   - gitops.yaml
   - sync-waves.yaml
+  - image-updater

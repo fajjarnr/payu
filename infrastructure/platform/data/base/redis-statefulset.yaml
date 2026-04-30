@@ -1,0 +1,156 @@
+# PayU Platform - Shared Redis Cache (RHEL9 redis-7)
+# Kyverno-compliant StatefulSet for restricted namespaces
+# ------------------------------------------------------
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-redis-credentials
+  labels:
+    app.kubernetes.io/name: payu-redis-credentials
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+type: Opaque
+stringData:
+  password: payu-cache-dev-password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payu-cache
+  labels:
+    app.kubernetes.io/name: payu-cache
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payu-cache
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: payu-cache
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payu-cache
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: payu-cache
+  labels:
+    app.kubernetes.io/name: payu-cache
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/version: "7"
+    team: platform
+spec:
+  replicas: 1
+  serviceName: payu-cache
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payu-cache
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payu-cache
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: cache
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: registry.redhat.io/rhel9/redis-7:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-redis-credentials
+                  key: password
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - |
+              exec redis-server \
+                --bind 0.0.0.0 \
+                --port 6379 \
+                --dir /var/lib/redis/data \
+                --appendonly yes \
+                --protected-mode no \
+                --pidfile /tmp/redis.pid \
+                --requirepass "${REDIS_PASSWORD}"
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/redis/data
+            - name: tmp
+              mountPath: /tmp
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  redis-cli -a "${REDIS_PASSWORD}" --no-auth-warning ping | grep -q PONG
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  redis-cli -a "${REDIS_PASSWORD}" --no-auth-warning ping | grep -q PONG
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: gp3-csi
+        resources:
+          requests:
+            storage: 5Gi

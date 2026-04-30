@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-service-config
+  labels:
+    app.kubernetes.io/name: account-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/managed-by: kustomize
+data:
+  application.yml: |
+    server:
+      port: 8080
+      shutdown: graceful
+    spring:
+      application:
+        name: account-service
+      jpa:
+        open-in-view: false
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+          base-path: /actuator
+      endpoint:
+        health:
+          show-details: always
+          probes:
+            enabled: true
+      health:
+        livenessstate:
+          enabled: true
+        readinessstate:
+          enabled: true
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+    logging:
+      level:
+        id.payu.account: INFO
+      pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

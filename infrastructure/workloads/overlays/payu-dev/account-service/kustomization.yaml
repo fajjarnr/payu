@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: payu-dev
+
+resources:
+  - ../../../base/account-service
+  - postgres.yaml
+
+images:
+  - name: account-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
+    newTag: "latest"
+
+commonLabels:
+  app.kubernetes.io/environment: dev
+  app.kubernetes.io/managed-by: argocd
+
+patches:
+  - target:
+      kind: Deployment
+      name: account-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: account-service
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: account-service
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+                  limits:
+                    cpu: 500m
+                    memory: 512Mi

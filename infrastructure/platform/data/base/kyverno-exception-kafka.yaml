@@ -1,0 +1,31 @@
+# Kyverno PolicyException for AMQ Streams Kafka operator-managed pods
+# The Strimzi operator manages pod security contexts internally and does not
+# expose all Kyverno-required fields via the Kafka CR.
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: payu-kafka-policy-exception
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-kafka-policy-exception
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+spec:
+  exceptions:
+    - policyName: disallow-root-user
+      ruleNames:
+        - check-runasuser
+    - policyName: set-readonly-root-filesystem
+      ruleNames:
+        - set-readonly-root
+    - policyName: require-resource-limits
+      ruleNames:
+        - validate-resources
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+          selector:
+            matchLabels:
+              strimzi.io/cluster: payu-kafka

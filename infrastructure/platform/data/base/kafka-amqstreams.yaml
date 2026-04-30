@@ -1,0 +1,158 @@
+# PayU Platform - AMQ Streams Kafka Cluster (KRaft mode)
+# Event streaming with persistent storage
+# Prerequisite: amq-streams operator subscription installed
+# --------------------------------------------------------
+
+# KafkaNodePool - Controller nodes (KRaft metadata quorum)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: payu-kafka-controller
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  replicas: 1
+  roles:
+    - controller
+  storage:
+    type: persistent-claim
+    size: 20Gi
+    class: gp3-csi
+
+---
+# KafkaNodePool - Broker nodes (data handling)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: payu-kafka-broker
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  replicas: 1
+  roles:
+    - broker
+  storage:
+    type: persistent-claim
+    size: 20Gi
+    class: gp3-csi
+
+---
+# Main Kafka cluster (KRaft mode)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: payu-kafka
+  labels:
+    app.kubernetes.io/name: payu-kafka
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: 4.0.0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      auto.create.topics.enable: "true"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+
+---
+# KafkaTopic - account events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: account-events
+  labels:
+    app.kubernetes.io/name: account-events
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - transaction events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: transaction-events
+  labels:
+    app.kubernetes.io/name: transaction-events
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 6
+  replicas: 1
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - wallet events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: wallet-events
+  labels:
+    app.kubernetes.io/name: wallet-events
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - notification events
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: notification-events
+  labels:
+    app.kubernetes.io/name: notification-events
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete

@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: account-service-dev
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/name: account-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/environment: dev
+spec:
+  project: payu
+  source:
+    repoURL: https://github.com/fajjarnr/payu.git
+    targetRevision: main
+    path: infrastructure/workloads/overlays/payu-dev/account-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payu-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

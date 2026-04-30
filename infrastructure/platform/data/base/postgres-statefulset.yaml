@@ -1,0 +1,170 @@
+# PayU Platform - Shared PostgreSQL (RHEL9 postgresql-16)
+# Kyverno-compliant StatefulSet for restricted namespaces
+# --------------------------------------------------------
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-postgres-credentials
+  labels:
+    app.kubernetes.io/name: payu-postgres-credentials
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  password: payu-dev-password
+  keycloak-password: keycloak-dev-password
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-postgres-init
+  labels:
+    app.kubernetes.io/name: payu-postgres-init
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+data:
+  01-create-keycloak.sh: |
+    #!/bin/bash
+    set -e
+    # Connect as postgres superuser (always exists after initdb) because
+    # POSTGRESQL_USER is not created until after init scripts finish.
+    psql -v ON_ERROR_STOP=1 --username postgres <<-EOSQL
+        CREATE USER keycloak WITH PASSWORD '${KEYCLOAK_PASSWORD}';
+        CREATE DATABASE keycloak OWNER keycloak;
+        GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;
+    EOSQL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payu-postgres
+  labels:
+    app.kubernetes.io/name: payu-postgres
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payu-postgres
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: payu-postgres
+  labels:
+    app.kubernetes.io/name: payu-postgres
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+    app.kubernetes.io/version: "16"
+    team: platform
+spec:
+  replicas: 1
+  serviceName: payu-postgres
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payu-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payu-postgres
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: database
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgresql
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRESQL_USER
+              value: payu
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-postgres-credentials
+                  key: password
+            - name: POSTGRESQL_DATABASE
+              value: payu
+            - name: POSTGRESQL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-postgres-credentials
+                  key: password
+            - name: KEYCLOAK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-postgres-credentials
+                  key: keycloak-password
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pgsql/data
+            - name: pgsql-tmp
+              mountPath: /var/lib/pgsql
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: init-scripts
+              mountPath: /opt/app-root/src/postgresql-init
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - --live
+            initialDelaySeconds: 120
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: pgsql-tmp
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: init-scripts
+          configMap:
+            name: payu-postgres-init
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: gp3-csi
+        resources:
+          requests:
+            storage: 20Gi
