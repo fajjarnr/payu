@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU Data Services - Base manifests
+# Apply with: oc apply -k infrastructure/platform/data/base/
+
+resources:
+  - crunchy-postgres.yaml
+  - datagrid.yaml
+  - amq-streams.yaml
+  - kafka-console.yaml

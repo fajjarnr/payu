@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU Infrastructure - Cluster Config
+# Cluster-scoped configurations: OAuth, machine configs, etc.
+# Apply with: oc apply -k infrastructure/foundation/cluster-config/
+
+resources:
+  - oauth.yaml
+  - machines/cluster-autoscaler.yaml
+  - machines/worker-machineautoscalers.yaml
+  - machines/worker-machineconfigpool.yaml
+  - machines/worker-machineset-2c.yaml

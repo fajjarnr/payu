@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU Identity - Base manifests
+# Apply with: oc apply -k infrastructure/platform/identity/base/
+
+resources:
+  - keycloak/rhbk-secrets.yaml
+  - keycloak/rhbk-keycloak.yaml
