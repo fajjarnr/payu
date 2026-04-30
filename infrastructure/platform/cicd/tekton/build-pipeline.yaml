@@ -214,6 +214,9 @@ spec:
         - build-push-direct
       taskRef:
         name: trivy
+      workspaces:
+        - name: dockerconfig
+          workspace: dockerconfig
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)

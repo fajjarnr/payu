@@ -23,6 +23,9 @@ spec:
     - name: output
       description: Workspace for scan reports
       optional: true
+    - name: dockerconfig
+      description: Docker registry credentials
+      optional: true
   results:
     - name: VULN_COUNT
       description: Number of vulnerabilities found
@@ -37,6 +40,14 @@ spec:
 
         echo "[*] Scanning image: $(params.IMAGE)"
         echo "[*] Severity filter: $(params.SEVERITY)"
+
+        # Mount dockerconfig if provided
+        if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+          mkdir -p ~/.docker
+          cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" ~/.docker/config.json
+          export TRIVY_USERNAME=unused
+          export TRIVY_PASSWORD=$(cat ~/.docker/config.json | jq -r '.auths["image-registry.openshift-image-registry.svc:5000"].auth' | base64 -d | cut -d: -f2)
+        fi
 
         trivy image \
           --severity $(params.SEVERITY) \
