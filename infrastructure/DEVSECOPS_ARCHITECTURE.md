@@ -562,7 +562,7 @@ graph LR
 
 **Notes:**
 - ❌ **Falco di-skip** — RHCOS immutable + RHACS SecuredCluster sudah cukup untuk runtime detection. Falco bisa di-add later jika ada gap specific yang RHACS tidak cover.
-- ⚠️ **GitOps server crash** — ArgoCD server pods (openshift-gitops-server, payu-gitops-server) dalam keadaan CrashLoopBackOff karena dex config conflict. Server di-scale down sementara; controller dan repo-server masih Running.
+- ✅ **GitOps server fixed** — `payu-gitops` ArgoCD CR dihapus karena tidak perlu (operator sudah menyediakan `openshift-gitops` instance). `openshift-gitops-server` kembali Running setelah tidak ada config fight antar instance.
 
 **Tekton Supply Chain (§4.4.1):**
 - [ ] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
