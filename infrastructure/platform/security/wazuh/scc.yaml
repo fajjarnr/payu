@@ -45,7 +45,7 @@ supplementalGroups:
 priority: 11
 readOnlyRootFilesystem: false
 users:
-  - system:serviceaccount:payu-security:wazuh-manager
+  - system:serviceaccount:wazuh:wazuh-manager
 volumes:
   - configMap
   - csi
