@@ -1,0 +1,97 @@
+# Falco Helm Values for OpenShift 4.20+
+# Chart: falcosecurity/falco
+# NOTE: OpenShift requires privileged SCC. Ensure falco-system namespace
+# is excluded from Kyverno disallow-root-user policy.
+# ============================================================
+
+# Driver configuration — use modern eBPF probe (kernel 5.8+ with BTF)
+driver:
+  kind: modern-bpf
+  loader:
+    initContainer:
+      enabled: true
+      image:
+        registry: docker.io
+        repository: falcosecurity/falco-driver-loader
+        tag: 0.40.0
+
+# Collector — syscall event collection
+collectors:
+  enabled: false  # disable kubernetes metadata collector (needs extra perms)
+
+# Falco daemonset configuration
+falco:
+  # Rules files — mount custom rules from ConfigMap
+  rules_files:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d/falco-custom-rules.yaml
+
+  # Output configuration
+  json_output: true
+  json_include_output_property: true
+  http_output:
+    enabled: true
+    url: http://falcosidekick.falco-system:2801/
+
+  # Logging
+  log_syslog: false
+  log_level: info
+
+  # Metrics for Prometheus
+  metrics:
+    enabled: true
+    interval: 1m
+    output_rule: true
+
+# Falco Sidekick — forward alerts to Wazuh/SIEM
+falcosidekick:
+  enabled: true
+  config:
+    debug: false
+    # Wazuh integration via webhook
+    webhook:
+      address: http://wazuh-manager.wazuh:55000/
+      minimumpriority: notice
+      checkcert: false
+  webui:
+    enabled: false  # disable UI for lab
+
+# ServiceMonitor for OpenShift Monitoring
+serviceMonitor:
+  enabled: true
+  interval: 30s
+
+# Pod security — OpenShift requires privileged
+# Kyverno policies must exclude falco-system namespace
+podSecurityContext:
+  runAsNonRoot: false
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+  readOnlyRootFilesystem: false
+  runAsUser: 0
+  runAsGroup: 0
+
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Node selector — run on all nodes including control plane
+nodeSelector: {}
+
+tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule

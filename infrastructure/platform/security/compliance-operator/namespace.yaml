@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: falco-system
+  name: openshift-compliance
   labels:
-    app.kubernetes.io/component: runtime-security
+    app.kubernetes.io/component: compliance
     payu.io/managed-by: platform-team

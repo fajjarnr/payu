@@ -1,0 +1,31 @@
+# Falco ServiceAccount + SCC for OpenShift
+# Falco requires privileged access for syscall monitoring
+# ============================================================
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: runtime-security
+
+---
+# Allow falco ServiceAccount to use privileged SCC
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: falco-privileged-scc
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/component: runtime-security
+subjects:
+  - kind: ServiceAccount
+    name: falco
+    namespace: falco-system
+roleRef:
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+  apiGroup: rbac.authorization.k8s.io

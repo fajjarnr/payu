@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: falco-system
+  name: wazuh
   labels:
-    app.kubernetes.io/component: runtime-security
+    app.kubernetes.io/component: siem
     payu.io/managed-by: platform-team
