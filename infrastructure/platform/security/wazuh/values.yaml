@@ -27,7 +27,7 @@ indexer:
   replicas: 1  # Lab: single node (chart default: 3)
 
   serviceAccount:
-    create: true
+    create: false
     annotations: {}
     name: "wazuh-indexer"
 
@@ -66,7 +66,7 @@ dashboard:
   replicas: 1
 
   serviceAccount:
-    create: true
+    create: false
     annotations: {}
     name: "wazuh-dashboard"
 
@@ -114,7 +114,7 @@ wazuh:
   syslog_enable: false  # Lab: disable syslog
 
   serviceAccount:
-    create: true
+    create: false
     annotations: {}
     name: "wazuh-manager"
 

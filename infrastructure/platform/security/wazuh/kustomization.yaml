@@ -5,4 +5,16 @@ namespace: wazuh
 
 resources:
   - namespace.yaml
-  - wazuh.yaml
+  - scc.yaml
+  - rbac.yaml
+  - networkpolicy.yaml
+  - route.yaml
+
+helmCharts:
+  - name: wazuh
+    repo: https://morgoved.github.io/wazuh-helm
+    version: "1.0.22"
+    releaseName: wazuh
+    namespace: wazuh
+    valuesFile: values.yaml
+    includeCRDs: true

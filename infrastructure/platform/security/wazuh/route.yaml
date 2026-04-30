@@ -6,7 +6,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: wazuh-dashboard
-  namespace: payu-security
+  namespace: wazuh
   labels:
     app: wazuh-dashboard
 spec:
