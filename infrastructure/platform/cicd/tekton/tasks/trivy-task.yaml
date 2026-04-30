@@ -45,8 +45,6 @@ spec:
         if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
           mkdir -p ~/.docker
           cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" ~/.docker/config.json
-          export TRIVY_USERNAME=unused
-          export TRIVY_PASSWORD=$(cat ~/.docker/config.json | jq -r '.auths["image-registry.openshift-image-registry.svc:5000"].auth' | base64 -d | cut -d: -f2)
         fi
 
         trivy image \
