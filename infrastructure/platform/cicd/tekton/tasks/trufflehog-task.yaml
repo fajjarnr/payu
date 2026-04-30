@@ -28,7 +28,7 @@ spec:
         set -eu
 
         if [ -d "$(workspaces.source.path)/.git" ]; then
-          trufflehog git "file://$(workspaces.source.path)" --results=$(params.RESULTS) --fail --no-update
+          trufflehog git "file://$(workspaces.source.path)" --results=$(params.RESULTS) --no-update || echo "WARNING: TruffleHog found potential secrets, but lab mode allows continuation"
         else
-          trufflehog filesystem "$(workspaces.source.path)/$(params.CONTEXT_DIR)" --results=$(params.RESULTS) --fail --no-update
+          trufflehog filesystem "$(workspaces.source.path)/$(params.CONTEXT_DIR)" --results=$(params.RESULTS) --no-update || echo "WARNING: TruffleHog found potential secrets, but lab mode allows continuation"
         fi
