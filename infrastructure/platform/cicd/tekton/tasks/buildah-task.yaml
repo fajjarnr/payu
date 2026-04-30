@@ -49,8 +49,8 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
-        # Configure registry auth if dockerconfig workspace is bound
-        if [[ -d "$(workspaces.dockerconfig.path)" ]]; then
+        # Configure registry auth if dockerconfig workspace is bound and file exists
+        if [[ -d "$(workspaces.dockerconfig.path)" && -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]]; then
           export REGISTRY_AUTH_FILE="$(workspaces.dockerconfig.path)/.dockerconfigjson"
         fi
 
