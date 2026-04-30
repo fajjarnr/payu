@@ -88,7 +88,7 @@ spec:
 
 ---
 # ClusterSecretStore - ESO bridge to Vault
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: payu-vault
@@ -108,7 +108,7 @@ spec:
           namespace: payu-dev
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: db-credentials
@@ -131,7 +131,7 @@ spec:
         key: payu/db-credentials
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: jwt-secret
@@ -154,7 +154,7 @@ spec:
         key: payu/jwt-secret
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: encryption-keys
@@ -177,7 +177,7 @@ spec:
         key: payu/encryption-keys
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: keycloak-credentials
@@ -200,7 +200,7 @@ spec:
         key: payu/keycloak-credentials
 
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: keycloak-db-secret
