@@ -240,3 +240,50 @@ spec:
       workspaces:
         - name: source
           workspace: source
+
+    # ── Step 5: k6 Smoke Test Gate (SIT/UAT) ──
+    - name: k6-smoke-test-gate
+      runAfter:
+        - argocd-sync-wait
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["sit", "uat"]
+      taskRef:
+        name: k6-load-test
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SCRIPT_PATH
+          value: infrastructure/platform/cicd/tekton/k6-scripts/payu-smoke-test.js
+        - name: VUS
+          value: "10"
+        - name: DURATION
+          value: "1m"
+        - name: BASE_URL
+          value: $(params.environment-base-url)
+
+    # ── Step 6: Notify Success ──
+    - name: notify-success
+      runAfter:
+        - k6-smoke-test-gate
+        - sit-litmus-gate
+        - uat-k6-load-test
+        - preprod-kraken-gate
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          value: |
+            #!/bin/sh
+            echo "[✓] Deployment pipeline completed successfully"
+            echo "Service: $(params.service-name)"
+            echo "Environment: $(params.environment)"

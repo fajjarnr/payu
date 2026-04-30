@@ -1,0 +1,21 @@
+# Allow all egress for pods in payu-cicd namespace.
+# Required because Kyverno-generated default-deny-all blocks egress,
+# which breaks DNS resolution and prevents Tekton tasks from reaching
+# external endpoints (git, registries) and k6 from reaching target services.
+# See infrastructure/platform/security/wazuh/networkpolicy.yaml for OVN-K DNS notes.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-egress
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: allow-all-egress
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "1.0.0"
+    team: platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pact-broker
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: pact-broker
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "2.112.0"
+    team: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pact-broker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pact-broker
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "2.112.0"
+        team: platform
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: pact-broker
+          image: docker.io/pactfoundation/pact-broker:latest
+          ports:
+            - containerPort: 9292
+              name: http
+          env:
+            - name: PACT_BROKER_DATABASE_HOST
+              value: postgres
+            - name: PACT_BROKER_DATABASE_PORT
+              value: "5432"
+            - name: PACT_BROKER_DATABASE_NAME
+              value: pactbroker
+            - name: PACT_BROKER_DATABASE_USERNAME
+              value: pactbroker
+            - name: PACT_BROKER_DATABASE_PASSWORD
+              value: pactbroker
+            - name: PACT_BROKER_PORT
+              value: "9292"
+            - name: PACT_BROKER_LOG_LEVEL
+              value: info
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

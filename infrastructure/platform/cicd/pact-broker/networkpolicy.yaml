@@ -1,0 +1,50 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-pact-broker
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: allow-ingress-to-pact-broker
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "1.0.0"
+    team: platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: pact-broker
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+      ports:
+        - protocol: TCP
+          port: 9292
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-postgres
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: allow-ingress-to-postgres
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "1.0.0"
+    team: platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: pact-broker
+      ports:
+        - protocol: TCP
+          port: 5432

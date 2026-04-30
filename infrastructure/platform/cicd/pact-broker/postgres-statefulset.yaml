@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "16"
+    team: platform
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "16"
+        team: platform
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: postgres
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRESQL_USER
+              value: pactbroker
+            - name: POSTGRESQL_PASSWORD
+              value: pactbroker
+            - name: POSTGRESQL_DATABASE
+              value: pactbroker
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pgsql/data
+            - name: pgsql
+              mountPath: /var/lib/pgsql
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/postgresql
+      volumes:
+        - name: pgsql
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: gp3-csi
+        resources:
+          requests:
+            storage: 10Gi

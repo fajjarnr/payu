@@ -31,6 +31,12 @@ resources:
   - rollback-pipeline.yaml
   - quality-gates/quality-gate-pipeline.yaml
 
+  # ConfigMaps
+  - k6-scripts-configmap.yaml
+
+  # NetworkPolicies
+  - networkpolicy-allow-egress.yaml
+
   # Triggers and Webhooks (require triggers.tekton.dev/v1beta1)
   - triggers/git-webhook-trigger.yaml
   - triggers/tekton-triggers-rbac.yaml

@@ -1,0 +1,20 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: pact-broker
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: pact-broker
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "2.112.0"
+    team: platform
+spec:
+  host: pact-broker.apps.payu.ocp.fajjjar.my.id
+  to:
+    kind: Service
+    name: pact-broker
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
