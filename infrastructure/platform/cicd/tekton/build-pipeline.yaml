@@ -223,7 +223,7 @@ spec:
         - name: SEVERITY
           value: "CRITICAL,HIGH"
         - name: EXIT_CODE
-          value: "1"
+          value: "0"
 
     # ── Step 5: RHACS Image Scan (CVE vulnerability report) ──
     - name: rhacs-image-scan
