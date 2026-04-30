@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace Strategy — Root Entrypoint
+# Recommended: apply overlay directly, e.g.:
+#   oc apply -k infrastructure/foundation/namespaces/overlays/shared/
+
+resources:
+  - overlays/shared

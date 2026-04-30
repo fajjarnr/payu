@@ -1,0 +1,99 @@
+# ------------------------------------------------------------
+# PayU DevSecOps — ResourceQuota (Phase 1 Foundation)
+# Scaled for 3-worker lab cluster
+# ------------------------------------------------------------
+
+# --- payu-dev ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: payu-dev-quota
+  namespace: payu-dev
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    requests.storage: 50Gi
+    pods: "50"
+    services: "20"
+    secrets: "50"
+    configmaps: "50"
+---
+# --- payu-sit ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: payu-sit-quota
+  namespace: payu-sit
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    requests.storage: 50Gi
+    pods: "50"
+    services: "20"
+    secrets: "50"
+    configmaps: "50"
+---
+# --- payu-uat ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: payu-uat-quota
+  namespace: payu-uat
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "6"
+    limits.memory: 12Gi
+    persistentvolumeclaims: "8"
+    requests.storage: 40Gi
+    pods: "40"
+    services: "15"
+    secrets: "40"
+    configmaps: "40"
+---
+# --- payu-preprod ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: payu-preprod-quota
+  namespace: payu-preprod
+spec:
+  hard:
+    requests.cpu: "6"
+    requests.memory: 12Gi
+    limits.cpu: "12"
+    limits.memory: 24Gi
+    persistentvolumeclaims: "12"
+    requests.storage: 80Gi
+    pods: "60"
+    services: "25"
+    secrets: "60"
+    configmaps: "60"
+---
+# --- payu (production) ---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: payu-prod-quota
+  namespace: payu
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "15"
+    requests.storage: 100Gi
+    pods: "80"
+    services: "30"
+    secrets: "80"
+    configmaps: "80"

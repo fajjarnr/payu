@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — DevSecOps Architecture Implementation (Phase 1 Foundation) (2026-04-30)
+
+- **Namespace Strategy**: Created `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, `payu-cicd`, `payu-infra`, `falco-system` with standardized labels (`app.kubernetes.io/part-of: payu`, `payu.io/managed-by: platform-team`), PodSecurity `restricted`, ResourceQuota, LimitRange, and default-deny NetworkPolicy.
+- **Kyverno Policies**: Deployed 9 ClusterPolicies via Kustomize — `disallow-root-user`, `require-resource-limits`, `set-readonly-root-filesystem`, `disallow-host-namespaces`, `require-approved-registry`, `require-cosign-signature`, `generate-default-deny-networkpolicy`, `block-shadow-namespaces`, `require-payu-labels`. Fixed CRD apply with server-side apply and resolved `mutateDigest` conflict for Audit mode.
+- **Vault + External Secrets Operator**: Deployed HashiCorp Vault OSS v1.15 in `payu-dev` (dev mode), seeded 5 secret paths (db-credentials, jwt-secret, encryption-keys, keycloak-credentials, keycloak-db). Installed External Secrets Operator v0.11.0 via OLM. Resolved OpenShift SCC conflicts and read-only-root-fs issues.
+- **Tekton Pipelines**: Installed OpenShift Pipelines operator v1.22.0. Applied 16+ Tekton Tasks (Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken, etc.) plus EventListener/TriggerBinding/TriggerTemplate in `payu-cicd`.
+- **ArgoCD GitOps**: Installed OpenShift GitOps operator v1.20.2. Applied AppProject (`payu`, `payu-preview`), Application (`payu-app-of-apps`), and ArgoCD instance (`payu-gitops`). Excluded `drift-detection.yaml` due to unavailable `ConfigManagementPlugin` CRD in GitOps 1.20.
+- **Falco**: Created `falco-system` namespace, ConfigMap (`falco-config`, `falco-custom-rules`). DaemonSet deployment pending Helm/manual manifest. Kernel 5.14 verified compatible with modern eBPF probe.
+- **Cosign**: Policy manifest and Tekton task available. Kyverno verifyImages policy configured in Audit mode for lab transition.
+- **Folder Restructure**: Merged duplicate folders (`platform/security/kyverno/policies` → `platform/devsecops-tooling/kyverno/`), added Kustomize entrypoints for all new resources, documented in `infrastructure/VERIFICATION_REPORT.md`.
+
 ### Changed — DevSecOps Bootstrap Alignment (2026-04-20)
 
 - Aligned GitOps bootstrap manifests under `infrastructure/platform/argocd-gitops/` with the active repository URL, added a root Kustomize entrypoint, and normalized preview namespace handling to `payu-dev-pr-*`.

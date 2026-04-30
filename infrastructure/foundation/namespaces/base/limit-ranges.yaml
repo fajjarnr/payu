@@ -1,0 +1,139 @@
+# ------------------------------------------------------------
+# PayU DevSecOps — LimitRange (Phase 1 Foundation)
+# Default container resource boundaries per namespace
+# ------------------------------------------------------------
+
+# --- payu-dev ---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: payu-dev-limits
+  namespace: payu-dev
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 4Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 10Gi
+      min:
+        storage: 1Gi
+---
+# --- payu-sit ---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: payu-sit-limits
+  namespace: payu-sit
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 4Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 10Gi
+      min:
+        storage: 1Gi
+---
+# --- payu-uat ---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: payu-uat-limits
+  namespace: payu-uat
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 4Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 10Gi
+      min:
+        storage: 1Gi
+---
+# --- payu-preprod ---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: payu-preprod-limits
+  namespace: payu-preprod
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 20Gi
+      min:
+        storage: 1Gi
+---
+# --- payu (production) ---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: payu-prod-limits
+  namespace: payu
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 20Gi
+      min:
+        storage: 1Gi
