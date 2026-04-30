@@ -9,3 +9,4 @@ resources:
   - datagrid.yaml
   - amq-streams.yaml
   - kafka-console.yaml
+  - kafka-config.yaml

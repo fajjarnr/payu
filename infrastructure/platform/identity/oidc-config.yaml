@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-config
+  labels:
+    app.kubernetes.io/name: oidc-config
+    app.kubernetes.io/part-of: payu
+data:
+  OIDC_AUTH_SERVER_URL: "http://payu-keycloak-service:8080/realms/payu"
+  OIDC_ISSUER: "http://payu-keycloak-service:8080/realms/payu"
+  OIDC_REALM: "payu"
+  OIDC_CLIENT_ID: "payu-backend"
+  OIDC_ENABLED: "true"

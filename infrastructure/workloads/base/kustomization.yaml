@@ -34,3 +34,6 @@ resources:
   # Security & Networking
   - network-policies.yaml
   - tls-certificates.yaml
+  # Shared ConfigMaps
+  - spring-config.yaml
+  - service-endpoints.yaml

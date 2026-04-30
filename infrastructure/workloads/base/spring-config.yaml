@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-config
+  labels:
+    app.kubernetes.io/name: spring-config
+    app.kubernetes.io/part-of: payu
+data:
+  SPRING_PROFILES_ACTIVE: "container"
+  LOG_LEVEL: "INFO"
+  SPRING_JPA_SHOW_SQL: "false"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"

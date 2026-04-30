@@ -7,3 +7,4 @@ kind: Kustomization
 resources:
   - keycloak/rhbk-secrets.yaml
   - keycloak/rhbk-keycloak.yaml
+  - oidc-config.yaml

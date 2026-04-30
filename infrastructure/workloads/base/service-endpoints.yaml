@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-endpoints
+  labels:
+    app.kubernetes.io/name: service-endpoints
+    app.kubernetes.io/part-of: payu
+data:
+  # Core services
+  ACCOUNT_SERVICE_URL: "http://account-service:8080"
+  AUTH_SERVICE_URL: "http://auth-service:8080"
+  TRANSACTION_SERVICE_URL: "http://transaction-service:8080"
+  WALLET_SERVICE_URL: "http://wallet-service:8080"
+  # Supporting services
+  BILLING_SERVICE_URL: "http://billing-service:8080"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8080"
+  KYC_SERVICE_URL: "http://kyc-service:8080"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
+  GATEWAY_SERVICE_URL: "http://gateway-service:8080"
+  # Infrastructure endpoints
+  KEYCLOAK_SERVER_URL: "http://keycloak-discovery:8080/auth"
+  KEYCLOAK_URL: "http://keycloak-discovery:8080/auth"
+  POSTGRES_HOST: "payu-postgres-primary.payu-dev.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  REDIS_HOST: "payu-datagrid"
+  REDIS_PORT: "11222"
+  KAFKA_URL: "kafka-kafka-bootstrap:9092"
