@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: payu-observability
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - networkpolicy.yaml
+  - opencost-generated.yaml
+  - route.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: payu
+  payu.io/managed-by: platform-team
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/part-of: payu
+      payu.io/managed-by: platform-team
+
+patches:
+  - target:
+      kind: Deployment
+      name: opencost
+    patch: |-
+      - op: add
+        path: /metadata/labels/team
+        value: platform
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1part-of
+        value: payu

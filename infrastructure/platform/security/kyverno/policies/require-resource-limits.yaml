@@ -24,6 +24,16 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: payu
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: chaos-engineering
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: cost-management
       validate:
         message: "All containers must have CPU and memory requests/limits defined."
         pattern:

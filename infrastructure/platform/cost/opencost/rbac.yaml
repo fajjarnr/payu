@@ -1,0 +1,25 @@
+# OpenCost RBAC — grant read access to OpenShift cluster monitoring
+# Thanos Querier in openshift-monitoring requires cluster-monitoring-view
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: opencost-cluster-monitoring-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: opencost
+    namespace: payu-observability
+---
+# Service-account token secret for OpenCost to authenticate to Thanos
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opencost-prometheus-token
+  namespace: payu-observability
+  annotations:
+    kubernetes.io/service-account.name: opencost
+type: kubernetes.io/service-account-token

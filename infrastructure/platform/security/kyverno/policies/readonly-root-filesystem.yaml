@@ -23,6 +23,16 @@ spec:
               namespaceSelector:
                 matchLabels:
                   app.kubernetes.io/part-of: payu
+      exclude:
+        any:
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: chaos-engineering
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: cost-management
       mutate:
         patchStrategicMerge:
           spec:

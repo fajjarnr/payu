@@ -1,0 +1,76 @@
+# OpenCost Helm values — OpenShift 4.20+ tuned
+# Chart: opencost/opencost
+# Ref: https://opencost.io/docs/installation/helm/
+
+fullnameOverride: opencost
+
+loglevel: info
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+podLabels:
+  app.kubernetes.io/component: cost-management
+  app.kubernetes.io/part-of: payu
+  payu.io/managed-by: platform-team
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+opencost:
+  exporter:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
+
+  ui:
+    enabled: false
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
+
+  prometheus:
+    internal:
+      enabled: true
+      serviceName: thanos-querier
+      namespaceName: openshift-monitoring
+      scheme: https
+      port: 9091
+    username_key: ""
+    password_key: ""
+    bearer_token: "placeholder"
+    bearer_token_key: token
+    existingSecretName: opencost-prometheus-token
+    insecureSkipVerify: true
+
+networkPolicies:
+  enabled: false

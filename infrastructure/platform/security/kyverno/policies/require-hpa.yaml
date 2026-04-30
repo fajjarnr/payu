@@ -1,0 +1,72 @@
+# Require HorizontalPodAutoscaler for Production Deployments
+# Ref: PLATFORM_OPS.md §5.3 — Production workloads must be auto-scaled
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-hpa
+  annotations:
+    policies.kyverno.io/title: Require HPA for Production Workloads
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Production workloads (payu-prod, payu-preprod, payu-uat) must have a
+      matching HorizontalPodAutoscaler defined.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-hpa-exists
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+              namespaces:
+                - payu-prod
+                - payu-preprod
+                - payu-uat
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - openshift
+                - openshift-*
+                - kyverno
+                - falco-system
+                - wazuh
+                - cert-manager
+                - cert-manager-operator
+                - rhacs-operator
+                - rhdh-operator
+                - openshift-gitops-operator
+                - openshift-kube-descheduler-operator
+                - openshift-operators
+                - openshift-operators-redhat
+                - openshift-marketplace
+                - openshift-cluster-samples-operator
+                - openshift-pipelines
+                - openshift-gitops
+                - openshift-monitoring
+                - openshift-logging
+                - openshift-user-workload-monitoring
+                - external-secrets
+                - istio-system
+                - stackrox
+                - litmus
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: chaos-engineering
+      context:
+        - name: hpaList
+          apiCall:
+            urlPath: "/apis/autoscaling/v2/namespaces/{{request.namespace}}/horizontalpodautoscalers"
+            jmesPath: "items[?spec.scaleTargetRef.kind == 'Deployment' && spec.scaleTargetRef.name == '{{request.object.metadata.name}}']"
+      validate:
+        message: "Production workloads must have a HorizontalPodAutoscaler defined"
+        deny:
+          conditions:
+            any:
+              - key: "{{ length(hpaList) }}"
+                operator: Equals
+                value: 0

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-observability
+  labels:
+    app.kubernetes.io/part-of: payu
+    payu.io/managed-by: platform-team
+    payu.io/environment: platform
+    payu.io/criticality: high
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

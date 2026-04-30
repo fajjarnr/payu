@@ -1,0 +1,20 @@
+# OpenShift Route for OpenCost API
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opencost
+  namespace: payu-observability
+  labels:
+    app.kubernetes.io/component: cost-management
+    app.kubernetes.io/part-of: payu
+    payu.io/managed-by: platform-team
+spec:
+  to:
+    kind: Service
+    name: opencost
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

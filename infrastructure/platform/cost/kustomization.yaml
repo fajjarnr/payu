@@ -10,3 +10,4 @@ resources:
   - cost-allocation.yaml
   - budget-alerts.yaml
   - idle-resource-detector.yaml
+  - opencost/
