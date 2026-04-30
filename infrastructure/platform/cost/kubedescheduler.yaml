@@ -7,7 +7,7 @@
 #   - SoftTopologyAndDuplicates: also handles soft topology constraints
 #
 # Applied to: openshift-kube-descheduler-operator namespace
-# Applied via: oc apply -f infrastructure/openshift/infra/base/kubedescheduler.yaml
+# Applied via: oc apply -f infrastructure/platform/cost/kubedescheduler.yaml
 # ============================================================
 apiVersion: operator.openshift.io/v1
 kind: KubeDescheduler
