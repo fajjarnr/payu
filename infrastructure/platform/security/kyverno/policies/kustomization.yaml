@@ -1,4 +1,4 @@
-# Kyverno — Policy-as-Code + Helm Deployment
+# Kyverno — Policy-as-Code (Admission Controller)
 #
 # Referenced in: DEVSECOPS_ARCHITECTURE.md §4.4.2
 # Purpose: Operational/mutation K8s policies (NOT security — that's ACS)
@@ -8,22 +8,17 @@
 #   Kyverno → Operational: auto-add labels, resource limits, namespace lifecycle
 #
 # See DEVSECOPS_ARCHITECTURE.md §4.4.2 for the complete policy matrix
-#
-# Requires ArgoCD kustomize.buildOptions: --enable-helm
-# or local: kustomize build --enable-helm .
-# ============================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - policies/
-
-helmCharts:
-  - name: kyverno
-    repo: https://kyverno.github.io/kyverno
-    version: "3.3.4"
-    releaseName: kyverno
-    namespace: kyverno
-    valuesFile: values.yaml
-    includeCRDs: true
+  - require-labels.yaml
+  - require-resource-limits.yaml
+  - readonly-root-filesystem.yaml
+  - default-deny-networkpolicy.yaml
+  - disallow-host-namespaces.yaml
+  - disallow-root-user.yaml
+  - require-approved-registry.yaml
+  - require-cosign-signature.yaml
+  - block-shadow-namespaces.yaml
