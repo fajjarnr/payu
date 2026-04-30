@@ -5,3 +5,4 @@ namespace: wazuh
 
 resources:
   - namespace.yaml
+  - wazuh.yaml

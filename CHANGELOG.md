@@ -22,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cosign**: Policy manifest and Tekton task available. Kyverno verifyImages policy configured in Audit mode for lab transition.
 - **Folder Restructure**: Merged duplicate folders (`platform/security/kyverno/policies` → `platform/devsecops-tooling/kyverno/`), added Kustomize entrypoints for all new resources, documented in `infrastructure/VERIFICATION_REPORT.md`.
 
+### Added — DevSecOps Architecture Implementation (Phase 2 Hardening) (2026-04-30)
+
+- **RHACS (Advanced Cluster Security)**: Deployed Central (`payu-central`) + SecuredCluster (`payu-secured-cluster`) in `stackrox` namespace. Runtime detection via eBPF Collector, Admission Control, Sensor. Central accessible at `central-stackrox.apps.payu.ocp.fajjjar.my.id`.
+- **OpenShift Service Mesh (Istio)**: Deployed `Istio` CR (`payu-mesh`) + `IstioCNI` in `istio-system`. Istiod + CNI node pods Running on all 8 nodes. Kiali deployed for service graph visualization.
+- **mTLS Policies**: Applied `PeerAuthentication` STRICT for `payu`, `payu-uat`, `payu-preprod`, `istio-system`; PERMISSIVE for `payu-dev`, `payu-sit`. Applied `AuthorizationPolicy` deny-all + allow-same-namespace + service-specific rules. Applied `RequestAuthentication` JWT validation for account/transaction/wallet services.
+- **ComplianceOperator**: Added subscription (v1.9.0). Deployed `ScanSetting` + `ScanSettingBinding` for CIS Kubernetes Benchmark (`ocp4-cis`, `ocp4-cis-node`) in `openshift-compliance` namespace. Scan scheduled daily at 01:00.
+- **Wazuh SIEM**: Scaffolded `wazuh` namespace with Manager + Indexer deployments + Route. Pods require further configuration for lab resource constraints.
+- **Falco Decision**: Skipped Falco deployment — RHCOS immutable OS + RHACS SecuredCluster runtime detection sufficient. Falco manifests retained in `infrastructure/platform/security/falco/` for future use if gap specific identified.
+- **Architecture Document Update**: Updated `DEVSECOPS_ARCHITECTURE.md` v1.3.1 — Phase 1 marked COMPLETE, Phase 2 IN PROGRESS, removed Falco as mandatory, added ArgoCD server crash note.
+
 ### Changed — DevSecOps Bootstrap Alignment (2026-04-20)
 
 - Aligned GitOps bootstrap manifests under `infrastructure/platform/argocd-gitops/` with the active repository URL, added a root Kustomize entrypoint, and normalized preview namespace handling to `payu-dev-pr-*`.

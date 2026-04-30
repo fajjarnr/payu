@@ -5,3 +5,4 @@ namespace: openshift-compliance
 
 resources:
   - namespace.yaml
+  - cis-scan.yaml
