@@ -72,8 +72,11 @@ metadata:
   namespace: payu-preprod
   labels:
     app: cerberus
+    app.kubernetes.io/name: cerberus
     app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "latest"
     app.kubernetes.io/component: chaos-engineering
+    team: platform
 spec:
   replicas: 1
   selector:
@@ -83,16 +86,28 @@ spec:
     metadata:
       labels:
         app: cerberus
+        app.kubernetes.io/name: cerberus
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "latest"
         app.kubernetes.io/component: chaos-engineering
+        team: platform
     spec:
       serviceAccountName: cerberus
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: cerberus
           image: quay.io/redhat-chaos/cerberus:latest
           ports:
             - containerPort: 8080
               name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: config
               mountPath: /root/cerberus/config/config.yaml
@@ -109,6 +124,13 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
       volumes:
         - name: config
           configMap:
@@ -121,8 +143,11 @@ metadata:
   namespace: payu-preprod
   labels:
     app: kraken
+    app.kubernetes.io/name: kraken
     app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "latest"
     app.kubernetes.io/component: chaos-engineering
+    team: platform
 spec:
   backoffLimit: 0
   activeDeadlineSeconds: 1800
@@ -130,11 +155,16 @@ spec:
     metadata:
       labels:
         app: kraken
+        app.kubernetes.io/name: kraken
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "latest"
         app.kubernetes.io/component: chaos-engineering
+        team: platform
     spec:
       restartPolicy: Never
       serviceAccountName: kraken-chaos
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: kraken
           image: quay.io/krkn-chaos/krkn:latest
@@ -144,10 +174,24 @@ spec:
             - run_kraken.py
             - --config
             - /root/kraken/config/config.yaml
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: config
               mountPath: /root/kraken/config/config.yaml
               subPath: config.yaml
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
       volumes:
         - name: config
           configMap:

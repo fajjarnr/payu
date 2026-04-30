@@ -32,6 +32,7 @@ data:
       slack_integration:
         slack_api_token: ""
         slack_channel: "#payu-chaos-alerts"
+    tunings:
       iterations: -1
       sleep_time: 30
       daemon_mode: true
