@@ -34,6 +34,23 @@ spec:
               selector:
                 matchLabels:
                   app.kubernetes.io/component: cost-management
+          - resources:
+              selector:
+                matchLabels:
+                  openshift.io/build.name: "?*"
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: affinity-assistant
+          - resources:
+              selector:
+                matchLabels:
+                  openshift.io/build.name: "?*"
+          - resources:
+              namespaces:
+                - payu-cicd
+                - openshift-pipelines
+                - openshift-gitops
       validate:
         message: "Running as root is not allowed. Set runAsNonRoot: true and ensure a non-zero runAsUser."
         pattern:

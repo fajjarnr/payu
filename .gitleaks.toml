@@ -1,0 +1,28 @@
+# Gitleaks configuration for PayU lab
+# Allowlist dummy/dev secrets in infrastructure manifests
+
+title = "PayU Gitleaks Config"
+
+[allowlist]
+  description = "Allowlist dummy secrets in lab manifests"
+  paths = [
+    '''infrastructure\/platform\/security\/litmus\/litmus-generated\.yaml''',
+    '''infrastructure\/workloads\/overlays\/dev\/secrets\/''',
+    '''infrastructure\/platform\/security\/vault\/''',
+    '''infrastructure\/platform\/data\/base\/''',
+    '''\.gitleaks\.toml''',
+    '''scripts\/''',
+  ]
+  regexes = [
+    '''password: \"payu-dev-password\"''',
+    '''password: \"keycloak-dev-password\"''',
+    '''password: \"payu-cache-dev-password\"''',
+    '''password: \"litmus\"''',
+    '''password: \"admin\"''',
+    '''POSTGRES_PASSWORD=.*''',
+    '''KEYCLOAK_ADMIN_PASSWORD=.*''',
+    '''JWT_SECRET=.*''',
+    '''AES_ENCRYPTION_KEY=.*''',
+    '''SECRET_KEY=.*''',
+    '''KEYCLOAK_CLIENT_SECRET=.*''',
+  ]

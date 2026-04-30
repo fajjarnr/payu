@@ -33,6 +33,10 @@ spec:
               selector:
                 matchLabels:
                   app.kubernetes.io/component: cost-management
+          - resources:
+              selector:
+                matchLabels:
+                  openshift.io/build.name: "?*"
       mutate:
         patchStrategicMerge:
           spec:
