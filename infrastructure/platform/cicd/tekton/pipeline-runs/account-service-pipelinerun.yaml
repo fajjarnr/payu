@@ -21,9 +21,15 @@ spec:
       value: spring-boot
   workspaces:
     - name: source
-      persistentVolumeClaim:
-        claimName: tekton-workspace-pvc
-      subPath: source-account-service
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+    - name: maven-settings
+      emptyDir: {}
     - name: dockerconfig
       secret:
-        secretName: builder-dockercfg-55vbf # OpenShift builder service account token
+        secretName: internal-registry-auth

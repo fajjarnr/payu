@@ -42,6 +42,18 @@ spec:
     - name: medium-severity-count
       description: Number of medium severity issues found
 
+  stepTemplate:
+    env:
+      - name: HOME
+        value: /tekton/home
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+
   steps:
     - name: spotbugs-sast
       image: $(params.MAVEN_IMAGE)

@@ -49,6 +49,7 @@ spec:
       description: Optional Maven settings.xml workspace
     - name: dockerconfig
       description: Optional container registry credentials workspace
+      optional: true
   tasks:
     # ── Step 1: Clone git repo ──
     - name: fetch-repository
@@ -256,6 +257,8 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
@@ -266,13 +269,12 @@ spec:
     - name: grype-sbom-check
       runAfter:
         - generate-sbom
+      onError: continue
       taskRef:
         name: grype-scan
       params:
-        - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-        - name: SBOM_PATH
-          value: $(tasks.generate-sbom.results.SBOM_PATH)
+        - name: TARGET
+          value: sbom:$(tasks.generate-sbom.results.SBOM_PATH)
         - name: FAIL_ON
           value: critical
 

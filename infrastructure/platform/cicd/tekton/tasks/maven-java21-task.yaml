@@ -35,6 +35,14 @@ spec:
     - name: maven-settings
       description: Maven settings.xml
       optional: true
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: maven-goals
       image: $(params.MAVEN_IMAGE)

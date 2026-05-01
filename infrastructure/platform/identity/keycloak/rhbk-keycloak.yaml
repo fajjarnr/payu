@@ -4,9 +4,11 @@
 # API Reference: https://www.keycloak.org/operator/basic-deployment
 #
 # IMPORTANT:
-# 1. Requires rhbk-operator subscription (namespace-scoped in payu-dev)
-# 2. payu-keycloak-db secret MUST be applied BEFORE this manifest
-# 3. The 'keycloak' database must exist in the PostgresCluster
+# 1. Install the rhbk-operator in rhbk-operator namespace.
+# 2. Apply this Keycloak CR via an environment overlay so it lands in payu-dev,
+#    payu-sit, payu-uat, payu-preprod, or payu.
+# 3. payu-keycloak-db secret MUST exist in the target environment namespace.
+# 4. The 'keycloak' database must exist in the PostgresCluster.
 ###############################################################################
 apiVersion: k8s.keycloak.org/v2alpha1
 kind: Keycloak
@@ -28,7 +30,7 @@ spec:
   # --- Database Configuration (Crunchy PGO) ---
   db:
     vendor: postgres
-    host: payu-postgres-primary.payu-dev.svc
+    host: payu-postgres-primary
     port: 5432
     database: keycloak
     usernameSecret:
@@ -46,7 +48,7 @@ spec:
 
   # --- Hostname Configuration ---
   hostname:
-    hostname: https://sso.dev.payu.fajjjar.my.id
+    hostname: https://sso.payu.fajjjar.my.id
     strict: false
     backchannelDynamic: true
 
@@ -216,11 +218,9 @@ spec:
         clientAuthenticatorType: client-secret
         secret: payu-web-secret-dev-only
         redirectUris:
-          - "http://localhost:3001/*"
-          - "https://dev.payu.fajjjar.my.id/*"
+          - "https://payu.fajjjar.my.id/*"
         webOrigins:
-          - "http://localhost:3001"
-          - "https://dev.payu.fajjjar.my.id"
+          - "https://payu.fajjjar.my.id"
           - "+"
         publicClient: false
         standardFlowEnabled: true

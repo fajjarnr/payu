@@ -24,6 +24,9 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service:latest
@@ -37,6 +40,9 @@ spec:
           capabilities:
             drop:
             - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness

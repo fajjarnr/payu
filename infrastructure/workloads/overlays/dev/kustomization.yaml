@@ -62,6 +62,15 @@ images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newTag: "v1.7.8"
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
+    newTag: "v1.7.8"
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
+    newTag: "v1.7.8"
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
+    newTag: "v1.7.8"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newTag: "v1.7.8"
@@ -168,16 +177,37 @@ patches:
         template:
           spec:
             containers:
-              - name: account-service
+              - name: app
                 env:
-                  - name: SPRING_DATASOURCE_URL
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
+                  - name: DB_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_account"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: ENCRYPTION_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: encryption-keys
+                        key: AES_ENCRYPTION_KEY
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -191,7 +221,7 @@ patches:
         template:
           spec:
             containers:
-              - name: auth-service
+              - name: app
                 env:
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_auth"
@@ -224,16 +254,34 @@ patches:
         template:
           spec:
             containers:
-              - name: wallet-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_wallet"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_wallet"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -247,16 +295,60 @@ patches:
         template:
           spec:
             containers:
-              - name: transaction-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_transaction"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_transaction"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "1Gi"
+                livenessProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 120
+                  periodSeconds: 10
+                readinessProbe:
+                  httpGet:
+                    path: /actuator/health/readiness
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                startupProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 30
 
   - target:
       kind: Deployment
@@ -270,16 +362,34 @@ patches:
         template:
           spec:
             containers:
-              - name: investment-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_investment"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_investment"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -293,16 +403,34 @@ patches:
         template:
           spec:
             containers:
-              - name: lending-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_lending"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_lending"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -316,7 +444,7 @@ patches:
         template:
           spec:
             containers:
-              - name: statement-service
+              - name: app
                 env:
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
@@ -339,16 +467,34 @@ patches:
         template:
           spec:
             containers:
-              - name: backoffice-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_backoffice"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_backoffice"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -362,16 +508,39 @@ patches:
         template:
           spec:
             containers:
-              - name: partner-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_partner"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_partner"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: JWT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: jwt-secret
+                        key: JWT_SECRET
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -385,16 +554,34 @@ patches:
         template:
           spec:
             containers:
-              - name: promotion-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_promotion"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_promotion"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -408,16 +595,34 @@ patches:
         template:
           spec:
             containers:
-              - name: support-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_support"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_support"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
 
   - target:
       kind: Deployment
@@ -431,16 +636,149 @@ patches:
         template:
           spec:
             containers:
-              - name: compliance-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_compliance"
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: SPRING_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_compliance"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: dispute-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: dispute-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_dispute"
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: SPRING_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_dispute"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+
+  - target:
+      kind: Deployment
+      name: integration-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: integration-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
+                  - name: DB_HOST
+                    value: "payu-postgres-primary.payu-dev.svc"
+                  - name: DB_PORT
+                    value: "5432"
+                  - name: DB_NAME
+                    value: "payu_integration"
+                  - name: DB_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: KAFKA_BOOTSTRAP
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+                startupProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 30
+                livenessProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                readinessProbe:
+                  httpGet:
+                    path: /actuator/health/readiness
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 3
 
   - target:
       kind: Deployment
@@ -454,16 +792,60 @@ patches:
         template:
           spec:
             containers:
-              - name: fx-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_fx"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_fx"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "1Gi"
+                livenessProbe:
+                  httpGet:
+                    path: /fx-api/actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 120
+                  periodSeconds: 10
+                readinessProbe:
+                  httpGet:
+                    path: /fx-api/actuator/health/readiness
+                    port: 8080
+                  initialDelaySeconds: 20
+                  periodSeconds: 5
+                startupProbe:
+                  httpGet:
+                    path: /fx-api/actuator/health/liveness
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 30
 
   - target:
       kind: Deployment
@@ -477,11 +859,62 @@ patches:
         template:
           spec:
             containers:
-              - name: cms-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_cms"
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_cms"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+                  - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
+                    value: "true"
+
+  - target:
+      kind: Deployment
+      name: product-catalog-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: product-catalog-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_products"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
@@ -501,11 +934,37 @@ patches:
         template:
           spec:
             containers:
-              - name: billing-service
+              - name: app
                 env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_billing"
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: SPRING_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_billing"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
@@ -513,6 +972,55 @@ patches:
                     value: "11222"
                   - name: SPRING_WEB_CLIENT_BILLER_SERVICE_BASE_URL
                     value: "http://biller-simulator.payu-dev.svc:8080"
+
+  - target:
+      kind: Deployment
+      name: statement-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: statement-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRING_PROFILES_ACTIVE
+                    value: "container"
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: SPRING_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
 
   # ============================================================
   # Quarkus services
@@ -529,16 +1037,53 @@ patches:
         template:
           spec:
             containers:
-              - name: notification-service
+              - name: app
                 env:
                   - name: QUARKUS_DATASOURCE_JDBC_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_notification"
+                  - name: QUARKUS_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: QUARKUS_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                volumeMounts:
+                  - name: tmp
+                    mountPath: /tmp
+                livenessProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 120
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                readinessProbe:
+                  httpGet:
+                    path: /q/health/ready
+                    port: 8080
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                startupProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 30
+            volumes:
+              - name: tmp
+                emptyDir: {}
 
   - target:
       kind: Deployment
@@ -552,10 +1097,53 @@ patches:
         template:
           spec:
             containers:
-              - name: api-portal-service
+              - name: app
                 env:
                   - name: QUARKUS_DATASOURCE_JDBC_URL
-                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_account"
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_api_portal"
+                  - name: QUARKUS_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: QUARKUS_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+                volumeMounts:
+                  - name: tmp
+                    mountPath: /tmp
+                livenessProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                readinessProbe:
+                  httpGet:
+                    path: /q/health/ready
+                    port: 8080
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                startupProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 30
+            volumes:
+              - name: tmp
+                emptyDir: {}
 
   # Patch gateway-config ConfigMap: update OIDC URL to use FQDN
   - target:
@@ -567,7 +1155,7 @@ patches:
       metadata:
         name: gateway-config
       data:
-        oidc-auth-server-url: "http://payu-keycloak-service.payu-dev.svc:8080/realms/payu"
+        oidc-auth-server-url: "http://payu-keycloak-service:8080/realms/payu"
 
   - target:
       kind: Deployment
@@ -581,16 +1169,65 @@ patches:
         template:
           spec:
             containers:
-              - name: gateway-service
+              - name: app
                 env:
+                  - name: REDIS_URL
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: url
+                  - name: OIDC_AUTH_SERVER_URL
+                    valueFrom:
+                      configMapKeyRef:
+                        name: gateway-config
+                        key: oidc-auth-server-url
+                  - name: QUARKUS_DATASOURCE_JDBC_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_gateway_service"
                   - name: QUARKUS_REDIS_HOSTS
-                    value: "redis://developer:payu-cache-dev@payu-datagrid.payu-dev.svc:11222"
+                    value: "redis://operator:zZTGzgczdFRpNyXe@payu-datagrid.payu-dev.svc:11222"
                   - name: REDIS_HOST
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: JWT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: gateway-secrets
+                        key: JWT_SECRET
+                  - name: WEBHOOK_PARTNER_1_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: gateway-secrets
+                        key: WEBHOOK_PARTNER_1_SECRET
                   - name: OIDC_ENABLED
                     value: "false"
+                volumeMounts:
+                  - name: tmp
+                    mountPath: /tmp
+                livenessProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                readinessProbe:
+                  httpGet:
+                    path: /q/health/ready
+                    port: 8080
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                startupProbe:
+                  httpGet:
+                    path: /q/health/live
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 30
+            volumes:
+              - name: tmp
+                emptyDir: {}
 
   # ============================================================
   # Python services
@@ -607,13 +1244,18 @@ patches:
         template:
           spec:
             containers:
-              - name: kyc-service
+              - name: app
                 env:
                   - name: DATABASE_PASSWORD
                     valueFrom:
                       secretKeyRef:
                         name: db-credentials
                         key: password
+                  - name: SECRET_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: jwt-secret
+                        key: JWT_SECRET
                   - name: DATABASE_URL
                     value: "postgresql+asyncpg://payu:$(DATABASE_PASSWORD)@payu-postgres-primary.payu-dev.svc:5432/payu_kyc"
                   - name: KAFKA_BOOTSTRAP_SERVERS
@@ -622,6 +1264,34 @@ patches:
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                livenessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                readinessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 512Mi
+                  limits:
+                    cpu: 500m
+                    memory: 1Gi
+                startupProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  failureThreshold: 30
 
   - target:
       kind: Deployment
@@ -635,13 +1305,18 @@ patches:
         template:
           spec:
             containers:
-              - name: analytics-service
+              - name: app
                 env:
                   - name: DATABASE_PASSWORD
                     valueFrom:
                       secretKeyRef:
                         name: db-credentials
                         key: password
+                  - name: SECRET_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: jwt-secret
+                        key: JWT_SECRET
                   - name: DATABASE_URL
                     value: "postgresql+asyncpg://payu:$(DATABASE_PASSWORD)@payu-postgres-primary.payu-dev.svc:5432/payu_analytics"
                   - name: KAFKA_BOOTSTRAP_SERVERS
@@ -650,6 +1325,27 @@ patches:
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                livenessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                readinessProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                startupProbe:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  failureThreshold: 30
 
   # ============================================================
   # Web App: override gateway URL for actual OCP domain
@@ -666,7 +1362,7 @@ patches:
         template:
           spec:
             containers:
-              - name: web-app
+              - name: app
                 env:
                   - name: NEXT_PUBLIC_GATEWAY_URL
                     value: "https://gateway-dev.payu.fajjjar.my.id"

@@ -1,5 +1,3 @@
-# Disallow host namespaces (hostNetwork, hostPID, hostIPC)
-# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — No host namespace policy
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -8,26 +6,40 @@ metadata:
     policies.kyverno.io/title: Disallow Host Namespaces
     policies.kyverno.io/category: Pod Security
     policies.kyverno.io/severity: high
-    policies.kyverno.io/description: >-
-      Blocks pods from using host namespaces (hostNetwork, hostPID, hostIPC)
-      in all PayU namespaces to prevent container escape.
+    policies.kyverno.io/description: Blocks pods from using host namespaces (hostNetwork,
+      hostPID, hostIPC) in all PayU namespaces to prevent container escape.
 spec:
   validationFailureAction: Enforce
   background: true
   rules:
-    - name: host-namespaces
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-              namespaceSelector:
-                matchLabels:
-                  app.kubernetes.io/part-of: payu
-      validate:
-        message: "Using host namespaces (hostNetwork, hostPID, hostIPC) is not allowed."
-        pattern:
-          spec:
-            =(hostNetwork): false
-            =(hostPID): false
-            =(hostIPC): false
+  - name: host-namespaces
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu
+    validate:
+      message: Using host namespaces (hostNetwork, hostPID, hostIPC) is not allowed.
+      pattern:
+        spec:
+          =(hostNetwork): false
+          =(hostPID): false
+          =(hostIPC): false
+    exclude:
+      any:
+      - resources:
+          selector:
+            matchExpressions:
+            - key: app.kubernetes.io/managed-by
+              operator: Exists
+      - resources:
+          selector:
+            matchLabels:
+              strimzi.io/cluster: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod

@@ -6,7 +6,7 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/identity/overlays/dev/
 
 resources:
-  - ../../base
+  - ../common
 
 namespace: payu-dev
 
@@ -20,3 +20,21 @@ patches:
       - op: replace
         path: /spec/instances
         value: 1
+      - op: replace
+        path: /spec/hostname/hostname
+        value: https://sso.dev.payu.fajjjar.my.id
+  - target:
+      kind: KeycloakRealmImport
+      name: payu-realm-import
+    patch: |
+      - op: replace
+        path: /spec/realm/clients/0/redirectUris
+        value:
+          - http://localhost:3001/*
+          - https://dev.payu.fajjjar.my.id/*
+      - op: replace
+        path: /spec/realm/clients/0/webOrigins
+        value:
+          - http://localhost:3001
+          - https://dev.payu.fajjjar.my.id
+          - "+"

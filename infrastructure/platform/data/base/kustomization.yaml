@@ -8,7 +8,8 @@ resources:
   - postgres-statefulset.yaml
   - redis-statefulset.yaml
   - kafka-amqstreams.yaml
-  - kafka-config.yaml
+  # kafka-config is managed by workload overlays per environment
+  # - kafka-config.yaml
   - network-policy-egress.yaml
   - kyverno-exception-kafka.yaml
   - kyverno-exception-kafka-deployments.yaml

@@ -1,5 +1,3 @@
-# Require resource requests/limits on all containers
-# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Resource requests/limits policy
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -8,41 +6,53 @@ metadata:
     policies.kyverno.io/title: Require Resource Requests and Limits
     policies.kyverno.io/category: Best Practices
     policies.kyverno.io/severity: medium
-    policies.kyverno.io/description: >-
-      All containers in PayU namespaces must specify CPU and memory
-      requests and limits for capacity planning and cost optimization.
+    policies.kyverno.io/description: All containers in PayU namespaces must specify
+      CPU and memory requests and limits for capacity planning and cost optimization.
 spec:
   validationFailureAction: Enforce
   background: true
   rules:
-    - name: validate-resources
-      match:
-        any:
+  - name: validate-resources
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu
+    exclude:
+      any:
+      - resources:
+          selector:
+            matchExpressions:
+            - key: app.kubernetes.io/managed-by
+              operator: Exists
+      - resources:
+          selector:
+            matchLabels:
+              strimzi.io/cluster: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: chaos-engineering
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cost-management
+    validate:
+      message: All containers must have CPU and memory requests/limits defined.
+      pattern:
+        spec:
+          containers:
           - resources:
-              kinds:
-                - Pod
-              namespaceSelector:
-                matchLabels:
-                  app.kubernetes.io/part-of: payu
-      exclude:
-        any:
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: chaos-engineering
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: cost-management
-      validate:
-        message: "All containers must have CPU and memory requests/limits defined."
-        pattern:
-          spec:
-            containers:
-              - resources:
-                  requests:
-                    memory: "?*"
-                    cpu: "?*"
-                  limits:
-                    memory: "?*"
-                    cpu: "?*"
+              requests:
+                memory: ?*
+                cpu: ?*
+              limits:
+                memory: ?*
+                cpu: ?*

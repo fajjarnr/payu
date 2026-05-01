@@ -27,13 +27,16 @@ spec:
       value: payu
   workspaces:
     - name: source
-      persistentVolumeClaim:
-        claimName: tekton-workspace-pvc
-      subPath: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
     - name: maven-settings
-      configMap:
-        name: maven-settings
+      emptyDir: {}
     - name: dockerconfig
       secret:
-        secretName: registry-credentials
+        secretName: internal-registry-auth
   timeout: 1h30m

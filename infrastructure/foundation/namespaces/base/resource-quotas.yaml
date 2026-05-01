@@ -11,16 +11,16 @@ metadata:
   namespace: payu-dev
 spec:
   hard:
-    requests.cpu: "4"
-    requests.memory: 8Gi
-    limits.cpu: "8"
-    limits.memory: 16Gi
-    persistentvolumeclaims: "10"
-    requests.storage: 50Gi
-    pods: "50"
-    services: "20"
-    secrets: "50"
-    configmaps: "50"
+    requests.cpu: "8"
+    requests.memory: 20Gi
+    limits.cpu: "36"
+    limits.memory: 48Gi
+    persistentvolumeclaims: "30"
+    requests.storage: 200Gi
+    pods: "100"
+    services: "50"
+    secrets: "100"
+    configmaps: "100"
 ---
 # --- payu-sit ---
 apiVersion: v1
@@ -30,16 +30,16 @@ metadata:
   namespace: payu-sit
 spec:
   hard:
-    requests.cpu: "4"
-    requests.memory: 8Gi
-    limits.cpu: "8"
-    limits.memory: 16Gi
-    persistentvolumeclaims: "10"
-    requests.storage: 50Gi
-    pods: "50"
-    services: "20"
-    secrets: "50"
-    configmaps: "50"
+    requests.cpu: "8"
+    requests.memory: 20Gi
+    limits.cpu: "36"
+    limits.memory: 48Gi
+    persistentvolumeclaims: "30"
+    requests.storage: 200Gi
+    pods: "100"
+    services: "50"
+    secrets: "100"
+    configmaps: "100"
 ---
 # --- payu-uat ---
 apiVersion: v1

@@ -7,6 +7,8 @@ metadata:
     app.kubernetes.io/name: argocd-image-updater
     app.kubernetes.io/part-of: argocd
 data:
+  config.yaml: '# ArgoCD Image Updater configuration\n# See: https://argocd-image-updater.readthedocs.io/\n'
+  
   # Registry configuration for OpenShift internal registry
   registries.conf: |
     registries:

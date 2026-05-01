@@ -8,27 +8,51 @@ metadata:
 spec:
   description: "Scan an image or SBOM with Grype and fail on configured severity."
   params:
-    - name: IMAGE
+    - name: TARGET
       type: string
-      description: "Image reference to scan"
-    - name: SBOM_PATH
-      type: string
-      description: "Optional SBOM path to scan instead of the image directly"
-      default: ""
+      description: "Resolved scan target, e.g. image reference or sbom:/path/to/file"
     - name: FAIL_ON
       type: string
       description: "Minimum severity that should fail the task"
       default: "critical"
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+    env:
+      - name: HOME
+        value: /tekton/home
+      - name: XDG_CACHE_HOME
+        value: /tekton/home/.cache
+      - name: TMPDIR
+        value: /tekton/home/tmp
+      - name: GRYPE_DB_AUTO_UPDATE
+        value: "true"
   steps:
+    - name: prepare-cache-dirs
+      image: registry.access.redhat.com/ubi9-minimal:latest
+      command:
+        - /bin/sh
+      args:
+        - -ceu
+        - |
+          mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
+    - name: update-db
+      image: docker.io/anchore/grype:v0.82.0
+      command:
+        - /grype
+      args:
+        - db
+        - update
     - name: scan
       image: docker.io/anchore/grype:v0.82.0
-      script: |
-        #!/bin/sh
-        set -eu
-
-        target="$(params.IMAGE)"
-        if [ -n "$(params.SBOM_PATH)" ] && [ -f "$(params.SBOM_PATH)" ]; then
-          target="sbom:$(params.SBOM_PATH)"
-        fi
-
-        grype "$target" --fail-on "$(params.FAIL_ON)"
+      command:
+        - /grype
+      args:
+        - $(params.TARGET)
+        - --fail-on
+        - $(params.FAIL_ON)

@@ -31,45 +31,63 @@ spec:
       description: Number of vulnerabilities found
     - name: SCAN_RESULT
       description: PASS or FAIL
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: scan
       image: "aquasec/trivy:0.58.0"
-      script: |
-        #!/bin/sh
-        set -e
+      env:
+        - name: HOME
+          value: /tmp
+        - name: TRIVY_CACHE_DIR
+          value: /tmp/trivy
+      command:
+        - /bin/sh
+      args:
+        - -ceu
+        - |
+          echo "[*] Scanning image: $(params.IMAGE)"
+          echo "[*] Severity filter: $(params.SEVERITY)"
 
-        echo "[*] Scanning image: $(params.IMAGE)"
-        echo "[*] Severity filter: $(params.SEVERITY)"
+          mkdir -p "$HOME/.docker" "$TRIVY_CACHE_DIR"
 
-        # Mount dockerconfig if provided
-        if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
-          mkdir -p ~/.docker
-          cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" ~/.docker/config.json
-        fi
+          if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+            cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$HOME/.docker/config.json"
+          fi
 
-        trivy image \
-          --severity $(params.SEVERITY) \
-          --exit-code 0 \
-          --format json \
-          --output /tmp/trivy-report.json \
-          $(params.IMAGE) 2>/dev/null || true
+          trivy image \
+            --severity $(params.SEVERITY) \
+            --exit-code 0 \
+            --format json \
+            --output /tmp/trivy-report.json \
+            $(params.IMAGE) 2>/dev/null || true
 
-        # Count vulnerabilities
-        VULN_COUNT=$(cat /tmp/trivy-report.json | grep -o '"VulnerabilityID"' | wc -l || echo "0")
-        echo -n "$VULN_COUNT" | tee $(results.VULN_COUNT.path)
+          if [ -f /tmp/trivy-report.json ]; then
+            VULN_COUNT=$(grep -o '"VulnerabilityID"' /tmp/trivy-report.json | wc -l || echo "0")
+          else
+            VULN_COUNT=0
+          fi
+          echo -n "$VULN_COUNT" | tee $(results.VULN_COUNT.path)
 
-        # Generate human-readable report
-        trivy image \
-          --severity $(params.SEVERITY) \
-          --exit-code $(params.EXIT_CODE) \
-          $(params.IMAGE)
+          set +e
+          trivy image \
+            --severity $(params.SEVERITY) \
+            --exit-code $(params.EXIT_CODE) \
+            $(params.IMAGE)
+          RESULT=$?
+          set -e
 
-        RESULT=$?
-        if [ $RESULT -eq 0 ]; then
-          echo -n "PASS" | tee $(results.SCAN_RESULT.path)
-          echo "[✓] No $(params.SEVERITY) vulnerabilities found"
-        else
-          echo -n "FAIL" | tee $(results.SCAN_RESULT.path)
-          echo "[✗] Found $VULN_COUNT vulnerabilities at $(params.SEVERITY) level"
-          exit $(params.EXIT_CODE)
-        fi
+          if [ $RESULT -eq 0 ]; then
+            echo -n "PASS" | tee $(results.SCAN_RESULT.path)
+            echo "[✓] No $(params.SEVERITY) vulnerabilities found"
+          else
+            echo -n "FAIL" | tee $(results.SCAN_RESULT.path)
+            echo "[✗] Found $VULN_COUNT vulnerabilities at $(params.SEVERITY) level"
+            exit $(params.EXIT_CODE)
+          fi

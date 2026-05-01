@@ -1,5 +1,3 @@
-# Mutate containers to set readOnlyRootFilesystem: true
-# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — ReadOnly root filesystem policy
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -8,39 +6,51 @@ metadata:
     policies.kyverno.io/title: Set ReadOnly Root Filesystem
     policies.kyverno.io/category: Security
     policies.kyverno.io/severity: medium
-    policies.kyverno.io/description: >-
-      Mutates all containers in PayU namespaces to set
-      readOnlyRootFilesystem: true for defense-in-depth.
+    policies.kyverno.io/description: 'Mutates all containers in PayU namespaces to
+      set readOnlyRootFilesystem: true for defense-in-depth.'
 spec:
   background: false
   rules:
-    - name: set-readonly-root
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-              namespaceSelector:
-                matchLabels:
-                  app.kubernetes.io/part-of: payu
-      exclude:
-        any:
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: chaos-engineering
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: cost-management
-          - resources:
-              selector:
-                matchLabels:
-                  openshift.io/build.name: "?*"
-      mutate:
-        patchStrategicMerge:
-          spec:
-            containers:
-              - (name): "*"
-                securityContext:
-                  readOnlyRootFilesystem: true
+  - name: set-readonly-root
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu
+    exclude:
+      any:
+      - resources:
+          selector:
+            matchExpressions:
+            - key: app.kubernetes.io/managed-by
+              operator: Exists
+      - resources:
+          selector:
+            matchLabels:
+              strimzi.io/cluster: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: chaos-engineering
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cost-management
+      - resources:
+          selector:
+            matchLabels:
+              openshift.io/build.name: ?*
+    mutate:
+      patchStrategicMerge:
+        spec:
+          containers:
+          - (name): '*'
+            securityContext:
+              readOnlyRootFilesystem: true

@@ -49,8 +49,21 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
-        # Configure registry auth if dockerconfig workspace is bound and file exists
-        if [[ -d "$(workspaces.dockerconfig.path)" && -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]]; then
+        image_registry="$(params.IMAGE)"
+        image_registry="${image_registry%%/*}"
+
+        # Internal OpenShift registry auth is derived from the PipelineRun service account
+        # token so pushes keep working even if a static dockerconfig secret goes stale.
+        if [[ "$image_registry" == *"openshift-image-registry"* ]] && [[ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]]; then
+          token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          auth=$(printf 'unused:%s' "$token" | base64 -w0)
+
+          cat > /tmp/internal-registry-auth.json <<EOF
+        {"auths":{"$image_registry":{"auth":"$auth"}}}
+        EOF
+
+          export REGISTRY_AUTH_FILE=/tmp/internal-registry-auth.json
+        elif [[ -d "$(workspaces.dockerconfig.path)" && -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]]; then
           export REGISTRY_AUTH_FILE="$(workspaces.dockerconfig.path)/.dockerconfigjson"
         fi
 

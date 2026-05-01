@@ -29,6 +29,14 @@ spec:
     - name: INSECURE_SKIP_TLS_VERIFY
       type: string
       default: "true"
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: scan-image
       image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7
@@ -87,6 +95,14 @@ spec:
   results:
     - name: check-result
       description: Pass or fail result of the image check
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: check-image
       image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7
@@ -163,6 +179,14 @@ spec:
   workspaces:
     - name: source
       description: Workspace containing deployment manifests
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: check-deployment
       image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7

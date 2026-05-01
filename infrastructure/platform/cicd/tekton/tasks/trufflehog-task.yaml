@@ -19,6 +19,14 @@ spec:
   workspaces:
     - name: source
       description: "Workspace containing the cloned repository"
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: scan
       image: docker.io/trufflesecurity/trufflehog:3.90.5

@@ -6,6 +6,7 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
+  - cicd-image-push-rolebindings.yaml
   - resource-quotas.yaml
   - limit-ranges.yaml
   - network-policies.yaml

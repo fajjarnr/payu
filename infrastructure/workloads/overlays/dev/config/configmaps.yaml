@@ -57,7 +57,7 @@ data:
   QUARKUS_HTTP_CORS_HEADERS: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
   QUARKUS_HTTP_CORS_CREDENTIALS: "true"
   QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: "10M"
-  OIDC_AUTH_SERVER_URL: "http://payu-keycloak-service.payu-dev.svc:8080/realms/payu"
+  OIDC_AUTH_SERVER_URL: "http://payu-keycloak-service.rhbk-operator.svc:8080/realms/payu"
   OIDC_CLIENT_ID: "payu-backend"
   OIDC_ENABLED: "true"
   ACCOUNT_SERVICE_URL: "http://account-service:8080"
@@ -70,6 +70,14 @@ data:
   ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
   RATE_LIMIT_ENABLED: "false"
   RATE_LIMIT_REQUESTS_PER_MINUTE: "1000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: payu-dev
+data:
+  oidc-auth-server-url: "http://payu-keycloak-service.rhbk-operator.svc:8080/realms/payu"
 ---
 apiVersion: v1
 kind: ConfigMap

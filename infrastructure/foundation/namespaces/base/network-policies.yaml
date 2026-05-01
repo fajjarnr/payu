@@ -15,6 +15,33 @@ spec:
     - Ingress
     - Egress
 ---
+# Allow Keycloak to reach PostgreSQL in payu-dev.
+# Keep the rhbk-operator namespace source during migration and allow the
+# operator-managed Keycloak pod labels once the CR lives in payu-dev.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-keycloak-to-postgres
+  namespace: payu-dev
+spec:
+  podSelector:
+    matchLabels:
+      postgres-operator.crunchydata.com/cluster: payu-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: rhbk-operator
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: payu-keycloak
+              app.kubernetes.io/managed-by: keycloak-operator
+      ports:
+        - protocol: TCP
+          port: 5432
+---
 # --- payu-sit ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

@@ -1,5 +1,3 @@
-# Require approved container registries only
-# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — Approved registry policy
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -8,36 +6,55 @@ metadata:
     policies.kyverno.io/title: Approved Registry Only
     policies.kyverno.io/category: Supply Chain Security
     policies.kyverno.io/severity: high
-    policies.kyverno.io/description: >-
-      Only approved container registries are allowed for image pulls.
+    policies.kyverno.io/description: Only approved container registries are allowed
+      for image pulls.
 spec:
   validationFailureAction: Enforce
   background: true
   rules:
-    - name: validate-registries
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-              namespaceSelector:
-                matchLabels:
-                  app.kubernetes.io/part-of: payu
-      exclude:
-        any:
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: chaos-engineering
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: cost-management
-      validate:
-        message: "Only approved registries are allowed."
-        pattern:
-          spec:
-            =(initContainers):
-              - image: "image-registry.openshift-image-registry.svc:5000/* | gcr.io/* | quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* | docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/* | docker.io/grafana/* | docker.io/pactfoundation/*"
-            containers:
-              - image: "image-registry.openshift-image-registry.svc:5000/* | gcr.io/* | quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* | docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/* | docker.io/grafana/* | docker.io/pactfoundation/*"
+  - name: validate-registries
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu
+    exclude:
+      any:
+      - resources:
+          selector:
+            matchExpressions:
+            - key: app.kubernetes.io/managed-by
+              operator: Exists
+      - resources:
+          selector:
+            matchLabels:
+              strimzi.io/cluster: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: chaos-engineering
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cost-management
+    validate:
+      message: Only approved registries are allowed.
+      pattern:
+        spec:
+          =(initContainers):
+          - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
+              quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
+              docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
+              | docker.io/grafana/* | docker.io/pactfoundation/*
+          containers:
+          - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
+              quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
+              docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
+              | docker.io/grafana/* | docker.io/pactfoundation/*

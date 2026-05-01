@@ -6,6 +6,11 @@ metadata:
 spec:
   targetNamespaces:
     - rhbk-operator
+    - payu-dev
+    - payu-sit
+    - payu-uat
+    - payu-preprod
+    - payu
   upgradeStrategy: Default
 ---
 apiVersion: operators.coreos.com/v1alpha1

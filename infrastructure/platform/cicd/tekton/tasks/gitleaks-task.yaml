@@ -10,6 +10,14 @@ spec:
   workspaces:
     - name: source
       description: Workspace containing the source code to scan
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
     - name: scan
       image: "zricethezav/gitleaks:v8.18.2"

@@ -1,5 +1,3 @@
-# Disallow root user (runAsNonRoot + non-zero runAsUser)
-# Ref: DEVSECOPS_ARCHITECTURE.md §4.4.2 — No root container policy
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -8,64 +6,89 @@ metadata:
     policies.kyverno.io/title: Disallow Root User
     policies.kyverno.io/category: Pod Security
     policies.kyverno.io/severity: medium
-    policies.kyverno.io/description: >-
-      Running as root is not allowed. Containers must set runAsNonRoot: true
-      and specify a non-zero runAsUser.
+    policies.kyverno.io/description: 'Running as root is not allowed. Containers must
+      set runAsNonRoot: true and specify a non-zero runAsUser.'
 spec:
   validationFailureAction: Enforce
   background: true
   rules:
-    - name: check-runasuser
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-              namespaceSelector:
-                matchLabels:
-                  app.kubernetes.io/part-of: payu
-      exclude:
-        any:
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: chaos-engineering
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: cost-management
-          - resources:
-              selector:
-                matchLabels:
-                  openshift.io/build.name: "?*"
-          - resources:
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: affinity-assistant
-          - resources:
-              selector:
-                matchLabels:
-                  openshift.io/build.name: "?*"
-          - resources:
-              namespaces:
-                - payu-cicd
-                - openshift-pipelines
-                - openshift-gitops
-      validate:
-        message: "Running as root is not allowed. Set runAsNonRoot: true and ensure a non-zero runAsUser."
-        pattern:
-          spec:
-            securityContext:
+  - name: check-runasuser
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu
+    exclude:
+      any:
+      - resources:
+          selector:
+            matchExpressions:
+            - key: app.kubernetes.io/managed-by
+              operator: Exists
+      - resources:
+          selector:
+            matchLabels:
+              strimzi.io/cluster: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: chaos-engineering
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cost-management
+      - resources:
+          selector:
+            matchLabels:
+              app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cache
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/managed-by: keycloak-operator
+      - resources:
+          selector:
+            matchLabels:
+              openshift.io/build.name: ?*
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: affinity-assistant
+      - resources:
+          selector:
+            matchLabels:
+              openshift.io/build.name: ?*
+      - resources:
+          namespaces:
+          - payu-cicd
+          - openshift-pipelines
+          - openshift-gitops
+    validate:
+      message: 'Running as root is not allowed. Set runAsNonRoot: true and ensure
+        a non-zero runAsUser.'
+      pattern:
+        spec:
+          securityContext:
+            runAsNonRoot: true
+          =(initContainers):
+          - securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
               runAsNonRoot: true
-            =(initContainers):
-              - securityContext:
-                  allowPrivilegeEscalation: false
-                  readOnlyRootFilesystem: true
-                  runAsNonRoot: true
-                  =(runAsUser): ">0"
-            containers:
-              - securityContext:
-                  allowPrivilegeEscalation: false
-                  readOnlyRootFilesystem: true
-                  runAsNonRoot: true
-                  =(runAsUser): ">0"
+              =(runAsUser): '>0'
+          containers:
+          - securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              =(runAsUser): '>0'

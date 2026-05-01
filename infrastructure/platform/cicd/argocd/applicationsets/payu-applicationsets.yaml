@@ -69,8 +69,10 @@ spec:
         managedNamespaceMetadata:
           labels:
             app.kubernetes.io/part-of: payu
+            app.kubernetes.io/managed-by: platform-team
             payu.io/environment: "{{.name}}"
             payu.io/environment-class: stable
+            payu.io/managed-by: platform-team
           annotations:
             argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
       ignoreDifferences:
@@ -142,14 +144,20 @@ spec:
             path: infrastructure/platform/security/vault
             namespace: payu-dev
           - name: acs
-            path: infrastructure/platform/devsecops-tooling/acs
+            path: infrastructure/platform/security/acs
             namespace: stackrox
           - name: cosign
-            path: infrastructure/platform/devsecops-tooling/cosign
+            path: infrastructure/platform/security/cosign
             namespace: payu-cicd
           - name: compliance-operator
-            path: infrastructure/platform/devsecops-tooling/compliance-operator
+            path: infrastructure/platform/security/compliance-operator
             namespace: openshift-compliance
+          - name: keycloak
+            path: infrastructure/platform/identity/operator
+            namespace: rhbk-operator
+          - name: datagrid
+            path: infrastructure/platform/data
+            namespace: payu-dev
 
   template:
     metadata:
@@ -159,6 +167,63 @@ spec:
         app.kubernetes.io/component: security-platform
     spec:
       project: payu-platform
+      source:
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{path}}"
+      destination:
+        namespace: "{{namespace}}"
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - SkipDryRunOnMissingResource=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payu-identity
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: identity
+spec:
+  generators:
+    - list:
+        elements:
+          - name: dev
+            path: infrastructure/platform/identity/overlays/dev
+            namespace: payu-dev
+            project: payu-dev
+          - name: sit
+            path: infrastructure/platform/identity/overlays/sit
+            namespace: payu-sit
+            project: payu-sit
+          - name: uat
+            path: infrastructure/platform/identity/overlays/uat
+            namespace: payu-uat
+            project: payu-uat
+          - name: preprod
+            path: infrastructure/platform/identity/overlays/preprod
+            namespace: payu-preprod
+            project: payu-preprod
+          - name: prod
+            path: infrastructure/platform/identity/overlays/prod
+            namespace: payu
+            project: payu
+
+  template:
+    metadata:
+      name: "identity-{{name}}"
+      labels:
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: identity
+        payu.io/environment: "{{name}}"
+    spec:
+      project: "{{project}}"
       source:
         repoURL: https://github.com/fajjarnr/payu.git
         targetRevision: main

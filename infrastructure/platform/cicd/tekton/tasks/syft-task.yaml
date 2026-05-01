@@ -21,17 +21,48 @@ spec:
   workspaces:
     - name: source
       description: "Workspace used to persist the generated SBOM"
+    - name: dockerconfig
+      description: "Docker registry credentials"
+      optional: true
   results:
     - name: SBOM_PATH
       description: "Path to the generated SBOM file"
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
   steps:
-    - name: generate
-      image: docker.io/anchore/syft:v1.20.0
-      workingDir: $(workspaces.source.path)
+    - name: prepare-output-dir
+      image: registry.access.redhat.com/ubi9-minimal:latest
       script: |
         #!/bin/sh
         set -eu
-
         mkdir -p "$(dirname "$(params.OUTPUT_FILE)")"
-        syft "$(params.IMAGE)" -o "$(params.FORMAT)" > "$(params.OUTPUT_FILE)"
+        if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+          mkdir -p "$(workspaces.source.path)/.docker"
+          cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$(workspaces.source.path)/.docker/config.json"
+        fi
+      workingDir: $(workspaces.source.path)
+    - name: generate
+      image: docker.io/anchore/syft:v1.20.0
+      env:
+        - name: DOCKER_CONFIG
+          value: $(workspaces.source.path)/.docker
+      command:
+        - /syft
+      args:
+        - registry:$(params.IMAGE)
+        - -o
+        - $(params.FORMAT)=$(params.OUTPUT_FILE)
+      workingDir: $(workspaces.source.path)
+    - name: publish-result
+      image: registry.access.redhat.com/ubi9-minimal:latest
+      script: |
+        #!/bin/sh
+        set -eu
         echo -n "$(params.OUTPUT_FILE)" | tee $(results.SBOM_PATH.path)
+      workingDir: $(workspaces.source.path)
