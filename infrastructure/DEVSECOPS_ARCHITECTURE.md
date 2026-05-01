@@ -553,12 +553,19 @@ graph LR
 
 **Security Scanning & Mesh:**
 - [x] 🔵 Deploy RHACS Central + SecuredCluster (stackrox namespace) — runtime detection via eBPF collector ✅
-- [ ] 🔵 Integrasi OWASP ZAP headless + Schemathesis ke Tekton task untuk setiap deploy ke `payu-dev`
+- [x] 🔵 Integrasi OWASP ZAP headless + Schemathesis ke Tekton task untuk setiap deploy ke `payu-dev`
+  - ZAP baseline scan dijalankan untuk environment `dev` dan `sit` setelah ArgoCD sync wait
+  - Schemathesis API fuzzing dijalankan untuk environment `sit` dan `uat` setelah ZAP baseline
+  - Pipeline: `payu-deploy-gitops-pipeline` di-update dengan steps `dev-zap-baseline`, `sit-zap-baseline`, `sit-schemathesis`, `uat-schemathesis`
 - [ ] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
 - [ ] 🟡 Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
 - [ ] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
 - [x] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator ✅
-- [ ] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion via Git write-back
+- [x] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion
+  - ConfigMap `argocd-image-updater-config` dibuat di `openshift-gitops` dengan registry internal OpenShift
+  - ApplicationSet `payu-environments` di-annotate dengan `update-strategy: digest`, `write-back-method: argocd`
+  - Image Updater akan otomatis update kustomization di cluster saat image digest berubah
+  - Untuk production, write-back-method perlu diubah ke `git` dengan SSH/token credentials
 
 **Notes:**
 - ❌ **Falco di-skip** — RHCOS immutable + RHACS SecuredCluster sudah cukup untuk runtime detection. Falco bisa di-add later jika ada gap specific yang RHACS tidak cover.

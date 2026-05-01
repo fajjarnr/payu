@@ -11,7 +11,8 @@ spec:
     Enterprise GitOps Deployment Pipeline compliant with PayU DevSecOps PRD.
     Replaces imperative 'oc apply' with declarative Kustomize Git write-back.
     Mandatory gates per environment:
-    - SIT: Argo sync wait → ZAP baseline → LitmusChaos
+    - DEV: Argo sync wait → ZAP baseline
+    - SIT: Argo sync wait → ZAP baseline → Schemathesis → LitmusChaos
     - UAT: Argo sync wait → Schemathesis → k6
     - PREPROD: Argo sync wait → Cerberus + Kraken
   params:
@@ -158,7 +159,24 @@ spec:
         - name: NAMESPACE
           value: openshift-gitops
 
-    # ── Step 4A: Security Gate (SIT) - DAST & App Chaos ──
+    # ── Step 4A: Security Gate (DEV) - DAST ──
+    - name: dev-zap-baseline
+      runAfter:
+        - argocd-sync-wait
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["dev"]
+      taskRef:
+        name: zap-baseline
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: TARGET_URL
+          value: $(params.environment-base-url)
+
+    # ── Step 4B: Security Gate (SIT) - DAST & App Chaos & API Fuzzing ──
     - name: sit-zap-baseline
       runAfter:
         - argocd-sync-wait
@@ -175,9 +193,27 @@ spec:
         - name: TARGET_URL
           value: $(params.environment-base-url)
 
-    - name: sit-litmus-gate
+    - name: sit-schemathesis
       runAfter:
         - sit-zap-baseline
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["sit"]
+      taskRef:
+        name: schemathesis-scan
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SCHEMA_URL
+          value: $(params.schema-url)
+        - name: BASE_URL
+          value: $(params.environment-base-url)
+
+    - name: sit-litmus-gate
+      runAfter:
+        - sit-schemathesis
       when:
         - input: "$(params.environment)"
           operator: in
@@ -188,7 +224,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 4B: Security Gate (UAT) - API Fuzzing ──
+    # ── Step 4C: Security Gate (UAT) - API Fuzzing & Load Test ──
     - name: uat-schemathesis
       runAfter:
         - argocd-sync-wait
@@ -227,7 +263,7 @@ spec:
         - name: DURATION
           value: "5m"
 
-    # ── Step 4C: Security Gate (PREPROD) - Infra Chaos ──
+    # ── Step 4D: Security Gate (PREPROD) - Infra Chaos ──
     - name: preprod-kraken-gate
       runAfter:
         - argocd-sync-wait
@@ -267,6 +303,7 @@ spec:
     # ── Step 6: Notify Success ──
     - name: notify-success
       runAfter:
+        - dev-zap-baseline
         - k6-smoke-test-gate
         - sit-litmus-gate
         - uat-k6-load-test
