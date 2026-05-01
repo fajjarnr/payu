@@ -305,6 +305,9 @@ spec:
             payu.io/environment-class: ephemeral
             payu.io/pr-number: "{{.number}}"
             auto-cleanup: "true"
+          annotations:
+            payu.io/ttl-hours: "48"
+            payu.io/created-at: "{{.created_at}}"
       ignoreDifferences:
         - group: argoproj.io
           kind: Application

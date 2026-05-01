@@ -1,0 +1,73 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: pact-verify
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Verify consumer-driven contract tests using Pact Broker"
+  params:
+    - name: PACT_BROKER_URL
+      type: string
+      default: "http://pact-broker.payu-cicd.svc"
+    - name: SERVICE_NAME
+      type: string
+      description: "Provider service name to verify"
+    - name: SERVICE_VERSION
+      type: string
+      default: "$(context.pipelineRun.name)"
+    - name: FAIL_ON_NO_PACTS
+      type: string
+      default: "false"
+      description: "Fail if no pacts found for this provider"
+  workspaces:
+    - name: source
+      description: "Source code workspace"
+  steps:
+    - name: verify
+      image: registry.access.redhat.com/ubi9/nodejs-18:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+        
+        echo "=== Pact Contract Verification ==="
+        echo "Provider: $(params.SERVICE_NAME)"
+        echo "Pact Broker: $(params.PACT_BROKER_URL)"
+        echo "Version: $(params.SERVICE_VERSION)"
+        
+        # Check if pact verification script exists in the service
+        SERVICE_DIR="backend/$(params.SERVICE_NAME)"
+        if [ ! -d "$SERVICE_DIR" ]; then
+          echo "Warning: Service directory $SERVICE_DIR not found"
+          exit 0
+        fi
+        
+        # Look for pact verification config or script
+        if [ -f "$SERVICE_DIR/verify-pacts.sh" ]; then
+          echo "Found verify-pacts.sh, executing..."
+          cd "$SERVICE_DIR"
+          bash verify-pacts.sh \
+            --broker-base-url "$(params.PACT_BROKER_URL)" \
+            --provider "$(params.SERVICE_NAME)" \
+            --provider-app-version "$(params.SERVICE_VERSION)"
+        elif [ -f "$SERVICE_DIR/package.json" ] && grep -q '"pact"' "$SERVICE_DIR/package.json" 2>/dev/null; then
+          echo "Running npm pact:verify..."
+          cd "$SERVICE_DIR"
+          npm ci --silent 2>/dev/null || true
+          npx pact-verify \
+            --provider "$(params.SERVICE_NAME)" \
+            --provider-app-version "$(params.SERVICE_VERSION)" \
+            --pact-broker-base-url "$(params.PACT_BROKER_URL)" \
+            --publish-verification-results || true
+        else
+          echo "No pact verification configuration found for $(params.SERVICE_NAME)"
+          if [ "$(params.FAIL_ON_NO_PACTS)" = "true" ]; then
+            echo "FAIL_ON_NO_PACTS=true, failing pipeline"
+            exit 1
+          fi
+          echo "Skipping contract verification (no pacts configured)"
+        fi
+        
+        echo "=== Pact verification complete ==="

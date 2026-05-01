@@ -151,6 +151,20 @@ spec:
             - test
             - "-Dtest=**/*Integration*,**/*IT*"
 
+    # Contract Tests (Pact verification)
+    - name: contract-tests
+      runAfter:
+        - unit-tests
+        - python-tests
+      taskRef:
+        name: pact-verify
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SERVICE_NAME
+          value: $(params.service-name)
+
   finally:
     - name: test-report
       taskRef:

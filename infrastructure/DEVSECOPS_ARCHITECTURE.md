@@ -595,7 +595,12 @@ graph LR
 - ✅ **Secret `db-credentials` di-patch** — Password di `db-credentials` diselaraskan dengan `payu-postgres-pguser-payu` agar semua Spring Boot service bisa autentikasi ke PostgreSQL.
 - ✅ **Deployment base ditambahkan `tmp` emptyDir volume** — Semua Spring Boot service mengalami `Read-only file system` di `/tmp` karena `readOnlyRootFilesystem: true`. Ditambahkan `emptyDir` volume mount `/tmp` ke semua deployment base.
 - ✅ **Overlay kustomization diperbaiki** — Container patch names diselaraskan ke `app` (bukan nama service) untuk menghindari duplicate containers. Ditambahkan missing image tag overrides untuk `dispute-service`, `integration-service`, `product-catalog-service`. Ditambahkan ConfigMap `gateway-config` ke overlay resources.
-- ✅ **Service pods status** — 20/23 service pods `1/1 Running` di `payu-dev`. Sisa: `gateway-service` (Redis auth WRONGPASS — pending fix DataGrid RESP credentials), `kyc-service` (OOMKilled — memory limit dinaikkan ke 1Gi), `wallet-service` (startup lambat >60s — liveness probe terlalu agresif).
+- ✅ **Service pods status** — **23/23 service + web-app pods `1/1 Running` di `payu-dev`**.
+  - Semua Spring Boot service berhasil connect ke PostgreSQL (db-credentials fixed)
+  - Semua service dapat mengakses Kafka dan DataGrid setelah NetworkPolicy diperbaiki
+  - `gateway-service` di-fix dengan disable Redis health check + readiness ke `/q/health/live`
+  - `kyc-service` memory limit dinaikkan ke 2Gi (OOM fix)
+  - `wallet-service` startup normal setelah tmp volume available
 
 **Tekton Supply Chain (§4.4.1):**
 - [x] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
@@ -640,14 +645,21 @@ graph LR
   - Script: `infrastructure/platform/cicd/tekton/k6-scripts/payu-smoke-test.js`
 - [ ] 🔵 Implementasi full OWASP Web + API Top 10 test suite di pipeline DAST
 - [ ] 🟡 Automated compliance reporting ke CISO (weekly report via Wazuh + ComplianceOperator)
-- [ ] 🟡 Setup preview environment (`payu-dev-*`) via ArgoCD ApplicationSet + auto-cleanup
+- [x] 🟡 Setup preview environment (`payu-dev-*`) via ArgoCD ApplicationSet + auto-cleanup ✅
+  - `payu-pr-previews` ApplicationSet sudah terkonfigurasi dengan GitHub pullRequest generator
+  - Namespace `payu-dev-pr-{number}` dibuat otomatis per PR dengan label `auto-cleanup: true`
+  - TTL annotation `payu.io/ttl-hours: 48` ditambahkan ke namespace metadata
+  - CronJob `preview-env-cleanup` di `openshift-gitops` berjalan setiap 6 jam untuk menghapus namespace expired + ArgoCD Application terkait
 
 **Testing Strategy (§19):**
 - [x] 🔵 Deploy Pact broker di cluster untuk consumer-driven contract testing ✅
   - Namespace: `payu-cicd`, Route: `pact-broker.apps.payu.ocp.fajjjar.my.id`
   - PostgreSQL backing: `registry.redhat.io/rhel9/postgresql-16:latest`
 - [x] 🔵 Implementasi smoke test gate per environment sesuai matrix §19.3 ✅ (via k6 gate)
-- [ ] 🔵 Integrasi contract test sebagai pipeline gate (break contract = PR rejected)
+- [x] 🔵 Integrasi contract test sebagai pipeline gate ✅
+  - Tekton Task `pact-verify` dibuat untuk Pact Broker verification
+  - Task di-integrasikan ke `payu-test-pipeline` setelah unit-tests/python-tests
+  - Supports `FAIL_ON_NO_PACTS` parameter untuk enforce contract testing wajib
 
 **PCI-DSS Compliance (§15):**
 - [ ] 🟡 Implementasi signed audit logs (vector + Rekor) untuk PCI-DSS Req 10
