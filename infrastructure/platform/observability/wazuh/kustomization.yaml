@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: wazuh
+
+resources:
+  - namespace.yaml
+  - serviceaccounts.yaml
+  - scc.yaml
+  - configmap-ossec.yaml
+  - wazuh-manager-statefulset.yaml
+  - wazuh-manager-service.yaml
+  - wazuh-indexer-statefulset.yaml
+  - wazuh-indexer-service.yaml
+  - wazuh-dashboard-deployment.yaml
+  - wazuh-dashboard-service.yaml
+  - wazuh-dashboard-route.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: wazuh-siem
+  app.kubernetes.io/managed-by: kustomize

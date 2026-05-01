@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wazuh-manager
+  namespace: wazuh
+  labels:
+    app.kubernetes.io/name: wazuh-manager
+    app.kubernetes.io/component: manager
+spec:
+  serviceName: wazuh-manager
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wazuh-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wazuh-manager
+        app.kubernetes.io/component: manager
+    spec:
+      serviceAccountName: wazuh-manager
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+        - name: wazuh-manager
+          image: wazuh/wazuh-manager:4.9.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - AUDIT_CONTROL
+                - AUDIT_READ
+          ports:
+            - name: agents
+              containerPort: 1514
+              protocol: TCP
+            - name: registration
+              containerPort: 1515
+              protocol: TCP
+            - name: api
+              containerPort: 55000
+              protocol: TCP
+            - name: cluster
+              containerPort: 1516
+              protocol: TCP
+            - name: syslog
+              containerPort: 514
+              protocol: UDP
+          env:
+            - name: INDEXER_URL
+              value: "https://wazuh-indexer:9200"
+            - name: INDEXER_USERNAME
+              value: "admin"
+            - name: INDEXER_PASSWORD
+              value: "SecretPassword"
+            - name: FILEBEAT_SSL_VERIFICATION_MODE
+              value: "none"
+            - name: API_USERNAME
+              value: "wazuh-wui"
+            - name: API_PASSWORD
+              value: "MyS3cr37P450r.*-"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: wazuh-manager-data
+              mountPath: /var/ossec/data
+            - name: ossec-config
+              mountPath: /var/ossec/etc/ossec.conf
+              subPath: ossec.conf
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "is running"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /var/ossec/bin/wazuh-control status 2>/dev/null | grep -q "is running"
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: ossec-config
+          configMap:
+            name: wazuh-manager-ossec
+        - name: wazuh-manager-data
+          emptyDir: {}

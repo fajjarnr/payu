@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: wazuh-dashboard
+  namespace: wazuh
+  labels:
+    app.kubernetes.io/name: wazuh-dashboard
+    app.kubernetes.io/component: dashboard
+spec:
+  host: ""
+  to:
+    kind: Service
+    name: wazuh-dashboard
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

@@ -557,9 +557,17 @@ graph LR
   - ZAP baseline scan dijalankan untuk environment `dev` dan `sit` setelah ArgoCD sync wait
   - Schemathesis API fuzzing dijalankan untuk environment `sit` dan `uat` setelah ZAP baseline
   - Pipeline: `payu-deploy-gitops-pipeline` di-update dengan steps `dev-zap-baseline`, `sit-zap-baseline`, `sit-schemathesis`, `uat-schemathesis`
-- [ ] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
+- [x] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
+  - Namespace `payu-uat`, `payu-preprod`, `payu` di-label `istio-injection=enabled`
+  - `PeerAuthentication` STRICT diterapkan di `payu-uat`, `payu-preprod`, `payu`
+  - `AuthorizationPolicy` deny-all + allow-same-namespace + service-specific policies diterapkan di `payu`
+  - `RequestAuthentication` JWT validation untuk account-service, transaction-service, wallet-service
+  - Simulators (bi-fast, dukcapil, qris) di-exclude dari mTLS dengan `DISABLE` mode
 - [ ] 🟡 Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
-- [ ] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
+- [x] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
+  - Wazuh Manager (master + worker) Running di namespace `wazuh`
+  - Wazuh Agent DaemonSet Running di semua worker nodes (4/4)
+  - ⚠️ Wazuh Indexer dan Dashboard mengalami permission issue di OpenShift (container image tidak compatible dengan random UID). Perlu rebuild image dengan OpenShift-compatible permissions atau initContainer fix.
 - [x] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator ✅
 - [x] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion
   - ConfigMap `argocd-image-updater-config` dibuat di `openshift-gitops` dengan registry internal OpenShift
@@ -590,8 +598,17 @@ graph LR
 - ✅ **Service pods status** — 20/23 service pods `1/1 Running` di `payu-dev`. Sisa: `gateway-service` (Redis auth WRONGPASS — pending fix DataGrid RESP credentials), `kyc-service` (OOMKilled — memory limit dinaikkan ke 1Gi), `wallet-service` (startup lambat >60s — liveness probe terlalu agresif).
 
 **Tekton Supply Chain (§4.4.1):**
-- [ ] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
-- [ ] 🟡 Konfigurasi Tekton Results untuk audit trail (retention 12 bulan)
+- [x] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
+  - Tekton Chains v0.26.2 sudah terinstall dan dikonfigurasi dengan:
+    - `artifacts.pipelinerun.format: in-toto` (SLSA provenance)
+    - `artifacts.pipelinerun.storage: oci` (attestation disimpan di OCI registry bersama image)
+    - `artifacts.taskrun.format: in-toto`
+    - `artifacts.taskrun.storage: oci`
+  - Setiap PipelineRun dan TaskRun akan menghasilkan SLSA provenance attestation yang di-sign secara otomatis
+- [x] 🟡 Konfigurasi Tekton Results untuk audit trail (retention 12 bulan)
+  - Tekton Results v0.18.0 sudah terinstall dengan watcher + API + retention policy agent
+  - Retention policy di-patch dari 30 hari ke **365 hari** untuk memenuhi PCI-DSS Requirement 10
+  - Pipeline logs dan metadata tersimpan persisten di PostgreSQL backend (Tekton Results DB)
 
 **API Gateway & WAF (§14):**
 - [ ] 🟡 Deploy Coraza WAF dengan OWASP CRS v4.x di ingress layer
