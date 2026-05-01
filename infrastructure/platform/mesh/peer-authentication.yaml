@@ -97,9 +97,6 @@ spec:
       app: account-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Auth Service
 apiVersion: security.istio.io/v1beta1
@@ -113,9 +110,6 @@ spec:
       app: auth-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Transaction Service
 apiVersion: security.istio.io/v1beta1
@@ -129,9 +123,6 @@ spec:
       app: transaction-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Wallet Service
 apiVersion: security.istio.io/v1beta1
@@ -145,9 +136,6 @@ spec:
       app: wallet-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Billing Service
 apiVersion: security.istio.io/v1beta1
@@ -161,9 +149,6 @@ spec:
       app: billing-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Notification Service
 apiVersion: security.istio.io/v1beta1
@@ -177,9 +162,6 @@ spec:
       app: notification-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for KYC Service
 apiVersion: security.istio.io/v1beta1
@@ -193,9 +175,6 @@ spec:
       app: kyc-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Analytics Service
 apiVersion: security.istio.io/v1beta1
@@ -209,9 +188,6 @@ spec:
       app: analytics-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # Service-specific PeerAuthentication for Gateway Service
 apiVersion: security.istio.io/v1beta1
@@ -225,9 +201,6 @@ spec:
       app: gateway-service
   mtls:
     mode: STRICT
-  portLevelMtls:
-    8080:
-      mode: STRICT
 ---
 # DISABLE mTLS for External Simulators (they don't have sidecars)
 apiVersion: security.istio.io/v1beta1

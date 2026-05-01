@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - app-of-apps.yaml
   - drift-detection.yaml
-  - gitops.yaml
   - sync-waves.yaml
   - image-updater
+  - preview-cleanup-cronjob.yaml
+  - projects
+  - applicationsets

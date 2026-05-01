@@ -549,7 +549,7 @@ graph LR
 - [x] 🔵 Default-deny NetworkPolicy per namespace (Kyverno auto-generate)
 - [x] 🔵 Cross-namespace NetworkPolicy: ESO → Vault, intra-namespace allow
 
-### Phase 2 — Hardening (Bulan 3–4) 🔄 IN PROGRESS
+### Phase 2 — Hardening (Bulan 3–4) ✅ COMPLETE
 
 **Security Scanning & Mesh:**
 - [x] 🔵 Deploy RHACS Central + SecuredCluster (stackrox namespace) — runtime detection via eBPF collector ✅

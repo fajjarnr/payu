@@ -149,6 +149,87 @@
 
 ---
 
+---
+
+## 🏗️ DevSecOps Architecture Implementation
+
+> **Sumber**: [`infrastructure/DEVSECOPS_ARCHITECTURE.md`](../../infrastructure/DEVSECOPS_ARCHITECTURE.md) v1.3.1 (Phase 1–4)
+> Phase 1: ✅ COMPLETE (kecuali 3 DR/backup items). Phase 2: 🔄 IN PROGRESS. Phase 3–4: 📋 Belum dimulai.
+
+### Phase 1 — Foundation (Sisa Tasks)
+
+| Key       | Priority | Badge | Summary                                                                                          | Notes / Current State                                                                                                                              | Status   |
+| :-------- | :------: | :---- | :----------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| INFRA-005 |    P0    | 🔵    | Configure Vault Raft auto-snapshot (1h interval) to encrypted S3 bucket                          | Phase 1 DR. Vault dev mode (`inmem`) confirmed data loss on pod restart. Need persistent snapshot strategy before production.                     | 📋 To Do |
+| INFRA-006 |    P0    | 🔵    | Configure Vault auto-unseal (Transit or KMS)                                                     | Phase 1 DR. Currently manual unseal after restart. Auto-unseal needed for HA.                                                                      | 📋 To Do |
+| INFRA-007 |    P1    | 🔵    | Document DR runbook for all critical components (Vault, ArgoCD, ACS, Wazuh)                    | Phase 1 DR. Vault DR script `scripts/vault-dr-restore.sh` exists; need runbooks for ArgoCD, ACS, Wazuh.                                           | 📋 To Do |
+
+### Phase 2 — Hardening (In Progress)
+
+| Key       | Priority | Badge | Summary                                                                                          | Notes / Current State                                                                                                                                            | Status   |
+| :-------- | :------: | :---- | :----------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| INFRA-001 |    P0    | 🔵    | Fix `trivy-image-scan` registry auth for OpenShift internal registry                             | Dockerconfig workspace mounted but trivy image lacks `jq`; registry credential parsing fails. Blocks full pipeline green.                                       | 🔄 In Progress |
+| INFRA-002 |    P0    | 🔵    | Build container images for remaining 22 services via Tekton PipelineRun                          | `account-service` image pushed successfully. Need 22 more services built and pushed to `image-registry.openshift-image-registry.svc:5000/payu-dev/`.            | 🔄 In Progress |
+| INFRA-003 |    P0    | 🔵    | Deploy all 23 services to `payu-dev` and verify pods Running                                     | Kustomize manifests ready (`infrastructure/workloads/base/` + `overlays/payu-dev/`). Pending image builds.                                                       | 📋 To Do |
+| INFRA-004 |    P0    | 🔵    | Create ArgoCD ApplicationSet for all 23 services across environments                             | Manifests exist in `infrastructure/workloads/`. Need ApplicationSet CR to auto-generate Applications per service/environment.                                    | 📋 To Do |
+| INFRA-008 |    P0    | 🔵    | Integrate OWASP ZAP headless + Schemathesis into Tekton task for every `payu-dev` deploy        | Tekton tasks for ZAP and Schemathesis exist but not wired into deploy pipeline. Need quality gate: no high/critical findings to promote to `payu-sit`.        | 📋 To Do |
+| INFRA-009 |    P0    | 🔵    | Implement OSSM (Istio) with `PeerAuthentication: STRICT` in `payu-uat` and above                 | Service Mesh operator installed. Need `PeerAuthentication` STRICT + `AuthorizationPolicy` deny-by-default in `payu-uat`, `payu-preprod`, `payu`.               | 📋 To Do |
+| INFRA-012 |    P0    | 🔵    | Complete ArgoCD Image Updater setup — add SSH public key to GitHub deploy keys for write-back   | Ed25519 key generated. Public key must be added to GitHub repo deploy keys to enable digest-based promotion via Git write-back.                               | 📋 To Do |
+| INFRA-016 |    P0    | 🔵    | Configure rate limiting (global 1000 req/s per IP) via API Gateway                               | §14.3 requirement. No rate limiting configured yet at ingress or gateway level.                                                                                  | 📋 To Do |
+| INFRA-017 |    P0    | 🔵    | Enforce API security headers (HSTS, CSP, X-Frame-Options) in all responses                       | §14.4 requirement. Headers not yet enforced globally. Need Gateway/WAF layer or Istio EnvoyFilter.                                                             | 📋 To Do |
+| INFRA-021 |    P0    | 🔵    | Configure ArgoCD auto-rollback on health check failure (5 min window)                            | §18.2 requirement. ArgoCD rollback is manual today. Need automated health check + rollback config.                                                            | 📋 To Do |
+| INFRA-010 |    P1    | 🟡    | Configure ComplianceOperator for CIS Kubernetes Benchmark scan + forward to Wazuh                | ComplianceOperator installed but not configured for scheduled CIS scan. Wazuh not deployed yet (dependency INFRA-011).                                         | 📋 To Do |
+| INFRA-011 |    P1    | 🟡    | Deploy Wazuh manager + agent for SIEM/compliance dashboard (PCI-DSS v4.0 ready)                  | §4.6.1 requirement. Wazuh is key for PCI-DSS Req 10 (logging) and compliance reporting. Not yet deployed.                                                      | 📋 To Do |
+| INFRA-013 |    P1    | 🟡    | Enable Tekton Chains for SLSA provenance attestation auto-generation                             | §4.4.1 requirement. Critical for SLSA Level 3 target. Chains not yet enabled in `openshift-pipelines`.                                                         | 📋 To Do |
+| INFRA-014 |    P1    | 🟡    | Configure Tekton Results for audit trail (12-month retention)                                    | §4.4.1 requirement. PCI-DSS Req 10 needs pipeline audit trail. Results not configured.                                                                         | 📋 To Do |
+| INFRA-015 |    P1    | 🟡    | Deploy Coraza WAF with OWASP CRS v4.x at ingress layer                                           | §14.2 requirement. No WAF deployed yet. Coraza or ModSecurity needed for OWASP CRS enforcement.                                                                 | 📋 To Do |
+| INFRA-020 |    P1    | 🔵    | Define severity P1-P4 + escalation path and socialize to all teams                               | §18.1 definitions exist in document but not formally adopted. Need incident response playbook distribution.                                                    | 📋 To Do |
+| INFRA-022 |    P1    | 🟠    | Setup PagerDuty/Opsgenie integration for P1/P2 alerting                                          | §18.3 requirement. No on-call rotation or paging integration exists yet.                                                                                       | 📋 To Do |
+| INFRA-018 |    P2    | 🟡    | Setup registry GC policy (7 days non-prod, 30 days prod)                                         | §12.3 requirement. OpenShift internal registry has default GC but not tuned per environment.                                                                   | 📋 To Do |
+| INFRA-019 |    P2    | 🟡    | Configure Quay.io auto-prune policy                                                              | §12.3 requirement. If Quay.io used as primary registry, needs auto-prune by tag age/count.                                                                     | 📋 To Do |
+
+### Phase 3 — Optimization
+
+| Key       | Priority | Badge | Summary                                                                                          | Notes / Current State                                                                                                                                            | Status   |
+| :-------- | :------: | :---- | :----------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| INFRA-023 |    P0    | 🔵    | Implement full OWASP Web + API Top 10 test suite in pipeline DAST                                | §5 requirement. ZAP + Schemathesis need to cover all OWASP Web Top 10 2025 + API Security Top 10 2023. Currently only basic scans.                              | 📋 To Do |
+| INFRA-026 |    P0    | 🔵    | Integrate contract test as pipeline gate (break contract = PR rejected)                          | §19.2 requirement. Pact Broker deployed but not wired as gate. Need provider/consumer verification in Tekton pipeline.                                          | 📋 To Do |
+| INFRA-024 |    P1    | 🟡    | Automated compliance reporting to CISO (weekly via Wazuh + ComplianceOperator)                   | §4.6.3 requirement. Depends on INFRA-010 and INFRA-011.                                                                                                         | 📋 To Do |
+| INFRA-025 |    P1    | 🟡    | Setup preview environment (`payu-dev-*`) via ArgoCD ApplicationSet + auto-cleanup                | §3.1 requirement. TTL-based namespace cleanup CronJob needed. ApplicationSet cluster generator for PR branches.                                                 | 📋 To Do |
+| INFRA-027 |    P1    | 🟡    | Implement signed audit logs (vector + Rekor) for PCI-DSS Req 10                                  | §15 requirement. Tamper-evident log chain needed. Wazuh FIM alone insufficient.                                                                                  | 📋 To Do |
+| INFRA-028 |    P1    | 🟡    | Generate PCI-DSS v4.0 evidence report from mapping matrix §15                                    | §15 requirement. Validate all Req 1-12 covered with evidence artifacts.                                                                                         | 📋 To Do |
+| INFRA-034 |    P1    | 🔵    | Validate ArgoCD recovery from Git (full re-sync test)                                            | §9.3 requirement. Git is source of truth but never tested end-to-end. Need DR validation.                                                                       | 📋 To Do |
+| INFRA-029 |    P2    | 🟠    | Schedule quarterly pen test in `payu-preprod`                                                    | §15 / Phase 3 requirement. Manual or automated penetration testing schedule.                                                                                    | 📋 To Do |
+| INFRA-030 |    P1    | 🟠    | Validate all data storage in-country (PostgreSQL, Vault, Wazuh, LokiStack)                       | §16 requirement. Bank Indonesia / UU PDP data residency. Need validation + documentation.                                                                      | 📋 To Do |
+| INFRA-031 |    P1    | 🟠    | Implement LUKS encryption for PersistentVolumes in production                                    | §16.2 requirement. Data-at-rest encryption for all PVs in `payu` namespace.                                                                                    | 📋 To Do |
+| INFRA-032 |    P1    | 🟠    | Configure Wazuh rule to detect data egress to non-Indonesia IP range                             | §16.3 requirement. Proactive monitoring for cross-border data flow violations.                                                                                 | 📋 To Do |
+| INFRA-033 |    P2    | 🟡    | Setup monthly cost report dashboard in Grafana                                                   | §10.2 requirement. OpenCost deployed but no Grafana dashboard yet.                                                                                              | 📋 To Do |
+| INFRA-035 |    P2    | 🟠    | Document DNS failover procedure for standby cluster                                              | §9.4 requirement. Cross-cluster DR target. Single cluster today but procedure needed for future scaling.                                                        | 📋 To Do |
+
+### Phase 4 — Continuous Improvement
+
+| Key       | Priority | Badge | Summary                                                                                          | Notes / Current State                                                                                                                                            | Status   |
+| :-------- | :------: | :---- | :----------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| INFRA-038 |    P1    | 🟠    | Target SLSA Level 3 — hermetic builds, provenance attestation, build isolation                   | §4.2.1 / §4.4.1 requirement. Depends on Tekton Chains (INFRA-013) + hermetic build NetworkPolicy.                                                              | 📋 To Do |
+| INFRA-048 |    P1    | 🟡    | Quarterly DR drill (Vault, ArgoCD, Wazuh) — automated test script                                | §9.2 requirement. Vault DR script exists (INFRA-005/006 needed first). Expand to quarterly automated drills.                                                   | 📋 To Do |
+| INFRA-036 |    P2    | 🔵    | Evaluate and tune tools based on metrics, incident reports, and false positive rate              | §4 / §21 requirement. Need baseline metrics first (pipeline duration, scan accuracy, developer feedback).                                                       | 📋 To Do |
+| INFRA-040 |    P2    | 🔵    | Review and update OWASP compliance matrix every 6 months                                         | §5 requirement. First review due 6 months after v1.3.0 baseline.                                                                                                | 📋 To Do |
+| INFRA-041 |    P2    | 🔵    | Developer feedback loop — DevEx survey, pipeline speed optimization, friction reduction          | §21 requirement. Target: pipeline feedback loop < 15 min, local setup < 30 min.                                                                                | 📋 To Do |
+| INFRA-037 |    P2    | 🟠    | Implement scheduled pen testing in `payu-preprod` (quarterly) with report to CAB                 | §4.6.3 / §20 requirement. Depends on INFRA-029.                                                                                                                | 📋 To Do |
+| INFRA-039 |    P2    | 🟠    | Annual red team exercise for end-to-end security posture validation                              | §4.6.3 requirement. Enterprise maturity target.                                                                                                                  | 📋 To Do |
+| INFRA-042 |    P2    | 🟠    | Pilot migration 1-2 services from Jenkins/GitLab CI to Tekton in `payu-dev`                      | §17 requirement. Brownfield adoption. No Jenkins/GitLab currently used; task reserved for future external integrations.                                         | 📋 To Do |
+| INFRA-043 |    P2    | 🟠    | Bulk import legacy K8s secrets to Vault (dry-run → execute)                                      | §17.2 requirement. No legacy secrets today; reserved for brownfield migration.                                                                                 | 📋 To Do |
+| INFRA-044 |    P2    | 🟠    | Cutover per-namespace per strangler fig strategy §17.3                                           | §17.3 requirement. Reserved for future CI migration.                                                                                                            | 📋 To Do |
+| INFRA-045 |    P2    | 🟠    | Evaluate hub-spoke model needs based on scale                                                    | §11 requirement. Single cluster sufficient for lab. Evaluate when scaling beyond 50 services or multi-region.                                                  | 📋 To Do |
+| INFRA-046 |    P2    | 🟠    | Setup ArgoCD ApplicationSet cluster generator (if multi-cluster adopted)                         | §11.2 requirement. Depends on INFRA-045.                                                                                                                       | 📋 To Do |
+| INFRA-047 |    P2    | 🟠    | Implement image mirroring across clusters via Skopeo + Cosign verify                             | §11.4 requirement. Depends on multi-cluster adoption.                                                                                                          | 📋 To Do |
+| INFRA-049 |    P2    | 🟠    | Validate cross-cluster failover < 5 minutes via DNS health check                                 | §9.4 / §11 requirement. Enterprise DR target.                                                                                                                  | 📋 To Do |
+| INFRA-050 |    P2    | 🟠    | Annual full-scale DR exercise with post-mortem report                                            | §9.4 requirement. Enterprise maturity target.                                                                                                                  | 📋 To Do |
+| INFRA-051 |    P2    | 🟠    | Setup `oc-mirror` for operator catalog mirroring (if required)                                   | §12.2 requirement. Air-gapped readiness for financial services.                                                                                                 | 📋 To Do |
+| INFRA-052 |    P2    | 🟠    | Document air-gapped deployment procedure                                                         | §12.2 requirement. Depends on INFRA-051.                                                                                                                       | 📋 To Do |
+
+---
+
 ## 📊 Metrics
 
 ### Current State
@@ -162,10 +243,11 @@
 | Open Bugs              | 6 — Frontend/Auth audit findings reopened on April 15, 2026               |
 | Tech Debt              | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)                              |
 | Operational Follow-Ups | 12 carry-over validation tasks (April 9, 2026 — k6 Operator + CRUD fixes) |
+| DevSecOps Tasks        | 52 tasks from `DEVSECOPS_ARCHITECTURE.md` v1.3.1 (Phase 1–4)               |
 
 ---
 
-_Last Updated: April 15, 2026 | 0 Active Epics · 0 Open Stories · 6 Open Bugs · 0 Tech Debt · 12 Operational Follow-Ups · 6 Spikes · 9 Deferred_
+_Last Updated: April 30, 2026 | 0 Active Epics · 0 Open Stories · 6 Open Bugs · 0 Tech Debt · 12 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _k6 Operator installed April 9: namespace payu-k6, ClusterAutoscaler (max 14 nodes), MachineAutoscalers (2a: 2-5, 2b: 1-4, 2c: 0-4). Use TestRun CRDs in infrastructure/openshift/infra/base/k6/ for distributed runs._
 _CRUD Testing Sessions (April 9): 24/28 endpoints validated ✅. 4 blocked by NetworkPolicy (OPS-09-02) + gateway route mismatches (OPS-09-03). Major fixes: wallet optimistic locking, JWT authority mapping (3 services), SavingsGoal ownership, gateway schema mismatches, AccountSecurityService bean, UserAccountController, BeneficiaryController ownership, tenant_id migration, AccountType enum._

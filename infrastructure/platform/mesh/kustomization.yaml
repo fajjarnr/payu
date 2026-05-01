@@ -5,7 +5,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Namespace for service mesh resources
-namespace: istio-system
+# Note: PeerAuthentication resources are applied to target service namespaces
+# Do not set a global namespace here to avoid ID conflicts
 
 # Resources in order of application
 resources:
