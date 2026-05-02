@@ -30,6 +30,7 @@ services:
     environment:
       USER: developer
       PASS: payu-cache-dev
+      REDIS_PASSWORD: payu-cache-dev-password
     ports:
       - 6379:6379
       - 11222:11222
@@ -166,6 +167,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -222,6 +225,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -271,6 +276,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -317,6 +324,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -363,6 +372,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -411,6 +422,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -458,6 +471,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -506,6 +521,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -548,6 +565,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -591,6 +610,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -634,6 +655,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -681,6 +704,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -780,7 +805,10 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      QUARKUS_REDIS_HOSTS: redis://:payu-cache-dev-password@redis:6379
+      REDIS_URL: redis://:payu-cache-dev-password@redis:6379
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -797,6 +825,8 @@ services:
     depends_on:
       - infinispan
       - keycloak
+      - postgres
+      - kafka
     healthcheck:
       test:
         - CMD
@@ -828,6 +858,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -872,6 +904,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
@@ -919,6 +953,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -963,6 +999,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1025,6 +1063,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1086,6 +1126,8 @@ services:
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1210,6 +1252,8 @@ services:
       KAFKA_BROKERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
@@ -1252,6 +1296,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
@@ -1300,6 +1346,8 @@ services:
       KAFKA_BROKERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       OTEL_ENDPOINT: http://jaeger:4317
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
@@ -1347,6 +1395,8 @@ services:
       KAFKA_BROKERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       - postgres
@@ -1388,6 +1438,8 @@ services:
       KAFKA_BROKERS: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: payu-cache-dev-password
+      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317

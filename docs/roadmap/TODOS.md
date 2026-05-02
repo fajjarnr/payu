@@ -292,6 +292,7 @@ _Phase 8 Test Quality Audit: 39 new findings (BUG-TEST-051–089) from 249 test 
 _Phase 7 Bug Sweep: ✅ COMPLETE (240/240 closed) — March 17, 2026. Verified: Maven 38/38, Frontend OK (44 routes, 79 pages), Playwright 544/544, Pytest 159/159._
 _Phase 3 Bug Fixes: ✅ COMPLETE (34/34 closed) — March 16, 2026_
 _Phase 2 Gateway Gaps: ✅ COMPLETE (GAP-001, GAP-002, GAP-006, GAP-007) — March 16, 2026_
+_⚠️ OpenShift Cluster Destroyed (May 2, 2026): All OpenShift-dependent tasks (INFRA-001~052, OPS-2026-04-08/09 series) are suspended. Local development environment (`infrastructure/local/podman/`) is now the primary target for fixes and validation. All OpenShift-specific infrastructure configs remain in `infrastructure/` for future redeployment._
 _Phase 1 E2E Stabilization: ✅ COMPLETE (544 Playwright + 159 Pytest = 703 tests, 0 failures) — March 15, 2026_
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 _Referensi: BCA Digital (blu), Xendit, Midtrans, GoPay, OVO, DANA, Flip, Jago_
