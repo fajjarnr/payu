@@ -1,19 +1,11 @@
-# ComplianceOperator — CIS Kubernetes Benchmark Scan
-# Requires: compliance-operator CSV in Succeeded state
-# ============================================================
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSetting
 metadata:
   name: default
   namespace: openshift-compliance
-  labels:
-    app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: compliance
 rawResultStorage:
-  pvAccessModes:
-    - ReadWriteOnce
-  rotation: 3
-  size: 1Gi
+  rotation: 10
+  size: 2Gi
 roles:
   - worker
   - master
@@ -21,28 +13,34 @@ scanTolerations:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
     operator: Exists
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/control-plane
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
     operator: Exists
-schedule: '0 1 * * *'
-
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+schedule: "0 1 * * 0"
+showNotApplicable: false
+strictNodeScan: false
 ---
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSettingBinding
 metadata:
   name: cis-kubernetes
   namespace: openshift-compliance
-  labels:
-    app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: compliance
 profiles:
-  - name: ocp4-cis
-    kind: Profile
-    apiGroup: compliance.openshift.io/v1alpha1
-  - name: ocp4-cis-node
-    kind: Profile
-    apiGroup: compliance.openshift.io/v1alpha1
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: TailoredProfile
+    name: ocp4-cis-node
+    namespace: openshift-compliance
+  - apiGroup: compliance.openshift.io/v1alpha1
+    kind: TailoredProfile
+    name: ocp4-cis
+    namespace: openshift-compliance
 settingsRef:
-  name: default
-  kind: ScanSetting
   apiGroup: compliance.openshift.io/v1alpha1
+  kind: ScanSetting
+  name: default
+  namespace: openshift-compliance

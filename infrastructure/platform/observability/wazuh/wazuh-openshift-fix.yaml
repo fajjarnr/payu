@@ -1,0 +1,55 @@
+# Wazuh OpenShift Permission Fix
+# Patch deployment to add initContainer that fixes file permissions
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wazuh-dashboard
+  namespace: wazuh
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: fix-perms
+          image: registry.access.redhat.com/ubi9-minimal:latest
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /usr/share/wazuh-dashboard/data /usr/share/wazuh-dashboard/config
+              chmod -R g=u /usr/share/wazuh-dashboard
+          volumeMounts:
+            - name: wazuh-dashboard-data
+              mountPath: /usr/share/wazuh-dashboard/data
+            - name: wazuh-dashboard-config
+              mountPath: /usr/share/wazuh-dashboard/config
+      containers:
+        - name: wazuh-dashboard
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wazuh-indexer
+  namespace: wazuh
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: fix-perms
+          image: registry.access.redhat.com/ubi9-minimal:latest
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /var/lib/wazuh-indexer /usr/share/wazuh-indexer/data
+              chmod -R g=u /var/lib/wazuh-indexer /usr/share/wazuh-indexer
+          volumeMounts:
+            - name: indexer-data
+              mountPath: /var/lib/wazuh-indexer
+      containers:
+        - name: wazuh-indexer
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: true
