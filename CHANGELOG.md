@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Syft Optional dockerconfig**: Fixed `syft-sbom` task to use `$(workspaces.dockerconfig.bound)` check so optional workspace does not cause mount failures.
 - **Trigger Template PVC Fix**: Updated `git-webhook-trigger` TriggerTemplate to reference existing `payu-build-workspace` PVC instead of non-existent `tekton-workspace-pvc`.
 
+### Added — LitmusChaos OpenShift/CRI-O Compatibility Documentation (2026-05-02)
+
+- **Root Cause Identified**: Litmus 3.28.0 `go-runner` helper binary deadlocks on OpenShift 4.20 + CRI-O 1.33.10 due to `futex_wait` during initialization. TCP connection to K8s API stuck in `SYN_SENT` despite network connectivity being fine.
+- **Debugging performed**: Verified CRI-O socket, NetworkPolicy, service account token, SCC (`litmus-chaos`), and process stack. Deadlock reproduced in isolated test pod.
+- **Compatibility Matrix documented**: Only `pod-delete` (non-helper) works. All helper-based experiments (`container-kill`, `disk-fill`, `pod-cpu-hog`, `pod-memory-hog`, `pod-network-latency`, `pod-network-loss`) are affected.
+- **Workarounds documented**: Use node-level experiments, consider Chaos Mesh, build custom helper image, or wait for upstream fix.
+- **New guide**: `docs/guides/LITMUS_CHAOS_OPENSHIFT_COMPATIBILITY.md`
+
 ### Added — Reproducible Build Labels & License Compliance Gate (2026-05-02)
 
 - **Buildah Reproducible Labels**: Injected OCI standard labels into every built image:
