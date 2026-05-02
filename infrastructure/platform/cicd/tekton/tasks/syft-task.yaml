@@ -27,14 +27,6 @@ spec:
   results:
     - name: SBOM_PATH
       description: "Path to the generated SBOM file"
-  stepTemplate:
-    securityContext:
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-      seccompProfile:
-        type: RuntimeDefault
   steps:
     - name: prepare-output-dir
       image: registry.access.redhat.com/ubi9-minimal:latest
@@ -42,7 +34,8 @@ spec:
         #!/bin/sh
         set -eu
         mkdir -p "$(dirname "$(params.OUTPUT_FILE)")"
-        if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+        # dockerconfig workspace is optional; gracefully skip if not bound
+        if [ "$(workspaces.dockerconfig.bound)" = "true" ] && [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
           mkdir -p "$(workspaces.source.path)/.docker"
           cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$(workspaces.source.path)/.docker/config.json"
         fi

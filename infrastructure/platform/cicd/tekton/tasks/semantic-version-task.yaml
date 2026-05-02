@@ -1,0 +1,121 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: semantic-version
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: |
+    Generate the next incremental semantic version tag for a service image.
+    Reads the latest git tag (or falls back to v0.0.0), bumps the specified
+    component (major|minor|patch), and outputs the new version string.
+  workspaces:
+    - name: source
+      description: Workspace containing the cloned git repository
+  params:
+    - name: bump-type
+      type: string
+      description: "Semver component to increment: major, minor, or patch"
+      default: "patch"
+    - name: image-prefix
+      type: string
+      description: "Optional prefix for the version tag (e.g., v)"
+      default: "v"
+    - name: service-name
+      type: string
+      description: "Service name used to scope the version lookup"
+    - name: override-version
+      type: string
+      description: "If set, skip auto-generation and use this version directly"
+      default: ""
+  results:
+    - name: version
+      description: "The generated semantic version tag (e.g., v1.2.4)"
+    - name: previous-version
+      description: "The previous semantic version tag (e.g., v1.2.3)"
+  steps:
+    - name: generate-version
+      image: registry.access.redhat.com/ubi9-minimal:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        BUMP_TYPE="$(params.bump-type)"
+        PREFIX="$(params.image-prefix)"
+        SERVICE="$(params.service-name)"
+        OVERRIDE="$(params.override-version)"
+
+        if [ -n "$OVERRIDE" ]; then
+          echo "[*] Using explicit override version: $OVERRIDE"
+          echo -n "$OVERRIDE" | tee $(results.version.path)
+          echo -n "$OVERRIDE" | tee $(results.previous-version.path)
+          exit 0
+        fi
+
+        echo "[*] Determining next semantic version for service: $SERVICE"
+        echo "[*] Bump type: $BUMP_TYPE"
+
+        # Try to find the latest tag matching the service or global semver
+        # Priority: service-specific tags (e.g., account-service-v1.2.3) then global tags
+        LATEST_TAG=""
+
+        # Check for service-scoped tags first
+        if git tag --list "$SERVICE-$PREFIX*" 2>/dev/null | grep -q .; then
+          LATEST_TAG=$(git tag --list "$SERVICE-$PREFIX*" --sort=-v:refname | head -n1)
+          echo "[*] Found service-scoped tag: $LATEST_TAG"
+        elif git tag --list "$PREFIX*" 2>/dev/null | grep -qE "^$PREFIX[0-9]+\.[0-9]+\.[0-9]+$"; then
+          LATEST_TAG=$(git tag --list "$PREFIX*" --sort=-v:refname | grep -E "^$PREFIX[0-9]+\.[0-9]+\.[0-9]+$" | head -n1)
+          echo "[*] Found global semver tag: $LATEST_TAG"
+        fi
+
+        # Fallback to registry image tags if no git tags exist
+        if [ -z "$LATEST_TAG" ]; then
+          echo "[*] No git tags found. Falling back to registry image tags."
+          # Use internal OpenShift registry
+          REGISTRY="image-registry.openshift-image-registry.svc:5000"
+          NS="payu-dev"
+          # Try to get tags from the image stream (requires oc or skopeo)
+          # Since we may not have oc in this minimal image, default to v0.0.0
+          LATEST_TAG="${PREFIX}0.0.0"
+          echo "[*] Defaulting to: $LATEST_TAG"
+        fi
+
+        # Strip prefix to get raw semver
+        RAW_VERSION="${LATEST_TAG#${SERVICE}-}"
+        RAW_VERSION="${RAW_VERSION#${PREFIX}}"
+
+        echo "[*] Previous version: ${PREFIX}${RAW_VERSION}"
+        echo -n "${PREFIX}${RAW_VERSION}" | tee $(results.previous-version.path)
+
+        # Parse semver components
+        MAJOR=$(echo "$RAW_VERSION" | cut -d. -f1)
+        MINOR=$(echo "$RAW_VERSION" | cut -d. -f2)
+        PATCH=$(echo "$RAW_VERSION" | cut -d. -f3)
+
+        # Validate numeric components
+        if ! echo "$MAJOR$MINOR$PATCH" | grep -qE "^[0-9]+$"; then
+          echo "WARNING: Could not parse semver from '$RAW_VERSION'. Resetting to 0.0.0"
+          MAJOR=0; MINOR=0; PATCH=0
+        fi
+
+        # Bump according to type
+        case "$BUMP_TYPE" in
+          major)
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+          minor)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+          patch|*)
+            PATCH=$((PATCH + 1))
+            ;;
+        esac
+
+        NEW_VERSION="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
+        echo "[*] New version: $NEW_VERSION"
+        echo -n "$NEW_VERSION" | tee $(results.version.path)

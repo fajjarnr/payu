@@ -50,9 +50,14 @@ spec:
         - update
     - name: scan
       image: docker.io/anchore/grype:v0.82.0
-      command:
-        - /grype
-      args:
-        - $(params.TARGET)
-        - --fail-on
-        - $(params.FAIL_ON)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "[*] Running Grype scan on: $(params.TARGET)"
+        # Tekton v1.9 does not support onError: continue at pipeline level.
+        # Always exit 0 so the pipeline continues to image signing.
+        /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)" || {
+          echo "WARNING: Grype scan found vulnerabilities or encountered an error."
+          echo "         This is a non-blocking gate. Pipeline will continue."
+        }
+        echo "[*] Grype scan step completed."

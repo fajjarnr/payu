@@ -26,7 +26,7 @@ spec:
   workspaces:
     - name: source
       persistentVolumeClaim:
-        claimName: tekton-workspace-pvc
+        claimName: payu-build-workspace
       subPath: source
     - name: maven-settings
       configMap:

@@ -16,6 +16,9 @@ spec:
       description: The type of service (spring-boot, quarkus, python)
     - name: service-name
       description: The name of the service
+    - name: version-bump-type
+      description: Semver bump type (major, minor, patch)
+      default: patch
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
@@ -39,10 +42,12 @@ spec:
             value: $(tt.params.git-revision)
           - name: service-type
             value: $(tt.params.service-type)
+          - name: version-bump-type
+            value: $(tt.params.version-bump-type)
         workspaces:
           - name: source
             persistentVolumeClaim:
-              claimName: tekton-workspace-pvc
+              claimName: payu-build-workspace
             subPath: source
           - name: maven-settings
             configMap:

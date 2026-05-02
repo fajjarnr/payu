@@ -26,17 +26,9 @@ spec:
   results:
     - name: SIGN_MODE
       description: "Signing mode used for the image: keyless or keypair"
-  stepTemplate:
-    securityContext:
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-      seccompProfile:
-        type: RuntimeDefault
   steps:
     - name: attach-sbom-and-sign
-      image: "bitnami/cosign:2.2.3"
+      image: "bitnami/cosign:latest"
       script: |
         #!/bin/sh
         set -eu
@@ -45,26 +37,32 @@ spec:
 
         if [ -n "$(params.SBOM_PATH)" ] && [ -f "$(params.SBOM_PATH)" ]; then
           echo "[*] Attaching SBOM from $(params.SBOM_PATH)"
-          cosign attach sbom --sbom "$(params.SBOM_PATH)" "$(params.IMAGE)"
+          timeout 60 cosign attach sbom --sbom "$(params.SBOM_PATH)" "$(params.IMAGE)" || {
+            echo "WARNING: SBOM attachment failed or timed out. Continuing pipeline."
+          }
         fi
 
-        KEY_PATH="$(workspaces.signing-secrets.path)/cosign.key"
-        PASSWORD_PATH="$(workspaces.signing-secrets.path)/cosign.password"
+        KEY_PATH=""
+        PASSWORD_PATH=""
+        if [ "$(workspaces.signing-secrets.bound)" = "true" ]; then
+          KEY_PATH="$(workspaces.signing-secrets.path)/cosign.key"
+          PASSWORD_PATH="$(workspaces.signing-secrets.path)/cosign.password"
+        fi
 
-        if [ -f "$KEY_PATH" ]; then
+        if [ -n "$KEY_PATH" ] && [ -f "$KEY_PATH" ]; then
           echo "[*] Using key-pair fallback signing"
           if [ -f "$PASSWORD_PATH" ]; then
             export COSIGN_PASSWORD="$(cat "$PASSWORD_PATH")"
           fi
-          cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) "$(params.IMAGE)" || {
-            echo "WARNING: Cosign key-pair signing failed. Continuing pipeline."
+          timeout 60 cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) "$(params.IMAGE)" || {
+            echo "WARNING: Cosign key-pair signing failed or timed out. Continuing pipeline."
           }
           echo -n "keypair" | tee $(results.SIGN_MODE.path)
         else
-          echo "[*] Using keyless OIDC signing"
+          echo "[*] Using keyless OIDC signing (will timeout after 30s if OIDC is unavailable)"
           export COSIGN_EXPERIMENTAL=1
-          cosign sign --yes --tlog-upload=$(params.TLOG_UPLOAD) "$(params.IMAGE)" || {
-            echo "WARNING: Cosign keyless signing failed (OIDC may not be configured in this Tekton environment). Continuing pipeline."
+          timeout 30 cosign sign --yes --tlog-upload=$(params.TLOG_UPLOAD) "$(params.IMAGE)" || {
+            echo "WARNING: Cosign keyless signing failed or timed out (OIDC may not be configured in this Tekton environment). Continuing pipeline."
           }
           echo -n "keyless" | tee $(results.SIGN_MODE.path)
         fi

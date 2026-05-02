@@ -35,7 +35,12 @@ spec:
       default: spring-boot
     - name: build-image-tag
       type: string
-      default: v1.7.8
+      default: ""
+      description: "Optional explicit image tag. If empty, semantic versioning will be used."
+    - name: version-bump-type
+      type: string
+      default: patch
+      description: "Semver bump when auto-generating tag: major, minor, or patch"
     - name: registry-url
       type: string
       default: image-registry.openshift-image-registry.svc:5000
@@ -72,6 +77,23 @@ spec:
           value: $(params.git-revision)
         - name: DELETE_EXISTING
           value: "true"
+
+    # ── Step 1b: Generate Semantic Version ──
+    - name: generate-semver
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: semantic-version
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: bump-type
+          value: $(params.version-bump-type)
+        - name: service-name
+          value: $(params.service-name)
+        - name: override-version
+          value: $(params.build-image-tag)
 
     # ── Step 2-1: Secret Scan (Gitleaks) ──
     - name: secret-scan
@@ -173,7 +195,7 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: CONTEXT
           value: $(params.service-base-dir)/$(params.service-path)
         - name: CONTAINERFILE
@@ -200,7 +222,7 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: CONTEXT
           value: $(params.service-base-dir)/$(params.service-path)
         - name: CONTAINERFILE
@@ -220,7 +242,7 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: SEVERITY
           value: "CRITICAL,HIGH"
         - name: EXIT_CODE
@@ -234,7 +256,7 @@ spec:
         name: rhacs-image-scan
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: OUTPUT_FORMAT
           value: table
 
@@ -246,7 +268,7 @@ spec:
         name: rhacs-image-check
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
 
     # ── Step 7: SBOM Generation (Syft) ──
     - name: generate-sbom
@@ -261,7 +283,7 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: OUTPUT_FILE
           value: $(workspaces.source.path)/reports/$(params.service-name)-sbom.cdx.json
 
@@ -286,6 +308,6 @@ spec:
         name: cosign-sign
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
         - name: SBOM_PATH
           value: $(tasks.generate-sbom.results.SBOM_PATH)

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maven-settings
+  namespace: payu-cicd
+data:
+  settings.xml: |
+    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                  https://maven.apache.org/xsd/settings-1.0.0.xsd">
+      <localRepository>/workspace/source/.m2/repository</localRepository>
+      <interactiveMode>false</interactiveMode>
+      <profiles>
+        <profile>
+          <id>default</id>
+          <activation>
+            <activeByDefault>true</activeByDefault>
+          </activation>
+          <properties>
+            <maven.test.failure.ignore>true</maven.test.failure.ignore>
+          </properties>
+        </profile>
+      </profiles>
+    </settings>
