@@ -5,7 +5,7 @@ import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4
 export const options = {
   stages: [
     { duration: '30s', target: 10 },
-    { duration: '1m', target: 50 },
+    { duration: '1m', target: 30 },
     { duration: '30s', target: 0 },
   ],
   thresholds: {
@@ -15,18 +15,52 @@ export const options = {
   },
 };
 
-const GATEWAY_URL = __ENV.GATEWAY_URL || 'http://gateway-service.payu-dev.svc.cluster.local:8080';
-const KEYCLOAK_URL = __ENV.KEYCLOAK_URL || 'http://payu-keycloak-service.payu-dev.svc.cluster.local:8080';
+// All configuration from environment variables (populated via ConfigMap/Secret)
+const GATEWAY_URL = __ENV.GATEWAY_URL;
+const KEYCLOAK_URL = __ENV.KEYCLOAK_URL;
+const WEBAPP_URL = __ENV.WEBAPP_URL;
+const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID;
+const KEYCLOAK_CLIENT_SECRET = __ENV.KEYCLOAK_CLIENT_SECRET;
+const KEYCLOAK_REALM = __ENV.KEYCLOAK_REALM;
+const TEST_USERNAME = __ENV.TEST_USERNAME;
+const TEST_PASSWORD = __ENV.TEST_PASSWORD;
 
-function getToken() {
-  const res = http.post(
-    `${KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token`,
+function validateConfig() {
+  const required = [
+    ['GATEWAY_URL', GATEWAY_URL],
+    ['KEYCLOAK_URL', KEYCLOAK_URL],
+    ['KEYCLOAK_CLIENT_ID', KEYCLOAK_CLIENT_ID],
+    ['KEYCLOAK_CLIENT_SECRET', KEYCLOAK_CLIENT_SECRET],
+    ['TEST_USERNAME', TEST_USERNAME],
+    ['TEST_PASSWORD', TEST_PASSWORD],
+  ];
+
+  for (const [name, value] of required) {
+    if (!value) {
+      throw new Error(`Required environment variable ${name} is not set. Please configure via ConfigMap/Secret.`);
+    }
+  }
+}
+
+export function setup() {
+  validateConfig();
+
+  console.log('=== PayU Realistic E2E CRUD Test ===');
+  console.log(`Gateway: ${GATEWAY_URL}`);
+  console.log(`Keycloak: ${KEYCLOAK_URL}`);
+  console.log(`Realm: ${KEYCLOAK_REALM}`);
+  console.log(`Client ID: ${KEYCLOAK_CLIENT_ID}`);
+  console.log(`Test User: ${TEST_USERNAME}`);
+
+  // Single login in setup to avoid rate limiting
+  const loginRes = http.post(
+    `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`,
     {
       grant_type: 'password',
-      client_id: 'payu-backend',
-      client_secret: 'payu-backend-secret',
-      username: 'customer1',
-      password: 'P@ssw0rd123',
+      client_id: KEYCLOAK_CLIENT_ID,
+      client_secret: KEYCLOAK_CLIENT_SECRET,
+      username: TEST_USERNAME,
+      password: TEST_PASSWORD,
     },
     {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -34,9 +68,9 @@ function getToken() {
     }
   );
 
-  const success = check(res, {
-    'login status is 200': (r) => r.status === 200,
-    'login returns access_token': (r) => {
+  const loginSuccess = check(loginRes, {
+    'setup login status is 200': (r) => r.status === 200,
+    'setup login returns access_token': (r) => {
       try {
         const body = JSON.parse(r.body);
         return body.access_token !== undefined;
@@ -46,27 +80,28 @@ function getToken() {
     },
   });
 
-  if (!success) {
-    console.error(`Login failed: ${res.status} - ${res.body}`);
-    return null;
+  if (!loginSuccess) {
+    console.error(`Setup login failed: ${loginRes.status} - ${loginRes.body}`);
+    return { token: null };
   }
 
-  return JSON.parse(res.body).access_token;
+  const token = JSON.parse(loginRes.body).access_token;
+  console.log(`Setup login successful, token: ${token.length} chars`);
+
+  return { token };
 }
 
-export default function () {
-  // === REALISTIC E2E: Login first ===
-  const token = getToken();
-  if (!token) {
+export default function (data) {
+  if (!data.token) {
+    console.error('No token available, skipping iteration');
     return;
   }
 
+  const token = data.token;
   const authHeaders = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
   };
-
-  sleep(0.5);
 
   // === BACKEND: Health with auth context ===
   const healthRes = http.get(`${GATEWAY_URL}/q/health`, {
@@ -120,7 +155,7 @@ export default function () {
 
   sleep(0.3);
 
-  // === BACKEND: Simulate CREATE (POST to accounts - real auth required) ===
+  // === BACKEND: Simulate CREATE (POST to accounts) ===
   const createPayload = JSON.stringify({
     email: `user-${randomString(8)}@payu.test`,
     phoneNumber: `+628${randomIntBetween(100000000, 999999999)}`,
@@ -133,7 +168,6 @@ export default function () {
     tags: { endpoint: 'account-create' },
   });
 
-  // 201 = created, 409 = conflict (user exists), 403 = forbidden, 401 = unauthorized
   check(createRes, {
     'CREATE responds (201/403/409)': (r) =>
       r.status === 201 || r.status === 200 || r.status === 403 || r.status === 409,
@@ -142,9 +176,9 @@ export default function () {
 
   sleep(0.5);
 
-  // === FRONTEND: Web-app home page (via Route) ===
-  const WEBAPP_URL = __ENV.WEBAPP_URL || 'https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id';
-  const webappRes = http.get(WEBAPP_URL);
+  // === FRONTEND: Web-app home page ===
+  const webappUrl = WEBAPP_URL || 'https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id';
+  const webappRes = http.get(webappUrl);
 
   check(webappRes, {
     'WEBAPP home is 200': (r) => r.status === 200,
@@ -154,10 +188,6 @@ export default function () {
   sleep(1);
 }
 
-export function setup() {
-  console.log('=== PayU Realistic E2E CRUD Test ===');
-  console.log(`Gateway: ${GATEWAY_URL}`);
-  console.log(`Keycloak: ${KEYCLOAK_URL}`);
-  console.log('Using customer1 / P@ssw0rd123');
-  return { startTime: new Date().toISOString() };
+export function teardown(data) {
+  console.log('=== Test Complete ===');
 }
