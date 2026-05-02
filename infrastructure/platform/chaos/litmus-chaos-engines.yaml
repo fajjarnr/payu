@@ -1,0 +1,144 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-pod-delete
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'active'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-network-latency
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'active'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TARGET_CONTAINER
+              value: 'app'
+            - name: NETWORK_INTERFACE
+              value: 'eth0'
+            - name: LIB_IMAGE
+              value: 'litmuschaos/go-runner:latest'
+            - name: TC_IMAGE
+              value: 'gaiadocker/iproute2'
+            - name: CONTAINER_RUNTIME
+              value: 'crio'
+            - name: SOCKET_PATH
+              value: '/run/crio/crio.sock'
+            - name: NETWORK_LATENCY
+              value: '2000'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: RAMP_TIME
+              value: '10'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-pod-cpu-hog
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'active'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: pod-cpu-hog
+      spec:
+        components:
+          env:
+            - name: TARGET_CONTAINER
+              value: 'app'
+            - name: CONTAINER_RUNTIME
+              value: 'crio'
+            - name: SOCKET_PATH
+              value: '/run/crio/crio.sock'
+            - name: CPU_CORES
+              value: '1'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
