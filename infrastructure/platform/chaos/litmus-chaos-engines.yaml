@@ -1,3 +1,75 @@
+# PayU Platform - Litmus Chaos Experiments
+# =========================================
+# NOTE: These experiments target the account-service deployment in payu-dev.
+#
+# OPENSHIFT/CRI-O COMPATIBILITY STATUS (Litmus 3.28.0)
+# =====================================================
+#
+# WORKING experiments (no helper pods):
+#   - pod-delete: PASS - Directly uses K8s API, no helper pods needed.
+#
+# FAILING experiments (ALL use helper pods which deadlock):
+#   - container-kill: FAIL - Helper pod hangs indefinitely
+#   - disk-fill: FAIL - Helper pod hangs indefinitely
+#   - pod-cpu-hog: FAIL - Helper pod hangs indefinitely
+#   - pod-memory-hog: FAIL - Helper pod hangs indefinitely
+#   - pod-network-latency: FAIL - Helper pod hangs indefinitely
+#   - pod-network-loss: FAIL - Helper pod hangs indefinitely
+#   - (and any other experiment that spawns a helper pod)
+#
+# ROOT CAUSE ANALYSIS
+# -------------------
+# All Litmus helper pods (image: go-runner:3.28.0) deadlocked during
+# initialization on OpenShift 4.20 + CRI-O 1.33.10.
+#
+# Symptoms observed:
+#   - Helper logs stop at: "[PreReq]: Getting the ENV variables"
+#   - Process kernel stack: futex_wait_queue -> __futex_wait -> futex_wait
+#   - TCP connection to K8s API (172.30.0.1:443) stuck in SYN_SENT
+#   - 10 Go threads spawned, all blocked on futex
+#   - Even with perfect network connectivity (verified via test pods),
+#     the ./helpers binary deadlocks internally
+#
+# Debugging performed:
+#   - Verified CRI-O socket accessible at /run/crio/crio.sock
+#   - Verified NetworkPolicies allow all egress (allow-all-egress)
+#   - Verified test pods with identical image/security-context reach API fine
+#   - Verified service account token mounted correctly
+#   - Verified litmus-chaos SCC applied (privileged, hostPID, NET_ADMIN)
+#   - Checked process stack via /proc/<pid>/stack → futex_wait deadlock
+#   - Reproduced deadlock in isolated test pod running ./helpers manually
+#
+# Conclusion: This is a bug in Litmus 3.28.0 helper binary on OpenShift/CRI-O.
+# All helper-based experiments are affected. Only pod-delete (non-helper) works.
+#
+# REQUIRED RBAC/SCC SETUP
+# -----------------------
+# The following was applied to get helper pods running (before discovering
+# the deadlock):
+#   oc adm policy add-scc-to-user litmus-chaos -z litmus -n payu-dev
+#   oc patch clusterrole litmus --type='json' -p='[{"op": "add", "path": "/rules/3/verbs/-", "value": "create"}]'
+#   oc patch scc litmus-chaos --type='merge' -p '{"seccompProfiles":["runtime/default","unconfined"]}'
+#   oc patch scc litmus-chaos --type='json' -p='[{"op": "add", "path": "/users/-", "value": "system:serviceaccount:payu-dev:litmus"}]'
+#
+# RECOMMENDED WORKAROUNDS
+# -----------------------
+# 1. Use ONLY pod-delete for now (working reliably).
+# 2. For CPU/network/disk/memory chaos, consider Chaos Mesh instead of Litmus.
+# 3. Wait for Litmus upstream fix (likely in go-runner helper binary).
+# 4. Build custom helper image with patched initialization logic.
+# 5. Use node-level experiments (node-cpu-hog, node-memory-hog) which run
+#    directly on nodes without helper pods.
+#
+# REFERENCES
+# ----------
+# - Litmus OpenShift docs: https://docs.litmuschaos.io/docs/platform/openshift
+# - Litmus experiment hub: https://hub.litmuschaos.io/
+# - Litmus GitHub issues: https://github.com/litmuschaos/litmus/issues
+
+---
+# WORKING: Pod Delete Chaos
+# This experiment kills pods and verifies they are recreated.
+# No helper pods required - directly uses Kubernetes API.
 apiVersion: litmuschaos.io/v1alpha1
 kind: ChaosEngine
 metadata:
@@ -40,42 +112,40 @@ spec:
                   get:
                     criteria: '=='
                     responseCode: '200'
+
 ---
+# KNOWN ISSUE: Container Kill
+# Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
+# Status: FAIL - Retained for future use once upstream fix is available.
+# To enable, change engineState from 'stop' to 'active'.
+# Requires: CONTAINER_RUNTIME=crio, SOCKET_PATH=/run/crio/crio.sock
 apiVersion: litmuschaos.io/v1alpha1
 kind: ChaosEngine
 metadata:
-  name: payu-account-service-network-latency
+  name: payu-account-service-container-kill
   namespace: payu-dev
 spec:
   appinfo:
     appns: 'payu-dev'
     applabel: 'app.kubernetes.io/name=account-service'
     appkind: 'deployment'
-  engineState: 'active'
+  engineState: 'stop'
   chaosServiceAccount: litmus
   experiments:
-    - name: pod-network-latency
+    - name: container-kill
       spec:
         components:
           env:
             - name: TARGET_CONTAINER
               value: 'app'
-            - name: NETWORK_INTERFACE
-              value: 'eth0'
-            - name: LIB_IMAGE
-              value: 'litmuschaos/go-runner:latest'
-            - name: TC_IMAGE
-              value: 'gaiadocker/iproute2'
             - name: CONTAINER_RUNTIME
               value: 'crio'
             - name: SOCKET_PATH
               value: '/run/crio/crio.sock'
-            - name: NETWORK_LATENCY
-              value: '2000'
+            - name: SIGNAL
+              value: 'SIGKILL'
             - name: TOTAL_CHAOS_DURATION
-              value: '60'
-            - name: RAMP_TIME
-              value: '10'
+              value: '30'
             - name: PODS_AFFECTED_PERC
               value: '50'
           probe:
@@ -95,7 +165,119 @@ spec:
                   get:
                     criteria: '=='
                     responseCode: '200'
+
 ---
+# KNOWN ISSUE: Disk Fill
+# Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
+# Status: FAIL - Retained for future use once upstream fix is available.
+# To enable, change engineState from 'stop' to 'active'.
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-disk-fill
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'stop'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: disk-fill
+      spec:
+        components:
+          env:
+            - name: TARGET_CONTAINER
+              value: 'app'
+            - name: FILL_PERCENTAGE
+              value: '80'
+            - name: EPHEMERAL_STORAGE_MEBYTES
+              value: '500'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+
+---
+# KNOWN ISSUE: Pod Memory Hog
+# Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
+# Status: FAIL - Retained for future use once upstream fix is available.
+# To enable, change engineState from 'stop' to 'active'.
+# NOTE: Even with -exec variant, target container needs stress-ng/dd.
+# Spring Boot containers (UBI-based) do NOT include these tools.
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-pod-memory-hog
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'stop'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: pod-memory-hog
+      spec:
+        components:
+          env:
+            - name: TARGET_CONTAINER
+              value: 'app'
+            - name: CONTAINER_RUNTIME
+              value: 'crio'
+            - name: SOCKET_PATH
+              value: '/run/crio/crio.sock'
+            - name: MEMORY_CONSUMPTION
+              value: '256'
+            - name: MEMORY_CONSUMPTION_PERCENTAGE
+              value: '50'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+
+---
+# KNOWN ISSUE: Pod CPU Hog
+# Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
+# Status: FAIL - Retained for future use once upstream fix is available.
+# To enable, change engineState from 'stop' to 'active'.
+# Same root cause as pod-memory-hog (helper binary futex deadlock).
 apiVersion: litmuschaos.io/v1alpha1
 kind: ChaosEngine
 metadata:
@@ -106,7 +288,7 @@ spec:
     appns: 'payu-dev'
     applabel: 'app.kubernetes.io/name=account-service'
     appkind: 'deployment'
-  engineState: 'active'
+  engineState: 'stop'
   chaosServiceAccount: litmus
   experiments:
     - name: pod-cpu-hog
@@ -123,6 +305,65 @@ spec:
               value: '1'
             - name: TOTAL_CHAOS_DURATION
               value: '60'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-dev.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+
+---
+# KNOWN ISSUE: Pod Network Latency
+# Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
+# Status: FAIL - Retained for future use once upstream fix is available.
+# To enable, change engineState from 'stop' to 'active'.
+# Same root cause as pod-cpu-hog (helper binary futex deadlock).
+# NOTE: Even if fixed, target container needs 'tc' (iproute2) which is
+# NOT present in Spring Boot UBI containers.
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-account-service-network-latency
+  namespace: payu-dev
+spec:
+  appinfo:
+    appns: 'payu-dev'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  engineState: 'stop'
+  chaosServiceAccount: litmus
+  experiments:
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TARGET_CONTAINER
+              value: 'app'
+            - name: NETWORK_INTERFACE
+              value: 'eth0'
+            - name: CONTAINER_RUNTIME
+              value: 'crio'
+            - name: SOCKET_PATH
+              value: '/run/crio/crio.sock'
+            - name: NETWORK_LATENCY
+              value: '2000'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: RAMP_TIME
+              value: '10'
             - name: PODS_AFFECTED_PERC
               value: '50'
           probe:
