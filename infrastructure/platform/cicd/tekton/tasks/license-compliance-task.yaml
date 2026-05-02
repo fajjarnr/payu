@@ -62,15 +62,14 @@ spec:
         IFS=',' read -ra ALLOWED <<< "$(params.ALLOWED_LICENSES)"
 
         # Extract application-level components only:
-        # - Has purl with pkg:maven/pkg:npm/pkg:pypi/pkg:gomod/pkg:nuget
-        # - OR type is "library" and publisher is not Red Hat / CentOS / Fedora
-        # - OR group looks like a Java package (contains dots)
+        # - Must have a purl
+        # - purl must match application package managers (maven, npm, pypi, gomod, nuget, cargo, hex)
+        # - purl must NOT match OS package managers (deb, rpm, apk, generic)
         COMPONENTS=$(jq -c '
           .components // [] | .[] |
           select(
-            (.purl // "" | test("pkg:(maven|npm|pypi|gomod|nuget|cargo|hex)"; "i")) or
-            (.type == "library" and ((.publisher // "") | test("Red Hat|CentOS|Fedora"; "i") | not)) or
-            (.group // "" | test("\\."))
+            (.purl // "" | test("pkg:(maven|npm|pypi|gomod|nuget|cargo|hex)"; "i")) and
+            (.purl // "" | test("pkg:(deb|rpm|apk|generic)"; "i") | not)
           ) |
           {name: (.name // "unknown"), version: (.version // "unknown"), licenses: (.licenses // [])}
         ' "$SBOM_FILE" 2>/dev/null || true)

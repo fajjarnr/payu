@@ -57,6 +57,8 @@ spec:
         echo "[*] Determining next semantic version for service: $SERVICE"
         echo "[*] Bump type: $BUMP_TYPE"
 
+        # curl-minimal is present in ubi9-minimal; no extra install needed
+
         # Try to find the latest tag matching the service or global semver
         # Priority: service-specific tags (e.g., account-service-v1.2.3) then global tags
         LATEST_TAG=""
@@ -73,13 +75,37 @@ spec:
         # Fallback to registry image tags if no git tags exist
         if [ -z "$LATEST_TAG" ]; then
           echo "[*] No git tags found. Falling back to registry image tags."
-          # Use internal OpenShift registry
-          REGISTRY="image-registry.openshift-image-registry.svc:5000"
+          # Query OpenShift ImageStream tags via K8s API using pod service account token
+          TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+          CA_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          API_SERVER="https://kubernetes.default.svc"
           NS="payu-dev"
-          # Try to get tags from the image stream (requires oc or skopeo)
-          # Since we may not have oc in this minimal image, default to v0.0.0
-          LATEST_TAG="${PREFIX}0.0.0"
-          echo "[*] Defaulting to: $LATEST_TAG"
+
+          if [ -f "$TOKEN_FILE" ]; then
+            TOKEN=$(cat "$TOKEN_FILE")
+            # Fetch image stream tags and extract semver ones (no jq dependency)
+            curl -s --cacert "$CA_FILE" -H "Authorization: Bearer $TOKEN" \
+              "$API_SERVER/apis/image.openshift.io/v1/namespaces/$NS/imagestreams/$SERVICE" > /tmp/is.json 2>/dev/null
+
+            if [ -s /tmp/is.json ] && grep -q '"status"' /tmp/is.json; then
+              TAGS=$(grep -o '"tag": "[^"]*"' /tmp/is.json | sed 's/"tag": "//;s/"$//' | \
+                grep -E "^${PREFIX}[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n1)
+
+              if [ -n "$TAGS" ]; then
+                LATEST_TAG="$TAGS"
+                echo "[*] Found registry tag: $LATEST_TAG"
+              else
+                LATEST_TAG="${PREFIX}0.0.0"
+                echo "[*] No semver registry tags found. Defaulting to: $LATEST_TAG"
+              fi
+            else
+              LATEST_TAG="${PREFIX}0.0.0"
+              echo "[*] Registry lookup failed or empty response. Defaulting to: $LATEST_TAG"
+            fi
+          else
+            LATEST_TAG="${PREFIX}0.0.0"
+            echo "[*] No K8s token available. Defaulting to: $LATEST_TAG"
+          fi
         fi
 
         # Strip prefix to get raw semver
