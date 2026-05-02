@@ -12,7 +12,7 @@ spec:
     Supports Spring Boot, Quarkus (Java) and Python services.
     Security gate order:
     Gitleaks → TruffleHog → Semgrep → service-specific SAST/SCA → Buildah build
-    → Trivy → RHACS scan/policy → Syft SBOM → Grype → Cosign signing.
+    → Trivy → RHACS scan/policy → Syft SBOM → License Compliance → Grype → Cosign signing.
   params:
     - name: service-name
       type: string
@@ -202,6 +202,8 @@ spec:
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
           value: "false"
+        - name: GIT_SHA
+          value: $(tasks.fetch-repository.results.COMMIT)
 
     # ── Step 2b/3b: Buildah image (Services with direct Containerfile like Python/Node.js) ──
     - name: build-push-direct
@@ -229,6 +231,8 @@ spec:
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
           value: "false"
+        - name: GIT_SHA
+          value: $(tasks.fetch-repository.results.COMMIT)
 
     # ── Step 4: Image Scan (Trivy) ──
     - name: trivy-image-scan
@@ -287,10 +291,25 @@ spec:
         - name: OUTPUT_FILE
           value: $(workspaces.source.path)/reports/$(params.service-name)-sbom.cdx.json
 
-    # ── Step 8: SBOM Vulnerability Gate (Grype) ──
-    - name: grype-sbom-check
+    # ── Step 8: License Compliance Gate (Syft SBOM) ──
+    - name: license-compliance-check
       runAfter:
         - generate-sbom
+      taskRef:
+        name: license-compliance-check
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SBOM_PATH
+          value: $(tasks.generate-sbom.results.SBOM_PATH)
+        - name: FAIL_ON_VIOLATION
+          value: "true"
+
+    # ── Step 9: SBOM Vulnerability Gate (Grype) ──
+    - name: grype-sbom-check
+      runAfter:
+        - license-compliance-check
       onError: continue
       taskRef:
         name: grype-scan

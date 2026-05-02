@@ -27,6 +27,10 @@ spec:
       type: string
       description: Verify TLS when pushing
       default: "true"
+    - name: GIT_SHA
+      type: string
+      description: Git commit SHA for reproducible build labels
+      default: ""
   workspaces:
     - name: source
       description: Source code workspace
@@ -67,11 +71,32 @@ spec:
           export REGISTRY_AUTH_FILE="$(workspaces.dockerconfig.path)/.dockerconfigjson"
         fi
 
+        # Extract reproducible build metadata from source
+        BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        GIT_SHA="$(params.GIT_SHA)"
+        if [ -z "$GIT_SHA" ] && [ -d "$(workspaces.source.path)/.git" ]; then
+          GIT_SHA="$(cd $(workspaces.source.path) && git rev-parse HEAD 2>/dev/null || echo unknown)"
+        fi
+        if [ -z "$GIT_SHA" ]; then
+          GIT_SHA="unknown"
+        fi
+        BUILDER_ID="tekton-pipeline/$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace 2>/dev/null || echo payu-cicd)"
+
         echo "[*] Building image: $(params.IMAGE)"
+        echo "    BUILD_DATE : $BUILD_DATE"
+        echo "    GIT_SHA    : $GIT_SHA"
+        echo "    BUILDER_ID : $BUILDER_ID"
+
         buildah build \
           --storage-driver=vfs \
           --format=oci \
           --tls-verify=$(params.TLSVERIFY) \
+          --label "org.opencontainers.image.created=${BUILD_DATE}" \
+          --label "org.opencontainers.image.revision=${GIT_SHA}" \
+          --label "org.opencontainers.image.source=${GIT_SHA}" \
+          --label "build-date=${BUILD_DATE}" \
+          --label "git-sha=${GIT_SHA}" \
+          --label "builder-id=${BUILDER_ID}" \
           -f $(params.CONTAINERFILE) \
           -t $(params.IMAGE) \
           $(params.CONTEXT)

@@ -1,0 +1,137 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: license-compliance-check
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: |
+    Scan a CycloneDX/SPDX SBOM for blocked copyleft licenses.
+    Only evaluates application-level dependencies (Maven, npm, PyPI, Go, etc.)
+    and excludes OS-level packages from the base image.
+    Fails the pipeline if any dependency uses a license in the blocklist
+    (e.g., AGPL, GPL, SSPL) unless FAIL_ON_VIOLATION is set to "false".
+  params:
+    - name: SBOM_PATH
+      type: string
+      description: "Path to the SBOM file (CycloneDX JSON or SPDX JSON)"
+    - name: FAIL_ON_VIOLATION
+      type: string
+      description: "Whether to fail the task when a blocked license is found"
+      default: "true"
+    - name: BLOCKED_LICENSES
+      type: string
+      description: "Comma-separated list of blocked license substrings (case-insensitive)"
+      default: "AGPL,GPL,SSPL"
+    - name: ALLOWED_LICENSES
+      type: string
+      description: "Comma-separated list of allowed license substrings that override blocked ones"
+      default: "LGPL,GPL-2.0-with-classpath-exception,GPL-3.0-with-classpath-exception,MIT,Apache,BSD,EPL,ISC,Public Domain"
+  workspaces:
+    - name: source
+      description: "Workspace containing the SBOM file"
+  steps:
+    - name: check-licenses
+      image: registry.access.redhat.com/ubi9-minimal:latest
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        SBOM_PATH="$(params.SBOM_PATH)"
+        if [[ "$SBOM_PATH" == /* ]]; then
+          SBOM_FILE="$SBOM_PATH"
+        else
+          SBOM_FILE="$(workspaces.source.path)/$SBOM_PATH"
+        fi
+        if [ ! -f "$SBOM_FILE" ]; then
+          echo "ERROR: SBOM file not found at $SBOM_FILE"
+          exit 1
+        fi
+
+        echo "[*] Scanning SBOM for license compliance..."
+        echo "    SBOM        : $SBOM_FILE"
+        echo "    Blocked     : $(params.BLOCKED_LICENSES)"
+        echo "    Allowed     : $(params.ALLOWED_LICENSES)"
+        echo "    Fail gate   : $(params.FAIL_ON_VIOLATION)"
+
+        microdnf install -y jq >/dev/null 2>&1
+
+        # Build blocked/allowed arrays
+        IFS=',' read -ra BLOCKED <<< "$(params.BLOCKED_LICENSES)"
+        IFS=',' read -ra ALLOWED <<< "$(params.ALLOWED_LICENSES)"
+
+        # Extract application-level components only:
+        # - Has purl with pkg:maven/pkg:npm/pkg:pypi/pkg:gomod/pkg:nuget
+        # - OR type is "library" and publisher is not Red Hat / CentOS / Fedora
+        # - OR group looks like a Java package (contains dots)
+        COMPONENTS=$(jq -c '
+          .components // [] | .[] |
+          select(
+            (.purl // "" | test("pkg:(maven|npm|pypi|gomod|nuget|cargo|hex)"; "i")) or
+            (.type == "library" and ((.publisher // "") | test("Red Hat|CentOS|Fedora"; "i") | not)) or
+            (.group // "" | test("\\."))
+          ) |
+          {name: (.name // "unknown"), version: (.version // "unknown"), licenses: (.licenses // [])}
+        ' "$SBOM_FILE" 2>/dev/null || true)
+
+        VIOLATIONS=""
+        while IFS= read -r comp; do
+          [ -z "$comp" ] && continue
+          name=$(echo "$comp" | jq -r '.name')
+          version=$(echo "$comp" | jq -r '.version')
+          lic_json=$(echo "$comp" | jq -c '.licenses')
+
+          # Extract all license strings for this component
+          lic_texts=$(echo "$lic_json" | jq -r '.[] | .license | (.licenseId // .name // .id // "")' 2>/dev/null | tr '\n' ' ')
+          [ -z "$lic_texts" ] && continue
+
+          lic_lower=$(echo "$lic_texts" | tr '[:upper:]' '[:lower:]')
+
+          # Check if any blocked substring matches
+          is_blocked="false"
+          for b in "${BLOCKED[@]}"; do
+            b_lower=$(echo "$b" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [ -z "$b_lower" ] && continue
+            if echo "$lic_lower" | grep -q "$b_lower"; then
+              # Check if an allowed substring overrides it
+              is_allowed="false"
+              for a in "${ALLOWED[@]}"; do
+                a_lower=$(echo "$a" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                [ -z "$a_lower" ] && continue
+                if echo "$lic_lower" | grep -q "$a_lower"; then
+                  is_allowed="true"
+                  break
+                fi
+              done
+              if [ "$is_allowed" = "false" ]; then
+                is_blocked="true"
+                break
+              fi
+            fi
+          done
+
+          if [ "$is_blocked" = "true" ]; then
+            VIOLATIONS="${VIOLATIONS}  [BLOCKED] ${name}@${version} — license: ${lic_texts}\n"
+          fi
+        done <<< "$COMPONENTS"
+
+        if [ -n "$(echo "$VIOLATIONS" | tr -d '[:space:]')" ]; then
+          echo ""
+          echo "============================================================"
+          echo "LICENSE COMPLIANCE VIOLATION(S) DETECTED"
+          echo "============================================================"
+          echo "$VIOLATIONS"
+          echo "============================================================"
+          echo ""
+          if [ "$(params.FAIL_ON_VIOLATION)" = "true" ]; then
+            echo "ERROR: Blocked licenses found. Failing pipeline gate."
+            echo "To override, set param FAIL_ON_VIOLATION to 'false'."
+            exit 1
+          else
+            echo "WARNING: Blocked licenses found, but FAIL_ON_VIOLATION is false. Continuing."
+          fi
+        else
+          echo "[✓] No blocked licenses detected in application dependencies."
+        fi
+      workingDir: $(workspaces.source.path)
