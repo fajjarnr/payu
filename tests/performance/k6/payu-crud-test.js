@@ -24,7 +24,7 @@ function getToken() {
     {
       grant_type: 'password',
       client_id: 'payu-backend',
-      client_secret: 'payu-backend-secret-2026',
+      client_secret: 'payu-backend-secret',
       username: 'customer1',
       password: 'P@ssw0rd123',
     },
