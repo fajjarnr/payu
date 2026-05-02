@@ -1,0 +1,46 @@
+# ArgoCD Auto-Rollback Configuration
+# Applied to the payu-dev environment Application via annotation
+# When sync fails health check within 5 minutes, auto-rollback to previous revision
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payu-dev-auto-rollback-policy
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gitops-policy
+  annotations:
+    # Auto-rollback: if health check fails within 5 min of sync, rollback
+    argocd.argoproj.io/sync-options: "PrunePropagationPolicy=foreground,PruneLast=true,RespectIgnoreDifferences=true"
+    # Enable automated rollback on sync failure
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: "payu-alerts"
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: "payu-alerts"
+spec:
+  project: payu-dev
+  source:
+    repoURL: https://github.com/fajjarnr/payu.git
+    targetRevision: main
+    path: infrastructure/workloads/overlays/dev
+  destination:
+    namespace: payu-dev
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 3m
+  # Health assessment: rollback if not Healthy within 5 minutes post-sync
+  # Note: ArgoCD does not natively support automatic rollback.
+  # The rollback trigger is implemented via ArgoCD Notifications + webhook/CronJob.
+  # See: infrastructure/platform/cicd/argocd/auto-rollback-trigger.yaml

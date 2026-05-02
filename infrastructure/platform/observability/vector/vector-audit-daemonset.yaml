@@ -1,0 +1,94 @@
+# Vector Agent DaemonSet for Signed Audit Logs
+# Collects Kubernetes audit logs, API server logs, and pod logs
+# Forwards to Rekor transparency log for PCI-DSS Requirement 10
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vector-audit-agent
+  namespace: payu-observability
+  labels:
+    app.kubernetes.io/name: vector-audit-agent
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: audit-logging
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vector-audit-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vector-audit-agent
+        app.kubernetes.io/part-of: payu
+    spec:
+      serviceAccountName: vector-audit-agent
+      containers:
+        - name: vector
+          image: docker.io/timberio/vector:0.44.0-distroless-libc
+          args: ["--config", "/etc/vector/vector.yaml"]
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          volumeMounts:
+            - name: vector-config
+              mountPath: /etc/vector
+              readOnly: true
+            - name: var-log
+              mountPath: /var/log
+              readOnly: true
+            - name: var-lib-docker
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: audit-logs
+              mountPath: /var/log/audit
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: vector-config
+          configMap:
+            name: vector-audit-config
+        - name: var-log
+          hostPath:
+            path: /var/log
+        - name: var-lib-docker
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: audit-logs
+          hostPath:
+            path: /var/log/audit
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vector-audit-agent
+  namespace: payu-observability
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vector-audit-agent
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "namespaces", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["audit.k8s.io"]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vector-audit-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vector-audit-agent
+subjects:
+  - kind: ServiceAccount
+    name: vector-audit-agent
+    namespace: payu-observability

@@ -1,0 +1,135 @@
+# Grafana Dashboard: PayU Monthly Cost Report
+# ConfigMap containing dashboard JSON for OpenCost integration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-payu-cost
+  namespace: openshift-monitoring
+  labels:
+    grafana_dashboard: "true"
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: finops
+data:
+  payu-cost-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "PayU - Monthly Cost Report",
+        "tags": ["payu", "finops", "cost"],
+        "timezone": "Asia/Jakarta",
+        "refresh": "1h",
+        "schemaVersion": 36,
+        "panels": [
+          {
+            "id": 1,
+            "title": "Total Monthly Cost",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(opencost_combined_cost{namespace=~\"payu.*\"}) by (namespace)",
+                "legendFormat": "{{namespace}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "currencyUSD",
+                "decimals": 2
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Cost by Namespace",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(opencost_combined_cost{namespace=~\"payu.*\"}) by (namespace)",
+                "legendFormat": "{{namespace}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Cost by Service (Top 10)",
+            "type": "barchart",
+            "targets": [
+              {
+                "expr": "topk(10, sum(opencost_combined_cost{namespace=~\"payu.*\"}) by (namespace, pod))",
+                "legendFormat": "{{namespace}}/{{pod}}"
+              }
+            ],
+            "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "CPU Cost vs Requested",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "sum(opencost_cpu_cost{namespace=~\"payu.*\"}) by (namespace)",
+                "legendFormat": "CPU Cost - {{namespace}}"
+              },
+              {
+                "expr": "sum(kube_pod_container_resource_requests{namespace=~\"payu.*\", resource=\"cpu\"}) by (namespace)",
+                "legendFormat": "CPU Requested - {{namespace}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18}
+          },
+          {
+            "id": 5,
+            "title": "Memory Cost vs Requested",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "sum(opencost_memory_cost{namespace=~\"payu.*\"}) by (namespace)",
+                "legendFormat": "Memory Cost - {{namespace}}"
+              },
+              {
+                "expr": "sum(kube_pod_container_resource_requests{namespace=~\"payu.*\", resource=\"memory\"}) by (namespace)",
+                "legendFormat": "Memory Requested - {{namespace}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18}
+          },
+          {
+            "id": 6,
+            "title": "Storage Cost Trend",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "sum(opencost_pv_cost{namespace=~\"payu.*\"}) by (namespace)",
+                "legendFormat": "Storage Cost - {{namespace}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 26}
+          },
+          {
+            "id": 7,
+            "title": "Monthly Budget Alert Threshold",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(opencost_combined_cost{namespace=~\"payu.*\"}) > 500",
+                "legendFormat": "Budget Overrun"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 400},
+                    {"color": "red", "value": 500}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 8, "x": 0, "y": 34}
+          }
+        ]
+      }
+    }

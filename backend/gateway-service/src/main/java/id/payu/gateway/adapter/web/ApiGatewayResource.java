@@ -131,6 +131,54 @@ public class ApiGatewayResource {
         return proxy("transaction-service", "/api/v1/transactions", "POST", body, headers);
     }
 
+    // ==================== Disbursement Service (via Transaction Service) ====================
+    @GET @Path("/disbursements/{path: .*}")
+    public Uni<Response> disbursementGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/disbursements/" + path, "GET", body, headers);
+    }
+    @POST @Path("/disbursements/{path: .*}")
+    public Uni<Response> disbursementPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/disbursements/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/disbursements/{path: .*}")
+    public Uni<Response> disbursementPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/disbursements/" + path, "PUT", body, headers);
+    }
+    @GET @Path("/disbursements")
+    public Uni<Response> disbursementRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/disbursements", "GET", body, headers);
+    }
+    @POST @Path("/disbursements")
+    public Uni<Response> disbursementRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/disbursements", "POST", body, headers);
+    }
+
+    // ==================== Virtual Account Service (via Transaction Service) ====================
+    @GET @Path("/payments/va/{path: .*}")
+    public Uni<Response> virtualAccountGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va/" + path, "GET", body, headers);
+    }
+    @POST @Path("/payments/va/{path: .*}")
+    public Uni<Response> virtualAccountPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/payments/va/{path: .*}")
+    public Uni<Response> virtualAccountPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/payments/va/{path: .*}")
+    public Uni<Response> virtualAccountDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va/" + path, "DELETE", body, headers);
+    }
+    @GET @Path("/payments/va")
+    public Uni<Response> virtualAccountRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va", "GET", body, headers);
+    }
+    @POST @Path("/payments/va")
+    public Uni<Response> virtualAccountRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/payments/va", "POST", body, headers);
+    }
+
     // ==================== Billing Service ====================
     @GET @Path("/billers/{path: .*}")
     public Uni<Response> billerGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {

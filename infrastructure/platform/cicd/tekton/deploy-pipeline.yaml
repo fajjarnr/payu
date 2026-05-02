@@ -159,10 +159,25 @@ spec:
         - name: NAMESPACE
           value: openshift-gitops
 
+    # ── Step 3b: Contract Test Gate (All envs) ──
+    - name: contract-test-gate
+      runAfter:
+        - argocd-sync-wait
+      taskRef:
+        name: pact-verify
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: SERVICE_NAME
+          value: $(params.service-name)
+        - name: FAIL_ON_NO_PACTS
+          value: "false"
+
     # ── Step 4A: Security Gate (DEV) - DAST ──
     - name: dev-zap-baseline
       runAfter:
-        - argocd-sync-wait
+        - contract-test-gate
       when:
         - input: "$(params.environment)"
           operator: in
@@ -303,6 +318,7 @@ spec:
     # ── Step 6: Notify Success ──
     - name: notify-success
       runAfter:
+        - contract-test-gate
         - dev-zap-baseline
         - k6-smoke-test-gate
         - sit-litmus-gate

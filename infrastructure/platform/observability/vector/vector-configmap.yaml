@@ -1,0 +1,111 @@
+# Vector Configuration: Kubernetes Audit Logs -> Rekor Signed Log
+# Sources: API server audit logs, pod logs, kubectl exec events
+# Transforms: Filter PCI-DSS relevant events, sign hashes
+# Sinks: Loki (short-term), Rekor (signed transparency log), S3 (cold storage)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-audit-config
+  namespace: payu-observability
+data:
+  vector.yaml: |
+    # ============================================================
+    # Sources
+    # ============================================================
+    sources:
+      k8s_audit_logs:
+        type: file
+        include:
+          - /var/log/audit/audit.log
+          - /var/log/kube-apiserver/audit.log
+        read_from: end
+
+      pod_logs:
+        type: kubernetes_logs
+        pod_annotation_fields:
+          container_image: "container_image"
+          container_name: "container_name"
+          pod_labels: "pod_labels"
+
+      host_syslog:
+        type: file
+        include:
+          - /var/log/messages
+          - /var/log/syslog
+        read_from: end
+
+    # ============================================================
+    # Transforms: PCI-DSS Relevant Event Filtering
+    # ============================================================
+    transforms:
+      pci_dss_filter:
+        type: filter
+        inputs: [k8s_audit_logs]
+        condition: |
+          .verb != "get" && .verb != "list" && .verb != "watch"
+
+      enrich_audit_log:
+        type: remap
+        inputs: [pci_dss_filter]
+        source: |
+          # Add PCI-DSS relevant metadata
+          .pci_dss_requirement = "Req 10"
+          .event_type = "audit"
+          .platform = "payu-openshift"
+          .environment = "dev"
+          # Hash the event for Rekor signing
+          .event_hash = sha256(encode_json(.))
+
+      rekor_ready:
+        type: remap
+        inputs: [enrich_audit_log]
+        source: |
+          # Prepare payload for Rekor
+          .rekor.entry = {
+            "data": .event_hash,
+            "kind": "hashedrekord",
+            "apiVersion": "0.0.1"
+          }
+
+    # ============================================================
+    # Sinks
+    # ============================================================
+    sinks:
+      # Short-term: LokiStack (OCP native logging)
+      loki_audit:
+        type: loki
+        inputs: [enrich_audit_log]
+        endpoint: http://loki-gateway.openshift-logging.svc:8080
+        encoding:
+          codec: json
+        labels:
+          platform: payu
+          compliance: pci-dss
+          requirement: req10
+
+      # Long-term signed: Rekor transparency log
+      rekor_sign:
+        type: http
+        inputs: [rekor_ready]
+        uri: http://rekor-server.payu-observability.svc:3000/api/v1/log/entries
+        method: POST
+        encoding:
+          codec: json
+        request:
+          headers:
+            Content-Type: application/json
+        # Note: Rekor integration requires actual Rekor instance.
+        # For lab/dev, this sink can be disabled or mocked.
+        # Set REKOR_ENABLED=true to enable.
+
+      # Cold storage: S3 compatible (MinIO/S3 bucket)
+      s3_archive:
+        type: aws_s3
+        inputs: [enrich_audit_log]
+        bucket: payu-audit-logs
+        region: ap-southeast-1
+        endpoint: http://minio.payu-observability.svc:9000
+        key_prefix: "audit/%Y/%m/%d/"
+        encoding:
+          codec: json
+        # Note: S3 credentials via env vars or IRSA

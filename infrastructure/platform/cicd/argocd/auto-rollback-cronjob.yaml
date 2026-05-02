@@ -1,0 +1,73 @@
+# ArgoCD Auto-Rollback Trigger
+# Monitors ArgoCD Applications and triggers rollback to previous revision
+# when health is Degraded or sync fails, within 5-minute window.
+# Requires ArgoCD CLI token (mounted from secret).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: argocd-auto-rollback-monitor
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: argocd-auto-rollback-monitor
+    app.kubernetes.io/part-of: payu
+spec:
+  schedule: "*/2 * * * *"  # Every 2 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: openshift-gitops-argocd-application-controller
+          restartPolicy: OnFailure
+          containers:
+            - name: monitor
+              image: registry.redhat.io/openshift4/ose-cli:v4.16
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  MAX_AGE_MINUTES=5
+                  
+                  echo "=== ArgoCD Auto-Rollback Monitor ==="
+                  
+                  # Get all PayU applications that are not Healthy
+                  oc get applications -n openshift-gitops -l app.kubernetes.io/part-of=payu -o json | \
+                    jq -r '.items[] | select(.status.health.status != "Healthy") | "\(.metadata.name) \(.status.health.status) \(.status.operationState?.startedAt // .metadata.creationTimestamp) \(.status.sync.revision // "")"' | \
+                    while read app_name health_status started_at current_revision; do
+                      if [ -z "$started_at" ]; then
+                        echo "$app_name: no sync timestamp, skipping"
+                        continue
+                      fi
+                      
+                      started_epoch=$(date -d "$started_at" +%s 2>/dev/null || echo 0)
+                      now_epoch=$(date +%s)
+                      age_minutes=$(( (now_epoch - started_epoch) / 60 ))
+                      
+                      echo "$app_name | Health: $health_status | Age: ${age_minutes}m | Rev: $current_revision"
+                      
+                      # Check if within rollback window (<= 5 min) and health is Degraded/Missing
+                      if [ "$age_minutes" -le "$MAX_AGE_MINUTES" ] && [ "$health_status" != "Progressing" ]; then
+                        echo "  -> TRIGGER ROLLBACK: health=$health_status within ${MAX_AGE_MINUTES}m window"
+                        
+                        # Get previous revision from history
+                        prev_revision=$(oc get application "$app_name" -n openshift-gitops -o json | jq -r '.status.history[-2].revision // empty')
+                        if [ -n "$prev_revision" ] && [ "$prev_revision" != "null" ]; then
+                          echo "  -> Rolling back $app_name to revision $prev_revision"
+                          # Note: ArgoCD rollback = sync to previous revision
+                          oc patch application "$app_name" -n openshift-gitops --type=merge -p \
+                            "{\"spec\":{\"source\":{\"targetRevision\":\"$prev_revision\"}}}"
+                          # Trigger sync
+                          oc annotate application "$app_name" -n openshift-gitops --overwrite \
+                            argocd.argoproj.io/refresh=hard
+                        else
+                          echo "  -> No previous revision found for $app_name"
+                        fi
+                      else
+                        echo "  -> OK (age=${age_minutes}m, outside rollback window or Progressing)"
+                      fi
+                    done
+                  
+                  echo "Monitor cycle complete."
