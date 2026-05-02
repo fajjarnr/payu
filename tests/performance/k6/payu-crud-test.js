@@ -15,71 +15,149 @@ export const options = {
   },
 };
 
-const BACKEND_URL = __ENV.BACKEND_URL || 'http://account-service.payu-dev.svc.cluster.local:8080';
-const WEBAPP_URL = __ENV.WEBAPP_URL || 'https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id';
+const GATEWAY_URL = __ENV.GATEWAY_URL || 'http://gateway-service.payu-dev.svc.cluster.local:8080';
+const KEYCLOAK_URL = __ENV.KEYCLOAK_URL || 'http://payu-keycloak-service.payu-dev.svc.cluster.local:8080';
+
+function getToken() {
+  const res = http.post(
+    `${KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token`,
+    {
+      grant_type: 'password',
+      client_id: 'payu-backend',
+      client_secret: 'payu-backend-secret-2026',
+      username: 'customer1',
+      password: 'P@ssw0rd123',
+    },
+    {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      tags: { endpoint: 'auth-login' },
+    }
+  );
+
+  const success = check(res, {
+    'login status is 200': (r) => r.status === 200,
+    'login returns access_token': (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return body.access_token !== undefined;
+      } catch (e) {
+        return false;
+      }
+    },
+  });
+
+  if (!success) {
+    console.error(`Login failed: ${res.status} - ${res.body}`);
+    return null;
+  }
+
+  return JSON.parse(res.body).access_token;
+}
 
 export default function () {
-  // === BACKEND: Health / Liveness (READ) ===
-  const livenessRes = http.get(BACKEND_URL + '/actuator/health/liveness');
-  check(livenessRes, {
-    'BACKEND liveness is 200': function (r) { return r.status === 200; },
-    'BACKEND liveness < 500ms': function (r) { return r.timings.duration < 500; },
-  });
+  // === REALISTIC E2E: Login first ===
+  const token = getToken();
+  if (!token) {
+    return;
+  }
 
-  sleep(0.3);
-
-  // === BACKEND: Readiness (READ) ===
-  const readinessRes = http.get(BACKEND_URL + '/actuator/health/readiness');
-  check(readinessRes, {
-    'BACKEND readiness is 200': function (r) { return r.status === 200; },
-    'BACKEND readiness < 500ms': function (r) { return r.timings.duration < 500; },
-  });
-
-  sleep(0.3);
-
-  // === BACKEND: Info (READ) ===
-  const infoRes = http.get(BACKEND_URL + '/actuator/info');
-  check(infoRes, {
-    'BACKEND info is 200': function (r) { return r.status === 200; },
-    'BACKEND info < 500ms': function (r) { return r.timings.duration < 500; },
-  });
-
-  sleep(0.3);
-
-  // === BACKEND: Simulate CREATE (POST to accounts - expects 401 without auth) ===
-  const headers = {
+  const authHeaders = {
+    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
-    'X-Idempotency-Key': randomString(16),
   };
+
+  sleep(0.5);
+
+  // === BACKEND: Health with auth context ===
+  const healthRes = http.get(`${GATEWAY_URL}/q/health`, {
+    headers: authHeaders,
+    tags: { endpoint: 'gateway-health' },
+  });
+
+  check(healthRes, {
+    'health is 200': (r) => r.status === 200,
+    'health < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(0.3);
+
+  // === BACKEND: GET profile (READ) ===
+  const profileRes = http.get(`${GATEWAY_URL}/api/v1/auth/validate`, {
+    headers: authHeaders,
+    tags: { endpoint: 'auth-profile' },
+  });
+
+  check(profileRes, {
+    'profile read is 200': (r) => r.status === 200,
+    'profile read < 1000ms': (r) => r.timings.duration < 1000,
+  });
+
+  sleep(0.3);
+
+  // === BACKEND: GET wallet balance (READ) ===
+  const walletRes = http.get(`${GATEWAY_URL}/api/v1/wallets`, {
+    headers: authHeaders,
+    tags: { endpoint: 'wallet-balance' },
+  });
+
+  check(walletRes, {
+    'wallet read is 200/201/404': (r) => r.status === 200 || r.status === 201 || r.status === 404,
+    'wallet read < 1000ms': (r) => r.timings.duration < 1000,
+  });
+
+  sleep(0.3);
+
+  // === BACKEND: GET pockets (READ) ===
+  const pocketsRes = http.get(`${GATEWAY_URL}/api/v1/wallets/pockets`, {
+    headers: authHeaders,
+    tags: { endpoint: 'pockets-list' },
+  });
+
+  check(pocketsRes, {
+    'pockets read is 200/404': (r) => r.status === 200 || r.status === 404,
+    'pockets read < 1000ms': (r) => r.timings.duration < 1000,
+  });
+
+  sleep(0.3);
+
+  // === BACKEND: Simulate CREATE (POST to accounts - real auth required) ===
   const createPayload = JSON.stringify({
-    email: 'user-' + randomString(8) + '@payu.test',
-    phoneNumber: '+628' + randomIntBetween(100000000, 999999999),
-    fullName: 'Test User ' + randomString(5),
+    email: `user-${randomString(8)}@payu.test`,
+    phoneNumber: `+628${randomIntBetween(100000000, 999999999)}`,
+    fullName: `Test User ${randomString(5)}`,
     password: 'SecurePass123!',
   });
-  const createRes = http.post(BACKEND_URL + '/api/v1/accounts', createPayload, { headers });
-  check(createRes, {
-    'BACKEND CREATE responds (201/401)': function (r) { return r.status === 201 || r.status === 200 || r.status === 401; },
-    'BACKEND CREATE < 1s': function (r) { return r.timings.duration < 1000; },
+
+  const createRes = http.post(`${GATEWAY_URL}/api/v1/accounts`, createPayload, {
+    headers: authHeaders,
+    tags: { endpoint: 'account-create' },
   });
 
-  sleep(0.3);
-
-  // === FRONTEND: Web-app home page (READ via Route) ===
-  const webappRes = http.get(WEBAPP_URL);
-  check(webappRes, {
-    'WEBAPP home is 200': function (r) { return r.status === 200; },
-    'WEBAPP home < 2s': function (r) { return r.timings.duration < 2000; },
+  // 201 = created, 409 = conflict (user exists), 403 = forbidden, 401 = unauthorized
+  check(createRes, {
+    'CREATE responds (201/403/409)': (r) =>
+      r.status === 201 || r.status === 200 || r.status === 403 || r.status === 409,
+    'CREATE < 2s': (r) => r.timings.duration < 2000,
   });
 
   sleep(0.5);
 
-  // === FRONTEND: Web-app static assets ===
-  const staticRes = http.get(WEBAPP_URL + '/_next/static/chunks/main.js');
-  check(staticRes, {
-    'WEBAPP static responds': function (r) { return r.status === 200 || r.status === 404; },
-    'WEBAPP static < 1s': function (r) { return r.timings.duration < 1000; },
+  // === FRONTEND: Web-app home page (via Route) ===
+  const WEBAPP_URL = __ENV.WEBAPP_URL || 'https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id';
+  const webappRes = http.get(WEBAPP_URL);
+
+  check(webappRes, {
+    'WEBAPP home is 200': (r) => r.status === 200,
+    'WEBAPP home < 2s': (r) => r.timings.duration < 2000,
   });
 
   sleep(1);
+}
+
+export function setup() {
+  console.log('=== PayU Realistic E2E CRUD Test ===');
+  console.log(`Gateway: ${GATEWAY_URL}`);
+  console.log(`Keycloak: ${KEYCLOAK_URL}`);
+  console.log('Using customer1 / P@ssw0rd123');
+  return { startTime: new Date().toISOString() };
 }

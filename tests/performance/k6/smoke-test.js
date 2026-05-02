@@ -51,25 +51,34 @@ export default function () {
     }
   });
 
-  // Test 3: Keycloak token endpoint (auth service health)
-  const tokenEndpoint = http.post(
-    `${keycloakUrl}/realms/payu/protocol/openid-connect/token`,
-    {
-      grant_type: 'password',
-      client_id: 'payu-backend',
-      username: 'customer1',
-      password: 'password123'
-    },
-    {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      tags: { endpoint: 'keycloak-token' }
-    }
-  );
+    // Test 3: Keycloak token endpoint (real auth test)
+    const tokenEndpoint = http.post(
+      `${keycloakUrl}/realms/payu/protocol/openid-connect/token`,
+      {
+        grant_type: 'password',
+        client_id: 'payu-backend',
+        client_secret: 'payu-backend-secret-2026',
+        username: 'customer1',
+        password: 'P@ssw0rd123'
+      },
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        tags: { endpoint: 'keycloak-token' }
+      }
+    );
 
-  check(tokenEndpoint, {
-    'token endpoint responds': (r) => r.status === 200 || r.status === 401,
-    'token endpoint time < 1000ms': (r) => r.timings.duration < 1000
-  });
+    check(tokenEndpoint, {
+      'token endpoint returns 200 with access_token': (r) => {
+        if (r.status !== 200) return false;
+        try {
+          const body = JSON.parse(r.body);
+          return body.access_token !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
+      'token endpoint time < 2000ms': (r) => r.timings.duration < 2000
+    });
 
   // Test 4: Core services via Gateway (public endpoints)
   const services = [

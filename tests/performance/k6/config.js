@@ -71,9 +71,10 @@ export const SESSION_SETTINGS = {
 };
 
 // Test users for authentication tests
+// NOTE: These must match users seeded by scripts/keycloak-seeder.sh
 export const TEST_USERS = [
-  { username: 'customer1', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
-  { username: 'customer2', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
-  { username: 'customer3', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
-  { username: 'customer4', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' }
+  { username: 'customer1', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
+  { username: 'customer2', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
+  { username: 'customer3', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
+  { username: 'customer4', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' }
 ];

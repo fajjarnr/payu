@@ -45,12 +45,30 @@ export default function () {
       }
     );
 
-    const authSuccess = tokenResponse.status === 200;
+    let authSuccess = false;
+    let token = null;
+    if (tokenResponse.status === 200) {
+      try {
+        const body = JSON.parse(tokenResponse.body);
+        token = body.access_token;
+        authSuccess = token !== undefined;
+      } catch (e) {
+        authSuccess = false;
+      }
+    }
     authSuccessRate.add(authSuccess);
     apiResponseTime.add(tokenResponse.timings.duration);
 
     check(tokenResponse, {
-      'login responds': (r) => r.status === 200 || r.status === 401,
+      'login returns 200 with access_token': (r) => {
+        if (r.status !== 200) return false;
+        try {
+          const body = JSON.parse(r.body);
+          return body.access_token !== undefined;
+        } catch (e) {
+          return false;
+        }
+      },
       'login time < 2000ms': (r) => r.timings.duration < 2000
     });
 

@@ -48,7 +48,7 @@ export function generateUserData(prefix = 'k6user') {
     externalId: `ext-${digits}`,
     username: username,
     email: `${username}@test.com`,
-    password: __ENV.K6_TEST_PASSWORD || 'TestPassword123!',
+    password: __ENV.K6_TEST_PASSWORD || 'P@ssw0rd123',
     fullName: `K6 User ${digits}`,
     phoneNumber: `081${digits.slice(-9).padStart(9, '0')}`,
     nik: `3${digits.slice(-15).padStart(15, '7')}`
