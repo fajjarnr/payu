@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Infrastructure / Redis Connectivity Bugs Discovered (2026-05-02)
+
+- **BUG-INFRA-088 — Redis Auth Failure**: All Spring Boot services configured to use `payu-datagrid.payu-dev.svc:11222` without password. DataGrid Infinispan RESP3 requires `AUTH developer payu-cache-dev` handshake that Spring Boot Lettuce cannot complete, causing health check 503 and gateway circuit breaker OPEN.
+  - **Root cause**: `redis-config` ConfigMap pointed to wrong host/port; `redis-credentials` Secret had empty `REDIS_PASSWORD` and wrong `url`.
+  - **Fix applied**: Patched `infrastructure/workloads/overlays/dev/config/configmaps.yaml`, `overlays/dev/secrets/dev-secrets.yaml`, `overlays/dev/kustomization.yaml`, and all 22 `infrastructure/workloads/base/*.yaml` service deployments to use `payu-cache.payu-dev.svc:6379` with `REDIS_PASSWORD=payu-cache-dev-password`.
+  - **Services affected**: account-service, wallet-service, auth-service, transaction-service, lending-service, investment-service, statement-service, backoffice-service, partner-service, promotion-service, support-service, compliance-service, cms-service, product-catalog-service, dispute-service, integration-service, fx-service, billing-service, notification-service, gateway-service.
+  - **Remaining work**: Rebuild all 20+ service images from updated source so new `application-container.yml` is bundled inside JARs. Live pods still run old images.
+- **BUG-INFRA-089 — Auth-service Redis localhost fallback**: `auth-service` logs still show `Connection refused: localhost/127.0.0.1:6379` despite env vars `REDIS_HOST=payu-cache.payu-dev.svc` and `REDIS_PORT=6379` being correctly set. Suspected stale JAR build or property name mismatch.
+- **BUG-INFRA-090 — Empty DB_PASSWORD / ENCRYPTION_KEY**: Base deployment YAMLs define `DB_PASSWORD` and `ENCRYPTION_KEY` with `valueFrom.secretKeyRef`, but overlay patches sometimes override with empty strings. Account-service and wallet-service currently show empty values.
+
+### Added — k6 Test Configuration Externalization (2026-05-02)
+
+- **ConfigMap + Secret for k6**: Created `k6-test-config` ConfigMap (URLs, client_id, realm, username) and `k6-test-credentials` Secret (password, client_secret) in `payu-dev`.
+- **Externalized script**: `tests/performance/k6/payu-crud-test.js` now reads all configuration from environment variables with validation that fails fast if required vars are missing.
+- **Setup-phase login**: Token acquired once in `setup()` and reused across VUs to avoid `auth-service` rate limiter (`max-login-attempts: 5`).
+
 ### Added — Tekton Build Pipeline Stabilization & Semantic Versioning (2026-05-02)
 
 - **Semantic Versioning**: Created `semantic-version` Tekton Task that reads git tags / registry image tags and auto-increments major/minor/patch. Pipeline `payu-build-pipeline` now uses `$(tasks.generate-semver.results.version)` instead of hardcoded `v1.7.8`. Trigger template passes `version-bump-type` param.

@@ -45,9 +45,9 @@ spec:
             - name: SECRET_KEY
               value: "CF2owM6bqkyWHSHCGlxMvx/PwBFQ2XCq4C3kdA7tiqQ="
             - name: REDIS_HOST
-              value: "payu-datagrid.payu-dev.svc"
+              value: "payu-cache.payu-dev.svc"
             - name: REDIS_PORT
-              value: "11222"
+              value: "6379"
           resources:
             requests:
               memory: "512Mi"

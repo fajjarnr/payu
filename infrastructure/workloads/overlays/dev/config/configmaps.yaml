@@ -16,8 +16,8 @@ metadata:
   name: redis-config
   namespace: payu-dev
 data:
-  REDIS_HOST: "payu-datagrid.payu-dev.svc"
-  REDIS_PORT: "11222"
+  REDIS_HOST: "payu-cache.payu-dev.svc"
+  REDIS_PORT: "6379"
   REDIS_MAX_RETRIES: "3"
 ---
 apiVersion: v1

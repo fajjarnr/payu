@@ -47,9 +47,9 @@ spec:
             - name: SERVICES_WALLET_URL
               value: "http://wallet-service:8080"
             - name: PAYU_CACHE_REDIS_HOST
-              value: "payu-datagrid.payu-dev.svc"
+              value: "payu-cache.payu-dev.svc"
             - name: PAYU_CACHE_REDIS_PORT
-              value: "11222"
+              value: "6379"
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_lending"
             - name: SPRING_DATASOURCE_USERNAME
@@ -65,9 +65,9 @@ spec:
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "payu-datagrid.payu-dev.svc"
+              value: "payu-cache.payu-dev.svc"
             - name: REDIS_PORT
-              value: "11222"
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"

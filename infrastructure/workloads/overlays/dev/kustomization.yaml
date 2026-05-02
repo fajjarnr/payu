@@ -104,7 +104,7 @@ images:
 # Strategic merge patches: override env vars for operator-deployed infra
 # DB: payu-postgres-primary.payu-dev.svc:5432
 # Kafka: kafka-kafka-bootstrap.payu-dev.svc:9092
-# Redis/DataGrid: payu-datagrid.payu-dev.svc:11222
+# Redis/DataGrid: payu-cache.payu-dev.svc:11222
 # ============================================================
 patches:
   # --- Scale all to 1 replica ---
@@ -203,9 +203,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -228,9 +233,14 @@ patches:
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: KEYCLOAK_ADMIN_PASSWORD
                     valueFrom:
                       secretKeyRef:
@@ -277,9 +287,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -318,9 +333,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
                 resources:
@@ -385,9 +405,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -426,9 +451,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -451,9 +481,14 @@ patches:
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
 
   - target:
       kind: Deployment
@@ -490,9 +525,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -536,9 +576,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -577,9 +622,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -618,9 +668,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -669,9 +724,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
 
   - target:
       kind: Deployment
@@ -716,9 +776,14 @@ patches:
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
 
   - target:
       kind: Deployment
@@ -755,9 +820,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                 startupProbe:
                   httpGet:
                     path: /actuator/health/liveness
@@ -815,9 +885,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
                 resources:
@@ -882,9 +957,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING
                     value: "true"
 
@@ -917,9 +997,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
 
 
   - target:
@@ -967,9 +1052,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: SPRING_WEB_CLIENT_BILLER_SERVICE_BASE_URL
                     value: "http://biller-simulator.payu-dev.svc:8080"
 
@@ -1018,9 +1108,14 @@ patches:
                   - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
 
   # ============================================================
   # Quarkus services
@@ -1054,9 +1149,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                 volumeMounts:
                   - name: tmp
                     mountPath: /tmp
@@ -1114,9 +1214,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                 volumeMounts:
                   - name: tmp
                     mountPath: /tmp
@@ -1184,11 +1289,16 @@ patches:
                   - name: QUARKUS_DATASOURCE_JDBC_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_gateway_service"
                   - name: QUARKUS_REDIS_HOSTS
-                    value: "redis://:payu-cache-dev@payu-datagrid.payu-dev.svc:11222"
+                    value: "redis://:payu-cache-dev-password@payu-cache.payu-dev.svc:6379"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                   - name: JWT_SECRET
                     valueFrom:
                       secretKeyRef:
@@ -1263,9 +1373,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                 livenessProbe:
                   httpGet:
                     path: /health
@@ -1324,9 +1439,14 @@ patches:
                   - name: KAFKA_BOOTSTRAP_SERVERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
+                    value: "payu-cache.payu-dev.svc"
                   - name: REDIS_PORT
-                    value: "11222"
+                    value: "6379"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
                 livenessProbe:
                   httpGet:
                     path: /health

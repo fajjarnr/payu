@@ -47,9 +47,9 @@ spec:
             - name: QUARKUS_DATASOURCE_JDBC_URL
               value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_gateway_service"
             - name: REDIS_HOST
-              value: "payu-datagrid.payu-dev.svc"
+              value: "payu-cache.payu-dev.svc"
             - name: REDIS_PORT
-              value: "11222"
+              value: "6379"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

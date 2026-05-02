@@ -53,9 +53,9 @@ spec:
                   name: db-credentials
                   key: password
             - name: REDIS_HOST
-              value: "payu-datagrid.payu-dev.svc"
+              value: "payu-cache.payu-dev.svc"
             - name: REDIS_PORT
-              value: "11222"
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"

@@ -22,6 +22,6 @@ data:
   KEYCLOAK_URL: "http://keycloak-discovery:8080/auth"
   POSTGRES_HOST: "payu-postgres-primary.payu-dev.svc.cluster.local"
   POSTGRES_PORT: "5432"
-  REDIS_HOST: "payu-datagrid"
-  REDIS_PORT: "11222"
+  REDIS_HOST: "payu-cache"
+  REDIS_PORT: "6379"
   KAFKA_URL: "kafka-kafka-bootstrap:9092"

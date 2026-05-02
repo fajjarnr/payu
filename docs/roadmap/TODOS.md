@@ -11,7 +11,7 @@
 
 ## 📊 Board Summary
 
-| **Open Bugs** | 6 | 🟠 Frontend/Auth audit reopened 6 actionable bugs (April 15, 2026) |
+| **Open Bugs** | 9 | 🟠 Frontend/Auth: 6 bugs + Infrastructure/Redis: 3 new bugs (May 2, 2026) |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
@@ -27,10 +27,10 @@
 | Auth / Session             |   1   | P1             |
 | Shared Libraries           |   0   | —              |
 | Test Coverage / Quality    |   0   | —              |
-| Infrastructure / OpenShift |   0   | —              |
+| Infrastructure / OpenShift |   3   | P0–P1          |
 | Architecture               |   0   | —              |
 | Security (PII/IDOR)        |   0   | —              |
-| **TOTAL**                  | **6** |                |
+| **TOTAL**                  | **9** |                |
 
 > 🚨 Audit update (April 15, 2026): 6 new frontend/auth regressions and product-flow bugs were identified below. Historical “all bugs resolved” notes remain valid for the April 7 milestone only, not for the current state.
 > All 702 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
@@ -55,6 +55,31 @@
 | BUG-FE-108    |    P2    | Frontend Logic            | “Lupa password?” is a dead `#` link, so there is no recoverable password-reset path from the login screen.                                                              | 📋 To Do |
 | BUG-FE-109    |    P2    | Frontend Logic            | Mobile onboarding step 1 has no visible in-app back/exit control because the only back link lives inside a desktop-only aside.                                          | 📋 To Do |
 | BUG-FE-110    |    P2    | Frontend Logic            | Onboarding password visibility toggles are removed from keyboard tab order, making them inaccessible for keyboard-only users.                                           | 📋 To Do |
+| BUG-INFRA-088 |    P0    | Infrastructure / OpenShift | Redis connectivity failure — all Spring Boot services connect to `payu-datagrid:11222` without password / incompatible auth, causing health check 503 and circuit breaker OPEN. | 📋 To Do |
+| BUG-INFRA-089 |    P1    | Infrastructure / OpenShift | `auth-service` Redis still connects to `localhost:6379` despite env vars patched to `payu-cache:6379` — property override or stale JAR build suspected.                  | 📋 To Do |
+| BUG-INFRA-090 |    P1    | Infrastructure / OpenShift | `DB_PASSWORD` and `ENCRYPTION_KEY` env vars are empty in many service deployments (inherited from base YAMLs with no secretRef).                                        | 📋 To Do |
+
+### BUG-INFRA-088 — Redis connectivity failure across all Spring Boot services
+
+- **Symptom**: `account-service`, `wallet-service`, `auth-service`, and others return HTTP 503 on `/actuator/health` because Redis health check fails. Gateway returns `CIRCUIT_OPEN` when proxying to these services.
+- **Root cause**: All service deployments use `REDIS_HOST=payu-datagrid.payu-dev.svc` and `REDIS_PORT=11222`. DataGrid Infinispan on port 11222 requires RESP3 + AUTH handshake (`developer` / `payu-cache-dev`) that Spring Boot Lettuce cannot complete. The `redis-credentials` Secret had `REDIS_PASSWORD=""` and pointed to the wrong URL.
+- **Evidence**: `account-service` logs show `NOAUTH HELLO must be called...`; `auth-service` logs show `Connection refused: localhost/127.0.0.1:6379`; `infrastructure/workloads/base/*.yaml` and `overlays/dev/kustomization.yaml` all reference `payu-datagrid:11222`.
+- **Fix in progress**: Patched base + overlay YAMLs to use `payu-cache.payu-dev.svc:6379` and `REDIS_PASSWORD=payu-cache-dev-password`. Patched live `redis-config` ConfigMap and `redis-credentials` Secret. All 22+ service deployments need rebuild + redeploy for the change to take effect inside containers.
+- **Affected services**: `account-service`, `wallet-service`, `auth-service`, `transaction-service`, `lending-service`, `investment-service`, `statement-service`, `backoffice-service`, `partner-service`, `promotion-service`, `support-service`, `compliance-service`, `cms-service`, `product-catalog-service`, `dispute-service`, `integration-service`, `fx-service`, `billing-service`, `notification-service`, `gateway-service`.
+
+### BUG-INFRA-089 — Auth-service Redis connects to localhost despite env var patch
+
+- **Symptom**: `auth-service` readiness probe returns 503. Logs show `Connection refused: localhost/127.0.0.1:6379` even though `oc set env` confirms `REDIS_HOST=payu-cache.payu-dev.svc` and `REDIS_PORT=6379`.
+- **Suspected cause**: Either (a) `application-container.yml` inside the running JAR still has `host: ${REDIS_HOST:localhost}` and the env var is not being picked up by the Spring Boot process, or (b) a hardcoded property elsewhere overrides the env var. The running image may also be stale (built before container env var support was added).
+- **Evidence**: `oc exec` into auth-service pod shows correct env vars, but logs consistently reference `localhost:6379`. `application-container.yml` in source shows correct `${REDIS_HOST:redis}` default, but running behavior differs.
+- **Next step**: Verify the effective `application-container.yml` bundled inside the running JAR, or rebuild `auth-service` image from latest source with confirmed env var support.
+
+### BUG-INFRA-090 — Empty DB_PASSWORD and ENCRYPTION_KEY in service deployments
+
+- **Symptom**: Multiple services may fail to connect to PostgreSQL or decrypt sensitive fields because `DB_PASSWORD` and `ENCRYPTION_KEY` env vars evaluate to empty strings.
+- **Root cause**: Base deployment YAMLs (`infrastructure/workloads/base/*.yaml`) define `DB_PASSWORD` and `ENCRYPTION_KEY` with `valueFrom.secretKeyRef`, but the overlay kustomization patches sometimes override these with plain `value: ""` or omit them entirely.
+- **Evidence**: `oc set env -n payu-dev deployment/account-service --list` shows `DB_PASSWORD=` and `ENCRYPTION_KEY=` with empty values. The same pattern exists in `wallet-service` and others.
+- **Fix needed**: Audit all base service YAMLs and overlay patches to ensure `DB_PASSWORD` and `ENCRYPTION_KEY` always reference the correct secrets (`db-credentials`, `encryption-keys`).
 
 ### BUG-CROSS-074 — Login page stores `user.id` as `accountId` (regression of prior account-claim fix)
 
@@ -146,6 +171,11 @@
 | OPS-2026-04-09-05 | Task | Run full comprehensive CRUD validation across all 3 services after NetworkPolicy + gateway route fixes. 24/28 endpoints passing; 4 blocked (Transfer, Account Transactions, Disbursement, VA).                                               | See CRUD Validation Results table in session notes. Wallet (14/14 ✅), Account (4/4 ✅), Transaction (0/4 ❌ blocked).                                                                                                                             | 📋 To Do |
 | OPS-2026-04-09-06 | Task | Transaction-service Redis/DataGrid connection issue — `ScheduledTransferScheduler` cannot connect to DataGrid RESP on port 11222. Affects Split Bill list (HTTP 500) and scheduled transfers.                                                | Lower priority — does not block core CRUD. May need DataGrid RESP config or NetworkPolicy fix for port 11222.                                                                                                                                      | 📋 To Do |
 | OPS-2026-04-09-07 | Task | Admin-only endpoints (GL, Settlement, Journal, ChartOfAccounts, Escrow, SplitPayment) require `ROLE_ADMIN` or `ROLE_BACKOFFICE`. Need to create admin Keycloak user or add realm roles for testing.                                          | Smart Routing also returns 404 — gateway doesn't route `/transfers/routes`.                                                                                                                                                                        | 📋 To Do |
+| OPS-2026-05-02-01 | Task | Rebuild and redeploy all 20+ Spring Boot/Quarkus services with updated Redis configuration (`payu-cache:6379` + password). Verify `/actuator/health` returns 200 for each.                                                              | Base YAMLs + overlay kustomization patched. Images still contain old `application-container.yml` with `payu-datagrid:11222`. Need `mvn clean package -DskipTests` + Tekton build for each service.                                                  | 📋 To Do |
+| OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | k6 script fixed (setup-phase login, ConfigMap + Secret config). Currently blocked by service health failures (Redis → circuit breaker OPEN → 503).                                                                                                   | 📋 To Do |
+| OPS-2026-05-02-03 | Task | Fix `auth-service` Redis property resolution — either rebuild JAR with confirmed env var support or add explicit `SPRING_DATA_REDIS_HOST` / `SPRING_DATA_REDIS_PORT` env var names.                                                      | Auth-service logs still show `localhost:6379` despite `REDIS_HOST`/`REDIS_PORT` env vars set correctly. May require code change or property name alignment.                                                                                         | 📋 To Do |
+| OPS-2026-05-02-04 | Task | Audit and fix empty `DB_PASSWORD`/`ENCRYPTION_KEY` across all service deployments. Ensure every service references `db-credentials` and `encryption-keys` secrets correctly.                                                              | Account-service and wallet-service currently show empty values. May cause DB connection failures or encryption pass-through mode (security risk).                                                                                                     | 📋 To Do |
+| OPS-2026-05-02-05 | Task | Document Tekton pipeline fix patterns in `docs/guides/LESSONS.md`: `onError: continue` Tekton v1.9 limitation, registry auth `unused:<token>` format, license compliance purl filtering.                                                  | All patterns discovered and fixed during this session. Need to capture for future sessions and team reference.                                                                                                                                      | 📋 To Do |
 
 ---
 
@@ -240,14 +270,14 @@
 | Completed Stories      | 109 done (86 + 23 test stories archived)                                  |
 | Completed SP           | 265/265                                                                   |
 | Bugs Fixed             | 702 done + 4 Won't Do (archived to CHANGELOG)                             |
-| Open Bugs              | 6 — Frontend/Auth audit findings reopened on April 15, 2026               |
+| Open Bugs              | 9 — 6 Frontend/Auth (April 15) + 3 Infrastructure/Redis (May 2, 2026)      |
 | Tech Debt              | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)                              |
-| Operational Follow-Ups | 12 carry-over validation tasks (April 9, 2026 — k6 Operator + CRUD fixes) |
+| Operational Follow-Ups | 17 carry-over tasks (May 2, 2026 — Tekton fixes, Redis rebuilds, k6 rerun) |
 | DevSecOps Tasks        | 52 tasks from `DEVSECOPS_ARCHITECTURE.md` v1.3.1 (Phase 1–4)               |
 
 ---
 
-_Last Updated: April 30, 2026 | 0 Active Epics · 0 Open Stories · 6 Open Bugs · 0 Tech Debt · 12 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
+_Last Updated: May 2, 2026 | 0 Active Epics · 0 Open Stories · 9 Open Bugs · 0 Tech Debt · 17 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _k6 Operator installed April 9: namespace payu-k6, ClusterAutoscaler (max 14 nodes), MachineAutoscalers (2a: 2-5, 2b: 1-4, 2c: 0-4). Use TestRun CRDs in infrastructure/openshift/infra/base/k6/ for distributed runs._
 _CRUD Testing Sessions (April 9): 24/28 endpoints validated ✅. 4 blocked by NetworkPolicy (OPS-09-02) + gateway route mismatches (OPS-09-03). Major fixes: wallet optimistic locking, JWT authority mapping (3 services), SavingsGoal ownership, gateway schema mismatches, AccountSecurityService bean, UserAccountController, BeneficiaryController ownership, tenant_id migration, AccountType enum._
