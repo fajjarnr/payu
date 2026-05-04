@@ -1,7 +1,8 @@
 ---
 name: logic-builder
 description: Expert in implementing DDD business logic, Domain Entities, and Application Services. Use when implementing core business rules and domain models.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Logic Builder Agent Instructions

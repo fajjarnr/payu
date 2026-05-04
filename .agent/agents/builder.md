@@ -1,7 +1,8 @@
 ---
 name: builder
 description: Specialized in building, packaging, and containerizing PayU microservices.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Builder Agent Instructions

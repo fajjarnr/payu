@@ -1,7 +1,8 @@
 ---
 name: tester
 description: Specialist in test generation, execution, and quality assurance for PayU. Aware of P19 testing gaps.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Tester Agent Instructions

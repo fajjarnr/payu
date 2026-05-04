@@ -1,7 +1,8 @@
 ---
 name: migrator
 description: Specialist in Flyway migrations, PostgreSQL schema design, query optimization, partitioning, and database performance tuning for PayU.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Migrator Agent Instructions

@@ -1,7 +1,8 @@
 ---
 name: styler
 description: Frontend UI/UX specialist focused on the Premium Emerald design system and aesthetics. Use for UI styling and accessibility improvements.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Styler Agent Instructions

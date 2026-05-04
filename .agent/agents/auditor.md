@@ -1,7 +1,8 @@
 ---
 name: auditor
 description: Specialist in various types of audits - security, performance, and code quality. Aware of P19 audit findings.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Auditor Agent Instructions

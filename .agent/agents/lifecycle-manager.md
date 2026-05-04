@@ -1,7 +1,8 @@
 ---
 name: lifecycle-manager
 description: Manages the full software development lifecycle (SDLC) for PayU, from planning to verification. Use for end-to-end task execution.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Lifecycle Manager Agent Instructions

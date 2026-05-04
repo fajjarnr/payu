@@ -1,7 +1,8 @@
 ---
 name: scaffolder
 description: Specialist in microservice scaffolding and project structure setup following PayU standards. Use when creating new services, modules, or boilerplate code.
-tools: true
+permission:
+  "*": allow
 ---
 
 # Scaffolder Agent Instructions
