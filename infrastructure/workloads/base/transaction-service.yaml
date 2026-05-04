@@ -22,6 +22,7 @@ spec:
       labels:
         app: transaction-service
         app.kubernetes.io/name: transaction-service
+        app.kubernetes.io/part-of: payu
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/actuator/prometheus"
