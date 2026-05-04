@@ -2,11 +2,8 @@
 
 Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestrasi **Agents** (Dedicated execution units) untuk mencapai efisiensi maksimal dalam siklus pengembangan PayU.
 
-> **Note**: Setelah konsolidasi Januari 2026, PayU memiliki **17 Skills** yang terintegrasi.
-> **🚨 POST-AUDIT STATUS (Mar 2026)**: Phase 1–12 Complete (Readiness 100%).
-> **CURRENT FOCUS**: Post-Audit Deep Remediation (56 Open Bugs per Mar 2026).
-> **Technical Inventory**: `docs/roadmap/SERVICES.md` | Actionable items: `docs/roadmap/TODOS.md`
-> Fix instructions: `docs/guides/LESSONS.md` | Remediation workflow: `.agent/workflows/p19-remediation.md`
+> **Note**: Ekosistem agen PayU didesain untuk skalabilitas microservices dengan prinsip **Decentralized Parallel Execution**.
+> **Source of Truth**: Gunakan `docs/roadmap/TODOS.md` untuk backlog tugas dan `docs/roadmap/SERVICES.md` untuk inventori teknis.
 
 ## 🏗️ Core Mapping Strategy
 
@@ -109,23 +106,5 @@ Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paral
 
 ---
 
-## 🔧 Post-Audit Remediation Orchestration (Mar 2026 Priority)
-
-Platform has completed Phase 1–12. Current priority is closing the 56 findings from the March 21 Deep Audit:
-
-| Phase | Action | Agents | Priority |
-|:------|:-------|:-------|:---|
-| **Remediation** | PII Masking in Backoffice | `@core-banking-engineer` + `@cybersecurity-architect` | P1 |
-| **Remediation** | IDOR/Access Control Fixes | `@api-architect` + `@cybersecurity-architect` | P0 |
-| **Remediation** | Account Lockout Bypass | `@core-banking-engineer` + `@lifecycle-manager` | P1 |
-| **Verification**| E2E Regression (703 tests) | `@tester` | Constant |
-
-**Status Tracking**:
-- Technical Status: `docs/roadmap/SERVICES.md`
-- Roadmap Progress: `docs/roadmap/PROGRESS.md`
-- Bug Backlog: `docs/roadmap/TODOS.md`
-
-**Full workflow**: See `.agent/workflows/p19-remediation.md`
-
 ---
-*Last Updated: March 2026 (v3.2.1 - Post-Audit Integration)*
+*Last Updated: 2026-05-04*

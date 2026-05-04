@@ -2,7 +2,7 @@
 name: data-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: []
 tags: [database, postgres, sql, performance, flyway, cqrs, event-sourcing]
@@ -502,4 +502,4 @@ SELECT add_retention_policy('transaction_events', INTERVAL '2 years');
 - [Debezium CDC](https://debezium.io/)
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*

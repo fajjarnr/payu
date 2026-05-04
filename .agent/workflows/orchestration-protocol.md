@@ -10,7 +10,7 @@ This protocol defines how AI agents should operate to ensure high quality, relia
 
 **Before ANY non-trivial task, load the platform truth:**
 
-1. Read `.agent/context/P19-AUDIT-STATUS.md` — Current platform scores, P0 blockers, service scoreboard
+1. Read `.agent/context/ROADMAP.md` — Current platform scores, P0 blockers, service scoreboard
 2. Reference `docs/roadmap/TODOS.md` for full roadmap and P0/P1/P2 priorities
 3. Reference `docs/guides/REMEDIATION_PLAYBOOK.md` for step-by-step fix instructions (R-001 through R-016)
 4. Reference `docs/guides/LESSONS.md` for implementation patterns and anti-patterns

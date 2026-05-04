@@ -2,7 +2,7 @@
 name: api-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: []
 tags: [api, rest, openapi, governance, fastapi, pydantic]
@@ -523,13 +523,5 @@ spectral lint ./docs/openapi/service-spec.yaml --ruleset .spectral.yaml --fail-s
 - [ ] **Async**: Are all I/O operations truly async (not blocking)?
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-018: Webhook Validation — Replay Attack Protection
-
-**Date**: March 16, 2026 | **Severity**: Critical | **Domain**: Security
-
-Never verify webhook signatures without checking a timestamp (e.g., `X-PayU-Timestamp`). 
-**Rule**: Reject webhooks older than 5 minutes, even if the signature is valid.

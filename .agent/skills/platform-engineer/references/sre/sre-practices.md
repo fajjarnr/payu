@@ -2,7 +2,7 @@
 name: sre
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [platform-engineer]
 tags: [reliability, observability, chaos, dr]

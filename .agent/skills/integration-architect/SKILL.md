@@ -2,7 +2,7 @@
 name: integration-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [core-banking-engineer]
 tags: [events, kafka, integration, cdc, saga, event-sourcing, debezium]
@@ -667,9 +667,9 @@ rate(kafka_consumer_fetch_manager_records_consumed_total[5m])
 
 ---
 
-## 🚨 P19 Audit Status — Integration Gaps (Feb 2026)
+## 🚨 audit Status — Integration Gaps (Feb 2026)
 
-> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **CRITICAL**: Read `.agent/context/ROADMAP.md` for full details.
 > **Event-First Architecture: ⚠️ PARTIAL** — Shared starters exist but are dead code.
 
 ### Dead Code Alert: Shared Starters NOT Integrated
@@ -741,20 +741,5 @@ See `docs/guides/LESSONS.md` § "Saga Orchestration Pattern Integration":
 5. Replace inline saga logic in transaction-service
 
 ---
-*Last Updated: February 2026 (P19 Audit)*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-012: Kafka Client `bootstrap.servers` — Use Internal K8s DNS
-
-**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Infrastructure
-
-Always use internal K8s service names (`payu-kafka-bootstrap:9092`) for inter-service communication.
-**Rule**: External IPs change; internal DNS is stable.
-
-### L-013: Exactly-Once Semantics (EOS) Performance Tax
-
-**Date**: February 26, 2026 | **Severity**: High | **Domain**: Performance
-
-EOS adds ~15-20% latency overhead. Use it ONLY for ledger-impacting topics.
-**Rule**: Standard `acks=all` is sufficient for non-financial notification events.

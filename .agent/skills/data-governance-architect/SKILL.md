@@ -2,7 +2,7 @@
 name: data-governance-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [data-architect]
 tags: [data, compliance, pii, lineage]
@@ -388,6 +388,6 @@ END $$;
 - [ ] **Compliance**: Can you generate compliance reports for OJK/BI audits?
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*
 
 ```

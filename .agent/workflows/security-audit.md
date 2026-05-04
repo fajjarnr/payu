@@ -1,5 +1,5 @@
 ---
-description: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK. Updated with P19 audit findings.
+description: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK. Updated with 
 ---
 
 # Security Audit Workflow
@@ -9,7 +9,7 @@ Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, fi
 ## 🚨 P19 Known Security Issues (Feb 2026)
 
 **BEFORE running this workflow, check if the target service has known P0/P1 issues:**
-- Read `.agent/context/P19-AUDIT-STATUS.md` for current status
+- Read `.agent/context/ROADMAP.md` for current status
 - Known P0-SEC-001: JWT in localStorage (frontend)
 - Known P0-SEC-002: Hardcoded credentials
 - Known P1-ARCH-001: 3 Quarkus services without JWT auth

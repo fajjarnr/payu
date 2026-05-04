@@ -2,7 +2,7 @@
 name: principal-architect
 version: 3.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: []
 tags: [architecture, strategy, leadership, dora, adr, tech-radar, governance, docs, c4, documentation]
@@ -176,7 +176,7 @@ What becomes easier or more difficult because of this change?
 | 004 | React Native for Mobile Apps | ✅ Accepted | 2025-02 |
 | 005 | Next.js 15 for Web Applications | ✅ Accepted | 2025-03 |
 | 006 | OpenShift 4.x as Container Platform | ✅ Accepted | 2025-03 |
-| 007 | Replace REST with gRPC for internal APIs | 🟡 Proposed | 2026-01 |
+| 007 | Replace REST with gRPC for internal APIs | 🟡 Proposed | - |
 ```
 
 ---
@@ -192,7 +192,7 @@ What becomes easier or more difficult because of this change?
 | **ASSESS** | Worth exploring with the goal of understanding |
 | **HOLD** | Proceed with caution, legacy or risky |
 
-### PayU Technology Radar (2026)
+### PayU Technology Radar
 
 #### Languages & Frameworks
 
@@ -363,7 +363,7 @@ debts:
     effort: small
     priority: P2
     status: planned
-    sprint: 2026-Q1-S2
+    sprint: Next-Q1-S2
     
   - id: TD-002
     title: Replace Lombok with Java Records
@@ -459,20 +459,6 @@ debts:
 - [Building Microservices (Sam Newman)](https://samnewman.io/books/building_microservices_2nd_edition/)
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
 
-### L-006: OSS Version Compatibility Matrix
-
-**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Architecture
-
-Maintain a compatibility matrix between Red Hat products and OSS equivalents.
-**Rule**: Verify wire compatibility when client/broker versions differ (e.g., Kafka client 3.8 ↔ broker 3.5).
-
-### L-023: Bulk Audit Approach — Verify Before Fixing
-
-**Date**: March 17, 2026 | **Severity**: Medium | **Domain**: Process / Audit
-
-Verification protocol: (1) read current code, (2) check if vulnerability exists, (3) only modify if confirmed.
-**Rule**: Never batch-apply fixes without verification; mark findings as "Already Fixed" with evidence.

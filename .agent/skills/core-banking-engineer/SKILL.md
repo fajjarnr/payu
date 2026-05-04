@@ -2,7 +2,7 @@
 name: core-banking-engineer
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [data-architect]
 tags: [backend, java, spring, hexagonal, transactions, caching]
@@ -481,9 +481,9 @@ public class RequestLoggingAspect {
 
 ---
 
-## 🚨 P19 Audit Status — Current Platform Reality (Feb 2026)
+## 🚨 audit Status — Current Platform Reality (Feb 2026)
 
-> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.  
+> **CRITICAL**: Read `.agent/context/ROADMAP.md` for full details.  
 > **Production Readiness: 48/100** — NOT ready for deployment.
 
 ### Service Compliance Matrix (What You MUST Know)
@@ -524,41 +524,5 @@ When asked to work on cms, ab-testing, statement, support, promotion, or backoff
 8. Run `mvn test` to verify ArchUnit rules pass
 
 ---
-*Last Updated: February 2026 (P19 Audit)*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-008: Hexagonal Port Naming — `InputPort` vs `OutputPort`
-
-**Date**: February 26, 2026 | **Severity**: Low | **Domain**: Architecture
-
-Always use `InputPort` suffix for use cases (driver) and `OutputPort` suffix for infrastructure interfaces (driven).
-**Rule**: Standardized naming reduces mental overhead during navigation.
-
-### L-009: Shared Starters Exception — Avoid Circular Dependencies
-
-**Date**: February 26, 2026 | **Severity**: High | **Domain**: Development
-
-`security-starter` must NOT depend on any other starter. Keep shared libraries "leaf" modules whenever possible.
-**Rule**: Zero-dependency starters are the most resilient.
-
-### L-011: .gitignore `out/` vs Hexagonal `port/out/`
-
-**Date**: March 14, 2026 | **Severity**: Critical | **Domain**: Platform / Architecture
-
-A root `.gitignore` entry `out/` matched all `port/out/` directories in the Hexagonal Architecture. 
-**Fix**: Use `/out/` (root-only) instead of `out/` (recursive).
-
-### L-024: Quality Gate Enforcement — ArchUnit
-
-**Date**: March 17, 2026 | **Severity**: Medium | **Domain**: QA / Architecture
-
-Never skip `ArchitectureTest.java`. It’s the only way to prevent "Big Ball of Mud" in a 22-service system.
-**Rule**: Every PR that adds a service MUST include ArchUnit rules.
-
-### L-025: Annotation Processor Fallback — Explicit over Magic
-
-**Date**: March 18, 2026 | **Severity**: High | **Domain**: Development
-
-If Lombok/Annotation processing fails in a specific CI runner/IDE, don't waste 4 hours debugging. 
-**Fallback**: Implement standard Getters/Setters/Constructors manually to unblock the build.

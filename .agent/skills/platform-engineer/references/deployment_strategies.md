@@ -36,4 +36,4 @@ Utilize Argo Rollouts or Istio VirtualServices for traffic splitting.
 Deploying directly using `oc apply` or `kubectl apply` from local machines. Always use the CI/CD pipeline and GitOps.
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*

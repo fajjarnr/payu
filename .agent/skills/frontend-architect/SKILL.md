@@ -2,7 +2,7 @@
 name: frontend-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [product-designer]
 tags: [frontend, react, nextjs, typescript, performance, accessibility]
@@ -962,9 +962,9 @@ const [items, setItems] = useState(() => calculateInitialItems())
 
 ---
 
-## 🚨 P19 Audit Status — Frontend Gaps (Feb 2026)
+## 🚨 audit Status — Frontend Gaps (Feb 2026)
 
-> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **CRITICAL**: Read `.agent/context/ROADMAP.md` for full details.
 > **Web-App Score: 72/100** | **Mobile Score: 58/100**
 
 ### P0 Security Blocker: JWT in localStorage
@@ -1026,64 +1026,5 @@ export async function POST(req: NextRequest) {
 - Several screens are placeholder/skeleton only
 
 ---
-*Last Updated: February 2026 (P19 Audit)*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-016: Next.js Layout vs Page — Context Scope
-
-**Date**: February 27, 2026 | **Severity**: Medium | **Domain**: Development
-
-`layout.tsx` does NOT re-render on navigation between child pages. Use `page.tsx` for state that must reset.
-**Rule**: Put shared UI (Sidebar/Nav) in Layout; put domain-specific state in Page.
-
-### L-017: Framer Motion Layout Animations — `layoutId`
-
-**Date**: February 27, 2026 | **Severity**: Low | **Domain**: UX
-
-Use `layoutId` for smooth transitions of shared elements (e.g., a selection pill moving between tabs).
-**Rule**: Improves perceived performance and premium feel.
-
-### L-020: Accessibility — `aria-live` for Error Messages
-
-**Date**: March 17, 2026 | **Severity**: High | **Domain**: A11y
-
-Form error messages must be in an `aria-live="polite"` region to be announced by screen readers.
-**Rule**: Never rely on visual color alone for error state.
-
-### L-022: Mobile Responsive — `100dvh` vs `100vh`
-
-**Date**: March 17, 2026 | **Severity**: High | **Domain**: UX
-
-Always use `100dvh` (Dynamic Viewport Height) to prevent layout jumping on mobile when browser chrome (URL bar) hides/shows.
-**Rule**: Ensures a stable, fullscreen-like app experience.
-
-## 🧠 Lessons Learned (Session Log)
-
-### L-016: Next.js Layout vs Page — Context Scope
-
-**Date**: February 27, 2026 | **Severity**: Medium | **Domain**: Development
-
-`layout.tsx` does NOT re-render on navigation between child pages. Use `page.tsx` for state that must reset.
-**Rule**: Put shared UI (Sidebar/Nav) in Layout; put domain-specific state in Page.
-
-### L-017: Framer Motion Layout Animations — `layoutId`
-
-**Date**: February 27, 2026 | **Severity**: Low | **Domain**: UX
-
-Use `layoutId` for smooth transitions of shared elements (e.g., a selection pill moving between tabs).
-**Rule**: Improves perceived performance and premium feel.
-
-### L-020: Accessibility — `aria-live` for Error Messages
-
-**Date**: March 17, 2026 | **Severity**: High | **Domain**: A11y
-
-Form error messages must be in an `aria-live="polite"` region to be announced by screen readers.
-**Rule**: Never rely on visual color alone for error state.
-
-### L-022: Mobile Responsive — `100dvh` vs `100vh`
-
-**Date**: March 17, 2026 | **Severity**: High | **Domain**: UX
-
-Always use `100dvh` (Dynamic Viewport Height) to prevent layout jumping on mobile when browser chrome (URL bar) hides/shows.
-**Rule**: Ensures a stable, fullscreen-like app experience.

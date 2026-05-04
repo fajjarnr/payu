@@ -1,17 +1,11 @@
-version: 3.0.0
-last_updated: 2026-02-09
+version: 3.2.1
+last_updated: 2026-05-04
 consolidation_notes: |
-  Reduced from 21 to 17 skills.
-  - information-architect merged into principal-architect
-  - release-engineer merged into platform-engineer
-  - sre merged into platform-engineer
-  - bff-architect removed (PayU is pure Java backend)
-  P19 Audit (Feb 2026): All domain skills updated with audit context.
-  - Added .agent/context/P19-AUDIT-STATUS.md as single source of truth
-  - Added P19 audit sections to core-banking-engineer, quality-engineer, cybersecurity-architect, integration-architect, frontend-architect
-  - Added p19-remediation workflow
-  - Updated auditor, tester, compliance-auditor agents with P0/P1 awareness
-  Production Readiness: 48/100 — See .agent/context/P19-AUDIT-STATUS.md
+  Standardized AI skill ecosystem for PayU Platform.
+  - principal-architect: Unified architectural strategy and documentation.
+  - platform-engineer: Integrated DevOps, SRE, and release management.
+  - Hexagonal Architecture & Domain-Driven Design (DDD) enforcement.
+  - Secure-by-design principles (PCI-DSS & OJK compliance).
 skills:
   - name: ai-engineer
     version: 2.0.0
@@ -25,12 +19,12 @@ skills:
     version: 2.1.0
     maturity: stable
     tags: [backend, java, spring, hexagonal, transactions]
-    notes: P19 audit status added — service compliance matrix, hexagonal refactoring checklist
+    notes: audit status added — service compliance matrix, hexagonal refactoring checklist
   - name: cybersecurity-architect
     version: 2.1.0
     maturity: stable
     tags: [security, compliance, zero-trust, vault, pci-dss]
-    notes: P19 audit status added — P0-SEC blockers, unauthenticated service list
+    notes: audit status added — P0-SEC blockers, unauthenticated service list
   - name: data-architect
     version: 2.0.0
     maturity: stable
@@ -55,12 +49,12 @@ skills:
     version: 2.1.0
     maturity: stable
     tags: [frontend, react, nextjs, performance, accessibility]
-    notes: P19 audit status added — JWT BFF pattern, E2E status, mobile gaps
+    notes: audit status added — JWT BFF pattern, E2E status, mobile gaps
   - name: integration-architect
     version: 2.1.0
     maturity: stable
     tags: [events, kafka, integration, cdc, saga, temporal]
-    notes: P19 audit status added — dead starter alert, outbox/saga integration steps
+    notes: audit status added — dead starter alert, outbox/saga integration steps
   - name: mobile-architect
     version: 2.0.0
     maturity: stable
@@ -83,7 +77,7 @@ skills:
     version: 2.1.0
     maturity: stable
     tags: [qa, testing, automation, contract-testing, browser]
-    notes: P19 audit status added — testing gap matrix, priority test patterns, E2E status
+    notes: audit status added — testing gap matrix, priority test patterns, E2E status
   - name: web-artifacts-builder
     version: 2.0.0
     maturity: stable

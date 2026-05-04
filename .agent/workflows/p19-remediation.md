@@ -2,7 +2,7 @@
 description: |
   Workflow untuk menjalankan remediasi P0/P1 dari hasil P19 Full Platform Audit.
   Gunakan workflow ini untuk menyelesaikan 5 P0 blockers dan membawa production readiness dari 48% ke 80%.
-updated: 2026-02-09
+updated: 2026-05-04
 ---
 
 # 🔧 P19 Remediation Workflow
@@ -12,7 +12,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ## Pre-requisites
 
-- Baca `.agent/context/P19-AUDIT-STATUS.md` untuk status terkini
+- Baca `.agent/context/ROADMAP.md` untuk status terkini
 - Baca `docs/guides/REMEDIATION_PLAYBOOK.md` untuk detail implementasi setiap remedy
 - Baca `docs/guides/LESSONS.md` untuk pattern yang benar
 
@@ -131,7 +131,7 @@ For each of: `cms-service`, `ab-testing-service`, `statement-service`:
 After EACH remedy is implemented:
 
 1. Run the verify command listed in the remedy step
-2. Update the service score in `.agent/context/P19-AUDIT-STATUS.md`
+2. Update the service score in `.agent/context/ROADMAP.md`
 3. Mark the remedy as complete in `docs/roadmap/TODOS.md`
 4. Update production readiness percentage
 5. Commit with conventional commit: `fix(service): R-XXX description`

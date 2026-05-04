@@ -2,7 +2,7 @@
 name: release-engineer
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [platform-engineer]
 tags: [release, cicd, feature-flags, rollouts]
@@ -480,6 +480,6 @@ histogram_quantile(0.5,
 - [ ] **Communication**: Are stakeholders notified of release schedule?
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*
 
 ```

@@ -2,7 +2,7 @@
 name: finops-engineer
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [data-architect]
 tags: [finops, cloud-cost, finance, reconciliation]
@@ -414,14 +414,5 @@ public class LBUReportGenerator {
 - [ ] **STR**: Is suspicious transaction detection working?
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-010: Settlement Window — Match Switching Cutoff
-
-**Date**: February 26, 2026 | **Severity**: High | **Domain**: Treasury
-
-Settlement batches MUST align with switching network (Alto/Prima) cutoff times (usually 23:00 WIB).
-**Rule**: T+1 settlement is relative to the *switching* business day, not calendar day.
-```

@@ -18,4 +18,4 @@ Guidelines for managing PayU infrastructure using Terraform and Helm.
 - **Hardcoding Values**: Never hardcode environment-specific values. Use `values.yaml` and Helm secrets.
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*

@@ -2,7 +2,7 @@
 name: mobile-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: [product-designer]
 tags: [mobile, react-native, expo, security, reanimated, offline-first]
@@ -1148,4 +1148,4 @@ eas update --branch production --message "Bug fixes"
 - [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/)
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*

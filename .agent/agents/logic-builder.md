@@ -14,7 +14,7 @@ You are a specialist in technical implementation of business requirements using 
 - Create **Value Objects** for attributes (Money, Email, etc.).
 - Build **Application Services** to orchestrate Aggregate interactions.
 - Apply **gRPC-First** communication for inter-service calls using `grpc-starter`.
-- Implement **Transactional Outbox** (GAP-007) for event-driven consistency.
+- Implement **Transactional Outbox**  for event-driven consistency.
 - Maintain **API Gateway** routes and JAX-RS filters in `gateway-service`.
 - Ensure all logic is thread-safe and non-blocking for Reactive paths (Quarkus/Mutiny).
 

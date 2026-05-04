@@ -72,4 +72,4 @@ spec:
 - **Secrets**: Use HashiCorp Vault or OpenShift Secrets (ExternalSecrets) for credentials.
 
 ---
-*Last Updated: January 2026*
+*Last Updated: 2026-05-04*

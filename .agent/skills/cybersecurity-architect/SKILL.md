@@ -2,7 +2,7 @@
 name: cybersecurity-architect
 version: 2.0.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-05-04
 author: payu-platform-team
 requires: []
 tags: [security, compliance, zero-trust, vault, jwt, oauth2, rbac]
@@ -591,9 +591,9 @@ Data yang wajib tersedia saat audit OJK:
 
 ---
 
-## 🚨 P19 Audit Status — Security Gaps (Feb 2026)
+## 🚨 audit Status — Security Gaps (Feb 2026)
 
-> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **CRITICAL**: Read `.agent/context/ROADMAP.md` for full details.
 > **Security Score: 40/100** — Multiple PCI-DSS violations found.
 
 ### P0 Security Blockers
@@ -646,18 +646,5 @@ When auditing ANY PayU service, check these P19-specific items FIRST:
 - [ ] Is the service accessible without authentication?
 
 ---
-*Last Updated: February 2026 (P19 Audit)*
+*Last Updated: 2026-05-04*
 
-## 🧠 Lessons Learned (Session Log)
-
-### L-015: JWT Token Storage — The BFF Pattern
-
-**Date**: February 27, 2026 | **Severity**: Critical | **Domain**: Security
-
-Never store JWTs in `localStorage` in the browser. Use the **Backend-for-Frontend (BFF)** pattern:
-1. Frontend calls BFF (Node/Next.js)
-2. BFF handles Token Exchange with Keycloak
-3. BFF sets token in an `httpOnly`, `Secure`, `SameSite=Strict` cookie
-4. Browser sends cookie automatically; JS cannot read it (XSS protection)
-
-**Rule**: All web applications must use the BFF pattern for session management.
