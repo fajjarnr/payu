@@ -18,7 +18,7 @@
     <description>Shared REST Client Module with Retry, Circuit Breaker, and Standardized Error Handling for External API Calls</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <resilience4j.version>2.2.0</resilience4j.version>
     </properties>
 

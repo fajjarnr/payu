@@ -18,7 +18,7 @@
     <description>Content Management Service for banners, promos, and alerts</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
 
     <dependencies>

@@ -18,7 +18,7 @@
     <description>E-Statement PDF Generation Service for PayU Digital Banking</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <apache.pdfbox.version>3.0.3</apache.pdfbox.version>
     </properties>
 

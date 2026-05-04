@@ -22,9 +22,9 @@
 | API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
 | Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
 | **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
-| Last Status Update         | 2026-05-04 | v1.7.9 (Local Env Bug Fix & Login Stabilization)|
+| Last Status Update         | 2026-05-04 | v1.8.0 (Framework & Infra Upgrades Complete)    |
 | OpenShift Tag              | `v1.7.8`   | Latest stable deployment                        |
-| Local Podman Tag           | `v1.7.9`   | All 9 bugs fixed, 38 containers healthy         |
+| Local Podman Tag           | `v1.8.0`   | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
 
 > ✅ **Phase 15 — Final Remediation Complete (Apr 7)**: All 12 remaining bugs closed (BUG-SECURITY-027/008/009/022-025, BUG-LOGIC-013/016, BUG-ARCH-002, BUG-FE-007-011). Security hardening, access control, promo validation, exception architecture fixes applied.
@@ -79,6 +79,32 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.0 (Completed) — May 4, 2026
+
+**Framework & Infrastructure Upgrades — 11 Upgrade Keys Executed**
+
+- ✅ **JDK 25 Installed & Active**: `openjdk 25.0.3-ea` deployed. All backend POMs updated from Java 21 → 25 (`<java.version>`, `maven.compiler.source/target`, `maven-compiler-plugin <release>`).
+- ✅ **Spring Boot 3.5.14**: Parent POM upgraded from `3.4.13`. Verified available in Maven Central.
+- ✅ **Spring Cloud 2025.0.2**: Release train upgraded from `2024.0.0` across all 17 service POMs + 2 hardcoded `<dependencyManagement>` blocks (`auth-service`, `account-service`). Verified in Maven Central.
+- ✅ **Quarkus 3.33.1**: Upgraded from `3.32.3` across 5 simulators + 3 Quarkus services (`gateway-service`, `notification-service`, `api-portal-service`). Verified via GitHub tag `3.33.1` and Maven Central.
+- ✅ **Node.js 24 LTS**: Frontend base/runner image migrated from `ubi9/nodejs-20:9.7` → `ubi9/nodejs-24@sha256:2de19f...` (digest-pinned via skopeo with `--authfile /home/ubuntu/auth-container.json`). `@types/node ^24`, `engines.node >=24.0.0` added.
+- ✅ **Vault 2.0.0**: Upgraded from `1.21`. Fixed `CAP_SETFCAP` permission error by adding `SETFCAP` to `cap_add` in `podman-compose.yml`.
+- ✅ **PostgreSQL 18.3**: Upgraded from `17-alpine`. Fixed volume mount path from `/var/lib/postgresql/data` → `/var/lib/postgresql` for PostgreSQL 18+ `pg_ctlcluster` compatibility. Crunchy Postgres cluster image updated to `ubi8-18.3-0`.
+- ✅ **Prometheus 3.11.0**: Upgraded from `v2.55.1`.
+- ✅ **Grafana 13.1.0**: Upgraded from `11.6.13` to `13.1.0-25295570271-ubuntu` (verified via skopeo). All DB migrations executed successfully.
+- ✅ **Keycloak 26.6.1**: Upgraded from `26.5`.
+- ✅ **Image Digest Pinning**: All floating tags (`kafbat-ui:latest`, `rustfs:latest`) pinned to digest-verified references via `skopeo` for reproducible builds.
+- ⏸️ **Mobile Upgrade Skipped**: Expo SDK 55 / React Native 0.85 deferred pending full compatibility matrix evaluation.
+- **Build Verification**: `mvn clean package -DskipTests -T 1C` → **BUILD SUCCESS** (36 modules, 33s wall clock, JDK 25).
+- **Podman Compose Verification**: `podman compose up -d` → **35/35 containers running/healthy**.
+
+### v1.7.9 (Completed) — May 4, 2026
+
+**Local Environment Bug Fixes & Kafka Stack Upgrade:**
+
+- Kafka upgraded to `apache/kafka:4.0.0` (KRaft mode), Kafka UI replaced with `ghcr.io/kafbat/kafka-ui:latest`.
+- All 9 open bugs (BUG-INFRA-088/089/090, BUG-CROSS-074, BUG-AUTH-035, BUG-FE-107–110) resolved.
 
 ### v1.7.8 (Completed) — April 7, 2026
 

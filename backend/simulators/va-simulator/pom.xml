@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
-        <version>3.32.3</version>
+        <version>3.33.1</version>
         <relativePath/>
     </parent>
 
@@ -116,7 +116,7 @@
             <plugin>
                 <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>3.32.3</version>
+                <version>3.33.1</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -132,7 +132,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>25</release>
                     <parameters>true</parameters>
                 </configuration>
             </plugin>

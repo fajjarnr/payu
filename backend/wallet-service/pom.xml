@@ -17,8 +17,8 @@
     <description>Core Banking - Wallet Service (Balance Management, Ledger)</description>
 
     <properties>
-        <java.version>21</java.version>
-        <spring-cloud.version>2024.0.0</spring-cloud.version>
+        <java.version>25</java.version>
+        <spring-cloud.version>2025.0.2</spring-cloud.version>
         <test.excluded.groups>integration</test.excluded.groups>
         <grpc.version>1.69.0</grpc.version>
         <protobuf.version>3.25.5</protobuf.version>
@@ -343,7 +343,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>25</release>
                     <annotationProcessorPaths>
                         <!-- Lombok must come before MapStruct -->
                         <path>

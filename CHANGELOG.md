@@ -11,6 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-05-04
+
+### Changed — Framework & Infrastructure Upgrades (2026-05-04)
+
+- **UPGRADE-003**: Upgraded Spring Boot from `3.4.13` to `3.5.14` in `backend/pom.xml`.
+- **UPGRADE-004**: Upgraded Spring Cloud from `2024.0.0` to `2025.0.2` across all backend service and shared library POMs.
+- **UPGRADE-005**: Upgraded Quarkus from `3.32.3` to `3.33.1` in all simulator and Quarkus service POMs.
+- **UPGRADE-006**: Migrated frontend base image from `ubi9/nodejs-20:9.7` to `ubi9/nodejs-24@sha256:2de19f9aed8524187e52c146da60635a80adb06739f23519a5c8a16fda2850e5` (digest-pinned via skopeo with `--authfile /home/ubuntu/auth-container.json`) in `frontend/web-app/Containerfile`; updated `@types/node` to `^24`; added `engines.node >=24.0.0` to `package.json`.
+- **UPGRADE-007**: Upgraded Vault from `1.21` to `2.0.0` in local Podman environment. Fixed `CAP_SETFCAP` permission by adding `SETFCAP` to `cap_add` in `podman-compose.yml`.
+- **UPGRADE-008**: Upgraded Java from `21` to `25` across all backend POMs (services, shared libraries, simulators), test POMs, and Java SDK.
+- **UPGRADE-009**: Upgraded PostgreSQL from `17-alpine` to `18.3-alpine` (local) and Crunchy Postgres from `ubi8-16.4-0` to `ubi8-18.3-0` (platform). Fixed local Podman volume mount from `/var/lib/postgresql/data` to `/var/lib/postgresql` for PostgreSQL 18+ compatibility.
+- **UPGRADE-010**: Upgraded Prometheus from `v2.55.1` to `v3.11.0` in local Podman environment. Pinned all floating image tags (`kafbat-ui:latest`, `rustfs:latest`) to digest-verified references via `skopeo`.
+- **UPGRADE-011**: Upgraded Grafana from `11.6.13` to `13.1.0-25295570271-ubuntu` in local Podman environment.
+- **UPGRADE-012**: Modernized mobile app to Expo SDK `~55.0.0` and React Native `0.85.0` in `frontend/mobile/package.json` — **reverted to original versions** (Expo 52, RN 0.76.9) pending full compatibility matrix evaluation. Marked as ⏸️ Skipped in `TODOS.md`.
+- **UPGRADE-013**: Upgraded Keycloak from `26.5` to `26.6.1` in local Podman environment.
+
+### Infrastructure — JDK 25 Installation
+
+- Installed `openjdk-25-jdk` via apt on build environment.
+- Configured `JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64` for Maven builds.
+
+### Build Verification
+
+- `mvn -f backend/pom.xml clean package -DskipTests -T 1C` → **BUILD SUCCESS** (36 modules, 33.8s wall clock).
+- `podman compose up -d` → **35/35 containers running/healthy** (PostgreSQL 18.3, Vault 2.0.0, Grafana 13.1.0, Keycloak 26.6.1, all simulators + services).
+
 ## [1.7.9] - 2026-05-04
 
 ### Changed — Kafka Stack Upgrade (2026-05-04)

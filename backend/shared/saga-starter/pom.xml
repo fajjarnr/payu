@@ -18,7 +18,7 @@
     <description>Shared Saga Pattern Module for Distributed Transaction Orchestration</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
 
     <dependencies>

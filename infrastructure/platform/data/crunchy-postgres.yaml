@@ -12,8 +12,8 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: database
 spec:
-  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.4-0
-  postgresVersion: 16
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-18.3-0
+  postgresVersion: 18
 
   instances:
     - name: instance1

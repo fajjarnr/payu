@@ -130,17 +130,17 @@
 
 | Key           | Priority | Category       | Summary                                                                                                                                                                 | Status   |
 | :------------ | :------: | :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| UPGRADE-003   |    P1    | Backend        | **Upgrade Spring Boot to 3.5.14**: Move to the final 3.x minor release as a bridge before migrating to Spring Boot 4.0.                                                 | 📋 To Do |
-| UPGRADE-004   |    P1    | Backend        | **Upgrade Spring Cloud to 2025.0.2**: Update the release train to "Northfields" for compatibility with Spring Boot 3.5.x.                                               | 📋 To Do |
-| UPGRADE-005   |    P2    | Backend        | **Upgrade Quarkus to 3.33 LTS**: Align simulator services with the latest Long-Term Support version for banking stability.                                              | 📋 To Do |
-| UPGRADE-006   |    P0    | Frontend       | **Migrate to Node.js 24 LTS**: Node.js 20 reached End-of-Life (EOL) on April 30, 2026. Critical for security compliance.                                                 | 📋 To Do |
-| UPGRADE-007   |    P1    | Infrastructure | **Upgrade Vault to 2.0.0**: Major version jump (v1 to v2) for core security infrastructure.                                                                              | 📋 To Do |
-| UPGRADE-008   |    P2    | Backend        | **Upgrade to Java 25 LTS**: Transition from Java 21 to the latest LTS for performance and better container support.                                                      | 📋 To Do |
-| UPGRADE-009   |    P2    | Infrastructure | **Upgrade PostgreSQL to 18.3**: Utilize latest performance and indexing improvements in the database layer.                                                              | 📋 To Do |
-| UPGRADE-010   |    P1    | Infrastructure | **Upgrade Prometheus to 3.11.x**: Migrate to the new major version (v3) for better high-cardinality data handling.                                                       | 📋 To Do |
-| UPGRADE-011   |    P2    | Infrastructure | **Upgrade Grafana to 13.0**: Move to the latest major version for enhanced incident response and visualization features.                                                | 📋 To Do |
-| UPGRADE-012   |    P2    | Mobile         | **Modernize Mobile App**: Upgrade to **Expo SDK 55** and **React Native 0.85** for performance and New Architecture support.                                            | 📋 To Do |
-| UPGRADE-013   |    P2    | Infrastructure | **Update Keycloak to 26.6.1**: Apply latest security patches and improvements for Passkeys/FIDO2 support.                                                               | 📋 To Do |
+| UPGRADE-003   |    P1    | Backend        | **Upgrade Spring Boot to 3.5.14**: Move to the final 3.x minor release as a bridge before migrating to Spring Boot 4.0.                                                 | ✅ Done |
+| UPGRADE-004   |    P1    | Backend        | **Upgrade Spring Cloud to 2025.0.2**: Update the release train to "Northfields" for compatibility with Spring Boot 3.5.x.                                               | ✅ Done |
+| UPGRADE-005   |    P2    | Backend        | **Upgrade Quarkus to 3.33.1**: Align simulator services with the latest release for banking stability.                                                                  | ✅ Done |
+| UPGRADE-006   |    P0    | Frontend       | **Migrate to Node.js 24 LTS**: Node.js 20 reached End-of-Life (EOL) on April 30, 2026. Critical for security compliance.                                                 | ✅ Done |
+| UPGRADE-007   |    P1    | Infrastructure | **Upgrade Vault to 2.0.0**: Major version jump (v1 to v2) for core security infrastructure.                                                                              | ✅ Done |
+| UPGRADE-008   |    P2    | Backend        | **Upgrade to Java 25 LTS**: Transition from Java 21 to the latest LTS for performance and better container support.                                                      | ✅ Done |
+| UPGRADE-009   |    P2    | Infrastructure | **Upgrade PostgreSQL to 18.3**: Utilize latest performance and indexing improvements in the database layer.                                                              | ✅ Done |
+| UPGRADE-010   |    P1    | Infrastructure | **Upgrade Prometheus to 3.11.x**: Migrate to the new major version (v3) for better high-cardinality data handling.                                                       | ✅ Done |
+| UPGRADE-011   |    P2    | Infrastructure | **Upgrade Grafana to 13.0**: Move to the latest major version for enhanced incident response and visualization features.                                                | ✅ Done |
+| UPGRADE-012   |    P2    | Mobile         | **Modernize Mobile App**: Upgrade to **Expo SDK 55** and **React Native 0.85** for performance and New Architecture support.                                            | ⏸️ Skipped |
+| UPGRADE-013   |    P2    | Infrastructure | **Update Keycloak to 26.6.1**: Apply latest security patches and improvements for Passkeys/FIDO2 support.                                                               | ✅ Done |
 
 ---
 
