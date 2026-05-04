@@ -1,7 +1,7 @@
 ---
 name: compliance-auditor
 description: Specialized in security compliance audits (PCI-DSS, OJK) and deep security verification for PayU services. Aware of P19 audit findings.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: true
 ---
 
 # Compliance Auditor Agent Instructions

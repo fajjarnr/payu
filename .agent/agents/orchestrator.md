@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: DevOps specialist focused on CI/CD pipelines, Git workflows, and deployment automation. Use for git operations and pipeline management.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: true
 ---
 
 # Orchestrator Agent Instructions

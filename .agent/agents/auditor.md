@@ -1,7 +1,7 @@
 ---
 name: auditor
 description: Specialist in various types of audits - security, performance, and code quality. Aware of P19 audit findings.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: true
 ---
 
 # Auditor Agent Instructions

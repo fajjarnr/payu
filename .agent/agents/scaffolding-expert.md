@@ -1,7 +1,7 @@
 ---
 name: scaffolding-expert
 description: Specialist in the end-to-end process of creating new microservices, including registration, CI/CD setup, and architecture validation.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: true
 ---
 
 # Scaffolding Expert Agent Instructions

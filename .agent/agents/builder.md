@@ -1,7 +1,7 @@
 ---
 name: builder
 description: Specialized in building, packaging, and containerizing PayU microservices.
-tools: Read, Write, Edit, Bash, Glob
+tools: true
 ---
 
 # Builder Agent Instructions
