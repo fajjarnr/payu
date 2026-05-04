@@ -7,25 +7,6 @@
 
 ---
 
-## ✅ Platform Status (Mar 2026)
-
-> **Deployment**: 🟢 23/23 services live on OpenShift | **E2E Tests**: 🟢 703/703 pass (544 Playwright + 159 Pytest)
->
-> ✅ **All 4 P0 Gateway Gaps Closed (Mar 16)**: GAP-001 Webhooks, GAP-002 Multi-Tenancy, GAP-006 Idempotency, GAP-007 Escrow — all implemented and E2E verified.
-> ⚠️ **Open Bug Backlog**: 56 items (Logical Inspection Tahap Akhir). See `docs/roadmap/TODOS.md`.
-> ✅ **Phase 1–5 Complete**: E2E stabilization, gateway gaps, bug fixes, backlog hygiene, lessons learned, skill sync.
->
-> **Dokumen Roadmap (split Feb 24)**:
->
-> - **Bug backlog & open items**: `docs/roadmap/TODOS.md`
-- **Deployment history & scorecard**: `docs/roadmap/PROGRESS.md`
-> - **Detailed service status**: `docs/roadmap/SERVICES.md`
-> - **Gateway architecture & gap analysis**: `docs/roadmap/GATEWAY_ARCH.md`
-> - **Implementation patterns (21 lessons)**: `docs/guides/LESSONS.md`
-> - **Architecture**: `docs/architecture/ARCHITECTURE.md`
-
----
-
 ## 📋 Project Overview
 
 **PayU** adalah **core banking & payment gateway platform** yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure berskala enterprise yang **diintegrasikan oleh multiple project eksternal** (TokoBapak, Nobar, dll.).
@@ -38,7 +19,6 @@
 | **Type**              | Core Banking & Payment Gateway Platform             |
 | **Architecture**      | Scalable Microservices + Event-Driven + Hexagonal   |
 | **Primary Languages** | Java 21, Python 3.12, TypeScript                    |
-| **Last Updated**      | March 16, 2026                                      |
 | **Key Integrations**  | TokoBapak (e-commerce escrow), Nobar (subscription) |
 | **Gateway Standard**  | SNAP-BI (Bank Indonesia API Standard)               |
 
@@ -59,7 +39,7 @@
 | File                           | Tujuan                                                  |
 | :----------------------------- | :------------------------------------------------------ |
 | `docs/INDEX.md`                | Doc map & navigation hub                                |
-| `docs/roadmap/TODOS.md`        | **Bug backlog & open items** (56 bugs, P0-P3)          |
+| `docs/roadmap/TODOS.md`        | **Bug backlog & open items**                            |
 | `docs/roadmap/PROGRESS.md`     | Deployment history, scorecard, DORA metrics             |
 | `docs/roadmap/SERVICES.md`     | **Detailed service status summary**                     |
 | `docs/roadmap/GATEWAY_ARCH.md` | **Gateway architecture** — gap analysis TokoBapak/Nobar |
@@ -88,52 +68,7 @@
 | **Developer Hub**       | Red Hat Developer Hub              | Backstage.io (CNCF)  |
 | **Service Mesh**        | OpenShift Service Mesh             | Istio                |
 
-### Microservices
-
-| Service                | Technology         | Domain                                           |
-| :--------------------- | :----------------- | :----------------------------------------------- |
-| `account-service`      | Spring Boot 3.4    | User accounts, profile, multi-pocket             |
-| `auth-service`         | Spring Boot 3.4    | Authentication, Risk-based MFA, Biometrics       |
-| `transaction-service`  | Spring Boot 3.4    | Transfers, BI-FAST, QRIS, Sharding               |
-| `wallet-service`       | Spring Boot 3.4    | Double-entry ledger, balance management          |
-| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Portfolio view               |
-| `lending-service`      | Spring Boot 3.4    | Loans, PayLater, Credit Scoring                  |
-| `fx-service`           | Spring Boot 3.4    | Currency exchange rates & conversion             |
-| `statement-service`    | Spring Boot 3.4    | PDF E-Statement generation                       |
-| `backoffice-service`   | Spring Boot 3.4    | Internal admin dashboard, audit                  |
-| `partner-service`      | Spring Boot 3.4    | Partner integration & management                 |
-| `promotion-service`    | Spring Boot 3.4    | Promo campaigns, vouchers, rewards               |
-| `support-service`      | Spring Boot 3.4    | Customer support, ticketing                      |
-| `compliance-service`   | Spring Boot 3.4    | Regulatory compliance, AML                       |
-| `billing-service`      | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc)                   |
-| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                       |
-| `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                       |
-| `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content                 |
-| `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox               |
-| `dispute-service`      | Spring Boot 3.4    | Refund & Dispute Management                      |
-| `integration-service`  | Spring Boot 3.4    | External Swift/ISO20022 Adapter                  |
-| `product-catalog-service` | Spring Boot 3.4 | Banking products & fees catalog                  |
-| `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                          |
-| `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights                     |
-
-### Shared Libraries (backend/shared/)
-
-| Library               | Purpose                                            |
-| :-------------------- | :------------------------------------------------- |
-| `security-starter`    | Field encryption, Data masking, Audit logging      |
-| `resilience-starter`  | Circuit Breaker, Retry, Bulkhead (Resilience4j)    |
-| `cache-starter`       | Multi-layer caching (Redis + Caffeine)             |
-| `saga-starter`        | Saga orchestration with compensation               |
-| `outbox-starter`      | Transactional outbox pattern for event publishing  |
-| `events-starter`      | CloudEvents envelope, Kafka producer/consumer      |
-| `grpc-starter`        | gRPC interceptors, proto types, channel management |
-| `rest-client-starter` | Spring RestClient with Resilience4j                |
-| `mapper-starter`      | MapStruct compile-time entity-domain mapping       |
-| `archunit-starter`    | ArchUnit rules for hexagonal architecture          |
-| `logging-starter`     | Structured logging, MDC, TraceIdFilter             |
-| `api-commons`         | Shared DTOs, ApiResponse envelope, error codes     |
-
-Other modules: `flyway` (see `backend/shared/`).
+> **Catatan**: Daftar lengkap microservices dan shared libraries dapat dilihat di `docs/roadmap/SERVICES.md` atau ditelusuri langsung pada direktori `backend/services/` dan `backend/shared/`.
 
 ---
 
@@ -141,12 +76,14 @@ Other modules: `flyway` (see `backend/shared/`).
 
 Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Parallel Execution**. AI Assistant tidak bekerja sebagai monolit, melainkan sebagai orkestrator yang mendispatch tugas ke agen spesialis secara simultan.
 
-### Swarm Principles:
+### Swarm Principles (Parallel Dispatch)
 
-1.  **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
-2.  **Specialized Handshake**: Setiap Skill (misal: `@core-banking-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
-3.  **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@dx-engineer` untuk presentasi) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
-4.  **Collision Guard**: Parallel hanya jika file/service berbeda. Jika menyentuh file yang sama atau shared module, gunakan eksekusi sequential.
+1. **Independent Domains**: Dispatch one agent per independent problem domain (misal: perbaiki 3 file *test* yang gagal secara bersamaan jika *root cause*-nya berbeda).
+2. **Focused Execution**: Beri tiap sub-agent batasan yang jelas (scope spesifik, dilarang edit file di luar scope, dan output yang diminta).
+3. **Full-stack Parallelism**: Tugas fitur didelegasikan ke UI/Frontend dan Backend secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
+4. **Specialized Handshake**: Setiap agen wajib proaktif memanggil agen pendukung (contoh: minta `@auditor` cek security) tanpa menunggu instruksi manual.
+5. **Collision Guard**: Eksekusi paralel **HANYA** jika menyentuh *file* atau *service* yang berbeda. Jika berbagi *state* atau *file* yang sama, wajib sequential.
+6. **Isolated Workspaces**: Untuk pengembangan fitur berskala besar secara paralel, gunakan `git worktree` (misal di folder `.worktrees/`) agar tiap agen memiliki isolasi environment yang bersih tanpa mengotori *branch* utama. Pastikan folder tersebut masuk ke `.gitignore` dan *test baseline*-nya hijau sebelum mulai.
 
 ---
 
@@ -154,35 +91,20 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 
 ```
 payu/
-├── .agent/               # AI Agent Ecosystem (Symlinked to .claude/)
-│   ├── skills/           # 17 AI Skills (Logic, Stack, Standards)
+├── .agent/               # AI Agent Ecosystem (Symlinked to .claude/ & .opencode/)
+│   ├── skills/           # AI Skills (Logic, Stack, Standards)
 │   ├── agents/           # Specialized Sub-agents (System-level prompts)
 │   ├── workflows/        # SOP for complex tasks (MUST READ BEFORE EXECUTION)
 │   └── resources/        # Shared assets (shadcn components, templates)
-├── backend/             # Microservices implementation (21 microservices)
-│   ├── shared/          # Shared Spring Boot starters (12 modules)
-│   │   ├── security-starter/    # PII encryption, audit logging
-│   │   ├── resilience-starter/  # Circuit breaker, retry, bulkhead
-│   │   ├── cache-starter/       # Multi-layer caching
-│   │   ├── saga-starter/        # Saga orchestration
-│   │   ├── outbox-starter/      # Transactional outbox
-│   │   ├── events-starter/      # CloudEvents, Kafka
-│   │   ├── grpc-starter/        # gRPC infrastructure
-│   │   ├── rest-client-starter/ # REST client with resilience
-│   │   ├── mapper-starter/      # MapStruct mapping
-│   │   ├── archunit-starter/    # Architecture governance
-│   │   ├── logging-starter/     # Structured logging
-│   │   └── api-commons/         # Shared DTOs, ApiResponse
-│   ├── simulators/      # External service mocks
-│   │   ├── bi-fast-simulator/   # BI-FAST mock
-│   │   ├── biller-simulator/    # Biller mock (PLN, PDAM, Telco)
-│   │   ├── dukcapil-simulator/  # Dukcapil mock
-│   │   └── qris-simulator/      # QRIS mock
+├── backend/             # Microservices implementation
+│   ├── shared/          # Shared starters & libraries
+│   ├── simulators/      # External service mocks (BI-FAST, QRIS, dll)
 │   └── [services]/      # Individual service implementations
 ├── frontend/            # All frontend applications
 │   ├── web-app/         # Digital Banking UI (Next.js 15+)
 │   ├── mobile/          # Mobile App (Expo/React Native)
 │   └── developer-docs/  # Partner Portal (Next.js)
+├── sdk/                 # Client SDKs for external integration
 ├── docs/                # Project documentation
 │   ├── architecture/    # ARCHITECTURE.md
 │   ├── product/         # PRD.md
@@ -207,32 +129,26 @@ payu/
 
 ### Standard Operating Procedures (SOP)
 
-1.  **Shared Starters**: Selalu gunakan `security-starter`, `resilience-starter`, dan `cache-starter` untuk fitur-fitur cross-cutting. Jangan implementasi manual di level service.
-2.  **DTO First**: Definisikan DTO/Request/Response di package `interfaces.dto` sebelum implementasi logic.
-3.  **Port-Adapter Interface**: Gunakan Hexagonal Architecture untuk core services. Semua external communication harus lewat Port interface di domain layer.
-4.  **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
-5.  **Annotation Processor Fallback**: Jika Lombok (`@Getter`, `@Setter`, `@Builder`, `@Slf4j`) gagal dikompilasi setelah 2 upaya perbaikan konfigurasi, segera beralih ke implementasi manual (explicit) untuk menjamin stabilitas build.
-6.  **Enum Placement**: Selalu definisikan Enum domain sebagai file top-level (bukan inner class) untuk menghindari masalah resolusi simbol dan kompatibilitas dengan Lombok/JPA.
-7.  **Doc Sync**: Setiap update signifikan WAJIB update `CHANGELOG.md`. Roadmap terbagi 3 file: `TODOS.md` (bugs), `PROGRESS.md` (history), `GATEWAY_ARCH.md` (arsitektur). Jangan campurkan konten.
-8.  **Idempotency**: Semua endpoint payment/transfer WAJIB support `X-Idempotency-Key` header. Ini absolute requirement untuk gateway role.
-9.  **Gateway-First Thinking**: Sebelum mengimplementasikan fitur, tanya: "Apakah ini relevan untuk payment gateway yang melayani TokoBapak/Nobar, atau hanya untuk consumer app?" Lihat `docs/roadmap/GATEWAY_ARCH.md` untuk konteks.
+1. **Shared Starters**: Selalu gunakan `security-starter`, `resilience-starter`, dan `cache-starter` untuk fitur-fitur cross-cutting. Jangan implementasi manual di level service.
+2. **DTO First**: Definisikan DTO/Request/Response di package `interfaces.dto` sebelum implementasi logic.
+3. **Port-Adapter Interface**: Gunakan Hexagonal Architecture untuk core services. Semua external communication harus lewat Port interface di domain layer.
+4. **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
+5. **Annotation Processor Fallback**: Jika Lombok (`@Getter`, `@Setter`, `@Builder`, `@Slf4j`) gagal dikompilasi setelah 2 upaya perbaikan konfigurasi, segera beralih ke implementasi manual (explicit) untuk menjamin stabilitas build.
+6. **Enum Placement**: Selalu definisikan Enum domain sebagai file top-level (bukan inner class) untuk menghindari masalah resolusi simbol dan kompatibilitas dengan Lombok/JPA.
+7. **Doc Sync**: Setiap update signifikan WAJIB update `CHANGELOG.md`. Roadmap terbagi 3 file: `TODOS.md` (bugs), `PROGRESS.md` (history), `GATEWAY_ARCH.md` (arsitektur). Jangan campurkan konten.
+8. **Idempotency**: Semua endpoint payment/transfer WAJIB support `X-Idempotency-Key` header. Ini absolute requirement untuk gateway role.
+9. **Gateway-First Thinking**: Sebelum mengimplementasikan fitur, tanya: "Apakah ini relevan untuk payment gateway yang melayani TokoBapak/Nobar, atau hanya untuk consumer app?" Lihat `docs/roadmap/GATEWAY_ARCH.md` untuk konteks.
+
+10. **Frontend Principles**: Untuk Next.js web-app, maksimalkan Server Components; gunakan `"use client"` se-minimal mungkin hanya pada *leaf components* yang membutuhkan interaksi DOM/State.
 
 ### Testing Guidelines (TDD)
 
-1.  **Unit Tests**: 100% coverage untuk core domain/critical flows; minimum 80–90% untuk non-critical modules (exception harus didokumentasikan).
-2.  **ArchUnit**: Pastikan setiap service baru memiliki `ArchitectureTest` untuk menjaga layering.
-3.  **Testcontainers**: Gunakan untuk integration tests yang membutuhkan PostgreSQL atau Kafka (jika enviroment memungkinkan).
-
----
-
-## 🎨 Frontend Design System (Premium Emerald)
-
-Untuk menjaga konsistensi UI yang premium:
-
-1.  **Color Palette**: Primary `bank-green` (#10b981), Background `bg-gray-950` (Dark Mode).
-2.  **Typography**: Inter (UI) dan Outfit (Headers).
-3.  **Aesthetics**: Glassmorphism, smooth gradients, subtle micro-animations.
-4.  **A11y**: Pastikan komponen support screen readers dan keyboard navigation (lihat `frontend/web-app/.a11yrc.json`, `frontend/web-app/scripts/a11y-audit.ts`, `frontend/web-app/e2e/a11y-audit.spec.ts`).
+1. **The Iron Law of TDD**: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. Write the test, watch it fail, then write minimal code to pass. If code is written before tests, delete it and start over.
+2. **Testing Anti-Patterns**: Never test mock behavior. Test real behavior instead. Never add test-only methods to production classes.
+3. **Unit Tests**: 100% coverage untuk core domain/critical flows; minimum 80–90% untuk non-critical modules (exception harus didokumentasikan).
+4. **ArchUnit**: Pastikan setiap service baru memiliki `ArchitectureTest` untuk menjaga layering.
+5. **Testcontainers**: Gunakan untuk integration tests yang membutuhkan PostgreSQL atau Kafka (jika enviroment memungkinkan).
+6. **UI/Frontend Testing**: Untuk aplikasi React/Next.js, fokus pada *user behavior* menggunakan React Testing Library. Jangan menguji *internal state* atau CSS, melainkan uji apa yang dilihat dan bisa diinteraksikan oleh pengguna.
 
 ---
 
@@ -240,133 +156,11 @@ Untuk menjaga konsistensi UI yang premium:
 
 AI Assistant harus mematuhi aturan keamanan berikut:
 
-1.  **PII Protection**: Data sensitif (NIK, PIN, Phone) harus di-mask di logs dan di-encrypt di DB (pake `@Sensitive` & `security-starter`).
-2.  **No Credentials**: Jangan pernah menuliskan password/key di `application.yml`. Gunakan placeholder atau Vault reference.
-3.  **Idempotency**: Semua API kritis (transfer, payment) harus mendukung idempotency key.
+1. **PII Protection**: Data sensitif (NIK, PIN, Phone) harus di-mask di logs dan di-encrypt di DB (pake `@Sensitive` & `security-starter`).
+2. **No Credentials**: Jangan pernah menuliskan password/key di `application.yml`. Gunakan placeholder atau Vault reference.
+3. **Idempotency**: Semua API kritis (transfer, payment) harus mendukung idempotency key.
 
 ---
-
-## 🚫 Excluded Scope (DevOps/SRE)
-
-AI Assistant **TIDAK BOLEH** mengimplementasikan kode atau konfigurasi untuk area berikut:
-
-### Infrastructure & Platform
-
--   Kubernetes manifests, Helm charts, OpenShift configurations
--   Terraform, Ansible, atau IaC (Infrastructure as Code)
-
-**Default policy**: Jangan mengubah `infrastructure/` atau manifest cluster produksi. Jika user meminta pembelajaran, batasi contoh ke `docs/` atau folder sandbox.
-
-### Ketika diminta untuk area di atas:
-
-1.  Tolak dengan sopan dan jelaskan bahwa ini adalah tanggung jawab tim DevOps/SRE
-2.  Arahkan user ke folder `infrastructure/` untuk referensi
-3.  Sarankan untuk berkonsultasi dengan tim operations
-
----
-
-## 📚 Learning Allowed (DevOps & Security)
-
-AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran **hanya** di `docs/` atau sandbox. Jangan ubah `infrastructure/` kecuali diminta eksplisit.
-
-### CI/CD & Pipelines
-
-| Area                 | Contoh                               | AI Dapat Membantu      |
-| -------------------- | ------------------------------------ | ---------------------- |
-| **Tekton Pipelines** | Pipeline, Task, TriggerTemplate      | ✅ Explain & implement |
-| **ArgoCD**           | Application manifests, sync policies | ✅ Explain & implement |
-
-### Containerization & Registry
-
-| Area                  | Contoh                                     | AI Dapat Membantu      |
-| --------------------- | ------------------------------------------ | ---------------------- |
-| **Containerization**  | Dockerfile, image builds, optimizations    | ✅ Explain & implement |
-| **Artifact Registry** | Container registry, image tagging, pushing | ✅ Explain & implement |
-
-### Observability & Monitoring
-
-| Area                    | Contoh                           | AI Dapat Membantu      |
-| ----------------------- | -------------------------------- | ---------------------- |
-| **Log Aggregation**     | LokiStack, Promtail, log queries | ✅ Explain & implement |
-| **Observability Setup** | Prometheus, Grafana, dashboards  | ✅ Explain & implement |
-| **Distributed Tracing** | Jaeger, OpenTelemetry            | ✅ Explain & implement |
-
-### Service Mesh & Networking
-
-| Area                   | Contoh                                | AI Dapat Membantu      |
-| ---------------------- | ------------------------------------- | ---------------------- |
-| **Istio**              | VirtualService, DestinationRule, mTLS | ✅ Explain & implement |
-| **Traffic Management** | Canary, Blue-Green, Circuit Breaking  | ✅ Explain & implement |
-| **Load Balancer**      | Ingress configuration, routing        | ✅ Explain & implement |
-
-### Security Infrastructure
-
-| Area                       | Contoh                                  | AI Dapat Membantu      |
-| -------------------------- | --------------------------------------- | ---------------------- |
-| **Secret Management**      | HashiCorp Vault setup, secret injection | ✅ Explain & implement |
-| **Certificate Management** | TLS certificates, mTLS, rotation        | ✅ Explain & implement |
-| **WAF Configuration**      | ModSecurity rules, OWASP CRS            | ✅ Explain & implement |
-| **SSO/Keycloak**           | Realm config, client setup, OIDC        | ✅ Explain & implement |
-| **Network Policies**       | Pod-to-pod security, ingress rules      | ✅ Explain & implement |
-
-> **Note**: Ini adalah lab project, jadi AI dapat membantu implementasi untuk pembelajaran **tanpa** menyentuh konfigurasi produksi.
-
----
-
-## 🤖 Available AI Skills (17 Skills - v3.0.0)
-
-Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/` and indexed in `REGISTRY.yaml`.
-Skill-to-agent mapping ada di `.agent/agents/AGENTS-MAP.md`.
-
-> **Consolidation Notes (January 2026)**:
->
-> - `information-architect` merged into `principal-architect`
-> - `release-engineer` + `sre` merged into `platform-engineer`
-> - `bff-architect` removed (PayU is pure Java backend)
-
-### 🏗️ Core & Architecture
-
-| Skill                 | Description                                                                                 |
-| :-------------------- | :------------------------------------------------------------------------------------------ |
-| `principal-architect` | **Master Skill**: High-level Architecture, DORA metrics, Strategy, C4, ADRs, Documentation. |
-
-### ☕ Backend & Logic
-
-| Skill                       | Description                                                                                  |
-| :-------------------------- | :------------------------------------------------------------------------------------------- |
-| `core-banking-engineer`     | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience.                     |
-| `api-architect`             | **Master Skill**: REST API standards, OpenAPI, Versioning, & 3rd-party Integrations.         |
-| `integration-architect`     | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC).                        |
-| `data-architect`            | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway.              |
-| `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention Policies, & UU PDP Compliance. |
-| `ai-engineer`               | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI.                 |
-
-### 📱 Frontend & Mobile
-
-| Skill                   | Description                                                                    |
-| :---------------------- | :----------------------------------------------------------------------------- |
-| `product-designer`      | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y.                   |
-| `frontend-architect`    | **Master Skill**: Next.js 15+, React, Performance, Component Refactoring.      |
-| `mobile-architect`      | **Master Skill**: React Native, Expo, Native UI (SF Symbols), Mobile Security. |
-| `web-artifacts-builder` | **Master Skill**: Scaffolding single-file HTML/React artifacts for docs/demos. |
-
-### 🛡️ Security & Compliance
-
-| Skill                     | Description                                                                           |
-| :------------------------ | :------------------------------------------------------------------------------------ |
-| `cybersecurity-architect` | **Master Skill**: Zero Trust, Vault, mTLS, Auth Patterns, & Compliance (PCI-DSS/OJK). |
-
-### ⚙️ DevOps, Reliability & Quality (CONSOLIDATED)
-
-| Skill                   | Description                                                                                                                |
-| :---------------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| `platform-engineer`     | **UNIFIED (v3.0)**: DevOps + SRE + Release Engineering. Tekton/ArgoCD, OpenShift, Feature Flags, Observability, Chaos, DR. |
-| `quality-engineer`      | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, Browser Testing.                                    |
-| `debugging-methodology` | **NEW**: Systematic debugging, Root Cause Analysis, Pattern Recognition.                                                   |
-| `finops-engineer`       | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management, Tagging Strategy.                                   |
-| `dx-engineer`           | **UNIFIED**: Git Workflows + Developer Onboarding + Slidev + Release Notes.                                                |
-
-> **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 
 ## 🧠 Reasoning Bank (Cognitive Model)
 
@@ -376,17 +170,17 @@ To emulate "Adaptive Intelligence" without a persistent database, all Agents MUS
 
 Before solving a problem, ask:
 
--   "Have I seen this error pattern (`api_errors_increase`) before?"
--   "Does this architecture match a known pattern (`Microservices` vs `Modular Monolith`)?"
--   **Action**: Check `docs/adr/` and `docs/guides/` for historical context.
+- "Have I seen this error pattern (`api_errors_increase`) before?"
+- "Does this architecture match a known pattern (`Microservices` vs `Modular Monolith`)?"
+- **Action**: Check `docs/adr/` and `docs/guides/` for historical context.
 
 ### 2. Strategy Optimization (Planning)
 
 Don't just execute. Optimize.
 
--   **Option A**: Quick Fix (Low risk, high speed)
--   **Option B**: Refactor (High risk, long term benefit)
--   **Decision**: Select strategy based on _Context Discovery_ (Team size, Timeline).
+- **Option A**: Quick Fix (Low risk, high speed)
+- **Option B**: Refactor (High risk, long term benefit)
+- **Decision**: Select strategy based on _Context Discovery_ (Team size, Timeline).
 
 ### 3. Continuous Learning (Synthesis)
 
@@ -395,15 +189,15 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 ```markdown
 ### 🧠 Meta-Learning
 
--   **Observation**: Parallel dispatching failed for shared files.
--   **Correction**: Use Sequential Chain for shared resources in future.
+- **Observation**: Parallel dispatching failed for shared files.
+- **Correction**: Use Sequential Chain for shared resources in future.
 ```
 
 ### 4. Systematic Debugging Methodology (Strict Protocol)
 
 **Core Principle:** NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
 
--   **Rule of Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
+- **Rule of Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
 
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
@@ -413,34 +207,34 @@ When encountering ANY technical issue (test failure, bug, performance issue):
 
 **Phase 1: Root Cause Investigation**
 
-1.  **Read Error Messages**: Don't skip stack traces. Note error codes.
-2.  **Reproduce Consistently**: If you can't reproduce it, you can't fix it.
-3.  **Trace Data Flow**: Add logs/prints at component boundaries to see WHERE it breaks.
-4.  **Gather Evidence**: Verify environment, config, and state before changing code.
+1. **Read Error Messages**: Don't skip stack traces. Note error codes.
+2. **Reproduce Consistently**: If you can't reproduce it, you can't fix it.
+3. **Trace Data Flow**: Add logs/prints at component boundaries to see WHERE it breaks.
+4. **Gather Evidence**: Verify environment, config, and state before changing code.
 
 **Phase 2: Pattern Analysis**
 
-1.  **Find Working Examples**: Compare against similar working code in the project.
-2.  **Identify Differences**: What is different? (Dependencies, versions, config).
+1. **Find Working Examples**: Compare against similar working code in the project.
+2. **Identify Differences**: What is different? (Dependencies, versions, config).
 
 **Phase 3: Hypothesis & Testing**
 
-1.  **Form Single Hypothesis**: "I think X is causing Y because Z".
-2.  **Test Minimally**: Change ONE thing.
-3.  **Verify**: Did it fix it? If no, revert and try a new hypothesis.
+1. **Form Single Hypothesis**: "I think X is causing Y because Z".
+2. **Test Minimally**: Change ONE thing.
+3. **Verify**: Did it fix it? If no, revert and try a new hypothesis.
 
 **Phase 4: Implementation**
 
-1.  **Create Failing Test**: Prove the bug exists with a test case (TDD).
-2.  **Implement Fix**: Address the root cause.
-3.  **Verify Fix**: Ensure test passes and no regressions.
+1. **Create Failing Test**: Prove the bug exists with a test case (TDD).
+2. **Implement Fix**: Address the root cause.
+3. **Verify Fix**: Ensure test passes and no regressions.
 
 **Red Flags (STOP IMMEDIATELY if you do this)**:
 
--   "Quick fix for now"
--   "Just try changing X"
--   "Add multiple changes and hope"
--   "One more fix attempt" (if > 2 failed attempts) -> **Stop and Question Architecture**.
+- "Quick fix for now"
+- "Just try changing X"
+- "Add multiple changes and hope"
+- "One more fix attempt" (if > 2 failed attempts) -> **Stop and Question Architecture**.
 
 ## 🤝 Collaboration Modes (Pair Programming)
 
@@ -458,13 +252,13 @@ To align with the user's intent, adopt one of these modes when requested:
 
 ## 🔄 Workflows & Procedures
 
-Claude Code SHOULD follow established workflows in `.agent/workflows/` for complex operations. **URGENT**: Karena Claude Code tidak auto-discover folder `workflows`, AI asisten wajib melakukan `ls .agent/workflows/` atau membaca file di dalamnya secara proaktif sebelum memulai tugas arsitektural.
+AI Assistants SHOULD follow established workflows in `.agent/workflows/` for complex operations. **URGENT**: Karena AI tidak selalu auto-discover folder `workflows`, asisten wajib melakukan `ls .agent/workflows/` atau membaca file di dalamnya secara proaktif sebelum memulai tugas arsitektural.
 
--   **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Observe -> Plan -> Execute -> Verify).
--   **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
--   **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
--   **`/orchestration-protocol`**: Advanced AI Orchestration, Task Management, and Core Engineering Principles for PayU.
--   **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
+- **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Observe -> Plan -> Execute -> Verify).
+- **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
+- **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
+- **`/orchestration-protocol`**: Advanced AI Orchestration, Task Management, and Core Engineering Principles for PayU.
+- **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
 
 ## 🛰️ Advanced Orchestration Protocol (v2.0)
 
@@ -472,57 +266,76 @@ This section defines the high-performance operational protocol for all AI Agents
 
 ### 1. Workflow Orchestration Standards
 
--   **Plan Mode Default**: Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions).
--   **Graceful Halt**: If something goes sideways, STOP and re-plan immediately – don't keep pushing.
--   **Verification-First Planning**: Use plan mode for verification steps, not just building.
--   **Detailed Specs**: Write detailed specs upfront to reduce ambiguity.
+- **Design-First Hard Gate**: Do NOT write code, scaffold projects, or take implementation actions for new features until you have explored the context, presented a design, and the user has approved it.
+- **Plan Mode Default**: Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions).
+- **Graceful Halt**: If something goes sideways, STOP and re-plan immediately – don't keep pushing.
+- **Verification-First Planning**: Use plan mode for verification steps, not just building.
+- **Detailed Specs**: Write detailed specs upfront to reduce ambiguity.
 
 ### 2. Subagent Strategy
 
--   **Liberal Subagent Usage**: Use subagents liberally to keep main context window clean.
--   **Offload & Parallelize**: Offload research, exploration, and parallel analysis to subagents.
--   **Compute Scaling**: For complex problems, throw more compute at it via subagents.
--   **Focused Execution**: One task per subagent for focused execution.
+- **Liberal Subagent Usage**: Use subagents liberally to keep main context window clean.
+- **Offload & Parallelize**: Offload research, exploration, and parallel analysis to subagents.
+- **Compute Scaling**: For complex problems, throw more compute at it via subagents.
+- **Focused Execution**: One task per subagent for focused execution.
+- **Subagent Code Review**: Before completing major features or merging, dispatch a reviewer subagent. Give it the diff (`HEAD_SHA` vs `BASE_SHA`) and the original requirements, to independently flag critical issues.
 
 ### 3. Self-Improvement Loop
 
--   **Pattern Capturing**: After ANY correction from the user: update `docs/guides/LESSONS.md` with the pattern.
--   **Recursive Rules**: Write rules for yourself that prevent the same mistake.
--   **Ruthless Iteration**: Iteratively refine lessons until the mistake rate drops.
--   **Pre-Session Review**: Review lessons at session start for relevant project context.
+- **Pattern Capturing**: After ANY correction from the user: update `docs/guides/LESSONS.md` with the pattern.
+- **Recursive Rules**: Write rules for yourself that prevent the same mistake.
+- **Ruthless Iteration**: Iteratively refine lessons until the mistake rate drops.
+- **Pre-Session Review**: Review lessons at session start for relevant project context.
 
-### 4. Verification Protocol
+### 4. Verification & Completion Protocol
 
--   **Proof of Work**: Never mark a task complete without proving it works.
--   **Behavioral Diffing**: Diff behavior between main and your changes when relevant.
--   **Staff Engineer Standard**: Ask yourself: "Would a staff engineer approve this?"
--   **E2E Validation**: Run tests, check logs, and demonstrate correctness explicitly.
+- **Evidence Before Claims**: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. Never say "it should work now" or "tests pass" without actually running the command and reading the output.
+- **Proof of Work**: Never mark a task complete without proving it works.
+- **E2E Validation**: Run tests, check logs, and demonstrate correctness explicitly. **Do NOT proceed to merge or PR if any tests fail.**
+- **Structured Completion**: Once tests pass, present exact options to the user before finishing: 1) Merge locally, 2) Create PR, 3) Keep branch as-is, 4) Discard.
+- **Staff Engineer Standard**: Ask yourself: "Would a staff engineer approve this?"
+- **Behavioral Diffing**: Diff behavior between main and your changes when relevant.
 
 ### 5. Architectural Elegance
 
--   **Elegance Pause**: For non-trivial changes: pause and ask "is there a more elegant way?"
--   **Refactoring for Quality**: If a fix feels hacky: "Knowing everything I know now, implement the elegant solution".
--   **Balanced Engineering**: Skip this for simple, obvious fixes – don't over-engineer.
--   **Internal Critique**: Challenge your own work before presenting it.
+- **Elegance Pause**: For non-trivial changes: pause and ask "is there a more elegant way?"
+- **Refactoring for Quality**: If a fix feels hacky: "Knowing everything I know now, implement the elegant solution".
+- **Balanced Engineering**: Skip this for simple, obvious fixes – don't over-engineer.
+- **Internal Critique**: Challenge your own work before presenting it.
 
 ### 6. Autonomous Bug Fixing
 
--   **Test-First Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
--   **Evidence-Based Resolution**: Point at logs, errors, failing tests – then resolve them.
--   **Zero-Context Switching**: Aim for zero context switching required from the user.
--   **Proactive Maintenance**: Fix failing CI tests without being told how.
+- **Test-First Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
+- **Evidence-Based Resolution**: Point at logs, errors, failing tests – then resolve them.
+- **Zero-Context Switching**: Aim for zero context switching required from the user.
+- **Proactive Maintenance**: Fix failing CI tests without being told how.
+
+### 7. Skill Usage Protocol (Superpowers)
+
+- **Mandatory Invocation**: If there is even a 1% chance a skill in `.agent/skills/` applies to your task, you **ABSOLUTELY MUST** read and use it before any response or action. This is not optional.
+- **Anti-Rationalization**: Do not skip skills with thoughts like "This is just a simple question," "I can do this quickly," or "I know this already." Unstructured action wastes time.
+- **Priority Hierarchy**: 1) User's explicit instructions (this file), 2) Skill instructions, 3) Default system prompt.
+
+### 8. Code Review & Feedback Protocol
+
+- **No Performative Agreement**: Do not say "You're absolutely right!" or "Great point!". Acknowledge technically or just implement the fix.
+- **Verify Before Implementing**: Read, understand, and verify the feedback against the codebase. Push back with technical reasoning if the suggestion breaks existing functionality or violates YAGNI.
+- **Clarify Unclear Items**: Do not guess or partially implement unclear feedback. STOP and ask for clarification.
 
 ### 📋 Task Management Protocol
 
--   **Plan First**: Write plan to `docs/roadmap/TODOS.md` with checkable items.
--   **Verify Plan**: Check in before starting implementation.
--   **Track Progress**: Mark items complete as you go.
--   **Explain Changes**: High-level summary at each step.
--   **Document Results**: Add bug findings ke `docs/roadmap/TODOS.md`, architectural decisions ke `docs/roadmap/GATEWAY_ARCH.md`.
--   **Capture Lessons**: Update `docs/guides/LESSONS.md` after corrections.
--   **Changelog**: Update `CHANGELOG.md` `[Unreleased]` section for any significant change.
+- **Plan First (No Placeholders)**: Write plan to `docs/roadmap/TODOS.md` with bite-sized, checkable items. Never use placeholders like "TODO", "TBD", or "add error handling". The plan must contain exact file paths, complete code snippets, and exact test commands.
+- **Verify Plan**: Check in and ask for review before starting implementation.
+- **Strict Execution**: Execute tasks step-by-step exactly as written. Do not skip verifications.
+- **Stop on Blockers**: If you hit a blocker, test failure, or ambiguity, **STOP and ask the user**. Do NOT guess or force through blockers.
+- **Track Progress**: Mark items complete as you go.
+- **Explain Changes**: High-level summary at each step.
+- **Document Results**: Add bug findings ke `docs/roadmap/TODOS.md`, architectural decisions ke `docs/roadmap/GATEWAY_ARCH.md`.
+- **Capture Lessons**: Update `docs/guides/LESSONS.md` after corrections.
+- **Changelog**: Update `CHANGELOG.md` `[Unreleased]` section for any significant change.
 
 **Doc Routing Rules**:
+
 | Konten | File Tujuan |
 | :--- | :--- |
 | Bug baru, open items, actionable todos | `docs/roadmap/TODOS.md` |
@@ -533,23 +346,15 @@ This section defines the high-performance operational protocol for all AI Agents
 
 **Fast Path (Small Changes)**:
 
--   Boleh skip update roadmap docs untuk perubahan kecil (<=2 file, 1 service, tanpa keputusan arsitektural).
--   Tetap berikan rencana singkat + langkah verifikasi di respons.
+- Boleh skip update roadmap docs untuk perubahan kecil (<=2 file, 1 service, tanpa keputusan arsitektural).
+- Tetap berikan rencana singkat + langkah verifikasi di respons.
 
 ### ⚖️ Core Engineering Principles
 
--   **Simplicity First**: Make every change as simple as possible. Impact minimal code.
--   **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
--   **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
-
-## 🤖 Specialized AI Agents
-
-Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
-
--   `@scaffolder`, `@logic-builder`, `@tester`, `@auditor`, `@migrator`, `@builder`, `@styler`, `@orchestrator`, `@lifecycle-manager`, `@scaffolding-expert`, `@compliance-auditor`.
-
-_Usage_: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
+- **Simplicity First**: Make every change as simple as possible. Impact minimal code.
+- **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
+- **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 
 ---
 
-_Last Updated: 2026-03-22 | Platform: Payment Gateway for TokoBapak & Nobar | Active Bug Count: 56 (Logical Inspection — see TODOS.md)_
+_Platform: Payment Gateway for TokoBapak & Nobar | See TODOS.md for bug backlog and open items._
