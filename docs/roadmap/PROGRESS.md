@@ -22,8 +22,9 @@
 | API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
 | Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
 | **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
-| Last Status Update         | 2026-04-07 | v1.7.8 (Phase 15 Final Remediation)             |
+| Last Status Update         | 2026-05-04 | v1.7.9 (Local Env Bug Fix & Login Stabilization)|
 | OpenShift Tag              | `v1.7.8`   | Latest stable deployment                        |
+| Local Podman Tag           | `v1.7.9`   | All 9 bugs fixed, 38 containers healthy         |
 | Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
 
 > ✅ **Phase 15 — Final Remediation Complete (Apr 7)**: All 12 remaining bugs closed (BUG-SECURITY-027/008/009/022-025, BUG-LOGIC-013/016, BUG-ARCH-002, BUG-FE-007-011). Security hardening, access control, promo validation, exception architecture fixes applied.

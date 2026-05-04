@@ -87,7 +87,7 @@ function LoginForm() {
       }
       
       if (user) {
-        setAuth(user, user.id);
+        setAuth(user, user.accountId || user.id);
         toast.success(t('loginSuccess') || 'Login successful!');
         // Use locale-aware router for navigation (BUG-I18N-002)
         router.push(callbackUrl);
@@ -183,7 +183,7 @@ function LoginForm() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                            <Link href="/forgot-password" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
                                 {t('forgotPassword')}
                             </Link>
                         </div>

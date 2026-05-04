@@ -6,4 +6,4 @@ resources:
 commonLabels:
   app.kubernetes.io/name: dispute-service
   app.kubernetes.io/part-of: payu
-  app.kubernetes.io/version: 1.5.0
+  app.kubernetes.io/version: 1.7.9

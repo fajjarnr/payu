@@ -270,7 +270,7 @@ spec:
         description: "Backend microservices for PayU platform"
         enabled: true
         clientAuthenticatorType: client-secret
-        secret: payu-backend-secret
+        secret: payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c
         redirectUris:
           - "http://localhost:8080/*"
           - "*"

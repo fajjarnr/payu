@@ -44,12 +44,14 @@ export function SessionBootstrap() {
         if (res.ok) {
           const data = await res.json();
           const expiresIn = data.expiresIn ?? 900;
-          setAuthenticated(true);
           setTokenExpiry(Date.now() + expiresIn * 1000);
 
-          // Note: The refresh endpoint doesn't return user data.
-          // The store will be populated on the next API call that includes user context,
-          // or the SilentRefreshRunner will maintain the session going forward.
+          if (data.user) {
+            const user = data.user;
+            setAuth(user, user.accountId || user.id);
+          } else {
+            setAuthenticated(true);
+          }
         }
         // If refresh fails (401/503), we don't have a valid session — leave store as-is
       } catch {

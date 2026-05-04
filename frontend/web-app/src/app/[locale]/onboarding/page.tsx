@@ -20,7 +20,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ktpFile, setKtpFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserRequest>({
     resolver: zodResolver(registerUserSchema)
@@ -118,6 +120,12 @@ export default function OnboardingPage() {
       {/* Right Panel - Form Flow */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative" aria-labelledby="onboarding-title">
         <div className="w-full max-w-[520px]">
+            {/* Mobile back link */}
+            <Link href="/login" className="lg:hidden flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 w-fit">
+                <ArrowLeft className="w-4 h-4" />
+                <span>{t('back')}</span>
+            </Link>
+
             {/* Progress Steps */}
             <nav className="mb-12" aria-label="Registration Progress">
               <Stepper 
@@ -140,17 +148,48 @@ export default function OnboardingPage() {
                             <p className="text-muted-foreground">{t('step1.subtitle')}</p>
                         </div>
 
-                        <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4" tabIndex={0} role="button" aria-label={t('step1.clickToUpload')}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                    setKtpFile(e.target.files[0]);
+                                }
+                            }}
+                        />
+
+                        <div 
+                            className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4" 
+                            tabIndex={0} 
+                            role="button" 
+                            aria-label={t('step1.clickToUpload')}
+                            onClick={() => fileInputRef.current?.click()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    fileInputRef.current?.click();
+                                }
+                            }}
+                        >
                             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Camera className="w-8 h-8 text-primary" aria-hidden="true" />
                             </div>
                             <div className="space-y-1">
                                 <p className="font-bold text-foreground">{t('step1.clickToUpload')}</p>
                                 <p className="text-xs text-muted-foreground">{t('step1.formats')}</p>
+                                {ktpFile && (
+                                    <p className="text-xs text-emerald-600 font-medium">{ktpFile.name}</p>
+                                )}
                             </div>
                         </div>
 
-                        <Button onClick={() => setStep(2)} className="w-full h-14 text-base font-bold shadow-xl shadow-primary/20">
+                        <Button 
+                            onClick={() => setStep(2)} 
+                            className="w-full h-14 text-base font-bold shadow-xl shadow-primary/20"
+                            disabled={!ktpFile}
+                        >
                             {t('step1.button')} <ChevronRight className="ml-2 w-4 h-4" />
                         </Button>
                     </motion.div>
@@ -223,7 +262,6 @@ export default function OnboardingPage() {
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
                                             onClick={() => setShowPassword(!showPassword)}
                                             aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                            tabIndex={-1}
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -247,7 +285,6 @@ export default function OnboardingPage() {
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                                            tabIndex={-1}
                                         >
                                             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>

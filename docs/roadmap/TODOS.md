@@ -11,7 +11,7 @@
 
 ## 📊 Board Summary
 
-| **Open Bugs** | 9 | 🟠 Frontend/Auth: 6 bugs + Infrastructure/Redis: 3 new bugs (May 2, 2026) |
+| **Open Bugs** | 0 | ✅ All 9 bugs resolved (May 4, 2026) |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
@@ -22,15 +22,15 @@
 | Kategori                   | Open  | Priority Range |
 | :------------------------- | :---: | :------------- |
 | Backend Logic              |   0   | —              |
-| Frontend Logic             |   4   | P1–P2          |
-| Frontend-Backend Mismatch  |   1   | P1             |
-| Auth / Session             |   1   | P1             |
+| Frontend Logic             |   0   | ✅ 4 resolved  |
+| Frontend-Backend Mismatch  |   0   | ✅ 1 resolved  |
+| Auth / Session             |   0   | ✅ 1 resolved  |
 | Shared Libraries           |   0   | —              |
 | Test Coverage / Quality    |   0   | —              |
-| Infrastructure / OpenShift |   3   | P0–P1          |
+| Infrastructure / OpenShift |   0   | ✅ 3 resolved  |
 | Architecture               |   0   | —              |
 | Security (PII/IDOR)        |   0   | —              |
-| **TOTAL**                  | **9** |                |
+| **TOTAL**                  | **0** | **9 resolved** |
 
 > 🚨 Audit update (April 15, 2026): 6 new frontend/auth regressions and product-flow bugs were identified below. Historical “all bugs resolved” notes remain valid for the April 7 milestone only, not for the current state.
 > All 702 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
@@ -49,15 +49,15 @@
 
 | Key           | Priority | Category                  | Summary                                                                                                                                                                 | Status   |
 | :------------ | :------: | :------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| BUG-CROSS-074 |    P1    | Frontend-Backend Mismatch | Login page still stores `user.id` as `accountId`, bypassing the BFF/account-claim fix and breaking account-scoped queries for users where `sub != account_id`.          | 📋 To Do |
-| BUG-AUTH-035  |    P1    | Auth / Session            | Cookie-restored sessions only rehydrate `isAuthenticated`/expiry, not `user` and `accountId`, leaving protected pages authenticated-but-empty after local storage loss. | 📋 To Do |
-| BUG-FE-107    |    P1    | Frontend Logic            | Onboarding step 1 lets users continue without uploading KTP or calling any KYC verification endpoint.                                                                   | 📋 To Do |
-| BUG-FE-108    |    P2    | Frontend Logic            | “Lupa password?” is a dead `#` link, so there is no recoverable password-reset path from the login screen.                                                              | 📋 To Do |
-| BUG-FE-109    |    P2    | Frontend Logic            | Mobile onboarding step 1 has no visible in-app back/exit control because the only back link lives inside a desktop-only aside.                                          | 📋 To Do |
-| BUG-FE-110    |    P2    | Frontend Logic            | Onboarding password visibility toggles are removed from keyboard tab order, making them inaccessible for keyboard-only users.                                           | 📋 To Do |
-| BUG-INFRA-088 |    P0    | Infrastructure / OpenShift | Redis connectivity failure — all Spring Boot services connect to `payu-datagrid:11222` without password / incompatible auth, causing health check 503 and circuit breaker OPEN. | 📋 To Do |
-| BUG-INFRA-089 |    P1    | Infrastructure / OpenShift | `auth-service` Redis still connects to `localhost:6379` despite env vars patched to `payu-cache:6379` — property override or stale JAR build suspected.                  | 📋 To Do |
-| BUG-INFRA-090 |    P1    | Infrastructure / OpenShift | `DB_PASSWORD` and `ENCRYPTION_KEY` env vars are empty in many service deployments (inherited from base YAMLs with no secretRef).                                        | 📋 To Do |
+| BUG-CROSS-074 |    P1    | Frontend-Backend Mismatch | Login page still stores `user.id` as `accountId`, bypassing the BFF/account-claim fix and breaking account-scoped queries for users where `sub != account_id`.          | ✅ Done |
+| BUG-AUTH-035  |    P1    | Auth / Session            | Cookie-restored sessions only rehydrate `isAuthenticated`/expiry, not `user` and `accountId`, leaving protected pages authenticated-but-empty after local storage loss. | ✅ Done |
+| BUG-FE-107    |    P1    | Frontend Logic            | Onboarding step 1 lets users continue without uploading KTP or calling any KYC verification endpoint.                                                                   | ✅ Done |
+| BUG-FE-108    |    P2    | Frontend Logic            | "Lupa password?" is a dead `#` link, so there is no recoverable password-reset path from the login screen.                                                              | ✅ Done |
+| BUG-FE-109    |    P2    | Frontend Logic            | Mobile onboarding step 1 has no visible in-app back/exit control because the only back link lives inside a desktop-only aside.                                          | ✅ Done |
+| BUG-FE-110    |    P2    | Frontend Logic            | Onboarding password visibility toggles are removed from keyboard tab order, making them inaccessible for keyboard-only users.                                           | ✅ Done |
+| BUG-INFRA-088 |    P0    | Infrastructure / OpenShift | Redis connectivity failure — all Spring Boot services connect to `payu-datagrid:11222` without password / incompatible auth, causing health check 503 and circuit breaker OPEN. | ✅ Done |
+| BUG-INFRA-089 |    P1    | Infrastructure / OpenShift | `auth-service` Redis still connects to `localhost:6379` despite env vars patched to `payu-cache:6379` — property override or stale JAR build suspected.                  | ✅ Done |
+| BUG-INFRA-090 |    P1    | Infrastructure / OpenShift | `DB_PASSWORD` and `ENCRYPTION_KEY` env vars are empty in many service deployments (inherited from base YAMLs with no secretRef).                                        | ✅ Done |
 
 ### BUG-INFRA-088 — Redis connectivity failure across all Spring Boot services
 
@@ -123,6 +123,24 @@
 - **Evidence**: Kedua tombol visibility pada `frontend/web-app/src/app/[locale]/onboarding/page.tsx` disetel dengan `tabIndex={-1}`.
 - **Affected flows**: Step 2 form onboarding / registrasi.
 - **Repro**: Masuk ke step 2 onboarding lalu tekan `Tab` berulang; fokus akan melewati kedua tombol visibility.
+
+---
+
+## 🚀 Framework & Infrastructure Upgrades (May 4, 2026)
+
+| Key           | Priority | Category       | Summary                                                                                                                                                                 | Status   |
+| :------------ | :------: | :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| UPGRADE-003   |    P1    | Backend        | **Upgrade Spring Boot to 3.5.14**: Move to the final 3.x minor release as a bridge before migrating to Spring Boot 4.0.                                                 | 📋 To Do |
+| UPGRADE-004   |    P1    | Backend        | **Upgrade Spring Cloud to 2025.0.2**: Update the release train to "Northfields" for compatibility with Spring Boot 3.5.x.                                               | 📋 To Do |
+| UPGRADE-005   |    P2    | Backend        | **Upgrade Quarkus to 3.33 LTS**: Align simulator services with the latest Long-Term Support version for banking stability.                                              | 📋 To Do |
+| UPGRADE-006   |    P0    | Frontend       | **Migrate to Node.js 24 LTS**: Node.js 20 reached End-of-Life (EOL) on April 30, 2026. Critical for security compliance.                                                 | 📋 To Do |
+| UPGRADE-007   |    P1    | Infrastructure | **Upgrade Vault to 2.0.0**: Major version jump (v1 to v2) for core security infrastructure.                                                                              | 📋 To Do |
+| UPGRADE-008   |    P2    | Backend        | **Upgrade to Java 25 LTS**: Transition from Java 21 to the latest LTS for performance and better container support.                                                      | 📋 To Do |
+| UPGRADE-009   |    P2    | Infrastructure | **Upgrade PostgreSQL to 18.3**: Utilize latest performance and indexing improvements in the database layer.                                                              | 📋 To Do |
+| UPGRADE-010   |    P1    | Infrastructure | **Upgrade Prometheus to 3.11.x**: Migrate to the new major version (v3) for better high-cardinality data handling.                                                       | 📋 To Do |
+| UPGRADE-011   |    P2    | Infrastructure | **Upgrade Grafana to 13.0**: Move to the latest major version for enhanced incident response and visualization features.                                                | 📋 To Do |
+| UPGRADE-012   |    P2    | Mobile         | **Modernize Mobile App**: Upgrade to **Expo SDK 55** and **React Native 0.85** for performance and New Architecture support.                                            | 📋 To Do |
+| UPGRADE-013   |    P2    | Infrastructure | **Update Keycloak to 26.6.1**: Apply latest security patches and improvements for Passkeys/FIDO2 support.                                                               | 📋 To Do |
 
 ---
 
@@ -269,15 +287,15 @@
 | Completed Epics        | 24/24 fully done (see PROGRESS.md)                                        |
 | Completed Stories      | 109 done (86 + 23 test stories archived)                                  |
 | Completed SP           | 265/265                                                                   |
-| Bugs Fixed             | 702 done + 4 Won't Do (archived to CHANGELOG)                             |
-| Open Bugs              | 9 — 6 Frontend/Auth (April 15) + 3 Infrastructure/Redis (May 2, 2026)      |
+| Bugs Fixed             | 711 done + 4 Won't Do (archived to CHANGELOG)                             |
+| Open Bugs              | 0 — All 9 resolved (May 4, 2026)                                          |
 | Tech Debt              | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)                              |
 | Operational Follow-Ups | 17 carry-over tasks (May 2, 2026 — Tekton fixes, Redis rebuilds, k6 rerun) |
 | DevSecOps Tasks        | 52 tasks from `DEVSECOPS_ARCHITECTURE.md` v1.3.1 (Phase 1–4)               |
 
 ---
 
-_Last Updated: May 2, 2026 | 0 Active Epics · 0 Open Stories · 9 Open Bugs · 0 Tech Debt · 17 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
+_Last Updated: May 4, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 0 Tech Debt · 17 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _k6 Operator installed April 9: namespace payu-k6, ClusterAutoscaler (max 14 nodes), MachineAutoscalers (2a: 2-5, 2b: 1-4, 2c: 0-4). Use TestRun CRDs in infrastructure/openshift/infra/base/k6/ for distributed runs._
 _CRUD Testing Sessions (April 9): 24/28 endpoints validated ✅. 4 blocked by NetworkPolicy (OPS-09-02) + gateway route mismatches (OPS-09-03). Major fixes: wallet optimistic locking, JWT authority mapping (3 services), SavingsGoal ownership, gateway schema mismatches, AccountSecurityService bean, UserAccountController, BeneficiaryController ownership, tenant_id migration, AccountType enum._

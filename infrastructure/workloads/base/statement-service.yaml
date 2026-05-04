@@ -31,7 +31,7 @@ spec:
               app: statement-service
       containers:
         - name: statement-service
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:v1.4.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:1.7.9
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

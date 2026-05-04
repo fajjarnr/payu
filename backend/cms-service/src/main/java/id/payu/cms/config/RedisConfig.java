@@ -29,6 +29,9 @@ public class RedisConfig {
     @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
+    @Value("${spring.data.redis.username:}")
+    private String redisUsername;
+
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
@@ -41,6 +44,9 @@ public class RedisConfig {
         config.setHostName(redisHost);
         config.setPort(redisPort);
 
+        if (redisUsername != null && !redisUsername.isEmpty()) {
+            config.setUsername(redisUsername);
+        }
         if (redisPassword != null && !redisPassword.isEmpty()) {
             config.setPassword(redisPassword);
         }

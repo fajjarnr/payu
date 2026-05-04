@@ -31,7 +31,7 @@ spec:
               app: billing-service
       containers:
         - name: billing-service
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:v1.4.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.7.9
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

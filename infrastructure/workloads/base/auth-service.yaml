@@ -41,7 +41,7 @@ spec:
               app: auth-service
       containers:
         - name: auth-service
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service:v1.4.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service:1.7.9
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

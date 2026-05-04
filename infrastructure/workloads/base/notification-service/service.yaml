@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: notification-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.5.0
+    app.kubernetes.io/version: 1.7.9
 spec:
   type: ClusterIP
   selector:

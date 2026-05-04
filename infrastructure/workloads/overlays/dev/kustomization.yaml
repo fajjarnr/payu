@@ -16,95 +16,95 @@ namespace: payu-dev
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   # web-app already uses internal registry in base, just update tag
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   # Simulators (disabled but need tag override for consistency)
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
-    newTag: "v1.7.8"
+    newTag: "1.7.9"
 
 # ============================================================
 # Strategic merge patches: override env vars for operator-deployed infra
 # DB: payu-postgres-primary.payu-dev.svc:5432
 # Kafka: kafka-kafka-bootstrap.payu-dev.svc:9092
-# Redis/DataGrid: payu-cache.payu-dev.svc:11222
+# Redis/DataGrid: payu-cache.payu-dev.svc:6379
 # ============================================================
 patches:
   # --- Scale all to 1 replica ---
@@ -251,8 +251,37 @@ patches:
                       secretKeyRef:
                         name: db-credentials
                         key: password
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: SPRING_DATA_REDIS_HOST
+                    value: "payu-cache.payu-dev.svc"
+                  - name: SPRING_DATA_REDIS_PORT
+                    value: "6379"
+                  - name: REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-credentials
+                        key: REDIS_PASSWORD
+                  - name: PAYU_KEYCLOAK_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: keycloak-credentials
+                        key: PAYU_KEYCLOAK_CLIENT_SECRET
+                  - name: ENCRYPTION_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: encryption-keys
+                        key: AES_ENCRYPTION_KEY
 
-  - target:
+   - target:
       kind: Deployment
       name: wallet-service
     patch: |-
@@ -478,7 +507,31 @@ patches:
                 env:
                   - name: SPRING_DATASOURCE_URL
                     value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
+                  - name: SPRING_DATASOURCE_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: SPRING_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DB_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
+                  - name: DB_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
                   - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: KAFKA_BROKERS
                     value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
                   - name: REDIS_HOST
                     value: "payu-cache.payu-dev.svc"
@@ -490,7 +543,7 @@ patches:
                         name: redis-credentials
                         key: REDIS_PASSWORD
 
-  - target:
+   - target:
       kind: Deployment
       name: backoffice-service
     patch: |-

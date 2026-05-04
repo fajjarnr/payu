@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.9] - 2026-05-04
+
+### Changed — Kafka Stack Upgrade (2026-05-04)
+
+- **Kafka**: Upgraded from `confluentinc/cp-kafka:7.8.7` to `apache/kafka:4.0.0` in local Podman environment.
+  - Env var updated: `CLUSTER_ID` → `KAFKA_CLUSTER_ID` for Apache Kafka 4.0.0 compatibility.
+  - Healthcheck updated: `kafka-broker-api-versions` → `/opt/kafka/bin/kafka-broker-api-versions.sh`.
+- **Kafka UI**: Replaced `provectuslabs/kafka-ui:v0.7.2` with `ghcr.io/kafbat/kafka-ui:latest` (Kafbat UI).
+  - Kafbat UI is the official community continuation of the original Kafka UI project.
+  - Added `DYNAMIC_CONFIG_ENABLED=true` and `SWAGGER_UI_ENABLED=true` environment variables.
+  - Container renamed from `payu-kafka-ui` to `payu-kafbat-ui`.
+
 ### Fixed — Infrastructure / Redis Connectivity Bugs Discovered (2026-05-02)
 
 - **BUG-INFRA-088 — Redis Auth Failure**: All Spring Boot services configured to use `payu-datagrid.payu-dev.svc:11222` without password. DataGrid Infinispan RESP3 requires `AUTH developer payu-cache-dev` handshake that Spring Boot Lettuce cannot complete, causing health check 503 and gateway circuit breaker OPEN.

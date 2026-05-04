@@ -17,5 +17,6 @@ infinispan:
           hotrod:
       - name: redis-endpoint
         socket-binding: resp
+        security-realm: default
         connectors:
           resp:

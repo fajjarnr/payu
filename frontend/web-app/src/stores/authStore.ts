@@ -31,7 +31,7 @@ import type { User } from '@/types';
 interface AuthState {
   // NOTE: token and refreshToken are REMOVED for security
   // Tokens are now managed via httpOnly cookies by the backend
-  user: User | null;
+  user: User | Partial<User> | null;
   accountId: string | null;
   /** True when user is authenticated - derived from user and accountId presence */
   isAuthenticated: boolean;
@@ -41,8 +41,8 @@ interface AuthState {
    * Populated after login or refresh. Does NOT contain the token itself.
    */
   tokenExpiresAt: number | null;
-  setAuth: (user: User, accountId: string) => void;
-  setUser: (user: User) => void;
+  setAuth: (user: User | Partial<User>, accountId: string) => void;
+  setUser: (user: User | Partial<User>) => void;
   setAuthenticated: (authenticated: boolean) => void;
   setTokenExpiry: (expiresAt: number) => void;
   logout: () => void;

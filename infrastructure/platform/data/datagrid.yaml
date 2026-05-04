@@ -25,7 +25,7 @@ stringData:
   identities.yaml: |
     credentials:
       - username: developer
-        password: payu-cache-dev
+        password: payu-cache-dev-password
         roles:
           - admin
 
@@ -67,7 +67,7 @@ spec:
 ---
 # Custom Infinispan configuration with RESP connector
 # NOTE: Do NOT add 'port:' to respConnector — DataGrid 8.5 doesn't support it.
-# RESP listens on the default socketBinding port (11222).
+# RESP listens on the default socketBinding port (11222) - note: applications use redis service on 6379.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -92,7 +92,7 @@ data:
 
 ---
 # Redis-compatible service alias
-# Applications can connect via: redis.payu-dev.svc:11222
+# Applications should connect via: redis.payu-dev.svc:6379 (native Redis) or payu-datagrid.payu-dev.svc:11222 (DataGrid RESP)
 apiVersion: v1
 kind: Service
 metadata:

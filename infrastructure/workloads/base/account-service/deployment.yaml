@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: account-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
-    app.kubernetes.io/version: 1.5.0
+    app.kubernetes.io/version: 1.7.9
     team: backend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: account-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
-        app.kubernetes.io/version: 1.5.0
+        app.kubernetes.io/version: 1.7.9
         team: backend
     spec:
       securityContext:
@@ -29,7 +29,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:latest
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:1.7.9
         ports:
         - containerPort: 8080
           name: http
@@ -67,3 +67,33 @@ spec:
           value: openshift
         - name: SERVER_PORT
           value: '8080'
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: REDIS_PASSWORD
+        - name: SPRING_DATA_REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: REDIS_HOST
+        - name: SPRING_DATA_REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: REDIS_PORT
+        - name: SPRING_DATA_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: REDIS_PASSWORD

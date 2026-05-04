@@ -75,7 +75,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "dev-customer1-change-me",
+          "value": "Dev-customer1-change-me",
           "temporary": true
         }
       ],
@@ -108,7 +108,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "dev-customer2-change-me",
+          "value": "Dev-customer2-change-me",
           "temporary": true
         }
       ],
@@ -136,7 +136,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "dev-admin-change-me-in-prod",
+          "value": "Dev-admin1-change-me-in-prod",
           "temporary": true
         }
       ],
@@ -165,7 +165,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "dev-backoffice-change-me",
+          "value": "Dev-backoffice1-change-me",
           "temporary": true
         }
       ],

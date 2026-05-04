@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: biller-simulator
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:v1.4.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.7.9
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

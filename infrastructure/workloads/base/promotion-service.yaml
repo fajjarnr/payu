@@ -31,7 +31,7 @@ spec:
               app: promotion-service
       containers:
         - name: promotion-service
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:v1.4.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:1.7.9
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

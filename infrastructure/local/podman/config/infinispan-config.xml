@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Infinispan 16 server config with RESP (Redis protocol) on port 6379.
+    Authentication is enabled on RESP using the default properties realm.
+    The container's USER/PASS env vars populate this realm via launch.sh.
+-->
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:16.0 https://infinispan.org/schemas/infinispan-config-16.0.xsd
+                            urn:infinispan:server:16.0 https://infinispan.org/schemas/infinispan-server-16.0.xsd"
+        xmlns="urn:infinispan:config:16.0"
+        xmlns:server="urn:infinispan:server:16.0">
+
+    <cache-container name="default" statistics="true">
+        <security>
+            <authorization/>
+        </security>
+    </cache-container>
+
+    <server xmlns="urn:infinispan:server:16.0">
+        <interfaces>
+            <interface name="public">
+                <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+            </interface>
+        </interfaces>
+
+        <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+            <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+            <socket-binding name="resp" port="6379"/>
+        </socket-bindings>
+
+        <security>
+            <security-realms>
+                <security-realm name="default">
+                    <properties-realm/>
+                </security-realm>
+            </security-realms>
+        </security>
+
+        <endpoints>
+            <endpoint socket-binding="default" security-realm="default">
+                <rest-connector/>
+                <hotrod-connector/>
+                <resp-connector socket-binding="resp" security-realm="default"/>
+            </endpoint>
+        </endpoints>
+    </server>
+</infinispan>

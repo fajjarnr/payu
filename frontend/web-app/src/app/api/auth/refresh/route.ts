@@ -5,6 +5,21 @@ import logger from '@/lib/logger';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
 /**
+ * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
+ * Extracts user claims from the Keycloak access token.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * BFF Token Refresh Route — Rotates tokens using the httpOnly refresh cookie.
  *
  * The browser never sees the raw tokens — old refresh token is read from
@@ -53,10 +68,30 @@ export async function POST() {
 
     // BUG-CROSS-001: Read expires_in from Keycloak response instead of hardcoding 900s
     const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
+
+    // BUG-AUTH-035: Rehydrate user data from refresh token response
+    let user = data.user ?? data.data?.user;
+    if (!user && newAccessToken) {
+      const claims = decodeJwtPayload(newAccessToken);
+      if (claims) {
+        const accountId = (claims.account_id as string) || `account-${claims.sub}`;
+        user = {
+          id: claims.sub as string,
+          accountId,
+          username: claims.preferred_username as string,
+          fullName: (claims.name as string) || '',
+          email: (claims.email as string) || '',
+          roles:
+            ((claims.realm_access as Record<string, unknown>)?.roles as string[]) || [],
+        };
+      }
+    }
+
     // BUG-AUTH-005: Only return expiresIn if newAccessToken was actually received
     const response = NextResponse.json({
       success: true,
       ...(newAccessToken ? { expiresIn: ACCESS_TOKEN_MAX_AGE } : {}),
+      ...(user ? { user } : {}),
     });
 
     if (newAccessToken) {
