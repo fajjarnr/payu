@@ -52,7 +52,7 @@ import java.util.Map;
  * portability — no Java-specific serialization that would break with Data Grid.</p>
  */
 @Slf4j
-@AutoConfiguration(after = RedisAutoConfiguration.class)
+@AutoConfiguration(before = RedisAutoConfiguration.class)
 @EnableCaching
 @EnableConfigurationProperties(CacheProperties.class)
 @ConditionalOnClass(RedisConnectionFactory.class)

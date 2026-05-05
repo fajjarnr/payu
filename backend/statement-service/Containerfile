@@ -2,7 +2,7 @@
 # PayU statement-service - Runtime Container
 # Expects pre-built JAR: mvn -f backend/pom.xml clean package -DskipTests -pl statement-service
 ####
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24-2
 
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-statement-service"

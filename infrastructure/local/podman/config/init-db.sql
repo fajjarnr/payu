@@ -27,6 +27,7 @@ CREATE DATABASE payu_integration;
 CREATE DATABASE payu_products;
 CREATE DATABASE payu_gateway;
 CREATE DATABASE payu_api_portal;
+CREATE DATABASE payu_sonarqube;
 
 -- =============================================================================
 -- DEV ONLY: Single shared 'payu' user for local development convenience.

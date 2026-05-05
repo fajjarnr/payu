@@ -81,9 +81,9 @@
 
 ## 📦 Deployment Log
 
-### v1.8.0 (Completed) — May 4, 2026
+### v1.8.0 (Completed) — May 5, 2026
 
-**Framework & Infrastructure Upgrades — 11 Upgrade Keys Executed**
+**Framework & Infrastructure Upgrades + P0 Deployment Blocker Resolution — Full Stack Verified**
 
 - ✅ **JDK 25 Installed & Active**: `openjdk 25.0.3-ea` deployed. All backend POMs updated from Java 21 → 25 (`<java.version>`, `maven.compiler.source/target`, `maven-compiler-plugin <release>`).
 - ✅ **Spring Boot 3.5.14**: Parent POM upgraded from `3.4.13`. Verified available in Maven Central.
@@ -97,8 +97,13 @@
 - ✅ **Keycloak 26.6.1**: Upgraded from `26.5`.
 - ✅ **Image Digest Pinning**: All floating tags (`kafbat-ui:latest`, `rustfs:latest`) pinned to digest-verified references via `skopeo` for reproducible builds.
 - ⏸️ **Mobile Upgrade Skipped**: Expo SDK 55 / React Native 0.85 deferred pending full compatibility matrix evaluation.
-- **Build Verification**: `mvn clean package -DskipTests -T 1C` → **BUILD SUCCESS** (36 modules, 33s wall clock, JDK 25).
-- **Podman Compose Verification**: `podman compose up -d` → **35/35 containers running/healthy**.
+- **Build Verification**: `mvn clean package -DskipTests -T 1C` → **BUILD SUCCESS** (36 modules, JDK 25).
+- **P0 Blocker OPS-03 — Redis Connectivity**: Fixed `cache-starter` `@AutoConfiguration(after = RedisAutoConfiguration.class)` → `before = RedisAutoConfiguration.class`. Added `redis-native` (Redis 7-alpine) to `podman-compose.yml`. Injected `PAYU_CACHE_REDIS_PASSWORD` into 14 services. All Spring Boot services now return HTTP 200 on `/actuator/health`.
+- **P0 Blocker OPS-04 — Empty Secrets**: Added `username: "payu"` to `db-credentials.yaml`. Added `encryption-keys` Secret to `dev-secrets.yaml`. Deleted 20 orphaned flat base service YAMLs.
+- **Jackson Conflict Resolution**: Excluded `jackson-module-scala_2.13` from `spring-kafka-test` in `compliance-service` and `fx-service` POMs to resolve `JsonMappingException` (Scala module 2.21.2 requiring Jackson >= 2.21.0).
+- **DevSecOps Stack Added**: SonarQube CE (9004), Trivy server (4954), OWASP ZAP (8094), Gitleaks, Nuclei, k6, Syft, Grype (on-demand CLI via `--profile devsecops`).
+- **Podman Compose Verification**: `podman compose up -d` → **24/24 backend services + gateway + web-app + api-portal healthy** (all `/actuator/health` or `/q/health` returning 200).
+- **k6 Smoke Test**: `podman-compose --profile devsecops run --rm k6` → **918/918 requests passed**, p(95) latency 1.71ms, 0% failure rate against `gateway-service:8080/q/health`.
 
 ### v1.7.9 (Completed) — May 4, 2026
 

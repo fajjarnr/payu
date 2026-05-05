@@ -44,6 +44,25 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+  redis-native:
+    image: docker.io/library/redis:7-alpine
+    container_name: payu-redis-native
+    networks:
+      payu-network:
+        aliases:
+          - redis-native
+    ports:
+      - 6380:6379
+    command:
+      - redis-server
+      - --requirepass
+      - payu-cache-dev-password
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "payu-cache-dev-password", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
   kafka:
     image: docker.io/apache/kafka:4.0.0
     container_name: payu-kafka
@@ -168,14 +187,15 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -201,7 +221,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-account-service:1.7.9
+    image: localhost/payu-account-service:1.8.0
   auth-service:
     build:
       context: ../../../backend/auth-service
@@ -229,14 +249,15 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -262,7 +283,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service:1.7.9
+    image: localhost/payu-auth-service:1.8.0
   transaction-service:
     build:
       context: ../../../backend/transaction-service
@@ -284,14 +305,15 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -316,7 +338,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-transaction-service:1.7.9
+    image: localhost/payu-transaction-service:1.8.0
   wallet-service:
     build:
       context: ../../../backend/wallet-service
@@ -335,14 +357,15 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -367,7 +390,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-wallet-service:1.7.9
+    image: localhost/payu-wallet-service:1.8.0
   compliance-service:
     build:
       context: ../../../backend/compliance-service
@@ -386,14 +409,15 @@ services:
       PORT: "8087"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -419,7 +443,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-compliance-service:1.7.9
+    image: localhost/payu-compliance-service:1.8.0
   investment-service:
     build:
       context: ../../../backend/investment-service
@@ -439,14 +463,15 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -472,7 +497,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-investment-service:1.7.9
+    image: localhost/payu-investment-service:1.8.0
   lending-service:
     build:
       context: ../../../backend/lending-service
@@ -491,14 +516,15 @@ services:
       PORT: "8087"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -525,7 +551,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-lending-service:1.7.9
+    image: localhost/payu-lending-service:1.8.0
   bi-fast-simulator:
     build:
       context: ../../../backend/simulators/bi-fast-simulator
@@ -544,13 +570,16 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -573,7 +602,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-bi-fast-simulator:1.7.9
+    image: localhost/payu-bi-fast-simulator:1.8.0
   dukcapil-simulator:
     build:
       context: ../../../backend/simulators/dukcapil-simulator
@@ -591,13 +620,16 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -620,7 +652,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-dukcapil-simulator:1.7.9
+    image: localhost/payu-dukcapil-simulator:1.8.0
   qris-simulator:
     build:
       context: ../../../backend/simulators/qris-simulator
@@ -639,13 +671,16 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -668,7 +703,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-qris-simulator:1.7.9
+    image: localhost/payu-qris-simulator:1.8.0
   billing-service:
     build:
       context: ../../../backend/billing-service
@@ -687,14 +722,15 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -720,7 +756,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-billing-service:1.7.9
+    image: localhost/payu-billing-service:1.8.0
   notification-service:
     build:
       context: ../../../backend/notification-service
@@ -739,14 +775,15 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -774,9 +811,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-notification-service:1.7.9
+    image: localhost/payu-notification-service:1.8.0
   gateway-service:
-    image: localhost/payu-gateway-service:1.7.9
+    image: localhost/payu-gateway-service:1.8.0
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -843,16 +880,20 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      QUARKUS_REDIS_HOSTS: redis://developer:payu-cache-dev-password@redis:6379
-      REDIS_URL: redis://developer:payu-cache-dev-password@redis:6379
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
+      QUARKUS_REDIS_HOSTS: redis://:payu-cache-dev-password@redis-native:6379
+      REDIS_URL: redis://:payu-cache-dev-password@redis-native:6379
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -899,13 +940,16 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -930,7 +974,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-backoffice-service:1.7.9
+    image: localhost/payu-backoffice-service:1.8.0
   partner-service:
     build:
       context: ../../../backend/partner-service
@@ -948,14 +992,15 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
@@ -982,7 +1027,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 240s
-    image: localhost/payu-partner-service:1.7.9
+    image: localhost/payu-partner-service:1.8.0
   promotion-service:
     build:
       context: ../../../backend/promotion-service
@@ -1000,13 +1045,16 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1031,7 +1079,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-promotion-service:1.7.9
+    image: localhost/payu-promotion-service:1.8.0
   support-service:
     build:
       context: ../../../backend/support-service
@@ -1049,13 +1097,16 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1080,7 +1131,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-support-service:1.7.9
+    image: localhost/payu-support-service:1.8.0
   api-portal-service:
     build:
       context: ../../../backend/api-portal-service
@@ -1116,13 +1167,16 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       KEYCLOAK_URL: http://keycloak:8080
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1159,9 +1213,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-api-portal-service:1.7.9
+    image: localhost/payu-api-portal-service:1.8.0
   statement-service:
-    image: localhost/payu-statement-service:1.7.9
+    image: localhost/payu-statement-service:1.8.0
     build:
       context: ../../../backend/statement-service
       dockerfile: Containerfile
@@ -1182,13 +1236,16 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -1252,7 +1309,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-kyc-service:1.7.9
+    image: localhost/payu-kyc-service:1.8.0
   analytics-service:
     build:
       context: ../../../backend/analytics-service
@@ -1284,7 +1341,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-analytics-service:1.7.9
+    image: localhost/payu-analytics-service:1.8.0
   cms-service:
     build:
       context: ../../../backend/cms-service
@@ -1311,14 +1368,17 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_BROKERS: kafka:29092
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -1335,9 +1395,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-cms-service:1.7.9
+    image: localhost/payu-cms-service:1.8.0
   fx-service:
-    image: localhost/payu-fx-service:1.7.9
+    image: localhost/payu-fx-service:1.8.0
     build:
       context: ../../../backend/fx-service
       dockerfile: Containerfile
@@ -1358,14 +1418,17 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
       OIDC_ISSUER: http://keycloak:8080/realms/payu
@@ -1411,13 +1474,16 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_BROKERS: kafka:29092
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
@@ -1436,7 +1502,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-dispute-service:1.7.9
+    image: localhost/payu-dispute-service:1.8.0
   integration-service:
     build:
       context: ../../../backend/integration-service
@@ -1463,13 +1529,16 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_BOOTSTRAP: kafka:29092
       KAFKA_BROKERS: kafka:29092
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       - postgres
@@ -1484,7 +1553,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-integration-service:1.7.9
+    image: localhost/payu-integration-service:1.8.0
   product-catalog-service:
     build:
       context: ../../../backend/product-catalog-service
@@ -1509,14 +1578,17 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_BROKERS: kafka:29092
-      REDIS_HOST: redis
+      REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_USERNAME: developer
+
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis-native
+      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
+      PAYU_CACHE_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -1533,7 +1605,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-product-catalog-service:1.7.9
+    image: localhost/payu-product-catalog-service:1.8.0
   web-app:
     build:
       context: ../../../frontend/web-app
@@ -1561,7 +1633,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app:1.7.9
+    image: localhost/payu-web-app:1.8.0
   jaeger:
     image: docker.io/jaegertracing/all-in-one:1.76.0
     container_name: payu-jaeger
@@ -1736,6 +1808,172 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  # ============================================================
+  # DevSecOps Tool Stack — Complete Local Security Pipeline
+  # ============================================================
+  # These containers provide a local DevSecOps lab environment
+  # matching the tool stack defined in DEVSECOPS_ARCHITECTURE.md.
+  # Long-running servers (SonarQube, Trivy, ZAP) run continuously.
+  # CLI tools (Gitleaks, Nuclei, k6, Syft, Grype) sleep until
+  # invoked via: podman compose run --rm <service> <args>
+  # ============================================================
+
+  sonarqube:
+    image: docker.io/sonarqube:community
+    container_name: payu-sonarqube
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 9004:9000
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      SONAR_JDBC_URL: jdbc:postgresql://postgres:5432/payu_sonarqube
+      SONAR_JDBC_USERNAME: payu
+      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      # SONAR_WEB_JAVAADDITIONALOPTS: "-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=web"
+      # SONAR_CE_JAVAADDITIONALOPTS: "-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=ce"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sf http://localhost:9000/api/system/status | grep -q "UP" || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  trivy:
+    image: docker.io/aquasec/trivy:latest
+    container_name: payu-trivy
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 4954:4954
+    volumes:
+      - trivy_cache:/root/.cache/trivy
+      - /var/lib/containers:/var/lib/containers:ro
+    command:
+      - server
+      - --listen
+      - 0.0.0.0:4954
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - trivy version || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  zap:
+    image: docker.io/zaproxy/zap-stable
+    container_name: payu-zap
+    podman_networks:
+      - name: payu-network
+    ports:
+      - 8094:8080
+    volumes:
+      - zap_data:/zap/wrk
+    command:
+      - zap.sh
+      - -daemon
+      - -host
+      - 0.0.0.0
+      - -port
+      - "8080"
+      - -config
+      - api.key=payu-zap-dev-key-change-in-prod
+      - -config
+      - api.addrs.addr.name=.*
+      - -config
+      - api.addrs.addr.regex=true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sf http://localhost:8080/ || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # CLI tools — run on-demand via: podman compose run --rm <service> <args>
+  gitleaks:
+    image: docker.io/zricethezav/gitleaks:latest
+    container_name: payu-gitleaks
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - ../../../:/repo:ro,z
+    working_dir: /repo
+    command:
+      - detect
+      - --source=/repo
+      - --verbose
+      - --redact
+    profiles:
+      - devsecops
+
+  nuclei:
+    image: docker.io/projectdiscovery/nuclei:latest
+    container_name: payu-nuclei
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - nuclei_data:/root/.cache/nuclei
+    command:
+      - -update-templates
+    profiles:
+      - devsecops
+
+  k6:
+    image: docker.io/grafana/k6:latest
+    container_name: payu-k6
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - ../../../tests/performance/k6:/tests:ro,z
+    working_dir: /tests
+    command:
+      - run
+      - /tests/local-smoke.js
+    profiles:
+      - devsecops
+
+  syft:
+    image: docker.io/anchore/syft:latest
+    container_name: payu-syft
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - /var/lib/containers:/var/lib/containers:ro
+      - ../../../:/repo:ro,z
+    working_dir: /repo
+    command:
+      - --version
+    profiles:
+      - devsecops
+
+  grype:
+    image: docker.io/anchore/grype:latest
+    container_name: payu-grype
+    podman_networks:
+      - name: payu-network
+    volumes:
+      - grype_cache:/root/.cache/grype
+      - /var/lib/containers:/var/lib/containers:ro
+      - ../../../:/repo:ro,z
+    working_dir: /repo
+    command:
+      - --version
+    profiles:
+      - devsecops
+
 volumes:
   postgres_data:
     driver: local
@@ -1754,6 +1992,20 @@ volumes:
   rustfs_data:
     driver: local
   rustfs_logs:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  trivy_cache:
+    driver: local
+  zap_data:
+    driver: local
+  nuclei_data:
+    driver: local
+  grype_cache:
     driver: local
 networks:
   payu-network:

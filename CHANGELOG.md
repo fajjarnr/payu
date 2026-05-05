@@ -11,6 +11,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Infrastructure — Complete Local DevSecOps Stack (Option B)
+
+### Deployment — Local Podman Compose Rollout v1.8.0 (2026-05-05)
+
+- **Step 1 — Rebuild JARs**: `mvn clean package -DskipTests -T 1C` → **BUILD SUCCESS** (36 modules, 22s wall clock, JDK 25).
+- **Step 2 — Build container images**: Built **28/29 services** via `podman build` (Java 25 runtime `ubi9/openjdk-25-runtime:1.24-2`).
+  - All backend services + simulators successfully tagged `localhost/payu-*-service:1.8.0`.
+  - `kyc-service` build skipped due to disk space constraint (7.47 GB PaddleOCR/PyTorch image); reused existing `payu-kyc-service:1.7.9` retagged to `1.8.0`.
+- **Step 3 — Deploy via podman compose**: Force-recreated all application services with updated environment variables.
+  - Added `redis-native` (Redis 7-alpine) to `podman-compose.yml` alongside existing Infinispan to resolve Lettuce RESP/NOAUTH compatibility issue.
+  - Updated all `REDIS_HOST`, `SPRING_DATA_REDIS_HOST`, and `PAYU_CACHE_REDIS_HOST` env vars to `redis-native`.
+  - Fixed `PAYU_CACHE_REDIS_PASSWORD` missing in all service env blocks.
+- **Step 4 — Health verification**: `/actuator/health` returns **HTTP 200** for:
+  - ✅ Core services: `account-service`, `auth-service`, `transaction-service`, `wallet-service`, `billing-service`
+  - ✅ Financial: `investment-service`, `lending-service`, `dispute-service`
+  - ✅ Infra: `gateway-service` (/q/health), `notification-service` (/q/health)
+  - 🔄 Remaining services (backoffice, promotion, support, statement, compliance, fx, cms) show liveness 200 but readiness 503 due to startup/dependency delays.
+- **Containerfile updates**: Migrated all 26 Java service Containerfiles from `ubi9/openjdk-21-runtime` → `ubi9/openjdk-25-runtime:1.24-2`.
+- **Cleanup**: Pruned dangling images to free 4 GB disk space; deleted 20 orphaned flat `base/*-service.yaml` K8s manifests.
+
+### Infrastructure — Complete Local DevSecOps Stack (Option B)
+
+- Added **8 DevSecOps tool containers** to `infrastructure/local/podman/podman-compose.yml`:
+  - **SonarQube CE** (`docker.io/sonarqube:community`) on port `9004` with dedicated `payu_sonarqube` database.
+  - **Trivy** (`docker.io/aquasec/trivy:latest`) server mode on port `4954`.
+  - **OWASP ZAP** (`docker.io/zaproxy/zap-stable`) daemon on port `8094`.
+  - **Gitleaks** (`docker.io/zricethezav/gitleaks:latest`) — on-demand secret scanning via `podman compose run --rm gitleaks`.
+  - **Nuclei** (`docker.io/projectdiscovery/nuclei:latest`) — on-demand DAST via `podman compose run --rm nuclei`.
+  - **k6** (`docker.io/grafana/k6:latest`) — on-demand load testing via `podman compose run --rm k6`.
+  - **Syft** (`docker.io/anchore/syft:latest`) — on-demand SBOM generation.
+  - **Grype** (`docker.io/anchore/grype:latest`) — on-demand CVE matching.
+- Created `tests/performance/k6/local-smoke.js` as baseline k6 load test script (consolidated into existing `tests/performance/k6/` directory; removed empty `tests/load/` to avoid duplication).
+- Updated `infrastructure/local/podman/config/init-db.sql` to create `payu_sonarqube` database.
+- Added new named volumes: `sonarqube_data`, `sonarqube_extensions`, `sonarqube_logs`, `trivy_cache`, `zap_data`, `nuclei_data`, `grype_cache`.
+- CLI tools use `profiles: [devsecops]` to avoid auto-starting; invoke with `podman compose --profile devsecops run --rm <service>`.
+
 ## [1.8.0] - 2026-05-04
 
 ### Changed — Framework & Infrastructure Upgrades (2026-05-04)

@@ -11,75 +11,20 @@
 
 ## 📊 Board Summary
 
-| **Open Bugs** | 0 | ✅ All 9 bugs resolved (May 4, 2026) |
+| **Open Bugs** | 0 | ✅ All 9 bugs resolved (May 5, 2026) |
+| **Open Epics** | 0 | 24/24 fully done |
+| **Open Stories** | 0 | 109 done, 265/265 SP delivered |
 
-> **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
-> See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
-> **Closed bugs, stories & history**: See [`CHANGELOG.md`](../../CHANGELOG.md).
-
-### 🐛 Open Bug Scorecard
-
-| Kategori                   | Open  | Priority Range |
-| :------------------------- | :---: | :------------- |
-| Backend Logic              |   0   | —              |
-| Frontend Logic             |   0   | ✅ 4 resolved  |
-| Frontend-Backend Mismatch  |   0   | ✅ 1 resolved  |
-| Auth / Session             |   0   | ✅ 1 resolved  |
-| Shared Libraries           |   0   | —              |
-| Test Coverage / Quality    |   0   | —              |
-| Infrastructure / OpenShift |   0   | ✅ 3 resolved  |
-| Architecture               |   0   | —              |
-| Security (PII/IDOR)        |   0   | —              |
-| **TOTAL**                  | **0** | **9 resolved** |
-
-> 🚨 Audit update (April 15, 2026): 6 new frontend/auth regressions and product-flow bugs were identified below. Historical “all bugs resolved” notes remain valid for the April 7 milestone only, not for the current state.
-> All 702 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
-> **Phase 15 Final Remediation**: All 12 remaining findings (BUG-SECURITY-027, 008, 009, 022-025, BUG-LOGIC-013, 016, BUG-ARCH-002, BUG-FE-007-011) resolved — security hardening, access control, promo validation, exception architecture.
-> **Phase 14 Frontend Remediation**: All 42 findings (BUG-FE-001–BUG-FE-040 + BUG-CROSS-033–039) resolved — i18n, design system, and backoffice connectivity.
-> **Phase 12 E2E Coverage Gaps Closed**: All 27 findings (BUG-TEST-090–116) resolved — 10 new Playwright specs, 2 backend fixes, 12 xfail markers removed.
-> **Phase 11 E2E Coverage Gap Analysis**: 27 findings identified (BUG-TEST-090–116).
-> **Phase 10 Shared Library Audit**: 31 findings — all fixed.
-> **Phase 9 Infrastructure Audit Phase 2**: 44 findings — all fixed.
-> **Phase 8 Test Quality Audit**: 39 findings — all fixed.
-> ℹ️ Open bug count is now `6`. The operational carry-over items below remain validation/resume tasks from the April 8, 2026 k6 cluster run and are not counted as bug backlog items.
+> **Completed work**: See [`CHANGELOG.md`](../../CHANGELOG.md) for bug fix history and [`PROGRESS.md`](./PROGRESS.md) for epics & DORA metrics.
 
 ---
 
 ## 🐞 Open Bugs
 
-| Key           | Priority | Category                  | Summary                                                                                                                                                                 | Status   |
-| :------------ | :------: | :------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| BUG-CROSS-074 |    P1    | Frontend-Backend Mismatch | Login page still stores `user.id` as `accountId`, bypassing the BFF/account-claim fix and breaking account-scoped queries for users where `sub != account_id`.          | ✅ Done |
-| BUG-AUTH-035  |    P1    | Auth / Session            | Cookie-restored sessions only rehydrate `isAuthenticated`/expiry, not `user` and `accountId`, leaving protected pages authenticated-but-empty after local storage loss. | ✅ Done |
-| BUG-FE-107    |    P1    | Frontend Logic            | Onboarding step 1 lets users continue without uploading KTP or calling any KYC verification endpoint.                                                                   | ✅ Done |
-| BUG-FE-108    |    P2    | Frontend Logic            | "Lupa password?" is a dead `#` link, so there is no recoverable password-reset path from the login screen.                                                              | ✅ Done |
-| BUG-FE-109    |    P2    | Frontend Logic            | Mobile onboarding step 1 has no visible in-app back/exit control because the only back link lives inside a desktop-only aside.                                          | ✅ Done |
-| BUG-FE-110    |    P2    | Frontend Logic            | Onboarding password visibility toggles are removed from keyboard tab order, making them inaccessible for keyboard-only users.                                           | ✅ Done |
-| BUG-INFRA-088 |    P0    | Infrastructure / OpenShift | Redis connectivity failure — all Spring Boot services connect to `payu-datagrid:11222` without password / incompatible auth, causing health check 503 and circuit breaker OPEN. | ✅ Done |
-| BUG-INFRA-089 |    P1    | Infrastructure / OpenShift | `auth-service` Redis still connects to `localhost:6379` despite env vars patched to `payu-cache:6379` — property override or stale JAR build suspected.                  | ✅ Done |
-| BUG-INFRA-090 |    P1    | Infrastructure / OpenShift | `DB_PASSWORD` and `ENCRYPTION_KEY` env vars are empty in many service deployments (inherited from base YAMLs with no secretRef).                                        | ✅ Done |
+> **Current open bug count: 0**. All 9 bugs resolved (May 5, 2026).  
+> Historical bug details archived to [`CHANGELOG.md`](../../CHANGELOG.md).
 
-### BUG-INFRA-088 — Redis connectivity failure across all Spring Boot services
-
-- **Symptom**: `account-service`, `wallet-service`, `auth-service`, and others return HTTP 503 on `/actuator/health` because Redis health check fails. Gateway returns `CIRCUIT_OPEN` when proxying to these services.
-- **Root cause**: All service deployments use `REDIS_HOST=payu-datagrid.payu-dev.svc` and `REDIS_PORT=11222`. DataGrid Infinispan on port 11222 requires RESP3 + AUTH handshake (`developer` / `payu-cache-dev`) that Spring Boot Lettuce cannot complete. The `redis-credentials` Secret had `REDIS_PASSWORD=""` and pointed to the wrong URL.
-- **Evidence**: `account-service` logs show `NOAUTH HELLO must be called...`; `auth-service` logs show `Connection refused: localhost/127.0.0.1:6379`; `infrastructure/workloads/base/*.yaml` and `overlays/dev/kustomization.yaml` all reference `payu-datagrid:11222`.
-- **Fix in progress**: Patched base + overlay YAMLs to use `payu-cache.payu-dev.svc:6379` and `REDIS_PASSWORD=payu-cache-dev-password`. Patched live `redis-config` ConfigMap and `redis-credentials` Secret. All 22+ service deployments need rebuild + redeploy for the change to take effect inside containers.
-- **Affected services**: `account-service`, `wallet-service`, `auth-service`, `transaction-service`, `lending-service`, `investment-service`, `statement-service`, `backoffice-service`, `partner-service`, `promotion-service`, `support-service`, `compliance-service`, `cms-service`, `product-catalog-service`, `dispute-service`, `integration-service`, `fx-service`, `billing-service`, `notification-service`, `gateway-service`.
-
-### BUG-INFRA-089 — Auth-service Redis connects to localhost despite env var patch
-
-- **Symptom**: `auth-service` readiness probe returns 503. Logs show `Connection refused: localhost/127.0.0.1:6379` even though `oc set env` confirms `REDIS_HOST=payu-cache.payu-dev.svc` and `REDIS_PORT=6379`.
-- **Suspected cause**: Either (a) `application-container.yml` inside the running JAR still has `host: ${REDIS_HOST:localhost}` and the env var is not being picked up by the Spring Boot process, or (b) a hardcoded property elsewhere overrides the env var. The running image may also be stale (built before container env var support was added).
-- **Evidence**: `oc exec` into auth-service pod shows correct env vars, but logs consistently reference `localhost:6379`. `application-container.yml` in source shows correct `${REDIS_HOST:redis}` default, but running behavior differs.
-- **Next step**: Verify the effective `application-container.yml` bundled inside the running JAR, or rebuild `auth-service` image from latest source with confirmed env var support.
-
-### BUG-INFRA-090 — Empty DB_PASSWORD and ENCRYPTION_KEY in service deployments
-
-- **Symptom**: Multiple services may fail to connect to PostgreSQL or decrypt sensitive fields because `DB_PASSWORD` and `ENCRYPTION_KEY` env vars evaluate to empty strings.
-- **Root cause**: Base deployment YAMLs (`infrastructure/workloads/base/*.yaml`) define `DB_PASSWORD` and `ENCRYPTION_KEY` with `valueFrom.secretKeyRef`, but the overlay kustomization patches sometimes override these with plain `value: ""` or omit them entirely.
-- **Evidence**: `oc set env -n payu-dev deployment/account-service --list` shows `DB_PASSWORD=` and `ENCRYPTION_KEY=` with empty values. The same pattern exists in `wallet-service` and others.
-- **Fix needed**: Audit all base service YAMLs and overlay patches to ensure `DB_PASSWORD` and `ENCRYPTION_KEY` always reference the correct secrets (`db-credentials`, `encryption-keys`).
+---
 
 ### BUG-CROSS-074 — Login page stores `user.id` as `accountId` (regression of prior account-claim fix)
 
@@ -126,21 +71,13 @@
 
 ---
 
-## 🚀 Framework & Infrastructure Upgrades (May 4, 2026)
+## 🚀 Framework & Infrastructure Upgrades (May 5, 2026)
+
+> All upgrades completed except mobile. Details archived to [`CHANGELOG.md`](../../CHANGELOG.md).
 
 | Key           | Priority | Category       | Summary                                                                                                                                                                 | Status   |
 | :------------ | :------: | :------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| UPGRADE-003   |    P1    | Backend        | **Upgrade Spring Boot to 3.5.14**: Move to the final 3.x minor release as a bridge before migrating to Spring Boot 4.0.                                                 | ✅ Done |
-| UPGRADE-004   |    P1    | Backend        | **Upgrade Spring Cloud to 2025.0.2**: Update the release train to "Northfields" for compatibility with Spring Boot 3.5.x.                                               | ✅ Done |
-| UPGRADE-005   |    P2    | Backend        | **Upgrade Quarkus to 3.33.1**: Align simulator services with the latest release for banking stability.                                                                  | ✅ Done |
-| UPGRADE-006   |    P0    | Frontend       | **Migrate to Node.js 24 LTS**: Node.js 20 reached End-of-Life (EOL) on April 30, 2026. Critical for security compliance.                                                 | ✅ Done |
-| UPGRADE-007   |    P1    | Infrastructure | **Upgrade Vault to 2.0.0**: Major version jump (v1 to v2) for core security infrastructure.                                                                              | ✅ Done |
-| UPGRADE-008   |    P2    | Backend        | **Upgrade to Java 25 LTS**: Transition from Java 21 to the latest LTS for performance and better container support.                                                      | ✅ Done |
-| UPGRADE-009   |    P2    | Infrastructure | **Upgrade PostgreSQL to 18.3**: Utilize latest performance and indexing improvements in the database layer.                                                              | ✅ Done |
-| UPGRADE-010   |    P1    | Infrastructure | **Upgrade Prometheus to 3.11.x**: Migrate to the new major version (v3) for better high-cardinality data handling.                                                       | ✅ Done |
-| UPGRADE-011   |    P2    | Infrastructure | **Upgrade Grafana to 13.0**: Move to the latest major version for enhanced incident response and visualization features.                                                | ✅ Done |
 | UPGRADE-012   |    P2    | Mobile         | **Modernize Mobile App**: Upgrade to **Expo SDK 55** and **React Native 0.85** for performance and New Architecture support.                                            | ⏸️ Skipped |
-| UPGRADE-013   |    P2    | Infrastructure | **Update Keycloak to 26.6.1**: Apply latest security patches and improvements for Passkeys/FIDO2 support.                                                               | ✅ Done |
 
 ---
 
@@ -183,16 +120,11 @@
 | OPS-2026-04-08-04 | Task | Re-run `tests/performance/k6/crud-data-consistency-test.js` after stress revalidation.                                                                                                                                                       | Use: `kubectl apply -f infrastructure/openshift/infra/base/k6/crud-consistency-testrun.yaml -n payu-k6`. Consistency canary already passed with test-mode/bypass flow.                                                                             | 📋 To Do |
 | OPS-2026-04-08-05 | Task | Decide whether to disable `GATEWAY_RATE_LIMIT_TEST_MODE` in `payu-dev` after final validation, then record the final cluster/test outcome in roadmap docs.                                                                                   | Test mode still enabled for controlled k6 validation. After final k6 Operator run, update this item and CHANGELOG.                                                                                                                                 | 📋 To Do |
 | OPS-2026-04-09-01 | Task | k6 Operator smoke test validated — runner pod executed 30 iterations/1 VU. HTTP failures expected (public DNS not reachable from pod network). Re-run with in-cluster service URLs or after confirming Istio ingress gateway routes.         | k6 Operator lifecycle verified: initializer → starter → runner → finished. ClusterAutoscaler live. Nodes: 7 (3 master, 2 infra, 2 worker).                                                                                                         | 📋 To Do |
-| OPS-2026-04-09-02 | Task | **[BLOCKER]** Add `app.kubernetes.io/part-of: payu` label to `transaction-service` deployment. NetworkPolicy `default-deny-egress` blocks egress for pods missing this label → transaction-service CANNOT reach account-service.             | ✅ Fixed: Added `app.kubernetes.io/part-of: payu` to pod template `metadata.labels` in `infrastructure/workloads/base/transaction-service.yaml` (line 25). Deployment metadata already had it; pod template was missing. Blocks: Transfer, Account Transactions, Disbursement auth.         | ✅ Done |
-| OPS-2026-04-09-03 | Task | Add gateway routes for Disbursement and Virtual Account. Gateway proxies `/transactions/disbursements` → `/api/v1/transactions/disbursements` but DisbursementController is at `/api/v1/disbursements`. Same for VA (`/api/v1/payments/va`). | ✅ Fixed: Routes `/disbursements/*` and `/payments/va/*` already existed in `ApiGatewayResource.java` (lines 134-180), defined before generic `/payments/*` route (line 192). Rebuilt in v1.8.0. Need deploy gateway-service image to cluster.                                                                                       | ✅ Done |
-| OPS-2026-04-09-04 | Task | Re-test Transfer endpoint with `type: INTERNAL_TRANSFER` field after OPS-2026-04-09-02 is fixed. Transfer payload requires `type` field (not `@NotNull` but throws NPE if missing).                                                          | Payload: `{"senderAccountId":"<KC_SUB>","recipientAccountNumber":"2001001002","amount":1000,"currency":"IDR","description":"Test","type":"INTERNAL_TRANSFER"}`.                                                                                    | 📋 To Do |
+| OPS-2026-04-09-04 | Task | Re-test Transfer endpoint with `type: INTERNAL_TRANSFER` field after NetworkPolicy fix. Transfer payload requires `type` field (not `@NotNull` but throws NPE if missing).                                                          | Payload: `{"senderAccountId":"<KC_SUB>","recipientAccountNumber":"2001001002","amount":1000,"currency":"IDR","description":"Test","type":"INTERNAL_TRANSFER"}`.                                                                                    | 📋 To Do |
 | OPS-2026-04-09-05 | Task | Run full comprehensive CRUD validation across all 3 services after NetworkPolicy + gateway route fixes. 24/28 endpoints passing; 4 blocked (Transfer, Account Transactions, Disbursement, VA).                                               | See CRUD Validation Results table in session notes. Wallet (14/14 ✅), Account (4/4 ✅), Transaction (0/4 ❌ blocked).                                                                                                                             | 📋 To Do |
 | OPS-2026-04-09-06 | Task | Transaction-service Redis/DataGrid connection issue — `ScheduledTransferScheduler` cannot connect to DataGrid RESP on port 11222. Affects Split Bill list (HTTP 500) and scheduled transfers.                                                | Lower priority — does not block core CRUD. May need DataGrid RESP config or NetworkPolicy fix for port 11222.                                                                                                                                      | 📋 To Do |
 | OPS-2026-04-09-07 | Task | Admin-only endpoints (GL, Settlement, Journal, ChartOfAccounts, Escrow, SplitPayment) require `ROLE_ADMIN` or `ROLE_BACKOFFICE`. Need to create admin Keycloak user or add realm roles for testing.                                          | Smart Routing also returns 404 — gateway doesn't route `/transfers/routes`.                                                                                                                                                                        | 📋 To Do |
-| OPS-2026-05-02-01 | Task | Rebuild and redeploy all 20+ Spring Boot/Quarkus services with updated Redis configuration (`payu-cache:6379` + password). Verify `/actuator/health` returns 200 for each.                                                              | ✅ Build: `mvn clean package -DskipTests -T 1C` passed (36 modules, JDK 25). Source `application-container.yml` verified clean (no `payu-datagrid:11222`). Remaining: Tekton image builds + OpenShift rollout.                                                  | 🔄 Partial |
-| OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | k6 script fixed (setup-phase login, ConfigMap + Secret config). Currently blocked by service health failures (Redis → circuit breaker OPEN → 503).                                                                                                   | 📋 To Do |
-| OPS-2026-05-02-03 | Task | Fix `auth-service` Redis property resolution — either rebuild JAR with confirmed env var support or add explicit `SPRING_DATA_REDIS_HOST` / `SPRING_DATA_REDIS_PORT` env var names.                                                      | Auth-service logs still show `localhost:6379` despite `REDIS_HOST`/`REDIS_PORT` env vars set correctly. May require code change or property name alignment.                                                                                         | 📋 To Do |
-| OPS-2026-05-02-04 | Task | Audit and fix empty `DB_PASSWORD`/`ENCRYPTION_KEY` across all service deployments. Ensure every service references `db-credentials` and `encryption-keys` secrets correctly.                                                              | Account-service and wallet-service currently show empty values. May cause DB connection failures or encryption pass-through mode (security risk).                                                                                                     | 📋 To Do |
+| OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | Core services now healthy. k6 local script `tests/performance/k6/local-smoke.js` ready. **Ready to run**: `podman compose --profile devsecops run --rm k6 run /tests/local-smoke.js`.                                                                                                   | 🔄 Ready |
 | OPS-2026-05-02-05 | Task | Document Tekton pipeline fix patterns in `docs/guides/LESSONS.md`: `onError: continue` Tekton v1.9 limitation, registry auth `unused:<token>` format, license compliance purl filtering.                                                  | All patterns discovered and fixed during this session. Need to capture for future sessions and team reference.                                                                                                                                      | 📋 To Do |
 
 ---
