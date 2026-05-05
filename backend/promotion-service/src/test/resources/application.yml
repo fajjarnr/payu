@@ -1,24 +1,23 @@
-# Test Configuration for Promotion Service
-quarkus:
-  # Use H2 in-memory database for unit tests (no Docker required)
+spring:
   datasource:
-    db-kind: h2
-    jdbc:
-      # PostgreSQL compatibility mode prevents test/production divergence
-      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    driver-class-name: org.h2.Driver
     username: sa
     password:
-  hibernate-orm:
-    database:
-      generation: drop-and-create
-      dialect: org.hibernate.dialect.H2Dialect
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
   flyway:
-    migrate-at-start: false
-  kafka:
-    devservices:
-      enabled: false
-  opentelemetry:
     enabled: false
-  # Test Configuration
-  test:
-    continuous-testing: disabled
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+
+logging:
+  level:
+    id.payu.promotion: DEBUG
+    org.springframework.web: INFO
+    org.springframework.test: INFO

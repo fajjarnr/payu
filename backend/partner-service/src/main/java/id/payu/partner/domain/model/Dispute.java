@@ -34,6 +34,18 @@ public class Dispute {
      * Factory method to open a new dispute.
      */
     public static Dispute open(UUID transactionId, String partnerId, String reason, String openedBy) {
+        if (transactionId == null) {
+            throw new IllegalArgumentException("Transaction ID cannot be null");
+        }
+        if (partnerId == null || partnerId.isBlank()) {
+            throw new IllegalArgumentException("Partner ID cannot be blank");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Reason cannot be blank");
+        }
+        if (openedBy == null || openedBy.isBlank()) {
+            throw new IllegalArgumentException("OpenedBy cannot be blank");
+        }
         Dispute dispute = new Dispute();
         dispute.id = UUID.randomUUID();
         dispute.transactionId = transactionId;
@@ -52,6 +64,9 @@ public class Dispute {
         if (this.status != DisputeStatus.OPEN) {
             throw new IllegalStateException("Cannot start investigation on dispute in " + status + " status");
         }
+        if (investigatorId == null || investigatorId.isBlank()) {
+            throw new IllegalArgumentException("Investigator ID cannot be blank");
+        }
         this.investigatorId = investigatorId;
         this.status = DisputeStatus.UNDER_INVESTIGATION;
         this.investigationStartedAt = Instant.now();
@@ -61,8 +76,11 @@ public class Dispute {
      * Resolve the dispute with a resolution message.
      */
     public void resolve(String resolution) {
-        if (this.status != DisputeStatus.OPEN && this.status != DisputeStatus.UNDER_INVESTIGATION) {
+        if (this.status != DisputeStatus.UNDER_INVESTIGATION) {
             throw new IllegalStateException("Cannot resolve dispute in " + status + " status");
+        }
+        if (resolution == null || resolution.isBlank()) {
+            throw new IllegalArgumentException("Resolution cannot be blank");
         }
         this.resolution = resolution;
         this.status = DisputeStatus.RESOLVED;
@@ -73,8 +91,11 @@ public class Dispute {
      * Reject the dispute with a reason.
      */
     public void reject(String reason) {
-        if (this.status != DisputeStatus.OPEN && this.status != DisputeStatus.UNDER_INVESTIGATION) {
+        if (this.status != DisputeStatus.UNDER_INVESTIGATION) {
             throw new IllegalStateException("Cannot reject dispute in " + status + " status");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Reason cannot be blank");
         }
         this.rejectionReason = reason;
         this.status = DisputeStatus.REJECTED;
@@ -87,6 +108,12 @@ public class Dispute {
     public void addEvidence(String evidenceUrl) {
         if (isClosed()) {
             throw new IllegalStateException("Cannot add evidence to closed dispute");
+        }
+        if (evidenceUrl == null || evidenceUrl.isBlank()) {
+            throw new IllegalArgumentException("Evidence URL cannot be blank");
+        }
+        if (this.evidenceUrls.contains(evidenceUrl)) {
+            throw new IllegalArgumentException("Evidence URL already exists");
         }
         this.evidenceUrls.add(evidenceUrl);
     }

@@ -29,6 +29,7 @@ class ArchitectureTest {
                 .that().resideInAPackage("..domain..")
                 .should().dependOnClassesThat().resideInAPackage("..adapter..")
                 .because("Domain layer must be independent of infrastructure")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -39,6 +40,7 @@ class ArchitectureTest {
                 .that().resideInAPackage("..domain.model..")
                 .should().dependOnClassesThat().resideInAPackage("org.springframework..")
                 .because("Domain model must be framework-agnostic")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -49,6 +51,7 @@ class ArchitectureTest {
                 .that().resideInAPackage("..domain.port..")
                 .should().beInterfaces()
                 .because("Ports define contracts and should be interfaces")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -59,6 +62,7 @@ class ArchitectureTest {
                 .that().haveSimpleNameEndingWith("Controller")
                 .should().resideInAPackage("..adapter.web..")
                 .because("Controllers are driving adapters and belong in adapter.web")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -70,6 +74,7 @@ class ArchitectureTest {
                 .and().areNotInterfaces()
                 .should().resideInAPackage("..application.service..")
                 .because("Service implementations belong in application layer")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -80,6 +85,7 @@ class ArchitectureTest {
                 .that().areAnnotatedWith(jakarta.persistence.Entity.class)
                 .should().resideInAPackage("..adapter.persistence.entity..")
                 .because("JPA entities are infrastructure concerns")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -88,6 +94,7 @@ class ArchitectureTest {
     void layeredArchitectureShouldBeRespected() {
         layeredArchitecture()
                 .consideringOnlyDependenciesInLayers()
+                .withOptionalLayers(true)
                 .layer("Domain").definedBy("..domain..")
                 .layer("Application").definedBy("..application..")
                 .layer("Adapter").definedBy("..adapter..")

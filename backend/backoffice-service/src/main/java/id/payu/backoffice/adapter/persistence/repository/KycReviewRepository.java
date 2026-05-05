@@ -16,6 +16,7 @@ public interface KycReviewRepository extends JpaRepository<KycReview, UUID> {
     // BUG-BE-043: Pageable version
     Page<KycReview> findByStatus(KycReview.KycStatus status, Pageable pageable);
     List<KycReview> findByUserId(String userId);
+    List<KycReview> findByUserIdOrderByCreatedAtDesc(String userId);
 
     // Search methods
     List<KycReview> findByUserIdContainingIgnoreCase(String userId);

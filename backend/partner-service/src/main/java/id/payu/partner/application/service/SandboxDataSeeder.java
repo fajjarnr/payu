@@ -85,6 +85,7 @@ public class SandboxDataSeeder {
                     partner.setPartnerCode("TEST-PARTNER");
                     partner.setName("Test Partner (Sandbox)");
                     partner.setEmail("sandbox@payu.fajjjar.my.id");
+                    partner.setType("MERCHANT");
                     partner.setStatus(PartnerStatus.ACTIVE);
                     partner.setWebhookUrl("https://webhook.site/sandbox-test");
                     partner.setCreatedAt(LocalDateTime.now());
@@ -99,6 +100,7 @@ public class SandboxDataSeeder {
             merchant1.setBusinessName("Test Retail Store");
             merchant1.setCategory(Merchant.MerchantCategory.RETAIL);
             merchant1.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant1.setAddress("123 Test Street");
             merchant1.setSettlementAccount(TEST_BCA_ACCOUNT);
             merchant1.setSettlementBank("BCA");
             merchant1.setCreatedAt(LocalDateTime.now());
@@ -116,6 +118,7 @@ public class SandboxDataSeeder {
             merchant2.setBusinessName("Test Restaurant");
             merchant2.setCategory(Merchant.MerchantCategory.FOOD_BEVERAGE);
             merchant2.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant2.setAddress("456 Test Avenue");
             merchant2.setSettlementAccount(TEST_BNI_ACCOUNT);
             merchant2.setSettlementBank("BNI");
             merchant2.setCreatedAt(LocalDateTime.now());
@@ -133,6 +136,7 @@ public class SandboxDataSeeder {
             merchant3.setBusinessName("Test Service Provider");
             merchant3.setCategory(Merchant.MerchantCategory.SERVICES);
             merchant3.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant3.setAddress("789 Test Boulevard");
             merchant3.setSettlementAccount(TEST_MANDIRI_ACCOUNT);
             merchant3.setSettlementBank("MANDIRI");
             merchant3.setCreatedAt(LocalDateTime.now());

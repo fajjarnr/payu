@@ -137,11 +137,13 @@ public class CashbackRule {
         }
 
         BigDecimal applicableCashback = BigDecimal.ZERO;
+        BigDecimal highestThreshold = BigDecimal.ZERO;
 
         // Find the highest tier that applies
         for (Map.Entry<BigDecimal, BigDecimal> tier : tieredCashback.entrySet()) {
             BigDecimal tierThreshold = tier.getKey();
-            if (amount.compareTo(tierThreshold) >= 0) {
+            if (amount.compareTo(tierThreshold) >= 0 && tierThreshold.compareTo(highestThreshold) >= 0) {
+                highestThreshold = tierThreshold;
                 applicableCashback = tier.getValue();
             }
         }

@@ -3,6 +3,7 @@ package id.payu.billing.application.service;
 import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
+import id.payu.billing.domain.port.out.BillerPort;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.CreatePaymentRequest;
@@ -38,6 +39,9 @@ class PaymentServiceTest {
     @Mock
     PaymentEventPort eventPort;
 
+    @Mock
+    BillerPort billerPort;
+
     @BeforeEach
     void setup() {
         lenient().when(persistencePort.save(any(BillPayment.class)))
@@ -51,6 +55,9 @@ class PaymentServiceTest {
                     }
                     return p;
                 });
+
+        lenient().when(billerPort.pay(any(), any(), any(), any()))
+                .thenReturn(new BillerPort.PaymentResult("00", "Success", "btx-123", "COMPLETED", java.time.Instant.now()));
     }
 
     @Nested
@@ -129,7 +136,7 @@ class PaymentServiceTest {
             // Then
             assertNotNull(payment);
             assertEquals(BillPayment.PaymentStatus.FAILED, payment.getStatus());
-            assertEquals("Wallet service unavailable", payment.getFailureReason());
+            assertEquals("Payment processing failed: Connection refused", payment.getFailureReason());
         }
 
         @Test

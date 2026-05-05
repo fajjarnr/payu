@@ -40,6 +40,7 @@ class ArchitectureTest {
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .withOptionalLayers(true)
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Webhook").definedBy("..adapter.webhook..")
                     .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
@@ -74,6 +75,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAnyPackage("..application..", "..adapter..")
                     .because("Domain layer must be independent of infrastructure concerns")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -91,6 +93,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
                     .because("Service classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -102,6 +105,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Repository")
                     .because("Repository classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -118,6 +122,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("..application..")
                     .because("DTOs should be simple data containers without service dependencies")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }

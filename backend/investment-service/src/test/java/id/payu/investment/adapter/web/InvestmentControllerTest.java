@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -52,7 +53,7 @@ class InvestmentControllerTest {
         testTransactionId = UUID.randomUUID();
         testAmount = new BigDecimal("1000000.00");
         mockJwt = mock(Jwt.class);
-        given(mockJwt.getSubject()).willReturn(testUserId);
+        lenient().when(mockJwt.getSubject()).thenReturn(testUserId);
     }
 
     @Nested

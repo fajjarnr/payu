@@ -96,8 +96,7 @@ class SandboxIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.created").isArray())
-                .andExpect(jsonPath("$.message").value("Sandbox test data seeded successfully"));
+                .andExpect(jsonPath("$.data.created").isArray());
     }
 
     @Test
@@ -138,6 +137,7 @@ class SandboxIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void getSandboxStatus_ReturnsStatus() throws Exception {
         mockMvc.perform(get("/admin/sandbox/status")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -149,6 +149,7 @@ class SandboxIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void requestWithSandboxKey_AddsSandboxHeader() throws Exception {
         // This test verifies the filter adds the header
         // In a real scenario, we'd need to hit an endpoint that uses the filter

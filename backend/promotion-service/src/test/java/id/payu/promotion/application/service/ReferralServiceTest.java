@@ -37,6 +37,9 @@ class ReferralServiceTest {
     @Autowired
     RewardRepository rewardRepository;
 
+    @Autowired
+    LoyaltyPointsRepository loyaltyPointsRepository;
+
     @MockBean
     @SuppressWarnings("rawtypes")
     id.payu.promotion.application.service.EmitterPlaceholder promotionEvents;
@@ -48,6 +51,7 @@ class ReferralServiceTest {
     void setUp() {
         referralRepository.deleteAll();
         rewardRepository.deleteAll();
+        loyaltyPointsRepository.deleteAll();
     }
 
     @Test
@@ -135,11 +139,11 @@ class ReferralServiceTest {
 
         assertEquals(Referral.Status.COMPLETED, result.getStatus());
 
-        var referrerRewards = rewardRepository.findByAccountId(REFERRER_ACCOUNT_ID);
-        var refereeRewards = rewardRepository.findByAccountId(REFEREE_ACCOUNT_ID);
+        var referrerPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(REFERRER_ACCOUNT_ID);
+        var refereePoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(REFEREE_ACCOUNT_ID);
 
-        assertTrue(referrerRewards.size() > 0 && refereeRewards.size() > 0,
-                "Both referrer and referee must receive rewards on referral completion");
+        assertTrue(referrerPoints.size() > 0 && refereePoints.size() > 0,
+                "Both referrer and referee must receive loyalty points on referral completion");
     }
 
     @Test

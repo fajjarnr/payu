@@ -2,7 +2,9 @@ package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.model.Card;
+import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.port.in.CardUseCase;
+import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.dto.CardResponse;
 import id.payu.wallet.dto.CreateCardRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,9 @@ class CardControllerTest {
 
     @Mock
     private CardUseCase cardUseCase;
+
+    @Mock
+    private WalletUseCase walletUseCase;
 
     @InjectMocks
     private CardController cardController;
@@ -106,6 +111,8 @@ class CardControllerTest {
     void shouldFreezeCard() {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
+        Wallet wallet = Wallet.builder().id(testCard.getWalletId()).accountId("ACC-001").build();
+        when(walletUseCase.getWallet(testCard.getWalletId())).thenReturn(wallet);
 
         ResponseEntity<ApiResponse<Void>> response = cardController.freezeCard(cardId, mockJwt);
 
@@ -118,6 +125,8 @@ class CardControllerTest {
     void shouldUnfreezeCard() {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
+        Wallet wallet = Wallet.builder().id(testCard.getWalletId()).accountId("ACC-001").build();
+        when(walletUseCase.getWallet(testCard.getWalletId())).thenReturn(wallet);
 
         ResponseEntity<ApiResponse<Void>> response = cardController.unfreezeCard(cardId, mockJwt);
 
@@ -130,6 +139,8 @@ class CardControllerTest {
     void shouldGetCardById() {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
+        Wallet wallet = Wallet.builder().id(testCard.getWalletId()).accountId("ACC-001").build();
+        when(walletUseCase.getWallet(testCard.getWalletId())).thenReturn(wallet);
 
         ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId, mockJwt);
 

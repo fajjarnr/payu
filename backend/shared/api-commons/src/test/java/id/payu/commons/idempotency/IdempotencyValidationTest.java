@@ -38,11 +38,13 @@ class IdempotencyValidationTest {
     @Test
     void shouldReturnCachedResponseForDuplicateRequest() {
         // Given: A previous request with the same idempotency key
-        String idempotencyKey = "test-key-12345";
+        String idempotencyKey = "550e8400-e29b-41d4-a716-446655440001";
         TestRequest request = new TestRequest("amount", 1000);
+        // Compute fingerprint that matches the request
+        String expectedFingerprint = idempotencyService.computeFingerprint(request);
         IdempotencyEntry cachedEntry = IdempotencyEntry.completed(
                 idempotencyKey,
-                "fingerprint123",
+                expectedFingerprint,
                 200,
                 "{\"result\":\"success\",\"amount\":1000}"
         );
@@ -64,13 +66,15 @@ class IdempotencyValidationTest {
     @Test
     void shouldRejectDifferentRequestWithSameKey() {
         // Given: A previous request with different body
-        String idempotencyKey = "test-key-67890";
+        String idempotencyKey = "550e8400-e29b-41d4-a716-446655440002";
         TestRequest originalRequest = new TestRequest("amount", 1000);
         TestRequest differentRequest = new TestRequest("amount", 2000);
 
+        // Use original request fingerprint
+        String originalFingerprint = idempotencyService.computeFingerprint(originalRequest);
         IdempotencyEntry cachedEntry = IdempotencyEntry.completed(
                 idempotencyKey,
-                "different-fingerprint",
+                originalFingerprint,
                 200,
                 "{\"result\":\"success\"}"
         );
@@ -88,12 +92,14 @@ class IdempotencyValidationTest {
     @Test
     void shouldDetectInProgressRequest() {
         // Given: A request currently in progress
-        String idempotencyKey = "test-key-in-progress";
+        String idempotencyKey = "550e8400-e29b-41d4-a716-446655440003";
         TestRequest request = new TestRequest("action", "transfer");
 
+        // Use matching fingerprint
+        String requestFingerprint = idempotencyService.computeFingerprint(request);
         IdempotencyEntry inProgressEntry = IdempotencyEntry.inProgress(
                 idempotencyKey,
-                "fingerprint456"
+                requestFingerprint
         );
 
         when(repository.findByKey(any(IdempotencyKey.class)))
@@ -109,7 +115,7 @@ class IdempotencyValidationTest {
     @Test
     void shouldStoreSuccessfulResponse() {
         // Given: A new request
-        String idempotencyKey = "test-key-success";
+        String idempotencyKey = "550e8400-e29b-41d4-a716-446655440004";
         TestRequest request = new TestRequest("amount", 5000);
         TestResponse response = new TestResponse("success", 5000);
 
@@ -135,7 +141,7 @@ class IdempotencyValidationTest {
     @Test
     void shouldStoreErrorResponse() {
         // Given: A request that fails
-        String idempotencyKey = "test-key-error";
+        String idempotencyKey = "550e8400-e29b-41d4-a716-446655440005";
         TestRequest request = new TestRequest("amount", -1);
         Exception error = new IllegalArgumentException("Invalid amount");
 

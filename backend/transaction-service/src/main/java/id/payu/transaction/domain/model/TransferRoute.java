@@ -220,6 +220,23 @@ public class TransferRoute implements Comparable<TransferRoute> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransferRoute that = (TransferRoute) o;
+        return method == that.method &&
+                java.util.Objects.equals(fee, that.fee) &&
+                java.util.Objects.equals(estimatedTime, that.estimatedTime) &&
+                java.util.Objects.equals(minAmount, that.minAmount) &&
+                java.util.Objects.equals(maxAmount, that.maxAmount);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(method, fee, estimatedTime, minAmount, maxAmount);
+    }
+
+    @Override
     public String toString() {
         return "TransferRoute{" +
                 "method=" + method +

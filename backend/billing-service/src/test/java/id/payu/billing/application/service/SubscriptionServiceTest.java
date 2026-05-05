@@ -424,10 +424,17 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
             when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
 
-            // Simulate charge failure by making saveCharge throw on success case
+            // Simulate charge failure by making saveSubscription throw on success case
             // but we need to verify the failure event is published
-            doThrow(new RuntimeException("Wallet service unavailable"))
-                    .when(persistencePort).saveSubscription(any(Subscription.class));
+            java.util.concurrent.atomic.AtomicInteger callCount = new java.util.concurrent.atomic.AtomicInteger(0);
+            doAnswer(inv -> {
+                if (callCount.incrementAndGet() == 1) {
+                    throw new RuntimeException("Wallet service unavailable");
+                }
+                Subscription s = inv.getArgument(0);
+                if (s.getId() == null) s.setId(UUID.randomUUID());
+                return s;
+            }).when(persistencePort).saveSubscription(any(Subscription.class));
 
             // Should not throw, but log error
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());

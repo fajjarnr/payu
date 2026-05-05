@@ -21,6 +21,7 @@ public class ArchitectureTest {
                 .should().onlyDependOnClassesThat()
                 .resideInAnyPackage("..domain..", "java..", "jakarta..", "org.springframework..", "lombok..")
                 .because("Domain layer should not depend on adapters or application layer")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -36,6 +37,7 @@ public class ArchitectureTest {
                         "org.apache.kafka..", "io.grpc.."
                 )
                 .because("Adapters should only depend on domain layer and framework classes")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -49,6 +51,7 @@ public class ArchitectureTest {
                         "io.github.resilience4j..", "org.slf4j..", "lombok.."
                 )
                 .because("Application layer should only depend on domain layer")
+                .allowEmptyShould(true)
                 .check(classes);
     }
 }

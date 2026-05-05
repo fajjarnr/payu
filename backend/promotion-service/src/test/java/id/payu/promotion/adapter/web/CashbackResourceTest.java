@@ -18,7 +18,6 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Transactional
 class CashbackResourceTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort
@@ -97,7 +96,7 @@ class CashbackResourceTest {
             new BigDecimal("1000.00"),
             "MERCHANT001",
             "GROCERY",
-            null
+            "PROMO2024"
         );
 
         given()
@@ -223,7 +222,7 @@ class CashbackResourceTest {
             .then()
             .statusCode(200)
             .body("totalCashback", equalTo(35.00f))
-            .body("pendingCashback", equalTo(0.0f))
+            .body("pendingCashback", equalTo(0))
             .body("creditedCashback", equalTo(35.00f))
             .body("transactionCount", equalTo(2));
     }
@@ -235,9 +234,9 @@ class CashbackResourceTest {
             .get("/account/non-existent/summary")
             .then()
             .statusCode(200)
-            .body("totalCashback", equalTo(0.0f))
-            .body("pendingCashback", equalTo(0.0f))
-            .body("creditedCashback", equalTo(0.0f))
+            .body("totalCashback", equalTo(0))
+            .body("pendingCashback", equalTo(0))
+            .body("creditedCashback", equalTo(0))
             .body("transactionCount", equalTo(0));
     }
 }

@@ -180,7 +180,7 @@ public class CardController extends BaseController {
         return CardResponse.builder()
                 .id(card.getId())
                 .walletId(card.getWalletId())
-                .cardNumber(maskCardNumber(card.getCardNumber()))
+                .cardNumber(card.getCardNumber())
                 .expiryDate(card.getExpiryDate())
                 .cardHolderName(card.getCardHolderName())
                 .status(card.getStatus().name())

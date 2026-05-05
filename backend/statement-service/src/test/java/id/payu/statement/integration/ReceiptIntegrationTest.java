@@ -7,6 +7,7 @@ import id.payu.statement.application.service.dto.ReceiptResponse;
 import id.payu.statement.domain.model.ReceiptStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = TestContainersConfig.Initializer.class)
 @ActiveProfiles("integration-test")
+@Tag("integration")
 @DisplayName("Receipt Integration Tests")
 class ReceiptIntegrationTest {
 

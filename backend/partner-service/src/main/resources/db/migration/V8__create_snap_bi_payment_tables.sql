@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS snap_bi_payments (
     beneficiary_bank_code  VARCHAR(20),
     source_account_no   VARCHAR(64),
     status              VARCHAR(20)  NOT NULL,
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at          TIMESTAMP  NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_snap_payment_partner_ref
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS snap_bi_refunds (
     currency            VARCHAR(3)   NOT NULL,
     reason              VARCHAR(500),
     status              VARCHAR(20)  NOT NULL,
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at          TIMESTAMP  NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_snap_refund_payment_ref

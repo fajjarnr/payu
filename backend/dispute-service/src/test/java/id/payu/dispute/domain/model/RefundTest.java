@@ -387,6 +387,7 @@ class RefundTest {
         @DisplayName("Should be equal when same ID")
         void shouldBeEqualWhenSameId() {
             UUID id = UUID.randomUUID();
+            Instant now = Instant.now();
             Refund refund1 = Refund.builder()
                     .id(id)
                     .transactionId(TRANSACTION_ID)
@@ -394,7 +395,7 @@ class RefundTest {
                     .currency(CURRENCY)
                     .reason(REASON)
                     .status(RefundStatus.PENDING)
-                    .createdAt(Instant.now())
+                    .createdAt(now)
                     .build();
 
             Refund refund2 = Refund.builder()
@@ -404,7 +405,7 @@ class RefundTest {
                     .currency(CURRENCY)
                     .reason(REASON)
                     .status(RefundStatus.PENDING)
-                    .createdAt(Instant.now())
+                    .createdAt(now)
                     .build();
 
             assertThat(refund1).isEqualTo(refund2);

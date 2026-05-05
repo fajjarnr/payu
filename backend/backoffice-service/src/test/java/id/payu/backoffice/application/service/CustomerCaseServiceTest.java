@@ -94,13 +94,6 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        // Small delay to ensure different timestamps
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         CustomerCaseRequest request2 = new CustomerCaseRequest(
                 testUserId,
                 "ACC-004",
@@ -112,6 +105,13 @@ class CustomerCaseServiceTest {
         );
 
         CustomerCase result1 = customerCaseService.create(request1);
+
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         CustomerCase result2 = customerCaseService.create(request2);
 
         assertNotEquals(result1.getCaseNumber(), result2.getCaseNumber());

@@ -3,10 +3,13 @@ quarkus:
     name: notification-service-test
   datasource:
     db-kind: h2
-    jdbc: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    jdbc:
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
   hibernate-orm:
+    packages: id.payu.notification.domain
     database:
       dialect: org.hibernate.dialect.H2Dialect
+      generation: drop-and-create
   mailer:
     mock: true
   kafka:

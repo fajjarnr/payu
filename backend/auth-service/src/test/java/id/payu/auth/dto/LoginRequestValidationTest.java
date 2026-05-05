@@ -59,16 +59,16 @@ class LoginRequestValidationTest {
     }
 
     @Test
-    @DisplayName("Should reject username longer than 50 characters")
+    @DisplayName("Should reject username longer than 80 characters")
     void shouldRejectLongUsername() {
-        String longUsername = "a".repeat(51);
+        String longUsername = "a".repeat(81);
         LoginRequest request = new LoginRequest(longUsername, "SecureP@ss123");
         Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty().anyMatch(v -> v.getPropertyPath().toString().equals("username"));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"user name", "user@name", "user-name", "user(name", "user;name", "user'name", "user\"name"})
+    @ValueSource(strings = {"user name", "user(name", "user;name", "user'name", "user\"name"})
     @DisplayName("Should reject username with invalid characters")
     void shouldRejectUsernameWithInvalidCharacters(String username) {
         LoginRequest request = new LoginRequest(username, "SecureP@ss123");

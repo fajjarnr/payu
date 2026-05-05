@@ -54,6 +54,9 @@ public class LoyaltyPointsResource {
      * BUG-SECURITY-024 FIX: Verify the authenticated user owns the given account.
      */
     private void verifyAccountOwnership(String accountId) {
+        if (accountId == null || accountId.isBlank()) {
+            throw new IllegalArgumentException("Account ID is required");
+        }
         String jwtAccountId = extractAccountId();
         if (!accountId.equals(jwtAccountId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
@@ -127,10 +130,15 @@ public class LoyaltyPointsResource {
     public ResponseEntity<?> getLoyaltyPoints(@PathVariable UUID id) {
         Optional<LoyaltyPoints> loyaltyPointsOpt = loyaltyPointsService.getLoyaltyPoints(id);
         if (loyaltyPointsOpt.isPresent()) {
-            // BUG-SECURITY-024 FIX: Verify ownership
-            LoyaltyPoints lp = loyaltyPointsOpt.get();
-            verifyAccountOwnership(lp.getAccountId());
-            return ResponseEntity.ok(LoyaltyPointsResponse.from(lp));
+            try {
+                // BUG-SECURITY-024 FIX: Verify ownership
+                LoyaltyPoints lp = loyaltyPointsOpt.get();
+                verifyAccountOwnership(lp.getAccountId());
+                return ResponseEntity.ok(LoyaltyPointsResponse.from(lp));
+            } catch (AccessDeniedException e) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse(e.getMessage()));
+            }
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse("Loyalty points record not found"));
@@ -146,10 +154,15 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getLoyaltyPointsByAccount(@PathVariable String accountId) {
-        // BUG-SECURITY-024 FIX: Verify caller owns the account
-        verifyAccountOwnership(accountId);
-        List<LoyaltyPoints> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
-        return ResponseEntity.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList());
+        try {
+            // BUG-SECURITY-024 FIX: Verify caller owns the account
+            verifyAccountOwnership(accountId);
+            List<LoyaltyPoints> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
+            return ResponseEntity.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @GetMapping("/account/{accountId}/balance")
@@ -162,10 +175,15 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getBalance(@PathVariable String accountId) {
-        // BUG-SECURITY-024 FIX: Verify caller owns the account
-        verifyAccountOwnership(accountId);
-        LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
-        return ResponseEntity.ok(balance);
+        try {
+            // BUG-SECURITY-024 FIX: Verify caller owns the account
+            verifyAccountOwnership(accountId);
+            LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
+            return ResponseEntity.ok(balance);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     record ErrorResponse(String message) {}

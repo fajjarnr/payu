@@ -276,7 +276,7 @@ class ReceiptTest {
     void shouldMaskAccountNumberCorrectly() {
         // Given & When & Then
         assertEquals("****5678", Receipt.maskAccountNumber("12345678"));
-        assertEquals("****90", Receipt.maskAccountNumber("123490"));
+        assertEquals("****3490", Receipt.maskAccountNumber("123490"));
         assertEquals("****1", Receipt.maskAccountNumber("1"));
         assertEquals("****", Receipt.maskAccountNumber(""));
     }

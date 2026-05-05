@@ -6,6 +6,7 @@ import id.payu.simulator.va.dto.VaRegistrationRequest;
 import id.payu.simulator.va.entity.VirtualAccount;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +25,7 @@ import static org.hamcrest.CoreMatchers.*;
 public class VaSimulatorResourceTest {
 
     @BeforeEach
+    @Transactional
     void setup() {
         // Clean up test data
         VirtualAccount.deleteAll();

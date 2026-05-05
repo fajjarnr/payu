@@ -1,5 +1,6 @@
 package id.payu.promotion.dto;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record CreateCashbackRequest(
@@ -9,4 +10,4 @@ public record CreateCashbackRequest(
     String merchantCode,
     String categoryCode,
     String cashbackCode
-) {}
+) implements Serializable {}

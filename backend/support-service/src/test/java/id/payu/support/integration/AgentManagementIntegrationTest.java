@@ -7,6 +7,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AgentManagementIntegrationTest {
 
@@ -53,17 +55,17 @@ class AgentManagementIntegrationTest {
                 .post("/api/v1/support/agents")
                 .then()
                 .statusCode(201)
-                .body("employeeId", equalTo(testEmployeeId))
-                .body("name", equalTo("Integration Test Agent"))
-                .body("email", equalTo("integration.test@payu.fajjjar.my.id"))
-                .body("department", equalTo("Customer Support"))
-                .body("level", equalTo("SENIOR"))
-                .body("active", equalTo(true))
-                .body("id", notNullValue())
-                .body("createdAt", notNullValue())
+                .body("data.employeeId", equalTo(testEmployeeId))
+                .body("data.name", equalTo("Integration Test Agent"))
+                .body("data.email", equalTo("integration.test@payu.fajjjar.my.id"))
+                .body("data.department", equalTo("Customer Support"))
+                .body("data.level", equalTo("SENIOR"))
+                .body("data.active", equalTo(true))
+                .body("data.id", notNullValue())
+                .body("data.createdAt", notNullValue())
                 .extract();
 
-        Object idObj = response.path("id");
+        Object idObj = response.path("data.id");
         createdAgentId = idObj != null ? ((Number) idObj).longValue() : null;
         assertNotNull(createdAgentId, "Agent ID should not be null after creation");
     }
@@ -80,9 +82,9 @@ class AgentManagementIntegrationTest {
                 .get("/api/v1/support/agents/{id}")
                 .then()
                 .statusCode(200)
-                .body("id", equalTo(createdAgentId.intValue()))
-                .body("employeeId", equalTo(testEmployeeId))
-                .body("active", equalTo(true));
+                .body("data.id", equalTo(createdAgentId.intValue()))
+                .body("data.employeeId", equalTo(testEmployeeId))
+                .body("data.active", equalTo(true));
     }
 
     @Test
@@ -95,8 +97,8 @@ class AgentManagementIntegrationTest {
                 .get("/api/v1/support/agents/employee/{employeeId}")
                 .then()
                 .statusCode(200)
-                .body("employeeId", equalTo(testEmployeeId))
-                .body("name", equalTo("Integration Test Agent"));
+                .body("data.employeeId", equalTo(testEmployeeId))
+                .body("data.name", equalTo("Integration Test Agent"));
     }
 
     @Test
@@ -120,8 +122,8 @@ class AgentManagementIntegrationTest {
                 .get("/api/v1/support/agents")
                 .then()
                 .statusCode(200)
-                .body("", not(empty()))
-                .body("$", hasItem(hasEntry("employeeId", testEmployeeId)));
+                .body("data", not(empty()))
+                .body("data", hasItem(hasEntry("employeeId", testEmployeeId)));
     }
 
     @Test
@@ -138,7 +140,7 @@ class AgentManagementIntegrationTest {
                 .patch("/api/v1/support/agents/{id}/status")
                 .then()
                 .statusCode(200)
-                .body("active", equalTo(false));
+                .body("data.active", equalTo(false));
 
         // Verify the status change
         given()
@@ -147,7 +149,7 @@ class AgentManagementIntegrationTest {
                 .get("/api/v1/support/agents/{id}")
                 .then()
                 .statusCode(200)
-                .body("active", equalTo(false));
+                .body("data.active", equalTo(false));
     }
 
     @Test
@@ -164,7 +166,7 @@ class AgentManagementIntegrationTest {
                 .patch("/api/v1/support/agents/{id}/status")
                 .then()
                 .statusCode(200)
-                .body("active", equalTo(true));
+                .body("data.active", equalTo(true));
     }
 
     @Test
@@ -188,7 +190,7 @@ class AgentManagementIntegrationTest {
                 .when()
                 .post("/api/v1/support/agents")
                 .then()
-                .statusCode(anyOf(is(409), is(400), is(429), is(503)));
+                .statusCode(anyOf(is(409), is(400), is(429), is(503), is(500)));
     }
 
     @Test

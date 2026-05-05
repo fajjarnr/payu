@@ -94,7 +94,6 @@ public class LedgerEntry {
         public LedgerEntryBuilder transactionId(UUID transactionId) { this.transactionId = transactionId; return this; }
         public LedgerEntryBuilder journalEntryId(UUID journalEntryId) { this.journalEntryId = journalEntryId; return this; }
         public LedgerEntryBuilder accountId(String accountId) { this.accountId = accountId; return this; }
-        public LedgerEntryBuilder accountId(UUID accountId) { this.accountId = accountId != null ? accountId.toString() : null; return this; }
         public LedgerEntryBuilder coaCode(String coaCode) { this.coaCode = coaCode; return this; }
         public LedgerEntryBuilder entryType(EntryType entryType) { this.entryType = entryType; return this; }
         public LedgerEntryBuilder amount(BigDecimal amount) { this.amount = amount; return this; }

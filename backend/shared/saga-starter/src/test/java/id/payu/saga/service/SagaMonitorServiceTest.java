@@ -45,14 +45,22 @@ class SagaMonitorServiceTest {
         @Test
         @DisplayName("should return count for each state")
         void shouldReturnCountForEachState() {
-            when(sagaRepository.countBySagaTypeAndCurrentState(anyString(), anyString())).thenReturn(0L);
-            when(sagaRepository.countBySagaTypeAndCurrentState("%", "COMPLETED")).thenReturn(10L);
-            when(sagaRepository.countBySagaTypeAndCurrentState("%", "FAILED")).thenReturn(3L);
+            when(sagaRepository.findByCurrentState(anyString())).thenReturn(List.of());
+            when(sagaRepository.findByCurrentState("COMPLETED")).thenReturn(
+                List.of(SagaInstance.create("Saga", SagaState.COMPLETED.name(), Map.of()))
+            );
+            when(sagaRepository.findByCurrentState("FAILED")).thenReturn(
+                List.of(
+                    SagaInstance.create("Saga", SagaState.FAILED.name(), Map.of()),
+                    SagaInstance.create("Saga", SagaState.FAILED.name(), Map.of()),
+                    SagaInstance.create("Saga", SagaState.FAILED.name(), Map.of())
+                )
+            );
 
             Map<String, Long> stats = monitorService.getSagaStatistics();
 
             assertThat(stats).hasSize(SagaState.values().length);
-            assertThat(stats.get("COMPLETED")).isEqualTo(10L);
+            assertThat(stats.get("COMPLETED")).isEqualTo(1L);
             assertThat(stats.get("FAILED")).isEqualTo(3L);
         }
     }

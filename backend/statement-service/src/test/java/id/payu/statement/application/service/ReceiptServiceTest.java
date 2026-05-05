@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,6 +49,7 @@ class ReceiptServiceTest {
         return Receipt.builder()
                 .id(RECEIPT_ID)
                 .transactionId(TRANSACTION_ID)
+                .customerId(CUSTOMER_ID)
                 .amount(new BigDecimal("150000.00"))
                 .currency("IDR")
                 .senderInfo(id.payu.statement.domain.model.SenderInfo.builder()
@@ -70,7 +72,11 @@ class ReceiptServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Setup is handled by MockitoExtension
+        // Inject @Value fields that MockitoExtension doesn't populate
+        ReflectionTestUtils.setField(receiptService, "companyName", "PayU Digital Banking");
+        ReflectionTestUtils.setField(receiptService, "companyLogoUrl", "https://payu.fajjjar.my.id/logo.png");
+        ReflectionTestUtils.setField(receiptService, "supportPhone", "+62 21 555-1234");
+        ReflectionTestUtils.setField(receiptService, "supportEmail", "support@payu.fajjjar.my.id");
     }
 
     @Test
@@ -212,6 +218,7 @@ class ReceiptServiceTest {
         Receipt expiredReceipt = Receipt.builder()
                 .id(RECEIPT_ID)
                 .transactionId(TRANSACTION_ID)
+                .customerId(CUSTOMER_ID)
                 .amount(new BigDecimal("150000.00"))
                 .currency("IDR")
                 .senderInfo(id.payu.statement.domain.model.SenderInfo.builder()
@@ -247,6 +254,7 @@ class ReceiptServiceTest {
         Receipt receipt = createTestReceipt();
         when(receiptRepository.findByTransactionId(TRANSACTION_ID))
                 .thenReturn(Optional.of(receipt));
+        when(receiptRepository.findById(RECEIPT_ID)).thenReturn(Optional.of(receipt));
         when(receiptRepository.save(any(Receipt.class))).thenReturn(receipt);
 
         // When
@@ -278,6 +286,7 @@ class ReceiptServiceTest {
         Receipt expiredReceipt = Receipt.builder()
                 .id(RECEIPT_ID)
                 .transactionId(TRANSACTION_ID)
+                .customerId(CUSTOMER_ID)
                 .amount(new BigDecimal("150000.00"))
                 .currency("IDR")
                 .senderInfo(id.payu.statement.domain.model.SenderInfo.builder()

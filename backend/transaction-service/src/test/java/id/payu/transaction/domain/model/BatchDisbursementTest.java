@@ -196,13 +196,13 @@ class BatchDisbursementTest {
         }
 
         @Test
-        @DisplayName("Should return PROCESSING when some items are PROCESSING")
-        void shouldReturnProcessingWhenSomeItemsAreProcessing() {
+        @DisplayName("Should return PARTIAL when some items are PROCESSING")
+        void shouldReturnPartialWhenSomeItemsAreProcessing() {
             BatchDisbursement batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PROCESSING));
 
-            assertThat(batch.calculateAggregateStatus()).isEqualTo(BatchDisbursementStatus.PROCESSING);
+            assertThat(batch.calculateAggregateStatus()).isEqualTo(BatchDisbursementStatus.PARTIAL);
         }
 
         @Test

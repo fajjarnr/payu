@@ -28,4 +28,8 @@ public class PromoCodePersistenceAdapter implements PromoCodeRepositoryPort {
         promoCodes.put(promoCode.getCode(), promoCode);
         return promoCode;
     }
+
+    public void clear() {
+        promoCodes.clear();
+    }
 }

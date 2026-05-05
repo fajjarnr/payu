@@ -150,8 +150,8 @@ class RequestValidationFilterTest {
             assertNotNull(schema);
 
             var node = new ObjectMapper().createObjectNode()
-                    .put("sourceAccountId", "acc-1")
-                    .put("destinationAccountId", "acc-2")
+                    .put("senderAccountId", "acc-1")
+                    .put("recipientAccountNumber", "1234567890")
                     .put("amount", 0); // Must be > 0
 
             var errors = schema.validate(node);
@@ -165,10 +165,12 @@ class RequestValidationFilterTest {
             assertNotNull(schema);
 
             var node = new ObjectMapper().createObjectNode()
-                    .put("sourceAccountId", "acc-1")
-                    .put("destinationAccountId", "acc-2")
+                    .put("senderAccountId", "acc-1")
+                    .put("recipientAccountNumber", "1234567890")
                     .put("amount", 100000)
-                    .put("currency", "IDR");
+                    .put("currency", "IDR")
+                    .put("description", "Test transfer")
+                    .put("type", "INTERNAL_TRANSFER");
 
             var errors = schema.validate(node);
             assertTrue(errors.isEmpty(), "Valid transfer should pass: " + errors);

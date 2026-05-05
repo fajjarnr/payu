@@ -209,8 +209,8 @@ class PromotionServiceIntegrationTest {
             null,
             null,
             null,
-            now.minusDays(5), // End date before start date
-            now.plusMonths(1)
+            null, // Keep original start date
+            now.minusDays(5) // End date before original start date
         );
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -317,8 +317,8 @@ class PromotionServiceIntegrationTest {
         Assertions.assertEquals("txn-claim-001", reward.getTransactionId());
         Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.getPromotionCode());
         Assertions.assertEquals(Reward.RewardType.PROMOTION_REWARD, reward.getType());
-        Assertions.assertEquals(new BigDecimal("5000"), reward.getAmount()); // 10% of 50000
-        Assertions.assertEquals(new BigDecimal("50000"), reward.getTransactionAmount());
+        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.getAmount())); // 10% of 50000
+        Assertions.assertEquals(0, new BigDecimal("50000").compareTo(reward.getTransactionAmount()));
         Assertions.assertEquals(Reward.Status.AWARDED, reward.getStatus());
 
         // Verify redemption count incremented
@@ -357,7 +357,7 @@ class PromotionServiceIntegrationTest {
         Reward reward = promotionService.claimPromotion("TEST-CLAIM-FIX-001", claimRequest);
 
         // Fixed amount should be awarded regardless of transaction amount
-        Assertions.assertEquals(new BigDecimal("5000"), reward.getAmount());
+        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.getAmount()));
     }
 
     @Test
@@ -389,7 +389,7 @@ class PromotionServiceIntegrationTest {
 
         Reward reward = promotionService.claimPromotion("TEST-CLAIM-PTS-001", claimRequest);
 
-        Assertions.assertEquals(new BigDecimal("100"), reward.getAmount());
+        Assertions.assertEquals(0, new BigDecimal("100").compareTo(reward.getAmount()));
         Assertions.assertEquals(100, reward.getPointsEarned());
     }
 

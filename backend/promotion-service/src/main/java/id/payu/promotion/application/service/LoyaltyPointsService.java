@@ -63,6 +63,7 @@ public class LoyaltyPointsService {
         loyaltyPoints.setExpiryDate(request.expiryDate());
 
         loyaltyPoints = loyaltyPointsRepository.save(loyaltyPoints);
+        entityManager.flush();
 
         publishLoyaltyEvent(loyaltyPoints);
 
@@ -204,11 +205,8 @@ public class LoyaltyPointsService {
      * @return the current balance (0 if no records)
      */
     public Integer calculateCurrentBalance(String accountId) {
-        List<LoyaltyPoints> pointsList = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
-        if (pointsList.isEmpty()) {
-            return 0;
-        }
-        return pointsList.get(0).getBalanceAfter();
+        Integer balance = loyaltyPointsRepository.calculateBalanceByAccountId(accountId);
+        return balance != null ? balance : 0;
     }
 
     private void publishLoyaltyEvent(LoyaltyPoints loyaltyPoints) {

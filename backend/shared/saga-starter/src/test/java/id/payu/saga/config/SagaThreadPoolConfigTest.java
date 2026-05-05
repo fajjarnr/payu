@@ -60,7 +60,7 @@ class SagaThreadPoolConfigTest {
         config.sagaTaskExecutor(meterRegistry);
 
         // Then
-        assertThat(meterRegistry.find("saga.executor").timers()).isNotEmpty();
+        assertThat(meterRegistry.find("executor.active").tag("name", "saga.executor").gauges()).isNotEmpty();
     }
 
     @Test
@@ -79,6 +79,6 @@ class SagaThreadPoolConfigTest {
         config.sagaRetryScheduler(meterRegistry);
 
         // Then
-        assertThat(meterRegistry.find("saga.retry.scheduler").timers()).isNotEmpty();
+        assertThat(meterRegistry.find("executor.active").tag("name", "saga.retry.scheduler").gauges()).isNotEmpty();
     }
 }

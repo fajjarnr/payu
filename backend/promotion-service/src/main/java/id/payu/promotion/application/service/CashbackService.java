@@ -64,6 +64,9 @@ public class CashbackService {
      */
     @Transactional
     public Cashback createCashback(CreateCashbackRequest request) {
+        if (request.accountId() == null || request.accountId().isBlank()) {
+            throw new IllegalArgumentException("Account ID is required");
+        }
         LOG.info("Creating cashback with saga: accountId={}, transactionId={}",
             request.accountId(), request.transactionId());
 

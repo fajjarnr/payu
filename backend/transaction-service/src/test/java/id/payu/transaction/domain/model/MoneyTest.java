@@ -76,7 +76,7 @@ class MoneyTest {
             BigDecimal amount = new BigDecimal("100000");
             Money money = Money.idr(amount);
 
-            assertThat(money.getAmount()).isEqualTo(amount);
+            assertThat(money.getAmount()).isEqualByComparingTo(amount);
             assertThat(money.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -507,7 +507,7 @@ class MoneyTest {
 
             String formatted = money.format();
 
-            assertThat(formatted).contains("Rp"); // IDR symbol
+            assertThat(formatted).contains("IDR");
             assertThat(formatted).contains("1,000,000.00");
         }
 

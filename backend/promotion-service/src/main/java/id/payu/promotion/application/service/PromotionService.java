@@ -28,16 +28,19 @@ public class PromotionService {
     private final RewardRepository rewardRepository;
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
     private final String promotionEventsTopic;
+    private final jakarta.persistence.EntityManager entityManager;
 
     public PromotionService(
             PromotionRepository promotionRepository,
             RewardRepository rewardRepository,
             KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            jakarta.persistence.EntityManager entityManager) {
         this.promotionRepository = promotionRepository;
         this.rewardRepository = rewardRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.promotionEventsTopic = promotionEventsTopic;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -58,6 +61,7 @@ public class PromotionService {
         promotion.setStartDate(request.startDate());
         promotion.setEndDate(request.endDate());
         promotion.setStatus(Promotion.Status.DRAFT);
+        promotion.setRedemptionCount(0);
 
         promotion = promotionRepository.save(promotion);
         LOG.info("Promotion created: id={}, code={}", promotion.getId(), promotion.getCode());
@@ -152,6 +156,9 @@ public class PromotionService {
         if (updated == 0) {
             throw new IllegalArgumentException("Promotion has reached maximum redemptions");
         }
+
+        // Refresh promotion to reflect the atomic increment in the current persistence context
+        entityManager.refresh(promotion);
 
         if (promotion.getMinTransactionAmount() != null &&
             request.transactionAmount().compareTo(promotion.getMinTransactionAmount()) < 0) {

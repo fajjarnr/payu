@@ -1,21 +1,69 @@
 package id.payu.partner.application.service;
 
+import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
+import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
+import id.payu.partner.domain.SnapBiPayment;
 import id.payu.partner.dto.snap.PaymentRequest;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
+import org.mockito.junit.jupiter.MockitoSettings;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SnapBiPaymentServiceTest {
+
+    @Mock
+    private SnapBiPaymentRepository paymentRepository;
+
+    @Mock
+    private SnapBiRefundRepository refundRepository;
 
     @InjectMocks
     private SnapBiPaymentService paymentService;
+
+    private Map<String, SnapBiPayment> paymentsByPayuRef;
+    private Map<String, SnapBiPayment> paymentsByPartnerRef;
+
+    @BeforeEach
+    void setUp() {
+        paymentsByPayuRef = new HashMap<>();
+        paymentsByPartnerRef = new HashMap<>();
+
+        when(paymentRepository.save(any(SnapBiPayment.class))).thenAnswer(inv -> {
+            SnapBiPayment p = inv.getArgument(0);
+            if (p.getCreatedAt() == null) {
+                p.setCreatedAt(Instant.now());
+            }
+            paymentsByPayuRef.put(p.getPayuReferenceNo(), p);
+            paymentsByPartnerRef.put(p.getPartnerReferenceNo(), p);
+            return p;
+        });
+
+        when(paymentRepository.findByPartnerIdAndPayuReferenceNo(anyString(), anyString()))
+                .thenAnswer(inv -> Optional.ofNullable(paymentsByPayuRef.get(inv.getArgument(1))));
+
+        when(paymentRepository.findByPartnerIdAndPartnerReferenceNo(anyString(), anyString()))
+                .thenAnswer(inv -> Optional.ofNullable(paymentsByPartnerRef.get(inv.getArgument(1))));
+
+        when(paymentRepository.findByPayuReferenceNo(anyString()))
+                .thenAnswer(inv -> Optional.ofNullable(paymentsByPayuRef.get(inv.getArgument(0))));
+    }
 
     @Test
     public void testCreatePayment() {

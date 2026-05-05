@@ -9,10 +9,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -26,7 +33,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(NikVerificationController.class)
+@WebMvcTest(controllers = NikVerificationController.class)
+@ImportAutoConfiguration({DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@Import(id.payu.account.config.SecurityConfig.class)
+@ActiveProfiles("test")
 @DisplayName("NikVerificationController")
 class NikVerificationControllerTest {
 
@@ -38,6 +48,9 @@ class NikVerificationControllerTest {
 
     @MockBean
     private VerifyNikUseCase verifyNikUseCase;
+
+    @MockBean
+    private JwtDecoder jwtDecoder;
 
     private VerifyNikRequest validRequest;
     private VerifyNikResponse successResponse;
@@ -213,13 +226,13 @@ class NikVerificationControllerTest {
         }
 
         @Test
-        @DisplayName("should return 403 Forbidden when not authenticated")
-        void shouldReturnForbiddenWhenNotAuthenticated() throws Exception {
+        @DisplayName("should return 401 Unauthorized when not authenticated")
+        void shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
             // When/Then
             mockMvc.perform(post("/api/v1/accounts/verify-nik")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         }
 
         @Test

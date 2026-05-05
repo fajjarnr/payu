@@ -223,7 +223,7 @@ class LoyaltyPointsServiceTest {
         var balance = loyaltyPointsService.getBalance(TEST_ACCOUNT_ID);
 
         assertEquals(150, balance.currentBalance());
-        assertEquals(2, balance.totalEarned());
+        assertEquals(150, balance.totalEarned());
         assertEquals(0, balance.totalRedeemed());
         assertEquals(0, balance.expiredPoints());
     }
@@ -251,8 +251,8 @@ class LoyaltyPointsServiceTest {
         var balance = loyaltyPointsService.getBalance(TEST_ACCOUNT_ID);
 
         assertEquals(70, balance.currentBalance());
-        assertEquals(1, balance.totalEarned());
-        assertEquals(1, balance.totalRedeemed());
+        assertEquals(100, balance.totalEarned());
+        assertEquals(30, balance.totalRedeemed());
         assertEquals(0, balance.expiredPoints());
     }
 

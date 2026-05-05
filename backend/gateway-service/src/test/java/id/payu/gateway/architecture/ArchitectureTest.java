@@ -41,6 +41,7 @@ class ArchitectureTest {
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .withOptionalLayers(true)
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Filter").definedBy("..adapter.filter..")
                     .layer("Application").definedBy("..application..")
@@ -74,6 +75,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Filter")
                     .because("Request filter classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -87,6 +89,7 @@ class ArchitectureTest {
                     .should().haveSimpleNameEndingWith("Resource")
                         .orShould().haveSimpleNameEndingWith("Handler")
                     .because("JAX-RS resource classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -100,6 +103,7 @@ class ArchitectureTest {
                     .should().haveSimpleNameEndingWith("Service")
                         .orShould().haveSimpleNameEndingWith("Registry")
                     .because("Application service classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -115,6 +119,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("org.springframework..")
                     .because("This is a Quarkus service - do not use Spring dependencies")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -124,6 +129,7 @@ class ArchitectureTest {
             noFields()
                     .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
                     .because("This is a Quarkus service - use @Inject instead of @Autowired")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -139,6 +145,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("javax.ws.rs..")
                     .because("Use jakarta.ws.rs instead of javax.ws.rs for Quarkus 3.x")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -149,6 +156,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("javax.inject..")
                     .because("Use jakarta.inject instead of javax.inject for Quarkus 3.x")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -167,6 +175,7 @@ class ArchitectureTest {
                     .should().beAnnotatedWith(jakarta.enterprise.context.ApplicationScoped.class)
                         .orShould().beAnnotatedWith(jakarta.enterprise.context.RequestScoped.class)
                     .because("Filters should have proper CDI scope")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }

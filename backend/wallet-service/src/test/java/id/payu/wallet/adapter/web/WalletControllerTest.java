@@ -18,11 +18,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,7 +71,7 @@ class WalletControllerTest {
         testLedgerEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(UUID.randomUUID())
-                .accountId(accountId)
+                .accountId(accountId.toString())
                 .entryType(LedgerEntry.EntryType.DEBIT)
                 .amount(new BigDecimal("5000000"))
                 .currency("IDR")
@@ -84,6 +91,19 @@ class WalletControllerTest {
                 .description("Test transaction")
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        // Set up mock JWT authentication for ownership checks
+        Jwt mockJwt = Jwt.withTokenValue("mock-token")
+                .header("alg", "RS256")
+                .claim("account_id", accountId.toString())
+                .claim("sub", accountId.toString())
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+        Authentication authentication = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(
+                mockJwt, Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
@@ -103,7 +123,7 @@ class WalletControllerTest {
     @Test
     @DisplayName("Should throw exception when getting balance for non-existent wallet")
     void shouldThrowExceptionWhenGettingBalanceForNonExistentWallet() {
-        String accountId = UUID.randomUUID().toString();
+        String accountId = testWallet.getAccountId();
         when(walletUseCase.getWalletByAccountId(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> walletController.getBalance(accountId))
@@ -130,6 +150,7 @@ class WalletControllerTest {
     @DisplayName("Should commit reservation")
     void shouldCommitReservation() {
         String reservationId = UUID.randomUUID().toString();
+        when(walletUseCase.getAccountIdByReservationId(reservationId)).thenReturn(testWallet.getAccountId());
 
         ResponseEntity<ApiResponse<Map<String, String>>> response = walletController.commitReservation(reservationId);
 
@@ -144,6 +165,7 @@ class WalletControllerTest {
     @DisplayName("Should release reservation")
     void shouldReleaseReservation() {
         String reservationId = UUID.randomUUID().toString();
+        when(walletUseCase.getAccountIdByReservationId(reservationId)).thenReturn(testWallet.getAccountId());
 
         ResponseEntity<ApiResponse<Map<String, String>>> response = walletController.releaseReservation(reservationId);
 

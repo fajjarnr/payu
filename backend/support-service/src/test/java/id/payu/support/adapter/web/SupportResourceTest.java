@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -20,6 +21,7 @@ import static org.hamcrest.Matchers.*;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SupportResourceTest {
 
@@ -41,9 +43,9 @@ class SupportResourceTest {
                 .when().get("/api/v1/support/training-status")
                 .then()
                 .statusCode(200)
-                .body("$", hasKey("activeAgents"))
-                .body("$", hasKey("trainedAgents"))
-                .body("$", hasKey("trainingPercentage"));
+                .body("data", hasKey("activeAgents"))
+                .body("data", hasKey("trainedAgents"))
+                .body("data", hasKey("trainingPercentage"));
     }
 
     @Test
@@ -74,9 +76,9 @@ class SupportResourceTest {
                 .when().post("/api/v1/support/agents")
                 .then()
                 .statusCode(201)
-                .body("employeeId", equalTo("EMP9999"))
-                .body("name", equalTo("Integration Test Agent"))
-                .extract().path("id");
+                .body("data.employeeId", equalTo("EMP9999"))
+                .body("data.name", equalTo("Integration Test Agent"))
+                .extract().path("data.id");
 
         agentId = id != null ? id.longValue() : null;
     }
@@ -91,8 +93,8 @@ class SupportResourceTest {
                 .when().get("/api/v1/support/agents/{id}")
                 .then()
                 .statusCode(200)
-                .body("id", equalTo(agentId.intValue()))
-                .body("employeeId", equalTo("EMP9999"));
+                .body("data.id", equalTo(agentId.intValue()))
+                .body("data.employeeId", equalTo("EMP9999"));
     }
 
     @Test
@@ -116,9 +118,9 @@ class SupportResourceTest {
                 .when().post("/api/v1/support/modules")
                 .then()
                 .statusCode(201)
-                .body("code", equalTo("TEST-001"))
-                .body("title", equalTo("Test Training Module"))
-                .extract().path("id");
+                .body("data.code", equalTo("TEST-001"))
+                .body("data.title", equalTo("Test Training Module"))
+                .extract().path("data.id");
 
         moduleId = id != null ? id.longValue() : null;
     }
@@ -141,7 +143,7 @@ class SupportResourceTest {
         String request = """
             {
                 "agentId": %d,
-                "trainingModuleId": %d,
+                "moduleId": %d,
                 "status": "IN_PROGRESS",
                 "notes": "Started integration test"
             }
@@ -153,7 +155,7 @@ class SupportResourceTest {
                 .when().post("/api/v1/support/trainings/assign")
                 .then()
                 .statusCode(anyOf(is(201), is(200)))
-                .body("status", equalTo("IN_PROGRESS"));
+                .body("data.status", equalTo("IN_PROGRESS"));
     }
 
     @Test

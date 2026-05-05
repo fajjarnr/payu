@@ -89,7 +89,8 @@ class AccountFinancialIntegrityTest {
         @Test
         @DisplayName("Should handle scale(2) values correctly")
         void shouldHandleScale2ValuesCorrectly() {
-            Account account = createSavingsAccount(new BigDecimal("100.00"));
+            // Use pocket account to avoid minimum balance constraints for precision testing
+            Account account = createPocketAccount(new BigDecimal("100.00"));
 
             account.credit(new BigDecimal("50.50"));
             account.debit(new BigDecimal("25.25"));
@@ -558,7 +559,7 @@ class AccountFinancialIntegrityTest {
         @Test
         @DisplayName("Should not freeze non-active account")
         void shouldNotFreezeNonActiveAccount() {
-            Account account = createSavingsAccount(new BigDecimal("100000"));
+            Account account = createSavingsAccount(BigDecimal.ZERO);
             account.close();
 
             assertThatThrownBy(() -> account.freeze())

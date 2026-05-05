@@ -451,6 +451,7 @@ class AuthorizationServiceTest {
                 .id(transactionId)
                 .referenceNumber("TXN123456")
                 .senderAccountId(senderAccountId)
+                .recipientAccountId(UUID.randomUUID())
                 .amount(id.payu.transaction.domain.model.Money.idr("100000"))
                 .description("Test transaction")
                 .type(Transaction.TransactionType.INTERNAL_TRANSFER)

@@ -269,8 +269,6 @@ class EscrowServiceTest {
             EscrowTransaction escrow = buildHeldEscrow(escrowId);
 
             when(escrowPersistencePort.findById(escrowId)).thenReturn(Optional.of(escrow));
-            when(walletUseCase.credit(eq(BUYER_ACCOUNT), eq(AMOUNT), anyString(), anyString()))
-                    .thenReturn("tx-refund");
             when(journalUseCase.createAndPostJournal(anyString(), anyString(), anyString(), anyList(), anyString()))
                     .thenReturn(JournalEntry.builder().id(UUID.randomUUID()).build());
             when(escrowPersistencePort.save(any(EscrowTransaction.class)))
@@ -282,11 +280,11 @@ class EscrowServiceTest {
             assertThat(result.getRefundedAt()).isNotNull();
             assertThat(result.getRefundReason()).isEqualTo("Buyer requested refund");
 
-            // Verify reservation released
+            // Verify reservation released (for HELD escrow, releaseReservation restores balance)
             verify(walletUseCase).releaseReservation(escrow.getReservationId());
 
-            // Verify buyer credited
-            verify(walletUseCase).credit(eq(BUYER_ACCOUNT), eq(AMOUNT),
+            // Verify buyer credited is NOT called for HELD escrow (releaseReservation already restored balance)
+            verify(walletUseCase, never()).credit(eq(BUYER_ACCOUNT), eq(AMOUNT),
                     eq(escrowId.toString()), contains("Escrow refund"));
 
             // Verify journal: DR 2100 / CR 1100

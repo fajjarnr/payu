@@ -32,6 +32,21 @@ public class Refund {
      */
     public static Refund create(UUID transactionId, UUID partnerId, BigDecimal amount,
                                  String reason, String requestedBy) {
+        if (transactionId == null) {
+            throw new IllegalArgumentException("Transaction ID cannot be null");
+        }
+        if (amount == null) {
+            throw new IllegalArgumentException("Amount cannot be null");
+        }
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Reason cannot be blank");
+        }
+        if (requestedBy == null || requestedBy.isBlank()) {
+            throw new IllegalArgumentException("RequestedBy cannot be blank");
+        }
         Refund refund = new Refund();
         refund.id = UUID.randomUUID();
         refund.transactionId = transactionId;
@@ -51,6 +66,9 @@ public class Refund {
         if (this.status != RefundStatus.PENDING) {
             throw new IllegalStateException("Cannot process refund in " + status + " status");
         }
+        if (processorId == null || processorId.isBlank()) {
+            throw new IllegalArgumentException("Processor ID cannot be blank");
+        }
         this.processorId = processorId;
         this.status = RefundStatus.PROCESSING;
         this.processedAt = Instant.now();
@@ -63,6 +81,9 @@ public class Refund {
         if (this.status != RefundStatus.PROCESSING) {
             throw new IllegalStateException("Cannot complete refund in " + status + " status");
         }
+        if (refundTransactionId == null || refundTransactionId.isBlank()) {
+            throw new IllegalArgumentException("Refund transaction ID cannot be blank");
+        }
         this.refundTransactionId = refundTransactionId;
         this.status = RefundStatus.COMPLETED;
         this.completedAt = Instant.now();
@@ -72,8 +93,11 @@ public class Refund {
      * Mark refund as FAILED.
      */
     public void fail(String failureReason) {
-        if (this.status != RefundStatus.PENDING && this.status != RefundStatus.PROCESSING) {
+        if (this.status != RefundStatus.PROCESSING) {
             throw new IllegalStateException("Cannot fail refund in " + status + " status");
+        }
+        if (failureReason == null || failureReason.isBlank()) {
+            throw new IllegalArgumentException("Failure reason cannot be blank");
         }
         this.failureReason = failureReason;
         this.status = RefundStatus.FAILED;

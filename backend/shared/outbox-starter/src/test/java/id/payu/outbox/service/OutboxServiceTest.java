@@ -1,5 +1,6 @@
 package id.payu.outbox.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.outbox.entity.OutboxEvent;
 import id.payu.outbox.repository.OutboxRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -31,6 +33,9 @@ class OutboxServiceTest {
 
     @Mock
     private OutboxRepository outboxRepository;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private OutboxService outboxService;
@@ -185,6 +190,8 @@ class OutboxServiceTest {
             stubSave();
             record WalletEvent(String walletId, int amount, String currency) {}
             WalletEvent domainEvent = new WalletEvent("wallet-001", 50000, "IDR");
+            when(objectMapper.convertValue(any(WalletEvent.class), eq(Map.class)))
+                    .thenReturn(Map.of("walletId", "wallet-001", "amount", 50000, "currency", "IDR"));
 
             OutboxEvent result = outboxService.createEventFromObject(
                     AGGREGATE_TYPE, AGGREGATE_ID, EVENT_TYPE, domainEvent);
@@ -204,6 +211,8 @@ class OutboxServiceTest {
             record TransferEvent(String from, String to, int amount) {}
             TransferEvent domainEvent = new TransferEvent("acc-1", "acc-2", 100000);
             Map<String, Object> headers = Map.of("traceId", "trace-789");
+            when(objectMapper.convertValue(any(TransferEvent.class), eq(Map.class)))
+                    .thenReturn(Map.of("from", "acc-1", "to", "acc-2", "amount", 100000));
 
             OutboxEvent result = outboxService.createEventFromObject(
                     "Transfer", "transfer-001", "TransferCompleted", domainEvent, headers, "transfer.events");
@@ -225,6 +234,8 @@ class OutboxServiceTest {
                 // Self-referencing getter that causes infinite recursion
                 public Object getSelf() { return this; }
             };
+            when(objectMapper.convertValue(any(), eq(Map.class)))
+                    .thenThrow(new IllegalArgumentException("Cannot serialize"));
 
             assertThatThrownBy(() -> outboxService.createEventFromObject(
                     AGGREGATE_TYPE, AGGREGATE_ID, EVENT_TYPE, badObject))

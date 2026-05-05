@@ -8,19 +8,6 @@ spring:
   autoconfigure:
     exclude: org.springframework.cloud.vault.core.VaultAutoConfiguration
 
-# Actuator endpoint security for tests
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  # Disable health indicators that require external services
-  health:
-    redis:
-      enabled: false
-    kafka:
-      enabled: false
-
   # Use H2 for unit tests (fast)
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
@@ -54,6 +41,19 @@ management:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8080/realms/payu
+
+# Actuator endpoint security for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  # Disable health indicators that require external services
+  health:
+    redis:
+      enabled: false
+    kafka:
+      enabled: false
 
 # Logging
 logging:

@@ -106,10 +106,10 @@ class SknRgsTransferServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.status()).isEqualTo("VALIDATING");
+        assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("5000"));
         assertThat(result.estimatedCompletionTime()).isEqualTo("Same day");
-        verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
         verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("100000.00")));
     }
 
@@ -132,10 +132,10 @@ class SknRgsTransferServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.status()).isEqualTo("VALIDATING");
+        assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("25000"));
         assertThat(result.estimatedCompletionTime()).isEqualTo("Real-time");
-        verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
         verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("50000000.00")));
     }
 

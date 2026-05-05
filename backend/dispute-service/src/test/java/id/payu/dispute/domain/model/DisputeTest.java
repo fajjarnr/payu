@@ -489,6 +489,7 @@ class DisputeTest {
         @DisplayName("Should be equal when same ID")
         void shouldBeEqualWhenSameId() {
             UUID id = UUID.randomUUID();
+            Instant now = Instant.now();
             Dispute dispute1 = Dispute.builder()
                     .id(id)
                     .transactionId(TRANSACTION_ID)
@@ -498,7 +499,7 @@ class DisputeTest {
                     .currency(CURRENCY)
                     .reason(REASON)
                     .status(DisputeStatus.OPEN)
-                    .openedAt(Instant.now())
+                    .openedAt(now)
                     .evidenceList(List.of())
                     .build();
 
@@ -511,7 +512,7 @@ class DisputeTest {
                     .currency(CURRENCY)
                     .reason(REASON)
                     .status(DisputeStatus.OPEN)
-                    .openedAt(Instant.now())
+                    .openedAt(now)
                     .evidenceList(List.of())
                     .build();
 

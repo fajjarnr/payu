@@ -1,7 +1,9 @@
 package id.payu.outbox;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
@@ -31,5 +33,9 @@ import org.springframework.context.annotation.FilterType;
         })
 })
 public class TestConfig {
-    // This class serves as a minimal Spring Boot application for testing
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 }

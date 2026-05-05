@@ -136,7 +136,7 @@ class IdempotencyTest {
         // Then
         assertThat(response).isNotNull();
         verify(walletServicePort, times(1)).reserveBalance(any(), any(), any());
-        verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
     }
 
     @Test
@@ -193,7 +193,7 @@ class IdempotencyTest {
         handler.handle(secondCommand);
 
         // Then
-        verify(transactionPersistencePort, times(4)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(6)).save(any(Transaction.class));
         verify(walletServicePort, times(2)).reserveBalance(any(), any(), any());
     }
 

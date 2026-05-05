@@ -1,9 +1,12 @@
 package id.payu.saga;
 
 import id.payu.saga.config.SagaProperties;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 
 /**
  * Test configuration for saga-starter integration tests.
@@ -15,5 +18,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableAutoConfiguration
 @EnableConfigurationProperties(SagaProperties.class)
 public class TestConfig {
-    // Configuration is handled by application-test.yml and SagaAutoConfiguration
+
+    @Bean
+    public MeterRegistry meterRegistry() {
+        return new SimpleMeterRegistry();
+    }
 }

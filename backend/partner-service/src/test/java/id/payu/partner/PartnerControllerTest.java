@@ -2,13 +2,16 @@ package id.payu.partner;
 
 import id.payu.partner.dto.PartnerDTO;
 import id.payu.partner.adapter.web.PartnerController;
+import id.payu.partner.adapter.web.filter.SandboxFilter;
 import id.payu.partner.application.service.PartnerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -23,8 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Spring Boot test for PartnerController.
  * Uses MockMvc for testing REST endpoints without starting the full server.
  */
-@WebMvcTest(controllers = PartnerController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
+@WithMockUser(roles = "ADMIN")
 public class PartnerControllerTest {
 
     @Autowired
@@ -32,6 +37,9 @@ public class PartnerControllerTest {
 
     @MockBean
     private PartnerService partnerService;
+
+    @MockBean
+    private SandboxFilter sandboxFilter;
 
     @Test
     public void testGetAllPartners() throws Exception {

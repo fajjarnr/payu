@@ -20,6 +20,6 @@ class ApiPortalServiceTest {
         assertNotNull(response);
         assertNotNull(response.services());
         assertFalse(response.services().isEmpty());
-        assertEquals(15, response.services().size());
+        assertEquals(20, response.services().size());
     }
 }

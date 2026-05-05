@@ -3,6 +3,7 @@ package id.payu.promotion.application.saga;
 import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.dto.CreateCashbackRequest;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
  * Context object for cashback saga orchestration.
  * Holds all data needed during saga execution.
  */
-public class CashbackSagaContext {
+public class CashbackSagaContext implements Serializable {
 
     private CreateCashbackRequest request;
     private Cashback cashback;

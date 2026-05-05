@@ -49,8 +49,7 @@ public class KycReviewService {
     }
 
     public Optional<KycReview> getByUserId(String userId) {
-        // Simplified for this example, or use repository
-        return repository.findByUserId(userId).stream().findFirst();
+        return repository.findByUserIdOrderByCreatedAtDesc(userId).stream().findFirst();
     }
 
     public List<KycReview> listByStatus(KycReview.KycStatus status, int page, int size) {

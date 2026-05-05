@@ -65,8 +65,6 @@ class PromoRedemptionServiceTest {
 
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.of(promo));
-        when(promoUsageRepository.hasUserUsedPromo(USER_ID, promoCode))
-                .thenReturn(false);
         when(promoUsageRepository.recordUsage(any()))
                 .thenReturn(true);
 
@@ -75,8 +73,8 @@ class PromoRedemptionServiceTest {
 
         // Then
         assertTrue(response.success());
-        assertEquals(new BigDecimal("10000"), response.discountAmount());
-        assertEquals(new BigDecimal("90000"), response.finalAmount());
+        assertEquals(0, new BigDecimal("10000").compareTo(response.discountAmount()));
+        assertEquals(0, new BigDecimal("90000").compareTo(response.finalAmount()));
         assertEquals(promoCode, response.promoCode());
 
         // Verify usage was recorded
@@ -126,8 +124,6 @@ class PromoRedemptionServiceTest {
 
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.of(promo));
-        when(promoUsageRepository.hasUserUsedPromo(USER_ID, promoCode))
-                .thenReturn(false);
         when(promoUsageRepository.recordUsage(any()))
                 .thenThrow(new RuntimeException("Database error"));
 
@@ -224,8 +220,6 @@ class PromoRedemptionServiceTest {
 
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.of(promo));
-        when(promoUsageRepository.hasUserUsedPromo(USER_ID, promoCode))
-                .thenReturn(false);
         when(promoUsageRepository.recordUsage(any()))
                 .thenReturn(true);
 
@@ -234,8 +228,8 @@ class PromoRedemptionServiceTest {
 
         // Then
         assertTrue(response.success());
-        assertEquals(new BigDecimal("5000"), response.discountAmount());
-        assertEquals(new BigDecimal("95000"), response.finalAmount());
+        assertEquals(0, new BigDecimal("5000").compareTo(response.discountAmount()));
+        assertEquals(0, new BigDecimal("95000").compareTo(response.finalAmount()));
     }
 
     @Test

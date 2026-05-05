@@ -3,6 +3,7 @@ package id.payu.promotion.domain;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,7 +16,7 @@ import java.util.UUID;
     @Index(name = "idx_cashback_date", columnList = "createdAt DESC")
 })
 @EntityListeners(AuditingEntityListener.class)
-public class Cashback {
+public class Cashback implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

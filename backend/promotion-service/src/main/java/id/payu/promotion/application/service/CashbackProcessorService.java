@@ -74,12 +74,14 @@ public class CashbackProcessorService {
         LOG.debug("Found {} active cashback rules", activeRules.size());
 
         int processedCount = 0;
+        int matchedCount = 0;
         BigDecimal totalCashback = BigDecimal.ZERO;
         List<String> processedRuleIds = new ArrayList<>();
 
         // Evaluate each rule
         for (CashbackRule rule : activeRules) {
             if (rule.matches(transaction)) {
+                matchedCount++;
                 BigDecimal cashbackAmount = rule.calculateCashback(transaction);
 
                 if (cashbackAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -98,7 +100,7 @@ public class CashbackProcessorService {
                 event.transactionId(), processedCount, totalCashback);
 
         return CashbackResult.builder()
-                .success(processedCount > 0 || activeRules.isEmpty())
+                .success(processedCount > 0 || matchedCount == 0)
                 .processedCount(processedCount)
                 .totalCashbackAmount(totalCashback)
                 .processedRuleIds(processedRuleIds)

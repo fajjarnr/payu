@@ -95,8 +95,8 @@ public class RevenueSplit {
         List<CalculatedSplit> results = new ArrayList<>();
         BigDecimal remainingAmount = totalAmount;
 
-        // Sort by priority (higher priority first)
-        stakeholders.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
+        // Sort by priority (lower number = higher priority)
+        stakeholders.sort((a, b) -> Integer.compare(a.getPriority(), b.getPriority()));
 
         for (Stakeholder stakeholder : stakeholders) {
             BigDecimal amount = BigDecimal.ZERO;

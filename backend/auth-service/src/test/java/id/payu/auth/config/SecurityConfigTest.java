@@ -97,7 +97,7 @@ class SecurityConfigTest {
     @DisplayName("Should allow public access to register endpoint")
     void shouldAllowPublicAccessToRegisterEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/auth/register"))
-                .andExpect(status().isNotFound()); // 404 because endpoint is not yet implemented
+                .andExpect(status().isMethodNotAllowed()); // 405 because endpoint requires POST
     }
 
     @Test

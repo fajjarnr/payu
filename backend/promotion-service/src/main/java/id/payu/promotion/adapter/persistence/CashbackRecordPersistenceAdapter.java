@@ -27,4 +27,8 @@ public class CashbackRecordPersistenceAdapter implements CashbackRecordRepositor
         processedTransactions.add(record.getTransactionId());
         return record;
     }
+
+    public void clear() {
+        processedTransactions.clear();
+    }
 }

@@ -80,6 +80,7 @@ public class SwiftTransformerTest {
         IntegrationMessage message = IntegrationMessage.builder()
                 .messageId("test-id")
                 .type(MessageType.SWIFT_MT103)
+                .direction(MessageDirection.INBOUND)
                 .rawPayload("")
                 .build();
 

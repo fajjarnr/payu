@@ -30,4 +30,8 @@ public class CashbackRulePersistenceAdapter implements CashbackRuleRepositoryPor
         rules.add(rule);
         return rule;
     }
+
+    public void clear() {
+        rules.clear();
+    }
 }

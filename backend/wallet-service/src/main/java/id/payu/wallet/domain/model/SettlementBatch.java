@@ -157,7 +157,10 @@ public class SettlementBatch {
         this.totalAmount = entries.stream()
                 .map(SettlementEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.netAmount = this.totalAmount.subtract(this.feeAmount != null ? this.feeAmount : BigDecimal.ZERO);
+        this.feeAmount = entries.stream()
+                .map(e -> e.getFee() != null ? e.getFee() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.netAmount = this.totalAmount.subtract(this.feeAmount);
     }
 
     public enum SettlementStatus {

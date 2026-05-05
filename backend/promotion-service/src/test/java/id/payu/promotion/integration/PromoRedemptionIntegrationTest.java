@@ -64,8 +64,8 @@ class PromoRedemptionIntegrationTest {
 
         // Then
         assertTrue(response.success());
-        assertEquals(new BigDecimal("20000"), response.discountAmount());
-        assertEquals(new BigDecimal("80000"), response.finalAmount());
+        assertEquals(0, new BigDecimal("20000").compareTo(response.discountAmount()));
+        assertEquals(0, new BigDecimal("80000").compareTo(response.finalAmount()));
     }
 
     @Test
@@ -90,8 +90,8 @@ class PromoRedemptionIntegrationTest {
 
         // Then
         assertTrue(response.success());
-        assertEquals(new BigDecimal("5000"), response.discountAmount());
-        assertEquals(new BigDecimal("95000"), response.finalAmount());
+        assertEquals(0, new BigDecimal("5000").compareTo(response.discountAmount()));
+        assertEquals(0, new BigDecimal("95000").compareTo(response.finalAmount()));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package id.payu.portal.adapter.web;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@TestSecurity(authorizationEnabled = false)
 class SandboxResourceTest {
 
     private String createdPaymentReferenceNo;

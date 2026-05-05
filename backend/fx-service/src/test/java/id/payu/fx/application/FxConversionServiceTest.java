@@ -44,7 +44,7 @@ class FxConversionServiceTest {
     @BeforeEach
     void setUp() {
         fxConversionService = new FxConversionService(conversionRepository, fxRateUseCase, walletServicePort);
-        
+
         testRate = FxRate.builder()
                 .id(UUID.randomUUID())
                 .fromCurrency("IDR")
@@ -54,6 +54,7 @@ class FxConversionServiceTest {
                 .validFrom(LocalDateTime.now())
                 .validUntil(LocalDateTime.now().plusMinutes(15))
                 .build();
+
     }
 
     @Test
@@ -68,14 +69,16 @@ class FxConversionServiceTest {
 
         when(fxRateUseCase.getCurrentRate("IDR", "USD")).thenReturn(testRate);
         when(conversionRepository.save(any(FxConversion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(walletServicePort.debit(any(), any(), any(), any())).thenReturn(true);
+        when(walletServicePort.credit(any(), any(), any(), any())).thenReturn(true);
 
         FxConversion result = fxConversionService.createConversion(conversion);
 
         assertThat(result.getToAmount()).isEqualByComparingTo("65.00");
         assertThat(result.getExchangeRate()).isEqualByComparingTo("0.000065");
-        assertThat(result.getStatus()).isEqualTo(FxConversion.ConversionStatus.PENDING);
+        assertThat(result.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
         verify(fxRateUseCase).getCurrentRate("IDR", "USD");
-        verify(conversionRepository).save(any(FxConversion.class));
+        verify(conversionRepository, times(2)).save(any(FxConversion.class));
     }
 
     @Test
@@ -143,6 +146,8 @@ class FxConversionServiceTest {
 
         when(conversionRepository.findById(conversionId)).thenReturn(Optional.of(conversion));
         when(conversionRepository.save(any(FxConversion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(walletServicePort.debit(any(), any(), any(), any())).thenReturn(true);
+        when(walletServicePort.credit(any(), any(), any(), any())).thenReturn(true);
 
         fxConversionService.reverseConversion(conversionId);
 

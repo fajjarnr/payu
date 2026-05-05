@@ -12,6 +12,7 @@ public class ArchitectureTest {
     @ArchTest
     static final ArchRule hexagonal_architecture = layeredArchitecture()
             .consideringOnlyDependenciesInAnyPackage("id.payu.backoffice..")
+            .withOptionalLayers(true)
             .layer("Adapter.Web").definedBy("..adapter.web..")
             .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
             .layer("Application").definedBy("..application..")

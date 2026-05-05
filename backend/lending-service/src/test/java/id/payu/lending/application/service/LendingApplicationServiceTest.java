@@ -160,6 +160,8 @@ class LendingApplicationServiceTest {
     void testCalculateCreditScore_ShouldCreateCreditScore() {
         UUID userId = UUID.randomUUID();
 
+        when(enhancedCreditScoringService.calculateEnhancedCreditScore(any(UUID.class), any(BigDecimal.class)))
+                .thenReturn(new BigDecimal("700"));
         when(creditScorePersistenceAdapter.save(any(CreditScore.class))).thenAnswer(invocation -> {
             CreditScore creditScore = invocation.getArgument(0);
             creditScore.setId(UUID.randomUUID());

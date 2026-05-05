@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Transactional
 class ReferralResourceTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort

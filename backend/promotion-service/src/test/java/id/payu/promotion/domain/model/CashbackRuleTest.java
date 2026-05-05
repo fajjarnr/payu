@@ -96,7 +96,7 @@ class CashbackRuleTest {
 
         // Then - 5% of 200k = 10k
         assertTrue(matches);
-        assertEquals(new BigDecimal("10000"), cashback, "5% of 200k should be 10k");
+        assertEquals(0, new BigDecimal("10000").compareTo(cashback), "5% of 200k should be 10k");
     }
 
     @Test

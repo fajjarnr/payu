@@ -123,7 +123,7 @@ public class SoapTransformerTest {
         String result = transformer.createRequest("GetBalance", params);
 
         assertNotNull(result);
-        assertTrue(result.contains("<GetBalance>"));
+        assertTrue(result.contains("<payu:GetBalance>"));
         assertTrue(result.contains("<accountNumber>1234567890</accountNumber>"));
         assertTrue(result.contains("<currency>IDR</currency>"));
     }

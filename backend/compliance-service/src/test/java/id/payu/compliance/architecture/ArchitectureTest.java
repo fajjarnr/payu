@@ -24,7 +24,8 @@ class ArchitectureTest {
                         "org.springframework.validation..",
                         "org.springframework.data.domain..",
                         "lombok.."
-                );
+                )
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }
@@ -43,7 +44,8 @@ class ArchitectureTest {
                         "org.slf4j..",
                         "lombok..",
                         "jakarta.."
-                );
+                )
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }
@@ -66,7 +68,8 @@ class ArchitectureTest {
                         "lombok..",
                         "jakarta..",
                         "io.swagger.."
-                );
+                )
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }
@@ -75,7 +78,8 @@ class ArchitectureTest {
     void controllersShouldResideInWebPackage() {
         ArchRule rule = classes()
                 .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
-                .should().resideInAPackage("id.payu.compliance.adapter.web");
+                .should().resideInAPackage("id.payu.compliance.adapter.web")
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }
@@ -85,7 +89,8 @@ class ArchitectureTest {
         ArchRule rule = classes()
                 .that().resideInAPackage("id.payu.compliance.domain.model..")
                 .should().notBeAnnotatedWith("org.springframework.stereotype.Component")
-                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Service");
+                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Service")
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }

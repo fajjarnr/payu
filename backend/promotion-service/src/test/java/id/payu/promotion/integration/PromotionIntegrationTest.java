@@ -39,7 +39,6 @@ import static org.hamcrest.Matchers.*;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Transactional
 class PromotionIntegrationTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort
@@ -60,7 +59,7 @@ class PromotionIntegrationTest {
     @Autowired
     RewardRepository rewardRepository;
 
-    private static final String TEST_ACCOUNT_ID = "acc-integration-test";
+    private static final String TEST_ACCOUNT_ID = "test-user";
     private static final String TEST_REFERRER_ID = "acc-referrer-test";
     private static final String TEST_REFEREE_ID = "acc-referee-test";
 
@@ -109,7 +108,7 @@ class PromotionIntegrationTest {
                 .when().get("/api/v1/loyalty-points/account/" + TEST_ACCOUNT_ID + "/balance")
                 .then().statusCode(200)
                 .body("currentBalance", equalTo(100))
-                .body("totalEarned", equalTo(1));
+                .body("totalEarned", equalTo(100));
 
         // 3. Verify individual transaction
         given()
@@ -140,7 +139,7 @@ class PromotionIntegrationTest {
                 .when().get("/api/v1/loyalty-points/account/" + TEST_ACCOUNT_ID + "/balance")
                 .then().statusCode(200)
                 .body("currentBalance", equalTo(150))
-                .body("totalEarned", equalTo(2));
+                .body("totalEarned", equalTo(150));
     }
 
     @Test
@@ -186,7 +185,7 @@ class PromotionIntegrationTest {
                 .when().get("/api/v1/loyalty-points/account/" + TEST_ACCOUNT_ID + "/balance")
                 .then().statusCode(200)
                 .body("currentBalance", equalTo(125))
-                .body("totalRedeemed", equalTo(1));
+                .body("totalRedeemed", equalTo(75));
     }
 
     // ==================== CASHBACK PROCESSING TESTS ====================
@@ -220,15 +219,15 @@ class PromotionIntegrationTest {
         given()
                 .when().get("/api/v1/cashbacks/" + cashbackId)
                 .then().statusCode(200)
-                .body("cashbackAmount", equalTo(3000)) // 3% of 100000
+                .body("cashbackAmount", equalTo(3000.0F)) // 3% of 100000
                 .body("percentage", equalTo(3.0F));
 
         // 3. Verify cashback summary
         given()
                 .when().get("/api/v1/cashbacks/account/" + TEST_ACCOUNT_ID + "/summary")
                 .then().statusCode(200)
-                .body("totalCashback", equalTo(3000))
-                .body("creditedCashback", equalTo(3000))
+                .body("totalCashback", equalTo(3000.0F))
+                .body("creditedCashback", equalTo(3000.0F))
                 .body("transactionCount", equalTo(1));
     }
 
@@ -251,7 +250,7 @@ class PromotionIntegrationTest {
                 .post("/api/v1/cashbacks")
         .then()
                 .statusCode(201)
-                .body("cashbackAmount", equalTo(1000)); // 2% of 50000
+                .body("cashbackAmount", equalTo(1000.0F)); // 2% of 50000
 
         // Test SHOPPING category (1.5%)
         CreateCashbackRequest shoppingRequest = new CreateCashbackRequest(
@@ -270,7 +269,7 @@ class PromotionIntegrationTest {
                 .post("/api/v1/cashbacks")
         .then()
                 .statusCode(201)
-                .body("cashbackAmount", equalTo(1500)); // 1.5% of 100000
+                .body("cashbackAmount", equalTo(1500.0F)); // 1.5% of 100000
     }
 
     // ==================== REFERRAL PROGRAM TESTS ====================
@@ -410,14 +409,14 @@ class PromotionIntegrationTest {
                 .post("/api/v1/promotions")
         .then()
                 .statusCode(201)
-                .extract().path("id");
+                .extract().path("data.id");
 
         // 2. Activate the promotion
         given()
                 .when().post("/api/v1/promotions/" + promoId + "/activate")
                 .then()
                 .statusCode(200)
-                .body("status", equalTo("ACTIVE"));
+                .body("data.status", equalTo("ACTIVE"));
 
         // 3. Claim the promotion (first use - should succeed)
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -433,9 +432,9 @@ class PromotionIntegrationTest {
                 .body(claimRequest)
         .when()
                 .post("/api/v1/promotions/PROMO-ONCE-001/claim")
-        .then()
+                .then()
                 .statusCode(201)
-                .body("type", equalTo("PROMOTION_REWARD"));
+                .body("data.type", equalTo("PROMOTION_REWARD"));
 
         // 4. Try to claim again (should fail - already used)
         ClaimPromotionRequest claimRequest2 = new ClaimPromotionRequest(
@@ -484,7 +483,7 @@ class PromotionIntegrationTest {
                 .post("/api/v1/promotions")
         .then()
                 .statusCode(201)
-                .extract().path("id");
+                .extract().path("data.id");
 
         // Activate the promotion
         given()
@@ -591,10 +590,10 @@ class PromotionIntegrationTest {
                 .body(expiredPromotionRequest)
         .when()
                 .post("/api/v1/promotions")
-        .then()
+                .then()
                 .statusCode(201)
-                .body("status", equalTo("DRAFT"))
-                .extract().path("id").toString();
+                .body("data.status", equalTo("DRAFT"))
+                .extract().path("data.id").toString();
 
         // Activate the expired promo — should auto-expire based on past dates
         given()
@@ -687,7 +686,7 @@ class PromotionIntegrationTest {
                 .post("/api/v1/promotions")
         .then()
                 .statusCode(201)
-                .extract().path("id");
+                .extract().path("data.id");
 
         // Activate the promotion
         given()
@@ -775,6 +774,7 @@ class PromotionIntegrationTest {
 
                     given()
                             .contentType(ContentType.JSON)
+                            .header("X-Test-Account-Id", accountId)
                             .body(request)
                     .when()
                             .post("/api/v1/loyalty-points")
@@ -795,6 +795,7 @@ class PromotionIntegrationTest {
 
         // Verify final balance
         var balance = given()
+                .header("X-Test-Account-Id", accountId)
                 .when().get("/api/v1/loyalty-points/account/" + accountId + "/balance")
                 .then()
                 .statusCode(200)

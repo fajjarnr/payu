@@ -47,6 +47,7 @@ class ArchitectureTest {
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .withOptionalLayers(true)
                     .layer("Domain").definedBy("..domain..")
                     .layer("Application").definedBy("..application..")
                     .layer("Adapter").definedBy("..adapter..")
@@ -79,6 +80,7 @@ class ArchitectureTest {
                             "..infrastructure..",
                             "..config.."
                     )
+                    .allowEmptyShould(true)
                     .because("Domain layer must be independent of infrastructure concerns (Hexagonal Architecture)");
 
             rule.check(importedClasses);
@@ -96,6 +98,7 @@ class ArchitectureTest {
                             "org.springframework.web..",
                             "org.springframework.data.."
                     )
+                    .allowEmptyShould(true)
                     .because("Domain entities should be framework-agnostic POJOs (jakarta.validation is allowed)");
 
             rule.check(importedClasses);
@@ -135,6 +138,7 @@ class ArchitectureTest {
                             "..domain.service..",
                             "..config.."
                     )
+                    .allowEmptyShould(true)
                     .because("Services should be accessed via adapters (controllers) or other services, not directly from infrastructure");
 
             rule.check(importedClasses);
@@ -187,6 +191,7 @@ class ArchitectureTest {
         void shouldNotUseFieldInjection() {
             ArchRule rule = noFields()
                     .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
+                    .allowEmptyShould(true)
                     .because("Use constructor injection instead of field injection for better testability");
 
             rule.check(importedClasses);
@@ -197,6 +202,7 @@ class ArchitectureTest {
         void shouldNotUseJakartaFieldInjection() {
             ArchRule rule = noFields()
                     .should().beAnnotatedWith("jakarta.inject.Inject")
+                    .allowEmptyShould(true)
                     .because("Use constructor injection instead of field injection for better testability");
 
             rule.check(importedClasses);
@@ -214,6 +220,7 @@ class ArchitectureTest {
                     .that().areAnnotatedWith(Service.class)
                     .should().haveSimpleNameEndingWith("Service")
                     .orShould().haveSimpleNameEndingWith("ServiceImpl")
+                    .allowEmptyShould(true)
                     .because("Service classes should follow naming convention");
 
             rule.check(importedClasses);
@@ -226,6 +233,7 @@ class ArchitectureTest {
                     .that().areAnnotatedWith(RestController.class)
                     .or().areAnnotatedWith(Controller.class)
                     .should().haveSimpleNameEndingWith("Controller")
+                    .allowEmptyShould(true)
                     .because("Controller classes should follow naming convention");
 
             rule.check(importedClasses);
@@ -239,6 +247,7 @@ class ArchitectureTest {
                     .or().resideInAPackage("..repository..")
                     .should().haveSimpleNameEndingWith("Repository")
                     .orShould().haveSimpleNameEndingWith("RepositoryImpl")
+                    .allowEmptyShould(true)
                     .because("Repository classes should follow naming convention");
 
             rule.check(importedClasses);

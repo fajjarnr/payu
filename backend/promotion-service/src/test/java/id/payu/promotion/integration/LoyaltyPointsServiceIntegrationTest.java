@@ -301,7 +301,7 @@ class LoyaltyPointsServiceIntegrationTest {
         // Verify final balance
         LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
         Assertions.assertEquals(350, balance.currentBalance());
-        Assertions.assertEquals(3, balance.totalRedeemed());
+        Assertions.assertEquals(650, balance.totalRedeemed()); // sum of redeemed points (200+150+300)
     }
 
     // ==================== GET POINTS TESTS ====================
@@ -398,7 +398,7 @@ class LoyaltyPointsServiceIntegrationTest {
         LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
 
         Assertions.assertEquals(350, balance.currentBalance());
-        Assertions.assertEquals(3, balance.totalEarned()); // 2 EARNED + 1 REFERRAL_BONUS
+        Assertions.assertEquals(300, balance.totalEarned()); // only EARNED points (100+200)
         Assertions.assertEquals(0, balance.totalRedeemed());
     }
 
@@ -424,8 +424,8 @@ class LoyaltyPointsServiceIntegrationTest {
         LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
 
         Assertions.assertEquals(350, balance.currentBalance()); // 500 - 150
-        Assertions.assertEquals(2, balance.totalEarned());
-        Assertions.assertEquals(1, balance.totalRedeemed());
+        Assertions.assertEquals(500, balance.totalEarned()); // sum of earned points (300+200)
+        Assertions.assertEquals(150, balance.totalRedeemed()); // sum of redeemed points
     }
 
     @Test
@@ -538,7 +538,7 @@ class LoyaltyPointsServiceIntegrationTest {
 
         // 100 transactions x 10 points = 1000 points
         Assertions.assertEquals(1000, balance.currentBalance());
-        Assertions.assertEquals(100, balance.totalEarned());
+        Assertions.assertEquals(1000, balance.totalEarned()); // sum of points, not count
     }
 
     @Test

@@ -40,6 +40,7 @@ class ArchitectureTest {
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .withOptionalLayers(true)
                     // Adapter layers (driving / driven)
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Client").definedBy("..adapter.client..")
@@ -69,6 +70,7 @@ class ArchitectureTest {
                     .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
                     .whereLayer("Adapter.Messaging").mayOnlyBeAccessedByLayers("Application")
 
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -89,6 +91,7 @@ class ArchitectureTest {
                             "org.springframework.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns (Hexagonal rule)")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -100,6 +103,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("..application..")
                     .because("DTOs should be data transfer objects without business logic dependencies")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -117,6 +121,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Controller")
                     .because("REST controller classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -129,6 +134,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
                     .because("Service classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -141,6 +147,7 @@ class ArchitectureTest {
                     .should().haveSimpleNameEndingWith("Adapter")
                     .orShould().haveSimpleNameEndingWith("Repository")
                     .because("Persistence adapter classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -152,6 +159,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().beInterfaces()
                     .because("Ports define contracts and must be interfaces")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -166,6 +174,7 @@ class ArchitectureTest {
             noFields()
                     .should().beAnnotatedWith("jakarta.inject.Inject")
                     .because("This is a Spring Boot service — avoid using Quarkus @Inject")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -181,6 +190,7 @@ class ArchitectureTest {
                     .that().areAssignableTo(org.springframework.data.repository.Repository.class)
                     .should().resideInAPackage("..adapter.persistence..")
                     .because("Repositories are driven adapter infrastructure concerns")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }

@@ -105,19 +105,13 @@ class NikVerificationServiceTest {
         @DisplayName("should return service unavailable response when adapter throws exception")
         void shouldReturnServiceUnavailableResponseWhenAdapterThrows() {
             // Given
-            VerifyNikResponse unavailableResponse = VerifyNikResponse.serviceUnavailable(
-                UUID.randomUUID().toString()
-            );
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willThrow(new AccountDomainException.DukcapilServiceUnavailableException());
 
-            // When
-            CompletableFuture<VerifyNikResponse> result = nikVerificationService.verifyNik(validRequest);
-
-            // Then
-            assertThat(result).isCompleted();
-            assertThat(result.join().responseCode()).isEqualTo("503");
-            assertThat(result.join().verified()).isFalse();
+            // When/Then
+            // In unit test without Spring AOP proxy, fallback is not active — exception propagates
+            assertThatThrownBy(() -> nikVerificationService.verifyNik(validRequest))
+                .isInstanceOf(AccountDomainException.DukcapilServiceUnavailableException.class);
         }
 
         @Test

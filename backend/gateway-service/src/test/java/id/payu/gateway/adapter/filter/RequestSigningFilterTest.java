@@ -20,15 +20,17 @@ public class RequestSigningFilterTest {
     private static final String TEST_PARTNER_ID = "partner-1";
     // pragma: allowlist secret
     private static final String TEST_SECRET_KEY = "dGVzdC1zZWNyZXQta2V5"; // base64 encoded "test-secret-key"
+    private static final String VALID_BODY = "{\"name\":\"Test Partner\",\"email\":\"test@example.com\",\"partnerType\":\"FINTECH\"}";
 
     @Test
     @DisplayName("Should accept valid signed request")
     public void testValidSignature() throws Exception {
         long timestamp = Instant.now().getEpochSecond();
-        String signature = generateSignature("POST", "/api/v1/partners/test", timestamp, TEST_SECRET_KEY);
+        String signature = generateSignature("POST", "/api/v1/partners/test", timestamp, TEST_SECRET_KEY, VALID_BODY.getBytes(StandardCharsets.UTF_8));
 
         given()
             .contentType("application/json")
+            .body(VALID_BODY)
             .header("X-Partner-Id", TEST_PARTNER_ID)
             .header("X-Signature", signature)
             .header("X-Timestamp", String.valueOf(timestamp))
@@ -43,6 +45,7 @@ public class RequestSigningFilterTest {
     public void testMissingSignature() {
         given()
             .contentType("application/json")
+            .body(VALID_BODY)
             .header("X-Partner-Id", TEST_PARTNER_ID)
             .when()
             .post("/api/v1/partners/test")
@@ -56,6 +59,7 @@ public class RequestSigningFilterTest {
     public void testInvalidSignature() {
         given()
             .contentType("application/json")
+            .body(VALID_BODY)
             .header("X-Partner-Id", TEST_PARTNER_ID)
             .header("X-Signature", "invalid-signature")
             .header("X-Timestamp", String.valueOf(Instant.now().getEpochSecond()))
@@ -70,10 +74,11 @@ public class RequestSigningFilterTest {
     @DisplayName("Should reject request with old timestamp")
     public void testOldTimestamp() throws Exception {
         long oldTimestamp = Instant.now().getEpochSecond() - 1000;
-        String signature = generateSignature("POST", "/api/v1/partners/test", oldTimestamp, TEST_SECRET_KEY);
+        String signature = generateSignature("POST", "/api/v1/partners/test", oldTimestamp, TEST_SECRET_KEY, VALID_BODY.getBytes(StandardCharsets.UTF_8));
 
         given()
             .contentType("application/json")
+            .body(VALID_BODY)
             .header("X-Partner-Id", TEST_PARTNER_ID)
             .header("X-Signature", signature)
             .header("X-Timestamp", String.valueOf(oldTimestamp))
@@ -88,10 +93,11 @@ public class RequestSigningFilterTest {
     @DisplayName("Should reject request from unknown partner")
     public void testUnknownPartner() throws Exception {
         long timestamp = Instant.now().getEpochSecond();
-        String signature = generateSignature("POST", "/api/v1/partners/test", timestamp, TEST_SECRET_KEY);
+        String signature = generateSignature("POST", "/api/v1/partners/test", timestamp, TEST_SECRET_KEY, VALID_BODY.getBytes(StandardCharsets.UTF_8));
 
         given()
             .contentType("application/json")
+            .body(VALID_BODY)
             .header("X-Partner-Id", "unknown-partner")
             .header("X-Signature", signature)
             .header("X-Timestamp", String.valueOf(timestamp))
@@ -102,16 +108,25 @@ public class RequestSigningFilterTest {
             .body("error", equalTo("UNKNOWN_PARTNER"));
     }
 
-    private String generateSignature(String method, String path, long timestamp, String secretKey) throws Exception {
+    private String generateSignature(String method, String path, long timestamp, String secretKey, byte[] body) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
 
         javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
         javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, "HmacSHA256");
         mac.init(keySpec);
 
-        String payload = method + "\n" + path + "\n" + timestamp + "\n";
-        byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+        StringBuilder payload = new StringBuilder();
+        payload.append(method).append("\n");
+        payload.append(path).append("\n");
+        payload.append(timestamp).append("\n");
 
+        if (body != null) {
+            java.security.MessageDigest sha256 = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] bodyHash = sha256.digest(body);
+            payload.append(Base64.getEncoder().encodeToString(bodyHash));
+        }
+
+        byte[] signature = mac.doFinal(payload.toString().getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(signature);
     }
 }

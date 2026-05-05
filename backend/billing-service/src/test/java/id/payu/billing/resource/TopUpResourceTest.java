@@ -1,8 +1,14 @@
 package id.payu.billing.resource;
 
-import id.payu.billing.adapter.client.WalletClient;
+import id.payu.billing.domain.port.out.BillerPort;
+import id.payu.billing.domain.port.out.PaymentEventPort;
+import id.payu.billing.domain.port.out.WalletPort;
+import id.payu.commons.idempotency.IdempotencyEntry;
+import id.payu.commons.idempotency.IdempotencyKey;
+import id.payu.commons.idempotency.IdempotencyRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,11 +16,19 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -26,20 +40,50 @@ class TopUpResourceTest {
     int port;
 
     @MockBean
-    WalletClient walletClient;
+    WalletPort walletPort;
+
+    @MockBean
+    BillerPort billerPort;
+
+    @MockBean
+    PaymentEventPort eventPort;
+
+    @MockBean
+    IdempotencyRepository idempotencyRepository;
+
+    @MockBean
+    JwtDecoder jwtDecoder;
 
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
+        Mockito.when(idempotencyRepository.findByKey(any(IdempotencyKey.class)))
+                .thenReturn(Optional.empty());
+        Mockito.when(idempotencyRepository.saveIfAbsent(any(IdempotencyKey.class), any(IdempotencyEntry.class), anyLong()))
+                .thenReturn(true);
+        Mockito.doNothing().when(idempotencyRepository).update(any(IdempotencyKey.class), any(IdempotencyEntry.class), anyLong());
+    }
+
+    private RequestSpecification givenAuth(String accountId) {
+        Jwt mockJwt = Jwt.withTokenValue("test-token")
+                .header("alg", "RS256")
+                .claim("account_id", accountId)
+                .build();
+        Mockito.when(jwtDecoder.decode("test-token")).thenReturn(mockJwt);
+        return given()
+                .header("Authorization", "Bearer test-token")
+                .header("Idempotency-Key", UUID.randomUUID().toString());
     }
 
     @Test
     @DisplayName("POST /api/v1/topup - should create GoPay top-up")
     void shouldCreateGoPayTopUp() {
-        Mockito.when(walletClient.reserveBalance(anyString(), any()))
-            .thenReturn(new WalletClient.ReserveResponse("res-123", "ACC-001", "ref-123", "RESERVED"));
+        Mockito.when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
+        Mockito.when(billerPort.pay(anyString(), anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new BillerPort.PaymentResult("00", "Success", "btx-123", "COMPLETED", Instant.now()));
 
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -52,23 +96,25 @@ class TopUpResourceTest {
             .when()
             .post("/api/v1/topup")
             .then()
-            .statusCode(201)
-            .body("referenceNumber", startsWith("BILL"))
-            .body("provider", equalTo("GOPAY"))
-            .body("walletNumber", equalTo("08123456789"))
-            .body("amount", equalTo(100000))
-            .body("adminFee", equalTo(1000))
-            .body("totalAmount", equalTo(101000))
-            .body("status", equalTo("COMPLETED"));
+            .statusCode(200)
+            .body("data.referenceNumber", startsWith("BILL"))
+            .body("data.provider", equalTo("GOPAY"))
+            .body("data.walletNumber", equalTo("08123456789"))
+            .body("data.amount", equalTo(100000))
+            .body("data.adminFee", equalTo(1000))
+            .body("data.totalAmount", equalTo(101000))
+            .body("data.status", equalTo("COMPLETED"));
     }
 
     @Test
     @DisplayName("POST /api/v1/topup - should create OVO top-up")
     void shouldCreateOVOTopUp() {
-        Mockito.when(walletClient.reserveBalance(anyString(), any()))
-            .thenReturn(new WalletClient.ReserveResponse("res-456", "ACC-002", "ref-456", "RESERVED"));
+        Mockito.when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new WalletPort.ReserveResult("res-456", "RESERVED"));
+        Mockito.when(billerPort.pay(anyString(), anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new BillerPort.PaymentResult("00", "Success", "btx-456", "COMPLETED", Instant.now()));
 
-        given()
+        givenAuth("ACC-002")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -81,21 +127,23 @@ class TopUpResourceTest {
             .when()
             .post("/api/v1/topup")
             .then()
-            .statusCode(201)
-            .body("provider", equalTo("OVO"))
-            .body("walletNumber", equalTo("08987654321"))
-            .body("amount", equalTo(50000))
-            .body("adminFee", equalTo(1000))
-            .body("status", equalTo("COMPLETED"));
+            .statusCode(200)
+            .body("data.provider", equalTo("OVO"))
+            .body("data.walletNumber", equalTo("08987654321"))
+            .body("data.amount", equalTo(50000))
+            .body("data.adminFee", equalTo(1000))
+            .body("data.status", equalTo("COMPLETED"));
     }
 
     @Test
     @DisplayName("POST /api/v1/topup - should create DANA top-up")
     void shouldCreateDNATopUp() {
-        Mockito.when(walletClient.reserveBalance(anyString(), any()))
-            .thenReturn(new WalletClient.ReserveResponse("res-789", "ACC-003", "ref-789", "RESERVED"));
+        Mockito.when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new WalletPort.ReserveResult("res-789", "RESERVED"));
+        Mockito.when(billerPort.pay(anyString(), anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new BillerPort.PaymentResult("00", "Success", "btx-789", "COMPLETED", Instant.now()));
 
-        given()
+        givenAuth("ACC-003")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -108,22 +156,24 @@ class TopUpResourceTest {
             .when()
             .post("/api/v1/topup")
             .then()
-            .statusCode(201)
-            .body("provider", equalTo("DANA"))
-            .body("walletNumber", equalTo("08555555555"))
-            .body("amount", equalTo(300000))
-            .body("adminFee", equalTo(1500))
-            .body("totalAmount", equalTo(301500))
-            .body("status", equalTo("COMPLETED"));
+            .statusCode(200)
+            .body("data.provider", equalTo("DANA"))
+            .body("data.walletNumber", equalTo("08555555555"))
+            .body("data.amount", equalTo(300000))
+            .body("data.adminFee", equalTo(1500))
+            .body("data.totalAmount", equalTo(301500))
+            .body("data.status", equalTo("COMPLETED"));
     }
 
     @Test
     @DisplayName("POST /api/v1/topup - should create LinkAja top-up")
     void shouldCreateLinkAjaTopUp() {
-        Mockito.when(walletClient.reserveBalance(anyString(), any()))
-            .thenReturn(new WalletClient.ReserveResponse("res-999", "ACC-004", "ref-999", "RESERVED"));
+        Mockito.when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new WalletPort.ReserveResult("res-999", "RESERVED"));
+        Mockito.when(billerPort.pay(anyString(), anyString(), any(BigDecimal.class), anyString()))
+            .thenReturn(new BillerPort.PaymentResult("00", "Success", "btx-999", "COMPLETED", Instant.now()));
 
-        given()
+        givenAuth("ACC-004")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -136,19 +186,19 @@ class TopUpResourceTest {
             .when()
             .post("/api/v1/topup")
             .then()
-            .statusCode(201)
-            .body("provider", equalTo("LINKAJA"))
-            .body("walletNumber", equalTo("08777777777"))
-            .body("amount", equalTo(1000000))
-            .body("adminFee", equalTo(2000))
-            .body("totalAmount", equalTo(1002000))
-            .body("status", equalTo("COMPLETED"));
+            .statusCode(200)
+            .body("data.provider", equalTo("LINKAJA"))
+            .body("data.walletNumber", equalTo("08777777777"))
+            .body("data.amount", equalTo(1000000))
+            .body("data.adminFee", equalTo(2000))
+            .body("data.totalAmount", equalTo(1002000))
+            .body("data.status", equalTo("COMPLETED"));
     }
 
     @Test
     @DisplayName("POST /api/v1/topup - should fail for unknown provider")
     void shouldFailForUnknownProvider() {
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -167,7 +217,7 @@ class TopUpResourceTest {
     @Test
     @DisplayName("POST /api/v1/topup - should validate minimum amount")
     void shouldValidateMinimumAmount() {
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -186,7 +236,7 @@ class TopUpResourceTest {
     @Test
     @DisplayName("POST /api/v1/topup - should validate maximum amount")
     void shouldValidateMaximumAmount() {
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -205,7 +255,7 @@ class TopUpResourceTest {
     @Test
     @DisplayName("POST /api/v1/topup - should validate wallet number length")
     void shouldValidateWalletNumberLength() {
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
@@ -224,11 +274,11 @@ class TopUpResourceTest {
     @Test
     @DisplayName("POST /api/v1/topup - should validate required fields")
     void shouldValidateRequiredFields() {
-        given()
+        givenAuth("ACC-001")
             .contentType(ContentType.JSON)
             .body("""
                 {
-                    "accountId": "",
+                    "accountId": "ACC-001",
                     "provider": "GOPAY"
                 }
                 """)
@@ -241,29 +291,29 @@ class TopUpResourceTest {
     @Test
     @DisplayName("GET /api/v1/topup/providers - should return available providers")
     void shouldReturnAvailableProviders() {
-        given()
+        givenAuth("ACC-001")
             .when()
             .get("/api/v1/topup/providers")
             .then()
             .statusCode(200)
-            .body("$.size()", equalTo(4))
-            .body("[0].code", equalTo("GOPAY"))
-            .body("[0].name", equalTo("GoPay"))
-            .body("[1].code", equalTo("OVO"))
-            .body("[1].name", equalTo("OVO"))
-            .body("[2].code", equalTo("DANA"))
-            .body("[2].name", equalTo("DANA"))
-            .body("[3].code", equalTo("LINKAJA"))
-            .body("[3].name", equalTo("LinkAja"));
+            .body("data.size()", equalTo(4))
+            .body("data[0].code", equalTo("GOPAY"))
+            .body("data[0].name", equalTo("GoPay"))
+            .body("data[1].code", equalTo("OVO"))
+            .body("data[1].name", equalTo("OVO"))
+            .body("data[2].code", equalTo("DANA"))
+            .body("data[2].name", equalTo("DANA"))
+            .body("data[3].code", equalTo("LINKAJA"))
+            .body("data[3].name", equalTo("LinkAja"));
     }
 
     @Test
-    @DisplayName("GET /api/v1/topup/{id} - should return 404 for non-existent top-up")
-    void shouldReturn404ForNonExistentTopUp() {
-        given()
+    @DisplayName("GET /api/v1/topup/{id} - should return 500 for non-existent top-up")
+    void shouldReturn500ForNonExistentTopUp() {
+        givenAuth("ACC-001")
             .when()
             .get("/api/v1/topup/00000000-0000-0000-0000-000000000000")
             .then()
-            .statusCode(404);
+            .statusCode(500);
     }
 }

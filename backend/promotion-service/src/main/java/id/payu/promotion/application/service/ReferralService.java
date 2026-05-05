@@ -51,6 +51,10 @@ public class ReferralService {
     public Referral createReferral(CreateReferralRequest request) {
         LOG.info("Creating referral: referrer={}", request.referrerAccountId());
 
+        if (request.referrerAccountId() == null || request.referrerAccountId().isBlank()) {
+            throw new IllegalArgumentException("Referrer account ID is required");
+        }
+
         String referralCode = generateReferralCode();
 
         Referral referral = new Referral();
@@ -124,6 +128,7 @@ public class ReferralService {
             .count();
 
         Optional<Referral> lastReferral = referrals.stream()
+            .sorted(java.util.Comparator.comparing(Referral::getCreatedAt).reversed())
             .findFirst();
 
         String referralCode = lastReferral

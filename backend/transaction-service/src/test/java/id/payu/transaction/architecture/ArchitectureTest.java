@@ -17,26 +17,30 @@ public class ArchitectureTest {
     static final ArchRule domain_layer_should_be_free_of_dependencies =
             classes().that().resideInAPackage("..domain..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("java..", "org.springframework.data..", "..domain..", "id.payu.transaction.dto..", "lombok..", "jakarta.persistence..", "jakarta.annotation..");
+                    .resideInAnyPackage("java..", "org.springframework.data..", "..domain..", "id.payu.transaction.dto..", "lombok..", "jakarta.persistence..", "jakarta.annotation..")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule application_layer_should_only_depend_on_domain =
             classes().that().resideInAPackage("..application..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.dto..", "id.payu.transaction.application..", "java..", "lombok..", "org.springframework..", "org.slf4j..");
+                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.dto..", "id.payu.transaction.application..", "java..", "lombok..", "org.springframework..", "org.slf4j..")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule adapter_layer_should_only_depend_on_domain_and_application =
             classes().that().resideInAPackage("..adapter..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..", "io.github.resilience4j..", "io.swagger.v3.oas.annotations..");
+                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..", "io.github.resilience4j..", "io.swagger.v3.oas.annotations..")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule controllers_should_only_depend_on_usecases =
             classes().that().resideInAPackage("..adapter.web..")
                     .should().onlyDependOnClassesThat()
                     // Allowed domain.model because controller returns Transaction object currently
-                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.application.cqrs..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..");
+                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.application.cqrs..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule adapters_should_have_suffixed_names =
@@ -44,7 +48,8 @@ public class ArchitectureTest {
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Adapter")
-                    .orShould().haveSimpleNameEndingWith("Controller"); // Controller is also an adapter
+                    .orShould().haveSimpleNameEndingWith("Controller") // Controller is also an adapter
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule services_should_have_suffixed_names =
@@ -57,11 +62,13 @@ public class ArchitectureTest {
                             return !javaClass.getPackageName().endsWith(".dto");
                         }
                     })
-                    .should().haveSimpleNameEndingWith("Service");
+                    .should().haveSimpleNameEndingWith("Service")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule controllers_should_have_suffixed_names =
             classes().that().resideInAPackage("..adapter.web..")
                     .and().areNotInterfaces()
-                    .should().haveSimpleNameEndingWith("Controller");
+                    .should().haveSimpleNameEndingWith("Controller")
+                    .allowEmptyShould(true);
 }

@@ -15,9 +15,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KycVerificationAdapter")
@@ -275,10 +277,10 @@ class KycVerificationAdapterTest {
                 "1990-01-15"
             );
 
-            // Then - the null should be handled by masking before gateway call
+            // Then - the null should be handled gracefully by masking before gateway call
             // This would actually fail at validation, but we test the adapter handles it
-            assertThatThrownBy(() -> kycVerificationAdapter.verifyNik(requestWithNullNik))
-                .isInstanceOf(Exception.class);
+            assertThatNoException().isThrownBy(() -> kycVerificationAdapter.verifyNik(requestWithNullNik));
+            verify(gatewayClient).verifyNik(requestWithNullNik);
         }
     }
 }

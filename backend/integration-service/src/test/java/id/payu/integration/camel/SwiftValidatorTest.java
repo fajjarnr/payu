@@ -23,7 +23,7 @@ public class SwiftValidatorTest {
 
     @Test
     void testValidMT103Message() {
-        String swiftMessage = "{1:F01PAYUIDJAAXXX0000000000}{2:I103PAYUIDJAXXXXN}{4:\n" +
+        String swiftMessage = "{1:F01PAYUIDJAAXXX0000000000}{2:I103PAYUIDJAXXXXN1234123456}{4:\n" +
                 ":20:REF123456\n" +
                 ":23B:CRED\n" +
                 ":32A:240101USD1000000,00\n" +
@@ -47,7 +47,7 @@ public class SwiftValidatorTest {
 
     @Test
     void testInvalidMessageMissingRequiredFields() {
-        String swiftMessage = "{1:F01PAYUIDJAAXXX0000000000}{2:I103PAYUIDJAXXXXN}{4:\n" +
+        String swiftMessage = "{1:F01PAYUIDJAAXXX0000000000}{2:I103PAYUIDJAXXXXN1234123456}{4:\n" +
                 ":20:REF123456\n" +
                 "-}{5:{CHK:000000000000}}";
 

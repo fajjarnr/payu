@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Transactional
 class LoyaltyPointsResourceTest {
 
     @org.springframework.boot.test.web.server.LocalServerPort
@@ -28,7 +27,7 @@ class LoyaltyPointsResourceTest {
     @Autowired
     LoyaltyPointsRepository loyaltyPointsRepository;
 
-    private static final String TEST_ACCOUNT_ID = "acc-test-123";
+    private static final String TEST_ACCOUNT_ID = "test-user";
 
     @BeforeEach
     void setUp() {
@@ -228,7 +227,7 @@ class LoyaltyPointsResourceTest {
             .then()
             .statusCode(200)
             .body("currentBalance", equalTo(100))
-            .body("totalEarned", equalTo(1))
+            .body("totalEarned", equalTo(100))
             .body("totalRedeemed", equalTo(0))
             .body("expiredPoints", equalTo(0));
     }
@@ -237,7 +236,7 @@ class LoyaltyPointsResourceTest {
     void testGetBalance_NoTransactions_ReturnsZero() {
         given()
             .when()
-            .get("/account/non-existent/balance")
+            .get("/account/test-user/balance")
             .then()
             .statusCode(200)
             .body("currentBalance", equalTo(0))

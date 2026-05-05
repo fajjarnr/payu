@@ -2,11 +2,15 @@ package id.payu.billing.resource;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
@@ -20,55 +24,69 @@ class BillerResourceTest {
     @LocalServerPort
     int port;
 
+    @MockBean
+    JwtDecoder jwtDecoder;
+
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
+
+        Jwt mockJwt = Jwt.withTokenValue("test-token")
+                .header("alg", "RS256")
+                .subject("test-user")
+                .claim("scope", "openid")
+                .build();
+        org.mockito.Mockito.when(jwtDecoder.decode("test-token")).thenReturn(mockJwt);
+    }
+
+    private RequestSpecification givenAuth() {
+        return given().header("Authorization", "Bearer test-token");
     }
 
     @Test
     @DisplayName("GET /api/v1/billers - should return all billers")
     void shouldReturnAllBillers() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers")
             .then()
             .statusCode(200)
             .contentType(ContentType.JSON)
-            .body("$", hasSize(greaterThan(0)))
-            .body("[0].code", notNullValue())
-            .body("[0].displayName", notNullValue());
+            .body("data", hasSize(greaterThan(0)))
+            .body("data[0].code", notNullValue())
+            .body("data[0].displayName", notNullValue());
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=mobile - should filter by category")
     void shouldFilterByCategory() {
-        given()
+        givenAuth()
             .queryParam("category", "mobile")
             .when()
             .get("/api/v1/billers")
             .then()
             .statusCode(200)
-            .body("$", hasSize(greaterThan(0)))
-            .body("category", everyItem(equalTo("mobile")));
+            .body("data", hasSize(greaterThan(0)))
+            .body("data.category", everyItem(equalTo("mobile")));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return specific biller")
     void shouldReturnSpecificBiller() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/PLN")
             .then()
             .statusCode(200)
-            .body("code", equalTo("PLN"))
-            .body("displayName", containsString("PLN"))
-            .body("category", equalTo("electricity"));
+            .body("data.code", equalTo("PLN"))
+            .body("data.displayName", containsString("PLN"))
+            .body("data.category", equalTo("electricity"));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return 404 for unknown biller")
     void shouldReturn404ForUnknownBiller() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/UNKNOWN")
             .then()
@@ -78,78 +96,78 @@ class BillerResourceTest {
     @Test
     @DisplayName("GET /api/v1/billers/categories - should return all categories")
     void shouldReturnAllCategories() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/categories")
             .then()
             .statusCode(200)
-            .body("$", hasItems("electricity", "water", "mobile"));
+            .body("data", hasItems("electricity", "water", "mobile"));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=tv_cable - should return TV Cable billers")
     void shouldReturnTVCableBillers() {
-        given()
+        givenAuth()
             .queryParam("category", "tv_cable")
             .when()
             .get("/api/v1/billers")
             .then()
             .statusCode(200)
-            .body("$", hasSize(greaterThan(0)))
-            .body("category", everyItem(equalTo("tv_cable")))
-            .body("code", hasItems("INDOVISION", "TRANSTV", "KVISION", "MNC_VISION"));
+            .body("data", hasSize(greaterThan(0)))
+            .body("data.category", everyItem(equalTo("tv_cable")))
+            .body("data.code", hasItems("INDOVISION", "TRANSTV", "KVISION", "MNC_VISION"));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=multifinance - should return Multifinance billers")
     void shouldReturnMultifinanceBillers() {
-        given()
+        givenAuth()
             .queryParam("category", "multifinance")
             .when()
             .get("/api/v1/billers")
             .then()
             .statusCode(200)
-            .body("$", hasSize(greaterThan(0)))
-            .body("category", everyItem(equalTo("multifinance")))
-            .body("code", hasItems("FIFASTRA", "BFI", "ADIRA", "WOM", "MEGA_FINANCE"));
+            .body("data", hasSize(greaterThan(0)))
+            .body("data.category", everyItem(equalTo("multifinance")))
+            .body("data.code", hasItems("FIFASTRA", "BFI", "ADIRA", "WOM", "MEGA_FINANCE"));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return TV Cable biller with correct admin fee")
     void shouldReturnTVCableBillerWithCorrectAdminFee() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/INDOVISION")
             .then()
             .statusCode(200)
-            .body("code", equalTo("INDOVISION"))
-            .body("displayName", containsString("Indovision"))
-            .body("category", equalTo("tv_cable"))
-            .body("adminFee", equalTo(2500));
+            .body("data.code", equalTo("INDOVISION"))
+            .body("data.displayName", containsString("Indovision"))
+            .body("data.category", equalTo("tv_cable"))
+            .body("data.adminFee", equalTo(2500));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return Multifinance biller with correct admin fee")
     void shouldReturnMultifinanceBillerWithCorrectAdminFee() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/FIFASTRA")
             .then()
             .statusCode(200)
-            .body("code", equalTo("FIFASTRA"))
-            .body("displayName", containsString("FIFASTRA"))
-            .body("category", equalTo("multifinance"))
-            .body("adminFee", equalTo(5000));
+            .body("data.code", equalTo("FIFASTRA"))
+            .body("data.displayName", containsString("FIFASTRA"))
+            .body("data.category", equalTo("multifinance"))
+            .body("data.adminFee", equalTo(5000));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/categories - should include tv_cable and multifinance categories")
     void shouldIncludeNewCategories() {
-        given()
+        givenAuth()
             .when()
             .get("/api/v1/billers/categories")
             .then()
             .statusCode(200)
-            .body("$", hasItems("electricity", "water", "mobile", "tv_cable", "multifinance"));
+            .body("data", hasItems("electricity", "water", "mobile", "tv_cable", "multifinance"));
     }
 }

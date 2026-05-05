@@ -353,6 +353,19 @@ public class Money implements Comparable<Money> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Money money = (Money) o;
+        return amount.compareTo(money.amount) == 0 && java.util.Objects.equals(currency, money.currency);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(amount.stripTrailingZeros(), currency);
+    }
+
+    @Override
     public String toString() {
         return "Money{" +
                 "amount=" + amount +

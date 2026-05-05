@@ -21,7 +21,7 @@ class LedgerEntryTest {
         LedgerEntry entry = LedgerEntry.builder()
                 .id(id)
                 .transactionId(transactionId)
-                .accountId(accountId)
+                .accountId(accountId.toString())
                 .entryType(LedgerEntry.EntryType.DEBIT)
                 .amount(new BigDecimal("5000000"))
                 .currency("IDR")

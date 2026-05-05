@@ -41,6 +41,7 @@ class ArchitectureTest {
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .withOptionalLayers(true)
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
                     .layer("Adapter.Sender").definedBy("..adapter.sender..")
@@ -78,6 +79,7 @@ class ArchitectureTest {
                             "org.eclipse.microprofile.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -95,6 +97,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Resource")
                     .because("JAX-RS resource classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -107,6 +110,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
                     .because("Service classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -118,6 +122,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Sender")
                     .because("Sender classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
 
@@ -129,6 +134,7 @@ class ArchitectureTest {
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Consumer")
                     .because("Kafka consumer classes should follow naming convention")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -143,6 +149,7 @@ class ArchitectureTest {
             noFields()
                     .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
                     .because("This is a Quarkus service - use @Inject instead of @Autowired")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }
@@ -158,6 +165,7 @@ class ArchitectureTest {
                     .that().areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
                     .should().resideInAPackage("..domain..")
                     .because("Panache entities are domain objects in this architecture")
+                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }

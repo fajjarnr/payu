@@ -1,6 +1,8 @@
 package id.payu.promotion.integration;
 
 import id.payu.promotion.application.service.CashbackProcessorService;
+import id.payu.promotion.adapter.persistence.CashbackRecordPersistenceAdapter;
+import id.payu.promotion.adapter.persistence.CashbackRulePersistenceAdapter;
 import id.payu.promotion.domain.model.*;
 import id.payu.promotion.domain.port.out.CashbackRuleRepositoryPort;
 import id.payu.promotion.domain.port.out.WalletServicePort;
@@ -36,7 +38,13 @@ class CashbackProcessorIntegrationTest {
     @Autowired
     private CashbackRuleRepositoryPort cashbackRuleRepository;
 
-    @MockBean
+    @Autowired
+    private CashbackRulePersistenceAdapter cashbackRulePersistenceAdapter;
+
+    @Autowired
+    private CashbackRecordPersistenceAdapter cashbackRecordPersistenceAdapter;
+
+    @MockBean(name = "walletGrpcAdapter")
     private WalletServicePort walletServicePort;
 
     private static final String ACCOUNT_ID = "acc-123";
@@ -44,6 +52,8 @@ class CashbackProcessorIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        cashbackRulePersistenceAdapter.clear();
+        cashbackRecordPersistenceAdapter.clear();
         when(walletServicePort.creditWallet(any(), any(), any(), any()))
                 .thenReturn(true);
     }
@@ -76,11 +86,11 @@ class CashbackProcessorIntegrationTest {
         // Then
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
-        assertEquals(new BigDecimal("5000"), result.getTotalCashbackAmount());
+        assertEquals(0, new BigDecimal("5000").compareTo(result.getTotalCashbackAmount()));
 
         verify(walletServicePort).creditWallet(
                 eq(ACCOUNT_ID),
-                eq(new BigDecimal("5000")),
+                argThat(amount -> new BigDecimal("5000").compareTo(amount) == 0),
                 contains(TRANSACTION_ID),
                 anyString()
         );
@@ -115,7 +125,7 @@ class CashbackProcessorIntegrationTest {
         // Then - 5% of 200k = 10k, capped at 10k max
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
-        assertEquals(new BigDecimal("10000"), result.getTotalCashbackAmount());
+        assertEquals(0, new BigDecimal("10000").compareTo(result.getTotalCashbackAmount()));
     }
 
     @Test

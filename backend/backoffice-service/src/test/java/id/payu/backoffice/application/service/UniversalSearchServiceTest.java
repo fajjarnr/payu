@@ -51,6 +51,7 @@ class UniversalSearchServiceTest {
     @BeforeEach
     void setUp() {
         sampleKycReview = new KycReview();
+        sampleKycReview.setId(UUID.randomUUID());
         sampleKycReview.setUserId("testUser123");
         sampleKycReview.setAccountNumber("ACC_TEST_123");
         sampleKycReview.setDocumentType("KTP");

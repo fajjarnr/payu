@@ -38,4 +38,9 @@ public class PromoUsagePersistenceAdapter implements PromoUsageRepositoryPort {
     public Optional<PromoUsage> findByIdempotencyKey(String idempotencyKey) {
         return Optional.ofNullable(usagesByIdempotencyKey.get(idempotencyKey));
     }
+
+    public void clear() {
+        userPromoUsage.clear();
+        usagesByIdempotencyKey.clear();
+    }
 }

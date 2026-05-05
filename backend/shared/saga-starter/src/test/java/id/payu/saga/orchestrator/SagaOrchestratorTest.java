@@ -71,6 +71,10 @@ class SagaOrchestratorTest {
 
         // Mock save to return the same instance
         lenient().when(sagaRepository.save(any(SagaInstance.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(sagaRepository.findById(anyString())).thenAnswer(inv -> {
+            // Return a started instance for state transitions
+            return Optional.of(SagaInstance.create("TestSaga", SagaState.STARTED.name(), Map.of()));
+        });
         lenient().when(sagaRepository.findBySagaId(anyString())).thenAnswer(inv -> {
             // Return the last saved instance
             return Optional.of(SagaInstance.create("TestSaga", SagaState.STARTED.name(), Map.of()));

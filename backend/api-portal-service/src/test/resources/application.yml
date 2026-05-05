@@ -19,6 +19,10 @@ quarkus:
       enabled: false
   opentelemetry:
     enabled: false
+  # Disable auth for tests
+  security:
+    auth:
+      enabled-in-dev-mode: false
   # Test Configuration
   test:
     continuous-testing: disabled

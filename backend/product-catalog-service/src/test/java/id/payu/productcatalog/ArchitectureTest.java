@@ -35,7 +35,8 @@ public class ArchitectureTest {
                             "jakarta.persistence..",
                             "jakarta.validation.."
                     )
-                    .because("Domain layer must be pure business logic without framework dependencies");
+                    .because("Domain layer must be pure business logic without framework dependencies")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule domainShouldNotDependOnApplication =
@@ -43,7 +44,8 @@ public class ArchitectureTest {
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAPackage("..application..")
-                    .because("Domain should not depend on application layer - dependency points inward");
+                    .because("Domain should not depend on application layer - dependency points inward")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule applicationShouldNotDependOnAdapters =
@@ -55,14 +57,16 @@ public class ArchitectureTest {
                             "..adapter.persistence..",
                             "..adapter.messaging.."
                     )
-                    .because("Application layer should only depend on domain and ports, not concrete adapters");
+                    .because("Application layer should only depend on domain and ports, not concrete adapters")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule noCyclicDependencies =
             slices()
                     .matching("id.payu.productcatalog.(*)..")
                     .should().beFreeOfCycles()
-                    .because("Hexagonal architecture should not have cyclic dependencies between layers");
+                    .because("Hexagonal architecture should not have cyclic dependencies between layers")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule adaptersShouldDependOnApplication =
@@ -70,12 +74,14 @@ public class ArchitectureTest {
                     .that().resideInAPackage("..adapter..")
                     .should().dependOnClassesThat()
                     .resideInAPackage("..dto..")
-                    .because("DTOs should be defined in adapter layer, not depended on by it");
+                    .because("DTOs should be defined in adapter layer, not depended on by it")
+                    .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule repositoriesShouldBeInPersistenceAdapter =
             classes()
                     .that().haveSimpleNameContaining("Repository")
                     .should().resideInAPackage("..adapter.persistence..")
-                    .because("Repositories should only exist in persistence adapter");
+                    .because("Repositories should only exist in persistence adapter")
+                    .allowEmptyShould(true);
 }

@@ -28,6 +28,7 @@ class ArchitectureTest {
         noClasses()
                 .that().resideInAPackage("..domain..")
                 .should().dependOnClassesThat().resideInAPackage("..adapter..")
+                .allowEmptyShould(true)
                 .because("Domain layer must be independent of infrastructure")
                 .check(classes);
     }
@@ -38,6 +39,7 @@ class ArchitectureTest {
         noClasses()
                 .that().resideInAPackage("..domain.model..")
                 .should().dependOnClassesThat().resideInAPackage("org.springframework..")
+                .allowEmptyShould(true)
                 .because("Domain model must be framework-agnostic")
                 .check(classes);
     }
@@ -48,6 +50,7 @@ class ArchitectureTest {
         classes()
                 .that().resideInAPackage("..domain.port..")
                 .should().beInterfaces()
+                .allowEmptyShould(true)
                 .because("Ports define contracts and should be interfaces")
                 .check(classes);
     }
@@ -58,6 +61,7 @@ class ArchitectureTest {
         classes()
                 .that().haveSimpleNameEndingWith("Controller")
                 .should().resideInAPackage("..adapter.web..")
+                .allowEmptyShould(true)
                 .because("Controllers are driving adapters and belong in adapter.web")
                 .check(classes);
     }
@@ -70,6 +74,7 @@ class ArchitectureTest {
                 .and().areNotInterfaces()
                 .and().haveSimpleNameNotContaining("Security") // Security services can be in security package
                 .should().resideInAPackage("..application..")
+                .allowEmptyShould(true)
                 .because("Service implementations belong in application layer")
                 .check(classes);
     }
@@ -80,6 +85,7 @@ class ArchitectureTest {
         classes()
                 .that().areAnnotatedWith(jakarta.persistence.Entity.class)
                 .should().resideInAPackage("..entity..")
+                .allowEmptyShould(true)
                 .because("JPA entities are infrastructure concerns")
                 .check(classes);
     }
@@ -92,6 +98,7 @@ class ArchitectureTest {
         // TODO: Refactor to use proper dependency injection via ports
         layeredArchitecture()
                 .consideringOnlyDependenciesInLayers()
+                .withOptionalLayers(true)
                 .layer("Domain").definedBy("..domain..")
                 .layer("Application").definedBy("..application..")
                 .layer("Adapter").definedBy("..adapter..")

@@ -14,10 +14,16 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ConfigurationPropertiesScan
 @ComponentScan(
     basePackages = "id.payu",
-    excludeFilters = @ComponentScan.Filter(
-        type = FilterType.REGEX,
-        pattern = "id\\.payu\\.api\\.common\\.openapi\\..*"
-    )
+    excludeFilters = {
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "id\\.payu\\.api\\.common\\.openapi\\..*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = id.payu.cache.config.DataSourceConfiguration.class
+        )
+    }
 )
 public class BackofficeServiceApplication {
 

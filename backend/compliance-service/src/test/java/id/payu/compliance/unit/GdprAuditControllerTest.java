@@ -64,17 +64,32 @@ class GdprAuditControllerTest {
                 .success(true)
                 .build();
 
-        doNothing().when(dataAccessAuditUseCase).logDataAccess(
+        DataAccessAudit audit = DataAccessAudit.builder()
+                .id(UUID.randomUUID())
+                .userId("user123")
+                .accessedBy("admin")
+                .serviceName("account-service")
+                .resourceType("User")
+                .resourceId("user123")
+                .operationType(DataOperationType.READ)
+                .purpose("User profile viewing")
+                .ipAddress("192.168.1.1")
+                .userAgent("Mozilla/5.0")
+                .success(true)
+                .build();
+
+        when(dataAccessAuditUseCase.logDataAccess(
                 any(), any(), any(), any(), any(), any(), any(),
                 any(), any(), anyBoolean(), any()
-        );
+        )).thenReturn(audit);
 
         mockMvc.perform(post("/api/v1/gdpr-audit")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.userId").value("user123"));
 
         verify(dataAccessAuditUseCase, times(1)).logDataAccess(
                 eq("user123"), eq("admin"), eq("account-service"),
@@ -102,12 +117,12 @@ class GdprAuditControllerTest {
         mockMvc.perform(get("/api/v1/gdpr-audit/{auditId}", auditId)
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(auditId.toString()))
-                .andExpect(jsonPath("$.userId").value("user123"))
-                .andExpect(jsonPath("$.accessedBy").value("admin"))
-                .andExpect(jsonPath("$.serviceName").value("account-service"))
-                .andExpect(jsonPath("$.resourceType").value("User"))
-                .andExpect(jsonPath("$.operationType").value("READ"));
+                .andExpect(jsonPath("$.data.id").value(auditId.toString()))
+                .andExpect(jsonPath("$.data.userId").value("user123"))
+                .andExpect(jsonPath("$.data.accessedBy").value("admin"))
+                .andExpect(jsonPath("$.data.serviceName").value("account-service"))
+                .andExpect(jsonPath("$.data.resourceType").value("User"))
+                .andExpect(jsonPath("$.data.operationType").value("READ"));
 
         verify(dataAccessAuditUseCase, times(1)).getDataAccessAudit(auditId);
     }
@@ -133,8 +148,8 @@ class GdprAuditControllerTest {
         mockMvc.perform(get("/api/v1/gdpr-audit/users/{userId}", userId)
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].userId").value(userId))
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.data.content[0].userId").value(userId))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
 
         verify(dataAccessAuditUseCase, times(1)).getUserDataAccessHistory(eq(userId), any(Pageable.class));
     }
@@ -162,7 +177,7 @@ class GdprAuditControllerTest {
                         .param("startDate", startDate.toString())
                         .param("endDate", endDate.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].userId").value(userId));
+                .andExpect(jsonPath("$.data[0].userId").value(userId));
 
         verify(dataAccessAuditUseCase, times(1))
                 .getUserDataAccessHistoryByDateRange(userId, startDate, endDate);
@@ -191,7 +206,7 @@ class GdprAuditControllerTest {
                         .param("startDate", startDate.toString())
                         .param("endDate", endDate.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].accessedBy").value(accessedBy));
+                .andExpect(jsonPath("$.data[0].accessedBy").value(accessedBy));
 
         verify(dataAccessAuditUseCase, times(1))
                 .getAccessedByUserHistory(accessedBy, startDate, endDate);
@@ -218,7 +233,7 @@ class GdprAuditControllerTest {
         mockMvc.perform(get("/api/v1/gdpr-audit/operations/{operationType}", operationType)
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].operationType").value("READ"));
+                .andExpect(jsonPath("$.data.content[0].operationType").value("READ"));
 
         verify(dataAccessAuditUseCase, times(1))
                 .getDataAccessByOperationType(eq(operationType), any(Pageable.class));
@@ -247,7 +262,7 @@ class GdprAuditControllerTest {
                         .param("startDate", startDate.toString())
                         .param("endDate", endDate.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].serviceName").value(serviceName));
+                .andExpect(jsonPath("$.data[0].serviceName").value(serviceName));
 
         verify(dataAccessAuditUseCase, times(1))
                 .getServiceDataAccessHistory(serviceName, startDate, endDate);
@@ -265,7 +280,7 @@ class GdprAuditControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .param("since", since.toString()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(String.valueOf(expectedCount)));
+                .andExpect(jsonPath("$.data").value((int) expectedCount));
 
         verify(dataAccessAuditUseCase, times(1)).getUserDataAccessCount(userId, since);
     }
@@ -291,8 +306,8 @@ class GdprAuditControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .param("since", since.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].success").value(false))
-                .andExpect(jsonPath("$[0].errorMessage").value("Access denied"));
+                .andExpect(jsonPath("$.data[0].success").value(false))
+                .andExpect(jsonPath("$.data[0].errorMessage").value("Access denied"));
 
         verify(dataAccessAuditUseCase, times(1)).getFailedAccessAttempts(since);
     }
@@ -330,7 +345,7 @@ class GdprAuditControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].userId").value("user123"));
+                .andExpect(jsonPath("$.data.content[0].userId").value("user123"));
 
         verify(dataAccessAuditUseCase, times(1)).searchDataAccessAudit(
                 eq("user123"), eq(null), eq("account-service"),

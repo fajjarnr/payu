@@ -1,19 +1,20 @@
 package id.payu.account.config;
 
 import id.payu.account.AccountServiceApplication;
+import id.payu.account.TestJpaConfig;
+import id.payu.cache.service.CacheService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.vault.core.VaultTemplate;
-
-import javax.sql.DataSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -23,14 +24,13 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Tests Vault auto-configuration while excluding database-related auto-configurations.
  * Uses mock beans for shared library dependencies that require external infrastructure.
  */
+@Import(TestJpaConfig.class)
 @SpringBootTest(
     classes = AccountServiceApplication.class,
     properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
-                + "org.springframework.cloud.vault.core.VaultAutoConfiguration"
+        "spring.autoconfigure.exclude=org.springframework.cloud.vault.core.VaultAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
+        "payu.security.encryption.password=dummy",
+        "payu.security.encryption.salt=dummy"
     }
 )
 @ActiveProfiles("test")
@@ -53,9 +53,6 @@ class VaultConfigurationTest {
 
     // Mock health indicator dependencies
     @MockBean
-    private DataSource dataSource;
-
-    @MockBean
     private RedisConnectionFactory redisConnectionFactory;
 
     @MockBean
@@ -74,9 +71,19 @@ class VaultConfigurationTest {
     @MockBean
     private id.payu.account.adapter.persistence.repository.ProfileRepository profileRepository;
 
+    // Mock remaining JPA repositories to avoid EntityManagerFactory creation
+    @MockBean
+    private id.payu.account.repository.AccountRepository accountRepository;
+
+    @MockBean
+    private id.payu.account.repository.BudgetJpaRepository budgetJpaRepository;
+
+    @MockBean
+    private id.payu.account.repository.BeneficiaryRepository beneficiaryRepository;
+
     // Mock cache-starter dependencies
-    @MockBean(name = "cacheService")
-    private Object cacheService;
+    @MockBean
+    private CacheService cacheService;
 
     @MockBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
