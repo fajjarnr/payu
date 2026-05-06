@@ -3,8 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * PayU Digital Banking - Playwright E2E Configuration
  *
- * IMPORTANT: This configuration assumes the web app is already running
- * on localhost:3000 (via podman-compose or npm run dev).
+ * IMPORTANT: This configuration assumes the web app is already running:
+ *   - npm run dev: http://localhost:3000
+ *   - podman-compose: http://localhost:3001 (set PLAYWRIGHT_BASE_URL=http://localhost:3001)
  *
  * The webServer is disabled to avoid port conflicts with the containerized
  * environment. Tests will reuse the existing server.
@@ -22,8 +23,8 @@ export default defineConfig({
     timeout: 10000, // Increase expect timeout to 10 seconds
   },
   use: {
-    // Use port 3000 for tests (local dev server)
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    // Use port 3001 for tests (web-app podman container defaults to host port 3001)
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -37,8 +38,10 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Ensure consistent viewport
         viewport: { width: 1280, height: 720 },
+        // Use system Google Chrome (faster than snap Chromium)
+        channel: 'chrome',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       },
     },
     // Temporarily disable other browsers to focus on Chromium first

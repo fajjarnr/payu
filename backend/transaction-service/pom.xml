@@ -255,6 +255,13 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Cloud Contract Verifier -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -299,6 +306,15 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Spring Cloud Contract Verifier -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <configuration>
+                    <baseClassForTests>id.payu.transaction.contract.ContractVerifierBase</baseClassForTests>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

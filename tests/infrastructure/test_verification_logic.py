@@ -21,13 +21,13 @@ class TestDockerComposeVerificationLogic:
     def test_initialization(self):
         """Test that TestDockerComposeVerification initializes correctly"""
         verifier = TestDockerComposeVerification()
-        assert verifier.COMPOSE_FILE == "backend/docs/archive/deprecated-docker/docker-compose.yml"
-        # 18 services: postgres, redis, kafka, kafka-ui, keycloak,
+        assert verifier.COMPOSE_FILE == "infrastructure/local/podman/podman-compose.yml"
+        # 19 services: postgres, redis-native, infinispan, kafka, kafbat-ui, keycloak, vault,
         # bi-fast-simulator, dukcapil-simulator, qris-simulator,
         # account-service, auth-service, transaction-service, wallet-service,
         # billing-service, notification-service, gateway-service,
-        # kyc-service, analytics-service, traefik
-        assert len(verifier.REQUIRED_SERVICES) == 18
+        # kyc-service, analytics-service
+        assert len(verifier.REQUIRED_SERVICES) == 19
 
     @patch('subprocess.run')
     def test_run_command_success(self, mock_run):
@@ -78,10 +78,12 @@ class TestDockerComposeVerificationLogic:
 
         expected_services = [
             "postgres",
-            "redis",
+            "redis-native",
+            "infinispan",
             "kafka",
-            "kafka-ui",
+            "kafbat-ui",
             "keycloak",
+            "vault",
             "bi-fast-simulator",
             "dukcapil-simulator",
             "qris-simulator",
@@ -93,8 +95,7 @@ class TestDockerComposeVerificationLogic:
             "notification-service",
             "gateway-service",
             "kyc-service",
-            "analytics-service",
-            "traefik"
+            "analytics-service"
         ]
 
         assert verifier.REQUIRED_SERVICES == expected_services

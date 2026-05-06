@@ -20,7 +20,7 @@ import json
 # =============================================================================
 BASE_URL = "http://localhost:8080/api/v1"
 GATEWAY_URL = "http://localhost:8080"
-KEYCLOAK_URL = "http://localhost:8180"
+KEYCLOAK_URL = "http://localhost:8099"
 ACCOUNT_URL = "http://localhost:8001"
 WALLET_URL = "http://localhost:8004"
 TRANSACTION_URL = "http://localhost:8003"

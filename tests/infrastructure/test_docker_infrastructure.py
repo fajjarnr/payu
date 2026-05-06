@@ -10,13 +10,15 @@ import time
 class TestDockerComposeVerification:
     """Test Docker Compose up/down operations"""
 
-    COMPOSE_FILE = "backend/docs/archive/deprecated-docker/docker-compose.yml"
+    COMPOSE_FILE = "infrastructure/local/podman/podman-compose.yml"
     REQUIRED_SERVICES = [
         "postgres",
-        "redis",
+        "redis-native",
+        "infinispan",
         "kafka",
-        "kafka-ui",
+        "kafbat-ui",
         "keycloak",
+        "vault",
         "bi-fast-simulator",
         "dukcapil-simulator",
         "qris-simulator",
@@ -28,8 +30,7 @@ class TestDockerComposeVerification:
         "notification-service",
         "gateway-service",
         "kyc-service",
-        "analytics-service",
-        "traefik"
+        "analytics-service"
     ]
 
     def run_command(self, cmd: list, timeout: int = 300) -> subprocess.CompletedProcess:
@@ -46,32 +47,30 @@ class TestDockerComposeVerification:
         """Ensure docker-compose is down after tests"""
         yield
         try:
-            self.run_command(["docker-compose", "-f", self.COMPOSE_FILE, "down", "-v"], timeout=120)
+            self.run_command(["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"], timeout=120)
         except Exception:
             pass
 
     def test_docker_available(self):
-        """Test that Docker is available"""
-        result = self.run_command(["docker", "--version"])
-        assert result.returncode == 0, "Docker is not installed or not accessible"
+        """Test that Podman is available"""
+        result = self.run_command(["podman", "--version"])
+        assert result.returncode == 0, "Podman is not installed or not accessible"
 
-        result = self.run_command(["docker-compose", "--version"])
-        if result.returncode != 0:
-            result = self.run_command(["docker", "compose", "version"])
-        assert result.returncode == 0, "Docker Compose is not installed or not accessible"
+        result = self.run_command(["podman", "compose", "version"])
+        assert result.returncode == 0, "Podman Compose is not installed or not accessible"
 
     def test_compose_up(self):
-        """Test that docker-compose up works"""
+        """Test that podman compose up works"""
         result = self.run_command(
-            ["docker-compose", "-f", self.COMPOSE_FILE, "up", "-d"],
+            ["podman", "compose", "-f", self.COMPOSE_FILE, "up", "-d"],
             timeout=600
         )
-        assert result.returncode == 0, f"Failed to start docker-compose: {result.stderr}"
+        assert result.returncode == 0, f"Failed to start podman compose: {result.stderr}"
 
     def test_services_running(self, compose_up):
         """Test that all required services are running"""
         result = self.run_command(
-            ["docker-compose", "-f", self.COMPOSE_FILE, "ps"]
+            ["podman", "compose", "-f", self.COMPOSE_FILE, "ps"]
         )
         assert result.returncode == 0, "Failed to get services status"
 
@@ -84,7 +83,7 @@ class TestDockerComposeVerification:
         max_retries = 30
         for i in range(max_retries):
             result = self.run_command([
-                "docker", "exec", "payu-postgres",
+                "podman", "exec", "payu-postgres",
                 "pg_isready", "-U", "payu"
             ])
             if result.returncode == 0:
@@ -96,7 +95,7 @@ class TestDockerComposeVerification:
     def test_databases_created(self):
         """Test that all required databases are created"""
         result = self.run_command([
-            "docker", "exec", "payu-postgres",
+            "podman", "exec", "payu-postgres",
             "psql", "-U", "payu", "-c", "\\l"
         ])
         assert result.returncode == 0, "Failed to list databases"
@@ -124,8 +123,8 @@ class TestDockerComposeVerification:
         max_retries = 30
         for i in range(max_retries):
             result = self.run_command([
-                "docker", "exec", "payu-redis",
-                "redis-cli", "ping"
+                "podman", "exec", "payu-redis-native",
+                "redis-cli", "-a", "payu-cache-dev-password", "ping"
             ])
             if result.returncode == 0 and "PONG" in result.stdout:
                 break
@@ -138,8 +137,8 @@ class TestDockerComposeVerification:
         max_retries = 60
         for i in range(max_retries):
             result = self.run_command([
-                "docker", "exec", "payu-kafka",
-                "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"
+                "podman", "exec", "payu-kafka",
+                "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"
             ])
             if result.returncode == 0:
                 break
@@ -152,7 +151,7 @@ class TestDockerComposeVerification:
         max_retries = 60
         for i in range(max_retries):
             result = self.run_command([
-                "docker", "exec", "payu-keycloak",
+                "podman", "exec", "payu-keycloak",
                 "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
                 "http://localhost:8080/health"
             ])
@@ -191,16 +190,16 @@ class TestDockerComposeVerification:
             pytest.fail(f"Account Service did not become accessible (status: {result.stdout.strip()})")
 
     def test_compose_down(self):
-        """Test that docker-compose down works"""
+        """Test that podman compose down works"""
         result = self.run_command(
-            ["docker-compose", "-f", self.COMPOSE_FILE, "down", "-v"],
+            ["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"],
             timeout=120
         )
-        assert result.returncode == 0, f"Failed to stop docker-compose: {result.stderr}"
+        assert result.returncode == 0, f"Failed to stop podman compose: {result.stderr}"
 
         # Verify no containers are running
         result = self.run_command(
-            ["docker-compose", "-f", self.COMPOSE_FILE, "ps", "-q"]
+            ["podman", "compose", "-f", self.COMPOSE_FILE, "ps", "-q"]
         )
         assert result.stdout.strip() == "", "Some containers are still running after down"
 
@@ -209,12 +208,12 @@ class TestDockerComposeVerification:
         """Fixture to ensure compose is up for tests"""
         try:
             self.run_command(
-                ["docker-compose", "-f", self.COMPOSE_FILE, "up", "-d"],
+                ["podman", "compose", "-f", self.COMPOSE_FILE, "up", "-d"],
                 timeout=600
             )
             yield
         finally:
             self.run_command(
-                ["docker-compose", "-f", self.COMPOSE_FILE, "down", "-v"],
+                ["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"],
                 timeout=120
             )

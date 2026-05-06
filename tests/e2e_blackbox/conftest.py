@@ -88,7 +88,7 @@ def test_user_data():
     return {
         "email": f"test_{fake.uuid4()}@example.com",
         "username": f"user_{fake.uuid4()[:8]}",
-        "password": "Password123",
+        "password": "Test@123",
         "fullName": fake.name(),
         "phoneNumber": "+6281234567890",
         "externalId": fake.uuid4(),

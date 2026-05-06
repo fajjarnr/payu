@@ -8,6 +8,25 @@ spring:
     vault:
       enabled: false
 
+  # H2 Database for unit tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # Disable Flyway for tests
+  flyway:
+    enabled: false
+
   security:
     oauth2:
       resourceserver:

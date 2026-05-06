@@ -32,7 +32,7 @@ test.describe('Login Flow', () => {
   test('should have forgot password link', async ({ page }) => {
     const forgotLink = page.getByText('Lupa password?');
     await expect(forgotLink).toBeVisible();
-    await expect(forgotLink).toHaveAttribute('href', '#');
+    await expect(forgotLink).toHaveAttribute('href', '/forgot-password');
   });
 
   test('should validate required fields', async ({ page }) => {
@@ -183,20 +183,63 @@ test.describe('Login Flow', () => {
 });
 
 test.describe('Login Flow - Success Path', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock the BFF login endpoint to return a successful auth response.
+    // The real backend is not available in E2E tests, so we intercept the fetch
+    // to /api/auth/login and return a valid user + set auth cookies.
+    await page.route('**/api/auth/login', async (route) => {
+      const response = await route.fetch();
+      // If the backend responds (e.g., dev env with real gateway), let it through
+      if (response.ok()) return route.continue();
+
+      // Otherwise, return a mock success response matching the BFF shape:
+      // { success: true, data: { user: {...}, expiresIn: ... } }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            user: {
+              id: 'e2e-user-001',
+              accountId: 'ACC-E2E-001',
+              username: 'customer1',
+              fullName: 'Customer Satu',
+              email: 'customer1@payu.id',
+              roles: ['CUSTOMER'],
+              kycStatus: 'VERIFIED',
+            },
+            expiresIn: 900,
+          },
+        }),
+        headers: {
+          'Set-Cookie': [
+            'accessToken=mock-e2e-token; Path=/; HttpOnly; SameSite=Strict',
+            'refreshToken=mock-e2e-refresh; Path=/; HttpOnly; SameSite=Strict',
+          ].join(', '),
+        },
+      });
+    });
+  });
+
   test('should complete successful login journey', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Fill in credentials with correct placeholder
-    await page.fill('input[placeholder="username123"]', 'testuser');
-    await page.fill('input[placeholder="••••••••"]', 'password123');
+    // Fill in credentials with valid-looking data (mocked backend)
+    await page.fill('input[placeholder="username123"]', 'customer1');
+    await page.fill('input[placeholder="••••••••"]', 'P@ssw0rd123');
 
     // Submit form
     await page.click('button[type="submit"]');
 
-    // In a real scenario with valid credentials, user would be redirected
-    // For now, we just verify the form submission process - wait a bit for loading state
-    await page.waitForTimeout(1000);
+    // Wait for redirect to dashboard (the onSuccess handler calls router.push('/dashboard'))
+    await page.waitForURL('**/dashboard**', { timeout: 15000 });
+
+    // Verify we landed on the dashboard
+    await expect(page).toHaveURL(/\/dashboard/);
+    // Dashboard should show the main navigation or welcome content
+    await expect(page.getByText('Selamat Datang')).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -215,16 +258,27 @@ test.describe('Login Flow - Accessibility', () => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Tab through form elements
-    await page.keyboard.press('Tab');
-    await page.waitForTimeout(100);
-    const firstFocused = await page.locator(':focus').isVisible().catch(() => false);
-    expect(firstFocused).toBe(true);
+    // Find form inputs by role — more robust than :focus + Tab from cold state
+    const usernameInput = page.getByPlaceholder('username123');
+    const passwordInput = page.getByPlaceholder('••••••••');
+    const forgotPasswordLink = page.getByTestId('forgot-password-link');
+
+    // Verify all interactive elements are in the DOM and focusable
+    await expect(usernameInput).toBeVisible();
+    await expect(passwordInput).toBeVisible();
+    await expect(forgotPasswordLink).toBeVisible();
+
+    // Tab sequence: username → forgot-password-link → password
+    await usernameInput.focus();
+    await expect(usernameInput).toBeFocused();
 
     await page.keyboard.press('Tab');
-    await page.waitForTimeout(100);
-    const secondFocused = await page.locator(':focus').isVisible().catch(() => false);
-    expect(secondFocused).toBe(true);
+    await page.waitForTimeout(150);
+    await expect(forgotPasswordLink).toBeFocused();
+
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(150);
+    await expect(passwordInput).toBeFocused();
   });
 
   test('should submit form with Enter key', async ({ page }) => {

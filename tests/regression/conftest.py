@@ -9,11 +9,11 @@ from typing import Generator
 
 # Test configuration
 BASE_URL = "http://localhost:8080"
-KEYCLOAK_URL = "http://localhost:8180"
+KEYCLOAK_URL = "http://localhost:8099"
 SERVICES = {
     "gateway": "http://localhost:8080",
     "account": "http://localhost:8001",
-    "keycloak": "http://localhost:8180",
+    "keycloak": "http://localhost:8099",
     "transaction": "http://localhost:8003",
     "wallet": "http://localhost:8004",
     "billing": "http://localhost:8005",
@@ -70,7 +70,7 @@ def check_services_running():
     if failed_services:
         pytest.fail(
             f"Required services not running: {', '.join(failed_services)}\n"
-            f"Start services with: docker-compose up -d"
+            f"Start services with: podman compose -f infrastructure/local/podman/podman-compose.yml up -d"
         )
 
 

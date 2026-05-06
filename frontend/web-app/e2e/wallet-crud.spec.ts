@@ -60,15 +60,20 @@ test.describe('Wallet CRUD Operations', () => {
       await authPage.goto('/pockets');
       await authPage.waitForLoadState('domcontentloaded');
 
+      // Wait for page to be fully interactive before clicking
+      await authPage.waitForTimeout(300);
       await authPage.getByText('Tambah Kantong').click();
       await authPage.waitForTimeout(500);
+
+      // Wait for the submit button in modal to be visible
+      const submitButton = authPage.locator('button:has-text("Buat Kantong")').last();
+      await expect(submitButton).toBeVisible({ timeout: 5000 });
 
       // Fill the form
       await authPage.getByPlaceholder('Contoh: Dana Darurat, Liburan').fill(`Test Pocket ${Date.now()}`);
       await authPage.getByPlaceholder('5000000').fill('1000000');
 
       // Verify "Buat Kantong" submit button exists in modal
-      const submitButton = authPage.locator('button:has-text("Buat Kantong")').last();
       await expect(submitButton).toBeVisible();
     });
 

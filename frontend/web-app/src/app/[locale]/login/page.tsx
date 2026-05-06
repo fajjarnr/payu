@@ -11,10 +11,10 @@ import { useAuthStore } from '@/stores';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 /**
@@ -57,6 +57,8 @@ function LoginForm() {
 
   // Read callbackUrl set by middleware when redirecting unauthenticated users.
   // Sanitize: only allow relative paths to prevent open-redirect attacks.
+  const [showPassword, setShowPassword] = useState(false);
+
   const rawCallback = searchParams.get('callbackUrl') || '/dashboard';
   const callbackUrl = rawCallback.startsWith('/') && !rawCallback.startsWith('//') ? rawCallback : '/dashboard';
 
@@ -90,7 +92,12 @@ function LoginForm() {
         setAuth(user, user.accountId || user.id);
         toast.success(t('loginSuccess') || 'Login successful!');
         // Use locale-aware router for navigation (BUG-I18N-002)
-        router.push(callbackUrl);
+        // Fallback: if next-intl router.push fails (e.g., SSR mismatch), use window.location
+        try {
+          router.push(callbackUrl);
+        } catch {
+          window.location.href = callbackUrl;
+        }
       } else {
         toast.error(t('invalidResponse'));
       }
@@ -187,16 +194,28 @@ function LoginForm() {
                                 {t('forgotPassword')}
                             </Link>
                         </div>
-                        <Input
-                            id="password"
-                            data-testid="password-input"
-                            type="password"
-                            placeholder="••••••••"
-                            {...register('password')}
-                            className="h-12 bg-muted/30"
-                            disabled={mutation.isPending}
-                            aria-invalid={!!errors.password}
-                        />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                data-testid="password-input"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                {...register('password')}
+                                className="h-12 bg-muted/30 pr-12"
+                                disabled={mutation.isPending}
+                                aria-invalid={!!errors.password}
+                            />
+                            <button
+                                type="button"
+                                data-testid="password-toggle"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                disabled={mutation.isPending}
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                        </div>
                         {errors.password && <p className="text-red-500 text-xs font-medium" role="alert">{errors.password.message}</p>}
                     </div>
                 </div>

@@ -11,7 +11,7 @@
 
 ## 📊 Board Summary
 
-| **Open Bugs** | 0 | ✅ All 9 bugs resolved (May 5, 2026) |
+| **Open Bugs** | 0 | ✅ FE-107/108/109/110 + CROSS-074 + AUTH-035 all closed (May 5, 2026) |
 | **Open Epics** | 0 | 24/24 fully done |
 | **Open Stories** | 0 | 109 done, 265/265 SP delivered |
 
@@ -21,53 +21,8 @@
 
 ## 🐞 Open Bugs
 
-> **Current open bug count: 0**. All 9 bugs resolved (May 5, 2026).  
+> **Current open bug count: 0**. All 6 bugs resolved (May 5, 2026).  
 > Historical bug details archived to [`CHANGELOG.md`](../../CHANGELOG.md).
-
----
-
-### BUG-CROSS-074 — Login page stores `user.id` as `accountId` (regression of prior account-claim fix)
-
-- **Symptom**: Setelah login sukses, layar yang bergantung pada `accountId` dapat memanggil API dengan JWT `sub` alih-alih `account_id`, sehingga saldo, kartu, dan data wallet bisa kosong atau salah target.
-- **Evidence**: `frontend/web-app/src/app/[locale]/login/page.tsx` masih memanggil `setAuth(user, user.id)`, sementara `frontend/web-app/src/app/api/auth/login/route.ts` sudah membangun `user.accountId` terpisah dari `user.id`, dan `frontend/web-app/src/hooks/useAuth.ts` sudah mengasumsikan `user.accountId || user.id`.
-- **Affected flows**: Login via halaman `/login`, kemudian dashboard/wallet/cards/history yang bergantung pada `accountId`.
-- **Repro**: Gunakan akun dengan token yang memiliki `account_id` berbeda dari `sub`, login lewat halaman web, lalu buka dashboard dan cek request account-scoped yang memakai identifier salah.
-
-### BUG-AUTH-035 — Cookie-restored session tidak memulihkan context user/account
-
-- **Symptom**: User dengan cookie sesi valid bisa lolos middleware dan dianggap login, tetapi halaman terproteksi tetap kosong karena store klien kehilangan `user` dan `accountId`.
-- **Evidence**: `frontend/web-app/src/components/SessionBootstrap.tsx` hanya memanggil `setAuthenticated(true)` dan `setTokenExpiry(...)`; `frontend/web-app/src/app/api/auth/refresh/route.ts` juga hanya mengembalikan `expiresIn`; query saldo di `frontend/web-app/src/app/[locale]/dashboard/page.tsx` dan `frontend/web-app/src/hooks/useWallet.ts` tetap menunggu `accountId`.
-- **Affected flows**: Reload hard refresh, restore tab, atau revisit app ketika cookie masih valid tetapi `payu-auth-storage` kosong/stale.
-- **Repro**: Pertahankan cookie auth valid, hapus local storage auth store, buka `/dashboard`, lalu amati state menjadi authenticated tanpa data account-scoped.
-
-### BUG-FE-107 — KYC onboarding step 1 dapat dilewati tanpa upload dokumen
-
-- **Symptom**: User bisa lanjut ke langkah profil tanpa memilih file KTP, tanpa ada upload state, dan tanpa request ke endpoint verifikasi KYC.
-- **Evidence**: `frontend/web-app/src/app/[locale]/onboarding/page.tsx` hanya menampilkan `div` fokusabel untuk area upload dan tombol `setStep(2)` tanpa validasi; halaman ini tidak memakai `frontend/web-app/src/services/KYCService.ts`; test `frontend/web-app/e2e/kyc-flow.spec.ts` juga langsung mengklik “Lanjut ke Profil Data” tanpa upload.
-- **Affected flows**: Onboarding / registrasi web.
-- **Repro**: Buka `/onboarding`, klik tombol lanjut pada step 1 tanpa interaksi upload, lalu verifikasi bahwa form step 2 terbuka tanpa request `/kyc/verify/*`.
-- **Notes**: Ini juga berarti coverage E2E saat ini menormalisasi bypass, bukan menangkap regression.
-
-### BUG-FE-108 — Link reset password mati di halaman login
-
-- **Symptom**: CTA “Lupa password?” tidak memulai flow recovery apa pun.
-- **Evidence**: `frontend/web-app/src/app/[locale]/login/page.tsx` menggunakan `Link href="#"`; `frontend/web-app/e2e/login-flow.spec.ts` saat ini justru menganggap `href="#"` sebagai expected behavior.
-- **Affected flows**: Password recovery dari halaman login.
-- **Repro**: Buka `/login`, klik “Lupa password?”, dan lihat bahwa browser hanya berpindah ke hash kosong pada halaman yang sama.
-
-### BUG-FE-109 — Mobile onboarding step 1 tidak punya jalur keluar in-app
-
-- **Symptom**: Pada viewport mobile, user tidak mendapat tombol kembali/batal di dalam UI onboarding step 1.
-- **Evidence**: Satu-satunya link “Kembali” berada di `aside` dengan class `hidden lg:flex` pada `frontend/web-app/src/app/[locale]/onboarding/page.tsx`, sehingga tidak tampil di mobile.
-- **Affected flows**: Onboarding di perangkat mobile dan viewport kecil.
-- **Repro**: Emulasikan lebar 375px, buka `/onboarding`, dan pastikan tidak ada kontrol kembali selain browser/system back.
-
-### BUG-FE-110 — Toggle show/hide password tidak bisa diakses via keyboard
-
-- **Symptom**: Keyboard-only user tidak bisa memfokuskan tombol show/hide password dan confirm password di form onboarding.
-- **Evidence**: Kedua tombol visibility pada `frontend/web-app/src/app/[locale]/onboarding/page.tsx` disetel dengan `tabIndex={-1}`.
-- **Affected flows**: Step 2 form onboarding / registrasi.
-- **Repro**: Masuk ke step 2 onboarding lalu tekan `Tab` berulang; fokus akan melewati kedua tombol visibility.
 
 ---
 
@@ -114,18 +69,17 @@
 
 | Key               | Type | Summary                                                                                                                                                                                                                                      | Notes / Current State                                                                                                                                                                                                                              | Status   |
 | :---------------- | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| OPS-2026-04-08-01 | Task | Validate that the new `wallet-service` rollout no longer emits `DistributedCacheService` wallet cache deserialization warnings.                                                                                                              | `cache-starter` compatibility fix added and `wallet-service` image rolled out; post-rollout in-cluster probe was interrupted before verification.                                                                                                  | 📋 To Do |
-| OPS-2026-04-08-02 | Task | Re-run the full 40-minute `tests/performance/k6/crud-stress-test.js` job via k6 Operator using `payu-crud-load` TestRun.                                                                                                                     | k6 Operator installed (April 9). Use: `kubectl apply -f infrastructure/openshift/infra/base/k6/crud-load-testrun.yaml -n payu-k6`. ClusterAutoscaler + MachineAutoscalers now configured to scale up to 5 workers in us-east-2a + 4 each in 2b/2c. | 📋 To Do |
-| OPS-2026-04-08-03 | Task | If full stress still breaches `http_req_duration p(99) < 10s`, isolate the slow endpoint from gateway, wallet, and account logs during the same run window.                                                                                  | k6 Operator runner logs available via `kubectl logs -n payu-k6 -l runner=payu-crud-stress`. Auth/cache instability improved after `payu-datagrid` 512Mi→1Gi fix.                                                                                   | 📋 To Do |
-| OPS-2026-04-08-04 | Task | Re-run `tests/performance/k6/crud-data-consistency-test.js` after stress revalidation.                                                                                                                                                       | Use: `kubectl apply -f infrastructure/openshift/infra/base/k6/crud-consistency-testrun.yaml -n payu-k6`. Consistency canary already passed with test-mode/bypass flow.                                                                             | 📋 To Do |
-| OPS-2026-04-08-05 | Task | Decide whether to disable `GATEWAY_RATE_LIMIT_TEST_MODE` in `payu-dev` after final validation, then record the final cluster/test outcome in roadmap docs.                                                                                   | Test mode still enabled for controlled k6 validation. After final k6 Operator run, update this item and CHANGELOG.                                                                                                                                 | 📋 To Do |
-| OPS-2026-04-09-01 | Task | k6 Operator smoke test validated — runner pod executed 30 iterations/1 VU. HTTP failures expected (public DNS not reachable from pod network). Re-run with in-cluster service URLs or after confirming Istio ingress gateway routes.         | k6 Operator lifecycle verified: initializer → starter → runner → finished. ClusterAutoscaler live. Nodes: 7 (3 master, 2 infra, 2 worker).                                                                                                         | 📋 To Do |
-| OPS-2026-04-09-04 | Task | Re-test Transfer endpoint with `type: INTERNAL_TRANSFER` field after NetworkPolicy fix. Transfer payload requires `type` field (not `@NotNull` but throws NPE if missing).                                                          | Payload: `{"senderAccountId":"<KC_SUB>","recipientAccountNumber":"2001001002","amount":1000,"currency":"IDR","description":"Test","type":"INTERNAL_TRANSFER"}`.                                                                                    | 📋 To Do |
-| OPS-2026-04-09-05 | Task | Run full comprehensive CRUD validation across all 3 services after NetworkPolicy + gateway route fixes. 24/28 endpoints passing; 4 blocked (Transfer, Account Transactions, Disbursement, VA).                                               | See CRUD Validation Results table in session notes. Wallet (14/14 ✅), Account (4/4 ✅), Transaction (0/4 ❌ blocked).                                                                                                                             | 📋 To Do |
-| OPS-2026-04-09-06 | Task | Transaction-service Redis/DataGrid connection issue — `ScheduledTransferScheduler` cannot connect to DataGrid RESP on port 11222. Affects Split Bill list (HTTP 500) and scheduled transfers.                                                | Lower priority — does not block core CRUD. May need DataGrid RESP config or NetworkPolicy fix for port 11222.                                                                                                                                      | 📋 To Do |
-| OPS-2026-04-09-07 | Task | Admin-only endpoints (GL, Settlement, Journal, ChartOfAccounts, Escrow, SplitPayment) require `ROLE_ADMIN` or `ROLE_BACKOFFICE`. Need to create admin Keycloak user or add realm roles for testing.                                          | Smart Routing also returns 404 — gateway doesn't route `/transfers/routes`.                                                                                                                                                                        | 📋 To Do |
-| OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | Core services now healthy. k6 local script `tests/performance/k6/local-smoke.js` ready. **Ready to run**: `podman compose --profile devsecops run --rm k6 run /tests/local-smoke.js`.                                                                                                   | 🔄 Ready |
-| OPS-2026-05-02-05 | Task | Document Tekton pipeline fix patterns in `docs/guides/LESSONS.md`: `onError: continue` Tekton v1.9 limitation, registry auth `unused:<token>` format, license compliance purl filtering.                                                  | All patterns discovered and fixed during this session. Need to capture for future sessions and team reference.                                                                                                                                      | 📋 To Do |
+| OPS-2026-04-08-01 | Task | Validate that the new `wallet-service` rollout no longer emits `DistributedCacheService` wallet cache deserialization warnings.                                                                                                              | `cache-starter` compatibility fix added and `wallet-service` image rolled out; post-rollout in-cluster probe was interrupted before verification.                                                                                                  | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-08-02 | Task | Re-run the full 40-minute `tests/performance/k6/crud-stress-test.js` job via k6 Operator using `payu-crud-load` TestRun.                                                                                                                     | k6 Operator installed (April 9). Use: `kubectl apply -f infrastructure/openshift/infra/base/k6/crud-load-testrun.yaml -n payu-k6`. ClusterAutoscaler + MachineAutoscalers now configured to scale up to 5 workers in us-east-2a + 4 each in 2b/2c. | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-08-03 | Task | If full stress still breaches `http_req_duration p(99) < 10s`, isolate the slow endpoint from gateway, wallet, and account logs during the same run window.                                                                                  | k6 Operator runner logs available via `kubectl logs -n payu-k6 -l runner=payu-crud-stress`. Auth/cache instability improved after `payu-datagrid` 512Mi→1Gi fix.                                                                                   | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-08-04 | Task | Re-run `tests/performance/k6/crud-data-consistency-test.js` after stress revalidation.                                                                                                                                                       | Use: `kubectl apply -f infrastructure/openshift/infra/base/k6/crud-consistency-testrun.yaml -n payu-k6`. Consistency canary already passed with test-mode/bypass flow.                                                                             | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-08-05 | Task | Decide whether to disable `GATEWAY_RATE_LIMIT_TEST_MODE` in `payu-dev` after final validation, then record the final cluster/test outcome in roadmap docs.                                                                                   | Test mode still enabled for controlled k6 validation. After final k6 Operator run, update this item and CHANGELOG.                                                                                                                                 | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-09-01 | Task | k6 Operator smoke test validated — runner pod executed 30 iterations/1 VU. HTTP failures expected (public DNS not reachable from pod network). Re-run with in-cluster service URLs or after confirming Istio ingress gateway routes.         | k6 Operator lifecycle verified: initializer → starter → runner → finished. ClusterAutoscaler live. Nodes: 7 (3 master, 2 infra, 2 worker).                                                                                                         | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-09-06 | Task | Transaction-service Redis/DataGrid connection issue — `ScheduledTransferScheduler` cannot connect to DataGrid RESP on port 11222. Affects Split Bill list (HTTP 500) and scheduled transfers.                                                | Lower priority — does not block core CRUD. May need DataGrid RESP config or NetworkPolicy fix for port 11222.                                                                                                                                      | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-04-09-07 | Task | Admin-only endpoints (GL, Settlement, Journal, ChartOfAccounts, Escrow, SplitPayment) require `ROLE_ADMIN` or `ROLE_BACKOFFICE`. Need to create admin Keycloak user or add realm roles for testing.                                          | Smart Routing also returns 404 — gateway doesn't route `/transfers/routes`.                                                                                                                                                                        | ⏸️ Suspended (OCP destroyed May 2) |
+| OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | ✅ **Done**: `podman compose -f infrastructure/local/podman/podman-compose.yml --profile devsecops run --rm k6` → 918/918 passed, 0% failure, p(95) 1.1ms. Gateway health endpoint fully healthy.                                                       | ✅ Done |
+| OPS-2026-05-02-05 | Task | Document Tekton pipeline fix patterns in `docs/guides/LESSONS.md`: `onError: continue` Tekton v1.9 limitation, registry auth `unused:<token>` format, license compliance purl filtering.                                                  | ✅ **Done**: Lessons L-027, L-028, L-029, L-030 added to `docs/guides/LESSONS.md` with detailed patterns and code examples.                                                                                                            | ✅ Done |
+| TEST-INFRA-006     |    P2    | Task | Playwright Chromium via snap execution ~2x lebih lambat dari native binary. Full suite (~544 tests) butuh ~20 menit (vs ~12 menit sebelumnya). | Symlink workaround works but slow. Optional: install non-snap chromium when available. | 📋 To Do |
 
 ---
 
@@ -220,14 +174,14 @@
 | Completed Stories      | 109 done (86 + 23 test stories archived)                                  |
 | Completed SP           | 265/265                                                                   |
 | Bugs Fixed             | 711 done + 4 Won't Do (archived to CHANGELOG)                             |
-| Open Bugs              | 0 — All 9 resolved (May 4, 2026)                                          |
+| Open Bugs              | 0 — All 6 resolved + closed today (May 5, 2026)                        |
 | Tech Debt              | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)                              |
-| Operational Follow-Ups | 17 carry-over tasks (May 2, 2026 — Tekton fixes, Redis rebuilds, k6 rerun) |
+| Operational Follow-Ups | 13 carry-over tasks (2 done, 2 blocked, 8 suspended, 1 to do)  |
 | DevSecOps Tasks        | 52 tasks from `DEVSECOPS_ARCHITECTURE.md` v1.3.1 (Phase 1–4)               |
 
 ---
 
-_Last Updated: May 4, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 0 Tech Debt · 17 Operational Follow-Ups · 52 DevSecOps Tasks · 6 Spikes · 9 Deferred_
+_Last Updated: May 5, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 13 Operational (2 done, 2 blocked, 8 suspended, 1 to do) · 52 DevSecOps · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _k6 Operator installed April 9: namespace payu-k6, ClusterAutoscaler (max 14 nodes), MachineAutoscalers (2a: 2-5, 2b: 1-4, 2c: 0-4). Use TestRun CRDs in infrastructure/openshift/infra/base/k6/ for distributed runs._
 _CRUD Testing Sessions (April 9): 24/28 endpoints validated ✅. 4 blocked by NetworkPolicy (OPS-09-02) + gateway route mismatches (OPS-09-03). Major fixes: wallet optimistic locking, JWT authority mapping (3 services), SavingsGoal ownership, gateway schema mismatches, AccountSecurityService bean, UserAccountController, BeneficiaryController ownership, tenant_id migration, AccountType enum._

@@ -14,6 +14,12 @@ test.describe('KYC Onboarding Flow', () => {
   });
 
   test('should navigate through KYC steps', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -22,6 +28,12 @@ test.describe('KYC Onboarding Flow', () => {
   });
 
   test('should validate NIK input format', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -48,6 +60,12 @@ test.describe('KYC Onboarding Flow', () => {
   });
 
   test('should show success message after valid submission', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -55,6 +73,8 @@ test.describe('KYC Onboarding Flow', () => {
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill('test@example.com');
     await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
+    await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
@@ -110,6 +130,12 @@ test.describe('KYC Flow - Step Navigation', () => {
   });
 
   test('should move from step 1 to step 2', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -122,6 +148,12 @@ test.describe('KYC Flow - Step Navigation', () => {
   });
 
   test('should move back from step 2 to step 1', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -138,6 +170,12 @@ test.describe('KYC Flow - Form Validation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
   });
@@ -170,6 +208,14 @@ test.describe('KYC Flow - Form Validation', () => {
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill('test@example.com');
     await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
+    await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
+
+    // Mock the API to delay so loading spinner is visible
+    await page.route('**/api/v1/accounts/register', async route => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock' }) });
+    });
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
@@ -183,6 +229,12 @@ test.describe('KYC Flow - Success State', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -190,6 +242,8 @@ test.describe('KYC Flow - Success State', () => {
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill('test@example.com');
     await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
+    await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
@@ -263,10 +317,16 @@ test.describe('KYC Flow - Accessibility', () => {
   });
 
   test('should have accessible form labels', async ({ page }) => {
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     const labels = page.locator('label');
-    await expect(labels).toHaveCount(4);
+    await expect(labels).toHaveCount(6);
   });
 });
 
@@ -296,6 +356,12 @@ test.describe('KYC Flow - Visual Regression', () => {
 
   test('should match screenshots on desktop - Step 2', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
+    const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'ktp.png',
+      mimeType: 'image/png',
+      buffer: fakePng,
+    });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     await page.screenshot({

@@ -329,7 +329,8 @@
         "subtitle": "Photo of your original ID for automated data validation",
         "clickToUpload": "Click to take photo",
         "formats": "JPG, PNG max 5MB",
-        "button": "Continue to Profile Data"
+        "button": "Continue to Profile Data",
+        "uploadRequiredHint": "Please upload your KTP document to proceed"
       },
       "step2": {
         "title": "Complete Profile",

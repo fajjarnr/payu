@@ -5,6 +5,11 @@ test.describe('Lending Flow', () => {
     // Navigate to lending page (assumes user is logged in)
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
+    // Wait for React to hydrate and Framer Motion animations to finish.
+    // Without this, PayLater tab clicks may fail because event handlers
+    // are not yet attached or elements are still animating.
+    await page.waitForSelector('[data-testid="lending-tabs"]', { timeout: 10000 });
+    await page.waitForTimeout(1000);
   });
 
   test('should display lending page correctly', async ({ authPage: page }) => {
@@ -27,11 +32,10 @@ test.describe('Lending Flow', () => {
 
   test('should switch to PayLater tab', async ({ authPage: page }) => {
     // Click the PayLater tab
-    await page.getByRole('tab', { name: 'PayLater' }).click();
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
 
-    // Wait for the PayLater content to appear with proper timeout
-    await page.waitForTimeout(500);
-    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 10000 });
+    // Wait for the PayLater content to appear (content-based wait instead of arbitrary timeout)
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display credit score on loans tab', async ({ authPage: page }) => {
@@ -82,16 +86,15 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display PayLater limit on PayLater tab', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
-    await expect(page.getByText('PayLater Limit')).toBeVisible();
     await expect(page.getByText(/Rp\s*10\.500\.000/)).toBeVisible();
   });
 
   test('should display PayLater usage breakdown', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     await expect(page.getByText('Limit Terpakai')).toBeVisible();
     await expect(page.getByText(/Rp\s*4\.500\.000/)).toBeVisible();
@@ -99,25 +102,24 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display PayLater due date', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     await expect(page.getByText('Jatuh Tempo')).toBeVisible();
     await expect(page.getByText('25 Jan 2026')).toBeVisible();
   });
 
   test('should display minimum payment', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     await expect(page.getByText('Pembayaran Minimum')).toBeVisible();
     await expect(page.getByText(/Rp\s*250\.000/)).toBeVisible();
   });
 
   test('should display PayLater transactions', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
-
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible();
     await expect(page.getByText('TokoBapak')).toBeVisible();
     await expect(page.getByText('Traveloka')).toBeVisible();
@@ -125,8 +127,8 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display transaction status indicators', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     // Status text: "Dibayar" and "Menunggu Pembayaran" (full text, not truncated)
     await expect(page.getByText('Dibayar').first()).toBeVisible();
@@ -141,16 +143,16 @@ test.describe('Lending Flow', () => {
   });
 
   test('should have activate PayLater button', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     // Check for activate button text
     await expect(page.getByText('Aktifkan PayLater')).toBeVisible();
   });
 
   test('should have pay bill button on PayLater tab', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     // Use data-testid to target the specific pay button (avoids nested button strict mode)
     await expect(page.getByTestId('pay-bill-button')).toBeVisible();
@@ -173,8 +175,8 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display transaction summary', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     await expect(page.getByText('Ringkasan Transaksi')).toBeVisible();
     await expect(page.getByText('Total Transaksi')).toBeVisible();
@@ -244,9 +246,14 @@ test.describe('Lending Flow - PayLater', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    // Wait for state to update - use a longer timeout for reliability
-    await page.waitForTimeout(500);
+    // Ensure React has hydrated and Framer Motion PageTransition (300ms)
+    // and StaggerContainer staggered animations (up to ~500ms) have completed.
+    await page.waitForSelector('[data-testid="lending-tabs"]', { timeout: 10000 });
+    await page.waitForTimeout(1000);
+    // Use force:true — Playwright's stability check conflicts with Framer Motion
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    // Wait for PayLater tab content to render
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display PayLater credit card', async ({ authPage: page }) => {
@@ -265,6 +272,8 @@ test.describe('Lending Flow - PayLater', () => {
   });
 
   test('should display transaction list', async ({ authPage: page }) => {
+    // Wait for transaction section to render before checking entries
+    await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     // Check for transaction entries
     await expect(page.getByText('TokoBapak')).toBeVisible();
     await expect(page.getByText('Traveloka')).toBeVisible();
@@ -272,36 +281,43 @@ test.describe('Lending Flow - PayLater', () => {
   });
 
   test('should display merchant names', async ({ authPage: page }) => {
+    await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('TokoBapak')).toBeVisible();
     await expect(page.getByText('Traveloka')).toBeVisible();
     await expect(page.getByText('Shopee')).toBeVisible();
   });
 
   test('should display transaction amounts', async ({ authPage: page }) => {
+    await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Rp\s*850\.000/)).toBeVisible();
     await expect(page.getByText(/Rp\s*3\.200\.000/)).toBeVisible();
     await expect(page.getByText(/Rp\s*450\.000/)).toBeVisible();
   });
 
   test('should display transaction dates', async ({ authPage: page }) => {
+    await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('20 Jan 2026')).toBeVisible();
     await expect(page.getByText('18 Jan 2026')).toBeVisible();
     await expect(page.getByText('15 Jan 2026')).toBeVisible();
   });
 
   test('should have pay bill button functional', async ({ authPage: page }) => {
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
     // Use data-testid to avoid strict mode with nested buttons
     const payButton = page.getByTestId('pay-bill-button');
     await expect(payButton).toBeVisible();
   });
 
   test('should display transaction summary stats', async ({ authPage: page }) => {
+    await expect(page.getByText('Ringkasan Transaksi')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Total Transaksi')).toBeVisible();
     await expect(page.getByText('Pembayaran Berhasil')).toBeVisible();
     await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
   });
 
   test('should have proper status styling', async ({ authPage: page }) => {
+    // Wait for transaction data to render
+    await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     // Check for status text content rather than CSS classes
     await expect(page.getByText('Dibayar').first()).toBeVisible();
     await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
@@ -346,6 +362,8 @@ test.describe('Lending Flow - Accessibility', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('[data-testid="lending-tabs"]', { timeout: 10000 });
+    await page.waitForTimeout(1000);
   });
 
   test('should have proper heading hierarchy', async ({ authPage: page }) => {
@@ -372,11 +390,10 @@ test.describe('Lending Flow - Accessibility', () => {
   test('should switch tabs with keyboard', async ({ authPage: page }) => {
     // Click the PayLater tab directly instead of relying on keyboard navigation
     // which is timing-sensitive and may not work consistently
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
 
-    // Should switch to PayLater
-    await expect(page.getByText('PayLater Limit')).toBeVisible();
+    // Wait for PayLater content to appear (content-based wait)
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -418,6 +435,8 @@ test.describe('Lending Flow - Error Handling', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('[data-testid="lending-tabs"]', { timeout: 10000 });
+    await page.waitForTimeout(1000);
   });
 
   test('should handle loan application error', async ({ authPage: page }) => {
@@ -430,8 +449,8 @@ test.describe('Lending Flow - Error Handling', () => {
   });
 
   test('should handle PayLater activation error', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     // Verify activate button exists - use data-testid to avoid nested button issue
     const activateButton = page.getByTestId('activate-paylater-button');
@@ -439,8 +458,8 @@ test.describe('Lending Flow - Error Handling', () => {
   });
 
   test('should handle payment error gracefully', async ({ authPage: page }) => {
-    await page.getByRole('tab', { name: 'PayLater' }).click();
-    await page.waitForTimeout(300);
+    await page.locator('[data-testid="paylater-tab"]').click({ force: true });
+    await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
     // Verify pay button exists - use data-testid to avoid nested button issue
     const payButton = page.getByTestId('pay-bill-button');

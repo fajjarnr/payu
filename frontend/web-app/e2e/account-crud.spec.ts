@@ -16,6 +16,17 @@ test.describe('Account CRUD Operations', () => {
       // Step 1: KYC Upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
 
+      // Upload a KTP file to enable the "Lanjut ke Profil Data" button.
+      // The button is disabled={!ktpFile}, so we must set a file on the hidden input.
+      const fileInput = page.locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'ktp-test.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'),
+      });
+      // Wait for the button to become enabled
+      await expect(page.locator('button:has-text("Lanjut ke Profil Data")')).toBeEnabled({ timeout: 5000 });
+
       // Click to proceed to profile form
       await page.click('button:has-text("Lanjut ke Profil Data")');
 
@@ -39,6 +50,15 @@ test.describe('Account CRUD Operations', () => {
     });
 
     test('should validate required fields for account creation', async ({ page }) => {
+      // Upload KTP to enable navigation to profile form
+      const fileInput = page.locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'ktp-test.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'),
+      });
+      await expect(page.locator('button:has-text("Lanjut ke Profil Data")')).toBeEnabled({ timeout: 5000 });
+
       // Navigate to profile form
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await expect(page.getByText('Lengkapi Profil')).toBeVisible();
@@ -51,6 +71,15 @@ test.describe('Account CRUD Operations', () => {
     });
 
     test('should prevent duplicate account creation', async ({ page }) => {
+      // Upload KTP to enable navigation to profile form
+      const fileInput = page.locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'ktp-test.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'),
+      });
+      await expect(page.locator('button:has-text("Lanjut ke Profil Data")')).toBeEnabled({ timeout: 5000 });
+
       // Navigate to profile form
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await expect(page.getByText('Lengkapi Profil')).toBeVisible();
@@ -71,9 +100,16 @@ test.describe('Account CRUD Operations', () => {
       // Step 1: On KYC upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
 
-      // The KTP upload area is a visual placeholder (no actual file input exists)
-      // Verify the upload area and proceed button are present
-      await expect(page.locator('button:has-text("Lanjut ke Profil Data")')).toBeVisible();
+      // Upload a KTP file
+      const fileInput = page.locator('input[type="file"]');
+      await fileInput.setInputFiles({
+        name: 'ktp-test.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'),
+      });
+
+      // The KTP upload area is a visual placeholder — after upload the button should be enabled
+      await expect(page.locator('button:has-text("Lanjut ke Profil Data")')).toBeEnabled({ timeout: 5000 });
 
       // Proceed to next step
       await page.click('button:has-text("Lanjut ke Profil Data")');

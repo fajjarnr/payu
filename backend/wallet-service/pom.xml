@@ -282,6 +282,13 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Cloud Contract Verifier -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -340,6 +347,15 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Spring Cloud Contract Verifier -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <configuration>
+                    <baseClassForTests>id.payu.wallet.contract.ContractVerifierBase</baseClassForTests>
                 </configuration>
             </plugin>
 

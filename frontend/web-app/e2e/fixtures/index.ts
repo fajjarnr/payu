@@ -121,21 +121,63 @@ async function handleMockApiRoute(route: Route) {
     // Wallet/balance endpoints
     if (apiPath.startsWith('wallet') || apiPath.startsWith('balance') || apiPath.startsWith('pockets')) {
       if (method === 'GET') {
+        // GET /pockets/total-balance/{currency}
+        if (apiPath.includes('total-balance')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              data: { totalBalance: 5000000, currency: 'IDR' },
+            }),
+          });
+        }
+        // GET /pockets (list) — returns Pocket[]
+        if (apiPath.startsWith('pockets') && !apiPath.includes('/')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              data: [
+                { id: 'PKT-001', name: 'Tabungan Utama', balance: 3000000, type: 'SAVINGS', currency: 'IDR', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', accountId: 'ACC-E2E-001' },
+                { id: 'PKT-002', name: 'Dana Darurat', balance: 2000000, type: 'EMERGENCY', currency: 'IDR', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', accountId: 'ACC-E2E-001' },
+              ],
+            }),
+          });
+        }
+        // GET /wallets/{id}/transactions — returns WalletTransaction[]
+        if (apiPath.includes('transactions')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              data: [
+                { id: 'TXN-001', type: 'CREDIT', amount: 100000, currency: 'IDR', status: 'SUCCESS', description: 'Top up via VA', createdAt: '2026-05-01T10:00:00Z' },
+                { id: 'TXN-002', type: 'DEBIT', amount: 50000, currency: 'IDR', status: 'SUCCESS', description: 'Transfer keluar', createdAt: '2026-05-02T08:00:00Z' },
+              ],
+            }),
+          });
+        }
+        // GET /wallets/{id}/balance — returns BalanceResponse
+        if (apiPath.includes('balance')) {
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              success: true,
+              data: { balance: 5000000, currency: 'IDR', available: 4800000, pending: 200000 },
+            }),
+          });
+        }
+        // Generic fallback for wallet/pockets GET
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             success: true,
-            data: apiPath.includes('/') && !apiPath.endsWith('pockets')
-              ? { id: 'PKT-001', name: 'Tabungan Utama', balance: 5000000, currency: 'IDR', type: 'SAVINGS' }
-              : {
-                  balance: 5000000,
-                  currency: 'IDR',
-                  pockets: [
-                    { id: 'PKT-001', name: 'Tabungan Utama', balance: 3000000, type: 'SAVINGS', color: '#10b981' },
-                    { id: 'PKT-002', name: 'Dana Darurat', balance: 2000000, type: 'EMERGENCY', color: '#f59e0b' },
-                  ],
-                },
+            data: { id: 'PKT-001', name: 'Tabungan Utama', balance: 5000000, currency: 'IDR', type: 'SAVINGS' },
           }),
         });
       }
@@ -457,30 +499,6 @@ async function handleMockApiRoute(route: Route) {
     // Backoffice endpoints — list endpoints expect arrays
     if (apiPath.startsWith('backoffice') || apiPath.startsWith('admin')) {
       // KYC reviews, fraud cases, customer cases all expect arrays from their service methods
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: [],
-        }),
-      });
-    }
-
-    // Pockets endpoints — listPockets expects Pocket[]
-    if (apiPath.startsWith('pockets')) {
-      // /pockets/total-balance
-      if (apiPath.includes('total-balance')) {
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            data: { totalBalance: 5000000, currency: 'IDR' },
-          }),
-        });
-      }
-      // /pockets (list) — expects array
       return route.fulfill({
         status: 200,
         contentType: 'application/json',

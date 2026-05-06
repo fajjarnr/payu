@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerUserSchema, RegisterUserRequest } from '@/types';
 import api from '@/lib/api';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import KYCService from '@/services/KYCService'; // Ready for KYC document upload integration (BUG-FE-107)
 import { useRouter } from '@/lib/navigation';
 import { 
   Camera, 
@@ -18,7 +20,8 @@ import {
   ScanFace,
   Fingerprint,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { Link } from '@/lib/navigation';
@@ -161,7 +164,11 @@ export default function OnboardingPage() {
                         />
 
                         <div 
-                            className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4" 
+                            className={`border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4 ${
+                                !ktpFile 
+                                    ? 'border-red-400/40 hover:border-primary/50 bg-red-50/30 dark:border-red-400/30 dark:bg-red-950/20 dark:hover:bg-primary/10' 
+                                    : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10'
+                            }`}
                             tabIndex={0} 
                             role="button" 
                             aria-label={t('step1.clickToUpload')}
@@ -192,6 +199,17 @@ export default function OnboardingPage() {
                         >
                             {t('step1.button')} <ChevronRight className="ml-2 w-4 h-4" />
                         </Button>
+                        {!ktpFile && (
+                            <motion.p
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400 font-medium"
+                                role="alert"
+                            >
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <span>{t('step1.uploadRequiredHint')}</span>
+                            </motion.p>
+                        )}
                     </motion.div>
                 )}
 
@@ -259,7 +277,7 @@ export default function OnboardingPage() {
                                         />
                                         <button 
                                             type="button" 
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md" 
                                             onClick={() => setShowPassword(!showPassword)}
                                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         >
@@ -282,7 +300,7 @@ export default function OnboardingPage() {
                                         />
                                         <button 
                                             type="button" 
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md" 
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                                         >

@@ -216,10 +216,24 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 for unit tests -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>archunit-starter</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Cloud Contract Verifier -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -274,6 +288,15 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Spring Cloud Contract Verifier -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <configuration>
+                    <baseClassForTests>id.payu.auth.contract.ContractVerifierBase</baseClassForTests>
                 </configuration>
             </plugin>
 

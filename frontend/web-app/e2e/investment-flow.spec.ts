@@ -101,9 +101,7 @@ test.describe('Investment Flow', () => {
   });
 
   test('should display smart advice section', async ({ authPage: page }) => {
-    // Wait for page to fully load including animated elements
-    await page.waitForTimeout(500);
-    await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
+    await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible({ timeout: 15000 });
   });
 
   test('should have optimize portfolio button', async ({ authPage: page }) => {

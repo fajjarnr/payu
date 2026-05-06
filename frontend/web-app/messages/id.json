@@ -329,7 +329,8 @@
         "subtitle": "Foto KTP asli Anda untuk validasi data otomatis",
         "clickToUpload": "Klik untuk ambil foto",
         "formats": "JPG, PNG maks 5MB",
-        "button": "Lanjut ke Profil Data"
+        "button": "Lanjut ke Profil Data",
+        "uploadRequiredHint": "Silakan unggah dokumen KTP Anda untuk melanjutkan"
       },
       "step2": {
         "title": "Lengkapi Profil",

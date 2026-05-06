@@ -6,11 +6,15 @@ spring:
     allow-bean-definition-overriding: true
 
   # H2 Database for unit tests (fast)
+  # Uses spring.datasource.primary.hikari prefix because
+  # DataSourceConfiguration binds @ConfigurationProperties with that prefix
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    primary:
+      hikari:
+        jdbc-url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+        driver-class-name: org.h2.Driver
+        username: sa
+        password: ""
 
   jpa:
     hibernate:
@@ -24,6 +28,14 @@ spring:
   # Disable Flyway for tests (using ddl-auto)
   flyway:
     enabled: false
+
+  # Disable gRPC server in test mode
+  grpc:
+    server:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.grpc.autoconfigure.server.GrpcServerFactoryAutoConfiguration
 
   # Kafka configuration (overridden by integration tests)
   kafka:

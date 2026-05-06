@@ -30,6 +30,13 @@ test.describe('User Profile CRUD Operations', () => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
 
+      // Upload a KTP file first — button is disabled={!ktpFile} (BUG-FE-107)
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'ktp.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgo='),
+      });
+
       // Click to proceed to step 2
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -41,6 +48,13 @@ test.describe('User Profile CRUD Operations', () => {
     test('should display all registration form fields', async ({ page }) => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
+
+      // Upload a KTP file first — button is disabled={!ktpFile} (BUG-FE-107)
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'ktp.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgo='),
+      });
 
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -55,6 +69,13 @@ test.describe('User Profile CRUD Operations', () => {
     test('should fill registration form', async ({ page }) => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
+
+      // Upload a KTP file first — button is disabled={!ktpFile} (BUG-FE-107)
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'ktp.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgo='),
+      });
 
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -73,6 +94,13 @@ test.describe('User Profile CRUD Operations', () => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
 
+      // Upload a KTP file first — button is disabled={!ktpFile} (BUG-FE-107)
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'ktp.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgo='),
+      });
+
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
 
@@ -83,6 +111,13 @@ test.describe('User Profile CRUD Operations', () => {
     test('should navigate back to KYC step', async ({ page }) => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
+
+      // Upload a KTP file first — button is disabled={!ktpFile} (BUG-FE-107)
+      await page.locator('input[type="file"]').setInputFiles({
+        name: 'ktp.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgo='),
+      });
 
       // Go to step 2
       await page.click('button:has-text("Lanjut ke Profil Data")');

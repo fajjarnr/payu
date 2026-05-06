@@ -50,13 +50,24 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Fill required fields
-      await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
-      await authPage.locator('[data-testid="amount-input"]').fill('10000');
+      // Fill required fields using keyboard.type() for proper React event handling
+      await authPage.locator('[data-testid="recipient-account-input"]').click();
+      await authPage.locator('[data-testid="recipient-account-input"]').clear();
+      await authPage.locator('[data-testid="recipient-account-input"]').pressSequentially('acc-any123');
+
+      await authPage.locator('[data-testid="amount-input"]').click();
+      await authPage.locator('[data-testid="amount-input"]').clear();
+      await authPage.locator('[data-testid="amount-input"]').pressSequentially('10000');
+
+      // Wait for react-hook-form state to propagate (check amount display)
+      await authPage.waitForFunction(() => {
+        const input = document.querySelector('[data-testid="amount-input"]') as HTMLInputElement;
+        return input && input.value.length > 0 && input.value !== '0';
+      }, { timeout: 5000 });
 
       // Click review button
       await authPage.locator('[data-testid="review-transfer-button"]').click();
-      await authPage.waitForTimeout(500);
+      await authPage.waitForTimeout(1000);
 
       // After clicking review, confirm button should appear
       await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible();
@@ -103,13 +114,24 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Fill transfer form
-      await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
-      await authPage.locator('[data-testid="amount-input"]').fill('25000');
+      // Fill transfer form using keyboard for proper React event handling
+      await authPage.locator('[data-testid="recipient-account-input"]').click();
+      await authPage.locator('[data-testid="recipient-account-input"]').clear();
+      await authPage.locator('[data-testid="recipient-account-input"]').pressSequentially('acc-any123');
+
+      await authPage.locator('[data-testid="amount-input"]').click();
+      await authPage.locator('[data-testid="amount-input"]').clear();
+      await authPage.locator('[data-testid="amount-input"]').pressSequentially('25000');
+
+      // Wait for react-hook-form state to propagate
+      await authPage.waitForFunction(() => {
+        const input = document.querySelector('[data-testid="amount-input"]') as HTMLInputElement;
+        return input && input.value.length > 0 && input.value !== '0';
+      }, { timeout: 5000 });
 
       // Click review button
       await authPage.locator('[data-testid="review-transfer-button"]').click();
-      await authPage.waitForTimeout(500);
+      await authPage.waitForTimeout(1000);
 
       // After review, the confirm button should be visible (two-step process prevents accidental double submit)
       await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible();
@@ -152,9 +174,10 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify filter buttons exist
-      await expect(authPage.getByText('Filter Tanggal')).toBeVisible();
-      await expect(authPage.getByRole('button', { name: 'Filter', exact: true })).toBeVisible();
+      // The transactions page has dropdown filter buttons "Status" and "Tipe"
+      // rather than "Filter Tanggal" / "Filter" labels
+      await expect(authPage.getByRole('button', { name: /Status/ })).toBeVisible();
+      await expect(authPage.getByRole('button', { name: /Tipe/ })).toBeVisible();
     });
 
     test('should show empty state or transaction table', async ({ authPage }) => {
@@ -274,12 +297,23 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the two-step process: review then confirm
-      await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
-      await authPage.locator('[data-testid="amount-input"]').fill('10000');
+      await authPage.locator('[data-testid="recipient-account-input"]').click();
+      await authPage.locator('[data-testid="recipient-account-input"]').clear();
+      await authPage.locator('[data-testid="recipient-account-input"]').pressSequentially('acc-any123');
+
+      await authPage.locator('[data-testid="amount-input"]').click();
+      await authPage.locator('[data-testid="amount-input"]').clear();
+      await authPage.locator('[data-testid="amount-input"]').pressSequentially('10000');
+
+      // Wait for react-hook-form state to propagate
+      await authPage.waitForFunction(() => {
+        const input = document.querySelector('[data-testid="amount-input"]') as HTMLInputElement;
+        return input && input.value.length > 0 && input.value !== '0';
+      }, { timeout: 5000 });
 
       // Step 1: Review
       await authPage.locator('[data-testid="review-transfer-button"]').click();
-      await authPage.waitForTimeout(500);
+      await authPage.waitForTimeout(1000);
 
       // Step 2: Confirm should now be visible
       await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible();
