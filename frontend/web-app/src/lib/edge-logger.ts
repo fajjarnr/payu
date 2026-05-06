@@ -6,7 +6,9 @@
  * using only Web-standard APIs so it can be safely imported in middleware.
  */
 
-const SERVICE_NAME = "payu-web-app";
+const SERVICE_NAME = "web-app";
+const SERVICE_VERSION = "1.5.0";
+const ENVIRONMENT = process.env.NODE_ENV || "dev";
 
 function format(
   level: string,
@@ -16,7 +18,9 @@ function format(
   return JSON.stringify({
     timestamp: new Date().toISOString(),
     level,
-    service: SERVICE_NAME,
+    service_name: SERVICE_NAME,
+    service_version: SERVICE_VERSION,
+    environment: ENVIRONMENT,
     message,
     ...meta,
   });

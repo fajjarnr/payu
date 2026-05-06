@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: wallet-service
+  application:
+    name: wallet-service
   datasource:
     # Primary datasource for write operations
     primary:

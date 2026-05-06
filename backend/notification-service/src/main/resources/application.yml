@@ -1,6 +1,11 @@
+  application:
+    name: notification-service
+
 quarkus:
   application:
     name: notification-service
+    version: 1.0.0
+    environment: dev
   http:
     port: 8080
   oidc:
@@ -69,10 +74,14 @@ payu:
       "id.payu.notification":
         level: DEBUG
     console:
-      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%c{3.}] (%t) %s%e%n"
       json:
-        ~: true
-        pretty-print: false
+        enabled: true
+        log-format: ecs
+        exception-output-type: formatted
+        additional-field:
+          "service.environment":
+            value: dev
+            type: STRING
 "%dev":
   quarkus:
     hibernate-orm:

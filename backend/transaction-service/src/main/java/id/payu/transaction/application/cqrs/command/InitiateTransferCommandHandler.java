@@ -115,7 +115,6 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         String referenceNumber = generateReferenceNumber();
 
         return Transaction.builder()
-                .id(UUID.randomUUID())
                 .referenceNumber(referenceNumber)
                 .senderAccountId(command.senderAccountId())
                 .amount(command.amount())

@@ -3,17 +3,19 @@ package id.payu.transaction.domain.model;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Persistable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 // TODO BUG-ARCH-003: Separate JPA entity from domain model (hexagonal architecture violation)
-// Domain models should not have JPA annotations. Create a separate persistence entity with mappers.
 @Entity
 @Table(name = "transactions")
 @TenantAware
 @EntityListeners(TenantEntityListener.class)
-public class Transaction {
+public class Transaction implements Persistable<UUID> {
     public Transaction() {
     }
 
@@ -24,8 +26,9 @@ public class Transaction {
         this.recipientAccountId = recipientAccountId;
         this.type = type;
         this.amount = amount;
-        this.amountValue = amountValue;
-        this.currencyCode = currencyCode;
+        // Derive deprecated fields from Money if not explicitly provided
+        this.amountValue = amountValue != null ? amountValue : (amount != null ? amount.getAmount() : null);
+        this.currencyCode = currencyCode != null ? currencyCode : (amount != null ? amount.getCurrency().getCurrencyCode() : null);
         this.description = description;
         this.status = status;
         this.failureReason = failureReason;
@@ -55,7 +58,9 @@ public class Transaction {
         private String description;
         private TransactionStatus status;
         private String failureReason;
-        private String metadata;
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String metadata;
         private Instant createdAt;
         private Instant updatedAt;
         private Instant completedAt;
@@ -423,10 +428,29 @@ public class Transaction {
     private String memo;
 
     @Column(name = "tags", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String tags;
 
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
+
+    @Transient
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PrePersist
+    void onPrePersist() {
+        this.isNew = false;
+    }
+
+    @PostLoad
+    void onPostLoad() {
+        this.isNew = false;
+    }
 
     // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum TransactionType {

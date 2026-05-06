@@ -14,11 +14,11 @@
     <!-- Import Spring Boot defaults -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <!-- Spring Boot property support -->
-    <springProperty scope="context" name="SERVICE_NAME" source="payu.logging.service-name" defaultValue="${spring.application.name:-unknown-service}"/>
-    <springProperty scope="context" name="SERVICE_VERSION" source="payu.logging.service-version" defaultValue="1.0.0"/>
-    <springProperty scope="context" name="ENVIRONMENT" source="payu.logging.environment" defaultValue="dev"/>
-    <springProperty scope="context" name="LOG_LEVEL" source="logging.level.root" defaultValue="INFO"/>
+    <!-- Service metadata from environment (SPRING_APPLICATION_NAME set in Containerfile) -->
+    <property scope="context" name="SERVICE_NAME" value="${SPRING_APPLICATION_NAME:-unknown-service}"/>
+    <property scope="context" name="SERVICE_VERSION" value="${SERVICE_VERSION:-1.0.0}"/>
+    <property scope="context" name="ENVIRONMENT" value="${SPRING_PROFILES_ACTIVE:-dev}"/>
+    <property scope="context" name="LOG_LEVEL" value="INFO"/>
 
     <!-- Console Appender with JSON for production -->
     <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -28,8 +28,8 @@
             <includeMdc>true</includeMdc>
             <includeStructuredArguments>true</includeStructuredArguments>
 
-            <!-- Custom fields for PayU standard -->
-            <customFields>{"service":"${SERVICE_NAME}","service_version":"${SERVICE_VERSION}","environment":"${ENVIRONMENT}"}</customFields>
+            <!-- Custom fields for PayU standard — only add fields NOT already in MDC -->
+            <customFields>{"log_format":"json"}</customFields>
 
             <!-- Field names compatible with Loki -->
             <fieldNames>

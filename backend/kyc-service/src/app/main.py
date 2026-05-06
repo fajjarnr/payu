@@ -15,11 +15,13 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import uuid
 
+from app.logging_config import configure_logging
 from app.config import get_settings
 from app.api.v1 import kyc_router
 from app.api.responses import ApiResponse
 from app.database import init_db, close_db
 
+configure_logging()
 logger = get_logger(__name__)
 settings = get_settings()
 

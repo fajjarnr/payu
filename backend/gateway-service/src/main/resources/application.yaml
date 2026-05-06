@@ -3,6 +3,7 @@ quarkus:
   application:
     name: gateway-service
     version: 1.0.0
+    environment: dev
   # HTTP Server
   http:
     port: 8080
@@ -74,10 +75,14 @@ quarkus:
       "io.quarkus.oidc":
         level: DEBUG
     console:
-      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%X{trace_id}] [%c{3.}] (%t) %s%e%n"
       json:
-        ~: true
-        pretty-print: false
+        enabled: true
+        log-format: ecs
+        exception-output-type: formatted
+        additional-field:
+          "service.environment":
+            value: dev
+            type: STRING
 # Gateway Configuration
 gateway:
   # Authorization Configuration

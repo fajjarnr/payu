@@ -9,24 +9,22 @@ import pino from "pino";
  * - Safe for Node.js API routes (NOT Edge runtime — see edge-logger.ts)
  */
 
-const LOG_LEVEL = process.env.LOG_LEVEL || "info";
-const SERVICE_NAME = "payu-web-app";
+const isProduction = process.env.NODE_ENV === "production" || process.env.SPRING_PROFILES_ACTIVE === "container";
 
 const logger = pino({
-  level: LOG_LEVEL,
-  name: SERVICE_NAME,
-  // In production: pure JSON to stdout (for log aggregators)
-  // In development: pretty-print for readability
-  ...(process.env.NODE_ENV !== "production" && {
+  level: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
+  ...(isProduction ? {} : {
     transport: {
       target: "pino-pretty",
-      options: {
-        colorize: true,
-        translateTime: "HH:MM:ss.l",
-        ignore: "pid,hostname",
-      },
-    },
+      options: { colorize: true }
+    }
   }),
+  base: {
+    service_name: "web-app",
+    service_version: "1.5.0",
+    environment: process.env.NODE_ENV || "dev",
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
 });
 
 export default logger;

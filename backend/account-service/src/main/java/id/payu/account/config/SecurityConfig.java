@@ -146,7 +146,8 @@ public class SecurityConfig {
             }
 
             // 4. Derive fine-grained permissions from coarse Keycloak roles
-            boolean isUser = realmRoles.contains("default-roles-payu") || realmRoles.contains("user");
+            boolean isUser = realmRoles.contains("default-roles-payu")
+                    || realmRoles.stream().anyMatch(r -> r.equalsIgnoreCase("user"));
             boolean isAdmin = realmRoles.contains("admin");
 
             if (isUser) {

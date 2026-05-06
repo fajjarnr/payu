@@ -19,6 +19,7 @@ COPY --chown=185 target/*.jar /deployments/app.jar
 
 EXPOSE 8080
 
+ENV SPRING_APPLICATION_NAME=investment-service
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:InitialRAMPercentage=50.0 \

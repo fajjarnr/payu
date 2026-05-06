@@ -2,6 +2,7 @@ quarkus:
   application:
     name: api-portal-service
     version: 1.0.0
+    environment: dev
   http:
     port: ${QUARKUS_HTTP_PORT:8080}
   oidc:
@@ -30,10 +31,25 @@ quarkus:
       "id.payu.portal":
         level: DEBUG
     console:
-      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%c{3.}] (%t) %s%e%n"
       json:
-        ~: true
-        pretty-print: false
+        enabled: true
+        log-format: ecs
+        exception-output-type: formatted
+        additional-field:
+          "service.environment":
+            value: dev
+            type: STRING
+  # OpenTelemetry
+  otel:
+    service:
+      name: api-portal-service
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=api-portal-service
+        - service.version=1.0.0
 portal:
   services:
     account-service:

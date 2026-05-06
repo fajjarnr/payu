@@ -19,6 +19,7 @@ COPY --chown=185 target/*.jar /deployments/app.jar
 
 EXPOSE 8080
 
+ENV SPRING_APPLICATION_NAME=transaction-service
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:InitialRAMPercentage=50.0 \
@@ -26,6 +27,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxGCPauseMillis=200 \
     -XX:+HeapDumpOnOutOfMemoryError \
     -XX:HeapDumpPath=/deployments/heapdump.hprof \
+    -Dspring.application.name=transaction-service \
     -Djava.security.egd=file:/dev/./urandom"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

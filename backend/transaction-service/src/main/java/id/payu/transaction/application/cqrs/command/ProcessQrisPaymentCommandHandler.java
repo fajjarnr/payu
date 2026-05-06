@@ -59,7 +59,6 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
         String referenceNumber = generateReferenceNumber();
 
         Transaction transaction = Transaction.builder()
-                .id(UUID.randomUUID())
                 .referenceNumber(referenceNumber)
                 .senderAccountId(command.accountId())
                 .amount(command.amount())

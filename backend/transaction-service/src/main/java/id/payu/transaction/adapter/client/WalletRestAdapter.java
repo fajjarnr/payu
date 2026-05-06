@@ -6,12 +6,19 @@ import id.payu.transaction.dto.ReserveBalanceResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Map;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -25,6 +32,7 @@ import java.util.UUID;
  *             Kept as fallback during migration period.
  */
 @Deprecated
+@Primary
 @Component("walletRestAdapter")
 public class WalletRestAdapter implements WalletServicePort {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletRestAdapter.class);
@@ -35,9 +43,11 @@ public class WalletRestAdapter implements WalletServicePort {
     private String walletServiceUrl;
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
-    public WalletRestAdapter(RestTemplate restTemplate) {
+    public WalletRestAdapter(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -54,16 +64,29 @@ public class WalletRestAdapter implements WalletServicePort {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // Forward the incoming JWT token so wallet-service can validate auth
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs != null && attrs.getRequest().getHeader("Authorization") != null) {
+            headers.set("Authorization", attrs.getRequest().getHeader("Authorization"));
+        }
         HttpEntity<ReserveBalanceRequest> entity = new HttpEntity<>(request, headers);
 
         try {
-            ReserveBalanceResponse response = restTemplate.postForObject(url, entity, ReserveBalanceResponse.class);
-            
-            if (response != null && response.getReservationId() != null) {
-                log.info("Balance reserved successfully: reservationId={}", response.getReservationId());
+            ResponseEntity<Map> responseEntity = restTemplate.postForEntity(url, entity, Map.class);
+            Map<String, Object> body = responseEntity.getBody();
+            if (body != null && Boolean.TRUE.equals(body.get("success"))) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> data = (Map<String, Object>) body.get("data");
+                if (data != null) {
+                    ReserveBalanceResponse response = objectMapper.convertValue(data, ReserveBalanceResponse.class);
+                    if (response.getReservationId() != null) {
+                        log.info("Balance reserved successfully: reservationId={}", response.getReservationId());
+                    }
+                    return response;
+                }
             }
-            
-            return response;
+            log.warn("Wallet reserve returned unexpected response: {}", body);
+            throw new RuntimeException("Failed to parse wallet reserve response");
         } catch (Exception e) {
             log.error("Failed to reserve balance: {}", e.getMessage());
             throw e;

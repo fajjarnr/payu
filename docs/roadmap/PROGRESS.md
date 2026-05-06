@@ -24,7 +24,7 @@
 | API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
 | Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
 | **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
-| Last Status Update         | 2026-05-05 | v1.8.0 — All layers green: Contract 3/3 ✅, Pytest 156/159 ✅, Playwright 623+ ✅, 0 bugs |
+| Last Status Update         | 2026-05-06 | v1.8.0 — Account ID fix: Wallet ✅, Transfer 🔄 (optimistic lock). All layers green. |
 | OpenShift Tag              | `v1.7.8`   | Latest stable deployment                        |
 | Local Podman Tag           | `v1.8.0`   | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode                 | KRaft      | (no Zookeeper)                                  |

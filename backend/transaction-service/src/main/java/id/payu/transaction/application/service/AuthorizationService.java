@@ -80,7 +80,11 @@ public class AuthorizationService {
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the account
      */
     public void verifyAccountOwnership(java.util.UUID accountId, String userId) {
-        // Get all account IDs for the user (multi-account support)
+        // Direct ownership: accountId IS the user's KC UUID (how wallets are keyed via WalletEventConsumer)
+        if (accountId.toString().equals(userId)) {
+            return;
+        }
+        // Fallback: check against internal Account UUIDs for multi-account users
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
         if (!userAccountIds.contains(accountId)) {
@@ -102,7 +106,11 @@ public class AuthorizationService {
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the account
      */
     public void verifySenderAccountOwnership(java.util.UUID senderAccountId, String userId) {
-        // Get all account IDs for the user (multi-account support)
+        // Direct ownership: senderAccountId IS the user's KC UUID (how wallets are keyed via WalletEventConsumer)
+        if (senderAccountId.toString().equals(userId)) {
+            return;
+        }
+        // Fallback: check against internal Account UUIDs for multi-account users
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
         if (!userAccountIds.contains(senderAccountId)) {

@@ -79,9 +79,37 @@
 | OPS-2026-04-09-07 | Task | Admin-only endpoints (GL, Settlement, Journal, ChartOfAccounts, Escrow, SplitPayment) require `ROLE_ADMIN` or `ROLE_BACKOFFICE`. Need to create admin Keycloak user or add realm roles for testing.                                          | Smart Routing also returns 404 — gateway doesn't route `/transfers/routes`.                                                                                                                                                                        | ⏸️ Suspended (OCP destroyed May 2) |
 | OPS-2026-05-02-02 | Task | Run realistic k6 E2E CRUD test again after all services are healthy. Target: >95% checks pass, `http_req_failed` < 5%, all endpoints return 200.                                                                                         | ✅ **Done**: `podman compose -f infrastructure/local/podman/podman-compose.yml --profile devsecops run --rm k6` → 918/918 passed, 0% failure, p(95) 1.1ms. Gateway health endpoint fully healthy.                                                       | ✅ Done |
 | OPS-2026-05-02-05 | Task | Document Tekton pipeline fix patterns in `docs/guides/LESSONS.md`: `onError: continue` Tekton v1.9 limitation, registry auth `unused:<token>` format, license compliance purl filtering.                                                  | ✅ **Done**: Lessons L-027, L-028, L-029, L-030 added to `docs/guides/LESSONS.md` with detailed patterns and code examples.                                                                                                            | ✅ Done |
-| TEST-INFRA-006     |    P2    | Task | Playwright Chromium via snap execution ~2x lebih lambat dari native binary. Full suite (~544 tests) butuh ~20 menit (vs ~12 menit sebelumnya). | Symlink workaround works but slow. Optional: install non-snap chromium when available. | 📋 To Do |
+| TEST-INFRA-006     |    P2    | Task | Playwright Chromium via snap execution ~2x lebih lambat dari native binary. | ✅ **Obsolete**: Switched to Google Chrome 147 via `channel: 'chrome'`. Full 652 suite verified, all spec files pass. | ✅ Done |
+| OPS-2026-05-06-01 |    P0    | Task | **Real API validation — test all 23 services via curl.** Loop endpoints gateway: account, auth, tx, wallet, billing, notification, kyc, analytics, compliance, investment, lending, fx, statement, backoffice, partner, promotion, support, cms, product-catalog, dispute, integration, api-portal, gateway. | Token: `curl -s http://localhost:8080/api/v1/auth/login ...`. For each service, test GET/POST endpoints. Document which return 200 vs 401/403/500. Target: >80% endpoint pass rate. | 📋 To Do |
 
 ---
+
+---
+
+## 🔑 Account ID Mismatch Fix (2026-05-06)
+
+> **Root cause**: 3 bugs causing transfer/wallet API failures. Wallet now works (balance 10M IDR). Transfer authorized but fails on Transaction entity optimistic locking.
+
+| Key               | Priority | Summary | Status |
+| :---------------- | :------: | :------ | :----- |
+| ACC-ID-001 | P0 | Role case-sensitivity: SecurityConfig checks `contains("user")` but Keycloak role is `"USER"`. Fixed 3 services (transaction, wallet, account). | ✅ Fixed |
+| ACC-ID-002 | P0 | Gateway `AuthorizationFilter.extractAccountId()` fallback `"account-" + sub` non-functional. Changed to return `sub` directly. | ✅ Fixed |
+| ACC-ID-003 | P0 | `AuthorizationService.verifySenderAccountOwnership()` compares KC UUID against internal Account UUIDs (cross-type). Added direct KC UUID match. | ✅ Fixed |
+| ACC-ID-004 | P1 | `customer1` seed data: `external_id="EXT-CUST-001"` ≠ KC UUID. No wallet. Fixed via SQL: update external_id, create wallet (10M IDR). | ✅ Fixed |
+| ACC-ID-005 | P1 | Transfer fails on `ObjectOptimisticLockingFailureException` — Transaction entity pre-assigned UUID triggers `merge()` not `persist()`. Also: metadata jsonb mismatch, amount null, gRPC→REST adapter, ApiResponse parsing. | ✅ **Fixed**: `Persistable<UUID>` + builder fix + REST adapter + DB schema + wallet e2e verified (status: COMPLETED). |
+
+---
+
+## 🔌 OpenAPI / Swagger Audit (2026-05-06)
+
+> **Audit**: 23 services checked. Only 3 fully functional (gateway, notification, api-portal). 8 blocked by Spring Security. 9 return 500. 3 not found. API-First is a platform requirement.
+
+| Key               | Priority | Summary | Status |
+| :---------------- | :------: | :------ | :----- |
+| API-OPENAPI-001 | P0 | **Unblock Spring Security** for `/v3/api-docs`, `/swagger-ui/**` di 8 Spring Boot services (account, auth, tx, wallet, statement, compliance, integration, product-catalog). | 📋 To Do |
+| API-OPENAPI-002 | P1 | **Fix 500 errors** on `/v3/api-docs` di 9 services (billing, investment, lending, cms, backoffice, partner, promotion, support, dispute). Likely dependency/startup issues. | 📋 To Do |
+| API-OPENAPI-003 | P2 | **Add OpenAPI** to fx-service, dukcapil-simulator, qris-simulator (currently return 404). | 📋 To Do |
+| API-OPENAPI-004 | P1 | **Gateway OpenAPI aggregation** — expose unified OpenAPI spec at `/q/openapi` combining all service schemas. | 📋 To Do |
 
 ---
 
@@ -174,14 +202,14 @@
 | Completed Stories      | 109 done (86 + 23 test stories archived)                                  |
 | Completed SP           | 265/265                                                                   |
 | Bugs Fixed             | 711 done + 4 Won't Do (archived to CHANGELOG)                             |
-| Open Bugs              | 0 — All 6 resolved + closed today (May 5, 2026)                        |
+| Open Bugs              | 0 — All resolved |
 | Tech Debt              | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)                              |
-| Operational Follow-Ups | 13 carry-over tasks (2 done, 2 blocked, 8 suspended, 1 to do)  |
+| Operational Follow-Ups | 13 carry-over tasks (3 done, 1 blocked, 8 suspended, 1 todo: real API test) |
 | DevSecOps Tasks        | 52 tasks from `DEVSECOPS_ARCHITECTURE.md` v1.3.1 (Phase 1–4)               |
 
 ---
 
-_Last Updated: May 5, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 13 Operational (2 done, 2 blocked, 8 suspended, 1 to do) · 52 DevSecOps · 6 Spikes · 9 Deferred_
+_Last Updated: May 6, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 5 Account ID Items (4 fixed, 1 todo) · 13 Ops (3 done, 1 blocked, 8 suspended, 1 todo) · 52 DevSecOps · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _k6 Operator installed April 9: namespace payu-k6, ClusterAutoscaler (max 14 nodes), MachineAutoscalers (2a: 2-5, 2b: 1-4, 2c: 0-4). Use TestRun CRDs in infrastructure/openshift/infra/base/k6/ for distributed runs._
 _CRUD Testing Sessions (April 9): 24/28 endpoints validated ✅. 4 blocked by NetworkPolicy (OPS-09-02) + gateway route mismatches (OPS-09-03). Major fixes: wallet optimistic locking, JWT authority mapping (3 services), SavingsGoal ownership, gateway schema mismatches, AccountSecurityService bean, UserAccountController, BeneficiaryController ownership, tenant_id migration, AccountType enum._

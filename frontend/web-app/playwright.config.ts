@@ -41,7 +41,6 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
         // Use system Google Chrome (faster than snap Chromium)
         channel: 'chrome',
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       },
     },
     // Temporarily disable other browsers to focus on Chromium first

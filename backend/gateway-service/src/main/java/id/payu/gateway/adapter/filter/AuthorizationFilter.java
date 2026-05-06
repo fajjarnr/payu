@@ -400,8 +400,9 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         if (accountIdClaim != null) {
             return accountIdClaim.toString();
         }
-        // Fallback: derive from subject
-        return "account-" + claimsSet.getSubject();
+        // Fallback: KC UUID IS the account ID for wallet/transaction operations
+        // (wallets are keyed by KC externalId via WalletEventConsumer)
+        return claimsSet.getSubject();
     }
 
     /**

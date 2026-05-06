@@ -82,6 +82,18 @@
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
 
+        <!-- OpenTelemetry -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-opentelemetry</artifactId>
+        </dependency>
+
+        <!-- JSON Structured Logging (container/prod mode) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-logging-json</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>

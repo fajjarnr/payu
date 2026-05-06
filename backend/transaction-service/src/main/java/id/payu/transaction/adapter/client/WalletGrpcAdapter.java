@@ -18,7 +18,7 @@ import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @since IMP-028
  */
-@Primary
+@ConditionalOnProperty(name = "payu.grpc.enabled", havingValue = "true", matchIfMissing = false)
 @Component("walletGrpcAdapter")
 public class WalletGrpcAdapter implements WalletServicePort {
 
