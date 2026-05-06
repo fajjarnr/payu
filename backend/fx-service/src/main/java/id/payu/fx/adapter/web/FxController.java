@@ -31,6 +31,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,16 @@ public class FxController extends BaseController {
         this.conversionTimer = Timer.builder("fx.conversion.duration")
                 .description("FX conversion duration")
                 .register(meterRegistry);
+    }
+
+    @GetMapping
+    @Operation(summary = "FX service status", description = "Returns FX service health and available endpoints")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getFxStatus() {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "service", "fx-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
     }
 
     @GetMapping("/rates/{fromCurrency}/{toCurrency}")

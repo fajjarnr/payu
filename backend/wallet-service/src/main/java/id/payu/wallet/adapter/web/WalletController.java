@@ -83,6 +83,17 @@ public class WalletController extends BaseController {
         return id.substring(0, 4) + "****";
     }
 
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Wallet service status", description = "Returns wallet service health and available endpoints")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getWalletStatus() {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "service", "wallet-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
+    }
+
     @GetMapping("/{accountId}/balance")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get wallet balance", description = "Retrieve current balance, available balance, and reserved balance for an account")

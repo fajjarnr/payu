@@ -103,6 +103,15 @@ public class ApiGatewayResource {
         return proxy("wallet-service", "/api/v1/wallets/" + path, "DELETE", body, headers);
     }
 
+    @POST @Path("/wallets")
+    public Uni<Response> walletRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets", "POST", body, headers);
+    }
+    @GET @Path("/wallets")
+    public Uni<Response> walletRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets", "GET", body, headers);
+    }
+
     // ==================== Transaction Service ====================
     @GET @Path("/transactions/{path: .*}")
     public Uni<Response> transactionGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
@@ -378,6 +387,11 @@ public class ApiGatewayResource {
         return proxy("lending-service", "/api/v1/lending/" + path, "POST", body, headers);
     }
 
+    @GET @Path("/lending")
+    public Uni<Response> lendingRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("lending-service", "/api/v1/lending", "GET", body, headers);
+    }
+
     // ==================== Investment Service ====================
     @GET @Path("/investments/{path: .*}")
     public Uni<Response> investmentGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
@@ -386,6 +400,11 @@ public class ApiGatewayResource {
     @POST @Path("/investments/{path: .*}")
     public Uni<Response> investmentPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("investment-service", "/api/v1/investments/" + path, "POST", body, headers);
+    }
+
+    @GET @Path("/investments")
+    public Uni<Response> investmentRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("investment-service", "/api/v1/investments", "GET", body, headers);
     }
 
     // ==================== Compliance Service ====================
@@ -420,6 +439,10 @@ public class ApiGatewayResource {
     public Uni<Response> backofficeRootPost(String body, @Context HttpHeaders headers) {
         return proxy("backoffice-service", "/api/v1/backoffice", "POST", body, headers);
     }
+    @GET @Path("/backoffice")
+    public Uni<Response> backofficeRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice", "GET", body, headers);
+    }
 
     // ==================== Analytics Service ====================
     @GET @Path("/analytics/{path: .*}")
@@ -429,6 +452,11 @@ public class ApiGatewayResource {
     @POST @Path("/analytics/{path: .*}")
     public Uni<Response> analyticsPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("analytics-service", "/api/v1/analytics/" + path, "POST", body, headers);
+    }
+
+    @GET @Path("/analytics")
+    public Uni<Response> analyticsRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("analytics-service", "/api/v1/analytics", "GET", body, headers);
     }
 
     // ==================== Support Service ====================
@@ -680,6 +708,11 @@ public class ApiGatewayResource {
     @POST @Path("/integration/{path: .*}")
     public Uni<Response> integrationPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("integration-service", "/api/v1/integration/" + path, "POST", body, headers);
+    }
+
+    @GET @Path("/integration")
+    public Uni<Response> integrationRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("integration-service", "/api/v1/integration", "GET", body, headers);
     }
 
 

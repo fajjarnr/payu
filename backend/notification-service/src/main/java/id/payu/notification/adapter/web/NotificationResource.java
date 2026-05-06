@@ -179,14 +179,6 @@ public class NotificationResource {
                 .map(NotificationResponse::from)
                 .toList();
     }
-        LOG.infof("Received notification request: channel=%s, recipient=%s",
-                request.channel(), request.recipient());
-
-        Notification notification = notificationService.send(request);
-        return Response.status(Response.Status.CREATED)
-                .entity(NotificationResponse.from(notification))
-                .build();
-    }
 
     /**
      * Get notification details by ID.

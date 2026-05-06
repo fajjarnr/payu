@@ -1,6 +1,3 @@
-  application:
-    name: notification-service
-
 quarkus:
   application:
     name: notification-service

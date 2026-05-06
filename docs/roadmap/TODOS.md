@@ -16,7 +16,7 @@
 | **Open Bugs** | 0 |
 | **Open Epics** | 0 |
 | **Open Stories** | 0 |
-| **Spikes** | 6 |
+| **Spikes** | 5 |
 | **Deferred** | 9 |
 | **Suspended (OCP destroyed)** | 8 |
 | **DevSecOps (suspended)** | 52 |
@@ -40,7 +40,7 @@
 | ARCH-003 | Spike | Support ticket: end-user PayU atau project client? | Multi-tenancy `support-service` | 📋 To Do |
 | ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client? | Multi-tenant mode `cms-service` | 📋 To Do |
 | ARCH-005 | Spike | RHPAM/Kogito/Drools PoC: evaluate rules engine untuk credit scoring & fraud detection | ADR-0015, `rules-starter` shared lib | 📋 To Do |
-| ARCH-006 | Spike | Spring Boot 4.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility before platform-wide rollout | Oakwood Release Train | 📋 To Do |
+| ARCH-006 | Spike | Spring Boot 4.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility before platform-wide rollout | Oakwood Release Train | ❄️ Deferred — Boot 3.5.14 + Java 25 stable, no urgency |
 
 ---
 

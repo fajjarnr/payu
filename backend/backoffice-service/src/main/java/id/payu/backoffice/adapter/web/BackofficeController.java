@@ -29,6 +29,7 @@ import id.payu.security.annotation.Audited;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -46,6 +47,16 @@ public class BackofficeController extends BaseController {
     private final FraudCaseService fraudCaseService;
     private final CustomerCaseService customerCaseService;
     private final UniversalSearchService universalSearchService;
+
+    @GetMapping
+    @Operation(summary = "Backoffice service status", description = "Returns backoffice service health and available endpoints")
+    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<Map<String, Object>>> getBackofficeStatus() {
+        return ResponseEntity.ok(id.payu.backoffice.dto.ApiResponse.success(Map.of(
+                "service", "backoffice-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
+    }
 
     /**
      * Resolves admin user identity from X-Admin-User header or authenticated principal.

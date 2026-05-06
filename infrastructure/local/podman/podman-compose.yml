@@ -147,6 +147,8 @@ services:
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME_URL: http://keycloak:8080
+      KC_HOSTNAME_ADMIN_URL: http://keycloak:8080
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-payu}
@@ -221,7 +223,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-account-service:1.8.0
+    image: localhost/payu-account-service:1.8.1
   auth-service:
     build:
       context: ../../../backend/auth-service
@@ -283,7 +285,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service:1.8.0
+    image: localhost/payu-auth-service:1.8.1
   transaction-service:
     build:
       context: ../../../backend/transaction-service
@@ -338,7 +340,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-transaction-service:1.8.0
+    image: localhost/payu-transaction-service:1.8.1
   wallet-service:
     build:
       context: ../../../backend/wallet-service
@@ -390,7 +392,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-wallet-service:1.8.0
+    image: localhost/payu-wallet-service:1.8.1
   compliance-service:
     build:
       context: ../../../backend/compliance-service
@@ -443,7 +445,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-compliance-service:1.8.0
+    image: localhost/payu-compliance-service:1.8.1
   investment-service:
     build:
       context: ../../../backend/investment-service
@@ -497,7 +499,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-investment-service:1.8.0
+    image: localhost/payu-investment-service:1.8.1
   lending-service:
     build:
       context: ../../../backend/lending-service
@@ -551,7 +553,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-lending-service:1.8.0
+    image: localhost/payu-lending-service:1.8.1
   bi-fast-simulator:
     build:
       context: ../../../backend/simulators/bi-fast-simulator
@@ -602,7 +604,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-bi-fast-simulator:1.8.0
+    image: localhost/payu-bi-fast-simulator:1.8.1
   dukcapil-simulator:
     build:
       context: ../../../backend/simulators/dukcapil-simulator
@@ -652,7 +654,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-dukcapil-simulator:1.8.0
+    image: localhost/payu-dukcapil-simulator:1.8.1
   qris-simulator:
     build:
       context: ../../../backend/simulators/qris-simulator
@@ -703,7 +705,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-qris-simulator:1.8.0
+    image: localhost/payu-qris-simulator:1.8.1
   billing-service:
     build:
       context: ../../../backend/billing-service
@@ -756,7 +758,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-billing-service:1.8.0
+    image: localhost/payu-billing-service:1.8.1
   notification-service:
     build:
       context: ../../../backend/notification-service
@@ -811,9 +813,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-notification-service:1.8.0
+    image: localhost/payu-notification-service:1.8.1
   gateway-service:
-    image: localhost/payu-gateway-service:1.8.0
+    image: localhost/payu-gateway-service:1.8.1
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -974,7 +976,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-backoffice-service:1.8.0
+    image: localhost/payu-backoffice-service:1.8.1
   partner-service:
     build:
       context: ../../../backend/partner-service
@@ -1027,7 +1029,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 240s
-    image: localhost/payu-partner-service:1.8.0
+    image: localhost/payu-partner-service:1.8.1
   promotion-service:
     build:
       context: ../../../backend/promotion-service
@@ -1079,7 +1081,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-promotion-service:1.8.0
+    image: localhost/payu-promotion-service:1.8.1
   support-service:
     build:
       context: ../../../backend/support-service
@@ -1131,7 +1133,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-support-service:1.8.0
+    image: localhost/payu-support-service:1.8.1
   api-portal-service:
     build:
       context: ../../../backend/api-portal-service
@@ -1213,9 +1215,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-api-portal-service:1.8.0
+    image: localhost/payu-api-portal-service:1.8.1
   statement-service:
-    image: localhost/payu-statement-service:1.8.0
+    image: localhost/payu-statement-service:1.8.1
     build:
       context: ../../../backend/statement-service
       dockerfile: Containerfile
@@ -1309,7 +1311,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-kyc-service:1.8.0
+    image: localhost/payu-kyc-service:1.8.1
   analytics-service:
     build:
       context: ../../../backend/analytics-service
@@ -1341,7 +1343,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-analytics-service:1.8.0
+    image: localhost/payu-analytics-service:1.8.1
   cms-service:
     build:
       context: ../../../backend/cms-service
@@ -1395,9 +1397,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-cms-service:1.8.0
+    image: localhost/payu-cms-service:1.8.1
   fx-service:
-    image: localhost/payu-fx-service:1.8.0
+    image: localhost/payu-fx-service:1.8.1
     build:
       context: ../../../backend/fx-service
       dockerfile: Containerfile
@@ -1502,7 +1504,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-dispute-service:1.8.0
+    image: localhost/payu-dispute-service:1.8.1
   integration-service:
     build:
       context: ../../../backend/integration-service
@@ -1553,7 +1555,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-integration-service:1.8.0
+    image: localhost/payu-integration-service:1.8.1
   product-catalog-service:
     build:
       context: ../../../backend/product-catalog-service
@@ -1605,7 +1607,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-product-catalog-service:1.8.0
+    image: localhost/payu-product-catalog-service:1.8.1
   web-app:
     build:
       context: ../../../frontend/web-app
@@ -1633,7 +1635,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app:1.8.0
+    image: localhost/payu-web-app:1.8.1
   jaeger:
     image: docker.io/jaegertracing/all-in-one:1.76.0
     container_name: payu-jaeger

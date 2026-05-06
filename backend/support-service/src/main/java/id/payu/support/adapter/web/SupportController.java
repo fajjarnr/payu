@@ -31,6 +31,16 @@ public class SupportController extends BaseController {
     private final TrainingModuleService trainingModuleService;
     private final AgentTrainingService agentTrainingService;
 
+    @GetMapping
+    @Operation(summary = "Support service status", description = "Returns support service health and available endpoints")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getSupportStatus() {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "service", "support-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
+    }
+
     @GetMapping("/training-status")
     @Operation(summary = "Get overall training status", description = "Retrieve training statistics including active and trained agents")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {

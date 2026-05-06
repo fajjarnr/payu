@@ -1,8 +1,6 @@
 spring:
   application:
     name: statement-service
-  application:
-    name: statement-service
   profiles:
     include: grpc
 

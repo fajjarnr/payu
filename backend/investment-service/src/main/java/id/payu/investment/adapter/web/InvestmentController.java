@@ -25,6 +25,7 @@ import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,17 @@ public class InvestmentController extends BaseController {
                                 InvestmentSecurityService investmentSecurityService) {
         this.investmentApplicationService = investmentApplicationService;
         this.investmentSecurityService = investmentSecurityService;
+    }
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Investment service status", description = "Returns investment service health and available endpoints")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getInvestmentStatus() {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "service", "investment-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
     }
 
     @PostMapping("/accounts")
