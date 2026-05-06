@@ -169,6 +169,21 @@ public class RouteRegistry {
         // CMS Service
         registerDefault("contents", "cms-service", "/api/v1/contents");
         registerDefault("public/contents", "cms-service", "/api/v1/public/contents");
+
+        // Billing Service - TopUp via alternate prefix
+        registerDefault("billing/topup", "billing-service", "/api/v1/topup");
+
+        // CMS Service (alternate /cms prefix)
+        registerDefault("cms", "cms-service", "/api/v1/contents");
+
+        // Product Catalog Service
+        registerDefault("products", "product-catalog-service", "/products");
+
+        // Integration Service
+        registerDefault("integration", "integration-service", "/api/v1/integration");
+
+        // TopUp - add explicit topup route
+        registerDefault("topup", "billing-service", "/api/v1/topup");
     }
 
     private void registerDefault(String prefix, String service, String targetPrefix) {

@@ -11,6 +11,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **API-OPENAPI-004 — Gateway OpenAPI aggregation**:
+  - Added `swagger-ui.always-include: true` + `swagger-ui.path: /q/swagger-ui` to gateway config.
+  - Created `GatewayOpenApiResource.java` with `/q/openapi/services` endpoint that lists all registered backend services and their OpenAPI spec URLs.
+  - Gateway's own OpenAPI spec at `/q/openapi` documents all proxy routes from `ApiGatewayResource.java`.
+
+### Fix OpenAPI Swagger Security & 500 Errors (API-OPENAPI-001 + API-OPENAPI-002) (2026-05-06)
+
+- **API-OPENAPI-003 — Add OpenAPI to 3 services missing it** (fx-service, dukcapil-simulator, qris-simulator):
+  - `fx-service`: Added `.permitAll()` for `/v3/api-docs/**`, `/swagger-ui/**` in SecurityConfig (dependency already existed).
+  - `dukcapil-simulator`: Added `quarkus-smallrye-openapi` dependency + `swagger-ui.always-include: true` + `smallrye-openapi.path: /openapi` config.
+  - `qris-simulator`: Same as dukcapil-simulator.
+
+- **API-OPENAPI-001 — Unblock Spring Security for Swagger** (8 services):
+  - Added `.permitAll()` for `/v3/api-docs/**`, `/swagger-ui/**`, `/swagger-ui.html` in `SecurityConfig.java` of:
+    `account-service`, `auth-service`, `transaction-service`, `wallet-service`, `statement-service`, `compliance-service`, `integration-service`, `product-catalog-service`.
+  - `integration-service`: Created missing `SecurityConfig.java` entirely.
+- **API-OPENAPI-002 — Fix 500 errors on `/v3/api-docs`** (9 services):
+  - **Root Cause**: `springdoc-openapi` v2.3.0 is incompatible with Spring Boot 3.5.14 (compatibility matrix requires 2.8.x for Boot 3.5.x). Several services also had missing dependencies or misconfigured endpoint paths.
+  - **Parent POM (`backend/pom.xml`)**: Bumped `springdoc.version` from `2.3.0` → `2.8.17`.
+  - **Dependency Fixes**:
+    - `investment-service`, `lending-service`: Added missing `springdoc-openapi-starter-webmvc-ui` dependency.
+    - `billing-service`, `cms-service`, `backoffice-service`, `partner-service`, `promotion-service`, `support-service`, `dispute-service`: Removed hardcoded outdated `<version>` tags to inherit `2.8.17` from parent `dependencyManagement`.
+  - **Config Path Fixes**:
+    - `investment-service`, `lending-service`, `cms-service`: Changed `springdoc.api-docs.path` from `/api-docs` → `/v3/api-docs`.
+    - `partner-service`: Changed `springdoc.api-docs.path` from `/q/openapi` → `/v3/api-docs`; changed `swagger-ui.path` from `/q/swagger-ui` → `/swagger-ui.html`.
+    - `promotion-service`: Moved `springdoc:` block from nested under `spring:` to top-level so properties are actually applied.
+  - **Verification**: All 9 services compile successfully (`mvn compile`). Integration tests for `billing-service`, `investment-service`, `lending-service`, `partner-service`, and `support-service` pass with `SpringDocAppInitializer` confirming `/v3/api-docs` endpoint is enabled.
+
+### Fix 7 Broken Services (500) & 5 Routing Issues (404-405) (2026-05-06)
+
+- **Spring Boot 500 Fixes**:
+  - `investment-service`: Removed duplicate `spring.application.name` key in `application.yml` (invalid YAML causing SnakeYAML parsing error).
+  - `dispute-service`: Created missing `application-container.yml` profile config for `SPRING_PROFILES_ACTIVE=container` (was falling back to `localhost` defaults).
+  - `partner-service`: Removed empty default `${DB_PASSWORD:}` in `application.yml` to enforce fail-fast behavior.
+- **Routing 404/405 Fixes**:
+  - `billing-service`: Added root `@GetMapping` to `PaymentController` (previously only had `@PostMapping`, causing 405 on GET).
+  - `analytics-service`: Added root `@analytics_router.get("/")` endpoint returning service status.
+  - `integration-service`: Added root `@GetMapping` to `IntegrationController`.
+  - `cms-service`: Added root `@GetMapping` to `PublicContentController` (unauthenticated public path was missing root handler).
+  - `product-catalog-service`: Changed `@GetMapping` to `@GetMapping({"", "/"})` in `PublicProductController` to handle trailing slashes; added null-guard for products list.
+- **Fixed**: `account-service` (added root GET + fixed ApiResponse ambiguity), `transaction-service` (restored `.id(UUID.randomUUID())`), `lending-service` (added root GET), `kyc-service` (added root GET).
+
 ### Test Infrastructure Audit & Configuration Fixes (2026-05-05)
 
 - **Contract Tests (Spring Cloud Contract)**: Implemented Spring Cloud Contract verifier for 3 services (auth, transaction, wallet). Created Groovy contracts, `ContractVerifierBase` classes, and Maven plugin config. **3/3 services BUILD SUCCESS, 614+ tests, 0 failures.**

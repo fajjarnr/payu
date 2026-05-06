@@ -20,6 +20,17 @@ from app.config import get_settings
 logger = get_logger(__name__)
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
 
+
+@kyc_router.get("/")
+async def get_kyc_status():
+    """Return KYC service health and available endpoints."""
+    return ApiResponse.success({
+        "service": "kyc-service",
+        "status": "UP",
+        "version": "1.0.0",
+    })
+
+
 # BUG-AUTH-022: JWT authentication dependency for KYC endpoints
 _bearer_scheme = HTTPBearer(auto_error=False)
 _settings = get_settings()
@@ -32,7 +43,7 @@ async def require_auth(
     BUG-AUTH-022: Validate JWT token from Authorization header.
     All KYC endpoints require authentication.
     """
-    import jwt
+    from jose import jwt, JWTError, ExpiredSignatureError
 
     if credentials is None:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -45,9 +56,9 @@ async def require_auth(
             options={"verify_exp": True},
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 

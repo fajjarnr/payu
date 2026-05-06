@@ -24,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -60,6 +62,23 @@ public class PaymentController {
                 && !payment.getAccountId().equals(userId)) {
             throw new PaymentNotFoundException("Payment not found");
         }
+    }
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get payment service status", description = "Retrieve operational status and available payment endpoints")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Service status retrieved")
+    public ApiResponse<Map<String, Object>> getPaymentStatus() {
+        return ApiResponse.success(Map.of(
+                "status", "operational",
+                "service", "billing-service",
+                "version", "1.0.0",
+                "endpoints", List.of(
+                        "POST /api/v1/payments",
+                        "GET /api/v1/payments/{id}",
+                        "GET /api/v1/payments/reference/{referenceNumber}"
+                )
+        ));
     }
 
     @PostMapping

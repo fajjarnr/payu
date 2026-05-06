@@ -86,6 +86,12 @@ public class NotificationService {
                 .list();
     }
 
+    public List<Notification> getAllNotifications(int limit) {
+        return Notification.find("ORDER BY createdAt DESC")
+                .page(0, Math.min(limit, 100))
+                .list();
+    }
+
     @Transactional
     public void markAsRead(UUID id) {
         Notification.<Notification>findByIdOptional(id).ifPresent(n -> {

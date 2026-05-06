@@ -207,6 +207,10 @@ public class ApiGatewayResource {
     public Uni<Response> notificationGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("notification-service", "/api/v1/notifications/" + path, "GET", body, headers);
     }
+    @GET @Path("/notifications")
+    public Uni<Response> notificationRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("notification-service", "/api/v1/notifications", "GET", body, headers);
+    }
     @POST @Path("/notifications")
     public Uni<Response> notificationRootPost(String body, @Context HttpHeaders headers) {
         return proxy("notification-service", "/api/v1/notifications", "POST", body, headers);
@@ -617,6 +621,67 @@ public class ApiGatewayResource {
     public Uni<Response> topupRootPost(String body, @Context HttpHeaders headers) {
         return proxy("billing-service", "/api/v1/topup", "POST", body, headers);
     }
+
+    // ==================== Billing Service - TopUp via /billing prefix ====================
+    @GET @Path("/billing/topup/{path: .*}")
+    public Uni<Response> billingTopupGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup/" + path, "GET", body, headers);
+    }
+    @POST @Path("/billing/topup/{path: .*}")
+    public Uni<Response> billingTopupPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup/" + path, "POST", body, headers);
+    }
+
+    // ==================== CMS Service (alternate /cms prefix) ====================
+    @GET @Path("/cms/{path: .*}")
+    public Uni<Response> cmsGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "GET", body, headers);
+    }
+    @POST @Path("/cms/{path: .*}")
+    public Uni<Response> cmsPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/cms/{path: .*}")
+    public Uni<Response> cmsPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/cms/{path: .*}")
+    public Uni<Response> cmsDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "DELETE", body, headers);
+    }
+    @GET @Path("/cms")
+    public Uni<Response> cmsRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents", "GET", body, headers);
+    }
+    @POST @Path("/cms")
+    public Uni<Response> cmsRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents", "POST", body, headers);
+    }
+
+    // ==================== Product Catalog Service ====================
+    @GET @Path("/products/{path: .*}")
+    public Uni<Response> productGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("product-catalog-service", "/products/" + path, "GET", body, headers);
+    }
+    @GET @Path("/products")
+    public Uni<Response> productRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("product-catalog-service", "/products", "GET", body, headers);
+    }
+    @POST @Path("/products")
+    public Uni<Response> productRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("product-catalog-service", "/products", "POST", body, headers);
+    }
+
+    // ==================== Integration Service ====================
+    @GET @Path("/integration/{path: .*}")
+    public Uni<Response> integrationGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("integration-service", "/api/v1/integration/" + path, "GET", body, headers);
+    }
+    @POST @Path("/integration/{path: .*}")
+    public Uni<Response> integrationPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("integration-service", "/api/v1/integration/" + path, "POST", body, headers);
+    }
+
 
     // ==================== Dynamic Route (IMP-007) ====================
     // Uses RouteRegistry to match path prefix → backend service dynamically.

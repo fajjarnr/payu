@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -153,6 +154,20 @@ public class InvestmentController extends BaseController {
         return investmentApplicationService.sellInvestment(request.accountId(), request.transactionId(), request.amount())
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
+    }
+
+    @GetMapping("/accounts")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "List investment accounts", description = "Lists all investment accounts for the authenticated user")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Accounts found",
+            content = @Content(schema = @Schema(implementation = InvestmentAccount.class)))
+    public CompletableFuture<ResponseEntity<ApiResponse<List<InvestmentAccount>>>> listAccounts(
+            @AuthenticationPrincipal Jwt jwt) {
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
+        return investmentApplicationService.getAccountsByUserId(userId)
+                .orTimeout(30, TimeUnit.SECONDS)
+                .thenApply(list -> ResponseEntity.ok(ApiResponse.success(list)));
     }
 
     @GetMapping("/accounts/me")

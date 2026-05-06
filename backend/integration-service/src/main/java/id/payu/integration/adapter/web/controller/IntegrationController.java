@@ -36,6 +36,33 @@ public class IntegrationController {
 
     private final IntegrationUseCase integrationUseCase;
 
+    @GetMapping
+    @Operation(summary = "Get integration service info",
+            description = "Retrieve service status and available endpoints")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Integration service info retrieved")
+    })
+    public ResponseEntity<Map<String, Object>> getIntegrationInfo() {
+        log.debug("Getting integration service info");
+        return ResponseEntity.ok(Map.of(
+                "status", "UP",
+                "service", "integration-service",
+                "version", "1.8.0",
+                "endpoints", List.of(
+                        "POST /api/v1/integration/swift/process",
+                        "POST /api/v1/integration/ojk/generate-report",
+                        "POST /api/v1/integration/soap/send",
+                        "POST /api/v1/integration/http/send",
+                        "GET /api/v1/integration/status",
+                        "GET /api/v1/integration/messages/{messageId}/status",
+                        "GET /api/v1/integration/messages",
+                        "POST /api/v1/integration/messages/{messageId}/retry",
+                        "POST /api/v1/integration/messages/{messageId}/cancel"
+                ),
+                "timestamp", java.time.Instant.now().toString()
+        ));
+    }
+
     @PostMapping("/swift/process")
     @Operation(summary = "Process SWIFT message",
             description = "Process an incoming SWIFT MT message (MT103, MT202, MT940)")
@@ -133,6 +160,22 @@ public class IntegrationController {
         return ResponseEntity.ok(Map.of(
                 "response", response,
                 "status", "SUCCESS"
+        ));
+    }
+
+    @GetMapping("/status")
+    @Operation(summary = "Get integration service status",
+            description = "Retrieve the current operational status of the integration service")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Integration service is operational")
+    })
+    public ResponseEntity<Map<String, Object>> getStatus() {
+        log.debug("Getting integration service status");
+        return ResponseEntity.ok(Map.of(
+                "status", "UP",
+                "service", "integration-service",
+                "version", "1.8.0",
+                "timestamp", java.time.Instant.now().toString()
         ));
     }
 

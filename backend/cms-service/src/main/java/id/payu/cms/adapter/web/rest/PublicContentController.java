@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Public REST Controller for Content retrieval
@@ -28,6 +29,29 @@ import java.util.List;
 public class PublicContentController {
 
     private final ContentService contentService;
+
+    @GetMapping
+    @Operation(
+        summary = "Get public content service info",
+        description = "Retrieve public content service status and available endpoints"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Public content service info retrieved successfully"
+        )
+    })
+    public ResponseEntity<Map<String, Object>> getPublicContentInfo() {
+        return ResponseEntity.ok(Map.of(
+            "status", "operational",
+            "service", "cms-service",
+            "version", "1.0.0",
+            "endpoints", List.of(
+                "GET /api/v1/public/contents",
+                "GET /api/v1/public/contents/type/{type}"
+            )
+        ));
+    }
 
     @GetMapping("/type/{type}")
     @Operation(

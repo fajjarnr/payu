@@ -1,6 +1,16 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
+import json
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
 from enum import Enum
 
 
@@ -170,12 +180,14 @@ class GetKycStatusResponse(BaseModel):
     completed_at: Optional[datetime] = None
 
     def safe_dump(self) -> dict:
-        """Serialize with all NIK fields masked for API responses."""
+        """Serialize with all NIK fields masked and JSON-safe types for API responses."""
         data = self.model_dump()
         if self.ktp_ocr_result:
             data["ktp_ocr_result"] = self.ktp_ocr_result.safe_dump()
         if self.dukcapil_result:
             data["dukcapil_result"] = self.dukcapil_result.safe_dump()
+        # Convert non-JSON-serializable types (datetime, Decimal, etc.)
+        data = json.loads(json.dumps(data, cls=DateTimeEncoder))
         return data
 
 

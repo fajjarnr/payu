@@ -153,4 +153,11 @@ public class DisputeService implements DisputeUseCase {
             throw new IllegalArgumentException("Invalid dispute status: " + status);
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Dispute> getAllDisputes() {
+        log.debug("Getting all disputes");
+        return disputePersistencePort.findAll();
+    }
 }

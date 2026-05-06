@@ -37,6 +37,16 @@ public class DisputeController {
 
     private final DisputeUseCase disputeUseCase;
 
+    @GetMapping
+    @Operation(summary = "List disputes", description = "Lists all disputes in the system")
+    @ApiResponse(responseCode = "200", description = "List of disputes",
+            content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
+    public ResponseEntity<DisputeListResponse> listDisputes() {
+        log.debug("Listing all disputes");
+        List<Dispute> disputes = disputeUseCase.getAllDisputes();
+        return ResponseEntity.ok(toListResponse(disputes));
+    }
+
     @PostMapping
     @Idempotent(required = true)
     @Operation(summary = "Open a dispute", description = "Creates a new dispute for a transaction")

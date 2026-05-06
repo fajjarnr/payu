@@ -82,6 +82,62 @@ public class TransactionController extends BaseController {
     }
 
     /**
+     * List transactions for the authenticated user or by accountId query parameter.
+     */
+    @GetMapping
+    @Operation(
+            summary = "List transactions",
+            description = "Retrieves paginated transaction list. Use accountId query param to filter by account."
+    )
+    @PreAuthorize("hasAuthority('read:transaction')")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> listTransactions(
+            @Parameter(description = "Account ID to filter transactions")
+            @RequestParam(required = false) UUID accountId,
+
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Number of items per page (max 100)", example = "20")
+            @RequestParam(defaultValue = "20") @Max(value = 100, message = "Page size must not exceed 100") int size,
+
+            @Parameter(description = "Sort field and direction (e.g., createdAt,desc)", example = "amount,asc")
+            @RequestParam(required = false) String sort,
+
+            @Parameter(description = "Filter by transaction status")
+            @RequestParam(required = false) String status,
+
+            @Parameter(description = "Filter by start date (ISO 8601)")
+            @RequestParam(required = false) String startDate,
+
+            @Parameter(description = "Filter by end date (ISO 8601)")
+            @RequestParam(required = false) String endDate
+    ) {
+        try {
+            String userId = extractUserId();
+            UUID effectiveAccountId = accountId != null ? accountId : UUID.fromString(userId);
+            var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
+            List<Transaction> transactions = transactionUseCase.getAccountTransactions(
+                    effectiveAccountId, userId, pageable.getPageNumber(), pageable.getPageSize());
+            List<TransactionResponse> responseList = transactions.stream()
+                    .map(TransactionResponse::from).toList();
+            PaginationInfo pagination = PaginationInfo.builder()
+                    .page(pageable.getPageNumber())
+                    .size(pageable.getPageSize())
+                    .totalElements(transactionUseCase.countAccountTransactions(effectiveAccountId, userId))
+                    .totalPages(transactions.size() < pageable.getPageSize() ? 1 :
+                            (int) Math.ceil((double) transactions.size() / pageable.getPageSize()))
+                    .hasNext(transactions.size() >= pageable.getPageSize())
+                    .hasPrevious(pageable.getPageNumber() > 0)
+                    .build();
+            return ResponseEntity.ok(ApiResponse.success(responseList, pagination));
+        } catch (BusinessException e) {
+            log.warn("Error retrieving transactions: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getCode(), e.getMessage()));
+        }
+    }
+
+    /**
      * Initiate a fund transfer to another account.
      * Supports BI-FAST, SKN, and internal transfers.
      */

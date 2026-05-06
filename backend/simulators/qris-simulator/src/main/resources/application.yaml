@@ -33,6 +33,12 @@ quarkus:
     ui:
       enable: true
 
+  swagger-ui:
+    always-include: true
+
+  smallrye-openapi:
+    path: /openapi
+
   micrometer:
     export:
       prometheus:

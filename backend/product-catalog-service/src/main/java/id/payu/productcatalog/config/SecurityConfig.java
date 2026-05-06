@@ -29,7 +29,7 @@ public class SecurityConfig {
                     // Health and metrics
                     .requestMatchers("/actuator/**").permitAll()
                     // API docs
-                    .requestMatchers("/api-docs/**", "/swagger-ui/**").permitAll()
+                    .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                     // Admin endpoints require authentication
                     .requestMatchers("/admin/**").authenticated()
                     .anyRequest().authenticated())

@@ -51,7 +51,12 @@ public class SecurityConfig {
         "/api/v1/auth/mfa/challenge",
         // /error must be public so validation errors (400) are not converted to 401
         // by the JWT security chain when DefaultHandlerExceptionResolver forwards to /error
-        "/error"
+        "/error",
+        // Swagger/OpenAPI docs
+        "/api-docs/**",
+        "/v3/api-docs/**",
+        "/swagger-ui/**",
+        "/swagger-ui.html"
     };
 
     private static final String[] PUBLIC_ACTUATOR_ENDPOINTS = {

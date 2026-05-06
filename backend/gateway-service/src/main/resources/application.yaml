@@ -60,6 +60,11 @@ quarkus:
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.fajjjar.my.id
     path: /q/openapi
+    scan-dependencies:
+      disable: false
+  swagger-ui:
+    always-include: true
+    path: /q/swagger-ui
   # gRPC Client Configuration (IMP-033: REST-to-gRPC Bridge)
   grpc:
     clients:
@@ -147,6 +152,12 @@ gateway:
       timeout: 30s
     fx-service:
       url: ${ROUTES_FX_URL:http://fx-service:8080}
+      timeout: 30s
+    product-catalog-service:
+      url: ${ROUTES_PRODUCT_CATALOG_URL:http://product-catalog-service:8080}
+      timeout: 30s
+    integration-service:
+      url: ${ROUTES_INTEGRATION_URL:http://integration-service:8080}
       timeout: 30s
   # Simulators
   simulators:
@@ -563,13 +574,34 @@ gateway:
     topup:
       service: "billing-service"
       target-prefix: "/api/v1/topup"
-      methods: ["POST"]
+      methods: ["GET", "POST"]
     # BUG-CROSS-067: Add missing scheduled-transfers route
     scheduled-transfers:
       service: "transaction-service"
       target-prefix: "/api/v1/scheduled-transfers"
       methods: ["GET", "POST", "PUT"]
     # BUG-CROSS-068: Add missing split-bills route
+    # BUG-CROSS-069: Add missing cms route (alternate prefix for CMS)
+    cms:
+      service: "cms-service"
+      target-prefix: "/api/v1/contents"
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    # BUG-CROSS-070: Add missing products route
+    products:
+      service: "product-catalog-service"
+      target-prefix: "/products"
+      methods: ["GET", "POST"]
+    # BUG-CROSS-071: Add missing integration route
+    integration:
+      service: "integration-service"
+      target-prefix: "/api/v1/integration"
+      methods: ["GET", "POST"]
+    # BUG-CROSS-072: Add billing/topup route (alternate prefix)
+    "billing/topup":
+      service: "billing-service"
+      target-prefix: "/api/v1/topup"
+      methods: ["GET", "POST"]
+
     split-bills:
       service: "transaction-service"
       target-prefix: "/api/v1/split-bills"

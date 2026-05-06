@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/partners")
 @Tag(name = OpenApiConstants.TAG_PARTNER, description = "Partner management operations")
-@PreAuthorize("hasRole('ADMIN')") // BUG-BE-164: Restrict partner management to ADMIN
+// BUG-BE-164: Allow authenticated users (USER/ADMIN) to view partners; mutations require ADMIN
 public class PartnerController extends BaseController {
 
     private final PartnerService partnerService;
@@ -141,6 +141,7 @@ public class PartnerController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createPartner(@Valid @RequestBody PartnerDTO partnerDTO) {
         try {
             PartnerDTO createdPartner = partnerService.createPartner(partnerDTO);
@@ -183,6 +184,7 @@ public class PartnerController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updatePartner(
             @PathVariable("id") Long id,
             @Valid @RequestBody PartnerDTO partnerDTO) {
@@ -228,6 +230,7 @@ public class PartnerController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> regenerateKeys(@PathVariable("id") Long id) {
         PartnerDTO partner = partnerService.regenerateKeys(id);
         if (partner == null) {
@@ -267,6 +270,7 @@ public class PartnerController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deletePartner(@PathVariable("id") Long id) {
         boolean deleted = partnerService.deletePartner(id);
         if (!deleted) {

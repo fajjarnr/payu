@@ -33,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
@@ -40,6 +41,7 @@ import id.payu.security.annotation.Audited.AuditLevel;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -53,6 +55,16 @@ import java.util.concurrent.TimeUnit;
 public class LendingController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(LendingController.class);
+
+    @GetMapping
+    @Operation(summary = "Lending service status", description = "Returns lending service health and available endpoints")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLendingStatus() {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
+                "service", "lending-service",
+                "status", "UP",
+                "version", "1.0.0"
+        )));
+    }
 
     private final LendingApplicationService lendingApplicationService;
     private final LoanManagementService loanManagementService;
@@ -307,6 +319,22 @@ public class LendingController extends BaseController {
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching transaction history for user: {}", userId);
         return ok(payLaterTransactionService.getTransactionHistory(userId));
+    }
+
+    @GetMapping("/credit-score")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get credit score", description = "Retrieve credit score for the authenticated user")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Credit score found",
+            content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Credit score not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<id.payu.lending.domain.model.CreditScore>> getMyCreditScore(
+            java.security.Principal principal) {
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        log.info("Fetching credit score for authenticated user: {}", authenticatedUserId);
+        return lendingApplicationService.getCreditScoreByUserId(authenticatedUserId)
+                .map(this::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/credit-score/calculate")

@@ -214,6 +214,6 @@ public class User {
     }
 
     public enum KycStatus {
-        NOT_STARTED, PENDING, APPROVED, REJECTED
+        NOT_STARTED, PENDING, APPROVED, REJECTED, VERIFIED
     }
 }

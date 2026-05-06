@@ -7,8 +7,6 @@ server:
 spring:
   application:
     name: investment-service
-  application:
-    name: investment-service
   profiles:
     active: ${SPRING_PROFILE:local}
     include: grpc
@@ -148,7 +146,7 @@ logging:
 # OpenAPI Documentation
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +43,13 @@ public class InvestmentApplicationService implements
         return CompletableFuture.completedFuture(
                 investmentPersistencePort.findAccountByUserId(userId)
                         .orElseThrow(() -> new IllegalArgumentException("Investment account not found"))
+        );
+    }
+
+    public CompletableFuture<List<InvestmentAccount>> getAccountsByUserId(String userId) {
+        return CompletableFuture.completedFuture(
+                List.of(investmentPersistencePort.findAccountByUserId(userId)
+                        .orElseThrow(() -> new IllegalArgumentException("Investment account not found")))
         );
     }
 

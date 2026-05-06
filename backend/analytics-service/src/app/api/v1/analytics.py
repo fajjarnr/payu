@@ -447,3 +447,51 @@ async def get_user_high_risk_transactions(
             message="Failed to fetch high-risk transactions",
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
+
+@analytics_router.get("/")
+async def get_analytics_root(request: Request):
+    """Get analytics service status and available endpoints."""
+    return ApiResponse.success(
+        data={
+            "status": "operational",
+            "service": "analytics-service",
+            "version": "1.0.0",
+            "endpoints": [
+                "GET /analytics",
+                "GET /analytics/metrics",
+                "GET /analytics/user/{user_id}/metrics",
+                "POST /analytics/spending/trends",
+                "POST /analytics/cashflow",
+                "GET /analytics/user/{user_id}/recommendations",
+                "POST /analytics/robo-advisory",
+                "POST /analytics/fraud/score",
+                "GET /analytics/fraud/transaction/{transaction_id}",
+                "GET /analytics/fraud/user/{user_id}/high-risk",
+            ]
+        },
+        request_id=getattr(request.state, "request_id", None),
+    ).model_dump()
+
+
+@analytics_router.get("/metrics")
+async def get_analytics_metrics(request: Request):
+    """Get analytics service operational metrics and available endpoints."""
+    return ApiResponse.success(
+        data={
+            "status": "operational",
+            "service": "analytics-service",
+            "version": "1.0.0",
+            "endpoints": [
+                "GET /analytics/metrics",
+                "GET /analytics/user/{user_id}/metrics",
+                "POST /analytics/spending/trends",
+                "POST /analytics/cashflow",
+                "GET /analytics/user/{user_id}/recommendations",
+                "POST /analytics/robo-advisory",
+                "POST /analytics/fraud/score",
+                "GET /analytics/fraud/transaction/{transaction_id}",
+                "GET /analytics/fraud/user/{user_id}/high-risk",
+            ]
+        },
+        request_id=getattr(request.state, "request_id", None),
+    ).model_dump()

@@ -137,6 +137,58 @@ public class NotificationResource {
     }
 
     /**
+     * List all recent notifications (paginated).
+     *
+     * @param limit maximum number of notifications to return (default: 20, max: 100)
+     * @return list of recent notifications
+     */
+    @GET
+    @Operation(
+        summary = "List all recent notifications",
+        description = """
+            Retrieves all recent notifications across users, ordered by creation date
+            (newest first). Supports pagination via the limit parameter.
+            """
+    )
+    @APIResponses(value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "List of notifications retrieved successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(
+                    type = SchemaType.ARRAY,
+                    implementation = NotificationResponse.class
+                )
+            )
+        ),
+        @APIResponse(
+            responseCode = "401",
+            description = "Authentication required"
+        )
+    })
+    public List<NotificationResponse> listAll(
+        @Parameter(
+            description = "Maximum number of notifications to return (default: 20, max: 100)",
+            schema = @Schema(minimum = "1", maximum = "100", defaultValue = "20"),
+            example = "20"
+        )
+        @QueryParam("limit") @DefaultValue("20") int limit) {
+        return notificationService.getAllNotifications(limit)
+                .stream()
+                .map(NotificationResponse::from)
+                .toList();
+    }
+        LOG.infof("Received notification request: channel=%s, recipient=%s",
+                request.channel(), request.recipient());
+
+        Notification notification = notificationService.send(request);
+        return Response.status(Response.Status.CREATED)
+                .entity(NotificationResponse.from(notification))
+                .build();
+    }
+
+    /**
      * Get notification details by ID.
      *
      * @param id the notification UUID

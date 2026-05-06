@@ -117,4 +117,11 @@ public interface DisputeUseCase {
      * @return list of disputes
      */
     List<Dispute> getDisputesByStatus(String status);
+
+    /**
+     * Gets all disputes.
+     *
+     * @return list of all disputes
+     */
+    List<Dispute> getAllDisputes();
 }

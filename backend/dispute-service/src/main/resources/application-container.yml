@@ -1,0 +1,93 @@
+# Container Integration Test Profile
+# Activated via: SPRING_PROFILES_ACTIVE=container
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_dispute}
+    username: ${DB_USERNAME:payu}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 60000
+      pool-name: container-pool
+      auto-commit: false
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        connection:
+          provider_disables_autocommit: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    consumer:
+      auto-startup: true
+      group-id: dispute-service-container
+      auto-offset-reset: earliest
+    producer:
+      retries: 3
+      acks: all
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+
+  cloud:
+    vault:
+      enabled: false
+
+# Disable health checks for external services in container mode
+management:
+  health:
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+    db:
+      enabled: true
+
+# Application-specific overrides
+payu:
+  cache:
+    enabled: true
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      pool-size: 20
+      timeout: 5s
+    default-ttl: 5m
+    local-cache:
+      enabled: true
+      max-size: 1000
+      ttl: 1m
+  security:
+    encryption-enabled: false
+    masking-enabled: false
+    audit-enabled: false

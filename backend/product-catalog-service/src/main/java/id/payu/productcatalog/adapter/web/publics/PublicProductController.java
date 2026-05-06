@@ -30,11 +30,16 @@ public class PublicProductController extends BaseController {
 
     /**
      * Get all active products.
+     * BUG-BE-160 FIX: Explicitly map both "" and "/" to handle trailing slash
+     * in Spring Boot 3.4 PathPatternParser, preventing 404 on /products/.
      */
-    @GetMapping
+    @GetMapping({"", "/"})
     public ResponseEntity<List<ProductResponse>> getActiveProducts() {
         log.debug("Listing active products");
         List<ProductDefinition> products = productCatalogUseCase.getAllActiveProducts();
+        if (products == null) {
+            return okList(List.of());
+        }
         return okList(products.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
