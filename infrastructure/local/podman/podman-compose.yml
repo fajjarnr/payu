@@ -1542,6 +1542,8 @@ services:
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
       OTEL_ENDPOINT: http://jaeger:4317
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
