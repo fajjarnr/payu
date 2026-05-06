@@ -47,10 +47,14 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities =
                 new java.util.ArrayList<>();
-            var roles = jwt.getClaimAsStringList("roles");
-            if (roles != null) {
-                roles.forEach(role -> authorities.add(
-                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role)));
+            var realmAccess = jwt.getClaimAsMap("realm_access");
+            if (realmAccess != null) {
+                @SuppressWarnings("unchecked")
+                var roles = (java.util.List<String>) realmAccess.get("roles");
+                if (roles != null) {
+                    roles.forEach(role -> authorities.add(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role)));
+                }
             }
             return authorities;
         });
