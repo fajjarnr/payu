@@ -303,6 +303,16 @@ public class ApiGatewayResource {
         return proxy("partner-service", "/v1/partner/" + path, "GET", body, headers);
     }
 
+    // ==================== Partner Statement API (ADR-002: Dual Format) ====================
+    @GET @Path("/v1/partner/statements")
+    public Uni<Response> partnerStatements(String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements", "GET", body, headers);
+    }
+    @POST @Path("/v1/partner/statements/generate")
+    public Uni<Response> partnerStatementGenerate(String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements/generate", "POST", body, headers);
+    }
+
     // ==================== Promotion Service ====================
     @GET @Path("/promotions/{path: .*}")
     public Uni<Response> promotionGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
@@ -594,6 +604,16 @@ public class ApiGatewayResource {
     @POST @Path("/kyc")
     public Uni<Response> kycRootPost(String body, @Context HttpHeaders headers) {
         return proxy("kyc-service", "/api/v1/kyc", "POST", body, headers);
+    }
+
+    // ==================== Partner KYC API (ADR-001: Hybrid KYC) ====================
+    @POST @Path("/v1/partner/kyc/verify")
+    public Uni<Response> partnerKycVerify(String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc/verify/start", "POST", body, headers);
+    }
+    @GET @Path("/v1/partner/kyc/{id}")
+    public Uni<Response> partnerKycStatus(@PathParam("id") String id, String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc/verify/" + id, "GET", body, headers);
     }
 
     // ==================== Statement Service ====================

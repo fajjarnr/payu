@@ -64,6 +64,45 @@ public class EventConsumer {
         }
     }
 
+    // ==================== KYC Events (ADR-001: Hybrid KYC) ====================
+
+    @Incoming("kyc-verified-events")
+    public void onKycVerified(String payload) {
+        LOG.infof("Received KYC verified event: %s", payload);
+        try {
+            String userId = extractValue(payload, "user_id");
+            LOG.infof("KYC verified for user: %s — sending in-app notification", userId);
+            SendNotificationRequest notification = new SendNotificationRequest(
+                null, NotificationChannel.IN_APP,
+                userId, "KYC Verification Approved",
+                "Your identity verification has been approved. Welcome to PayU!",
+                null, null
+            );
+            notificationService.send(notification);
+        } catch (Exception e) {
+            LOG.errorf("Failed to process KYC verified event: %s", e.getMessage());
+        }
+    }
+
+    @Incoming("kyc-failed-events")
+    public void onKycFailed(String payload) {
+        LOG.infof("Received KYC failed event: %s", payload);
+        try {
+            String userId = extractValue(payload, "user_id");
+            String reason = extractValue(payload, "reason");
+            LOG.infof("KYC failed for user: %s reason: %s", userId, reason);
+            SendNotificationRequest notification = new SendNotificationRequest(
+                null, NotificationChannel.IN_APP,
+                userId, "KYC Verification Failed",
+                "Your identity verification was not approved. Reason: " + reason,
+                null, null
+            );
+            notificationService.send(notification);
+        } catch (Exception e) {
+            LOG.errorf("Failed to process KYC failed event: %s", e.getMessage());
+        }
+    }
+
     private void processSplitBillEvent(String payload) {
         String eventType = extractEventType(payload);
         

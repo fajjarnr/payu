@@ -104,3 +104,13 @@ mp:
         topic: payment-events
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+      kyc-verified-events:
+        connector: smallrye-kafka
+        topic: payu.kyc.verified
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
+      kyc-failed-events:
+        connector: smallrye-kafka
+        topic: payu.kyc.failed
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
