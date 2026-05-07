@@ -16,7 +16,7 @@
 | **Open Bugs** | 0 |
 | **Open Epics** | 0 |
 | **Open Stories** | 0 |
-| **Spikes** | 5 |
+| **Spikes** | 4 |
 | **Deferred** | 9 |
 | **Suspended (OCP destroyed)** | 8 |
 | **DevSecOps (suspended)** | 52 |
@@ -35,7 +35,7 @@
 
 | Key | Type | Question | Impact | Status |
 |:---|:---|:---|:---|:---|
-| ARCH-001 | Spike | KYC di level PayU atau project client? | Scope `kyc-service` | 📋 To Do |
+| ARCH-001 | Spike | KYC di level PayU atau project client? | Scope `kyc-service` | ✅ **Decided (May 7)**: Hybrid — PayU eKYC dasar (NIK+liveness), client extend via API. Lihat `docs/adr/001-kyc-hybrid.md` |
 | ARCH-002 | Spike | Statement: PDF end-user atau JSON/CSV project client? | Output format `statement-service` | 📋 To Do |
 | ARCH-003 | Spike | Support ticket: end-user PayU atau project client? | Multi-tenancy `support-service` | 📋 To Do |
 | ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client? | Multi-tenant mode `cms-service` | 📋 To Do |
