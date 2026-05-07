@@ -451,7 +451,7 @@ async def get_user_high_risk_transactions(
 @analytics_router.get("/")
 async def get_analytics_root(request: Request):
     """Get analytics service status and available endpoints."""
-    return ApiResponse.success(
+    return ApiResponse.create_success(
         data={
             "status": "operational",
             "service": "analytics-service",

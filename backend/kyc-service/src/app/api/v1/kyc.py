@@ -24,11 +24,12 @@ kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
 @kyc_router.get("/")
 async def get_kyc_status():
     """Return KYC service health and available endpoints."""
-    return ApiResponse.success({
-        "service": "kyc-service",
-        "status": "UP",
-        "version": "1.0.0",
-    })
+    return ApiResponse.create_success(
+        data={
+            "service": "kyc-service",
+            "status": "UP",
+            "version": "1.0.0",
+        })
 
 
 # BUG-AUTH-022: JWT authentication dependency for KYC endpoints

@@ -73,7 +73,6 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
         structlog.contextvars.merge_contextvars,
         _add_otel_context,
         structlog.processors.add_log_level,
-        structlog.processors.add_logger_name,
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
