@@ -3,9 +3,10 @@
 // Configuration for establishing performance baselines per service
 
 export const BASE_URLS = {
-  gateway: 'https://gateway-dev.payu.fajjjar.my.id',
-  keycloak: 'https://keycloak-dev.payu.fajjjar.my.id',
-  webApp: 'https://dev.payu.fajjjar.my.id'
+  gateway: __ENV.GATEWAY_URL || 'http://localhost:8080',
+  keycloak: __ENV.KEYCLOAK_URL || 'http://localhost:8099',
+  keycloakInternal: __ENV.KEYCLOAK_INTERNAL || 'http://keycloak:8080',
+  webApp: __ENV.WEB_APP_URL || 'http://localhost:3001'
 };
 
 // Service endpoints mapping
