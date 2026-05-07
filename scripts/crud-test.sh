@@ -96,8 +96,15 @@ done
 
 echo ""
 echo "=== CREATE ==="
-IK1=$(python3 -c "import uuid;print(uuid.uuid4())")
-test_endpoint POST "/api/v1/transactions/transfer" '{"senderAccountId":"574e8801-a8da-4272-b6ff-493cd9b71685","recipientAccountNumber":"1234567890","amount":10,"type":"INTERNAL_TRANSFER","description":"CRUD-test"}' "$IK1"
+IK=$(python3 -c "import uuid;print(uuid.uuid4())")
+test_endpoint POST "/api/v1/transactions/transfer" '{"senderAccountId":"574e8801-a8da-4272-b6ff-493cd9b71685","recipientAccountNumber":"1234567890","amount":10,"type":"INTERNAL_TRANSFER","description":"test"}' "$IK"
 
- IK2=$(python3 -c "import uuid;print(uuid.uuid4())")
-test_endpoint POST "/api/v1/disputes" '{"transactionId":"932db19b-704e-4649-a82c-d69ecf0956ff","customerId":"574e8801-a8da-4272-b6ff-493cd9b71685","merchantId":"574e8801-a8da-4272-b6ff-493cd9b71685","disputedAmount":100.00,"currency":"IDR","reason":"CRUD test"}' "$IK2"
+test_endpoint POST "/api/v1/disputes" '{"transactionId":"932db19b-704e-4649-a82c-d69ecf0956ff","customerId":"574e8801-a8da-4272-b6ff-493cd9b71685","merchantId":"574e8801-a8da-4272-b6ff-493cd9b71685","disputedAmount":100.00,"currency":"IDR","reason":"test"}' "$(python3 -c "import uuid;print(uuid.uuid4())")"
+
+echo ""
+echo "=== MORE CREATE ==="
+test_endpoint POST "/api/v1/support/agents" '{"name":"Test Agent","email":"test@test.com","employeeId":"EMP001"}' "$(python3 -c "import uuid;print(uuid.uuid4())")"
+test_endpoint POST "/api/v1/lending/loans" '{"userId":"574e8801-a8da-4272-b6ff-493cd9b71685","amount":5000000,"tenureMonths":12,"interestRate":14.0}' "$(python3 -c "import uuid;print(uuid.uuid4())")"
+test_endpoint POST "/api/v1/investments/deposits" '{"userId":"574e8801-a8da-4272-b6ff-493cd9b71685","amount":1000000,"tenureMonths":6}' "$(python3 -c "import uuid;print(uuid.uuid4())")"
+test_endpoint POST "/api/v1/partners" '{"name":"Test Partner","email":"partner@test.com","type":"MERCHANT"}' "$(python3 -c "import uuid;print(uuid.uuid4())")"
+test_endpoint POST "/api/v1/fx/conversions/estimate" '{"fromCurrency":"USD","toCurrency":"IDR","amount":100}' "" ""
