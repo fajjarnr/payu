@@ -194,6 +194,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -256,6 +258,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -312,6 +316,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -364,6 +370,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -416,6 +424,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -470,6 +480,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -523,6 +535,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -577,6 +591,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -627,6 +643,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -678,6 +696,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -729,6 +749,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -782,6 +804,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -887,6 +911,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -947,6 +973,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -999,6 +1027,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1052,6 +1082,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1104,6 +1136,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1174,6 +1208,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1243,6 +1279,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1375,6 +1413,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1382,6 +1422,8 @@ services:
       PAYU_CACHE_REDIS_PORT: "6379"
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       - postgres
@@ -1425,6 +1467,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1432,6 +1476,8 @@ services:
       PAYU_CACHE_REDIS_PORT: "6379"
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       OTEL_ENDPOINT: http://jaeger:4317
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
@@ -1481,6 +1527,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1536,6 +1584,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1587,6 +1637,8 @@ services:
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
@@ -1594,6 +1646,8 @@ services:
       PAYU_CACHE_REDIS_PORT: "6379"
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       - postgres
