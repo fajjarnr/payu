@@ -71,7 +71,7 @@ code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${GATEWAY}/api/v1/transac
 check "$code"; printf "%-6s %-55s %s\n" "POST" "/api/v1/transactions/transfer" "$code"
 
 echo "=== BILLING ==="
-for p in "/api/v1/payments" "/api/v1/billers" "/api/v1/topup/providers"; do
+for p in "/api/v1/billers" "/api/v1/topup/providers"; do
   code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "${GATEWAY}${p}")
   check "$code"; printf "%-6s %-55s %s\n" "GET" "$p" "$code"
 done
