@@ -99,5 +99,5 @@ echo "=== CREATE ==="
 IK1=$(python3 -c "import uuid;print(uuid.uuid4())")
 test_endpoint POST "/api/v1/transactions/transfer" '{"senderAccountId":"574e8801-a8da-4272-b6ff-493cd9b71685","recipientAccountNumber":"1234567890","amount":10,"type":"INTERNAL_TRANSFER","description":"CRUD-test"}' "$IK1"
 
-IK2=$(python3 -c "import uuid;print(uuid.uuid4())")
-test_endpoint POST "/api/v1/disputes" '{"transactionId":"932db19b-704e-4649-a82c-d69ecf0956ff","reason":"Test","description":"CRUD dispute"}' "$IK2"
+ IK2=$(python3 -c "import uuid;print(uuid.uuid4())")
+test_endpoint POST "/api/v1/disputes" '{"transactionId":"932db19b-704e-4649-a82c-d69ecf0956ff","customerId":"574e8801-a8da-4272-b6ff-493cd9b71685","merchantId":"574e8801-a8da-4272-b6ff-493cd9b71685","disputedAmount":100.00,"currency":"IDR","reason":"CRUD test"}' "$IK2"
