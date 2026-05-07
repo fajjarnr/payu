@@ -10,3 +10,27 @@ spec:
       htpasswd:
         fileData:
           name: htpasswd-secret
+    # OpenID Connect — Keycloak (PayU SSO)
+    # Uncomment after Keycloak is deployed and client 'openshift' is created
+    # - type: OpenID
+    #   name: payu-sso
+    #   mappingMethod: claim
+    #   openID:
+    #     clientID: openshift
+    #     clientSecret:
+    #       name: keycloak-openshift-client
+    #     extraScopes:
+    #       - email
+    #       - profile
+    #       - groups
+    #     extraAuthorizeParams:
+    #       include_granted_scopes: "true"
+    #     claims:
+    #       preferredUsername:
+    #         - preferred_username
+    #         - email
+    #       name:
+    #         - name
+    #       email:
+    #         - email
+    #     issuer: https://sso.payu.fajjjar.my.id/realms/payu

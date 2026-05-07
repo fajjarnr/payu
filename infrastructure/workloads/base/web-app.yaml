@@ -43,6 +43,10 @@ spec:
                   key: nextauth-secret
             - name: GATEWAY_URL
               value: "http://gateway-service:8080"
+            - name: OIDC_ISSUER
+              value: "http://keycloak:8080/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"
           resources:
             requests:
               memory: "256Mi"

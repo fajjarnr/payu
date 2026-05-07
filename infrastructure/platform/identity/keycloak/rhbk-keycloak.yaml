@@ -49,6 +49,7 @@ spec:
   # --- Hostname Configuration ---
   hostname:
     hostname: https://sso.payu.fajjjar.my.id
+    admin: https://sso.payu.fajjjar.my.id
     strict: false
     backchannelDynamic: true
 

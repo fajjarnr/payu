@@ -55,6 +55,7 @@ vault kv put secret/wallet-service/db \
 echo "Writing Keycloak secrets..."
 vault kv put secret/auth-service/keycloak \
     server-url="http://keycloak:8080" \
+    issuer-url="http://keycloak:8080/realms/payu" \
     realm="payu" \
     client-id="auth-service" \
     client-secret="$KEYCLOAK_CLIENT_SECRET" \

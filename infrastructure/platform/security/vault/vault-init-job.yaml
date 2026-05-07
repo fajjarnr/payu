@@ -66,6 +66,7 @@ spec:
               KEYCLOAK_ADMIN_USERNAME="${KEYCLOAK_ADMIN_USERNAME:-admin}"
               KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-$(random_alnum 32)}"
               KEYCLOAK_CLIENT_SECRET="${KEYCLOAK_CLIENT_SECRET:-$(random_alnum 48)}"
+              KEYCLOAK_OIDC_ISSUER_URL="${KEYCLOAK_OIDC_ISSUER_URL:-https://sso.payu.fajjjar.my.id/realms/payu}"
               JWT_SECRET="${JWT_SECRET:-$(random_alnum 64)}"
               AES_ENCRYPTION_KEY="${AES_ENCRYPTION_KEY:-$(random_b64 32)}"
               SECRET_KEY="${SECRET_KEY:-$(random_b64 32)}"
@@ -89,6 +90,7 @@ spec:
 
               echo "=== Seeding keycloak-credentials ==="
               vault kv put secret/payu/keycloak-credentials \
+                OIDC_ISSUER_URL="$KEYCLOAK_OIDC_ISSUER_URL" \
                 KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
                 KEYCLOAK_ADMIN_USERNAME="$KEYCLOAK_ADMIN_USERNAME" \
                 KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_ADMIN_PASSWORD"

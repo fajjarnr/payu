@@ -68,8 +68,23 @@ data:
   NOTIFICATION_SERVICE_URL: "http://notification-service:8080"
   KYC_SERVICE_URL: "http://kyc-service:8080"
   ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
+  INVESTMENT_SERVICE_URL: "http://investment-service:8080"
+  LENDING_SERVICE_URL: "http://lending-service:8080"
+  STATEMENT_SERVICE_URL: "http://statement-service:8080"
+  BACKOFFICE_SERVICE_URL: "http://backoffice-service:8080"
+  PARTNER_SERVICE_URL: "http://partner-service:8080"
+  PROMOTION_SERVICE_URL: "http://promotion-service:8080"
+  SUPPORT_SERVICE_URL: "http://support-service:8080"
+  COMPLIANCE_SERVICE_URL: "http://compliance-service:8080"
+  DISPUTE_SERVICE_URL: "http://dispute-service:8080"
+  INTEGRATION_SERVICE_URL: "http://integration-service:8080"
+  FX_SERVICE_URL: "http://fx-service:8080"
+  CMS_SERVICE_URL: "http://cms-service:8080"
+  PRODUCT_CATALOG_SERVICE_URL: "http://product-catalog-service:8080"
+  API_PORTAL_SERVICE_URL: "http://api-portal-service:8080"
   RATE_LIMIT_ENABLED: "false"
   RATE_LIMIT_REQUESTS_PER_MINUTE: "1000"
+  RATE_LIMIT_TEST_MODE: "true"
 ---
 apiVersion: v1
 kind: ConfigMap
