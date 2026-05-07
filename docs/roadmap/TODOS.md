@@ -16,7 +16,7 @@
 | **Open Bugs** | 0 |
 | **Open Epics** | 0 |
 | **Open Stories** | 0 |
-| **Spikes** | 0 |
+| **Spikes** | 2 (Deferred) |
 | **Deferred** | 9 |
 | **Suspended (OCP destroyed)** | 8 |
 | **DevSecOps (suspended)** | 52 |
@@ -33,12 +33,10 @@
 
 ## 🔍 Spikes (Research / Architecture Decision)
 
+> ✅ ARCH-001 through ARCH-004 resolved May 7, 2026 — decisions archived to [`docs/adr/`](../../docs/adr/) and [`CHANGELOG.md`](../../CHANGELOG.md).
+
 | Key | Type | Question | Impact | Status |
 |:---|:---|:---|:---|:---|
-| ARCH-001 | Spike | KYC di level PayU atau project client? | Scope `kyc-service` | ✅ **Decided (May 7)**: Hybrid — PayU eKYC dasar (NIK+liveness), client extend via API. Lihat `docs/adr/001-kyc-hybrid.md` |
-| ARCH-002 | Spike | Statement: PDF end-user atau JSON/CSV project client? | Output format `statement-service` | ✅ **Decided (May 7)**: Dual — PDF untuk end-user, JSON/CSV untuk client via `/v1/partner/statements`. Lihat `docs/adr/002-statement-dual-format.md` |
-| ARCH-003 | Spike | Support ticket: end-user PayU atau project client? | Multi-tenancy `support-service` | ✅ **Decided (May 7)**: PayU handles all — single support system. No code changes needed. Lihat `docs/adr/003-support-centralized.md` |
-| ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client? | Multi-tenant mode `cms-service` | ✅ **Decided (May 7)**: PayU only — single-tenant. No code changes. Lihat `docs/adr/004-cms-single-tenant.md` |
 | ARCH-005 | Spike | RHPAM/Kogito/Drools PoC: evaluate rules engine untuk credit scoring & fraud detection | ADR-0015, `rules-starter` shared lib | ❄️ Deferred — Planned for future, Java logic sufficient for MVP. Will use Drools 9.x embedded. |
 | ARCH-006 | Spike | Spring Boot 4.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility before platform-wide rollout | Oakwood Release Train | ❄️ Deferred — Boot 3.5.14 + Java 25 stable, no urgency |
 
@@ -114,6 +112,6 @@
 
 ---
 
-_Last Updated: May 6, 2026 — Cleaned up all completed items (archived to CHANGELOG.md)._
+_Last Updated: May 7, 2026 — ARCH-001~004 resolved, ADRs created, all Spikes decided or deferred._
 _⚠️ OpenShift Cluster Destroyed (May 2, 2026): All OpenShift-dependent tasks suspended. Local podman environment is primary target._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
