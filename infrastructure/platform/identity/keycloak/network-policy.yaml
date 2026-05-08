@@ -1,0 +1,65 @@
+###############################################################################
+# NetworkPolicy: Allow cross-namespace access to Keycloak from PayU namespaces
+#
+# This policy allows:
+# - All payu-* namespaces to access Keycloak on ports 8080 (HTTP) and 8443 (HTTPS)
+# - OpenShift ingress controller to access Keycloak (for Routes)
+###############################################################################
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-payu-namespaces-to-keycloak
+  namespace: payu-sso
+  labels:
+    app.kubernetes.io/component: sso
+    app.kubernetes.io/name: payu-keycloak
+    app.kubernetes.io/part-of: payu
+spec:
+  podSelector:
+    matchLabels:
+      app: payu-keycloak
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow HTTP from all PayU namespaces
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - payu-dev
+                  - payu-sit
+                  - payu-uat
+                  - payu-preprod
+                  - payu-prod
+                  - payu-sso
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow HTTPS from all PayU namespaces
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - payu-dev
+                  - payu-sit
+                  - payu-uat
+                  - payu-preprod
+                  - payu-prod
+                  - payu-sso
+      ports:
+        - protocol: TCP
+          port: 8443
+    # Allow OpenShift ingress controller (for Routes)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8443

@@ -18,8 +18,8 @@ data:
   ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
   GATEWAY_SERVICE_URL: "http://gateway-service:8080"
   # Infrastructure endpoints
-  KEYCLOAK_SERVER_URL: "http://payu-keycloak-service:8080"
-  KEYCLOAK_URL: "http://payu-keycloak-service:8080"
+  KEYCLOAK_SERVER_URL: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
+  KEYCLOAK_URL: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
   POSTGRES_HOST: "payu-postgres"
   POSTGRES_PORT: "5432"
   REDIS_HOST: "payu-cache"

@@ -97,9 +97,9 @@ spec:
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
           value: "1"
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
-          value: "http://payu-keycloak-service:8080/realms/payu"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: QUARKUS_OIDC_TOKEN_ISSUER
-          value: "http://payu-keycloak-service:8080/realms/payu"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: QUARKUS_TLS_TRUST_ALL
           value: "false"
         - name: GATEWAY_RATE_LIMIT_TEST_MODE

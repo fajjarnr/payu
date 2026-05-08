@@ -96,12 +96,12 @@ spec:
               name: redis-credentials
               key: SPRING_DATA_REDIS_PASSWORD
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
-          value: "http://payu-keycloak-service:8080/realms/payu"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
           value: "payu-kafka-kafka-bootstrap:9092"
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "payu-kafka-kafka-bootstrap:9092"
         - name: OIDC_ISSUER
-          value: "http://payu-keycloak-service:8080/realms/payu"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
-          value: "http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"

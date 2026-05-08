@@ -64,6 +64,6 @@ spec:
             memory: 512Mi
         env:
         - name: OIDC_ISSUER
-          value: "http://keycloak:8080/realms/payu"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
-          value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
