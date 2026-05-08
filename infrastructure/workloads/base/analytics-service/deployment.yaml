@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: analytics-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
-    app.kubernetes.io/version: 1.7.9
+    app.kubernetes.io/version: 1.8.1
     team: backend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: analytics-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
-        app.kubernetes.io/version: 1.7.9
+        app.kubernetes.io/version: 1.8.1
         team: backend
     spec:
       securityContext:
@@ -29,7 +29,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.7.9
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.1
         ports:
         - containerPort: 8080
           name: http
@@ -45,15 +45,15 @@ spec:
           mountPath: /tmp
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /health
             port: 8080
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /actuator/health/liveness
+            path: /health
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
           periodSeconds: 15
         resources:
           requests:
@@ -63,44 +63,10 @@ spec:
             cpu: 500m
             memory: 512Mi
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: openshift
-        - name: SERVER_PORT
-          value: '8080'
-        - name: REDIS_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_HOST
-        - name: REDIS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_PORT
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: REDIS_PASSWORD
-        - name: SPRING_DATA_REDIS_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_HOST
-        - name: SPRING_DATA_REDIS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_PORT
-        - name: SPRING_DATA_REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: REDIS_PASSWORD
-        - name: OIDC_ISSUER
-          value: "http://keycloak:8080/realms/payu"
-        - name: OIDC_JWK_SET_URI
-          value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"
+        - name: DATABASE_URL
+          value: "postgresql+asyncpg://payu:payu-dev-password@payu-postgres:5432/payu_analytics"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "payu-kafka-kafka-bootstrap:9092"
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:

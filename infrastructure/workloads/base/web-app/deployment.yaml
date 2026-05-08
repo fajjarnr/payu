@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/version: 1.7.9
+    app.kubernetes.io/version: 1.8.1
     team: frontend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: web-app
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: frontend
-        app.kubernetes.io/version: 1.7.9
+        app.kubernetes.io/version: 1.8.1
         team: frontend
     spec:
       securityContext:
@@ -29,7 +29,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.7.9
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.8.1
         ports:
         - containerPort: 3000
           name: http

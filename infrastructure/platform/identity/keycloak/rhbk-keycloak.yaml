@@ -30,7 +30,7 @@ spec:
   # --- Database Configuration (Crunchy PGO) ---
   db:
     vendor: postgres
-    host: payu-postgres-primary
+    host: payu-postgres
     port: 5432
     database: keycloak
     usernameSecret:
@@ -48,7 +48,7 @@ spec:
 
   # --- Hostname Configuration ---
   hostname:
-    hostname: https://sso.payu.fajjjar.my.id
+    hostname: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
     admin: https://sso.payu.fajjjar.my.id
     strict: false
     backchannelDynamic: true

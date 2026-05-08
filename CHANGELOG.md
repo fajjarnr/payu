@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### OpenShift Deployment — All 36 Pods 1/1 Running (2026-05-08)
+
+- **Fixed 5 crash-looping services** (`api-portal-service`, `gateway-service`, `notification-service`, `fx-service`, `lending-service`):
+  - **Quarkus services** (api-portal, gateway, notification): Added `QUARKUS_OIDC_AUTH_SERVER_URL` env var; fixed health probe paths from `/actuator/health/*` → `/q/health/ready` and `/q/health/live`; increased liveness `initialDelaySeconds` to 90.
+  - **notification-service**: Added `QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS` and `KAFKA_BOOTSTRAP_SERVERS` env vars (was connecting to `localhost:9092`).
+  - **Spring services** (fx, lending): Added `SPRING_KAFKA_BOOTSTRAP_SERVERS` env var (was connecting to `localhost:9092`); increased readiness `initialDelaySeconds` to 120 and liveness to 180 (startup ~53-83s).
+  - **fx-service**: Removed `server.servlet.context-path: /fx-api` from `application.yml` to align with all other services (actuator at `/actuator/health`, not `/fx-api/actuator/health`); rebuilt and pushed container image `1.8.2`.
+- **All 36 pods now `1/1 Running` with 0 restarts**: 23 microservices + 5 simulators + 8 infrastructure components.
+
+### Local Podman Compose Alignment with OpenShift (2026-05-08)
+
+- **PostgreSQL**: `max_connections` 300 → 500 (aligned with OpenShift).
+- **fx-service**: Removed `/fx-api` context-path from healthcheck and gateway `ROUTES_FX_URL`.
+- **notification-service**: Added `QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS`; removed `QUARKUS_OIDC_ENABLED: "false"`; switched to `QUARKUS_DATASOURCE_JDBC_URL` config style.
+- **gateway-service**: Added `QUARKUS_OIDC_AUTH_SERVER_URL`; switched to `QUARKUS_DATASOURCE_JDBC_URL`; cleaned up duplicate env vars.
+- **api-portal-service**: Added `QUARKUS_OIDC_AUTH_SERVER_URL`; switched to `QUARKUS_DATASOURCE_JDBC_URL`; cleaned up duplicate env vars.
+- **lending-service**: Added `SPRING_KAFKA_BOOTSTRAP_SERVERS`; cleaned up duplicate env vars.
+- **All services**: Removed duplicate `OIDC_ISSUER`, `OIDC_JWK_SET_URI`, `SPRING_DATA_REDIS_*` entries.
+
 - **API-OPENAPI-004 — Gateway OpenAPI aggregation**:
   - Added `swagger-ui.always-include: true` + `swagger-ui.path: /q/swagger-ui` to gateway config.
   - Created `GatewayOpenApiResource.java` with `/q/openapi/services` endpoint that lists all registered backend services and their OpenAPI spec URLs.

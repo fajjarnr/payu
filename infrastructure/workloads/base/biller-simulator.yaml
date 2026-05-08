@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: biller-simulator
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.7.9
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -32,7 +32,7 @@ spec:
               protocol: TCP
           env:
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_biller_simulator"
+              value: "jdbc:postgresql://payu-postgres:5432/payu_biller"
             - name: QUARKUS_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

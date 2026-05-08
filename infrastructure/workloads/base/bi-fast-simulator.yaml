@@ -24,28 +24,19 @@ spec:
     spec:
       containers:
         - name: bi-fast-simulator
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.7.9
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
               name: http
               protocol: TCP
           env:
-            - name: DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: bi-fast-simulator-db
-                  key: url
-            - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: bi-fast-simulator-db
-                  key: username
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: bi-fast-simulator-db
-                  key: password
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://payu-postgres:5432/payu_bifast"
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "payu"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "payu-dev-password"
           envFrom:
             - configMapRef:
                 name: bi-fast-simulator-config

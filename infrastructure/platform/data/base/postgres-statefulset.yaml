@@ -101,6 +101,8 @@ spec:
                 secretKeyRef:
                   name: payu-postgres-credentials
                   key: password
+            - name: POSTGRESQL_MAX_CONNECTIONS
+              value: "500"
             - name: KEYCLOAK_PASSWORD
               valueFrom:
                 secretKeyRef:

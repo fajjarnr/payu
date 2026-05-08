@@ -2,7 +2,7 @@ services:
   postgres:
     image: docker.io/library/postgres:18.3-alpine
     container_name: payu-postgres
-    command: postgres -c max_connections=300 -c shared_buffers=256MB
+    command: postgres -c max_connections=500 -c shared_buffers=256MB
     podman_networks:
       - name: payu-network
     environment:
@@ -529,29 +529,27 @@ services:
       SERVER_PORT: "8087"
       PORT: "8087"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
-      KAFKA_BROKERS: kafka:29092
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USERNAME: payu
       DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OTEL_ENDPOINT: http://jaeger:4317
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
       - postgres
       - kafka
@@ -792,37 +790,26 @@ services:
       - 8006:8080
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
-      DB_URL: jdbc:postgresql://postgres:5432/payu_notification
-      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_notification
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_notification
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
-      KAFKA_BROKERS: kafka:29092
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USERNAME: payu
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
-      QUARKUS_OIDC_ENABLED: "false"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_notification
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
       - postgres
       - kafka
@@ -871,7 +858,7 @@ services:
       ROUTES_DISPUTE_URL: http://dispute-service:8080
       ROUTES_INTEGRATION_URL: http://integration-service:8080
       ROUTES_PRODUCT_CATALOG_URL: http://product-catalog-service:8080
-      ROUTES_FX_URL: http://fx-service:8080/fx-api
+      ROUTES_FX_URL: http://fx-service:8080
       ROUTES_CMS_URL: http://cms-service:8080
       # Service URLs for gateway.services.* config mapping
       ACCOUNT_SERVICE_URL: http://account-service:8080
@@ -901,39 +888,27 @@ services:
       DUKCAPIL_SIMULATOR_URL: http://dukcapil-simulator:8080
       QRIS_SIMULATOR_URL: http://qris-simulator:8080
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
-      DB_URL: jdbc:postgresql://postgres:5432/payu_gateway
-      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_gateway
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_gateway
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
+      QUARKUS_REDIS_HOSTS: redis://:payu-cache-dev-password@redis-native:6379
       SERVER_PORT: "8080"
       PORT: "8080"
-      SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
-      QUARKUS_REDIS_HOSTS: redis://:payu-cache-dev-password@redis-native:6379
-      REDIS_URL: redis://:payu-cache-dev-password@redis-native:6379
-      PAYU_CACHE_REDIS_HOST: redis-native
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "6379"
-      KAFKA_BROKERS: kafka:29092
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USERNAME: payu
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_gateway
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
+      GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
     depends_on:
       - infinispan
       - keycloak
@@ -1196,35 +1171,23 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
-      DB_URL: jdbc:postgresql://postgres:5432/payu_api_portal
-      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_api_portal
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      QUARKUS_HTTP_PORT: "8080"
-      KEYCLOAK_URL: http://keycloak:8080
-      SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
-      KAFKA_BROKERS: kafka:29092
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USERNAME: payu
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
       - account-service
       - auth-service
@@ -1438,8 +1401,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
-    image: localhost/payu-cms-service:1.8.1
+      start_period: 120s
   fx-service:
     image: localhost/payu-fx-service:1.8.1
     build:
@@ -1462,22 +1424,16 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       REDIS_HOST: redis-native
       REDIS_PORT: "6379"
       REDIS_PASSWORD: payu-cache-dev-password
       SPRING_DATA_REDIS_HOST: redis-native
       SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: redis-native
       PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_HOST: redis-native
-      SPRING_DATA_REDIS_PORT: "6379"
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       OTEL_ENDPOINT: http://jaeger:4317
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
@@ -1492,11 +1448,11 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/fx-api/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
   dispute-service:
     build:
       context: ../../../backend/dispute-service

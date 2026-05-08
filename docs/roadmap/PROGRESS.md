@@ -12,7 +12,7 @@
 | Attribute                  | Value      | Notes                                           |
 | -------------------------- | ---------- | ----------------------------------------------- |
 | Services Deployed          | 🟢 23/23    | (Excl. Simulators). AB-Testing Deprecated.      |
-| Total Pods                 | 🟢 35/35    | All pods running & healthy (Mar 22)             |
+| Total Pods                 | 🟢 36/36    | All pods 1/1 Running, 0 restarts (May 8)        |
 | Maven Build                | 🟢 36/36    | ALL modules SUCCESS (inc. 23 services + 5 sims + 8 shared) |
 | **Unit Test Coverage**       | 🟢 100%     | All 36 modules pass (0 failures, 0 errors) in `mvn clean test -T 1C` (May 5) |
 | **Maven Contract Tests**     | 🟢 3/3 svc   | 614+ tests, 0 failures (auth, transaction, wallet) |
@@ -24,8 +24,8 @@
 | API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
 | Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
 | **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
-| Last Status Update         | 2026-05-06 | v1.8.0 — Account ID fix: Wallet ✅, Transfer 🔄 (optimistic lock). All layers green. |
-| OpenShift Tag              | `v1.7.8`   | Latest stable deployment                        |
+| Last Status Update         | 2026-05-08 | v1.8.1 — All 36 pods 1/1 Running on OpenShift. 5 crash-looping services fixed (Quarkus OIDC/health paths, Kafka bootstrap, fx-service context-path). |
+| OpenShift Tag              | `v1.8.1`   | Latest stable deployment                        |
 | Local Podman Tag           | `v1.8.0`   | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
 

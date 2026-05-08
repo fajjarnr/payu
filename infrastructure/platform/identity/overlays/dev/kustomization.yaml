@@ -22,7 +22,7 @@ patches:
         value: 1
       - op: replace
         path: /spec/hostname/hostname
-        value: https://sso.dev.payu.fajjjar.my.id
+        value: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import
@@ -31,10 +31,10 @@ patches:
         path: /spec/realm/clients/0/redirectUris
         value:
           - http://localhost:3001/*
-          - https://dev.payu.fajjjar.my.id/*
+          - https://payu-dev.apps.payu.ocp.fajjjar.my.id/*
       - op: replace
         path: /spec/realm/clients/0/webOrigins
         value:
           - http://localhost:3001
-          - https://dev.payu.fajjjar.my.id
+          - https://payu-dev.apps.payu.ocp.fajjjar.my.id
           - "+"

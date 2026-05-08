@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: backoffice-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
-    app.kubernetes.io/version: 1.7.9
+    app.kubernetes.io/version: 1.8.1
     team: backend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: backoffice-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
-        app.kubernetes.io/version: 1.7.9
+        app.kubernetes.io/version: 1.8.1
         team: backend
     spec:
       securityContext:
@@ -29,7 +29,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.7.9
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.1
         ports:
         - containerPort: 8080
           name: http
@@ -64,40 +64,48 @@ spec:
             memory: 512Mi
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: openshift
+          value: container
         - name: SERVER_PORT
           value: '8080'
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://payu-postgres:5432/payu_backoffice"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "payu"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "payu-dev-password"
+        - name: PAYU_CACHE_REDIS_HOST
+          value: payu-datagrid
+        - name: PAYU_CACHE_REDIS_PORT
+          value: "11222"
+        - name: PAYU_CACHE_REDIS_PASSWORD
+          value: payu-cache-dev-password
+        - name: PAYU_CACHE_REDIS_USERNAME
+          value: developer
         - name: REDIS_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_HOST
+          value: payu-datagrid
         - name: REDIS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_PORT
+          value: "11222"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: redis-credentials
               key: REDIS_PASSWORD
         - name: SPRING_DATA_REDIS_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_HOST
+          value: payu-datagrid
         - name: SPRING_DATA_REDIS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_PORT
+          value: "11222"
         - name: SPRING_DATA_REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: redis-credentials
-              key: REDIS_PASSWORD
+              key: SPRING_DATA_REDIS_PASSWORD
+        - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+          value: "3"
+        - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+          value: "1"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "payu-kafka-kafka-bootstrap:9092"
         - name: OIDC_ISSUER
-          value: "http://keycloak:8080/realms/payu"
+          value: "http://payu-keycloak-service:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
-          value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"
+          value: "http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs"

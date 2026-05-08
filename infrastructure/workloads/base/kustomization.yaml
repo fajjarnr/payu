@@ -25,3 +25,7 @@ resources:
 - ./transaction-service
 - ./wallet-service
 - ./web-app
+- ./bi-fast-simulator.yaml
+- ./biller-simulator.yaml
+- ./dukcapil-simulator.yaml
+- ./qris-simulator.yaml
