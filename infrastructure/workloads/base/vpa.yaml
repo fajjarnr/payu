@@ -2,15 +2,14 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: account-service-vpa
-  namespace: payu
   labels:
     app: payu
     service: account-service
     type: vpa
 spec:
   targetRef:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
+    apiVersion: apps/v1
+    kind: Deployment
     name: account-service
   updatePolicy:
     updateMode: "Auto"
@@ -32,15 +31,14 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: transaction-service-vpa
-  namespace: payu
   labels:
     app: payu
     service: transaction-service
     type: vpa
 spec:
   targetRef:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
+    apiVersion: apps/v1
+    kind: Deployment
     name: transaction-service
   updatePolicy:
     updateMode: "Auto"
@@ -60,15 +58,14 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: billing-service-vpa
-  namespace: payu
   labels:
     app: payu
     service: billing-service
     type: vpa
 spec:
   targetRef:
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
+    apiVersion: apps/v1
+    kind: Deployment
     name: billing-service
   updatePolicy:
     updateMode: "Auto"

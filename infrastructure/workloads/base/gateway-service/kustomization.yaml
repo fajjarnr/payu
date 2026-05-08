@@ -3,7 +3,10 @@ kind: Kustomization
 resources:
 - deployment.yaml
 - service.yaml
-commonLabels:
-  app.kubernetes.io/name: gateway-service
-  app.kubernetes.io/part-of: payu
-  app.kubernetes.io/version: 1.7.9
+labels:
+- pairs:
+    app.kubernetes.io/name: gateway-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: 1.8.2
+  includeSelectors: false
+  includeTemplates: true

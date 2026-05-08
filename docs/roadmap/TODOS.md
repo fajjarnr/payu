@@ -15,11 +15,12 @@
 |:---|:---|
 | **Open Bugs** | 0 |
 | **Open Epics** | 0 |
-| **Open Stories** | 0 |
+| **Open Stories** | 1 (YAML-009) |
 | **Spikes** | 2 (Deferred) |
-| **Deferred** | 9 |
+| **Deferred** | 10 |
 | **Suspended (OCP destroyed)** | 8 |
 | **DevSecOps (suspended)** | 52 |
+| **Infrastructure Fixes** | 8 completed |
 
 ---
 
@@ -46,6 +47,7 @@
 
 | Key | Type | Summary | Notes |
 |:---|:---|:---|:---|
+| LOG-001 | Spike | Evaluate OTLP log export (`quarkus.otel.logs.enabled`) vs current stdout JSON | ❌ **Decision: Keep current setup** — stdout JSON + LokiStack is K8s best practice, fully service-mesh compatible, zero extra overhead. OTLP logs redundant. |
 | P2-FE-003 | Story | Mobile App Feature Parity (Expo/RN) | ❄️ Deferred |
 | OCP-007 | Story | Service Mesh mTLS enforcement | ❄️ Planned |
 | OCP-010 | Story | API versioning headers | ❄️ Planned |
@@ -70,6 +72,22 @@
 | OPS-2026-04-09-01 | Re-run k6 with in-cluster service URLs | k6 Operator lifecycle verified |
 | OPS-2026-04-09-06 | Fix transaction-service Redis/DataGrid RESP connection (port 11222) | Affects Split Bill list (HTTP 500) |
 | OPS-2026-04-09-07 | Create admin Keycloak user for admin-only endpoints | Smart Routing returns 404 |
+
+---
+
+## 🏗️ Infrastructure YAML Audit Fixes (May 8, 2026)
+
+| Key | Priority | Summary | Status |
+|:---|:---:|:---|:---|
+| YAML-001 | P0 | Fix web-app deployment YAML syntax error (`env` nested under `resources.limits`) | ✅ Fixed |
+| YAML-002 | P0 | Fix fx-service version mismatch (labels 1.8.1 vs image 1.8.2) | ✅ Fixed |
+| YAML-003 | P1 | Fix HPA/VPA `DeploymentConfig` → `Deployment` (6 resources) | ✅ Fixed |
+| YAML-004 | P1 | Fix PDB selectors `app:` → `app.kubernetes.io/name:` (21 resources) | ✅ Fixed |
+| YAML-005 | P1 | Fix `commonLabels` → `labels` with `includeSelectors: false` in all overlays | ✅ Fixed |
+| YAML-006 | P1 | Update all base service/kustomization versions to match deployments (1.7.9 → 1.8.x) | ✅ Fixed |
+| YAML-007 | P1 | Remove hardcoded `namespace: payu` from base/hpa-enhanced.yaml and base/vpa.yaml | ✅ Fixed |
+| YAML-008 | P1 | Fix ServiceMonitor metrics path `/actuator/prometheus` → `/q/metrics` | ✅ Fixed |
+| YAML-009 | P2 | Add OIDC issuer patches for all services in payu-dev overlay | ⏳ Pending |
 
 ---
 
@@ -112,6 +130,6 @@
 
 ---
 
-_Last Updated: May 7, 2026 — ARCH-001~004 resolved, ADRs created, all Spikes decided or deferred._
+_Last Updated: May 8, 2026 — Infrastructure YAML audit completed, 8/9 fixes applied._
 _⚠️ OpenShift Cluster Destroyed (May 2, 2026): All OpenShift-dependent tasks suspended. Local podman environment is primary target._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

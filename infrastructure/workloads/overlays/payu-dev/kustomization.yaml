@@ -97,7 +97,16 @@ patches:
 - target:
     kind: Deployment
     name: gateway-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
+  patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 1
+    - op: replace
+      path: /spec/template/spec/containers/0/env/14/value
+      value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/15/value
+      value: "true"
 - target:
     kind: Deployment
     name: integration-service
@@ -150,5 +159,4 @@ patches:
     kind: Deployment
     name: web-app
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
-commonLabels:
-  environment: dev
+# Environment labels added via patches to avoid affecting service selectors

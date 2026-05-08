@@ -29,6 +29,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
@@ -36,6 +37,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Gateway-level authorization filter that validates JWT tokens
@@ -94,6 +99,10 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     String authServerUrl;
 
     @Inject
+    @ConfigProperty(name = "quarkus.tls.trust-all", defaultValue = "false")
+    boolean trustAllCerts;
+
+    @Inject
     GatewayConfig gatewayConfig;
 
     @Inject
@@ -136,9 +145,9 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             String jwksUri = buildJwksUri();
             Log.infof("Initializing JWT processor with JWKS URI: %s", jwksUri);
 
-            // Load JWKSet from JWKS endpoint
+            // Load JWKSet from JWKS endpoint (with trust-all for dev HTTPS)
             this.jwksUri = jwksUri;
-            JWKSet jwkSet = JWKSet.load(new URL(jwksUri));
+            JWKSet jwkSet = loadJwkSet(new URL(jwksUri));
             this.jwkSetRef.set(jwkSet);
             this.jwkSource = new ImmutableJWKSet<>(jwkSet);
 
@@ -188,7 +197,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             return;
         }
         try {
-            JWKSet newJwkSet = JWKSet.load(new URL(jwksUri));
+            JWKSet newJwkSet = loadJwkSet(new URL(jwksUri));
             this.jwkSetRef.set(newJwkSet);
             ImmutableJWKSet<SecurityContext> newSource = new ImmutableJWKSet<>(newJwkSet);
             this.jwkSource = newSource;
@@ -220,6 +229,30 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
         return baseUrl + "/protocol/openid-connect/certs";
+    }
+
+    /**
+     * Load JWKSet from URL with optional trust-all SSL context for dev environments.
+     * Controlled by quarkus.tls.trust-all configuration property.
+     */
+    private JWKSet loadJwkSet(URL url) throws IOException, ParseException {
+        if (url.getProtocol().equals("https") && trustAllCerts) {
+            try {
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, new TrustManager[]{
+                    new X509TrustManager() {
+                        public X509Certificate[] getAcceptedIssuers() { return null; }
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+                    }
+                }, new java.security.SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+                HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+            } catch (Exception e) {
+                Log.warnf("Failed to configure trust-all SSL: %s", e.getMessage());
+            }
+        }
+        return JWKSet.load(url);
     }
 
     private String resolveJwtIssuer() {

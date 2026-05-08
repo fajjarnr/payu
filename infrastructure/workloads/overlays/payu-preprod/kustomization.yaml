@@ -150,5 +150,7 @@ patches:
     kind: Deployment
     name: web-app
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
-commonLabels:
-  environment: preprod
+labels:
+- pairs:
+    environment: preprod
+  includeSelectors: false

@@ -18,7 +18,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: gateway-service
+      app.kubernetes.io/name: gateway-service
 
 ---
 apiVersion: policy/v1
@@ -31,7 +31,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: auth-service
+      app.kubernetes.io/name: auth-service
 
 ---
 apiVersion: policy/v1
@@ -44,7 +44,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: transaction-service
+      app.kubernetes.io/name: transaction-service
 
 ---
 apiVersion: policy/v1
@@ -57,7 +57,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: account-service
+      app.kubernetes.io/name: account-service
 
 ---
 apiVersion: policy/v1
@@ -70,7 +70,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: wallet-service
+      app.kubernetes.io/name: wallet-service
 
 # Supporting Services
 ---
@@ -84,7 +84,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: notification-service
+      app.kubernetes.io/name: notification-service
 
 ---
 apiVersion: policy/v1
@@ -97,7 +97,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: billing-service
+      app.kubernetes.io/name: billing-service
 
 ---
 apiVersion: policy/v1
@@ -110,7 +110,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: investment-service
+      app.kubernetes.io/name: investment-service
 
 ---
 apiVersion: policy/v1
@@ -123,7 +123,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: lending-service
+      app.kubernetes.io/name: lending-service
 
 ---
 apiVersion: policy/v1
@@ -136,7 +136,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: fx-service
+      app.kubernetes.io/name: fx-service
 
 ---
 apiVersion: policy/v1
@@ -149,7 +149,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: statement-service
+      app.kubernetes.io/name: statement-service
 
 ---
 apiVersion: policy/v1
@@ -162,7 +162,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: partner-service
+      app.kubernetes.io/name: partner-service
 
 ---
 apiVersion: policy/v1
@@ -175,7 +175,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: promotion-service
+      app.kubernetes.io/name: promotion-service
 
 ---
 apiVersion: policy/v1
@@ -188,7 +188,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: support-service
+      app.kubernetes.io/name: support-service
 
 ---
 apiVersion: policy/v1
@@ -201,7 +201,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: compliance-service
+      app.kubernetes.io/name: compliance-service
 
 ---
 apiVersion: policy/v1
@@ -214,7 +214,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: backoffice-service
+      app.kubernetes.io/name: backoffice-service
 
 ---
 apiVersion: policy/v1
@@ -227,7 +227,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: cms-service
+      app.kubernetes.io/name: cms-service
 
 ---
 apiVersion: policy/v1
@@ -240,7 +240,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: dispute-service
+      app.kubernetes.io/name: dispute-service
 
 ---
 apiVersion: policy/v1
@@ -253,7 +253,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: product-catalog-service
+      app.kubernetes.io/name: product-catalog-service
 
 ---
 apiVersion: policy/v1
@@ -266,7 +266,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: integration-service
+      app.kubernetes.io/name: integration-service
 
 ---
 apiVersion: policy/v1
@@ -279,7 +279,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: api-portal-service
+      app.kubernetes.io/name: api-portal-service
 
 ---
 apiVersion: policy/v1
@@ -292,7 +292,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: kyc-service
+      app.kubernetes.io/name: kyc-service
 
 ---
 apiVersion: policy/v1
@@ -305,7 +305,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: analytics-service
+      app.kubernetes.io/name: analytics-service
 
 # Web App
 ---
@@ -319,4 +319,4 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: web-app
+      app.kubernetes.io/name: web-app

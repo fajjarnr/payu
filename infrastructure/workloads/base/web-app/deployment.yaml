@@ -62,8 +62,8 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-          env:
-          - name: OIDC_ISSUER
-            value: "http://keycloak:8080/realms/payu"
-          - name: OIDC_JWK_SET_URI
-            value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"
+        env:
+        - name: OIDC_ISSUER
+          value: "http://keycloak:8080/realms/payu"
+        - name: OIDC_JWK_SET_URI
+          value: "http://keycloak:8080/realms/payu/protocol/openid-connect/certs"

@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: integration-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.7.9
+    app.kubernetes.io/version: 1.8.1
 spec:
   type: ClusterIP
   selector:
