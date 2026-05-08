@@ -31,7 +31,7 @@ spec:
   # --- Database Configuration (Crunchy PGO) ---
   db:
     vendor: postgres
-    host: payu-postgres.payu-sso.svc.cluster.local
+    host: payu-postgres.payu-dev.svc.cluster.local
     port: 5432
     database: keycloak
     usernameSecret:
@@ -50,8 +50,8 @@ spec:
   # --- Hostname Configuration ---
   # Override per environment via overlay patch
   hostname:
-    hostname: ${KEYCLOAK_HOSTNAME:sso-payu-dev.apps.payu.ocp.fajjjar.my.id}
-    admin: ${KEYCLOAK_ADMIN_HOSTNAME:sso.payu.fajjjar.my.id}
+    hostname: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
+    admin: https://sso.payu.fajjjar.my.id
     strict: false
     backchannelDynamic: true
 
@@ -77,3 +77,29 @@ spec:
     # Metrics endpoint (for Prometheus)
     - name: metrics-enabled
       value: "true"
+
+  # --- Probe Configuration ---
+  # Use liveness endpoint for readiness to avoid cluster health check failures
+  # in single-node deployments (cluster check includes stale JGroups connections)
+  readinessProbe:
+    periodSeconds: 10
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+
+  # --- Unsupported (advanced pod customization) ---
+  # Override readiness probe to use /health/live instead of /health/ready
+  # to avoid cluster health check failures in single-node deployments
+  unsupported:
+    podTemplate:
+      spec:
+        containers:
+          - name: keycloak
+            readinessProbe:
+              httpGet:
+                path: /health/live
+                port: 9000
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3

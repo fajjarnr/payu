@@ -19,5 +19,6 @@ spec:
       targetPort: 8443
       protocol: TCP
   selector:
-    app: payu-keycloak
-    app.kubernetes.io/name: payu-keycloak
+    app: keycloak
+    app.kubernetes.io/instance: payu-keycloak
+    app.kubernetes.io/managed-by: keycloak-operator

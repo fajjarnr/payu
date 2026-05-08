@@ -5,18 +5,17 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/security/cert-manager/
 
 resources:
-  - cert-manager.yaml
-  - tls-certificates.yaml
+  # Shared
   - letsencrypt/1-cluster.yaml
   - letsencrypt/2-secret.yaml
-  - letsencrypt/3-clusterIssuer.yaml
-  - letsencrypt/4-certificate.apps.yaml
   - letsencrypt/5-ingressController.yaml
-  - letsencrypt/6-certificate.api.yaml
-  - letsencrypt/7-apiserver.yaml
-  - zerossl/1-cluster.yaml
-  - zerossl/2-aws-creds.yaml
-  - zerossl/3-zerossl-creds.yaml
-  - zerossl/4-clusterIssuer.yaml
-  - zerossl/5-ingress-cert.yaml
-  - zerossl/6-api-cert.yaml
+
+  # Staging
+  - letsencrypt/staging/cluster-issuer.yaml
+  - letsencrypt/staging/certificate.apps.yaml
+  - letsencrypt/staging/certificate.api.yaml
+
+  # Production
+  - letsencrypt/production/cluster-issuer.yaml
+  - letsencrypt/production/certificate.apps.yaml
+  - letsencrypt/production/certificate.api.yaml

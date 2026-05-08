@@ -17,7 +17,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: payu-keycloak
+      app: keycloak
   policyTypes:
     - Ingress
   ingress:

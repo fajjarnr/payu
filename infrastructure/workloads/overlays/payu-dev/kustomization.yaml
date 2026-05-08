@@ -4,6 +4,7 @@ namespace: payu-dev
 resources:
 - namespace.yaml
 - ../../base
+- network-policy-payu-sso-postgres.yaml
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service

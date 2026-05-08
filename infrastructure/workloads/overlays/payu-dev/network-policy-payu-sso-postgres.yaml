@@ -1,0 +1,29 @@
+###############################################################################
+# NetworkPolicy: Allow payu-sso namespace to access Postgres in payu-dev
+#
+# Keycloak runs in payu-sso but uses the shared Postgres cluster in payu-dev.
+# This policy allows cross-namespace access on port 5432.
+###############################################################################
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-payu-sso-to-postgres
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/component: network
+    app.kubernetes.io/name: allow-payu-sso-to-postgres
+    app.kubernetes.io/part-of: payu
+spec:
+  podSelector:
+    matchLabels:
+      postgres-operator.crunchydata.com/cluster: payu-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-sso
+      ports:
+        - protocol: TCP
+          port: 5432

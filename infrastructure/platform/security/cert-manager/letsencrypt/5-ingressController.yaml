@@ -4,7 +4,5 @@ metadata:
   name: default
   namespace: openshift-ingress-operator
 spec:
-  ### additional configuration options can be set here
   defaultCertificate:
-    name: app-router-certs
-  ###
+    name: app-router-certs-staging
