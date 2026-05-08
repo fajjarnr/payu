@@ -154,3 +154,14 @@ labels:
 - pairs:
     environment: prod
   includeSelectors: false
+
+# OIDC Issuer patches for prod environment
+- target:
+    kind: Deployment
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/14/value
+      value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/15/value
+      value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
