@@ -1,9 +1,9 @@
 // PayU Platform - k6 Load Test Configuration
 // ===========================================
 
-const gatewayUrl = __ENV.GATEWAY_URL || 'https://gateway-dev.payu.fajjjar.my.id';
-const keycloakUrl = __ENV.KEYCLOAK_URL || 'https://sso.dev.payu.fajjjar.my.id';
-const webAppUrl = __ENV.WEB_APP_URL || 'https://dev.payu.fajjjar.my.id';
+const gatewayUrl = __ENV.GATEWAY_URL || 'http://gateway-service:8080';
+const keycloakUrl = __ENV.KEYCLOAK_URL || 'http://payu-keycloak-service.payu-sso.svc.cluster.local:8080';
+const webAppUrl = __ENV.WEB_APP_URL || 'http://web-app:3000';
 const minRequestRate = __ENV.K6_MIN_REQUEST_RATE;
 
 export const BASE_URLS = {
@@ -73,8 +73,7 @@ export const SESSION_SETTINGS = {
 // Test users for authentication tests
 // NOTE: These must match users seeded by scripts/keycloak-seeder.sh
 export const TEST_USERS = [
-  { username: 'customer1', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
   { username: 'customer2', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
-  { username: 'customer3', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
-  { username: 'customer4', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' }
+  { username: 'customer1', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' },
+  { username: 'admin', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'P@ssw0rd123' }
 ];

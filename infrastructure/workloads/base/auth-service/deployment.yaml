@@ -109,3 +109,15 @@ spec:
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+        - name: PAYU_KEYCLOAK_SERVER_URL
+          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
+        - name: PAYU_KEYCLOAK_REALM
+          value: "payu"
+        - name: PAYU_KEYCLOAK_CLIENT_ID
+          value: "payu-backend"
+        - name: PAYU_KEYCLOAK_CLIENT_SECRET
+          value: "payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c"
+        - name: PAYU_KEYCLOAK_ADMIN_USERNAME
+          value: "admin"
+        - name: PAYU_KEYCLOAK_ADMIN_PASSWORD
+          value: "payu-keycloak-admin-dev-only"

@@ -5,7 +5,7 @@
 
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { BASE_URLS, THRESHOLDS } from './config.js';
+import { BASE_URLS, THRESHOLDS, TEST_USERS } from './config.js';
 
 export const options = {
   stages: [
@@ -56,10 +56,10 @@ export default function () {
       `${keycloakUrl}/realms/payu/protocol/openid-connect/token`,
       {
         grant_type: 'password',
-        client_id: 'payu-backend',
-        client_secret: 'payu-backend-secret',
-        username: 'customer1',
-        password: 'P@ssw0rd123'
+        client_id: __ENV.KEYCLOAK_CLIENT_ID || 'payu-gateway',
+        client_secret: __ENV.KEYCLOAK_CLIENT_SECRET || 'payu-gateway-secret-dev-only',
+        username: TEST_USERS[0].username,
+        password: TEST_USERS[0].password
       },
       {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -69,7 +69,10 @@ export default function () {
 
     check(tokenEndpoint, {
       'token endpoint returns 200 with access_token': (r) => {
-        if (r.status !== 200) return false;
+        if (r.status !== 200) {
+          console.log(`Token endpoint failed: ${r.status} - ${r.body}`);
+          return false;
+        }
         try {
           const body = JSON.parse(r.body);
           return body.access_token !== undefined;
@@ -93,7 +96,12 @@ export default function () {
     });
 
     check(response, {
-      [`${service.name} responds`]: (r) => r.status === 200 || r.status === 401 || r.status === 404,
+      [`${service.name} responds`]: (r) => {
+        if (r.status >= 400 && r.status !== 401 && r.status !== 404) {
+          console.log(`${service.name} failed with status: ${r.status}`);
+        }
+        return r.status === 200 || r.status === 401 || r.status === 404;
+      },
       [`${service.name} time < 1000ms`]: (r) => r.timings.duration < 1000
     });
   }

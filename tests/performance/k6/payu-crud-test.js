@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { BASE_URLS } from './config.js';
 
 export const options = {
   stages: [
@@ -16,23 +17,19 @@ export const options = {
 };
 
 // All configuration from environment variables (populated via ConfigMap/Secret)
-const GATEWAY_URL = __ENV.GATEWAY_URL;
-const KEYCLOAK_URL = __ENV.KEYCLOAK_URL;
-const WEBAPP_URL = __ENV.WEBAPP_URL;
-const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID;
-const KEYCLOAK_CLIENT_SECRET = __ENV.KEYCLOAK_CLIENT_SECRET;
-const KEYCLOAK_REALM = __ENV.KEYCLOAK_REALM;
-const TEST_USERNAME = __ENV.TEST_USERNAME;
-const TEST_PASSWORD = __ENV.TEST_PASSWORD;
+const GATEWAY_URL = __ENV.GATEWAY_URL || BASE_URLS.gateway;
+const KEYCLOAK_URL = __ENV.KEYCLOAK_URL || BASE_URLS.keycloak;
+const WEBAPP_URL = __ENV.WEBAPP_URL || BASE_URLS.webApp;
+const KEYCLOAK_CLIENT_ID = __ENV.KEYCLOAK_CLIENT_ID || 'payu-backend';
+const KEYCLOAK_CLIENT_SECRET = __ENV.KEYCLOAK_CLIENT_SECRET || 'payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c';
+const KEYCLOAK_REALM = __ENV.KEYCLOAK_REALM || 'payu';
+const TEST_USERNAME = __ENV.TEST_USERNAME || 'customer1';
+const TEST_PASSWORD = __ENV.TEST_PASSWORD || 'password123';
 
 function validateConfig() {
   const required = [
     ['GATEWAY_URL', GATEWAY_URL],
     ['KEYCLOAK_URL', KEYCLOAK_URL],
-    ['KEYCLOAK_CLIENT_ID', KEYCLOAK_CLIENT_ID],
-    ['KEYCLOAK_CLIENT_SECRET', KEYCLOAK_CLIENT_SECRET],
-    ['TEST_USERNAME', TEST_USERNAME],
-    ['TEST_PASSWORD', TEST_PASSWORD],
   ];
 
   for (const [name, value] of required) {
@@ -177,8 +174,7 @@ export default function (data) {
   sleep(0.5);
 
   // === FRONTEND: Web-app home page ===
-  const webappUrl = WEBAPP_URL || 'https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id';
-  const webappRes = http.get(webappUrl);
+  const webappRes = http.get(WEBAPP_URL);
 
   check(webappRes, {
     'WEBAPP home is 200': (r) => r.status === 200,
