@@ -107,6 +107,8 @@ spec:
           value: "1"
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "payu-kafka-kafka-bootstrap:9092"
+        - name: KAFKA_BROKERS
+          value: "payu-kafka-kafka-bootstrap:9092"
         - name: OIDC_ISSUER
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
