@@ -13,14 +13,14 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open Bugs** | 0 |
+| **Open Bugs** | 2 (AUTH-030, AUTH-031) |
 | **Open Epics** | 0 |
 | **Open Stories** | 1 (YAML-009) |
 | **Spikes** | 2 (Deferred) |
 | **Deferred** | 10 |
 | **Suspended (OCP destroyed)** | 8 |
 | **DevSecOps (suspended)** | 52 |
-| **Infrastructure Fixes** | 8 completed |
+| **Infrastructure Fixes** | 12 completed, 2 in progress |
 
 ---
 
@@ -91,6 +91,44 @@
 
 ---
 
+## 🔐 Auth & Health Endpoint Stabilization (May 9, 2026)
+
+### Completed Fixes
+
+| Key | Priority | Summary | Status |
+|:---|:---:|:---|:---|
+| AUTH-024 | P0 | Gateway `AuthorizationFilter.java`: whitelist `/public/health` paths for all core services | ✅ Fixed — filter code updated, image rebuilt & pushed |
+| INFRA-KAFKA-001 | P0 | Sync Kafka bootstrap env vars (`KAFKA_BROKERS`, `SPRING_KAFKA_BOOTSTRAP_SERVERS`) across all deployment.yaml | ✅ Fixed — 6 services patched |
+| INFRA-REDIS-001 | P0 | Standardize Redis/DataGrid port `11222` (RESP protocol) via `PAYU_CACHE_REDIS_PORT` across deployments | ✅ Fixed — verified all services |
+| SEC-SPRING-001 | P1 | Patch Spring Security `SecurityConfig.java`: add `"/**/public/**"` to `requestMatchers().permitAll()` | ✅ Fixed — 7 services patched (account, wallet, transaction, compliance, integration, product-catalog, statement) |
+
+### Open Bugs
+
+| Key | Priority | Summary | Root Cause | Status |
+|:---|:---:|:---|:---|:---|
+| AUTH-030 | P1 | `GET /api/v1/transactions/public/health` via Gateway returns 401 despite Gateway filter whitelist + Spring Security permitAll + HealthController created | **Dual-layer auth conflict**: Gateway `AuthorizationFilter` (JAX-RS `ContainerRequestFilter`) logs show filter is never invoked for these paths. Quarkus OIDC extension intercepts at Vert.x layer before JAX-RS filter chain. Spring Security on backend also rejects because `/**/public/**` glob pattern may not match Spring's AntPathRequestMatcher. | ⏳ Investigating |
+| AUTH-031 | P1 | k6 smoke-test `http_req_failed` stuck at ~50% — all health check endpoints return 401 | Downstream of AUTH-030. Health endpoints don't exist as REST controllers in backend services (created `HealthController.java` but Spring Security still blocks). | ⏳ Blocked by AUTH-030 |
+
+### Root Cause Analysis (AUTH-030)
+
+**Findings so far:**
+
+1. **Gateway layer (Quarkus)**: `quarkus.http.auth.proactive=false` is set, but Quarkus OIDC extension may still enforce auth at the Vert.x router level before requests reach JAX-RS filters. The custom `AuthorizationFilter` (a `@Provider` `ContainerRequestFilter`) never logs any activity for `/public/health` paths — confirming it's intercepted earlier.
+
+2. **Backend layer (Spring Boot)**: `SecurityConfig.java` patched with `"/**/public/**"` glob but Spring Security uses `AntPathRequestMatcher` which may not support `**` prefix patterns the same way. Need to verify with explicit path `/api/v1/transactions/public/health` in `requestMatchers()`.
+
+3. **Missing HealthController**: Created `HealthController.java` in `account-service`, `wallet-service`, `transaction-service` — maps `@GetMapping("/public/health")` under `@RequestMapping("/api/v1/{service}")`.
+
+**Next Steps:**
+
+- [ ] Verify AUTH-030: Test curl directly to `transaction-service:8080` from inside cluster (bypass Gateway) to isolate which layer returns 401
+- [ ] If backend returns 401: Fix Spring Security `requestMatchers` with explicit paths instead of glob
+- [ ] If backend returns 200: Fix Quarkus Gateway — add `quarkus.http.auth.permission` entries in `application.yaml` to permit `/api/v1/**/public/**`
+- [ ] Re-run k6 smoke-test to validate AUTH-031 resolved
+- [ ] Context7: Check latest Quarkus OIDC docs for `proactive=false` behavior with JAX-RS filters
+
+---
+
 ## 🏗️ DevSecOps Architecture (Suspended — OCP Destroyed)
 
 > Lihat [`infrastructure/DEVSECOPS_ARCHITECTURE.md`](../../infrastructure/DEVSECOPS_ARCHITECTURE.md) v1.3.1
@@ -130,6 +168,6 @@
 
 ---
 
-_Last Updated: May 8, 2026 — Infrastructure YAML audit completed, 8/9 fixes applied._
-_⚠️ OpenShift Cluster Destroyed (May 2, 2026): All OpenShift-dependent tasks suspended. Local podman environment is primary target._
+_Last Updated: May 9, 2026 — Auth & health endpoint stabilization in progress (AUTH-030/031 open)._
+_⚠️ OCP cluster rebuilt (May 8). Infrastructure YAML audit 8/9 applied. Kafka/Redis env sync completed._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
