@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### OpenShift Deployment — All 36 Pods 1/1 Running (2026-05-08)
 
 - **Fixed 5 crash-looping services** (`api-portal-service`, `gateway-service`, `notification-service`, `fx-service`, `lending-service`):
@@ -29,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **api-portal-service**: Added `QUARKUS_OIDC_AUTH_SERVER_URL`; switched to `QUARKUS_DATASOURCE_JDBC_URL`; cleaned up duplicate env vars.
 - **lending-service**: Added `SPRING_KAFKA_BOOTSTRAP_SERVERS`; cleaned up duplicate env vars.
 - **All services**: Removed duplicate `OIDC_ISSUER`, `OIDC_JWK_SET_URI`, `SPRING_DATA_REDIS_*` entries.
+=======
+- **GEMINI.md — Adaptive Debugging Rule**:
+  - Added "Don’t fight errors!" rule to the Systematic Debugging Methodology section, requiring 3-5 researched solutions (via web or context7) before implementation for repeated errors.
+
+
+>>>>>>> ba6be5b1 (docs: add adaptive debugging rule to GEMINI.md)
 
 - **API-OPENAPI-004 — Gateway OpenAPI aggregation**:
   - Added `swagger-ui.always-include: true` + `swagger-ui.path: /q/swagger-ui` to gateway config.

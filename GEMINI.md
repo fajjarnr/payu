@@ -78,12 +78,12 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 
 ### Swarm Principles (Parallel Dispatch)
 
-1. **Independent Domains**: Dispatch one agent per independent problem domain (misal: perbaiki 3 file *test* yang gagal secara bersamaan jika *root cause*-nya berbeda).
+1. **Independent Domains**: Dispatch one agent per independent problem domain (misal: perbaiki 3 file _test_ yang gagal secara bersamaan jika _root cause_-nya berbeda).
 2. **Focused Execution**: Beri tiap sub-agent batasan yang jelas (scope spesifik, dilarang edit file di luar scope, dan output yang diminta).
 3. **Full-stack Parallelism**: Tugas fitur didelegasikan ke UI/Frontend dan Backend secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
 4. **Specialized Handshake**: Setiap agen wajib proaktif memanggil agen pendukung (contoh: minta `@auditor` cek security) tanpa menunggu instruksi manual.
-5. **Collision Guard**: Eksekusi paralel **HANYA** jika menyentuh *file* atau *service* yang berbeda. Jika berbagi *state* atau *file* yang sama, wajib sequential.
-6. **Isolated Workspaces**: Untuk pengembangan fitur berskala besar secara paralel, gunakan `git worktree` (misal di folder `.worktrees/`) agar tiap agen memiliki isolasi environment yang bersih tanpa mengotori *branch* utama. Pastikan folder tersebut masuk ke `.gitignore` dan *test baseline*-nya hijau sebelum mulai.
+5. **Collision Guard**: Eksekusi paralel **HANYA** jika menyentuh _file_ atau _service_ yang berbeda. Jika berbagi _state_ atau _file_ yang sama, wajib sequential.
+6. **Isolated Workspaces**: Untuk pengembangan fitur berskala besar secara paralel, gunakan `git worktree` (misal di folder `.worktrees/`) agar tiap agen memiliki isolasi environment yang bersih tanpa mengotori _branch_ utama. Pastikan folder tersebut masuk ke `.gitignore` dan _test baseline_-nya hijau sebelum mulai.
 
 ---
 
@@ -139,7 +139,7 @@ payu/
 8. **Idempotency**: Semua endpoint payment/transfer WAJIB support `X-Idempotency-Key` header. Ini absolute requirement untuk gateway role.
 9. **Gateway-First Thinking**: Sebelum mengimplementasikan fitur, tanya: "Apakah ini relevan untuk payment gateway yang melayani TokoBapak/Nobar, atau hanya untuk consumer app?" Lihat `docs/roadmap/GATEWAY_ARCH.md` untuk konteks.
 
-10. **Frontend Principles**: Untuk Next.js web-app, maksimalkan Server Components; gunakan `"use client"` se-minimal mungkin hanya pada *leaf components* yang membutuhkan interaksi DOM/State.
+10. **Frontend Principles**: Untuk Next.js web-app, maksimalkan Server Components; gunakan `"use client"` se-minimal mungkin hanya pada _leaf components_ yang membutuhkan interaksi DOM/State.
 
 ### Testing Guidelines (TDD)
 
@@ -148,7 +148,7 @@ payu/
 3. **Unit Tests**: 100% coverage untuk core domain/critical flows; minimum 80–90% untuk non-critical modules (exception harus didokumentasikan).
 4. **ArchUnit**: Pastikan setiap service baru memiliki `ArchitectureTest` untuk menjaga layering.
 5. **Testcontainers**: Gunakan untuk integration tests yang membutuhkan PostgreSQL atau Kafka (jika enviroment memungkinkan).
-6. **UI/Frontend Testing**: Untuk aplikasi React/Next.js, fokus pada *user behavior* menggunakan React Testing Library. Jangan menguji *internal state* atau CSS, melainkan uji apa yang dilihat dan bisa diinteraksikan oleh pengguna.
+6. **UI/Frontend Testing**: Untuk aplikasi React/Next.js, fokus pada _user behavior_ menggunakan React Testing Library. Jangan menguji _internal state_ atau CSS, melainkan uji apa yang dilihat dan bisa diinteraksikan oleh pengguna.
 
 ---
 
@@ -198,6 +198,7 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 **Core Principle:** NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
 
 - **Rule of Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
+- **Don’t fight errors!**: Whenever you encounter the same error twice, research the web or check context7 and find 3-5 possible ways to fix it. Then choose the most efficient solution and implement it.
 
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
@@ -336,13 +337,13 @@ This section defines the high-performance operational protocol for all AI Agents
 
 **Doc Routing Rules**:
 
-| Konten | File Tujuan |
-| :--- | :--- |
-| Bug baru, open items, actionable todos | `docs/roadmap/TODOS.md` |
-| Deployment status, completed milestones | `docs/roadmap/PROGRESS.md` |
-| Architecture decisions, gap analysis | `docs/roadmap/GATEWAY_ARCH.md` |
-| Version changelog | `CHANGELOG.md` |
-| Implementation patterns | `docs/guides/LESSONS.md` |
+| Konten                                  | File Tujuan                    |
+| :-------------------------------------- | :----------------------------- |
+| Bug baru, open items, actionable todos  | `docs/roadmap/TODOS.md`        |
+| Deployment status, completed milestones | `docs/roadmap/PROGRESS.md`     |
+| Architecture decisions, gap analysis    | `docs/roadmap/GATEWAY_ARCH.md` |
+| Version changelog                       | `CHANGELOG.md`                 |
+| Implementation patterns                 | `docs/guides/LESSONS.md`       |
 
 **Fast Path (Small Changes)**:
 
