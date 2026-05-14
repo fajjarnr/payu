@@ -33,7 +33,9 @@ public class ApiPortalService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, OpenApiSpec> specCache = new ConcurrentHashMap<>();
     private Instant lastCacheUpdate;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
 
     public Uni<ServiceListResponse> listServices() {
         Map<String, PortalConfig.ServiceConfig> services = config.services();
@@ -153,8 +155,13 @@ public class ApiPortalService {
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.statusCode() == 200 ? "UP" : "DOWN";
+            if (response.statusCode() == 200) {
+                return "UP";
+            }
+            Log.warnf("Health check failed for %s: HTTP %d", serviceConfig.name(), response.statusCode());
+            return "DOWN";
         } catch (Exception e) {
+            Log.warnf("Health check failed for %s: %s", serviceConfig.name(), e.getMessage());
             return "UNKNOWN";
         }
     }

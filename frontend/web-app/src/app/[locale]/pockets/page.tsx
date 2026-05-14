@@ -607,7 +607,10 @@ export default function PocketsPage() {
                                     return (
                                         <div key={pocket.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden group">
                                             <div
+                                                role="button"
+                                                tabIndex={0}
                                                 onClick={() => setSelectedPocket(isSelected ? null : pocket.id)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPocket(isSelected ? null : pocket.id); } }}
                                                 className="p-6 cursor-pointer transition-colors hover:bg-muted/30"
                                             >
                                                 <div className="flex justify-between items-start mb-4">

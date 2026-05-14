@@ -51,7 +51,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               {/* Step Label */}
               <div className="mt-4 text-center">
                 <span className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300",
+                  "text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {step}

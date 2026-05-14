@@ -10,7 +10,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Page error:', error);
+    console.error('[ErrorBoundary: dashboard]', error);
   }, [error]);
 
   return (

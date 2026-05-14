@@ -38,6 +38,9 @@ spring:
     locations: classpath:db/migration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  cache:
+    redis:
+      time-to-live: 300000
 
 # Resilience4j Configuration
 resilience4j:

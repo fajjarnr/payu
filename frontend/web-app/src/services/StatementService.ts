@@ -92,11 +92,8 @@ export class StatementService {
    * @returns Promise with statement response
    */
   async generateStatement(request: StatementGenerationRequest): Promise<Statement> {
-    const response = await api.post<ApiResponseType<Statement>>('/statements/generate', request);
-    // BFF proxy returns backend response body directly (already unwrapped once by axios).
-    // Backend wraps in {data: ...}, so response.data is the ApiResponseType.
-    // If the backend already returns the Statement directly, fall back to response.data.
-    return (response.data as any)?.data ?? response.data;
+    const response = await api.post<Statement>('/statements/generate', request);
+    return response.data;
   }
 
   /**
@@ -105,8 +102,8 @@ export class StatementService {
    * @returns Promise with statement details
    */
   async getStatement(id: string): Promise<Statement> {
-    const response = await api.get<ApiResponseType<Statement>>(`/statements/${id}`);
-    return (response.data as any)?.data ?? response.data;
+    const response = await api.get<Statement>(`/statements/${id}`);
+    return response.data;
   }
 
   /**
@@ -116,10 +113,10 @@ export class StatementService {
    * @returns Promise with paginated statements
    */
   async listStatements(page: number = 0, size: number = 12): Promise<StatementsListResponse> {
-    const response = await api.get<ApiResponseType<StatementsListResponse>>('/statements', {
+    const response = await api.get<StatementsListResponse>('/statements', {
       params: { page, size, sort: 'statementPeriod,desc' }
     });
-    return (response.data as any)?.data ?? response.data;
+    return response.data;
   }
 
   /**
@@ -128,8 +125,8 @@ export class StatementService {
    */
   async getLatestStatement(): Promise<Statement | null> {
     try {
-      const response = await api.get<ApiResponseType<Statement>>('/statements/latest');
-      return (response.data as any)?.data ?? response.data;
+      const response = await api.get<Statement>('/statements/latest');
+      return response.data;
     } catch (error) {
       // Return null if 404 (no statements found)
       if (isAxiosError(error) && error.response?.status === 404) {

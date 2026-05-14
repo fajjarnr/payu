@@ -21,7 +21,7 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟡 76/100                                | Audit May 14 — 13 of 53 findings fixed. P0s: 7 fixed, 4 open (refactors). Score: 67→76 |
+| **Production Readiness** | 🟡 80/100                                | Audit May 14 — 34 of 53 findings fixed. Score: 67→80. |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟡 33 open                               | 4 P0 (arch/security refactors), 9 P1, 20 P2    |
@@ -96,8 +96,13 @@
   - **P1 Fixed (5)**: Web-app empty catch blocks (9 files), localStorage in useMemo, billing RestTemplate timeouts, partner silent catches (4 files), integration silent catches (3 files).
   - **P2 Fixed (1)**: Support + promotion `@Profile("!test")` removed.
 - ✅ **Quarkus OIDC**: Added `public-health` permit to api-portal, notification, gateway configs.
-- ✅ **Context7 Verified**: `@PreAuthorize` pattern (Spring Security 6.5), Quarkus OIDC `http.auth.permission`.
-- ⏳ **4 P0 Open (arch refactors)**: @PreAuthorize (9 services), @Sensitive (16 services), @Entity in domain (13 services), GlobalExceptionHandler (19 services).
+- ✅ **Context7 Verified**: `@PreAuthorize` pattern (Spring Security 6.5), Quarkus OIDC `http.auth.permission`, Next.js Image component.
+- ✅ **Round 2 Fixes (21 items)**:
+  - **10 GlobalExceptionHandlers**: account, wallet, auth, partner, billing, fx, lending, investment, compliance, statement.
+  - **8 Web-App fixes**: A11Y-001 (keyboard), A11Y-002 (aria-label), A11Y-003 (text size), PERF-003 (img→Image), CQ-002 (StatementService any casts), SEC-007 (image whitelist), CQ-003 (eslint rules), ERR-004 (error.tsx logging).
+  - **3 Backend fixes**: RES-006 (api-portal HttpClient timeout), CACHE-001 (NIK cache TTL 5min), OBS-002 (health check logging).
+- **Score**: 67 → 80/100 (+13). 34 of 53 audit findings fixed.
+- ⏳ **4 P0 Open (arch refactors)** + 5 P1 + 14 P2 remaining.
 - **Build**: Not yet verified (no JDK in current env). `mvn -f backend/pom.xml clean package -DskipTests -T 1C`.
 
 ### v1.8.0 (Completed) — May 5, 2026

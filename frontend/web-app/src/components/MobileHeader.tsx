@@ -20,6 +20,7 @@ export default function MobileHeader({
         {showBack && (
           <button
             onClick={() => router.back()}
+            aria-label="Kembali"
             className="p-2 -ml-2 rounded-full hover:bg-muted text-foreground transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

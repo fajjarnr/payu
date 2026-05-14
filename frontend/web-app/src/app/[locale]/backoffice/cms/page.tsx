@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   Plus, 
   Search, 
@@ -166,9 +167,9 @@ export default function CMSPage() {
                   <TableRow key={item.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="flex items-start gap-4">
-                        <div className="h-16 w-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden border border-border">
+                        <div className="h-16 w-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden border border-border relative">
                           {item.imageUrl ? (
-                            <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                            <Image src={item.imageUrl} alt={item.title} fill sizes="64px" className="object-cover" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               {getContentTypeIcon(item.contentType)}
