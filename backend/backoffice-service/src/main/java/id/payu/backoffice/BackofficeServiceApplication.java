@@ -20,6 +20,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
             pattern = "id\\.payu\\.api\\.common\\.openapi\\..*"
         ),
         @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "id\\.payu\\.api\\.common\\.controller\\.HealthController"
+        ),
+        @ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
             classes = id.payu.cache.config.DataSourceConfiguration.class
         )

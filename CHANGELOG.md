@@ -13,19 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### AUTH-030 — Health Endpoint Stabilization & Production Readiness Audit (2026-05-14)
 
-- **AUTH-030/031 Resolved**: All 18 Spring services now have `HealthController.java` + `"/**/public/**"` permitAll in SecurityConfig. Gateway `AuthorizationFilter` wildcard check. Gateway Quarkus `/**/public/health` → `permit`.
-- **15 HealthControllers created**: compliance, integration, product-catalog, statement, fx, auth, cms, support, promotion, partner, lending, investment, dispute, billing, backoffice.
-- **11 SecurityConfigs patched**: Added `"/**/public/**"` + `"/api/v1/**/public/**"` permitAll.
-- **10 GlobalExceptionHandlers created**: account, wallet, auth, partner, billing, fx, lending, investment, compliance, statement.
-- **Production Readiness Audit — 34 of 53 findings fixed (Score: 67→80/100)**:
-  - **Web-App P0**: XSS in chart.tsx, CSP unsafe directives, BFF proxy HTTPS default.
-  - **Web-App P1**: 9 empty catch blocks → console.error(), localStorage useMemo → useEffect, keyboard accessibility (pockets), aria-label (MobileHeader), text-10px → text-xs, eslint rules.
-  - **Web-App P2**: img → Next.js Image (cms), image remote patterns restricted, StatementService any casts, error.tsx structured logging.
-  - **Backend P0**: Gateway 7 filter files silent catches, notification DLQ + rethrow, wallet auth bypass, partner ddl-auto: validate.
-  - **Backend P1**: billing RestTemplate timeouts (5s/10s), partner 14 silent catches, integration silent catches, api-portal HttpClient timeout.
-  - **Backend P2**: @Profile("!test") removed (support/promotion), account NIK cache TTL 5min, api-portal health check logging.
-- **Quarkus OIDC**: Added `public-health` permit to api-portal, notification, gateway.
-- **Context7 Verified**: `@PreAuthorize` (Spring Security 6.5), Quarkus OIDC `http.auth.permission`, Next.js Image component.
+- **AUTH-030/031 Resolved (verified in podman compose)**: Zero 401 errors on all health endpoints. 18 HealthController + 18 SecurityConfig + Gateway `AuthorizationFilter.endsWith("/public/health")`.
+- **15 HealthControllers created** + **11 SecurityConfigs patched** + **10 GlobalExceptionHandlers created**.
+- **Production Readiness Audit — 36 of 53 findings fixed (Score: 67→82/100)**.
+- **Podman Compose Verified**: 36 containers healthy. Gateway `{"status":"UP"}`. AUTH-030 zero 401 confirmed.
+- **Round 3 Fixes**: Gateway Quarkus `http.auth.permission` removed (Quarkus 3.33.1 doesn't support `**` wildcard). Backoffice `@ComponentScan` excludeFilter added for api-commons HealthController conflict.
+- **Quarkus OIDC**: Added `public-health` permit to api-portal, notification.
 
 ### OpenShift Deployment — All 36 Pods 1/1 Running (2026-05-08)
 

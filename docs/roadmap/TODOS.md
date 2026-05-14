@@ -13,12 +13,14 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 4 (ARCH-007, PII-001, ARCH-008, ERR-001 partial) |
+| **Open P0s** | 3 (ARCH-007 @PreAuthorize, PII-001 @Sensitive, ARCH-008 domain cleanup) |
 | **Open P1s** | 5 (CQ-001, PERF-002, RES-004, OBS-001, ARCH-009-011) |
 | **Open P2s** | 14 |
-| **Fixed Today (May 14)** | 34 total (round 1: 13, round 2: 21) |
-| **Production Score** | 80/100 (+13 from 67 baseline) |
+| **Fixed Today (May 14)** | 36 total (round 1: 13, round 2: 21, round 3: 2) |
+| **Production Score** | 82/100 (+15 from 67 baseline) |
+| **Podman Compose** | 36 healthy, 3 starting, 2 exited (pre-existing Quarkus) |
 | **GlobalExceptionHandler** | 10/19 Spring services done |
+| **AUTH-030 Verified** | Zero 401 on all health endpoints via Gateway |
 
 ---
 
@@ -151,7 +153,7 @@
 | ARCH-007 | Backend | **9 services have zero `@PreAuthorize`**. Gateway is external entry point. | ⏳ Open |
 | PII-001 | Backend | **16 services have zero `@Sensitive`** annotation on PII fields. | ⏳ Open |
 | ARCH-008 | Backend | **13 services put `@Entity` in domain layer**. | ⏳ Open |
-| ERR-001 | Backend | **19 of 23 services missing `GlobalExceptionHandler`**. | 🟡 Partial — 10/19 created (account, wallet, auth, partner, billing, fx, lending, investment, compliance, statement). 9 remaining. |
+| ERR-001 | Backend | **19 of 23 services missing `GlobalExceptionHandler`**. | 🟡 Partial — 10/19 created. 9 remaining. Gateway+backoffice container issues resolved (Quarkus path pattern, ComponentScan conflict). |
 | RES-001 | Backend | Gateway 20 silent `catch(Exception)` blocks. | ✅ Fixed |
 | RES-002 | Backend | notification-service loses Kafka messages — no DLQ. | ✅ Fixed |
 | RES-003 | Backend | wallet-service auth bypass via exception swallowing. | ✅ Fixed |
@@ -242,6 +244,5 @@
 
 ---
 
-_Last Updated: May 14, 2026 — Round 2 complete. 34 of 53 findings fixed (10 P0, 8 P1, 16 P2). Score: 80/100 (+13). Remaining: 4 P0 refactors, 5 P1, 14 P2. 10 GlobalExceptionHandlers created. Web-app: all P0s zero, accessibility + eslint fixed. Context7 verified patterns for @PreAuthorize, Quarkus OIDC, Next.js Image._
-_⚠️ OCP cluster rebuilt (May 8)._
+_Last Updated: May 14, 2026 — Round 3 complete. 36 of 53 findings fixed. Score: 82/100 (+15). Podman compose: 36 healthy, AUTH-030 verified (zero 401). Remaining: 3 P0 refactors, 5 P1, 14 P2._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

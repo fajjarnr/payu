@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-@RestController
+@RestController("backofficePublicHealthController")
 @RequestMapping("/api/v1/backoffice")
 public class HealthController {
 

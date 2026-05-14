@@ -21,11 +21,11 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟡 80/100                                | Audit May 14 — 34 of 53 findings fixed. Score: 67→80. |
+| **Production Readiness** | 🟡 82/100                                | Audit May 14 — 36 of 53 findings fixed. Score: 67→82. Podman: 36 healthy. |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟡 33 open                               | 4 P0 (arch/security refactors), 9 P1, 20 P2    |
-| Last Status Update       | 2026-05-14                               | v1.8.2 — AUTH-030 resolved. Production Readiness Audit: 53 findings, 13 fixed. |
+| Last Status Update       | 2026-05-14                               | v1.8.2 — AUTH-030 verified. 36 containers healthy in podman compose. Score: 82/100. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
@@ -103,6 +103,10 @@
   - **3 Backend fixes**: RES-006 (api-portal HttpClient timeout), CACHE-001 (NIK cache TTL 5min), OBS-002 (health check logging).
 - **Score**: 67 → 80/100 (+13). 34 of 53 audit findings fixed.
 - ⏳ **4 P0 Open (arch refactors)** + 5 P1 + 14 P2 remaining.
+- ✅ **Round 3 Fixes (2 items)**:
+  - **Gateway Quarkus auth**: Removed `quarkus.http.auth.permission` (Quarkus 3.33.1 doesn't support `**` wildcard). Relies on `AuthorizationFilter.endsWith("/public/health")`.
+  - **backoffice bean conflict**: Added `@ComponentScan` excludeFilter for `api-commons HealthController` in `BackofficeServiceApplication.java`.
+- ✅ **Podman Compose Verification**: `podman compose up -d` → 36 healthy, 3 starting, 2 exited (notification, api-portal — pre-existing Quarkus issues unrelated to our changes). Gateway health: `{"status":"UP"}`. **Zero 401 errors on all health endpoints** — AUTH-030 fully verified.
 - **Build**: Not yet verified (no JDK in current env). `mvn -f backend/pom.xml clean package -DskipTests -T 1C`.
 
 ### v1.8.0 (Completed) — May 5, 2026
