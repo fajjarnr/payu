@@ -11,7 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<<<<<<< HEAD
+### AUTH-030 — Health Endpoint Stabilization & Production Readiness Audit (2026-05-14)
+
+- **AUTH-030/031 Resolved**: All 18 Spring services now have `HealthController.java` + `"/**/public/**"` + `"/api/v1/**/public/**"` permitAll in SecurityConfig. Gateway `AuthorizationFilter` has generic `endsWith("/public/health")` wildcard check. Gateway Quarkus config has `permission` entry `"/**/public/health"` → `permit`.
+- **14 HealthControllers created**: compliance, integration, product-catalog, statement, fx, auth, cms, support, promotion, partner, lending, investment, dispute, billing, backoffice.
+- **11 SecurityConfigs patched**: Added `"/**/public/**"` + `"/api/v1/**/public/**"` permitAll to auth, backoffice, billing, cms, dispute, fx, investment, lending, partner, promotion, support.
+- **Production Readiness Audit (53 findings across web-app + backend)**:
+  - **Web-App P0s fixed**: XSS in `chart.tsx` (color regex validation), CSP `unsafe-eval`/`unsafe-inline` removed in production, BFF proxy `GATEWAY_URL` default changed to `https://`.
+  - **Web-App P1s fixed**: 9 empty catch blocks now `console.error()`, `localStorage` moved from `useMemo` → `useEffect` in CMS components.
+  - **Backend P0s fixed**: Gateway 7 filter files silent catch blocks now log with exception param, notification `EventConsumer` rethrows + 6 DLQ channels, wallet `validateReservationOwnership()` logs + rethrows on error, partner `ddl-auto: update` → `validate`.
+  - **Backend P1s fixed**: billing `RestTemplate` 5s connect/10s read timeouts, partner 4 files (14 silent catches → Logger + log), integration 3 files (silent catches → log with exception), support + promotion `@Profile("!test")` removed.
+- **Quarkus OIDC**: Added `quarkus.http.auth.permission.public-health` to api-portal, notification, and gateway service configs.
+- **Context7 Verified**: `@PreAuthorize` pattern confirmed per Spring Security 6.5 docs; Quarkus OIDC `http.auth.permission` pattern confirmed.
+- **Score**: 13 of 53 findings fixed (7 P0, 5 P1, 1 P2). Production score: 67 → 76/100.
+
 ### OpenShift Deployment — All 36 Pods 1/1 Running (2026-05-08)
 
 - **Fixed 5 crash-looping services** (`api-portal-service`, `gateway-service`, `notification-service`, `fx-service`, `lending-service`):
@@ -30,12 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **api-portal-service**: Added `QUARKUS_OIDC_AUTH_SERVER_URL`; switched to `QUARKUS_DATASOURCE_JDBC_URL`; cleaned up duplicate env vars.
 - **lending-service**: Added `SPRING_KAFKA_BOOTSTRAP_SERVERS`; cleaned up duplicate env vars.
 - **All services**: Removed duplicate `OIDC_ISSUER`, `OIDC_JWK_SET_URI`, `SPRING_DATA_REDIS_*` entries.
-=======
-- **GEMINI.md — Adaptive Debugging Rule**:
-  - Added "Don’t fight errors!" rule to the Systematic Debugging Methodology section, requiring 3-5 researched solutions (via web or context7) before implementation for repeated errors.
 
+### GEMINI.md — Adaptive Debugging Rule
 
->>>>>>> ba6be5b1 (docs: add adaptive debugging rule to GEMINI.md)
+- Added "Don't fight errors!" rule to the Systematic Debugging Methodology section, requiring 3-5 researched solutions (via web or context7) before implementation for repeated errors.
 
 - **API-OPENAPI-004 — Gateway OpenAPI aggregation**:
   - Added `swagger-ui.always-include: true` + `swagger-ui.path: /q/swagger-ui` to gateway config.

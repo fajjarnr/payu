@@ -11,6 +11,12 @@ quarkus:
       # Disable proactive authentication so Quarkus does NOT validate Bearer tokens
       # at the Vert.x layer. Our custom AuthorizationFilter handles JWT validation.
       proactive: false
+      # AUTH-030: Permit public health endpoints at Vert.x routing layer
+      # so Quarkus OIDC does not intercept before JAX-RS AuthorizationFilter
+      permission:
+        public-health:
+          paths: "/**/public/health"
+          policy: permit
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
     enabled: ${OIDC_ENABLED:false}

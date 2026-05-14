@@ -203,7 +203,7 @@ public class RequestSigningFilter implements ContainerRequestFilter {
                 payload.append(Base64.getEncoder().encodeToString(bodyHash));
             }
         } catch (Exception e) {
-            Log.warnf("Could not read request body for signature: %s", e.getMessage());
+            Log.warnf(e, "Could not read request body for signature: %s", e.getMessage());
             // Continue without body hash for backward compatibility
         }
 
@@ -218,6 +218,7 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             byte[] signature = mac.doFinal(payload.toString().getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(signature);
         } catch (Exception e) {
+            Log.errorf(e, "Failed to calculate HMAC signature: %s", e.getMessage());
             throw new RuntimeException("Failed to calculate signature", e);
         }
     }

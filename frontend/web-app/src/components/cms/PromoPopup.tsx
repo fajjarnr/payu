@@ -46,10 +46,12 @@ export default function PromoPopup({
   const { data: popups, isLoading } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
-  const [sessionState, setSessionState] = useState<PopupSession>(() => {
-    if (typeof window === 'undefined') {
-      return { shownThisSession: false, timestamp: 0 };
-    }
+  const [sessionState, setSessionState] = useState<PopupSession>({ shownThisSession: false, timestamp: 0 });
+  const [dismissedPopups, setDismissedPopups] = useState<Set<string>>(new Set());
+  const [sessionShownPopups, setSessionShownPopups] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const stored = sessionStorage.getItem('promo-popup-session');
       if (stored) {
@@ -57,28 +59,42 @@ export default function PromoPopup({
         const now = Date.now();
         if (now - parsed.timestamp > 30 * 60 * 1000) {
           sessionStorage.removeItem('promo-popup-session');
-          return { shownThisSession: false, timestamp: 0 };
+        } else {
+          setSessionState(parsed);
         }
-        return parsed;
       }
-    } catch {
-      // Ignore parse errors
+    } catch (err) {
+      console.error('[PromoPopup] Failed to parse session state:', err);
     }
-    return { shownThisSession: false, timestamp: 0 };
-  });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const dismissed = new Set<string>();
+      const shown = new Set<string>();
+      if (popups) {
+        for (const popup of popups) {
+          if (localStorage.getItem(`${storageKey}-dismissed-${popup.id}`) === 'true') {
+            dismissed.add(popup.id);
+          }
+          if (sessionStorage.getItem(`${sessionKey}-shown-${popup.id}`) === 'true') {
+            shown.add(popup.id);
+          }
+        }
+      }
+      setDismissedPopups(dismissed);
+      setSessionShownPopups(shown);
+    } catch (err) {
+      console.error('[PromoPopup] Failed to read popup state:', err);
+    }
+  }, [popups, storageKey, sessionKey]);
 
   // Filter eligible popups
   const eligiblePopups = useMemo(() =>
     popups?.filter((popup) => {
-      // Check if popup was permanently dismissed
-      const dismissedKey = `${storageKey}-dismissed-${popup.id}`;
-      const dismissed = localStorage.getItem(dismissedKey);
-      if (dismissed === 'true') return false;
-
-      // Check if popup was shown this session
-      const sessionShownKey = `${sessionKey}-shown-${popup.id}`;
-      const sessionShown = sessionStorage.getItem(sessionShownKey);
-      if (sessionShown === 'true') return false;
+      if (dismissedPopups.has(popup.id)) return false;
+      if (sessionShownPopups.has(popup.id)) return false;
 
       // Check date range
       const now = new Date();
@@ -88,7 +104,7 @@ export default function PromoPopup({
 
       return true;
     }) ?? [],
-    [popups, storageKey, sessionKey]
+    [popups, dismissedPopups, sessionShownPopups]
   );
 
   // Auto-show popup after delay

@@ -34,7 +34,9 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/api/v1/partners/callback/**", // Webhooks are usually signature-protected, not JWT
-            "/pay/**" // Public payment link endpoints for payers
+            "/pay/**", // Public payment link endpoints for payers
+            "/**/public/**",
+            "/api/v1/**/public/**"
     };
 
     @Bean

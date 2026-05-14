@@ -67,6 +67,9 @@ const ChartContainer = React.forwardRef<
 })
 ChartContainer.displayName = "Chart"
 
+const COLOR_REGEX = /^#[0-9a-fA-F]{3,8}$/;
+const FALLBACK_COLOR = "#666666";
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
@@ -88,7 +91,9 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    if (!color) return null;
+    const safeColor = COLOR_REGEX.test(color) ? color : FALLBACK_COLOR;
+    return `  --color-${key}: ${safeColor};`
   })
   .join("\n")}
 }

@@ -112,6 +112,7 @@ public class OjkValidator {
                     .newDocumentBuilder()
                     .parse(new org.xml.sax.InputSource(new java.io.StringReader(xmlContent)));
         } catch (Exception e) {
+            log.warn("XML is not well-formed", e);
             errors.add("XML is not well-formed: " + e.getMessage());
         }
 

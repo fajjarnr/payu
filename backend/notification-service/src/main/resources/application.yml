@@ -5,6 +5,11 @@ quarkus:
     environment: dev
   http:
     port: 8080
+    auth:
+      permission:
+        public-health:
+          paths: "/**/public/health"
+          policy: permit
   oidc:
     auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM:payu}
     client-id: ${OIDC_CLIENT_ID:notification-service}
@@ -94,23 +99,40 @@ mp:
         topic: wallet.balance.changed
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: wallet.balance.changed.dlq
       transaction-events:
         connector: smallrye-kafka
         topic: transaction.completed
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: transaction.completed.dlq
       payment-events:
         connector: smallrye-kafka
         topic: payment-events
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: payment-events.dlq
+      split-bill-events:
+        connector: smallrye-kafka
+        topic: split-bill.events
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: split-bill.events.dlq
       kyc-verified-events:
         connector: smallrye-kafka
         topic: payu.kyc.verified
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: payu.kyc.verified.dlq
       kyc-failed-events:
         connector: smallrye-kafka
         topic: payu.kyc.failed
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: payu.kyc.failed.dlq

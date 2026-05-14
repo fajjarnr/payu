@@ -211,6 +211,7 @@ public class IntegrationService implements IntegrationUseCase {
             java.net.URL url = new java.net.URL(endpoint);
             return url.getHost();
         } catch (Exception e) {
+            log.warn("Failed to extract host from endpoint: {}", endpoint, e);
             return "UNKNOWN";
         }
     }

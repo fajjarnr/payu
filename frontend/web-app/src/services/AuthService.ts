@@ -78,7 +78,10 @@ export class AuthService {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
+      const err = await res.json().catch((e) => {
+        console.error('[AuthService] Failed to parse login error response:', e);
+        return {};
+      });
       throw new Error(err.message || 'Login failed');
     }
 
@@ -93,7 +96,7 @@ export class AuthService {
    */
   async logout(): Promise<void> {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-      .catch(() => { /* best-effort */ });
+      .catch((err) => { console.error('[AuthService] Logout request failed:', err); });
     this.authenticated = false;
     this.userSession = null;
   }
@@ -172,7 +175,8 @@ export class AuthService {
       // so isAuthenticated() returns true after page refresh with valid cookies
       this.authenticated = true;
       return true;
-    } catch {
+    } catch (err) {
+      console.error('[AuthService] Session validation failed:', err);
       this.authenticated = false;
       return false;
     }

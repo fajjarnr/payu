@@ -28,7 +28,8 @@ public class EventConsumer {
             // In production, parse JSON and extract userId, email, etc.
             LOG.info("Processing wallet balance change notification");
         } catch (Exception e) {
-            LOG.errorf("Failed to process wallet event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process wallet event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process wallet event", e);
         }
     }
 
@@ -39,7 +40,8 @@ public class EventConsumer {
             // Parse and send notification
             LOG.info("Processing transaction notification");
         } catch (Exception e) {
-            LOG.errorf("Failed to process transaction event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process transaction event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process transaction event", e);
         }
     }
 
@@ -50,7 +52,8 @@ public class EventConsumer {
             // Parse and send notification
             LOG.info("Processing bill payment notification");
         } catch (Exception e) {
-            LOG.errorf("Failed to process payment event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process payment event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process payment event", e);
         }
     }
 
@@ -60,7 +63,8 @@ public class EventConsumer {
         try {
             processSplitBillEvent(payload);
         } catch (Exception e) {
-            LOG.errorf("Failed to process split bill event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process split bill event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process split bill event", e);
         }
     }
 
@@ -80,7 +84,8 @@ public class EventConsumer {
             );
             notificationService.send(notification);
         } catch (Exception e) {
-            LOG.errorf("Failed to process KYC verified event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process KYC verified event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process KYC verified event", e);
         }
     }
 
@@ -99,7 +104,8 @@ public class EventConsumer {
             );
             notificationService.send(notification);
         } catch (Exception e) {
-            LOG.errorf("Failed to process KYC failed event: %s", e.getMessage());
+            LOG.errorf(e, "Failed to process KYC failed event: %s", e.getMessage());
+            throw new RuntimeException("Failed to process KYC failed event", e);
         }
     }
 

@@ -5,6 +5,8 @@ import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CertificateService {
+
+    private static final Logger log = LoggerFactory.getLogger(CertificateService.class);
 
     private final PartnerCertificateRepository certificateRepository;
     private final PartnerRepository partnerRepository;
@@ -158,9 +162,11 @@ public class CertificateService {
                 partnerCert.verify(trustedCert.getPublicKey());
                 return true;
             } catch (Exception e) {
+                log.warn("Certificate trust validation failed", e);
                 return false;
             }
         } catch (Exception e) {
+            log.warn("Certificate trust validation failed", e);
             return false;
         }
     }
@@ -182,6 +188,7 @@ public class CertificateService {
             byte[] signatureBytes = Base64.getDecoder().decode(signatureB64);
             return sig.verify(signatureBytes);
         } catch (Exception e) {
+            log.warn("Signature verification failed", e);
             return false;
         }
     }

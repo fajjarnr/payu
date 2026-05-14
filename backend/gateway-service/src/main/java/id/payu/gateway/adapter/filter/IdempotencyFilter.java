@@ -296,7 +296,7 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             }
             return new CachedResponse(status, body);
         } catch (Exception e) {
-            Log.warnf("Failed to parse cached response JSON: %s", json);
+            Log.warnf(e, "Failed to parse cached response JSON: %s", json);
             return new CachedResponse(200, json);
         }
     }

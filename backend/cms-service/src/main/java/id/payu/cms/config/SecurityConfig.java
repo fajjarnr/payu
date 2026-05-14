@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
+                .requestMatchers("/**/public/**", "/api/v1/**/public/**").permitAll()
                 .requestMatchers(PUBLIC_API_PATH).permitAll()
                 .requestMatchers(ACTUATOR_PATH).permitAll()
                 .requestMatchers(SWAGGER_PATH).permitAll()

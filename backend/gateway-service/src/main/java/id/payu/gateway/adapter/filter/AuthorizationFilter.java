@@ -218,7 +218,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             }
             Log.debug("JWKS refreshed successfully");
         } catch (Exception e) {
-            Log.warnf("JWKS refresh failed, continuing with current keys: %s", e.getMessage());
+            Log.warnf(e, "JWKS refresh failed, continuing with current keys: %s", e.getMessage());
         }
     }
 
@@ -253,7 +253,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
                 HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
             } catch (Exception e) {
-                Log.warnf("Failed to configure trust-all SSL: %s", e.getMessage());
+                Log.warnf(e, "Failed to configure trust-all SSL: %s", e.getMessage());
             }
         }
         return JWKSet.load(url);
@@ -322,6 +322,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
             normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+
+        // AUTH-030: Generic public health endpoints — permit /public/health for ALL services
+        if (normalizedPath.endsWith("/public/health")) {
+            return true;
         }
 
         // Check exact matches
@@ -497,7 +502,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             }
 
         } catch (Exception e) {
-            Log.warnf("Error extracting roles from JWT: %s", e.getMessage());
+            Log.warnf(e, "Error extracting roles from JWT: %s", e.getMessage());
         }
 
         // Default role if none found

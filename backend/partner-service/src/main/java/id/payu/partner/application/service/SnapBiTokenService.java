@@ -102,7 +102,7 @@ public class SnapBiTokenService {
 
             return claims;
         } catch (Exception e) {
-            LOG.warn("Token validation failed error={}", e.getMessage());
+            LOG.warn("Token validation failed", e);
             return null;
         }
     }

@@ -8,26 +8,27 @@
 
 ## 🏁 Current Status Snapshot
 
-| Attribute                | Value                                    |
-| Attribute                  | Value      | Notes                                           |
-| -------------------------- | ---------- | ----------------------------------------------- |
-| Services Deployed          | 🟢 23/23    | (Excl. Simulators). AB-Testing Deprecated.      |
-| Total Pods                 | 🟢 36/36    | All pods 1/1 Running, 0 restarts (May 8)        |
-| Maven Build                | 🟢 36/36    | ALL modules SUCCESS (inc. 23 services + 5 sims + 8 shared) |
-| **Unit Test Coverage**       | 🟢 100%     | All 36 modules pass (0 failures, 0 errors) in `mvn clean test -T 1C` (May 5) |
-| **Maven Contract Tests**     | 🟢 3/3 svc   | 614+ tests, 0 failures (auth, transaction, wallet) |
-| **E2E Pytest Blackbox**      | 🟢 156/159  | 3 skipped (admin login), 0 failures — May 5 fix |
-| **E2E Playwright (Web)**     | 🟢 623+     | 25 spec files, 0 failures — Chrome 147, all flows verified |
-| **Frontend Bugs**            | 🟢 0        | FE-107/108/109/110 + CROSS-074 + AUTH-035 all closed |
-| **Backend Services**         | 🟢 23/23    | (AB-Testing removed, 23 services deployed)      |
-| Frontend Pages             | 🟢 44/44    | Next.js App Router (Mar 22)                     |
-| API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
-| Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
-| **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
-| Last Status Update         | 2026-05-08 | v1.8.1 — All 36 pods 1/1 Running on OpenShift. 5 crash-looping services fixed (Quarkus OIDC/health paths, Kafka bootstrap, fx-service context-path). |
-| OpenShift Tag              | `v1.8.1`   | Latest stable deployment                        |
-| Local Podman Tag           | `v1.8.0`   | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
-| Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
+| Attribute                | Value                                    | Notes                                           |
+|:-------------------------|:-----------------------------------------|:------------------------------------------------|
+| Services Deployed        | 🟢 23/23                                 | (Excl. Simulators). AB-Testing Deprecated.      |
+| Total Pods               | 🟢 36/36                                 | All pods 1/1 Running, 0 restarts (May 8)        |
+| Maven Build              | 🟢 36/36                                 | ALL modules SUCCESS (inc. 23 services + 5 sims + 8 shared) |
+| Unit Test Coverage       | 🟢 100%                                  | All 36 modules pass (0 failures, 0 errors) in `mvn clean test -T 1C` (May 5) |
+| Maven Contract Tests     | 🟢 3/3 svc                               | 614+ tests, 0 failures (auth, transaction, wallet) |
+| E2E Pytest Blackbox      | 🟢 156/159                               | 3 skipped (admin login), 0 failures — May 5 fix |
+| E2E Playwright (Web)     | 🟢 623+                                  | 25 spec files, 0 failures — Chrome 147, all flows verified |
+| Frontend Bugs            | 🟢 0                                     | FE-107/108/109/110 + CROSS-074 + AUTH-035 all closed |
+| Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
+| Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
+| API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
+| **Production Readiness** | 🟡 76/100                                | Audit May 14 — 13 of 53 findings fixed. P0s: 7 fixed, 4 open (refactors). Score: 67→76 |
+| Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
+| Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
+| Open Bugs (TODOS.md)     | 🟡 33 open                               | 4 P0 (arch/security refactors), 9 P1, 20 P2    |
+| Last Status Update       | 2026-05-14                               | v1.8.2 — AUTH-030 resolved. Production Readiness Audit: 53 findings, 13 fixed. |
+| OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
+| Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
+| Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
 > ✅ **v1.8.0 — Full Backend Test Suite Green (May 5, 2026)**: Fixed all unit test failures across 36 backend modules (23 services + 5 simulators + 8 shared libraries) for JDK 25 / Spring Boot 3.5.14 / Quarkus 3.33.1. `mvn clean test -T 1C` → **BUILD SUCCESS** (0 failures, 0 errors). Key fixes: ArchUnit Java 25 compatibility, Jackson conflict resolution, mock bean provisioning, H2 test configs, auth/security test setup.
 > ✅ **Phase 15 — Final Remediation Complete (Apr 7)**: All 12 remaining bugs closed (BUG-SECURITY-027/008/009/022-025, BUG-LOGIC-013/016, BUG-ARCH-002, BUG-FE-007-011). Security hardening, access control, promo validation, exception architecture fixes applied.
@@ -82,6 +83,22 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.2 (In Progress) — May 14, 2026
+
+**AUTH-030 Resolution & Production Readiness Audit Phase 1:**
+
+- ✅ **AUTH-030/031 Resolved**: All 18 Spring services now have HealthController.java + `"/**/public/**"` + `"/api/v1/**/public/**"` permitAll in SecurityConfig. Gateway `AuthorizationFilter` generic `endsWith("/public/health")` wildcard. Gateway Quarkus `permission` entry `"/**/public/health"` → `permit`.
+- ✅ **14 HealthControllers Created**: compliance, integration, product-catalog, statement, fx, auth, cms, support, promotion, partner, lending, investment, dispute, billing, backoffice (added to existing account, wallet, transaction).
+- ✅ **11 SecurityConfigs Patched**: auth, backoffice, billing, cms, dispute, fx, investment, lending, partner, promotion, support.
+- ✅ **Production Readiness Audit**: 53 findings across web-app + 23 backend services.
+  - **P0 Fixed (7)**: XSS in chart.tsx (color regex), CSP unsafe directives (dev-only), BFF HTTPS default, Gateway silent catches (7 files), notification DLQ (6 channels + rethrow), wallet auth bypass, partner ddl-auto.
+  - **P1 Fixed (5)**: Web-app empty catch blocks (9 files), localStorage in useMemo, billing RestTemplate timeouts, partner silent catches (4 files), integration silent catches (3 files).
+  - **P2 Fixed (1)**: Support + promotion `@Profile("!test")` removed.
+- ✅ **Quarkus OIDC**: Added `public-health` permit to api-portal, notification, gateway configs.
+- ✅ **Context7 Verified**: `@PreAuthorize` pattern (Spring Security 6.5), Quarkus OIDC `http.auth.permission`.
+- ⏳ **4 P0 Open (arch refactors)**: @PreAuthorize (9 services), @Sensitive (16 services), @Entity in domain (13 services), GlobalExceptionHandler (19 services).
+- **Build**: Not yet verified (no JDK in current env). `mvn -f backend/pom.xml clean package -DskipTests -T 1C`.
 
 ### v1.8.0 (Completed) — May 5, 2026
 

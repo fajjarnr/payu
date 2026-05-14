@@ -148,6 +148,7 @@ public class RequestValidationFilter implements ContainerRequestFilter {
             try {
                 jsonNode = objectMapper.readTree(requestBody);
             } catch (Exception e) {
+                Log.warnf(e, "Failed to parse request body as JSON for %s", path);
                 if (config.validation().strictMode()) {
                     requestContext.abortWith(
                         Response.status(Response.Status.BAD_REQUEST)

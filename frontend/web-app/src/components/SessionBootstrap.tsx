@@ -54,8 +54,8 @@ export function SessionBootstrap() {
           }
         }
         // If refresh fails (401/503), we don't have a valid session — leave store as-is
-      } catch {
-        // Network error — silently fail, store stays unauthenticated
+      } catch (err) {
+        console.error('[SessionBootstrap] Session bootstrap failed:', err);
       }
     };
 

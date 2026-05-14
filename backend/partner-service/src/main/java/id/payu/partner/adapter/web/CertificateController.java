@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 @Tag(name = OpenApiConstants.TAG_CERTIFICATE, description = "Certificate management operations")
 @RequiredArgsConstructor
 public class CertificateController extends BaseController {
+
+    private static final Logger log = LoggerFactory.getLogger(CertificateController.class);
 
     private final CertificateService certificateService;
     private final CertificateRotationService certificateRotationService;
@@ -108,6 +112,7 @@ public class CertificateController extends BaseController {
         } catch (IllegalArgumentException e) {
             return (ResponseEntity) notFound(e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to add certificate", e);
             return (ResponseEntity) badRequest("CERTIFICATE_INVALID", e.getMessage());
         }
     }
@@ -125,6 +130,7 @@ public class CertificateController extends BaseController {
         } catch (IllegalArgumentException e) {
             return (ResponseEntity) notFound(e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to generate certificate", e);
             return (ResponseEntity) internalError(e.getMessage());
         }
     }
@@ -158,6 +164,7 @@ public class CertificateController extends BaseController {
         } catch (IllegalArgumentException e) {
             return (ResponseEntity) notFound(e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to rotate certificate", e);
             return (ResponseEntity) internalError(e.getMessage());
         }
     }
@@ -176,6 +183,7 @@ public class CertificateController extends BaseController {
             response.put("partnerId", partnerId);
             return ok(response);
         } catch (Exception e) {
+            log.error("Failed to rotate all certificates for partner", e);
             return (ResponseEntity) internalError(e.getMessage());
         }
     }

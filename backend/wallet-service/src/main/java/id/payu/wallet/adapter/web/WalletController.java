@@ -24,6 +24,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class WalletController extends BaseController {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletController.class);
+    private static final Logger log = LoggerFactory.getLogger(WalletController.class);
 
     private final WalletUseCase walletUseCase;
 
@@ -214,7 +216,8 @@ public class WalletController extends BaseController {
             String reservationOwnerId = walletUseCase.getAccountIdByReservationId(reservationId);
             return reservationOwnerId.equals(accountId);
         } catch (Exception e) {
-            return false;
+            log.error("Authorization check failed for reservation {}: {}", reservationId, e.getMessage(), e);
+            throw new RuntimeException("Unable to verify reservation ownership due to internal error", e);
         }
     }
 

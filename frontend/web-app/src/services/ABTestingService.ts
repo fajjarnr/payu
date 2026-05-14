@@ -184,7 +184,8 @@ export class ABTestingService {
       }
 
       return assignment.variantKey;
-    } catch {
+    } catch (err) {
+      console.error('[ABTestingService] Failed to read cached variant:', err);
       // BUG-FE-031: Fall back to memory cache on localStorage error
       const cacheKey = this.buildCacheKey(experimentKey, userId);
       const memoryCached = this.memoryCache.get(cacheKey);

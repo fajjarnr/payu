@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,8 @@ import java.time.format.DateTimeParseException;
 @Tag(name = OpenApiConstants.TAG_SNAP_BI, description = "SNAP BI payment integration operations")
 @RequiredArgsConstructor
 public class SnapBiController {
+
+    private static final Logger log = LoggerFactory.getLogger(SnapBiController.class);
 
     // BUG-BE-138 FIX: Use service instead of repository
     private final PartnerService partnerService;
@@ -119,6 +123,7 @@ public class SnapBiController {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
         } catch (Exception e) {
+            log.error("Signature validation failed for token request", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
@@ -127,6 +132,7 @@ public class SnapBiController {
         try {
             request = objectMapper.readValue(rawBody, TokenRequest.class);
         } catch (Exception e) {
+            log.error("Failed to parse token request body", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
@@ -197,6 +203,7 @@ public class SnapBiController {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
         } catch (Exception e) {
+            log.error("Signature validation failed for payment request", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
@@ -205,6 +212,7 @@ public class SnapBiController {
         try {
             request = objectMapper.readValue(rawBody, PaymentRequest.class);
         } catch (Exception e) {
+            log.error("Failed to parse payment request body", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
@@ -257,6 +265,7 @@ public class SnapBiController {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
         } catch (Exception e) {
+            log.error("Signature validation failed for payment status request", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request");
         }
 
@@ -310,6 +319,7 @@ public class SnapBiController {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
         } catch (Exception e) {
+            log.error("Signature validation failed for refund request", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
@@ -318,6 +328,7 @@ public class SnapBiController {
         try {
             request = objectMapper.readValue(rawBody, RefundRequest.class);
         } catch (Exception e) {
+            log.error("Failed to parse refund request body", e);
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 

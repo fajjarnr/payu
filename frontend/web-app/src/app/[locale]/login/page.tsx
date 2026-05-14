@@ -75,7 +75,10 @@ function LoginForm() {
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: 'Login failed' }));
+        const err = await res.json().catch((e) => {
+          console.error('[LoginPage] Failed to parse login error response:', e);
+          return { message: 'Login failed' };
+        });
         throw new Error(err.message || t('loginFailed'));
       }
       return res.json();
@@ -95,7 +98,8 @@ function LoginForm() {
         // Fallback: if next-intl router.push fails (e.g., SSR mismatch), use window.location
         try {
           router.push(callbackUrl);
-        } catch {
+        } catch (err) {
+          console.error('[LoginPage] Router push failed, falling back to window.location:', err);
           window.location.href = callbackUrl;
         }
       } else {

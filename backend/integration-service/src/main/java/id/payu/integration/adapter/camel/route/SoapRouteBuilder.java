@@ -139,7 +139,7 @@ public class SoapRouteBuilder extends RouteBuilder {
                 Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
                 String messageId = exchange.getIn().getHeader("MessageId", String.class);
 
-                log.error("SOAP request failed: {}", exception.getMessage());
+                log.error("SOAP request failed: {}", exception.getMessage(), exception);
 
                 if (messageId != null) {
                     messageProcessingService.markFailed(messageId, exception.getMessage());
@@ -180,6 +180,7 @@ public class SoapRouteBuilder extends RouteBuilder {
             java.net.URL url = new java.net.URL(endpoint);
             return url.getHost();
         } catch (Exception e) {
+            log.warn("Failed to extract host from endpoint: {}", endpoint, e);
             return "UNKNOWN";
         }
     }

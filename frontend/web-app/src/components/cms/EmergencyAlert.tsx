@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -35,15 +35,17 @@ export default function EmergencyAlert({
 }: EmergencyAlertProps) {
   const router = useRouter();
   const { data: alerts, isLoading } = useEmergencyAlerts({ segment, location, device });
-  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
-    if (typeof window === 'undefined') return new Set();
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const stored = localStorage.getItem(storageKey);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
+      if (stored) setDismissedAlerts(new Set(JSON.parse(stored)));
+    } catch (err) {
+      console.error('[EmergencyAlert] Failed to read dismissed alerts:', err);
     }
-  });
+  }, [storageKey]);
 
   // Save dismissed alerts to localStorage
   const saveDismissedAlert = (alertId: string) => {

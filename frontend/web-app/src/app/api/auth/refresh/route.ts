@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import logger from '@/lib/logger';
 
-const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
+const GATEWAY_URL = process.env.GATEWAY_URL || 'https://gateway-service:8080';
 
 /**
  * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
@@ -14,7 +14,8 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
     if (parts.length !== 3) return null;
     const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
     return JSON.parse(payload);
-  } catch {
+  } catch (err) {
+    console.error('[refresh] JWT decode failed:', err);
     return null;
   }
 }

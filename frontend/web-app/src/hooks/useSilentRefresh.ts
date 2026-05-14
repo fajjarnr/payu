@@ -79,8 +79,8 @@ export function useSilentRefresh() {
       setAuthenticated(true);
       setTokenExpiry(Date.now() + expiresIn * 1000);
       return true;
-    } catch {
-      // Network error — don't log out, retry will happen via backoff
+    } catch (err) {
+      console.error('[useSilentRefresh] Token refresh network error:', err);
       return false;
     } finally {
       isRefreshingRef.current = false;
