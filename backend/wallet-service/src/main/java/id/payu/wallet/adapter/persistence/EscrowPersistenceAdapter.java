@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.wallet.adapter.persistence.entity.EscrowStatus;
 
 /**
  * Persistence adapter mapping EscrowTransaction domain ↔ JPA entity.
@@ -122,11 +123,11 @@ public class EscrowPersistenceAdapter implements EscrowPersistencePort {
                 .build();
     }
 
-    private EscrowTransactionEntity.EscrowStatus toEntityStatus(EscrowTransaction.EscrowStatus status) {
-        return EscrowTransactionEntity.EscrowStatus.valueOf(status.name());
+    private EscrowStatus toEntityStatus(id.payu.wallet.domain.model.EscrowStatus status) {
+        return EscrowStatus.valueOf(status.name());
     }
 
-    private EscrowTransaction.EscrowStatus toDomainStatus(EscrowTransactionEntity.EscrowStatus status) {
-        return EscrowTransaction.EscrowStatus.valueOf(status.name());
+    private id.payu.wallet.domain.model.EscrowStatus toDomainStatus(EscrowStatus status) {
+        return id.payu.wallet.domain.model.EscrowStatus.valueOf(status.name());
     }
 }

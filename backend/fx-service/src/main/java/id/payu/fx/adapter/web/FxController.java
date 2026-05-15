@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.security.annotation.AuditOperation;
 
 @RestController
 @RequestMapping("/v1")
@@ -133,7 +134,7 @@ public class FxController extends BaseController {
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            operation = id.payu.security.annotation.AuditOperation.TRANSFER,
             entityType = "FxConversion",
             maskData = true,
             level = AuditLevel.INFO
@@ -210,7 +211,7 @@ public class FxController extends BaseController {
     @PostMapping("/conversions/{conversionId}/reverse")
     @Idempotent(required = true)
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "FxConversion",
             maskData = true,
             level = AuditLevel.WARN

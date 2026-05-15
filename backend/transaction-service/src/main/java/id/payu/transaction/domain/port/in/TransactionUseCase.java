@@ -5,13 +5,13 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResul
 import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
 import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Use Case interface for Transaction operations following CQRS pattern.
+ * Use Case interface for TransactionEntity operations following CQRS pattern.
  *
  * <p>This interface defines the contract for transaction operations,
  separating Commands (write operations) from Queries (read operations).</p>
@@ -51,7 +51,7 @@ public interface TransactionUseCase {
      * @param query the transaction query
      * @return the transaction
      */
-    Transaction getTransaction(GetTransactionQuery query);
+    TransactionEntity getTransaction(GetTransactionQuery query);
 
     /**
      * Gets transactions for an account with pagination.
@@ -59,7 +59,7 @@ public interface TransactionUseCase {
      * @param query the account transactions query
      * @return list of transactions
      */
-    List<Transaction> getAccountTransactions(GetAccountTransactionsQuery query);
+    List<TransactionEntity> getAccountTransactions(GetAccountTransactionsQuery query);
 
     /**
      * Updates tags for a transaction (IMP-037).
@@ -69,7 +69,7 @@ public interface TransactionUseCase {
      * @param tags the list of tags to set
      * @return the updated transaction
      */
-    Transaction updateTransactionTags(UUID transactionId, String userId, List<String> tags);
+    TransactionEntity updateTransactionTags(UUID transactionId, String userId, List<String> tags);
 
     // Legacy Methods (Deprecated - Will be removed)
 
@@ -97,7 +97,7 @@ public interface TransactionUseCase {
      * @deprecated Use {@link #getTransaction(GetTransactionQuery)} instead
      */
     @Deprecated
-    default Transaction getTransaction(java.util.UUID transactionId, String userId) {
+    default TransactionEntity getTransaction(java.util.UUID transactionId, String userId) {
         GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
         return getTransaction(query);
     }
@@ -106,7 +106,7 @@ public interface TransactionUseCase {
      * @deprecated Use {@link #getAccountTransactions(GetAccountTransactionsQuery)} instead
      */
     @Deprecated
-    default List<Transaction> getAccountTransactions(
+    default List<TransactionEntity> getAccountTransactions(
             java.util.UUID accountId, String userId, int page, int size) {
         GetAccountTransactionsQuery query = new GetAccountTransactionsQuery(
                 accountId.toString(), userId, page, size);

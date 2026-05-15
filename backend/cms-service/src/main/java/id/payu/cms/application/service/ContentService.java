@@ -3,7 +3,8 @@ package id.payu.cms.application.service;
 import id.payu.cms.domain.dto.ContentRequest;
 import id.payu.cms.domain.dto.ContentResponse;
 import id.payu.cms.domain.dto.ContentListResponse;
-import id.payu.cms.domain.entity.Content;
+import id.payu.cms.adapter.persistence.entity.ContentEntity;
+import id.payu.cms.domain.entity.ContentStatus;
 import id.payu.cms.domain.repository.ContentRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -53,7 +54,7 @@ public class ContentService {
             );
         }
 
-        Content content = Content.builder()
+        ContentEntity content = ContentEntity.builder()
             .contentType(request.getContentType())
             .title(request.getTitle())
             .description(request.getDescription())
@@ -63,7 +64,7 @@ public class ContentService {
             .startDate(request.getStartDate())
             .endDate(request.getEndDate())
             .priority(request.getPriority() != null ? request.getPriority() : 0)
-            .status(Content.ContentStatus.DRAFT)
+            .status(ContentStatus.DRAFT)
             .targetingRules(request.getTargetingRules())
             .metadata(request.getMetadata())
             .version(1)
@@ -71,7 +72,7 @@ public class ContentService {
             .updatedBy(createdBy)
             .build();
 
-        Content saved;
+        ContentEntity saved;
         try {
             saved = contentRepository.save(content);
         } catch (DataIntegrityViolationException e) {
@@ -92,7 +93,7 @@ public class ContentService {
     public ContentResponse updateContent(UUID id, ContentRequest request, String updatedBy) {
         log.info("Updating content: {}", id);
 
-        Content content = contentRepository.findById(id)
+        ContentEntity content = contentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Content not found with ID: " + id));
 
         // Check title uniqueness if changed
@@ -118,7 +119,7 @@ public class ContentService {
         content.setVersion(content.getVersion() + 1);
         content.setUpdatedBy(updatedBy);
 
-        Content saved = contentRepository.save(content);
+        ContentEntity saved = contentRepository.save(content);
         log.info("Content updated: {}", id);
 
         return toResponse(saved);
@@ -131,7 +132,7 @@ public class ContentService {
     @CircuitBreaker(name = "cmsService", fallbackMethod = "getContentByIdFallback")
     @Retry(name = "cmsService")
     public ContentResponse getContentById(UUID id) {
-        Content content = contentRepository.findById(id)
+        ContentEntity content = contentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Content not found with ID: " + id));
         return toResponse(content);
     }
@@ -145,7 +146,7 @@ public class ContentService {
             : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Content> contentPage = contentRepository.findAll(pageable);
+        Page<ContentEntity> contentPage = contentRepository.findAll(pageable);
 
         return ContentListResponse.builder()
             .contents(contentPage.getContent().stream()
@@ -175,7 +176,7 @@ public class ContentService {
      */
     @Cacheable(value = "contents", key = "'status:' + #status")
     public List<ContentResponse> getContentByStatus(String status) {
-        Content.ContentStatus contentStatus = Content.ContentStatus.valueOf(status.toUpperCase());
+        ContentStatus contentStatus = ContentStatus.valueOf(status.toUpperCase());
         return contentRepository.findByStatus(contentStatus).stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
@@ -186,7 +187,7 @@ public class ContentService {
      */
     @Cacheable(value = "activeContents", key = "#type")
     public List<ContentResponse> getActiveContentByType(String type) {
-        List<Content> contents = contentRepository.findActiveByContentType(type, LocalDate.now());
+        List<ContentEntity> contents = contentRepository.findActiveByContentType(type, LocalDate.now());
         return contents.stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
@@ -198,14 +199,14 @@ public class ContentService {
     @Transactional
     @CacheEvict(value = {"contents", "activeContents"}, allEntries = true)
     public ContentResponse updateContentStatus(UUID id, String status, String updatedBy) {
-        Content content = contentRepository.findById(id)
+        ContentEntity content = contentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Content not found with ID: " + id));
 
-        Content.ContentStatus newStatus = Content.ContentStatus.valueOf(status.toUpperCase());
+        ContentStatus newStatus = ContentStatus.valueOf(status.toUpperCase());
         content.setStatus(newStatus);
         content.setUpdatedBy(updatedBy);
 
-        Content saved = contentRepository.save(content);
+        ContentEntity saved = contentRepository.save(content);
         log.info("Content status updated: {} -> {}", id, status);
 
         return toResponse(saved);
@@ -227,14 +228,14 @@ public class ContentService {
     /**
      * Get scheduled content to activate
      */
-    public List<Content> getScheduledContentToActivate() {
+    public List<ContentEntity> getScheduledContentToActivate() {
         return contentRepository.findScheduledToActivate(LocalDate.now());
     }
 
     /**
      * Get expired active content to archive
      */
-    public List<Content> getExpiredActiveContent() {
+    public List<ContentEntity> getExpiredActiveContent() {
         return contentRepository.findActiveToArchive(LocalDate.now());
     }
 
@@ -257,7 +258,7 @@ public class ContentService {
     public void activateScheduledContent(List<UUID> contentIds) {
         contentIds.forEach(id -> {
             contentRepository.findById(id).ifPresent(content -> {
-                content.setStatus(Content.ContentStatus.ACTIVE);
+                content.setStatus(ContentStatus.ACTIVE);
                 contentRepository.save(content);
                 log.info("Activated scheduled content: {}", id);
             });
@@ -272,7 +273,7 @@ public class ContentService {
     public void archiveExpiredContent(List<UUID> contentIds) {
         contentIds.forEach(id -> {
             contentRepository.findById(id).ifPresent(content -> {
-                content.setStatus(Content.ContentStatus.ARCHIVED);
+                content.setStatus(ContentStatus.ARCHIVED);
                 contentRepository.save(content);
                 log.info("Archived expired content: {}", id);
             });
@@ -282,7 +283,7 @@ public class ContentService {
     /**
      * Convert entity to response DTO
      */
-    private ContentResponse toResponse(Content content) {
+    private ContentResponse toResponse(ContentEntity content) {
         return ContentResponse.builder()
             .id(content.getId())
             .contentType(content.getContentType())

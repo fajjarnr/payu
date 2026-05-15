@@ -1,7 +1,7 @@
 package id.payu.compliance.domain.port.in;
 
-import id.payu.compliance.domain.model.DataAccessAudit;
-import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
+import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataOperationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface DataAccessAuditUseCase {
 
-    DataAccessAudit logDataAccess(
+    DataAccessAuditEntity logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,
@@ -21,7 +21,7 @@ public interface DataAccessAuditUseCase {
             String purpose
     );
 
-    DataAccessAudit logDataAccess(
+    DataAccessAuditEntity logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,
@@ -35,23 +35,23 @@ public interface DataAccessAuditUseCase {
             String errorMessage
     );
 
-    DataAccessAudit getDataAccessAudit(UUID auditId);
+    DataAccessAuditEntity getDataAccessAudit(UUID auditId);
 
-    Page<DataAccessAudit> getUserDataAccessHistory(String userId, Pageable pageable);
+    Page<DataAccessAuditEntity> getUserDataAccessHistory(String userId, Pageable pageable);
 
-    List<DataAccessAudit> getUserDataAccessHistoryByDateRange(String userId, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> getUserDataAccessHistoryByDateRange(String userId, LocalDateTime startDate, LocalDateTime endDate);
 
-    List<DataAccessAudit> getAccessedByUserHistory(String accessedBy, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> getAccessedByUserHistory(String accessedBy, LocalDateTime startDate, LocalDateTime endDate);
 
-    Page<DataAccessAudit> getDataAccessByOperationType(DataOperationType operationType, Pageable pageable);
+    Page<DataAccessAuditEntity> getDataAccessByOperationType(DataOperationType operationType, Pageable pageable);
 
-    List<DataAccessAudit> getServiceDataAccessHistory(String serviceName, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> getServiceDataAccessHistory(String serviceName, LocalDateTime startDate, LocalDateTime endDate);
 
     long getUserDataAccessCount(String userId, LocalDateTime since);
 
-    List<DataAccessAudit> getFailedAccessAttempts(LocalDateTime since);
+    List<DataAccessAuditEntity> getFailedAccessAttempts(LocalDateTime since);
 
-    Page<DataAccessAudit> searchDataAccessAudit(
+    Page<DataAccessAuditEntity> searchDataAccessAudit(
             String userId,
             String accessedBy,
             String serviceName,

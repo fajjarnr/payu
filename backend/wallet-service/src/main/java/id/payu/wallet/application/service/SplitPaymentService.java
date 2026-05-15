@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.LegStatus;
+import id.payu.wallet.domain.model.SplitExecutionStatus;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * Application service for split payment operations.
@@ -51,7 +55,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
     @Override
     @Transactional
     public SplitPaymentRule createRule(String partnerId, String ruleName,
-                                       SplitPaymentRule.SplitType splitType, String currency,
+                                       SplitType splitType, String currency,
                                        List<SplitRecipient> recipients) {
         log.info("Creating split rule: partner={}, name={}, type={}", partnerId, ruleName, splitType);
 
@@ -152,7 +156,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
 
         // Build a temporary rule for computation
         SplitPaymentRule tempRule = SplitPaymentRule.builder()
-                .splitType(SplitPaymentRule.SplitType.FIXED)
+                .splitType(SplitType.FIXED)
                 .recipients(recipients)
                 .build();
 
@@ -183,7 +187,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                     .recipientAccountId(la.recipient.getRecipientAccountId())
                     .recipientLabel(la.recipient.getRecipientLabel())
                     .amount(la.amount)
-                    .status(SplitPaymentLeg.LegStatus.PENDING)
+                    .status(LegStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .build());
         }
@@ -197,7 +201,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                 .currency(currency)
                 .externalReferenceId(externalReferenceId)
                 .idempotencyKey(idempotencyKey)
-                .status(SplitPaymentExecution.SplitExecutionStatus.PENDING)
+                .status(SplitExecutionStatus.PENDING)
                 .description(description)
                 .legs(legs)
                 .createdAt(LocalDateTime.now())
@@ -271,7 +275,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
 
         // Debit each credited recipient back before crediting payer
         for (SplitPaymentLeg leg : execution.getLegs()) {
-            if (leg.getStatus() == SplitPaymentLeg.LegStatus.CREDITED) {
+            if (leg.getStatus() == LegStatus.CREDITED) {
                 // Reserve and commit debit from recipient
                 String resId = walletUseCase.reserveBalance(
                         leg.getRecipientAccountId(),
@@ -307,7 +311,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                 .id(UUID.randomUUID())
                 .accountId(execution.getPayerAccountId())
                 .coaCode(COA_USER_WALLETS)
-                .entryType(LedgerEntry.EntryType.DEBIT)
+                .entryType(EntryType.DEBIT)
                 .amount(execution.getTotalAmount())
                 .currency(execution.getCurrency())
                 .referenceType(REFERENCE_TYPE)
@@ -321,7 +325,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                     .id(UUID.randomUUID())
                     .accountId(leg.getRecipientAccountId())
                     .coaCode(COA_USER_WALLETS)
-                    .entryType(LedgerEntry.EntryType.CREDIT)
+                    .entryType(EntryType.CREDIT)
                     .amount(leg.getAmount())
                     .currency(execution.getCurrency())
                     .referenceType(REFERENCE_TYPE)
@@ -346,7 +350,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                 .id(UUID.randomUUID())
                 .accountId(execution.getPayerAccountId())
                 .coaCode(COA_USER_WALLETS)
-                .entryType(LedgerEntry.EntryType.CREDIT)
+                .entryType(EntryType.CREDIT)
                 .amount(execution.getTotalAmount())
                 .currency(execution.getCurrency())
                 .referenceType(REFERENCE_TYPE)
@@ -360,7 +364,7 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                     .id(UUID.randomUUID())
                     .accountId(leg.getRecipientAccountId())
                     .coaCode(COA_USER_WALLETS)
-                    .entryType(LedgerEntry.EntryType.DEBIT)
+                    .entryType(EntryType.DEBIT)
                     .amount(leg.getAmount())
                     .currency(execution.getCurrency())
                     .referenceType(REFERENCE_TYPE)

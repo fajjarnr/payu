@@ -45,7 +45,7 @@ public class KafkaNotificationAdapter implements NotificationPort {
 
         try {
             kafkaTemplate.send(notificationTopic, notification.getAccountId(), event);
-            LOG.debug("Cashback notification sent successfully");
+            LOG.debug("CashbackEntity notification sent successfully");
         } catch (Exception e) {
             LOG.error("Failed to send cashback notification: {}", e.getMessage(), e);
             // Don't throw - notification failure shouldn't fail the cashback

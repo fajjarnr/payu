@@ -18,13 +18,6 @@ public class PayLater {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum PayLaterStatus {
-        ACTIVE,
-        SUSPENDED,
-        BLOCKED,
-        CLOSED
-    }
-
     public PayLater() {}
 
     public UUID getId() {

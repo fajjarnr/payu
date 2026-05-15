@@ -22,13 +22,6 @@ public class SplitPaymentLeg {
     public SplitPaymentLeg() {
     }
 
-    public enum LegStatus {
-        PENDING,
-        CREDITED,
-        FAILED,
-        REVERSED
-    }
-
     public void markCredited(UUID journalEntryId) {
         this.status = LegStatus.CREDITED;
         this.journalEntryId = journalEntryId;

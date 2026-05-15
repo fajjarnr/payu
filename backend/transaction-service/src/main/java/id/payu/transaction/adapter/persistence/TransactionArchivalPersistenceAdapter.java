@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
-import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.model.TransactionArchive;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.TransactionArchiveJpaRepository;
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
@@ -36,14 +36,14 @@ public class TransactionArchivalPersistenceAdapter implements TransactionArchiva
     }
 
     @Override
-    public List<Transaction> findTransactionsToArchive(Instant beforeDate, int limit) {
+    public List<TransactionEntity> findTransactionsToArchive(Instant beforeDate, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return transactionArchiveJpaRepository.findTransactionsToArchive(beforeDate, pageable);
     }
 
     @Override
     @Transactional
-    public void archiveTransactions(List<TransactionArchive> archives) {
+    public void archiveTransactions(List<TransactionArchiveEntity> archives) {
         if (archives.isEmpty()) {
             return;
         }
@@ -74,13 +74,13 @@ public class TransactionArchivalPersistenceAdapter implements TransactionArchiva
     }
 
     @Override
-    public List<TransactionArchive> findByAccountId(UUID accountId, int page, int size) {
+    public List<TransactionArchiveEntity> findByAccountId(UUID accountId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return transactionArchiveJpaRepository.findByAccountId(accountId, pageable);
     }
 
     @Override
-    public List<TransactionArchive> findByBatchId(Long batchId) {
+    public List<TransactionArchiveEntity> findByBatchId(Long batchId) {
         return transactionArchiveJpaRepository.findByArchivedBatchId(batchId);
     }
 }

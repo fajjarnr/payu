@@ -2,7 +2,7 @@ package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.CommandHandler;
 import id.payu.transaction.application.service.AuthorizationService;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.QrisServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
+import id.payu.transaction.domain.model.TransactionStatus;
+import id.payu.transaction.domain.model.TransactionType;
 
 /**
  * Handler for the ProcessQrisPaymentCommand.
@@ -58,12 +60,12 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
 
         String referenceNumber = generateReferenceNumber();
 
-        Transaction transaction = Transaction.builder()
+        TransactionEntity transaction = TransactionEntity.builder()
                 .referenceNumber(referenceNumber)
                 .senderAccountId(command.accountId())
                 .amount(command.amount())
-                .type(Transaction.TransactionType.QRIS_PAYMENT)
-                .status(Transaction.TransactionStatus.PENDING)
+                .type(TransactionType.QRIS_PAYMENT)
+                .status(TransactionStatus.PENDING)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -80,7 +82,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
         String reservationId = balanceResponse.getReservationId();
 
         if (!balanceResponse.isSuccess()) {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("Insufficient balance");
             transactionPersistencePort.save(transaction);
             eventPublisherPort.publishTransactionFailed(transaction, "Insufficient balance");
@@ -106,7 +108,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                         reservationId,
                         command.amount().getAmount()
                 );
-                transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
+                transaction.setStatus(TransactionStatus.COMPLETED);
                 transaction.setCompletedAt(Instant.now());
                 eventPublisherPort.publishTransactionCompleted(transaction);
             } else {
@@ -117,7 +119,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                         reservationId,
                         command.amount().getAmount()
                 );
-                transaction.setStatus(Transaction.TransactionStatus.FAILED);
+                transaction.setStatus(TransactionStatus.FAILED);
                 transaction.setFailureReason(qrisResponse.getMessage());
                 eventPublisherPort.publishTransactionFailed(transaction, qrisResponse.getMessage());
             }
@@ -130,7 +132,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                     reservationId,
                     command.amount().getAmount()
             );
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("QRIS processing error: " + e.getMessage());
             transactionPersistencePort.save(transaction);
             eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());

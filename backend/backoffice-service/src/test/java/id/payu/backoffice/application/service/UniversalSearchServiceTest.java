@@ -1,8 +1,8 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.domain.CustomerCase;
-import id.payu.backoffice.domain.FraudCase;
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.UniversalSearchResponse;
 import id.payu.backoffice.adapter.persistence.repository.CustomerCaseRepository;
 import id.payu.backoffice.adapter.persistence.repository.FraudCaseRepository;
@@ -44,13 +44,13 @@ class UniversalSearchServiceTest {
     @InjectMocks
     private UniversalSearchService searchService;
 
-    private KycReview sampleKycReview;
-    private FraudCase sampleFraudCase;
-    private CustomerCase sampleCustomerCase;
+    private KycReviewEntity sampleKycReview;
+    private FraudCaseEntity sampleFraudCase;
+    private CustomerCaseEntity sampleCustomerCase;
 
     @BeforeEach
     void setUp() {
-        sampleKycReview = new KycReview();
+        sampleKycReview = new KycReviewEntity();
         sampleKycReview.setId(UUID.randomUUID());
         sampleKycReview.setUserId("testUser123");
         sampleKycReview.setAccountNumber("ACC_TEST_123");
@@ -59,30 +59,30 @@ class UniversalSearchServiceTest {
         sampleKycReview.setFullName("John Doe");
         sampleKycReview.setAddress("Jalan Test No. 123");
         sampleKycReview.setPhoneNumber("08123456789");
-        sampleKycReview.setStatus(KycReview.KycStatus.PENDING);
+        sampleKycReview.setStatus(KycReviewEntity.KycStatus.PENDING);
         sampleKycReview.setCreatedAt(LocalDateTime.now());
 
-        sampleFraudCase = new FraudCase();
+        sampleFraudCase = new FraudCaseEntity();
         sampleFraudCase.setUserId("testUser123");
         sampleFraudCase.setAccountNumber("ACC_TEST_123");
         sampleFraudCase.setTransactionId(UUID.randomUUID());
         sampleFraudCase.setTransactionType("TRANSFER");
         sampleFraudCase.setAmount(new BigDecimal("1000000"));
         sampleFraudCase.setFraudType("Unauthorized Transaction");
-        sampleFraudCase.setRiskLevel(FraudCase.RiskLevel.HIGH);
-        sampleFraudCase.setStatus(FraudCase.CaseStatus.OPEN);
+        sampleFraudCase.setRiskLevel(FraudCaseEntity.RiskLevel.HIGH);
+        sampleFraudCase.setStatus(FraudCaseEntity.CaseStatus.OPEN);
         sampleFraudCase.setDescription("Unauthorized transfer detected");
         sampleFraudCase.setCreatedAt(LocalDateTime.now());
 
-        sampleCustomerCase = new CustomerCase();
+        sampleCustomerCase = new CustomerCaseEntity();
         sampleCustomerCase.setUserId("testUser456");
         sampleCustomerCase.setAccountNumber("ACC_TEST_456");
         sampleCustomerCase.setCaseNumber("CASE_TEST_001");
-        sampleCustomerCase.setCaseType(CustomerCase.CaseType.TRANSACTION_DISPUTE);
-        sampleCustomerCase.setPriority(CustomerCase.Priority.HIGH);
+        sampleCustomerCase.setCaseType(CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE);
+        sampleCustomerCase.setPriority(CustomerCaseEntity.Priority.HIGH);
         sampleCustomerCase.setSubject("Test case");
         sampleCustomerCase.setDescription("Test case description");
-        sampleCustomerCase.setStatus(CustomerCase.CaseStatus.OPEN);
+        sampleCustomerCase.setStatus(CustomerCaseEntity.CaseStatus.OPEN);
         sampleCustomerCase.setCreatedAt(LocalDateTime.now());
     }
 

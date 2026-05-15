@@ -72,10 +72,6 @@ public class SplitPaymentExecutionEntity {
     @Column(name = "failure_reason", length = 512)
     private String failureReason;
 
-    public enum SplitExecutionStatus {
-        PENDING, PROCESSING, COMPLETED, FAILED, REVERSED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.persistence.repository;
 
-import id.payu.promotion.domain.SegmentMembership;
+import id.payu.promotion.adapter.persistence.entity.SegmentMembershipEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface SegmentMembershipRepository extends JpaRepository<SegmentMembership, UUID> {
+public interface SegmentMembershipRepository extends JpaRepository<SegmentMembershipEntity, UUID> {
 
-    List<SegmentMembership> findByAccountId(String accountId);
+    List<SegmentMembershipEntity> findByAccountId(String accountId);
 
-    List<SegmentMembership> findBySegmentId(UUID segmentId);
+    List<SegmentMembershipEntity> findBySegmentId(UUID segmentId);
 
     boolean existsByAccountIdAndSegmentId(String accountId, UUID segmentId);
 }

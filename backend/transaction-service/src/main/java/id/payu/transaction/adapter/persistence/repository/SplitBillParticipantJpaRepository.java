@@ -1,6 +1,6 @@
 package id.payu.transaction.adapter.persistence.repository;
 
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface SplitBillParticipantJpaRepository extends JpaRepository<SplitBillParticipant, UUID> {
-    List<SplitBillParticipant> findBySplitBillId(UUID splitBillId);
-    List<SplitBillParticipant> findByAccountId(UUID accountId, Pageable pageable);
+public interface SplitBillParticipantJpaRepository extends JpaRepository<SplitBillParticipantEntity, UUID> {
+    List<SplitBillParticipantEntity> findBySplitBillId(UUID splitBillId);
+    List<SplitBillParticipantEntity> findByAccountId(UUID accountId, Pageable pageable);
 }

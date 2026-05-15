@@ -260,12 +260,4 @@ public class Account {
                     currency, balance, createdAt, updatedAt, allowPhoneLookup, qrCodeHash);
         }
     }
-
-    public enum AccountType {
-        SAVINGS, CHECKING, POCKET
-    }
-
-    public enum AccountStatus {
-        ACTIVE, DORMANT, BLOCKED, CLOSED
-    }
 }

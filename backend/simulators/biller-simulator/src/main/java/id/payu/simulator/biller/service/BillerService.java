@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Random;
 import java.util.UUID;
+import id.payu.simulator.biller.entity.TransactionStatus;
 
 /**
  * Core service for biller simulation — inquiry, payment, status check.
@@ -111,7 +112,7 @@ public class BillerService {
         tx.amount = request.amount();
         tx.referenceNumber = request.referenceNumber();
         tx.billerTransactionId = billerTxId;
-        tx.status = BillerTransaction.TransactionStatus.COMPLETED;
+        tx.status = TransactionStatus.COMPLETED;
         tx.createdAt = Instant.now();
         tx.completedAt = Instant.now();
         tx.persist();

@@ -3,7 +3,7 @@ package id.payu.statement.adapter.web;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Base controller for Statement Service providing common API response functionality.
+ * Base controller for StatementEntity Service providing common API response functionality.
  * Extends the shared api-commons BaseController.
  */
 @RestController

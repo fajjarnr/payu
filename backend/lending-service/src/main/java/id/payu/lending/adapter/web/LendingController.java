@@ -36,7 +36,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -46,6 +46,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import id.payu.security.annotation.AuditOperation;
 
 @RestController
 @RequestMapping("/api/v1/lending")
@@ -77,7 +78,7 @@ public class LendingController extends BaseController {
     @PreAuthorize("isAuthenticated()")
     @Idempotent(required = true)
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "Loan",
             maskData = true,
             level = AuditLevel.INFO
@@ -252,7 +253,7 @@ public class LendingController extends BaseController {
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
     @Idempotent(required = true)
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "PayLaterTransaction",
             maskData = true,
             level = AuditLevel.INFO
@@ -464,7 +465,7 @@ public class LendingController extends BaseController {
     @PreAuthorize("isAuthenticated()")
     @Idempotent(required = true)
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            operation = id.payu.security.annotation.AuditOperation.TRANSFER,
             entityType = "InstallmentCheckout",
             maskData = true,
             level = AuditLevel.INFO

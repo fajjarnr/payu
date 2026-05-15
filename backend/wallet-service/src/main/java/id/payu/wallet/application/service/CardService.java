@@ -20,6 +20,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.CardStatus;
 
 @Service
 public class CardService implements CardUseCase {
@@ -63,7 +64,7 @@ public class CardService implements CardUseCase {
                 .cardNumber(cardNumber)
                 .expiryDate(expiry)
                 .cardHolderName(cardHolderName)
-                .status(Card.CardStatus.ACTIVE)
+                .status(CardStatus.ACTIVE)
                 .dailyLimit(dailyLimit != null ? dailyLimit : new BigDecimal("10000000"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

@@ -25,8 +25,4 @@ public class InvestmentAccount {
     private AccountStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum AccountStatus {
-        ACTIVE, SUSPENDED, CLOSED, PENDING_VERIFICATION
-    }
 }

@@ -16,10 +16,6 @@ public class Pocket {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum PocketStatus {
-        ACTIVE, FROZEN, CLOSED
-    }
-
     public Pocket() {
     }
 

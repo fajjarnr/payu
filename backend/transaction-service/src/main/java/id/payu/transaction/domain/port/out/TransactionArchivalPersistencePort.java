@@ -1,7 +1,7 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.model.TransactionArchive;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,12 +17,12 @@ public interface TransactionArchivalPersistencePort {
     /**
      * Find transactions to archive (paginated by batch size)
      */
-    List<Transaction> findTransactionsToArchive(Instant cutoffDate, int batchSize);
+    List<TransactionEntity> findTransactionsToArchive(Instant cutoffDate, int batchSize);
 
     /**
      * Archive transactions by saving them to archive table
      */
-    void archiveTransactions(List<TransactionArchive> archives);
+    void archiveTransactions(List<TransactionArchiveEntity> archives);
 
     /**
      * Delete transactions that have been archived
@@ -37,10 +37,10 @@ public interface TransactionArchivalPersistencePort {
     /**
      * Find archived transactions by account ID
      */
-    List<TransactionArchive> findByAccountId(UUID accountId, int page, int size);
+    List<TransactionArchiveEntity> findByAccountId(UUID accountId, int page, int size);
 
     /**
      * Find archived transactions by batch ID
      */
-    List<TransactionArchive> findByBatchId(Long batchId);
+    List<TransactionArchiveEntity> findByBatchId(Long batchId);
 }

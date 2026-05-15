@@ -1,8 +1,8 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.application.service.dto.ArchivalResult;
-import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.model.TransactionArchive;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.transaction.domain.model.TransactionArchiveStatus;
+import id.payu.transaction.domain.model.TransactionArchiveType;
 
 @Service
 public class TransactionArchivalService {
@@ -47,7 +49,7 @@ public class TransactionArchivalService {
      */
     public ArchivalResult archiveOldTransactions() {
         if (!archivalEnabled) {
-            log.info("Transaction archival is disabled");
+            log.info("TransactionEntity archival is disabled");
             return ArchivalResult.builder()
                     .archivedCount(0)
                     .batchId(null)
@@ -81,7 +83,7 @@ public class TransactionArchivalService {
         long maxBatches = ((totalToArchive / batchSize) + 1) * 2;
         
         while (processedBatches < maxBatches) {
-            List<Transaction> transactions = archivalPersistencePort.findTransactionsToArchive(cutoffDate, batchSize);
+            List<TransactionEntity> transactions = archivalPersistencePort.findTransactionsToArchive(cutoffDate, batchSize);
 
             if (transactions.isEmpty()) {
                 break;
@@ -89,11 +91,11 @@ public class TransactionArchivalService {
 
             // BUG-BE-128: (Mitigation) In a full CQRS we'd split the archive and delete.
             // Assuming the persistence port has transaction control.
-            List<TransactionArchive> archives = convertToArchives(transactions, batchId);
+            List<TransactionArchiveEntity> archives = convertToArchives(transactions, batchId);
             archivalPersistencePort.archiveTransactions(archives);
 
             List<UUID> transactionIds = transactions.stream()
-                    .map(Transaction::getId)
+                    .map(TransactionEntity::getId)
                     .collect(Collectors.toList());
                     
             try {
@@ -126,11 +128,11 @@ public class TransactionArchivalService {
                 .build();
     }
 
-    public List<TransactionArchive> getArchivedTransactions(UUID accountId, int page, int size) {
+    public List<TransactionArchiveEntity> getArchivedTransactions(UUID accountId, int page, int size) {
         return archivalPersistencePort.findByAccountId(accountId, page, size);
     }
 
-    public List<TransactionArchive> getArchivedTransactionsByBatch(Long batchId) {
+    public List<TransactionArchiveEntity> getArchivedTransactionsByBatch(Long batchId) {
         return archivalPersistencePort.findByBatchId(batchId);
     }
 
@@ -139,21 +141,21 @@ public class TransactionArchivalService {
         return archivalPersistencePort.countTransactionsToArchive(cutoffDate);
     }
 
-    private List<TransactionArchive> convertToArchives(List<Transaction> transactions, Long batchId) {
+    private List<TransactionArchiveEntity> convertToArchives(List<TransactionEntity> transactions, Long batchId) {
         Instant archivedAt = Instant.now();
-        List<TransactionArchive> archives = new ArrayList<>();
+        List<TransactionArchiveEntity> archives = new ArrayList<>();
 
-        for (Transaction transaction : transactions) {
-            TransactionArchive archive = TransactionArchive.builder()
+        for (TransactionEntity transaction : transactions) {
+            TransactionArchiveEntity archive = TransactionArchiveEntity.builder()
                     .id(transaction.getId())
                     .referenceNumber(transaction.getReferenceNumber())
                     .senderAccountId(transaction.getSenderAccountId())
                     .recipientAccountId(transaction.getRecipientAccountId())
-                    .type(TransactionArchive.TransactionType.valueOf(transaction.getType().name()))
+                    .type(TransactionArchiveType.valueOf(transaction.getType().name()))
                     .amount(transaction.getAmount().getAmount())
                     .currency(transaction.getAmount().getCurrency().getCurrencyCode())
                     .description(transaction.getDescription())
-                    .status(TransactionArchive.TransactionStatus.valueOf(transaction.getStatus().name()))
+                    .status(TransactionArchiveStatus.valueOf(transaction.getStatus().name()))
                     .failureReason(transaction.getFailureReason())
                     .metadata(transaction.getMetadata())
                     .createdAt(transaction.getCreatedAt())

@@ -1,6 +1,6 @@
 package id.payu.partner.adapter.persistence.repository;
 
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,23 +11,23 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PartnerCertificateRepository extends JpaRepository<PartnerCertificate, Long> {
+public interface PartnerCertificateRepository extends JpaRepository<PartnerCertificateEntity, Long> {
 
-    List<PartnerCertificate> findByPartnerId(Long partnerId);
+    List<PartnerCertificateEntity> findByPartnerId(Long partnerId);
 
-    @Query("SELECT pc FROM PartnerCertificate pc WHERE pc.partner.id = ?1 AND pc.active = true")
-    Optional<PartnerCertificate> findActiveByPartnerId(Long partnerId);
+    @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.partner.id = ?1 AND pc.active = true")
+    Optional<PartnerCertificateEntity> findActiveByPartnerId(Long partnerId);
 
-    @Query("SELECT pc FROM PartnerCertificate pc WHERE pc.partner.id = ?1 AND pc.active = true AND pc.validFrom <= ?2 AND pc.validTo >= ?3")
-    Optional<PartnerCertificate> findValidByPartnerId(Long partnerId, LocalDateTime validFrom, LocalDateTime validTo);
+    @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.partner.id = ?1 AND pc.active = true AND pc.validFrom <= ?2 AND pc.validTo >= ?3")
+    Optional<PartnerCertificateEntity> findValidByPartnerId(Long partnerId, LocalDateTime validFrom, LocalDateTime validTo);
 
-    default Optional<PartnerCertificate> findValidByPartnerId(Long partnerId) {
+    default Optional<PartnerCertificateEntity> findValidByPartnerId(Long partnerId) {
         LocalDateTime now = LocalDateTime.now();
         return findValidByPartnerId(partnerId, now, now);
     }
     
-    @Query("SELECT pc FROM PartnerCertificate pc WHERE pc.partner.id = ?1 AND pc.active = true AND pc.validTo >= ?2 AND pc.validTo <= ?3")
-    List<PartnerCertificate> findExpiringSoon(Long partnerId, LocalDateTime now, LocalDateTime expiryThreshold);
+    @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.partner.id = ?1 AND pc.active = true AND pc.validTo >= ?2 AND pc.validTo <= ?3")
+    List<PartnerCertificateEntity> findExpiringSoon(Long partnerId, LocalDateTime now, LocalDateTime expiryThreshold);
 
     // Helper method to satisfy the logical contract - if partnerId is null, ignore it? Or specific call?
     // Based on usage in RotationService: findExpiringSoon(null, days) suggests fetching ANY expiring cert.
@@ -42,10 +42,10 @@ public interface PartnerCertificateRepository extends JpaRepository<PartnerCerti
     // "request param partnerId" in controller suggests explicit partner.
     // "rotateExpiringCertificates" service job suggests ALL partners.
     
-    @Query("SELECT pc FROM PartnerCertificate pc WHERE pc.active = true AND pc.validTo >= ?1 AND pc.validTo <= ?2")
-    List<PartnerCertificate> findAllExpiringSoon(LocalDateTime now, LocalDateTime expiryThreshold);
+    @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.active = true AND pc.validTo >= ?1 AND pc.validTo <= ?2")
+    List<PartnerCertificateEntity> findAllExpiringSoon(LocalDateTime now, LocalDateTime expiryThreshold);
 
-    default List<PartnerCertificate> findExpiringSoon(Long partnerId, int daysUntilExpiry) {
+    default List<PartnerCertificateEntity> findExpiringSoon(Long partnerId, int daysUntilExpiry) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiryThreshold = now.plusDays(daysUntilExpiry);
         if (partnerId != null) {
@@ -55,14 +55,14 @@ public interface PartnerCertificateRepository extends JpaRepository<PartnerCerti
         }
     }
 
-    @Query("SELECT pc FROM PartnerCertificate pc WHERE pc.active = true AND pc.validTo < ?1")
-    List<PartnerCertificate> findExpiredCertificates(LocalDateTime now);
+    @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.active = true AND pc.validTo < ?1")
+    List<PartnerCertificateEntity> findExpiredCertificates(LocalDateTime now);
     
-    default List<PartnerCertificate> findExpiredCertificates() {
+    default List<PartnerCertificateEntity> findExpiredCertificates() {
         return findExpiredCertificates(LocalDateTime.now());
     }
 
     @Modifying
-    @Query("UPDATE PartnerCertificate pc SET pc.active = false WHERE pc.partner.id = ?1")
+    @Query("UPDATE PartnerCertificateEntity pc SET pc.active = false WHERE pc.partner.id = ?1")
     void deactivateByPartnerId(Long partnerId);
 }

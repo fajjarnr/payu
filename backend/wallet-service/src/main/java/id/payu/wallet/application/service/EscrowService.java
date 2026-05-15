@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.EscrowStatus;
 
 /**
  * Application service for escrow / payment holding.
@@ -79,7 +81,7 @@ public class EscrowService implements EscrowUseCase {
                 .amount(amount)
                 .feeAmount(feeAmount != null ? feeAmount : BigDecimal.ZERO)
                 .currency(currency != null ? currency : "IDR")
-                .status(EscrowTransaction.EscrowStatus.CREATED)
+                .status(EscrowStatus.CREATED)
                 .externalReferenceId(externalReferenceId)
                 .description(description)
                 .expiresAt(LocalDateTime.now().plusHours(expiresInHours))
@@ -167,7 +169,7 @@ public class EscrowService implements EscrowUseCase {
         EscrowTransaction escrow = findEscrowOrThrow(escrowId);
 
         // If still HELD, release the reservation back first (this restores the buyer's available balance)
-        boolean wasHeld = escrow.getStatus() == EscrowTransaction.EscrowStatus.HELD;
+        boolean wasHeld = escrow.getStatus() == EscrowStatus.HELD;
         if (wasHeld) {
             walletUseCase.releaseReservation(escrow.getReservationId());
         }
@@ -260,7 +262,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId(escrow.getBuyerAccountId())
                         .coaCode(COA_USER_WALLETS)
-                        .entryType(LedgerEntry.EntryType.DEBIT)
+                        .entryType(EntryType.DEBIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -271,7 +273,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId("SYSTEM_ESCROW")
                         .coaCode(COA_ESCROW_HOLDINGS)
-                        .entryType(LedgerEntry.EntryType.CREDIT)
+                        .entryType(EntryType.CREDIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -294,7 +296,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId("SYSTEM_ESCROW")
                         .coaCode(COA_ESCROW_HOLDINGS)
-                        .entryType(LedgerEntry.EntryType.DEBIT)
+                        .entryType(EntryType.DEBIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -305,7 +307,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId(escrow.getSellerAccountId())
                         .coaCode(COA_MERCHANT_PAYABLE)
-                        .entryType(LedgerEntry.EntryType.CREDIT)
+                        .entryType(EntryType.CREDIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -328,7 +330,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId(escrow.getSellerAccountId())
                         .coaCode(COA_MERCHANT_PAYABLE)
-                        .entryType(LedgerEntry.EntryType.DEBIT)
+                        .entryType(EntryType.DEBIT)
                         .amount(netAmount)
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -339,7 +341,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId(escrow.getSellerAccountId())
                         .coaCode(COA_USER_WALLETS)
-                        .entryType(LedgerEntry.EntryType.CREDIT)
+                        .entryType(EntryType.CREDIT)
                         .amount(netAmount)
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -362,7 +364,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId("SYSTEM_ESCROW")
                         .coaCode(COA_ESCROW_HOLDINGS)
-                        .entryType(LedgerEntry.EntryType.DEBIT)
+                        .entryType(EntryType.DEBIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)
@@ -373,7 +375,7 @@ public class EscrowService implements EscrowUseCase {
                         .id(UUID.randomUUID())
                         .accountId(escrow.getBuyerAccountId())
                         .coaCode(COA_USER_WALLETS)
-                        .entryType(LedgerEntry.EntryType.CREDIT)
+                        .entryType(EntryType.CREDIT)
                         .amount(escrow.getAmount())
                         .currency(escrow.getCurrency())
                         .referenceType(REFERENCE_TYPE)

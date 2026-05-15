@@ -4,7 +4,7 @@ import id.payu.api.common.exception.BusinessException;
 import lombok.Getter;
 
 /**
- * Custom exception for Statement service
+ * Custom exception for StatementEntity service
  */
 @Getter
 public class StatementException extends BusinessException {

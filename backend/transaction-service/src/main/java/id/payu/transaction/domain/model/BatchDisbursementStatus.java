@@ -17,7 +17,7 @@ package id.payu.transaction.domain.model;
  *   <li><b>FAILED</b> - All items in batch failed</li>
  * </ul>
  *
- * @see BatchDisbursement
+ * @see BatchDisbursementEntity
  */
 public enum BatchDisbursementStatus {
     /**

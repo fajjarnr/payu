@@ -2,7 +2,7 @@ package id.payu.statement.integration;
 
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
- * Integration tests for Statement Controller.
+ * Integration tests for StatementEntity Controller.
  * Verifies POST /api/v1/statements, GET /api/v1/statements/{id},
  * GET /api/v1/statements, and GET /api/v1/statements/{id}/download endpoints.
  */
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Tag("integration")
 @Import(TestContainersConfig.class)
-@DisplayName("Statement Controller Integration Tests")
+@DisplayName("StatementEntity Controller Integration Tests")
 class StatementControllerIntegrationTest {
 
     private static final String BASE_PATH = "/api/v1/statements";
@@ -62,7 +62,7 @@ class StatementControllerIntegrationTest {
     // ─── POST /statements/generate ───────────────────────────────────
 
     @Nested
-    @DisplayName("Generate Statement")
+    @DisplayName("Generate StatementEntity")
     class GenerateStatementTests {
 
         @Test
@@ -166,14 +166,14 @@ class StatementControllerIntegrationTest {
     // ─── GET /statements/{id} ────────────────────────────────────────
 
     @Nested
-    @DisplayName("Get Statement by ID")
+    @DisplayName("Get StatementEntity by ID")
     class GetStatementTests {
 
         @Test
         @DisplayName("Should return statement by ID")
         void getStatement_withExistingId_shouldReturn200() {
             // Create a statement first
-            Statement statement = Statement.builder()
+            StatementEntity statement = StatementEntity.builder()
                     .id(UUID.randomUUID())
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
@@ -185,7 +185,7 @@ class StatementControllerIntegrationTest {
                     .totalCredits(new BigDecimal("500000.00"))
                     .totalDebits(new BigDecimal("300000.00"))
                     .transactionCount(25)
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
 
             statement = statementRepository.save(statement);
@@ -236,14 +236,14 @@ class StatementControllerIntegrationTest {
         void listStatements_shouldReturn200() {
             // Create some statements
             for (int i = 0; i < 3; i++) {
-                Statement statement = Statement.builder()
+                StatementEntity statement = StatementEntity.builder()
                         .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                         .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                         .statementPeriod(LocalDate.of(2026, i + 1, 1))
                         .storagePath("s3://bucket/statement-" + i + ".pdf")
                         .openingBalance(new BigDecimal("1000000.00"))
                         .closingBalance(new BigDecimal("1100000.00"))
-                        .status(Statement.StatementStatus.COMPLETED)
+                        .status(StatementEntity.StatementStatus.COMPLETED)
                         .build();
                 statementRepository.save(statement);
             }
@@ -287,14 +287,14 @@ class StatementControllerIntegrationTest {
         void listStatements_withPagination_shouldReturnPagedResult() {
             // Create 5 statements
             for (int i = 0; i < 5; i++) {
-                Statement statement = Statement.builder()
+                StatementEntity statement = StatementEntity.builder()
                         .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                         .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                         .statementPeriod(LocalDate.of(2026, i + 1, 1))
                         .storagePath("s3://bucket/statement-" + i + ".pdf")
                         .openingBalance(new BigDecimal("1000000.00"))
                         .closingBalance(new BigDecimal("1100000.00"))
-                        .status(Statement.StatementStatus.COMPLETED)
+                        .status(StatementEntity.StatementStatus.COMPLETED)
                         .build();
                 statementRepository.save(statement);
             }
@@ -319,32 +319,32 @@ class StatementControllerIntegrationTest {
     // ─── GET /statements/latest ──────────────────────────────────────
 
     @Nested
-    @DisplayName("Get Latest Statement")
+    @DisplayName("Get Latest StatementEntity")
     class GetLatestStatementTests {
 
         @Test
         @DisplayName("Should return latest statement")
         void getLatestStatement_shouldReturn200() {
             // Create statements with different periods
-            Statement oldStatement = Statement.builder()
+            StatementEntity oldStatement = StatementEntity.builder()
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                     .statementPeriod(LocalDate.of(2026, 1, 1))
                     .storagePath("s3://bucket/statement-jan.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1100000.00"))
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(oldStatement);
 
-            Statement latestStatement = Statement.builder()
+            StatementEntity latestStatement = StatementEntity.builder()
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                     .statementPeriod(LocalDate.of(2026, 2, 1))
                     .storagePath("s3://bucket/statement-feb.pdf")
                     .openingBalance(new BigDecimal("1100000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(latestStatement);
 
@@ -372,14 +372,14 @@ class StatementControllerIntegrationTest {
     // ─── GET /statements/{id}/download ───────────────────────────────
 
     @Nested
-    @DisplayName("Download Statement")
+    @DisplayName("Download StatementEntity")
     class DownloadStatementTests {
 
         @Test
         @DisplayName("Should return PDF for completed statement")
         void downloadStatement_withCompletedStatus_shouldReturnPdf() {
             // Create a completed statement
-            Statement statement = Statement.builder()
+            StatementEntity statement = StatementEntity.builder()
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                     .statementPeriod(LocalDate.of(2026, 2, 1))
@@ -387,7 +387,7 @@ class StatementControllerIntegrationTest {
                     .fileSizeBytes(1024L)
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 
@@ -413,7 +413,7 @@ class StatementControllerIntegrationTest {
     // ─── POST /statements/{id}/regenerate ────────────────────────────
 
     @Nested
-    @DisplayName("Regenerate Statement (Admin Only)")
+    @DisplayName("Regenerate StatementEntity (Admin Only)")
     class RegenerateStatementTests {
 
         @Test
@@ -424,14 +424,14 @@ class StatementControllerIntegrationTest {
                 .thenReturn(TestContainersConfig.buildAdminJwt());
 
             // Create a statement
-            Statement statement = Statement.builder()
+            StatementEntity statement = StatementEntity.builder()
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                     .statementPeriod(LocalDate.of(2026, 2, 1))
                     .storagePath("s3://bucket/statement.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 
@@ -448,14 +448,14 @@ class StatementControllerIntegrationTest {
         @Test
         @DisplayName("Should return 403 for non-admin user")
         void regenerateStatement_withUserRole_shouldReturn403() {
-            Statement statement = Statement.builder()
+            StatementEntity statement = StatementEntity.builder()
                     .customerId(TestContainersConfig.TEST_CUSTOMER_ID)
                     .accountNumber(TestContainersConfig.TEST_ACCOUNT_NUMBER)
                     .statementPeriod(LocalDate.of(2026, 2, 1))
                     .storagePath("s3://bucket/statement.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(Statement.StatementStatus.COMPLETED)
+                    .status(StatementEntity.StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 

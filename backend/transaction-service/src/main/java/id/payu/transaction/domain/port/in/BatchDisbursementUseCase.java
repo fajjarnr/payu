@@ -1,7 +1,7 @@
 package id.payu.transaction.domain.port.in;
 
-import id.payu.transaction.domain.model.BatchDisbursement;
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 
 import java.util.List;
@@ -23,8 +23,8 @@ import java.util.UUID;
  *   <li>Track batch progress and aggregate status</li>
  * </ul>
  *
- * @see BatchDisbursement
- * @see Disbursement
+ * @see BatchDisbursementEntity
+ * @see DisbursementEntity
  */
 public interface BatchDisbursementUseCase {
 
@@ -38,7 +38,7 @@ public interface BatchDisbursementUseCase {
      * @param idempotencyKey optional idempotency key for duplicate protection
      * @return the created batch disbursement
      */
-    BatchDisbursement createBatch(
+    BatchDisbursementEntity createBatch(
             UUID sourceAccountId,
             String name,
             String description,
@@ -57,7 +57,7 @@ public interface BatchDisbursementUseCase {
      * @return the created disbursement item
      * @throws IllegalStateException if batch is not in PENDING status
      */
-    Disbursement addBatchItem(
+    DisbursementEntity addBatchItem(
             UUID batchId,
             Money amount,
             String bankCode,
@@ -72,7 +72,7 @@ public interface BatchDisbursementUseCase {
      * @param id the batch ID
      * @return optional containing the batch if found
      */
-    Optional<BatchDisbursement> getBatch(UUID id);
+    Optional<BatchDisbursementEntity> getBatch(UUID id);
 
     /**
      * Finds a batch by idempotency key.
@@ -80,7 +80,7 @@ public interface BatchDisbursementUseCase {
      * @param idempotencyKey the idempotency key
      * @return optional containing the batch if found
      */
-    Optional<BatchDisbursement> findBatchByIdempotencyKey(String idempotencyKey);
+    Optional<BatchDisbursementEntity> findBatchByIdempotencyKey(String idempotencyKey);
 
     /**
      * Lists batch disbursements for a source account.
@@ -90,7 +90,7 @@ public interface BatchDisbursementUseCase {
      * @param offset pagination offset
      * @return list of batch disbursements
      */
-    List<BatchDisbursement> listBatchesByAccount(UUID sourceAccountId, int limit, int offset);
+    List<BatchDisbursementEntity> listBatchesByAccount(UUID sourceAccountId, int limit, int offset);
 
     /**
      * Starts processing a pending batch.
@@ -100,7 +100,7 @@ public interface BatchDisbursementUseCase {
      * @return the updated batch
      * @throws IllegalStateException if batch is not in PENDING status
      */
-    BatchDisbursement processBatch(UUID id);
+    BatchDisbursementEntity processBatch(UUID id);
 
     /**
      * Gets the items in a batch.
@@ -108,7 +108,7 @@ public interface BatchDisbursementUseCase {
      * @param batchId the batch ID
      * @return list of disbursement items
      */
-    List<Disbursement> getBatchItems(UUID batchId);
+    List<DisbursementEntity> getBatchItems(UUID batchId);
 
     /**
      * Gets the progress of a batch as percentage.
@@ -124,5 +124,5 @@ public interface BatchDisbursementUseCase {
      * @param id the batch ID
      * @return the updated batch with final status
      */
-    BatchDisbursement completeBatch(UUID id);
+    BatchDisbursementEntity completeBatch(UUID id);
 }

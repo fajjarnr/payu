@@ -39,11 +39,6 @@ public class LedgerEntry {
         this.createdAt = createdAt;
     }
 
-    public enum EntryType {
-        DEBIT,
-        CREDIT
-    }
-
     public static LedgerEntryBuilder builder() {
         return new LedgerEntryBuilder();
     }

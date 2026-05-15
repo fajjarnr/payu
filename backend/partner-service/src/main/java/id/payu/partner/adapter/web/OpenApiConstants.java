@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 /**
- * OpenAPI constants and security scheme definitions for Partner Service.
+ * OpenAPI constants and security scheme definitions for PartnerEntity Service.
  *
  * <p>This class defines common security schemes and annotation constants
  * used across all REST endpoints for OpenAPI documentation generation.</p>
@@ -34,7 +34,7 @@ public final class OpenApiConstants {
     public static final String SECURITY_SCHEME_SIGNATURE = "signatureAuth";
 
     /**
-     * Tag for Partner management endpoints.
+     * Tag for PartnerEntity management endpoints.
      */
     public static final String TAG_PARTNER = "Partners";
 

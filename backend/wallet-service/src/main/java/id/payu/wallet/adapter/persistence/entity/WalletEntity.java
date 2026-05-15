@@ -73,12 +73,6 @@ public class WalletEntity {
         this.updatedAt = updatedAt;
     }
 
-    public enum WalletStatus {
-        ACTIVE,
-        FROZEN,
-        CLOSED
-    }
-
     public static WalletEntityBuilder builder() {
         return new WalletEntityBuilder();
     }

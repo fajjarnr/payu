@@ -14,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import id.payu.gateway.application.service.State;
 
 /**
  * Health and status endpoints for the gateway.
@@ -62,7 +63,7 @@ public class HealthResource {
                 if (info.lastFailureTime() != null) {
                     serviceState.put("lastFailureTime", info.lastFailureTime().toString());
                 }
-                if (info.state() == CircuitBreakerService.State.OPEN) {
+                if (info.state() == State.OPEN) {
                     anyOpen = true;
                     serviceState.put("retryAfterSeconds", info.retryAfterSeconds());
                     if (info.openedAt() != null) {
@@ -163,13 +164,13 @@ public class HealthResource {
                 if (info.lastFailureTime() != null) {
                     svcInfo.put("lastFailureTime", info.lastFailureTime().toString());
                 }
-                if (info.state() == CircuitBreakerService.State.OPEN) {
+                if (info.state() == State.OPEN) {
                     openCount++;
                     svcInfo.put("retryAfterSeconds", info.retryAfterSeconds());
                     if (info.openedAt() != null) {
                         svcInfo.put("openedAt", info.openedAt().toString());
                     }
-                } else if (info.state() == CircuitBreakerService.State.HALF_OPEN) {
+                } else if (info.state() == State.HALF_OPEN) {
                     halfOpenCount++;
                 } else {
                     closedCount++;
@@ -213,7 +214,7 @@ public class HealthResource {
         if (info.lastFailureTime() != null) {
             result.put("lastFailureTime", info.lastFailureTime().toString());
         }
-        if (info.state() == CircuitBreakerService.State.OPEN) {
+        if (info.state() == State.OPEN) {
             result.put("retryAfterSeconds", info.retryAfterSeconds());
             if (info.openedAt() != null) {
                 result.put("openedAt", info.openedAt().toString());

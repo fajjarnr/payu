@@ -1,9 +1,11 @@
 package id.payu.backoffice.dto;
 
-import id.payu.backoffice.domain.FraudCase;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.math.BigDecimal;
+import id.payu.backoffice.domain.FraudCaseStatus;
+import id.payu.backoffice.domain.RiskLevel;
 
 public record FraudCaseResponse(
         UUID id,
@@ -13,8 +15,8 @@ public record FraudCaseResponse(
         String transactionType,
         BigDecimal amount,
         String fraudType,
-        FraudCase.RiskLevel riskLevel,
-        FraudCase.CaseStatus status,
+        RiskLevel riskLevel,
+        FraudCaseStatus status,
         String description,
         String evidence,
         String notes,
@@ -23,7 +25,7 @@ public record FraudCaseResponse(
         LocalDateTime resolvedAt,
         LocalDateTime createdAt
 ) {
-    public static FraudCaseResponse from(FraudCase fraudCase) {
+    public static FraudCaseResponse from(FraudCaseEntity fraudCase) {
         return new FraudCaseResponse(
                 fraudCase.getId(),
                 fraudCase.getUserId(),

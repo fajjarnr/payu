@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
-import id.payu.transaction.domain.model.VirtualAccount;
+import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
 import id.payu.transaction.dto.VirtualAccountResponse;
@@ -51,8 +51,8 @@ class VirtualAccountServiceTest {
                     .build();
 
             when(virtualAccountRepository.existsByVaNumber(anyString())).thenReturn(false);
-            when(virtualAccountRepository.save(any(VirtualAccount.class))).thenAnswer(i -> {
-                VirtualAccount va = i.getArgument(0);
+            when(virtualAccountRepository.save(any(VirtualAccountEntity.class))).thenAnswer(i -> {
+                VirtualAccountEntity va = i.getArgument(0);
                 va.setId(UUID.randomUUID());
                 va.setCreatedAt(Instant.now());
                 return va;
@@ -78,8 +78,8 @@ class VirtualAccountServiceTest {
                     .build();
 
             when(virtualAccountRepository.existsByVaNumber(anyString())).thenReturn(false);
-            when(virtualAccountRepository.save(any(VirtualAccount.class))).thenAnswer(i -> {
-                VirtualAccount va = i.getArgument(0);
+            when(virtualAccountRepository.save(any(VirtualAccountEntity.class))).thenAnswer(i -> {
+                VirtualAccountEntity va = i.getArgument(0);
                 va.setId(UUID.randomUUID());
                 va.setCreatedAt(Instant.now());
                 return va;
@@ -113,7 +113,7 @@ class VirtualAccountServiceTest {
         @Test
         @DisplayName("should handle payment callback successfully")
         void shouldHandlePaymentCallback() {
-            VirtualAccount va = VirtualAccount.builder()
+            VirtualAccountEntity va = VirtualAccountEntity.builder()
                     .id(UUID.randomUUID())
                     .vaNumber("1234999888777666")
                     .bankCode("BCA")
@@ -121,14 +121,14 @@ class VirtualAccountServiceTest {
                     .partnerId(UUID.randomUUID())
                     .amount(new BigDecimal("500000"))
                     .currency("IDR")
-                    .status(VirtualAccount.VaStatus.PENDING)
+                    .status(VirtualAccountEntity.VaStatus.PENDING)
                     .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
                     .createdAt(Instant.now())
                     .build();
 
             when(virtualAccountRepository.findByVaNumber("1234999888777666"))
                     .thenReturn(Optional.of(va));
-            when(virtualAccountRepository.save(any(VirtualAccount.class)))
+            when(virtualAccountRepository.save(any(VirtualAccountEntity.class)))
                     .thenAnswer(i -> i.getArgument(0));
 
             VaCallbackRequest callback = VaCallbackRequest.builder()
@@ -164,11 +164,11 @@ class VirtualAccountServiceTest {
         @Test
         @DisplayName("should fail for expired VA")
         void shouldFailForExpiredVa() {
-            VirtualAccount va = VirtualAccount.builder()
+            VirtualAccountEntity va = VirtualAccountEntity.builder()
                     .id(UUID.randomUUID())
                     .vaNumber("1234expired")
                     .bankCode("BCA")
-                    .status(VirtualAccount.VaStatus.PENDING)
+                    .status(VirtualAccountEntity.VaStatus.PENDING)
                     .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS))
                     .createdAt(Instant.now().minus(25, ChronoUnit.HOURS))
                     .build();
@@ -194,11 +194,11 @@ class VirtualAccountServiceTest {
         @Test
         @DisplayName("should expire pending VAs past TTL")
         void shouldExpirePendingVAs() {
-            VirtualAccount va = VirtualAccount.builder()
+            VirtualAccountEntity va = VirtualAccountEntity.builder()
                     .id(UUID.randomUUID())
                     .vaNumber("1234old")
                     .bankCode("BCA")
-                    .status(VirtualAccount.VaStatus.PENDING)
+                    .status(VirtualAccountEntity.VaStatus.PENDING)
                     .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS))
                     .createdAt(Instant.now().minus(25, ChronoUnit.HOURS))
                     .build();
@@ -209,7 +209,7 @@ class VirtualAccountServiceTest {
 
             virtualAccountService.expireVirtualAccounts();
 
-            assertEquals(VirtualAccount.VaStatus.EXPIRED, va.getStatus());
+            assertEquals(VirtualAccountEntity.VaStatus.EXPIRED, va.getStatus());
             verify(virtualAccountRepository).saveAll(anyList());
         }
 
@@ -233,7 +233,7 @@ class VirtualAccountServiceTest {
         @DisplayName("should get VA by ID")
         void shouldGetVaById() {
             UUID vaId = UUID.randomUUID();
-            VirtualAccount va = VirtualAccount.builder()
+            VirtualAccountEntity va = VirtualAccountEntity.builder()
                     .id(vaId)
                     .vaNumber("1234111222333")
                     .bankCode("BCA")
@@ -241,7 +241,7 @@ class VirtualAccountServiceTest {
                     .partnerId(UUID.randomUUID())
                     .amount(BigDecimal.valueOf(100000))
                     .currency("IDR")
-                    .status(VirtualAccount.VaStatus.PENDING)
+                    .status(VirtualAccountEntity.VaStatus.PENDING)
                     .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
                     .createdAt(Instant.now())
                     .build();

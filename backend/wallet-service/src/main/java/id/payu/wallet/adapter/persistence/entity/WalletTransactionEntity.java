@@ -73,11 +73,6 @@ public class WalletTransactionEntity implements Persistable<UUID> {
         this.createdAt = createdAt;
     }
 
-    public enum TransactionType {
-        CREDIT,
-        DEBIT
-    }
-
     public static WalletTransactionEntityBuilder builder() {
         return new WalletTransactionEntityBuilder();
     }

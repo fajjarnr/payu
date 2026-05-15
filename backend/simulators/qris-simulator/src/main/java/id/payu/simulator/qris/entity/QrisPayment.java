@@ -78,20 +78,6 @@ public class QrisPayment extends PanacheEntityBase {
     @Column(name = "paid_at")
     public LocalDateTime paidAt;
 
-    public enum QrType {
-        STATIC,   // Fixed QR, amount entered by payer
-        DYNAMIC   // Generated per transaction, amount included
-    }
-
-    public enum PaymentStatus {
-        PENDING,
-        PAID,
-        EXPIRED,
-        FAILED,
-        CANCELLED,
-        REFUNDED
-    }
-
     // Finder methods
     public static QrisPayment findByQrId(String qrId) {
         return find("qrId", qrId).firstResult();

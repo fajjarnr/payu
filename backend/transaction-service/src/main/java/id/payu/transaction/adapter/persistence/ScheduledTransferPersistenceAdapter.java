@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
 import id.payu.transaction.adapter.persistence.repository.ScheduledTransferJpaRepository;
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,33 +18,33 @@ public class ScheduledTransferPersistenceAdapter implements ScheduledTransferPer
     private final ScheduledTransferJpaRepository repository;
 
     @Override
-    public ScheduledTransfer save(ScheduledTransfer scheduledTransfer) {
+    public ScheduledTransferEntity save(ScheduledTransferEntity scheduledTransfer) {
         scheduledTransfer.setUpdatedAt(Instant.now());
         return repository.save(scheduledTransfer);
     }
 
     @Override
-    public Optional<ScheduledTransfer> findById(UUID id) {
+    public Optional<ScheduledTransferEntity> findById(UUID id) {
         return repository.findById(id);
     }
 
     @Override
-    public Optional<ScheduledTransfer> findByReferenceNumber(String referenceNumber) {
+    public Optional<ScheduledTransferEntity> findByReferenceNumber(String referenceNumber) {
         return repository.findByReferenceNumber(referenceNumber);
     }
 
     @Override
-    public List<ScheduledTransfer> findBySenderAccountId(UUID senderAccountId) {
+    public List<ScheduledTransferEntity> findBySenderAccountId(UUID senderAccountId) {
         return repository.findBySenderAccountId(senderAccountId);
     }
 
     @Override
-    public List<ScheduledTransfer> findDueScheduledTransfers(Instant now) {
+    public List<ScheduledTransferEntity> findDueScheduledTransfers(Instant now) {
         return repository.findDueScheduledTransfers(now);
     }
 
     @Override
-    public void delete(ScheduledTransfer scheduledTransfer) {
+    public void delete(ScheduledTransferEntity scheduledTransfer) {
         repository.delete(scheduledTransfer);
     }
 }

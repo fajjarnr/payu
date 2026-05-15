@@ -13,7 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * OpenAPI configuration for PayU Notification Service.
+ * OpenAPI configuration for PayU NotificationEntity Service.
  *
  * <p>Provides comprehensive API documentation including:
  * - Authentication via JWT bearer tokens
@@ -25,12 +25,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 @OpenAPIDefinition(
     info = @Info(
-        title = "PayU Notification Service API",
+        title = "PayU NotificationEntity Service API",
         version = "1.0.0",
         description = """
-            ## PayU Notification Service
+            ## PayU NotificationEntity Service
 
-            The Notification Service is responsible for delivering notifications to PayU users
+            The NotificationEntity Service is responsible for delivering notifications to PayU users
             through multiple channels including Push, SMS, Email, and In-App notifications.
 
             ### Features
@@ -51,7 +51,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
             ### Rate Limiting
 
-            - **Send Notification**: 100 requests per minute per user
+            - **Send NotificationEntity**: 100 requests per minute per user
             - **Get Notifications**: 200 requests per minute per user
             - **Mark as Read**: 200 requests per minute per user
 
@@ -60,7 +60,7 @@ import jakarta.enterprise.context.ApplicationScoped;
             The API uses standard HTTP status codes:
 
             - `200 OK` - Request succeeded
-            - `201 Created` - Notification created successfully
+            - `201 Created` - NotificationEntity created successfully
             - `400 Bad Request` - Invalid request parameters
             - `401 Unauthorized` - Missing or invalid authentication
             - `403 Forbidden` - Insufficient permissions

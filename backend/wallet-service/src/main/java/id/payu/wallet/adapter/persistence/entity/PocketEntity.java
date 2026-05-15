@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.wallet.domain.model.PocketStatus;
 
 @Entity
 @Table(name = "pockets")
@@ -33,7 +34,7 @@ public class PocketEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private id.payu.wallet.domain.model.Pocket.PocketStatus status;
+    private id.payu.wallet.domain.model.PocketStatus status;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -91,11 +92,11 @@ public class PocketEntity {
         this.balance = balance;
     }
 
-    public id.payu.wallet.domain.model.Pocket.PocketStatus getStatus() {
+    public id.payu.wallet.domain.model.PocketStatus getStatus() {
         return status;
     }
 
-    public void setStatus(id.payu.wallet.domain.model.Pocket.PocketStatus status) {
+    public void setStatus(id.payu.wallet.domain.model.PocketStatus status) {
         this.status = status;
     }
 

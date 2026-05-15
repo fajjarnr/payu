@@ -4,6 +4,9 @@ import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
 import id.payu.partner.adapter.persistence.repository.MerchantRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.domain.*;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.MerchantEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -11,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import id.payu.partner.domain.KeyEnvironment;
+import id.payu.partner.domain.MerchantCategory;
+import id.payu.partner.domain.MerchantStatus;
 
 /**
  * Service for seeding test data in sandbox environment.
@@ -79,11 +85,11 @@ public class SandboxDataSeeder {
      */
     private void seedTestMerchants(List<String> created, List<String> skipped) {
         // Get or create test partner
-        Partner testPartner = partnerRepository.findByPartnerCode("TEST-PARTNER")
+        PartnerEntity testPartner = partnerRepository.findByPartnerCode("TEST-PARTNER")
                 .orElseGet(() -> {
-                    Partner partner = new Partner();
+                    PartnerEntity partner = new PartnerEntity();
                     partner.setPartnerCode("TEST-PARTNER");
-                    partner.setName("Test Partner (Sandbox)");
+                    partner.setName("Test PartnerEntity (Sandbox)");
                     partner.setEmail("sandbox@payu.fajjjar.my.id");
                     partner.setType("MERCHANT");
                     partner.setStatus(PartnerStatus.ACTIVE);
@@ -94,56 +100,56 @@ public class SandboxDataSeeder {
 
         // Test merchant 1: Retail
         if (!merchantRepository.existsByMerchantCode(TEST_MERCHANT_001)) {
-            Merchant merchant1 = new Merchant();
+            MerchantEntity merchant1 = new MerchantEntity();
             merchant1.setPartner(testPartner);
             merchant1.setMerchantCode(TEST_MERCHANT_001);
             merchant1.setBusinessName("Test Retail Store");
-            merchant1.setCategory(Merchant.MerchantCategory.RETAIL);
-            merchant1.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant1.setCategory(MerchantCategory.RETAIL);
+            merchant1.setStatus(MerchantStatus.ACTIVE);
             merchant1.setAddress("123 Test Street");
             merchant1.setSettlementAccount(TEST_BCA_ACCOUNT);
             merchant1.setSettlementBank("BCA");
             merchant1.setCreatedAt(LocalDateTime.now());
             merchantRepository.save(merchant1);
-            created.add("Merchant: " + TEST_MERCHANT_001);
+            created.add("MerchantEntity: " + TEST_MERCHANT_001);
         } else {
-            skipped.add("Merchant: " + TEST_MERCHANT_001);
+            skipped.add("MerchantEntity: " + TEST_MERCHANT_001);
         }
 
         // Test merchant 2: Food & Beverage
         if (!merchantRepository.existsByMerchantCode(TEST_MERCHANT_002)) {
-            Merchant merchant2 = new Merchant();
+            MerchantEntity merchant2 = new MerchantEntity();
             merchant2.setPartner(testPartner);
             merchant2.setMerchantCode(TEST_MERCHANT_002);
             merchant2.setBusinessName("Test Restaurant");
-            merchant2.setCategory(Merchant.MerchantCategory.FOOD_BEVERAGE);
-            merchant2.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant2.setCategory(MerchantCategory.FOOD_BEVERAGE);
+            merchant2.setStatus(MerchantStatus.ACTIVE);
             merchant2.setAddress("456 Test Avenue");
             merchant2.setSettlementAccount(TEST_BNI_ACCOUNT);
             merchant2.setSettlementBank("BNI");
             merchant2.setCreatedAt(LocalDateTime.now());
             merchantRepository.save(merchant2);
-            created.add("Merchant: " + TEST_MERCHANT_002);
+            created.add("MerchantEntity: " + TEST_MERCHANT_002);
         } else {
-            skipped.add("Merchant: " + TEST_MERCHANT_002);
+            skipped.add("MerchantEntity: " + TEST_MERCHANT_002);
         }
 
         // Test merchant 3: Services
         if (!merchantRepository.existsByMerchantCode(TEST_MERCHANT_003)) {
-            Merchant merchant3 = new Merchant();
+            MerchantEntity merchant3 = new MerchantEntity();
             merchant3.setPartner(testPartner);
             merchant3.setMerchantCode(TEST_MERCHANT_003);
             merchant3.setBusinessName("Test Service Provider");
-            merchant3.setCategory(Merchant.MerchantCategory.SERVICES);
-            merchant3.setStatus(Merchant.MerchantStatus.ACTIVE);
+            merchant3.setCategory(MerchantCategory.SERVICES);
+            merchant3.setStatus(MerchantStatus.ACTIVE);
             merchant3.setAddress("789 Test Boulevard");
             merchant3.setSettlementAccount(TEST_MANDIRI_ACCOUNT);
             merchant3.setSettlementBank("MANDIRI");
             merchant3.setCreatedAt(LocalDateTime.now());
             merchantRepository.save(merchant3);
-            created.add("Merchant: " + TEST_MERCHANT_003);
+            created.add("MerchantEntity: " + TEST_MERCHANT_003);
         } else {
-            skipped.add("Merchant: " + TEST_MERCHANT_003);
+            skipped.add("MerchantEntity: " + TEST_MERCHANT_003);
         }
     }
 
@@ -151,7 +157,7 @@ public class SandboxDataSeeder {
      * Seed test API keys for sandbox environment.
      */
     private void seedTestApiKeys(List<String> created, List<String> skipped) {
-        Partner testPartner = partnerRepository.findByPartnerCode("TEST-PARTNER")
+        PartnerEntity testPartner = partnerRepository.findByPartnerCode("TEST-PARTNER")
                 .orElseThrow(() -> new IllegalStateException("Test partner not found"));
 
         // Sandbox API Key
@@ -162,7 +168,7 @@ public class SandboxDataSeeder {
                     "payu_test_",
                     sandboxKeyHash,
                     "2345",
-                    ApiKeyEntity.KeyEnvironment.SANDBOX,
+                    KeyEnvironment.SANDBOX,
                     true
             );
             sandboxKey.setName("Sandbox Test Key");

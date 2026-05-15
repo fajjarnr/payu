@@ -1,15 +1,17 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.Promotion;
+import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import id.payu.promotion.domain.PromotionRewardType;
+import id.payu.promotion.domain.PromotionType;
 
 public record CreatePromotionRequest(
     String code,
     String name,
     String description,
-    Promotion.PromotionType promotionType,
-    Promotion.RewardType rewardType,
+    PromotionType promotionType,
+    PromotionRewardType rewardType,
     BigDecimal rewardValue,
     Integer maxRedemptions,
     BigDecimal minTransactionAmount,

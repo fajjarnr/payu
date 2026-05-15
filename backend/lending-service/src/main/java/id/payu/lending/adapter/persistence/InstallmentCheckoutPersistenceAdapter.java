@@ -1,7 +1,7 @@
 package id.payu.lending.adapter.persistence;
 
 import id.payu.lending.domain.model.InstallmentCheckout;
-import id.payu.lending.domain.model.InstallmentCheckout.CheckoutStatus;
+import id.payu.lending.domain.model.CheckoutStatus;
 import id.payu.lending.domain.port.out.InstallmentCheckoutPersistencePort;
 import id.payu.lending.entity.InstallmentCheckoutEntity;
 import id.payu.lending.repository.InstallmentCheckoutRepository;

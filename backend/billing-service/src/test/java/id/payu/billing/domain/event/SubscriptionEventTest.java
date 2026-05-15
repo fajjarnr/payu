@@ -1,7 +1,7 @@
 package id.payu.billing.domain.event;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ class SubscriptionEventTest {
     @Test
     @DisplayName("should create subscription.created event with correct type")
     void shouldCreateSubscriptionCreatedEvent() {
-        Subscription subscription = createSampleSubscription();
+        SubscriptionEntity subscription = createSampleSubscription();
 
         CloudEventEnvelope<SubscriptionEvent.SubscriptionCreatedPayload> event =
                 SubscriptionEvent.createSubscriptionCreatedEvent(subscription);
@@ -46,8 +46,8 @@ class SubscriptionEventTest {
     @Test
     @DisplayName("should create charge.succeeded event with correct type")
     void shouldCreateChargeSucceededEvent() {
-        Subscription subscription = createSampleSubscription();
-        SubscriptionCharge charge = createSampleCharge(subscription.getId(), true);
+        SubscriptionEntity subscription = createSampleSubscription();
+        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), true);
 
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
                 SubscriptionEvent.createChargeSucceededEvent(subscription, charge);
@@ -75,8 +75,8 @@ class SubscriptionEventTest {
     @Test
     @DisplayName("should create charge.failed event with correct type and failure reason")
     void shouldCreateChargeFailedEvent() {
-        Subscription subscription = createSampleSubscription();
-        SubscriptionCharge charge = createSampleCharge(subscription.getId(), false);
+        SubscriptionEntity subscription = createSampleSubscription();
+        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), false);
         charge.markFailed("Insufficient balance");
 
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
@@ -101,7 +101,7 @@ class SubscriptionEventTest {
     @Test
     @DisplayName("should convert LocalDateTime to Instant correctly")
     void shouldConvertLocalDateTimeToInstant() {
-        Subscription subscription = createSampleSubscription();
+        SubscriptionEntity subscription = createSampleSubscription();
         LocalDateTime now = LocalDateTime.now();
         subscription.setTrialEndAt(now);
         subscription.setCurrentPeriodStart(now);
@@ -123,7 +123,7 @@ class SubscriptionEventTest {
     @Test
     @DisplayName("should handle null dates gracefully")
     void shouldHandleNullDates() {
-        Subscription subscription = createSampleSubscription();
+        SubscriptionEntity subscription = createSampleSubscription();
         subscription.setTrialEndAt(null);
         subscription.setCurrentPeriodStart(null);
         subscription.setCurrentPeriodEnd(null);
@@ -141,13 +141,13 @@ class SubscriptionEventTest {
 
     // Helper methods
 
-    private Subscription createSampleSubscription() {
-        Subscription sub = new Subscription();
+    private SubscriptionEntity createSampleSubscription() {
+        SubscriptionEntity sub = new SubscriptionEntity();
         sub.setId(UUID.randomUUID());
         sub.setAccountId("acc-123456");
         sub.setPlanId(UUID.randomUUID());
         sub.setPartnerId("partner-nobar");
-        sub.setStatus(Subscription.SubscriptionStatus.ACTIVE);
+        sub.setStatus(SubscriptionEntity.SubscriptionStatus.ACTIVE);
         sub.setCurrentPrice(new BigDecimal("99000"));
         sub.setCurrency("IDR");
         sub.setExternalReferenceId("ext-ref-001");
@@ -155,8 +155,8 @@ class SubscriptionEventTest {
         return sub;
     }
 
-    private SubscriptionCharge createSampleCharge(UUID subscriptionId, boolean succeeded) {
-        SubscriptionCharge charge = new SubscriptionCharge();
+    private SubscriptionChargeEntity createSampleCharge(UUID subscriptionId, boolean succeeded) {
+        SubscriptionChargeEntity charge = new SubscriptionChargeEntity();
         charge.setId(UUID.randomUUID());
         charge.setSubscriptionId(subscriptionId);
         charge.setAccountId("acc-123456");
@@ -169,7 +169,7 @@ class SubscriptionEventTest {
         if (succeeded) {
             charge.markSucceeded();
         } else {
-            charge.setStatus(SubscriptionCharge.ChargeStatus.FAILED);
+            charge.setStatus(SubscriptionChargeEntity.ChargeStatus.FAILED);
         }
 
         return charge;

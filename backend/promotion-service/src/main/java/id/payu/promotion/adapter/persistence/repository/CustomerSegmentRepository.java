@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.persistence.repository;
 
-import id.payu.promotion.domain.CustomerSegment;
+import id.payu.promotion.adapter.persistence.entity.CustomerSegmentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface CustomerSegmentRepository extends JpaRepository<CustomerSegment, UUID> {
+public interface CustomerSegmentRepository extends JpaRepository<CustomerSegmentEntity, UUID> {
 
-    List<CustomerSegment> findByIsActiveTrue();
+    List<CustomerSegmentEntity> findByIsActiveTrue();
 
-    Optional<CustomerSegment> findByName(String name);
+    Optional<CustomerSegmentEntity> findByName(String name);
 
     boolean existsByName(String name);
 }

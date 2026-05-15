@@ -1,8 +1,8 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.application.service.dto.ArchivalResult;
-import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.model.TransactionArchive;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class TransactionArchivalServiceTest {
     @InjectMocks
     private TransactionArchivalService archivalService;
 
-    private Transaction completedTransaction;
+    private TransactionEntity completedTransaction;
     private Instant cutoffDate;
 
     @BeforeEach
@@ -51,15 +51,15 @@ class TransactionArchivalServiceTest {
         ReflectionTestUtils.setField(archivalService, "batchSize", 1000);
         ReflectionTestUtils.setField(archivalService, "archivalEnabled", true);
 
-        completedTransaction = Transaction.builder()
+        completedTransaction = TransactionEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN1234567890")
                 .senderAccountId(UUID.randomUUID())
                 .recipientAccountId(UUID.randomUUID())
-                .type(Transaction.TransactionType.INTERNAL_TRANSFER)
+                .type(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
                 .amount(id.payu.transaction.domain.model.Money.idr(new BigDecimal("100000")))
                 .description("Test transfer")
-                .status(Transaction.TransactionStatus.COMPLETED)
+                .status(TransactionEntity.TransactionStatus.COMPLETED)
                 .createdAt(ZonedDateTime.now().minusMonths(13).toInstant())
                 .updatedAt(ZonedDateTime.now().minusMonths(13).toInstant())
                 .completedAt(ZonedDateTime.now().minusMonths(13).toInstant())
@@ -126,16 +126,16 @@ class TransactionArchivalServiceTest {
     @Test
     @DisplayName("should process multiple batches when transactions exceed batch size")
     void shouldProcessMultipleBatches() {
-        List<Transaction> transactions = new ArrayList<>();
+        List<TransactionEntity> transactions = new ArrayList<>();
         for (int i = 0; i < 2500; i++) {
-            transactions.add(Transaction.builder()
+            transactions.add(TransactionEntity.builder()
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN" + i)
                     .senderAccountId(UUID.randomUUID())
                     .recipientAccountId(UUID.randomUUID())
-                    .type(Transaction.TransactionType.INTERNAL_TRANSFER)
+                    .type(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
                     .amount(id.payu.transaction.domain.model.Money.idr(new BigDecimal("1000")))
-                    .status(Transaction.TransactionStatus.COMPLETED)
+                    .status(TransactionEntity.TransactionStatus.COMPLETED)
                     .createdAt(ZonedDateTime.now().minusMonths(13).toInstant())
                     .updatedAt(ZonedDateTime.now().minusMonths(13).toInstant())
                     .completedAt(ZonedDateTime.now().minusMonths(13).toInstant())
@@ -172,15 +172,15 @@ class TransactionArchivalServiceTest {
     @DisplayName("should return archived transactions for account")
     void shouldReturnArchivedTransactionsForAccount() {
         UUID accountId = UUID.randomUUID();
-        List<TransactionArchive> archives = List.of(
-                TransactionArchive.builder()
+        List<TransactionArchiveEntity> archives = List.of(
+                TransactionArchiveEntity.builder()
                         .id(UUID.randomUUID())
                         .referenceNumber("TXN1")
                         .senderAccountId(accountId)
-                        .type(TransactionArchive.TransactionType.INTERNAL_TRANSFER)
+                        .type(TransactionArchiveEntity.TransactionType.INTERNAL_TRANSFER)
                         .amount(new BigDecimal("1000"))
                         .currency("IDR")
-                        .status(TransactionArchive.TransactionStatus.COMPLETED)
+                        .status(TransactionArchiveEntity.TransactionStatus.COMPLETED)
                         .archivedAt(Instant.now())
                         .archivalReason("RETENTION_EXPIRED")
                         .archivedBatchId(1L)
@@ -190,7 +190,7 @@ class TransactionArchivalServiceTest {
         given(archivalPersistencePort.findByAccountId(eq(accountId), eq(0), eq(10)))
                 .willReturn(archives);
 
-        List<TransactionArchive> result = archivalService.getArchivedTransactions(accountId, 0, 10);
+        List<TransactionArchiveEntity> result = archivalService.getArchivedTransactions(accountId, 0, 10);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSenderAccountId()).isEqualTo(accountId);
@@ -200,8 +200,8 @@ class TransactionArchivalServiceTest {
     @DisplayName("should return archived transactions by batch id")
     void shouldReturnArchivedTransactionsByBatchId() {
         Long batchId = 1L;
-        List<TransactionArchive> archives = List.of(
-                TransactionArchive.builder()
+        List<TransactionArchiveEntity> archives = List.of(
+                TransactionArchiveEntity.builder()
                         .id(UUID.randomUUID())
                         .referenceNumber("TXN1")
                         .archivedBatchId(batchId)
@@ -211,7 +211,7 @@ class TransactionArchivalServiceTest {
 
         given(archivalPersistencePort.findByBatchId(batchId)).willReturn(archives);
 
-        List<TransactionArchive> result = archivalService.getArchivedTransactionsByBatch(batchId);
+        List<TransactionArchiveEntity> result = archivalService.getArchivedTransactionsByBatch(batchId);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getArchivedBatchId()).isEqualTo(batchId);
@@ -241,9 +241,9 @@ class TransactionArchivalServiceTest {
         verify(archivalPersistencePort).archiveTransactions(archiveCaptor.capture());
 
         @SuppressWarnings("unchecked")
-        List<TransactionArchive> archives = archiveCaptor.getValue();
+        List<TransactionArchiveEntity> archives = archiveCaptor.getValue();
         assertThat(archives).hasSize(1);
-        TransactionArchive archive = archives.get(0);
+        TransactionArchiveEntity archive = archives.get(0);
         assertThat(archive.getId()).isEqualTo(completedTransaction.getId());
         assertThat(archive.getReferenceNumber()).isEqualTo(completedTransaction.getReferenceNumber());
         assertThat(archive.getSenderAccountId()).isEqualTo(completedTransaction.getSenderAccountId());

@@ -1,6 +1,6 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.DisbursementStatus;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.DisbursementUseCase;
@@ -33,7 +33,7 @@ import java.util.UUID;
  * <p>The service follows the application service pattern from DDD, coordinating
  * between domain aggregates and external services while maintaining transaction boundaries.
  *
- * @see Disbursement
+ * @see DisbursementEntity
  * @see DisbursementUseCase
  */
 @Service
@@ -57,7 +57,7 @@ public class DisbursementService implements DisbursementUseCase {
 
     @Override
     @Transactional
-    public Disbursement createDisbursement(
+    public DisbursementEntity createDisbursement(
             UUID sourceAccountId,
             Money amount,
             String bankCode,
@@ -71,7 +71,7 @@ public class DisbursementService implements DisbursementUseCase {
 
         // Check idempotency
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            Optional<Disbursement> existing = disbursementRepository.findByIdempotencyKey(idempotencyKey);
+            Optional<DisbursementEntity> existing = disbursementRepository.findByIdempotencyKey(idempotencyKey);
             if (existing.isPresent()) {
                 log.info("Returning existing disbursement for idempotency key: {}", idempotencyKey);
                 return existing.get();
@@ -79,7 +79,7 @@ public class DisbursementService implements DisbursementUseCase {
         }
 
         // Create disbursement
-        Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+        DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                 sourceAccountId,
                 amount,
                 bankCode,
@@ -105,34 +105,34 @@ public class DisbursementService implements DisbursementUseCase {
                 disbursement.getId(), reservation.getReservationId());
 
         // Save disbursement
-        Disbursement saved = disbursementRepository.save(disbursement);
+        DisbursementEntity saved = disbursementRepository.save(disbursement);
         log.info("Created disbursement: {}", saved.getId());
 
         return saved;
     }
 
     @Override
-    public Optional<Disbursement> getDisbursement(UUID id) {
+    public Optional<DisbursementEntity> getDisbursement(UUID id) {
         return disbursementRepository.findById(id);
     }
 
     @Override
-    public Optional<Disbursement> findByIdempotencyKey(String idempotencyKey) {
+    public Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey) {
         return disbursementRepository.findByIdempotencyKey(idempotencyKey);
     }
 
     @Override
-    public List<Disbursement> listDisbursementsByAccount(UUID sourceAccountId, int limit, int offset) {
+    public List<DisbursementEntity> listDisbursementsByAccount(UUID sourceAccountId, int limit, int offset) {
         return disbursementRepository.findBySourceAccountId(sourceAccountId, limit, offset);
     }
 
     @Override
     @Transactional
-    public Disbursement processDisbursement(UUID id) {
+    public DisbursementEntity processDisbursement(UUID id) {
         log.info("Processing disbursement: {}", id);
 
-        Disbursement disbursement = disbursementRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Disbursement not found: " + id));
+        DisbursementEntity disbursement = disbursementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
         // Transition to PROCESSING
         disbursement.process();
@@ -146,7 +146,7 @@ public class DisbursementService implements DisbursementUseCase {
                 .amount(disbursement.getAmount().getAmount())
                 .currency(disbursement.getAmount().getCurrency().getCurrencyCode())
                 .senderAccountNumber("PAYU" + disbursement.getSourceAccountId().toString().substring(0, 8))
-                .senderAccountName("PayU Disbursement")
+                .senderAccountName("PayU DisbursementEntity")
                 .purposeCode("PAY")
                 .build();
 
@@ -163,11 +163,11 @@ public class DisbursementService implements DisbursementUseCase {
 
     @Override
     @Transactional
-    public Disbursement completeDisbursement(UUID id, String bankReference) {
+    public DisbursementEntity completeDisbursement(UUID id, String bankReference) {
         log.info("Completing disbursement: {} with bank reference: {}", id, bankReference);
 
-        Disbursement disbursement = disbursementRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Disbursement not found: " + id));
+        DisbursementEntity disbursement = disbursementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
         // Transition to COMPLETED
         disbursement.complete(bankReference);
@@ -180,17 +180,17 @@ public class DisbursementService implements DisbursementUseCase {
                 disbursement.getAmount().getAmount()
         );
 
-        log.info("Disbursement completed: {}", id);
+        log.info("DisbursementEntity completed: {}", id);
         return disbursementRepository.save(disbursement);
     }
 
     @Override
     @Transactional
-    public Disbursement failDisbursement(UUID id, String reason) {
+    public DisbursementEntity failDisbursement(UUID id, String reason) {
         log.info("Failing disbursement: {} with reason: {}", id, reason);
 
-        Disbursement disbursement = disbursementRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Disbursement not found: " + id));
+        DisbursementEntity disbursement = disbursementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
         // Transition to FAILED
         disbursement.fail(reason);
@@ -203,12 +203,12 @@ public class DisbursementService implements DisbursementUseCase {
                 disbursement.getAmount().getAmount()
         );
 
-        log.info("Disbursement failed: {}", id);
+        log.info("DisbursementEntity failed: {}", id);
         return disbursementRepository.save(disbursement);
     }
 
     @Override
-    public List<Disbursement> listDisbursementsByStatus(String status, int limit) {
+    public List<DisbursementEntity> listDisbursementsByStatus(String status, int limit) {
         return disbursementRepository.findByStatus(status, limit);
     }
 

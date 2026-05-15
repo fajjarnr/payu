@@ -29,8 +29,4 @@ public class Deposit {
     private String currency;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum DepositStatus {
-        ACTIVE, MATURED, WITHDRAWN, CANCELLED
-    }
 }

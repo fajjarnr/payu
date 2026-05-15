@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.domain.Promotion;
+import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
 import id.payu.promotion.dto.CreatePromotionRequest;
 import id.payu.promotion.dto.UpdatePromotionRequest;
 import id.payu.promotion.dto.ClaimPromotionRequest;
@@ -32,7 +32,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/promotions")
-@Tag(name = "Promotions", description = "Promotion management APIs")
+@Tag(name = "Promotions", description = "PromotionEntity management APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class PromotionResource extends BaseController {
 
@@ -61,7 +61,7 @@ public class PromotionResource extends BaseController {
     @PostMapping
     @Operation(summary = "Create promotion", description = "Create a new promotion campaign")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Promotion created successfully",
+        @ApiResponse(responseCode = "201", description = "PromotionEntity created successfully",
             content = @Content(schema = @Schema(implementation = PromotionResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -71,7 +71,7 @@ public class PromotionResource extends BaseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> createPromotion(@Valid @RequestBody CreatePromotionRequest request) {
         try {
-            Promotion promotion = promotionService.createPromotion(request);
+            PromotionEntity promotion = promotionService.createPromotion(request);
             return created(PromotionResponse.from(promotion), "/api/v1/promotions/{id}", promotion.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_001", e.getMessage());
@@ -81,18 +81,18 @@ public class PromotionResource extends BaseController {
     @PutMapping("/{id}")
     @Operation(summary = "Update promotion", description = "Update an existing promotion")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Promotion updated successfully",
+        @ApiResponse(responseCode = "200", description = "PromotionEntity updated successfully",
             content = @Content(schema = @Schema(implementation = PromotionResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Promotion not found"),
+        @ApiResponse(responseCode = "404", description = "PromotionEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> updatePromotion(@PathVariable UUID id, @RequestBody UpdatePromotionRequest request) {
         try {
-            Promotion promotion = promotionService.updatePromotion(id, request);
+            PromotionEntity promotion = promotionService.updatePromotion(id, request);
             return ok(PromotionResponse.from(promotion));
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_002", e.getMessage());
@@ -102,7 +102,7 @@ public class PromotionResource extends BaseController {
     @PostMapping("/{code}/claim")
     @Operation(summary = "Claim promotion", description = "Claim a promotion using a promo code")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Promotion claimed successfully",
+        @ApiResponse(responseCode = "201", description = "PromotionEntity claimed successfully",
             content = @Content(schema = @Schema(implementation = RewardResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request or promotion not claimable"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -121,7 +121,7 @@ public class PromotionResource extends BaseController {
                     request.merchantCode(),
                     request.categoryCode()
             );
-            id.payu.promotion.domain.Reward reward = promotionService.claimPromotion(code, securedRequest);
+            id.payu.promotion.adapter.persistence.entity.RewardEntity reward = promotionService.claimPromotion(code, securedRequest);
             return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_003", e.getMessage());
@@ -131,18 +131,18 @@ public class PromotionResource extends BaseController {
     @PostMapping("/{id}/activate")
     @Operation(summary = "Activate promotion", description = "Activate a promotion campaign")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Promotion activated successfully",
+        @ApiResponse(responseCode = "200", description = "PromotionEntity activated successfully",
             content = @Content(schema = @Schema(implementation = PromotionResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Promotion not found"),
+        @ApiResponse(responseCode = "404", description = "PromotionEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> activatePromotion(@PathVariable UUID id) {
         try {
-            Promotion promotion = promotionService.activatePromotion(id);
+            PromotionEntity promotion = promotionService.activatePromotion(id);
             return ok(PromotionResponse.from(promotion));
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_004", e.getMessage());
@@ -152,37 +152,37 @@ public class PromotionResource extends BaseController {
     @GetMapping("/{id}")
     @Operation(summary = "Get promotion by ID", description = "Retrieve promotion details by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Promotion found",
+        @ApiResponse(responseCode = "200", description = "PromotionEntity found",
             content = @Content(schema = @Schema(implementation = PromotionResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Promotion not found"),
+        @ApiResponse(responseCode = "404", description = "PromotionEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotion(@PathVariable UUID id) {
-        Optional<Promotion> promotionOpt = promotionService.getPromotion(id);
+        Optional<PromotionEntity> promotionOpt = promotionService.getPromotion(id);
         if (promotionOpt.isPresent()) {
             return ok(PromotionResponse.from(promotionOpt.get()));
         }
-        return notFound("PROMO_404", "Promotion not found");
+        return notFound("PROMO_404", "PromotionEntity not found");
     }
 
     @GetMapping("/code/{code}")
     @Operation(summary = "Get promotion by code", description = "Retrieve promotion details by promo code")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Promotion found",
+        @ApiResponse(responseCode = "200", description = "PromotionEntity found",
             content = @Content(schema = @Schema(implementation = PromotionResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Promotion not found"),
+        @ApiResponse(responseCode = "404", description = "PromotionEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotionByCode(@PathVariable String code) {
-        Optional<Promotion> promotionOpt = promotionService.getPromotionByCode(code);
+        Optional<PromotionEntity> promotionOpt = promotionService.getPromotionByCode(code);
         if (promotionOpt.isPresent()) {
             return ok(PromotionResponse.from(promotionOpt.get()));
         }
-        return notFound("PROMO_404", "Promotion not found");
+        return notFound("PROMO_404", "PromotionEntity not found");
     }
 
     @GetMapping
@@ -195,7 +195,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getActivePromotions() {
-        List<Promotion> promotions = promotionService.getActivePromotions();
+        List<PromotionEntity> promotions = promotionService.getActivePromotions();
         return ok(promotions.stream().map(PromotionResponse::from).toList());
     }
 }

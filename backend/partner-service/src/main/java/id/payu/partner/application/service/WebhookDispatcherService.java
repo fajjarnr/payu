@@ -2,8 +2,8 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.WebhookDeliveryRepository;
 import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionRepository;
-import id.payu.partner.domain.WebhookDelivery;
-import id.payu.partner.domain.WebhookSubscription;
+import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import id.payu.partner.domain.Status;
 
 /**
  * Dispatches webhook events to partner endpoints.
@@ -83,7 +84,7 @@ public class WebhookDispatcherService {
     @Async
     @Transactional
     public void dispatch(String eventType, String eventId, Map<String, Object> payload) {
-        List<WebhookSubscription> subscriptions =
+        List<WebhookSubscriptionEntity> subscriptions =
                 subscriptionRepository.findActiveByEventType(eventType);
 
         if (subscriptions.isEmpty()) {
@@ -98,10 +99,10 @@ public class WebhookDispatcherService {
         Map<String, Object> envelope = buildEnvelope(eventId, eventType, payload);
         String payloadJson = toJson(envelope);
 
-        for (WebhookSubscription subscription : subscriptions) {
+        for (WebhookSubscriptionEntity subscription : subscriptions) {
             if (!subscription.matchesEvent(eventType)) continue;
 
-            WebhookDelivery delivery = new WebhookDelivery(
+            WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, eventId, eventType, payloadJson);
             delivery = deliveryRepository.save(delivery);
 
@@ -116,17 +117,17 @@ public class WebhookDispatcherService {
     @Scheduled(fixedDelay = 30000)
     @Transactional
     public void retryFailedDeliveries() {
-        List<WebhookDelivery> retryable =
+        List<WebhookDeliveryEntity> retryable =
                 deliveryRepository.findRetryableDeliveries(LocalDateTime.now());
 
         if (retryable.isEmpty()) return;
 
         log.info("Retrying {} failed webhook deliveries", retryable.size());
 
-        for (WebhookDelivery delivery : retryable) {
-            WebhookSubscription subscription = delivery.getSubscription();
+        for (WebhookDeliveryEntity delivery : retryable) {
+            WebhookSubscriptionEntity subscription = delivery.getSubscription();
             if (!subscription.isActive()) {
-                delivery.setStatus(WebhookDelivery.Status.EXHAUSTED);
+                delivery.setStatus(Status.EXHAUSTED);
                 delivery.setErrorMessage("Subscription deactivated");
                 deliveryRepository.save(delivery);
                 continue;
@@ -152,7 +153,7 @@ public class WebhookDispatcherService {
     /**
      * Attempt to deliver a webhook payload to the partner endpoint.
      */
-    void attemptDelivery(WebhookDelivery delivery, WebhookSubscription subscription) {
+    void attemptDelivery(WebhookDeliveryEntity delivery, WebhookSubscriptionEntity subscription) {
         delivery.markDelivering();
         deliveryRepository.save(delivery);
 
@@ -201,7 +202,7 @@ public class WebhookDispatcherService {
 
     /**
      * Compute HMAC-SHA256 signature.
-     * Partner verifies: HMAC-SHA256(secret, timestamp + "." + body) == signature
+     * PartnerEntity verifies: HMAC-SHA256(secret, timestamp + "." + body) == signature
      */
     String computeHmac(String secret, String data) {
         try {

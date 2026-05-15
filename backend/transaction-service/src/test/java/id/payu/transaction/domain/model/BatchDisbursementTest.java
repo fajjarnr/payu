@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for BatchDisbursement Aggregate Root.
+ * Unit tests for BatchDisbursementEntity Aggregate Root.
  *
  * <p>P0 Critical Tests - These tests verify batch processing logic
  * and aggregate status calculation that must be correct for bulk payouts.</p>
@@ -30,10 +30,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *   <li>Edge Cases - empty batch, all failed, partial completion</li>
  * </ul>
  *
- * @see BatchDisbursement
+ * @see BatchDisbursementEntity
  */
 @Execution(ExecutionMode.CONCURRENT)
-@DisplayName("BatchDisbursement Aggregate Root Tests")
+@DisplayName("BatchDisbursementEntity Aggregate Root Tests")
 class BatchDisbursementTest {
 
     private static final UUID SOURCE_ACCOUNT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -49,7 +49,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should create batch disbursement with PENDING status")
         void shouldCreateBatchDisbursementWithPendingStatus() {
-            BatchDisbursement batch = BatchDisbursement.create(
+            BatchDisbursementEntity batch = BatchDisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     BATCH_NAME
             );
@@ -65,7 +65,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should create batch disbursement with idempotency key")
         void shouldCreateBatchDisbursementWithIdempotencyKey() {
-            BatchDisbursement batch = BatchDisbursement.createWithIdempotencyKey(
+            BatchDisbursementEntity batch = BatchDisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID,
                     BATCH_NAME,
                     IDEMPOTENCY_KEY
@@ -78,7 +78,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should generate idempotency key if not provided")
         void shouldGenerateIdempotencyKeyIfNotProvided() {
-            BatchDisbursement batch = BatchDisbursement.create(
+            BatchDisbursementEntity batch = BatchDisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     BATCH_NAME
             );
@@ -90,7 +90,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should throw exception when source account ID is null")
         void shouldThrowExceptionWhenSourceAccountIdIsNull() {
-            assertThatThrownBy(() -> BatchDisbursement.create(
+            assertThatThrownBy(() -> BatchDisbursementEntity.create(
                     null,
                     BATCH_NAME
             ))
@@ -101,14 +101,14 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should throw exception when name is null or empty")
         void shouldThrowExceptionWhenNameIsNullOrEmpty() {
-            assertThatThrownBy(() -> BatchDisbursement.create(
+            assertThatThrownBy(() -> BatchDisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     null
             ))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Name cannot be null or empty");
 
-            assertThatThrownBy(() -> BatchDisbursement.create(
+            assertThatThrownBy(() -> BatchDisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     ""
             ))
@@ -126,8 +126,8 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should add item to batch")
         void shouldAddItemToBatch() {
-            BatchDisbursement batch = createSampleBatch();
-            Disbursement item = createSampleDisbursement();
+            BatchDisbursementEntity batch = createSampleBatch();
+            DisbursementEntity item = createSampleDisbursement();
 
             batch.addItem(item);
 
@@ -138,7 +138,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should calculate total amount correctly")
         void shouldCalculateTotalAmountCorrectly() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursement(Money.idr("100000")));
             batch.addItem(createDisbursement(Money.idr("200000")));
             batch.addItem(createDisbursement(Money.idr("300000")));
@@ -151,7 +151,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return zero for total amount when no items")
         void shouldReturnZeroForTotalAmountWhenNoItems() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
 
             Money total = batch.getTotalAmount();
 
@@ -161,7 +161,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return correct item count")
         void shouldReturnCorrectItemCount() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createSampleDisbursement());
             batch.addItem(createSampleDisbursement());
 
@@ -171,8 +171,8 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return immutable items list")
         void shouldReturnImmutableItemsList() {
-            BatchDisbursement batch = createSampleBatch();
-            List<Disbursement> items = batch.getItems();
+            BatchDisbursementEntity batch = createSampleBatch();
+            List<DisbursementEntity> items = batch.getItems();
 
             assertThatThrownBy(() -> items.add(createSampleDisbursement()))
                     .isInstanceOf(UnsupportedOperationException.class);
@@ -188,7 +188,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return PENDING when all items are PENDING")
         void shouldReturnPendingWhenAllItemsArePending() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
 
@@ -198,7 +198,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return PARTIAL when some items are PROCESSING")
         void shouldReturnPartialWhenSomeItemsAreProcessing() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PROCESSING));
 
@@ -208,7 +208,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return COMPLETED when all items are COMPLETED")
         void shouldReturnCompletedWhenAllItemsAreCompleted() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
 
@@ -218,7 +218,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return FAILED when all items are FAILED")
         void shouldReturnFailedWhenAllItemsAreFailed() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
 
@@ -228,7 +228,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return PARTIAL when mix of COMPLETED and FAILED")
         void shouldReturnPartialWhenMixOfCompletedAndFailed() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
 
@@ -238,7 +238,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return PARTIAL when mix of all statuses")
         void shouldReturnPartialWhenMixOfAllStatuses() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PROCESSING));
@@ -257,12 +257,12 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return correct processed count")
         void shouldReturnCorrectProcessedCount() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
 
-            Disbursement pending = createDisbursementWithStatus(DisbursementStatus.PENDING);
-            Disbursement processing = createDisbursementWithStatus(DisbursementStatus.PROCESSING);
-            Disbursement completed = createDisbursementWithStatus(DisbursementStatus.COMPLETED);
-            Disbursement failed = createDisbursementWithStatus(DisbursementStatus.FAILED);
+            DisbursementEntity pending = createDisbursementWithStatus(DisbursementStatus.PENDING);
+            DisbursementEntity processing = createDisbursementWithStatus(DisbursementStatus.PROCESSING);
+            DisbursementEntity completed = createDisbursementWithStatus(DisbursementStatus.COMPLETED);
+            DisbursementEntity failed = createDisbursementWithStatus(DisbursementStatus.FAILED);
 
             batch.addItem(pending);
             batch.addItem(processing);
@@ -275,7 +275,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return correct progress percentage")
         void shouldReturnCorrectProgressPercentage() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
@@ -289,7 +289,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return zero progress for empty batch")
         void shouldReturnZeroProgressForEmptyBatch() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
 
             assertThat(batch.getProgressPercentage()).isEqualTo(0);
         }
@@ -297,7 +297,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return zero progress when no items processed")
         void shouldReturnZeroProgressWhenNoItemsProcessed() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PENDING));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.PROCESSING));
 
@@ -307,7 +307,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should return 100 progress when all items processed")
         void shouldReturn100ProgressWhenAllItemsProcessed() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
 
@@ -324,7 +324,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should transition from PENDING to PROCESSING")
         void shouldTransitionFromPendingToProcessing() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
 
             batch.process();
 
@@ -335,7 +335,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should throw exception when processing non-PENDING batch")
         void shouldThrowExceptionWhenProcessingNonPendingBatch() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.process();
 
             assertThatThrownBy(batch::process)
@@ -346,7 +346,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should complete batch and set aggregate status")
         void shouldCompleteBatchAndSetAggregateStatus() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.process();
@@ -360,7 +360,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should complete batch with PARTIAL status")
         void shouldCompleteBatchWithPartialStatus() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.COMPLETED));
             batch.addItem(createDisbursementWithStatus(DisbursementStatus.FAILED));
             batch.process();
@@ -373,7 +373,7 @@ class BatchDisbursementTest {
         @Test
         @DisplayName("Should throw exception when completing non-PROCESSING batch")
         void shouldThrowExceptionWhenCompletingNonProcessingBatch() {
-            BatchDisbursement batch = createSampleBatch();
+            BatchDisbursementEntity batch = createSampleBatch();
 
             assertThatThrownBy(batch::complete)
                     .isInstanceOf(IllegalStateException.class)
@@ -383,12 +383,12 @@ class BatchDisbursementTest {
 
     // ==================== HELPER METHODS ====================
 
-    private BatchDisbursement createSampleBatch() {
-        return BatchDisbursement.create(SOURCE_ACCOUNT_ID, BATCH_NAME);
+    private BatchDisbursementEntity createSampleBatch() {
+        return BatchDisbursementEntity.create(SOURCE_ACCOUNT_ID, BATCH_NAME);
     }
 
-    private Disbursement createSampleDisbursement() {
-        return Disbursement.create(
+    private DisbursementEntity createSampleDisbursement() {
+        return DisbursementEntity.create(
                 SOURCE_ACCOUNT_ID,
                 Money.idr(new BigDecimal("100000")),
                 "014",
@@ -397,8 +397,8 @@ class BatchDisbursementTest {
         );
     }
 
-    private Disbursement createDisbursement(Money amount) {
-        return Disbursement.create(
+    private DisbursementEntity createDisbursement(Money amount) {
+        return DisbursementEntity.create(
                 SOURCE_ACCOUNT_ID,
                 amount,
                 "014",
@@ -407,8 +407,8 @@ class BatchDisbursementTest {
         );
     }
 
-    private Disbursement createDisbursementWithStatus(DisbursementStatus status) {
-        Disbursement disbursement = Disbursement.create(
+    private DisbursementEntity createDisbursementWithStatus(DisbursementStatus status) {
+        DisbursementEntity disbursement = DisbursementEntity.create(
                 SOURCE_ACCOUNT_ID,
                 Money.idr(new BigDecimal("100000")),
                 "014",

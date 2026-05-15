@@ -46,10 +46,6 @@ public class BillerTransaction extends PanacheEntityBase {
     @Column(name = "completed_at")
     public Instant completedAt;
 
-    public enum TransactionStatus {
-        PENDING, PROCESSING, COMPLETED, FAILED
-    }
-
     public static BillerTransaction findByReference(String referenceNumber) {
         return find("referenceNumber", referenceNumber).firstResult();
     }

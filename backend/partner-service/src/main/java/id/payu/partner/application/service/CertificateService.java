@@ -1,7 +1,7 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,17 +33,17 @@ public class CertificateService {
     private final PartnerRepository partnerRepository;
 
     @Transactional
-    public PartnerCertificate addCertificate(Long partnerId, String certificatePem, String privateKeyPem) {
-        Partner partner = partnerRepository.findById(partnerId).orElse(null);
+    public PartnerCertificateEntity addCertificate(Long partnerId, String certificatePem, String privateKeyPem) {
+        PartnerEntity partner = partnerRepository.findById(partnerId).orElse(null);
         if (partner == null) {
-            throw new IllegalArgumentException("Partner not found with id: " + partnerId);
+            throw new IllegalArgumentException("PartnerEntity not found with id: " + partnerId);
         }
 
         try {
             X509Certificate cert = parseCertificate(certificatePem);
             String publicKeyFingerprint = generatePublicKeyFingerprint(cert);
 
-            PartnerCertificate partnerCert = new PartnerCertificate();
+            PartnerCertificateEntity partnerCert = new PartnerCertificateEntity();
             partnerCert.setPartner(partner);
             partnerCert.setCertificatePem(certificatePem);
             partnerCert.setPrivateKeyPem(privateKeyPem);
@@ -65,10 +65,10 @@ public class CertificateService {
     }
 
     @Transactional
-    public PartnerCertificate generateKeyPairAndStore(Long partnerId, int validityDays) throws Exception {
-        Partner partner = partnerRepository.findById(partnerId).orElse(null);
+    public PartnerCertificateEntity generateKeyPairAndStore(Long partnerId, int validityDays) throws Exception {
+        PartnerEntity partner = partnerRepository.findById(partnerId).orElse(null);
         if (partner == null) {
-            throw new IllegalArgumentException("Partner not found with id: " + partnerId);
+            throw new IllegalArgumentException("PartnerEntity not found with id: " + partnerId);
         }
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -79,7 +79,7 @@ public class CertificateService {
         String privateKeyPem = privateKeyToPem(keyPair.getPrivate());
         String publicKeyFingerprint = generatePublicKeyFingerprint(keyPair.getPublic());
 
-        PartnerCertificate partnerCert = new PartnerCertificate();
+        PartnerCertificateEntity partnerCert = new PartnerCertificateEntity();
         partnerCert.setPartner(partner);
         partnerCert.setCertificatePem(publicKeyPem);
         partnerCert.setPrivateKeyPem(privateKeyPem);
@@ -95,29 +95,29 @@ public class CertificateService {
         return partnerCert;
     }
 
-    public Optional<PartnerCertificate> getActiveCertificate(Long partnerId) {
+    public Optional<PartnerCertificateEntity> getActiveCertificate(Long partnerId) {
         return certificateRepository.findActiveByPartnerId(partnerId);
     }
 
-    public Optional<PartnerCertificate> getValidCertificate(Long partnerId) {
+    public Optional<PartnerCertificateEntity> getValidCertificate(Long partnerId) {
         return certificateRepository.findValidByPartnerId(partnerId);
     }
 
-    public List<PartnerCertificate> getCertificatesByPartner(Long partnerId) {
+    public List<PartnerCertificateEntity> getCertificatesByPartner(Long partnerId) {
         return certificateRepository.findByPartnerId(partnerId);
     }
 
-    public List<PartnerCertificate> getExpiringCertificates(Long partnerId, int daysUntilExpiry) {
+    public List<PartnerCertificateEntity> getExpiringCertificates(Long partnerId, int daysUntilExpiry) {
         return certificateRepository.findExpiringSoon(partnerId, daysUntilExpiry);
     }
 
-    public List<PartnerCertificate> getAllExpiredCertificates() {
+    public List<PartnerCertificateEntity> getAllExpiredCertificates() {
         return certificateRepository.findExpiredCertificates();
     }
 
     @Transactional
     public boolean deactivateCertificate(Long certificateId) {
-        PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
+        PartnerCertificateEntity cert = certificateRepository.findById(certificateId).orElse(null);
         if (cert == null) {
             return false;
         }
@@ -141,7 +141,7 @@ public class CertificateService {
     }
 
     public boolean validateCertificate(Long certificateId) {
-        PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
+        PartnerCertificateEntity cert = certificateRepository.findById(certificateId).orElse(null);
         if (cert == null) {
             return false;
         }
@@ -150,7 +150,7 @@ public class CertificateService {
 
     public boolean validateCertificateWithTrust(Long certificateId, String trustedCertPem) {
         try {
-            PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
+            PartnerCertificateEntity cert = certificateRepository.findById(certificateId).orElse(null);
             if (cert == null || !cert.isValid()) {
                 return false;
             }
@@ -173,7 +173,7 @@ public class CertificateService {
 
     public boolean verifySignatureWithCertificate(Long certificateId, String data, String signatureB64) {
         try {
-            PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
+            PartnerCertificateEntity cert = certificateRepository.findById(certificateId).orElse(null);
             if (cert == null || !cert.isValid()) {
                 return false;
             }

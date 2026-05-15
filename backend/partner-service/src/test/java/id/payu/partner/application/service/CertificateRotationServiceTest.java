@@ -1,7 +1,7 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,17 +32,17 @@ public class CertificateRotationServiceTest {
     @InjectMocks
     private CertificateRotationService rotationService;
 
-    private Partner testPartner;
-    private PartnerCertificate testCertificate;
+    private PartnerEntity testPartner;
+    private PartnerCertificateEntity testCertificate;
 
     @BeforeEach
     public void setUp() {
-        testPartner = new Partner();
+        testPartner = new PartnerEntity();
         testPartner.setId(1L);
-        testPartner.setName("Test Partner");
+        testPartner.setName("Test PartnerEntity");
         testPartner.setEmail("test@example.com");
 
-        testCertificate = new PartnerCertificate();
+        testCertificate = new PartnerCertificateEntity();
         testCertificate.setId(1L);
         testCertificate.setPartner(testPartner);
         testCertificate.setPublicKeyFingerprint("test-fingerprint");
@@ -56,7 +56,7 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateCertificate() throws Exception {
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
@@ -83,7 +83,7 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateCertificate_DefaultValidityDays() throws Exception {
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
@@ -99,12 +99,12 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateExpiringCertificates() throws Exception {
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
 
-        List<PartnerCertificate> expiringCerts = List.of(testCertificate);
+        List<PartnerCertificateEntity> expiringCerts = List.of(testCertificate);
         when(certificateRepository.findExpiringSoon(null, 30)).thenReturn(expiringCerts);
         when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
         when(certificateService.generateKeyPairAndStore(1L, 90)).thenReturn(newCert);
@@ -117,7 +117,7 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateExpiringCertificates_EmptyList() {
-        List<PartnerCertificate> emptyList = List.of();
+        List<PartnerCertificateEntity> emptyList = List.of();
         when(certificateRepository.findExpiringSoon(null, 30)).thenReturn(emptyList);
 
         int rotatedCount = rotationService.rotateExpiringCertificates(30);
@@ -129,12 +129,12 @@ public class CertificateRotationServiceTest {
     public void testRotateAllExpiredCertificates() throws Exception {
         testCertificate.setValidTo(LocalDateTime.now().minusDays(1));
 
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
 
-        List<PartnerCertificate> expiredCerts = List.of(testCertificate);
+        List<PartnerCertificateEntity> expiredCerts = List.of(testCertificate);
         when(certificateRepository.findExpiredCertificates()).thenReturn(expiredCerts);
         when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
         when(certificateService.generateKeyPairAndStore(1L, 90)).thenReturn(newCert);
@@ -147,7 +147,7 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateAllExpiredCertificates_EmptyList() {
-        List<PartnerCertificate> emptyList = List.of();
+        List<PartnerCertificateEntity> emptyList = List.of();
         when(certificateRepository.findExpiredCertificates()).thenReturn(emptyList);
 
         int rotatedCount = rotationService.rotateAllExpiredCertificates();
@@ -157,7 +157,7 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateCertificateForPartner_WithActiveCert() throws Exception {
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
@@ -174,12 +174,12 @@ public class CertificateRotationServiceTest {
 
     @Test
     public void testRotateCertificateForPartner_NoActiveCert() throws Exception {
-        PartnerCertificate newCert = new PartnerCertificate();
+        PartnerCertificateEntity newCert = new PartnerCertificateEntity();
         newCert.setId(2L);
         newCert.setPartner(testPartner);
         newCert.setActive(true);
 
-        List<PartnerCertificate> inactiveCerts = List.of();
+        List<PartnerCertificateEntity> inactiveCerts = List.of();
         when(certificateRepository.findByPartnerId(1L)).thenReturn(inactiveCerts);
         when(certificateService.generateKeyPairAndStore(1L, 90)).thenReturn(newCert);
 

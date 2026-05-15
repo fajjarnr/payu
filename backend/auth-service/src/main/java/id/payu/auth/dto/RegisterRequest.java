@@ -5,6 +5,7 @@ import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * DTO for user registration in Keycloak identity provider.
@@ -20,7 +21,7 @@ public record RegisterRequest(
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
-    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
+    @Sensitive(value = SensitivityLevel.CRITICAL)
     String password,
 
     @JsonProperty("fullName")

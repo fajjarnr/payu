@@ -1,6 +1,6 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.domain.LoyaltyPoints;
+import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,17 +48,17 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             TEST_TRANSACTION_ID,
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPoints result = loyaltyPointsService.addPoints(request);
+        LoyaltyPointsEntity result = loyaltyPointsService.addPoints(request);
 
         assertNotNull(result.getId());
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
         assertEquals(TEST_TRANSACTION_ID, result.getTransactionId());
-        assertEquals(LoyaltyPoints.TransactionType.EARNED, result.getTransactionType());
+        assertEquals(LoyaltyPointsEntity.TransactionType.EARNED, result.getTransactionType());
         assertEquals(100, result.getPoints());
         assertEquals(100, result.getBalanceAfter());
         assertNotNull(result.getCreatedAt());
@@ -69,7 +69,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request1 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-1",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -77,15 +77,15 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request2 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-2",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             50,
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPoints result1 = loyaltyPointsService.addPoints(request1);
+        LoyaltyPointsEntity result1 = loyaltyPointsService.addPoints(request1);
         assertEquals(100, result1.getBalanceAfter());
 
-        LoyaltyPoints result2 = loyaltyPointsService.addPoints(request2);
+        LoyaltyPointsEntity result2 = loyaltyPointsService.addPoints(request2);
         assertEquals(150, result2.getBalanceAfter());
     }
 
@@ -94,7 +94,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             TEST_TRANSACTION_ID,
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -107,11 +107,11 @@ class LoyaltyPointsServiceTest {
             "redeem-txn-789"
         );
 
-        LoyaltyPoints result = loyaltyPointsService.redeemPoints(redeemRequest);
+        LoyaltyPointsEntity result = loyaltyPointsService.redeemPoints(redeemRequest);
 
         assertNotNull(result.getId());
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
-        assertEquals(LoyaltyPoints.TransactionType.REDEEMED, result.getTransactionType());
+        assertEquals(LoyaltyPointsEntity.TransactionType.REDEEMED, result.getTransactionType());
         assertEquals(-50, result.getPoints());
         assertEquals(50, result.getBalanceAfter());
         assertNotNull(result.getRedeemedAt());
@@ -122,7 +122,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             TEST_TRANSACTION_ID,
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             30,
             LocalDateTime.now().plusMonths(6)
         );
@@ -148,12 +148,12 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             TEST_TRANSACTION_ID,
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPoints created = loyaltyPointsService.addPoints(request);
+        LoyaltyPointsEntity created = loyaltyPointsService.addPoints(request);
 
         var result = loyaltyPointsService.getLoyaltyPoints(created.getId());
 
@@ -176,7 +176,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request1 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-1",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -184,7 +184,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request2 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-2",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             50,
             LocalDateTime.now().plusMonths(6)
         );
@@ -204,7 +204,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "earn-txn-1",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -212,7 +212,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest earnRequest2 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "earn-txn-2",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             50,
             LocalDateTime.now().plusMonths(6)
         );
@@ -233,7 +233,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "earn-txn-1",
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -261,7 +261,7 @@ class LoyaltyPointsServiceTest {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             TEST_TRANSACTION_ID,
-            LoyaltyPoints.TransactionType.EARNED,
+            LoyaltyPointsEntity.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );

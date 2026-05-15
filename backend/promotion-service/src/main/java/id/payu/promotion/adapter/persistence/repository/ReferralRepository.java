@@ -1,21 +1,22 @@
 package id.payu.promotion.adapter.persistence.repository;
 
-import id.payu.promotion.domain.Referral;
+import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.promotion.domain.ReferralStatus;
 
 @Repository
-public interface ReferralRepository extends JpaRepository<Referral, UUID> {
+public interface ReferralRepository extends JpaRepository<ReferralEntity, UUID> {
 
-    Optional<Referral> findByReferrerAccountIdAndStatus(String referrerAccountId, Referral.Status status);
+    Optional<ReferralEntity> findByReferrerAccountIdAndStatus(String referrerAccountId, ReferralStatus status);
 
-    List<Referral> findByReferrerAccountId(String referrerAccountId);
+    List<ReferralEntity> findByReferrerAccountId(String referrerAccountId);
 
-    List<Referral> findByRefereeAccountId(String refereeAccountId);
+    List<ReferralEntity> findByRefereeAccountId(String refereeAccountId);
 
-    Optional<Referral> findByReferralCode(String referralCode);
+    Optional<ReferralEntity> findByReferralCode(String referralCode);
 }

@@ -1,8 +1,8 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.domain.Referral;
-import id.payu.promotion.domain.Reward;
-import id.payu.promotion.domain.LoyaltyPoints;
+import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
+import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.dto.CreateReferralRequest;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.ReferralSummaryResponse;
@@ -22,6 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.promotion.domain.ReferralRewardType;
+import id.payu.promotion.domain.ReferralStatus;
+import id.payu.promotion.domain.RewardStatus;
+import id.payu.promotion.domain.RewardType;
+import id.payu.promotion.domain.TransactionType;
 
 @Service
 public class ReferralService {
@@ -48,7 +53,7 @@ public class ReferralService {
     }
 
     @Transactional
-    public Referral createReferral(CreateReferralRequest request) {
+    public ReferralEntity createReferral(CreateReferralRequest request) {
         LOG.info("Creating referral: referrer={}", request.referrerAccountId());
 
         if (request.referrerAccountId() == null || request.referrerAccountId().isBlank()) {
@@ -57,41 +62,41 @@ public class ReferralService {
 
         String referralCode = generateReferralCode();
 
-        Referral referral = new Referral();
+        ReferralEntity referral = new ReferralEntity();
         referral.setReferrerAccountId(request.referrerAccountId());
         referral.setReferralCode(referralCode);
         referral.setReferrerReward(request.referrerReward());
         referral.setRefereeReward(request.refereeReward());
         referral.setRewardType(request.rewardType());
         referral.setExpiryDate(request.expiryDate());
-        referral.setStatus(Referral.Status.PENDING);
+        referral.setStatus(ReferralStatus.PENDING);
 
         referral = referralRepository.save(referral);
 
         publishReferralEvent(referral, "CREATED");
 
-        LOG.info("Referral created: id={}, code={}", referral.getId(), referralCode);
+        LOG.info("ReferralEntity created: id={}, code={}", referral.getId(), referralCode);
 
         return referral;
     }
 
     @Transactional
-    public Referral completeReferral(CompleteReferralRequest request) {
-        Referral referral = referralRepository.findByReferralCode(request.referralCode())
+    public ReferralEntity completeReferral(CompleteReferralRequest request) {
+        ReferralEntity referral = referralRepository.findByReferralCode(request.referralCode())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid referral code"));
 
-        if (referral.getStatus() != Referral.Status.PENDING) {
-            throw new IllegalArgumentException("Referral already completed or expired");
+        if (referral.getStatus() != ReferralStatus.PENDING) {
+            throw new IllegalArgumentException("ReferralEntity already completed or expired");
         }
 
         if (referral.getExpiryDate() != null && LocalDateTime.now().isAfter(referral.getExpiryDate())) {
-            referral.setStatus(Referral.Status.EXPIRED);
+            referral.setStatus(ReferralStatus.EXPIRED);
             referralRepository.save(referral);
-            throw new IllegalArgumentException("Referral code has expired");
+            throw new IllegalArgumentException("ReferralEntity code has expired");
         }
 
         referral.setRefereeAccountId(request.refereeAccountId());
-        referral.setStatus(Referral.Status.COMPLETED);
+        referral.setStatus(ReferralStatus.COMPLETED);
         referral.setCompletedAt(LocalDateTime.now());
         referral = referralRepository.save(referral);
 
@@ -99,40 +104,40 @@ public class ReferralService {
 
         publishReferralEvent(referral, "COMPLETED");
 
-        LOG.info("Referral completed: code={}, referrer={}, referee={}",
+        LOG.info("ReferralEntity completed: code={}, referrer={}, referee={}",
             request.referralCode(), referral.getReferrerAccountId(), request.refereeAccountId());
 
         return referral;
     }
 
-    public Optional<Referral> getReferral(UUID id) {
+    public Optional<ReferralEntity> getReferral(UUID id) {
         return referralRepository.findById(id);
     }
 
-    public Optional<Referral> getReferralByCode(String code) {
+    public Optional<ReferralEntity> getReferralByCode(String code) {
         return referralRepository.findByReferralCode(code);
     }
 
-    public List<Referral> getReferralsByReferrer(String referrerAccountId) {
+    public List<ReferralEntity> getReferralsByReferrer(String referrerAccountId) {
         return referralRepository.findByReferrerAccountId(referrerAccountId);
     }
 
     public ReferralSummaryResponse getReferralSummary(String referrerAccountId) {
-        List<Referral> referrals = referralRepository.findByReferrerAccountId(referrerAccountId);
+        List<ReferralEntity> referrals = referralRepository.findByReferrerAccountId(referrerAccountId);
         long totalReferrals = referrals.size();
         long completedReferrals = referrals.stream()
-            .filter(r -> r.getStatus() == Referral.Status.COMPLETED)
+            .filter(r -> r.getStatus() == ReferralStatus.COMPLETED)
             .count();
         long pendingReferrals = referrals.stream()
-            .filter(r -> r.getStatus() == Referral.Status.PENDING)
+            .filter(r -> r.getStatus() == ReferralStatus.PENDING)
             .count();
 
-        Optional<Referral> lastReferral = referrals.stream()
-            .sorted(java.util.Comparator.comparing(Referral::getCreatedAt).reversed())
+        Optional<ReferralEntity> lastReferral = referrals.stream()
+            .sorted(java.util.Comparator.comparing(ReferralEntity::getCreatedAt).reversed())
             .findFirst();
 
         String referralCode = lastReferral
-            .map(Referral::getReferralCode)
+            .map(ReferralEntity::getReferralCode)
             .orElse(null);
 
         return new ReferralSummaryResponse(
@@ -143,37 +148,37 @@ public class ReferralService {
         );
     }
 
-    private void grantReferralRewards(Referral referral) {
-        if (referral.getRewardType() == Referral.RewardType.CASHBACK) {
+    private void grantReferralRewards(ReferralEntity referral) {
+        if (referral.getRewardType() == ReferralRewardType.CASHBACK) {
             grantCashbackReward(referral.getReferrerAccountId(), referral.getReferrerReward(),
                 referral.getReferralCode(), "REFERRER");
             grantCashbackReward(referral.getRefereeAccountId(), referral.getRefereeReward(),
                 referral.getReferralCode(), "REFEREE");
-        } else if (referral.getRewardType() == Referral.RewardType.POINTS) {
+        } else if (referral.getRewardType() == ReferralRewardType.POINTS) {
             grantLoyaltyPoints(referral.getReferrerAccountId(), referral.getReferrerReward().intValue(),
-                referral.getReferralCode(), LoyaltyPoints.TransactionType.REFERRAL_BONUS);
+                referral.getReferralCode(), TransactionType.REFERRAL_BONUS);
             grantLoyaltyPoints(referral.getRefereeAccountId(), referral.getRefereeReward().intValue(),
-                referral.getReferralCode(), LoyaltyPoints.TransactionType.REFERRAL_BONUS);
+                referral.getReferralCode(), TransactionType.REFERRAL_BONUS);
         }
     }
 
     private void grantCashbackReward(String accountId, BigDecimal amount,
         String transactionId, String rewardType) {
-        Reward reward = new Reward();
+        RewardEntity reward = new RewardEntity();
         reward.setAccountId(accountId);
         reward.setTransactionId(transactionId);
-        reward.setType(Reward.RewardType.REFERRAL_BONUS);
+        reward.setType(RewardType.REFERRAL_BONUS);
         reward.setAmount(amount);
         reward.setTransactionAmount(BigDecimal.ZERO);
-        reward.setStatus(Reward.Status.AWARDED);
+        reward.setStatus(RewardStatus.AWARDED);
         rewardRepository.save(reward);
     }
 
     private void grantLoyaltyPoints(String accountId, Integer points,
-        String transactionId, LoyaltyPoints.TransactionType type) {
+        String transactionId, TransactionType type) {
         Integer currentBalance = 0;
 
-        LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
+        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
         loyaltyPoints.setAccountId(accountId);
         loyaltyPoints.setTransactionId(transactionId);
         loyaltyPoints.setTransactionType(type);
@@ -193,7 +198,7 @@ public class ReferralService {
         return code.toString();
     }
 
-    private void publishReferralEvent(Referral referral, String eventType) {
+    private void publishReferralEvent(ReferralEntity referral, String eventType) {
         try {
             Map<String, Object> event = Map.of(
                 "referralId", referral.getId().toString(),

@@ -1,6 +1,6 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.SplitBill;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import id.payu.transaction.domain.model.SplitType;
 
 public class CreateSplitBillRequest {
 
@@ -28,7 +29,7 @@ public class CreateSplitBillRequest {
     private String description;
 
     @NotNull(message = "Split type is required")
-    private SplitBill.SplitType splitType;
+    private SplitType splitType;
 
     private Instant dueDate;
 
@@ -39,7 +40,7 @@ public class CreateSplitBillRequest {
     }
 
     public CreateSplitBillRequest(UUID creatorAccountId, BigDecimal totalAmount, String currency, String title,
-                                  String description, SplitBill.SplitType splitType, Instant dueDate,
+                                  String description, SplitType splitType, Instant dueDate,
                                   List<ParticipantRequest> participants) {
         this.creatorAccountId = creatorAccountId;
         this.totalAmount = totalAmount;
@@ -95,11 +96,11 @@ public class CreateSplitBillRequest {
         this.description = description;
     }
 
-    public SplitBill.SplitType getSplitType() {
+    public SplitType getSplitType() {
         return splitType;
     }
 
-    public void setSplitType(SplitBill.SplitType splitType) {
+    public void setSplitType(SplitType splitType) {
         this.splitType = splitType;
     }
 
@@ -125,7 +126,7 @@ public class CreateSplitBillRequest {
         private String currency;
         private String title;
         private String description;
-        private SplitBill.SplitType splitType;
+        private SplitType splitType;
         private Instant dueDate;
         private List<ParticipantRequest> participants;
 
@@ -154,7 +155,7 @@ public class CreateSplitBillRequest {
             return this;
         }
 
-        public CreateSplitBillRequestBuilder splitType(SplitBill.SplitType splitType) {
+        public CreateSplitBillRequestBuilder splitType(SplitType splitType) {
             this.splitType = splitType;
             return this;
         }

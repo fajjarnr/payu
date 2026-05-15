@@ -84,7 +84,7 @@ public class DisbursementCallbackRequest {
 
 
 
-    @NotNull(message = "Disbursement ID is required")
+    @NotNull(message = "DisbursementEntity ID is required")
     private UUID disbursementId;
 
     @NotBlank(message = "Status is required")

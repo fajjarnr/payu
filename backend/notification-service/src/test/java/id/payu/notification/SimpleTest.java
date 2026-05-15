@@ -1,7 +1,7 @@
 package id.payu.notification;
 
 import id.payu.notification.domain.NotificationChannel;
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.dto.SendNotificationRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,10 +35,10 @@ class SimpleTest {
         @Test
         @DisplayName("should have correct display names")
         void shouldHaveCorrectDisplayNames() {
-            assertThat(NotificationChannel.PUSH.getDisplayName()).isEqualTo("Push Notification");
+            assertThat(NotificationChannel.PUSH.getDisplayName()).isEqualTo("Push NotificationEntity");
             assertThat(NotificationChannel.SMS.getDisplayName()).isEqualTo("SMS");
             assertThat(NotificationChannel.EMAIL.getDisplayName()).isEqualTo("Email");
-            assertThat(NotificationChannel.IN_APP.getDisplayName()).isEqualTo("In-App Notification");
+            assertThat(NotificationChannel.IN_APP.getDisplayName()).isEqualTo("In-App NotificationEntity");
         }
 
         @Test
@@ -52,39 +52,39 @@ class SimpleTest {
     }
 
     @Nested
-    @DisplayName("Notification Entity")
+    @DisplayName("NotificationEntity Entity")
     class NotificationEntityTest {
 
         @Test
         @DisplayName("should have all expected status values")
         void shouldHaveAllExpectedStatuses() {
-            Notification.NotificationStatus[] statuses = Notification.NotificationStatus.values();
+            NotificationEntity.NotificationStatus[] statuses = NotificationEntity.NotificationStatus.values();
             assertThat(statuses).hasSize(6);
             assertThat(statuses).containsExactlyInAnyOrder(
-                    Notification.NotificationStatus.PENDING,
-                    Notification.NotificationStatus.SENDING,
-                    Notification.NotificationStatus.SENT,
-                    Notification.NotificationStatus.DELIVERED,
-                    Notification.NotificationStatus.READ,
-                    Notification.NotificationStatus.FAILED
+                    NotificationEntity.NotificationStatus.PENDING,
+                    NotificationEntity.NotificationStatus.SENDING,
+                    NotificationEntity.NotificationStatus.SENT,
+                    NotificationEntity.NotificationStatus.DELIVERED,
+                    NotificationEntity.NotificationStatus.READ,
+                    NotificationEntity.NotificationStatus.FAILED
             );
         }
 
         @Test
         @DisplayName("should allow setting all fields")
         void shouldAllowSettingAllFields() {
-            Notification notification = new Notification();
+            NotificationEntity notification = new NotificationEntity();
             notification.userId = "user-123";
             notification.channel = NotificationChannel.PUSH;
             notification.recipient = "device-token-abc";
-            notification.title = "Test Notification";
+            notification.title = "Test NotificationEntity";
             notification.body = "Test body";
             notification.retryCount = 3;
 
             assertThat(notification.userId).isEqualTo("user-123");
             assertThat(notification.channel).isEqualTo(NotificationChannel.PUSH);
             assertThat(notification.recipient).isEqualTo("device-token-abc");
-            assertThat(notification.title).isEqualTo("Test Notification");
+            assertThat(notification.title).isEqualTo("Test NotificationEntity");
             assertThat(notification.body).isEqualTo("Test body");
             assertThat(notification.retryCount).isEqualTo(3);
         }

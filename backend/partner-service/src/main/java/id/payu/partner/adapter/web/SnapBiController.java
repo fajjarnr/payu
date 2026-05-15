@@ -2,7 +2,7 @@ package id.payu.partner.adapter.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.snap.*;
 import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.application.service.SnapBiPaymentService;
@@ -87,7 +87,7 @@ public class SnapBiController {
         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = SnapErrorResponse.class)))
     })
     public ResponseEntity<?> getAccessToken(
-        @Parameter(description = "Partner client key", required = true) @RequestHeader("X-CLIENT-KEY") String clientKey,
+        @Parameter(description = "PartnerEntity client key", required = true) @RequestHeader("X-CLIENT-KEY") String clientKey,
         @Parameter(description = "Request timestamp", required = true) @RequestHeader("X-TIMESTAMP") String timestamp,
         @Parameter(description = "HMAC signature", required = true) @RequestHeader("X-SIGNATURE") String signature,
         @Valid @RequestBody String rawBody) {
@@ -98,13 +98,13 @@ public class SnapBiController {
         }
 
         // BUG-BE-138: Use service layer instead of repository
-        Partner partner = partnerService.findByClientId(clientKey).orElse(null);
+        PartnerEntity partner = partnerService.findByClientId(clientKey).orElse(null);
         if (partner == null) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012502", "Invalid Client Key");
         }
 
         if (!partner.isActive()) {
-             return errorResponse(HttpStatus.UNAUTHORIZED, "4012503", "Partner is inactive");
+             return errorResponse(HttpStatus.UNAUTHORIZED, "4012503", "PartnerEntity is inactive");
         }
 
         try {
@@ -182,9 +182,9 @@ public class SnapBiController {
         }
 
         // BUG-BE-138: Use service layer
-        Partner partner = partnerService.findByClientId(clientId).orElse(null);
+        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
-            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
 
         try {
@@ -244,9 +244,9 @@ public class SnapBiController {
         }
 
         // BUG-BE-138: Use service layer
-        Partner partner = partnerService.findByClientId(clientId).orElse(null);
+        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
-            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
 
         try {
@@ -298,9 +298,9 @@ public class SnapBiController {
         }
 
         // BUG-BE-138: Use service layer
-        Partner partner = partnerService.findByClientId(clientId).orElse(null);
+        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
-            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
 
         try {

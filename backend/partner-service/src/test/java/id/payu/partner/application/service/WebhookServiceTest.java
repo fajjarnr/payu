@@ -3,9 +3,9 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.adapter.persistence.repository.WebhookDeliveryRepository;
 import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionRepository;
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.WebhookDelivery;
-import id.payu.partner.domain.WebhookSubscription;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
 import id.payu.partner.dto.WebhookDeliveryDTO;
 import id.payu.partner.dto.WebhookSubscriptionDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,26 +45,26 @@ class WebhookServiceTest {
     @InjectMocks
     private WebhookService webhookService;
 
-    private Partner activePartner;
-    private Partner inactivePartner;
-    private WebhookSubscription testSubscription;
+    private PartnerEntity activePartner;
+    private PartnerEntity inactivePartner;
+    private WebhookSubscriptionEntity testSubscription;
 
     @BeforeEach
     void setUp() {
-        activePartner = new Partner();
+        activePartner = new PartnerEntity();
         activePartner.setId(1L);
         activePartner.setName("TokoBapak");
         activePartner.setType("MERCHANT");
         activePartner.setEmail("partner@tokobapak.com");
         activePartner.setActive(true);
 
-        inactivePartner = new Partner();
+        inactivePartner = new PartnerEntity();
         inactivePartner.setId(2L);
         inactivePartner.setName("Inactive Corp");
         inactivePartner.setType("MERCHANT");
         inactivePartner.setActive(false);
 
-        testSubscription = new WebhookSubscription(
+        testSubscription = new WebhookSubscriptionEntity(
                 activePartner,
                 "https://api.tokobapak.com/webhooks",
                 "payment.completed,payment.failed",
@@ -91,9 +91,9 @@ class WebhookServiceTest {
 
             when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
             when(subscriptionRepository.existsByPartnerIdAndUrl(1L, dto.getUrl())).thenReturn(false);
-            when(subscriptionRepository.save(any(WebhookSubscription.class)))
+            when(subscriptionRepository.save(any(WebhookSubscriptionEntity.class)))
                     .thenAnswer(inv -> {
-                        WebhookSubscription saved = inv.getArgument(0);
+                        WebhookSubscriptionEntity saved = inv.getArgument(0);
                         saved.setId(100L);
                         saved.setCreatedAt(LocalDateTime.now());
                         return saved;
@@ -110,10 +110,10 @@ class WebhookServiceTest {
             assertEquals(3, result.getMaxRetries());
 
             // Verify saved entity
-            ArgumentCaptor<WebhookSubscription> captor =
-                    ArgumentCaptor.forClass(WebhookSubscription.class);
+            ArgumentCaptor<WebhookSubscriptionEntity> captor =
+                    ArgumentCaptor.forClass(WebhookSubscriptionEntity.class);
             verify(subscriptionRepository).save(captor.capture());
-            WebhookSubscription saved = captor.getValue();
+            WebhookSubscriptionEntity saved = captor.getValue();
             assertEquals(activePartner, saved.getPartner());
             assertTrue(saved.isActive());
         }
@@ -169,9 +169,9 @@ class WebhookServiceTest {
 
             when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
             when(subscriptionRepository.existsByPartnerIdAndUrl(anyLong(), anyString())).thenReturn(false);
-            when(subscriptionRepository.save(any(WebhookSubscription.class)))
+            when(subscriptionRepository.save(any(WebhookSubscriptionEntity.class)))
                     .thenAnswer(inv -> {
-                        WebhookSubscription s = inv.getArgument(0);
+                        WebhookSubscriptionEntity s = inv.getArgument(0);
                         s.setId(101L);
                         s.setCreatedAt(LocalDateTime.now());
                         return s;
@@ -179,8 +179,8 @@ class WebhookServiceTest {
 
             webhookService.createSubscription(1L, dto);
 
-            ArgumentCaptor<WebhookSubscription> captor =
-                    ArgumentCaptor.forClass(WebhookSubscription.class);
+            ArgumentCaptor<WebhookSubscriptionEntity> captor =
+                    ArgumentCaptor.forClass(WebhookSubscriptionEntity.class);
             verify(subscriptionRepository).save(captor.capture());
             assertEquals(10, captor.getValue().getMaxRetries());
         }
@@ -299,7 +299,7 @@ class WebhookServiceTest {
         @Test
         @DisplayName("should return paginated delivery log")
         void shouldReturnDeliveries() {
-            WebhookDelivery delivery = new WebhookDelivery(
+            WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     testSubscription, "evt_abc123", "payment.completed", "{\"test\":true}");
             delivery.setId(200L);
             delivery.markDelivered(200, "OK");

@@ -8,7 +8,7 @@ class TransactionTagsTest {
 
     @Test
     void shouldSetAndGetTags() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
         String tagsJson = "[\"FOOD\", \"DINING\", \"WORK\"]";
 
         transaction.setTags(tagsJson);
@@ -18,7 +18,7 @@ class TransactionTagsTest {
 
     @Test
     void shouldAllowNullTags() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
 
         transaction.setTags(null);
 
@@ -27,7 +27,7 @@ class TransactionTagsTest {
 
     @Test
     void shouldAllowEmptyTagsArray() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
         String emptyArray = "[]";
 
         transaction.setTags(emptyArray);

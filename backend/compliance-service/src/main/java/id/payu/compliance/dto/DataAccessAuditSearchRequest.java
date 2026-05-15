@@ -1,6 +1,6 @@
 package id.payu.compliance.dto;
 
-import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
+import id.payu.compliance.domain.model.DataOperationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

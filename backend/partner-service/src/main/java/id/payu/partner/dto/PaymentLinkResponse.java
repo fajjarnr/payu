@@ -37,7 +37,7 @@ public class PaymentLinkResponse {
     @Schema(description = "Customer email")
     private String customerEmail;
 
-    @Schema(description = "Partner's external reference ID")
+    @Schema(description = "PartnerEntity's external reference ID")
     private String externalId;
 
     @Schema(description = "Redirect URL after payment")

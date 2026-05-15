@@ -1,13 +1,13 @@
 package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.InstallmentCheckout;
-import id.payu.lending.domain.model.InstallmentCheckout.CheckoutStatus;
+import id.payu.lending.domain.model.CheckoutStatus;
 import id.payu.lending.domain.model.InstallmentOption;
 import id.payu.lending.domain.model.Loan;
-import id.payu.lending.domain.model.Loan.LoanStatus;
-import id.payu.lending.domain.model.Loan.LoanType;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.domain.model.PayLater;
-import id.payu.lending.domain.model.PayLater.PayLaterStatus;
+import id.payu.lending.domain.model.PayLaterStatus;
 import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.in.InstallmentUseCase;

@@ -6,7 +6,7 @@ import id.payu.api.common.exception.ExternalServiceException;
 import id.payu.api.common.exception.InsufficientFundsException;
 
 /**
- * Base exception for Transaction Service domain errors.
+ * Base exception for TransactionEntity Service domain errors.
  *
  * Error Code Structure: TXN_[CATEGORY]_[SPECIFIC]
  *
@@ -69,7 +69,7 @@ public abstract class TransactionDomainException extends BusinessException {
     public static class TransactionLimitExceededException extends TransactionDomainException {
         public TransactionLimitExceededException(String limitType) {
             super("TXN_BUS_002",
-                  "Transaction limit exceeded: " + limitType,
+                  "TransactionEntity limit exceeded: " + limitType,
                   "Batas transaksi terlampaui");
         }
     }
@@ -77,7 +77,7 @@ public abstract class TransactionDomainException extends BusinessException {
     public static class TransactionNotAllowedException extends TransactionDomainException {
         public TransactionNotAllowedException(String reason) {
             super("TXN_BUS_003",
-                  "Transaction not allowed: " + reason,
+                  "TransactionEntity not allowed: " + reason,
                   "Transaksi tidak diizinkan");
         }
     }
@@ -202,13 +202,13 @@ public abstract class TransactionDomainException extends BusinessException {
     public static class TransactionProcessingException extends TransactionDomainException {
         public TransactionProcessingException(String reason) {
             super("TXN_SYS_001",
-                  "Transaction processing error: " + reason,
+                  "TransactionEntity processing error: " + reason,
                   "Terjadi kesalahan saat memproses transaksi");
         }
 
         public TransactionProcessingException(String reason, Throwable cause) {
             super("TXN_SYS_001",
-                  "Transaction processing error: " + reason,
+                  "TransactionEntity processing error: " + reason,
                   cause);
         }
     }
@@ -216,7 +216,7 @@ public abstract class TransactionDomainException extends BusinessException {
     public static class TransactionTimeoutException extends TransactionDomainException {
         public TransactionTimeoutException(String transactionId) {
             super("TXN_SYS_002",
-                  "Transaction timeout: " + transactionId,
+                  "TransactionEntity timeout: " + transactionId,
                   "Transaksi timeout, silakan cek status transaksi");
         }
     }

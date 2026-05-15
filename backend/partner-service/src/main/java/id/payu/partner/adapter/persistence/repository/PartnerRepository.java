@@ -1,17 +1,17 @@
 package id.payu.partner.adapter.persistence.repository;
 
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface PartnerRepository extends JpaRepository<Partner, Long> {
+public interface PartnerRepository extends JpaRepository<PartnerEntity, Long> {
     
-    Optional<Partner> findByEmail(String email);
+    Optional<PartnerEntity> findByEmail(String email);
 
-    Optional<Partner> findByClientId(String clientId);
+    Optional<PartnerEntity> findByClientId(String clientId);
 
-    Optional<Partner> findByPartnerCode(String partnerCode);
+    Optional<PartnerEntity> findByPartnerCode(String partnerCode);
 }

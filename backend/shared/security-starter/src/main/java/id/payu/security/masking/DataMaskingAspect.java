@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.IdentityHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * Aspect for masking sensitive data in method arguments and return values.
@@ -334,15 +335,15 @@ public class DataMaskingAspect {
             return "****";
         }
 
-        Sensitive.SensitivityLevel level = annotation.value();
+        SensitivityLevel level = annotation.value();
 
         // CRITICAL level: always fully mask
-        if (level == Sensitive.SensitivityLevel.CRITICAL) {
+        if (level == SensitivityLevel.CRITICAL) {
             return "****";
         }
 
         // HIGH level: show partial (last 4 for strings, **** for amounts)
-        if (level == Sensitive.SensitivityLevel.HIGH) {
+        if (level == SensitivityLevel.HIGH) {
             if (value instanceof String) {
                 String strValue = (String) value;
                 if (strValue.length() <= 4) {

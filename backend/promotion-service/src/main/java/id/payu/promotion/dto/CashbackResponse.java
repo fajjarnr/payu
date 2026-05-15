@@ -1,9 +1,10 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.promotion.domain.CashbackStatus;
 
 public record CashbackResponse(
     UUID id,
@@ -15,12 +16,12 @@ public record CashbackResponse(
     String merchantCode,
     String categoryCode,
     String cashbackCode,
-    Cashback.Status status,
+    CashbackStatus status,
     LocalDateTime creditedAt,
     LocalDateTime expiryDate,
     LocalDateTime createdAt
 ) {
-    public static CashbackResponse from(Cashback cashback) {
+    public static CashbackResponse from(CashbackEntity cashback) {
         return new CashbackResponse(
             cashback.getId(),
             cashback.getAccountId(),

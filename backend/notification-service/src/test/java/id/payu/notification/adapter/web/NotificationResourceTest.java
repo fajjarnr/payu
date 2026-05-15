@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Integration tests require Docker for Kafka DevServices and PostgreSQL")
-@DisplayName("Notification Resource Tests")
+@DisplayName("NotificationEntity Resource Tests")
 class NotificationResourceTest {
 
     @InjectMock
@@ -43,7 +43,7 @@ class NotificationResourceTest {
                             "userId": "user-123",
                             "channel": "EMAIL",
                             "recipient": "user@example.com",
-                            "title": "Test Notification",
+                            "title": "Test NotificationEntity",
                             "body": "This is a test notification"
                         }
                         """)

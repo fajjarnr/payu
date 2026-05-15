@@ -1,20 +1,21 @@
 package id.payu.support.adapter.persistence.repository;
 
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import id.payu.support.domain.TrainingStatus;
 
-public interface TrainingModuleRepository extends JpaRepository<TrainingModule, Long> {
+public interface TrainingModuleRepository extends JpaRepository<TrainingModuleEntity, Long> {
 
-    Optional<TrainingModule> findByCode(String code);
+    Optional<TrainingModuleEntity> findByCode(String code);
 
-    List<TrainingModule> findByStatus(TrainingModule.TrainingStatus status);
+    List<TrainingModuleEntity> findByStatus(TrainingStatus status);
 
-    List<TrainingModule> findByMandatoryTrue();
+    List<TrainingModuleEntity> findByMandatoryTrue();
 
-    List<TrainingModule> findByStatusAndMandatoryTrue(TrainingModule.TrainingStatus status);
+    List<TrainingModuleEntity> findByStatusAndMandatoryTrue(TrainingStatus status);
 
-    long countByMandatoryTrueAndStatus(TrainingModule.TrainingStatus status);
+    long countByMandatoryTrueAndStatus(TrainingStatus status);
 }

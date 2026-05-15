@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.Objects;
+import id.payu.transaction.dto.TransactionType;
 
 /**
  * Command to initiate a fund transfer.
@@ -43,10 +44,10 @@ public record InitiateTransferCommand(
         @Pattern(regexp = "^[a-zA-Z0-9\\s\\-.,]+$", message = "Description contains invalid characters")
         String description,
 
-        @NotNull(message = "Transaction type is required")
-        InitiateTransferRequest.TransactionType type,
+        @NotNull(message = "TransactionEntity type is required")
+        TransactionType type,
 
-        @Pattern(regexp = "^\\d{6}$", message = "Transaction PIN must be exactly 6 digits")
+        @Pattern(regexp = "^\\d{6}$", message = "TransactionEntity PIN must be exactly 6 digits")
         String transactionPin,
 
         @Size(max = 100, message = "Device ID is too long")
@@ -66,7 +67,7 @@ public record InitiateTransferCommand(
     public InitiateTransferCommand {
         Objects.requireNonNull(senderAccountId, "Sender account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
-        Objects.requireNonNull(type, "Transaction type cannot be null");
+        Objects.requireNonNull(type, "TransactionEntity type cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
         // Additional validation for Money positivity

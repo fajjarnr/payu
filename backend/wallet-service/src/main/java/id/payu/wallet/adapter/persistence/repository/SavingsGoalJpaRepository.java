@@ -7,15 +7,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.adapter.persistence.entity.SavingsGoalStatus;
 
 @Repository
 public interface SavingsGoalJpaRepository extends JpaRepository<SavingsGoalEntity, UUID> {
 
-    List<SavingsGoalEntity> findByPocketIdAndStatusNot(UUID pocketId, SavingsGoalEntity.SavingsGoalStatus status);
+    List<SavingsGoalEntity> findByPocketIdAndStatusNot(UUID pocketId, SavingsGoalStatus status);
 
-    List<SavingsGoalEntity> findByUserIdAndStatusNot(UUID userId, SavingsGoalEntity.SavingsGoalStatus status);
+    List<SavingsGoalEntity> findByUserIdAndStatusNot(UUID userId, SavingsGoalStatus status);
 
     Optional<SavingsGoalEntity> findByIdAndUserId(UUID id, UUID userId);
 
-    long countByPocketIdAndStatusNot(UUID pocketId, SavingsGoalEntity.SavingsGoalStatus status);
+    long countByPocketIdAndStatusNot(UUID pocketId, SavingsGoalStatus status);
 }

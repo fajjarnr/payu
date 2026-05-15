@@ -11,7 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### P0 Infrastructure Sprint — Service Mesh, Security & CD (2026-05-15)
+### Backend Architecture & Quality Sprint 2 (2026-05-15)
+
+- **ARCH-008 — Hexagonal Entity Layer Refactoring**: Moved all 46 `@Entity` classes from `domain/` to `adapter/persistence/entity/` across 13 services (account, cms, compliance, integration, notification, statement, auth, backoffice, billing, support, promotion, transaction, partner). All entities suffixed with `Entity`. Zero JPA annotations remaining in domain layer. 300+ files updated with correct imports.
+- **ARCH-009 — Inner-Class Enum Extraction**: Extracted 144 inner-class enums to top-level `.java` files. 3 naming conflicts resolved (AuditOperation, TransactionType). 250+ reference files updated. All services compile.
+- **AUTH-033 — HealthController Real Health Checks**: All 18 services + api-commons updated with real dependency checks: DB `SELECT 1`, Redis `PING` (conditional), Kafka listener status (conditional). Graceful fallback with `@Autowired(required = false)`. Structured JSON response with `details` and latency metrics.
+- **TEST-001 — cms-service Tests**: 71 tests (was 2 files): ContentServiceTest(40), ContentControllerTest(18), ContentRepositoryIntegrationTest(20), ContentSchedulerTest(6). Fixed inner enum extraction.
+- **TEST-002 — api-portal-service Tests**: 76 tests (was 4 files): ApiPortalIntegrationTest(15), ApiPortalResourceTest(15), SandboxResourceTest(14), ServiceTests(17), ArchitectureTest(8), CorrelationIdFilterTest(7).
+- **TEST-003 — product-catalog-service Tests**: 60 tests (was 4 files): PublicProductControllerTest(10), PersistenceAdapterTest(9), HealthControllerTest(3), GlobalExceptionHandlerTest(4). Fixed pre-existing compilation bug in AdminProductController.
+
+### P0 Infrastructure Sprint (2026-05-15)
 
 - **INFRA-009 — Service Mesh mTLS STRICT**: Deployed Istio control plane (Sail operator v3.3.3, Istio 1.28.4) on OpenShift 4.20+. istiod + IstioCNI Healthy. 20 security resources: mesh-wide STRICT PeerAuthentication, per-namespace policies (payu-dev PERMISSIVE, prod STRICT), AuthorizationPolicy (zero-trust deny-all + service-specific ALLOW), RequestAuthentication (JWT), DestinationRules (14 services with circuit breaker).
 - **INFRA-017 — API Security Headers**: EnvoyFilter deployed on ingress gateway: Strict-Transport-Security (max-age=1y), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy, Content-Security-Policy, Cache-Control, X-XSS-Protection.

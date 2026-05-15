@@ -1,6 +1,6 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.KycReviewDecisionRequest;
 import id.payu.backoffice.dto.KycReviewRequest;
 import id.payu.backoffice.adapter.persistence.repository.KycReviewRepository;
@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.backoffice.domain.KycStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -23,10 +24,10 @@ public class KycReviewService {
     private final KycReviewRepository repository;
 
     @Transactional
-    public KycReview create(KycReviewRequest request) {
+    public KycReviewEntity create(KycReviewRequest request) {
         log.info("Creating KYC review for user: {}", request.userId());
 
-        KycReview review = KycReview.builder()
+        KycReviewEntity review = KycReviewEntity.builder()
                 .userId(request.userId())
                 .accountNumber(request.accountNumber())
                 .documentType(request.documentType())
@@ -36,49 +37,49 @@ public class KycReviewService {
                 .address(request.address())
                 .phoneNumber(request.phoneNumber())
                 .notes(request.notes())
-                .status(KycReview.KycStatus.PENDING)
+                .status(KycStatus.PENDING)
                 .build();
 
-        KycReview saved = repository.save(review);
+        KycReviewEntity saved = repository.save(review);
         log.info("KYC review created: id={}", saved.getId());
         return saved;
     }
 
-    public Optional<KycReview> getById(UUID id) {
+    public Optional<KycReviewEntity> getById(UUID id) {
         return repository.findById(id);
     }
 
-    public Optional<KycReview> getByUserId(String userId) {
+    public Optional<KycReviewEntity> getByUserId(String userId) {
         return repository.findByUserIdOrderByCreatedAtDesc(userId).stream().findFirst();
     }
 
-    public List<KycReview> listByStatus(KycReview.KycStatus status, int page, int size) {
+    public List<KycReviewEntity> listByStatus(KycStatus status, int page, int size) {
         // BUG-BE-043: Use DB-level pagination instead of ignoring page/size
         return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
     }
 
-    public List<KycReview> listAll(int page, int size) {
+    public List<KycReviewEntity> listAll(int page, int size) {
         return repository.findAll(PageRequest.of(page, size)).getContent();
     }
 
     @Transactional
-    public KycReview review(UUID id, KycReviewDecisionRequest request, String reviewedBy) {
+    public KycReviewEntity review(UUID id, KycReviewDecisionRequest request, String reviewedBy) {
         log.info("Reviewing KYC: id={}, status={}, reviewer={}", id, request.status(), reviewedBy);
 
-        KycReview review = repository.findById(id)
+        KycReviewEntity review = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("KYC review not found: " + id));
 
         review.setStatus(switch (request.status()) {
-            case APPROVED -> KycReview.KycStatus.APPROVED;
-            case REJECTED -> KycReview.KycStatus.REJECTED;
-            case REQUIRES_ADDITIONAL_INFO -> KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO;
+            case APPROVED -> KycStatus.APPROVED;
+            case REJECTED -> KycStatus.REJECTED;
+            case REQUIRES_ADDITIONAL_INFO -> KycStatus.REQUIRES_ADDITIONAL_INFO;
         });
 
         review.setNotes(request.notes());
         review.setReviewedBy(reviewedBy);
         review.setReviewedAt(LocalDateTime.now());
 
-        KycReview saved = repository.save(review);
+        KycReviewEntity saved = repository.save(review);
         log.info("KYC review updated: id={}, newStatus={}", saved.getId(), saved.getStatus());
         return saved;
     }

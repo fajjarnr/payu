@@ -87,7 +87,7 @@ class CashbackProcessorServiceTest {
                 eq(ACCOUNT_ID),
                 argThat(bd -> bd.compareTo(new BigDecimal("5000")) == 0),
                 anyString(),
-                contains("Cashback")
+                contains("CashbackEntity")
         );
     }
 

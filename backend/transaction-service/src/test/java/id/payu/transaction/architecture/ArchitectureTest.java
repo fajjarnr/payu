@@ -38,7 +38,7 @@ public class ArchitectureTest {
     static final ArchRule controllers_should_only_depend_on_usecases =
             classes().that().resideInAPackage("..adapter.web..")
                     .should().onlyDependOnClassesThat()
-                    // Allowed domain.model because controller returns Transaction object currently
+                    // Allowed domain.model because controller returns TransactionEntity object currently
                     .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.application.cqrs..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..")
                     .allowEmptyShould(true);
 

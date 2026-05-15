@@ -7,6 +7,7 @@ import id.payu.wallet.domain.model.SplitRecipient;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * Input port for split payment use cases.
@@ -20,7 +21,7 @@ public interface SplitPaymentUseCase {
      * Create a new split payment rule.
      */
     SplitPaymentRule createRule(String partnerId, String ruleName,
-                                SplitPaymentRule.SplitType splitType, String currency,
+                                SplitType splitType, String currency,
                                 List<SplitRecipient> recipients);
 
     /**

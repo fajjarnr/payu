@@ -20,6 +20,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import id.payu.wallet.adapter.persistence.entity.JournalStatus;
+import id.payu.wallet.domain.model.AccountCategory;
+import id.payu.wallet.domain.model.AccountType;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.NormalBalance;
 
 /**
  * Persistence adapter for Journal and Chart of Account operations.
@@ -172,7 +177,7 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
                 .description(domain.getDescription())
                 .referenceType(domain.getReferenceType())
                 .referenceId(domain.getReferenceId())
-                .status(JournalEntryEntity.JournalStatus.valueOf(domain.getStatus().name()))
+                .status(JournalStatus.valueOf(domain.getStatus().name()))
                 .postedAt(domain.getPostedAt())
                 .createdAt(domain.getCreatedAt())
                 .createdBy(domain.getCreatedBy())
@@ -186,7 +191,7 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
                 .description(entity.getDescription())
                 .referenceType(entity.getReferenceType())
                 .referenceId(entity.getReferenceId())
-                .status(JournalEntry.JournalStatus.valueOf(entity.getStatus().name()))
+                .status(id.payu.wallet.domain.model.JournalStatus.valueOf(entity.getStatus().name()))
                 .postedAt(entity.getPostedAt())
                 .createdAt(entity.getCreatedAt())
                 .createdBy(entity.getCreatedBy())
@@ -217,7 +222,7 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
                 .journalEntryId(entity.getJournalEntry() != null ? entity.getJournalEntry().getId() : null)
                 .accountId(entity.getAccountId())
                 .coaCode(entity.getCoaCode())
-                .entryType(LedgerEntry.EntryType.valueOf(entity.getEntryType()))
+                .entryType(EntryType.valueOf(entity.getEntryType()))
                 .amount(entity.getAmount())
                 .currency(entity.getCurrency())
                 .balanceAfter(entity.getBalanceAfter())
@@ -251,13 +256,13 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
                 .code(entity.getCode())
                 .name(entity.getName())
                 .description(entity.getDescription())
-                .accountType(ChartOfAccount.AccountType.valueOf(entity.getAccountType()))
+                .accountType(AccountType.valueOf(entity.getAccountType()))
                 .category(entity.getCategory() != null
-                        ? ChartOfAccount.AccountCategory.valueOf(entity.getCategory()) : null)
+                        ? AccountCategory.valueOf(entity.getCategory()) : null)
                 .parentId(entity.getParentId())
                 .level(entity.getLevel())
                 .active(entity.isActive())
-                .normalBalance(ChartOfAccount.NormalBalance.valueOf(entity.getNormalBalance()))
+                .normalBalance(NormalBalance.valueOf(entity.getNormalBalance()))
                 .currency(entity.getCurrency())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

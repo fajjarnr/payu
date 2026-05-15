@@ -1,11 +1,12 @@
 package id.payu.backoffice.dto;
 
 import jakarta.validation.constraints.NotNull;
-import id.payu.backoffice.domain.CustomerCase;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.domain.CustomerCaseStatus;
 
 public record CustomerCaseUpdateRequest(
         @NotNull(message = "Status is required")
-        CustomerCase.CaseStatus status,
+        CustomerCaseStatus status,
 
         String notes
 ) {}

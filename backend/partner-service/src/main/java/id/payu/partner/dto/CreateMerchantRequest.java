@@ -19,7 +19,7 @@ public class CreateMerchantRequest {
     private String businessType;
 
     @NotNull
-    @Schema(description = "Merchant category", example = "FOOD_BEVERAGE")
+    @Schema(description = "MerchantEntity category", example = "FOOD_BEVERAGE")
     private String category;
 
     @NotBlank

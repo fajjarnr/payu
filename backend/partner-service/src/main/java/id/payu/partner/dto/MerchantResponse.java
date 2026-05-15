@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Merchant details")
+@Schema(description = "MerchantEntity details")
 public class MerchantResponse {
 
     private Long id;

@@ -41,19 +41,4 @@ public class VerificationLog extends PanacheEntityBase {
 
     @Column(name = "created_at", nullable = false)
     public LocalDateTime createdAt = LocalDateTime.now();
-
-    public enum VerificationType {
-        NIK_VERIFICATION,
-        FACE_MATCHING,
-        DATA_RETRIEVAL
-    }
-
-    public enum VerificationResult {
-        SUCCESS,
-        FAILED,
-        NOT_FOUND,
-        BLOCKED,
-        ERROR,
-        TIMEOUT
-    }
 }

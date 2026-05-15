@@ -2,9 +2,9 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.WebhookDeliveryRepository;
 import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionRepository;
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.WebhookDelivery;
-import id.payu.partner.domain.WebhookSubscription;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,19 +38,19 @@ class WebhookDispatcherServiceTest {
     private HttpClient httpClient;
 
     private WebhookDispatcherService dispatcher;
-    private Partner partner;
-    private WebhookSubscription subscription;
+    private PartnerEntity partner;
+    private WebhookSubscriptionEntity subscription;
 
     @BeforeEach
     void setUp() {
         dispatcher = new WebhookDispatcherService(subscriptionRepository, deliveryRepository, httpClient);
 
-        partner = new Partner();
+        partner = new PartnerEntity();
         partner.setId(1L);
         partner.setName("TokoBapak");
         partner.setActive(true);
 
-        subscription = new WebhookSubscription(
+        subscription = new WebhookSubscriptionEntity(
                 partner,
                 "https://api.tokobapak.com/webhooks",
                 "payment.completed,payment.failed",
@@ -119,9 +119,9 @@ class WebhookDispatcherServiceTest {
         void shouldCreateDeliveryAndAttempt() throws Exception {
             when(subscriptionRepository.findActiveByEventType("payment.completed"))
                     .thenReturn(List.of(subscription));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> {
-                        WebhookDelivery d = inv.getArgument(0);
+                        WebhookDeliveryEntity d = inv.getArgument(0);
                         d.setId(200L);
                         return d;
                     });
@@ -136,14 +136,14 @@ class WebhookDispatcherServiceTest {
                     Map.of("amount", 50000, "currency", "IDR"));
 
             // Verify delivery was saved (initial + after attempt)
-            ArgumentCaptor<WebhookDelivery> captor =
-                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
-            List<WebhookDelivery> saved = captor.getAllValues();
+            List<WebhookDeliveryEntity> saved = captor.getAllValues();
             // First save = PENDING, second = DELIVERING, third = DELIVERED
-            WebhookDelivery finalState = saved.get(saved.size() - 1);
-            assertEquals(WebhookDelivery.Status.DELIVERED, finalState.getStatus());
+            WebhookDeliveryEntity finalState = saved.get(saved.size() - 1);
+            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, finalState.getStatus());
             assertEquals(200, finalState.getResponseCode());
         }
 
@@ -153,7 +153,7 @@ class WebhookDispatcherServiceTest {
         void shouldMarkFailedOnNon2xx() throws Exception {
             when(subscriptionRepository.findActiveByEventType("payment.completed"))
                     .thenReturn(List.of(subscription));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             HttpResponse<String> mockResponse = mock(HttpResponse.class);
@@ -164,12 +164,12 @@ class WebhookDispatcherServiceTest {
 
             dispatcher.dispatch("payment.completed", "evt_fail001", Map.of("test", true));
 
-            ArgumentCaptor<WebhookDelivery> captor =
-                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
-            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDelivery.Status.FAILED, finalState.getStatus());
+            WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDeliveryEntity.Status.FAILED, finalState.getStatus());
             assertEquals(500, finalState.getResponseCode());
             assertNotNull(finalState.getNextRetryAt(), "Should schedule retry");
         }
@@ -180,19 +180,19 @@ class WebhookDispatcherServiceTest {
         void shouldMarkFailedOnConnectionError() throws Exception {
             when(subscriptionRepository.findActiveByEventType("payment.completed"))
                     .thenReturn(List.of(subscription));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
             when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                     .thenThrow(new java.io.IOException("Connection refused"));
 
             dispatcher.dispatch("payment.completed", "evt_err001", Map.of("test", true));
 
-            ArgumentCaptor<WebhookDelivery> captor =
-                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
-            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDelivery.Status.FAILED, finalState.getStatus());
+            WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDeliveryEntity.Status.FAILED, finalState.getStatus());
             assertNotNull(finalState.getErrorMessage());
             assertTrue(finalState.getErrorMessage().contains("Connection refused"));
         }
@@ -203,9 +203,9 @@ class WebhookDispatcherServiceTest {
         void shouldIncludeCorrectHeaders() throws Exception {
             when(subscriptionRepository.findActiveByEventType("payment.completed"))
                     .thenReturn(List.of(subscription));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> {
-                        WebhookDelivery d = inv.getArgument(0);
+                        WebhookDeliveryEntity d = inv.getArgument(0);
                         d.setId(300L);
                         return d;
                     });
@@ -248,16 +248,16 @@ class WebhookDispatcherServiceTest {
         @Test
         @DisplayName("should retry failed deliveries that are due")
         void shouldRetryFailedDeliveries() throws Exception {
-            WebhookDelivery failedDelivery = new WebhookDelivery(
+            WebhookDeliveryEntity failedDelivery = new WebhookDeliveryEntity(
                     subscription, "evt_retry001", "payment.completed", "{\"retry\":true}");
             failedDelivery.setId(500L);
-            failedDelivery.setStatus(WebhookDelivery.Status.FAILED);
+            failedDelivery.setStatus(WebhookDeliveryEntity.Status.FAILED);
             failedDelivery.setAttemptCount(1);
             failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
 
             when(deliveryRepository.findRetryableDeliveries(any(LocalDateTime.class)))
                     .thenReturn(List.of(failedDelivery));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             HttpResponse<String> mockResponse = mock(HttpResponse.class);
@@ -268,12 +268,12 @@ class WebhookDispatcherServiceTest {
 
             dispatcher.retryFailedDeliveries();
 
-            ArgumentCaptor<WebhookDelivery> captor =
-                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
-            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDelivery.Status.DELIVERED, finalState.getStatus());
+            WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, finalState.getStatus());
         }
 
         @Test
@@ -281,24 +281,24 @@ class WebhookDispatcherServiceTest {
         void shouldExhaustForDeactivatedSubscription() {
             subscription.setActive(false);
 
-            WebhookDelivery failedDelivery = new WebhookDelivery(
+            WebhookDeliveryEntity failedDelivery = new WebhookDeliveryEntity(
                     subscription, "evt_deact001", "payment.completed", "{\"test\":true}");
             failedDelivery.setId(600L);
-            failedDelivery.setStatus(WebhookDelivery.Status.FAILED);
+            failedDelivery.setStatus(WebhookDeliveryEntity.Status.FAILED);
             failedDelivery.setAttemptCount(1);
             failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
 
             when(deliveryRepository.findRetryableDeliveries(any(LocalDateTime.class)))
                     .thenReturn(List.of(failedDelivery));
-            when(deliveryRepository.save(any(WebhookDelivery.class)))
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             dispatcher.retryFailedDeliveries();
 
-            ArgumentCaptor<WebhookDelivery> captor =
-                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository).save(captor.capture());
-            assertEquals(WebhookDelivery.Status.EXHAUSTED, captor.getValue().getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.EXHAUSTED, captor.getValue().getStatus());
         }
 
         @Test
@@ -329,23 +329,23 @@ class WebhookDispatcherServiceTest {
     }
 
     @Nested
-    @DisplayName("Domain Model - WebhookDelivery")
+    @DisplayName("Domain Model - WebhookDeliveryEntity")
     class DeliveryDomainModel {
 
         @Test
         @DisplayName("should transition through delivery lifecycle")
         void shouldTransitionThroughLifecycle() {
-            WebhookDelivery delivery = new WebhookDelivery(
+            WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, "evt_lc001", "payment.completed", "{\"test\":true}");
 
-            assertEquals(WebhookDelivery.Status.PENDING, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.PENDING, delivery.getStatus());
             assertEquals(0, delivery.getAttemptCount());
 
             delivery.markDelivering();
-            assertEquals(WebhookDelivery.Status.DELIVERING, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.DELIVERING, delivery.getStatus());
 
             delivery.markDelivered(200, "OK");
-            assertEquals(WebhookDelivery.Status.DELIVERED, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, delivery.getStatus());
             assertEquals(200, delivery.getResponseCode());
             assertNotNull(delivery.getDeliveredAt());
             assertEquals(1, delivery.getAttemptCount());
@@ -354,12 +354,12 @@ class WebhookDispatcherServiceTest {
         @Test
         @DisplayName("should calculate exponential backoff for retries")
         void shouldCalculateExponentialBackoff() {
-            WebhookDelivery delivery = new WebhookDelivery(
+            WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, "evt_bo001", "payment.completed", "{\"test\":true}");
 
             // First failure: 30s backoff
             delivery.markFailed(500, "Error", "Server Error");
-            assertEquals(WebhookDelivery.Status.FAILED, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.FAILED, delivery.getStatus());
             assertEquals(1, delivery.getAttemptCount());
             assertNotNull(delivery.getNextRetryAt());
             assertTrue(delivery.canRetry());
@@ -368,23 +368,23 @@ class WebhookDispatcherServiceTest {
         @Test
         @DisplayName("should mark EXHAUSTED when max attempts exceeded")
         void shouldExhaustAfterMaxAttempts() {
-            WebhookDelivery delivery = new WebhookDelivery(
+            WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, "evt_ex001", "payment.completed", "{\"test\":true}");
             delivery.setMaxAttempts(2);
 
             delivery.markFailed(500, "Error 1", "Server Error");
-            assertEquals(WebhookDelivery.Status.FAILED, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.FAILED, delivery.getStatus());
             assertTrue(delivery.canRetry());
 
             delivery.markFailed(500, "Error 2", "Server Error");
-            assertEquals(WebhookDelivery.Status.EXHAUSTED, delivery.getStatus());
+            assertEquals(WebhookDeliveryEntity.Status.EXHAUSTED, delivery.getStatus());
             assertFalse(delivery.canRetry());
             assertNull(delivery.getNextRetryAt());
         }
     }
 
     @Nested
-    @DisplayName("Domain Model - WebhookSubscription")
+    @DisplayName("Domain Model - WebhookSubscriptionEntity")
     class SubscriptionDomainModel {
 
         @Test
@@ -398,7 +398,7 @@ class WebhookDispatcherServiceTest {
         @Test
         @DisplayName("should match wildcard subscription")
         void shouldMatchWildcard() {
-            WebhookSubscription wildcardSub = new WebhookSubscription(
+            WebhookSubscriptionEntity wildcardSub = new WebhookSubscriptionEntity(
                     partner, "https://example.com/wh", "*", "secret");
             wildcardSub.setId(20L);
 

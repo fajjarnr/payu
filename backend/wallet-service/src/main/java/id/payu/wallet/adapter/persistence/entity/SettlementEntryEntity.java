@@ -58,12 +58,6 @@ public class SettlementEntryEntity {
     public SettlementEntryEntity() {
     }
 
-    public enum EntryStatus {
-        PENDING,
-        SETTLED,
-        FAILED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

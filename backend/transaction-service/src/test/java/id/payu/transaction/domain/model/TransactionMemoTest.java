@@ -8,7 +8,7 @@ class TransactionMemoTest {
 
     @Test
     void shouldSetAndGetMemo() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
         String memo = "Bayar makan siang";
 
         transaction.setMemo(memo);
@@ -18,7 +18,7 @@ class TransactionMemoTest {
 
     @Test
     void shouldAllowNullMemo() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
 
         transaction.setMemo(null);
 
@@ -27,7 +27,7 @@ class TransactionMemoTest {
 
     @Test
     void shouldAllowEmptyMemo() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
 
         transaction.setMemo("");
 
@@ -36,7 +36,7 @@ class TransactionMemoTest {
 
     @Test
     void shouldAllowLongMemoUpTo140Chars() {
-        Transaction transaction = new Transaction();
+        TransactionEntity transaction = new TransactionEntity();
         String longMemo = "a".repeat(140);
 
         transaction.setMemo(longMemo);

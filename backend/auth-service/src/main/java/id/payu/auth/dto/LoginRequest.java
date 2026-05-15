@@ -4,6 +4,7 @@ import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * Login request DTO with input validation.
@@ -27,7 +28,7 @@ public record LoginRequest(
 
     @NotBlank(message = "Password is required")
     @Size(min = 1, max = 128, message = "Password must not exceed 128 characters")
-    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
+    @Sensitive(value = SensitivityLevel.CRITICAL)
     String password
 ) {
     @Override

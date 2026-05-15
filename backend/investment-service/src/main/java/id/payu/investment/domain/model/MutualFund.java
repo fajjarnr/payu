@@ -28,12 +28,4 @@ public class MutualFund {
     private FundStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum FundStatus {
-        ACTIVE, SUSPENDED, CLOSED
-    }
-
-    public enum FundType {
-        MONEY_MARKET, FIXED_INCOME, MIXED, EQUITY, INDEX_FUND
-    }
 }

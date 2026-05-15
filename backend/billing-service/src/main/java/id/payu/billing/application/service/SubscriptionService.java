@@ -1,11 +1,11 @@
 package id.payu.billing.application.service;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.Subscription.SubscriptionStatus;
-import id.payu.billing.domain.model.SubscriptionCharge;
-import id.payu.billing.domain.model.SubscriptionCharge.ChargeStatus;
-import id.payu.billing.domain.model.SubscriptionPlan;
-import id.payu.billing.domain.model.SubscriptionPlan.BillingInterval;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.domain.model.SubscriptionStatus;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.ChargeStatus;
+import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.domain.model.BillingInterval;
 import id.payu.billing.domain.port.in.SubscriptionUseCase;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
@@ -51,13 +51,13 @@ public class SubscriptionService implements SubscriptionUseCase {
     @CircuitBreaker(name = "billing", fallbackMethod = "createPlanFallback")
     @Retry(name = "billing")
     @Transactional
-    public SubscriptionPlan createPlan(String partnerId, String planName, String description,
+    public SubscriptionPlanEntity createPlan(String partnerId, String planName, String description,
                                         BillingInterval interval, BigDecimal price, String currency,
                                         int trialDays, int gracePeriodDays) {
         log.info("Creating subscription plan: partner={}, name={}, interval={}, price={}",
                 partnerId, planName, interval, price);
 
-        SubscriptionPlan plan = new SubscriptionPlan();
+        SubscriptionPlanEntity plan = new SubscriptionPlanEntity();
         plan.setPartnerId(partnerId);
         plan.setPlanName(planName);
         plan.setDescription(description);
@@ -68,50 +68,50 @@ public class SubscriptionService implements SubscriptionUseCase {
         plan.setGracePeriodDays(gracePeriodDays);
         plan.setActive(true);
 
-        SubscriptionPlan saved = persistencePort.savePlan(plan);
-        log.info("Subscription plan created: id={}", saved.getId());
+        SubscriptionPlanEntity saved = persistencePort.savePlan(plan);
+        log.info("SubscriptionEntity plan created: id={}", saved.getId());
         return saved;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public SubscriptionPlan getPlan(UUID planId) {
+    public SubscriptionPlanEntity getPlan(UUID planId) {
         return persistencePort.findPlanById(planId)
-                .orElseThrow(() -> new SubscriptionNotFoundException("Subscription plan not found: " + planId));
+                .orElseThrow(() -> new SubscriptionNotFoundException("SubscriptionEntity plan not found: " + planId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<SubscriptionPlan> getPlansByPartner(String partnerId) {
+    public List<SubscriptionPlanEntity> getPlansByPartner(String partnerId) {
         return persistencePort.findPlansByPartnerId(partnerId);
     }
 
     @Override
     @Transactional
     public void deactivatePlan(UUID planId) {
-        SubscriptionPlan plan = getPlan(planId);
+        SubscriptionPlanEntity plan = getPlan(planId);
         plan.deactivate();
         persistencePort.savePlan(plan);
-        log.info("Subscription plan deactivated: id={}", planId);
+        log.info("SubscriptionEntity plan deactivated: id={}", planId);
     }
 
     // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle
+    //  SubscriptionEntity Lifecycle
     // ═══════════════════════════════════════════════════════
 
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "subscribeFallback")
     @Retry(name = "billing")
     @Transactional
-    public Subscription subscribe(String accountId, UUID planId, String externalReferenceId) {
-        SubscriptionPlan plan = getPlan(planId);
+    public SubscriptionEntity subscribe(String accountId, UUID planId, String externalReferenceId) {
+        SubscriptionPlanEntity plan = getPlan(planId);
         if (!plan.isActive()) {
-            throw new IllegalStateException("Subscription plan is not active: " + planId);
+            throw new IllegalStateException("SubscriptionEntity plan is not active: " + planId);
         }
 
         log.info("Creating subscription: account={}, plan={}", maskId(accountId), plan.getPlanName());
 
-        Subscription sub = new Subscription();
+        SubscriptionEntity sub = new SubscriptionEntity();
         sub.setAccountId(accountId);
         sub.setPlanId(planId);
         sub.setPartnerId(plan.getPartnerId());
@@ -134,8 +134,8 @@ public class SubscriptionService implements SubscriptionUseCase {
             sub.setNextBillingAt(advanceByInterval(now, plan.getBillingInterval()));
         }
 
-        Subscription saved = persistencePort.saveSubscription(sub);
-        log.info("Subscription created: id={}, status={}", saved.getId(), saved.getStatus());
+        SubscriptionEntity saved = persistencePort.saveSubscription(sub);
+        log.info("SubscriptionEntity created: id={}, status={}", saved.getId(), saved.getStatus());
 
         // Publish webhook event asynchronously
         try {
@@ -149,20 +149,20 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Subscription getSubscription(UUID subscriptionId) {
+    public SubscriptionEntity getSubscription(UUID subscriptionId) {
         return persistencePort.findSubscriptionById(subscriptionId)
-                .orElseThrow(() -> new SubscriptionNotFoundException("Subscription not found: " + subscriptionId));
+                .orElseThrow(() -> new SubscriptionNotFoundException("SubscriptionEntity not found: " + subscriptionId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Subscription> getSubscriptionsByAccount(String accountId) {
+    public List<SubscriptionEntity> getSubscriptionsByAccount(String accountId) {
         return persistencePort.findSubscriptionsByAccountId(accountId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Subscription> getSubscriptionsByPartner(String partnerId) {
+    public List<SubscriptionEntity> getSubscriptionsByPartner(String partnerId) {
         return persistencePort.findSubscriptionsByPartnerId(partnerId);
     }
 
@@ -170,14 +170,14 @@ public class SubscriptionService implements SubscriptionUseCase {
     @CircuitBreaker(name = "billing", fallbackMethod = "cancelSubscriptionFallback")
     @Retry(name = "billing")
     @Transactional
-    public Subscription cancelSubscription(UUID subscriptionId, String reason) {
-        Subscription sub = getSubscription(subscriptionId);
+    public SubscriptionEntity cancelSubscription(UUID subscriptionId, String reason) {
+        SubscriptionEntity sub = getSubscription(subscriptionId);
         if (sub.getStatus() == SubscriptionStatus.CANCELLED) {
-            throw new IllegalStateException("Subscription is already cancelled");
+            throw new IllegalStateException("SubscriptionEntity is already cancelled");
         }
         sub.cancel(reason);
-        Subscription saved = persistencePort.saveSubscription(sub);
-        log.info("Subscription cancelled: id={}, reason={}", subscriptionId, reason);
+        SubscriptionEntity saved = persistencePort.saveSubscription(sub);
+        log.info("SubscriptionEntity cancelled: id={}, reason={}", subscriptionId, reason);
         return saved;
     }
 
@@ -192,21 +192,21 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Transactional
     public int processDueSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
-        List<Subscription> dueSubscriptions = persistencePort.findDueSubscriptions(now);
-        List<Subscription> pastDue = persistencePort.findPastDueSubscriptions();
+        List<SubscriptionEntity> dueSubscriptions = persistencePort.findDueSubscriptions(now);
+        List<SubscriptionEntity> pastDue = persistencePort.findPastDueSubscriptions();
 
         int processed = 0;
-        for (Subscription sub : dueSubscriptions) {
+        for (SubscriptionEntity sub : dueSubscriptions) {
             processCharge(sub);
             processed++;
         }
 
         // Dunning: retry past-due
-        for (Subscription sub : pastDue) {
+        for (SubscriptionEntity sub : pastDue) {
             if (sub.isDunningExhausted()) {
                 sub.suspend();
                 persistencePort.saveSubscription(sub);
-                log.warn("Subscription suspended after dunning exhaustion: id={}", sub.getId());
+                log.warn("SubscriptionEntity suspended after dunning exhaustion: id={}", sub.getId());
             } else {
                 processCharge(sub);
             }
@@ -226,17 +226,17 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Transactional
     public int processExpiredTrials() {
         LocalDateTime now = LocalDateTime.now();
-        List<Subscription> expired = persistencePort.findExpiredTrials(now);
+        List<SubscriptionEntity> expired = persistencePort.findExpiredTrials(now);
 
         int processed = 0;
-        for (Subscription sub : expired) {
+        for (SubscriptionEntity sub : expired) {
             log.info("Trial expired, activating subscription: id={}", sub.getId());
             // Transition from TRIAL to ACTIVE and schedule first charge
             sub.setStatus(SubscriptionStatus.ACTIVE);
             sub.setCurrentPeriodStart(now);
 
             // Look up plan for interval
-            SubscriptionPlan plan = getPlan(sub.getPlanId());
+            SubscriptionPlanEntity plan = getPlan(sub.getPlanId());
             LocalDateTime periodEnd = advanceByInterval(now, plan.getBillingInterval());
             sub.setCurrentPeriodEnd(periodEnd);
             sub.setNextBillingAt(now); // charge immediately
@@ -254,7 +254,7 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SubscriptionCharge> getChargesBySubscription(UUID subscriptionId) {
+    public List<SubscriptionChargeEntity> getChargesBySubscription(UUID subscriptionId) {
         return persistencePort.findChargesBySubscriptionId(subscriptionId);
     }
 
@@ -262,19 +262,19 @@ public class SubscriptionService implements SubscriptionUseCase {
     //  Resilience Fallback Methods
     // ═══════════════════════════════════════════════════════
 
-    private SubscriptionPlan createPlanFallback(String partnerId, String planName, String description,
+    private SubscriptionPlanEntity createPlanFallback(String partnerId, String planName, String description,
                                                 BillingInterval interval, BigDecimal price, String currency,
                                                 int trialDays, int gracePeriodDays, Exception ex) {
         log.error("Fallback for createPlan: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Subscription subscribeFallback(String accountId, UUID planId, String externalReferenceId, Exception ex) {
+    private SubscriptionEntity subscribeFallback(String accountId, UUID planId, String externalReferenceId, Exception ex) {
         log.error("Fallback for subscribe: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Subscription cancelSubscriptionFallback(UUID subscriptionId, String reason, Exception ex) {
+    private SubscriptionEntity cancelSubscriptionFallback(UUID subscriptionId, String reason, Exception ex) {
         log.error("Fallback for cancelSubscription: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
@@ -293,7 +293,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     //  Internal Helpers
     // ═══════════════════════════════════════════════════════
 
-    private void processCharge(Subscription sub) {
+    private void processCharge(SubscriptionEntity sub) {
         // BUG-BE-187 FIX: Skip charging subscriptions that are still in trial period
         if (sub.getStatus() == SubscriptionStatus.TRIAL) {
             log.info("Skipping charge for subscription {} — still in trial period (ends at {})",
@@ -309,7 +309,7 @@ public class SubscriptionService implements SubscriptionUseCase {
             return;
         }
 
-        SubscriptionCharge charge = new SubscriptionCharge();
+        SubscriptionChargeEntity charge = new SubscriptionChargeEntity();
         charge.setSubscriptionId(sub.getId());
         charge.setAccountId(sub.getAccountId());
         charge.setAmount(sub.getCurrentPrice());
@@ -328,7 +328,7 @@ public class SubscriptionService implements SubscriptionUseCase {
             persistencePort.saveCharge(charge);
 
             // Advance billing cycle
-            SubscriptionPlan plan = getPlan(sub.getPlanId());
+            SubscriptionPlanEntity plan = getPlan(sub.getPlanId());
             LocalDateTime nextStart = sub.getCurrentPeriodEnd() != null
                     ? sub.getCurrentPeriodEnd()
                     : LocalDateTime.now();

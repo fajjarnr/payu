@@ -2,8 +2,8 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.PaymentLinkRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.PaymentLink;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.PaymentLinkEntity;
 import id.payu.partner.dto.CreatePaymentLinkRequest;
 import id.payu.partner.dto.PaymentLinkResponse;
 import org.slf4j.Logger;
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import id.payu.partner.domain.PaymentLinkStatus;
 
 /**
  * Manages payment link lifecycle: creation, retrieval, payment confirmation, and expiry.
@@ -50,8 +51,8 @@ public class PaymentLinkService {
      * Create a new payment link for a partner.
      */
     public PaymentLinkResponse createPaymentLink(Long partnerId, CreatePaymentLinkRequest request) {
-        Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Partner not found: " + partnerId));
+        PartnerEntity partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new IllegalArgumentException("PartnerEntity not found: " + partnerId));
 
         if (!partner.isActive()) {
             throw new IllegalStateException("Cannot create payment link for inactive partner");
@@ -66,7 +67,7 @@ public class PaymentLinkService {
         int expiryHours = request.getExpiryHours() != null ? request.getExpiryHours() : 24;
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(expiryHours);
 
-        PaymentLink paymentLink = new PaymentLink(
+        PaymentLinkEntity paymentLink = new PaymentLinkEntity(
                 partner,
                 request.getAmount(),
                 request.getCurrency() != null ? request.getCurrency() : "IDR",
@@ -91,11 +92,11 @@ public class PaymentLinkService {
      * Note: Not readOnly because auto-expire may write.
      */
     public PaymentLinkResponse getBySlug(String slug) {
-        PaymentLink paymentLink = paymentLinkRepository.findBySlug(slug)
+        PaymentLinkEntity paymentLink = paymentLinkRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
 
         // Auto-expire if past expiry
-        if (paymentLink.getStatus() == PaymentLink.PaymentLinkStatus.ACTIVE
+        if (paymentLink.getStatus() == PaymentLinkStatus.ACTIVE
                 && paymentLink.getExpiresAt().isBefore(LocalDateTime.now())) {
             paymentLink.markExpired();
             paymentLinkRepository.save(paymentLink);
@@ -109,7 +110,7 @@ public class PaymentLinkService {
      */
     @Transactional(readOnly = true)
     public PaymentLinkResponse getByIdForPartner(Long partnerId, Long linkId) {
-        PaymentLink paymentLink = paymentLinkRepository.findById(linkId)
+        PaymentLinkEntity paymentLink = paymentLinkRepository.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + linkId));
 
         if (!paymentLink.getPartner().getId().equals(partnerId)) {
@@ -133,7 +134,7 @@ public class PaymentLinkService {
      * Dispatches webhook notification on payment completion.
      */
     public PaymentLinkResponse confirmPayment(String slug, String paymentMethod, String paymentReference) {
-        PaymentLink paymentLink = paymentLinkRepository.findBySlug(slug)
+        PaymentLinkEntity paymentLink = paymentLinkRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
 
         if (!paymentLink.isActive()) {
@@ -156,7 +157,7 @@ public class PaymentLinkService {
      * Cancel a payment link.
      */
     public void cancelPaymentLink(Long partnerId, Long linkId) {
-        PaymentLink paymentLink = paymentLinkRepository.findById(linkId)
+        PaymentLinkEntity paymentLink = paymentLinkRepository.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + linkId));
 
         if (!paymentLink.getPartner().getId().equals(partnerId)) {
@@ -175,7 +176,7 @@ public class PaymentLinkService {
      */
     @Scheduled(fixedRate = 300000)
     public void expirePaymentLinks() {
-        List<PaymentLink> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
+        List<PaymentLinkEntity> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
         if (!expiredLinks.isEmpty()) {
             expiredLinks.forEach(link -> {
                 link.markExpired();
@@ -189,7 +190,7 @@ public class PaymentLinkService {
     /**
      * Dispatch webhook for payment_link.paid event.
      */
-    private void dispatchPaymentLinkPaidEvent(PaymentLink paymentLink) {
+    private void dispatchPaymentLinkPaidEvent(PaymentLinkEntity paymentLink) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("event", "payment_link.paid");
@@ -220,7 +221,7 @@ public class PaymentLinkService {
     /**
      * Dispatch webhook for payment_link.expired event.
      */
-    private void dispatchPaymentLinkExpiredEvent(PaymentLink paymentLink) {
+    private void dispatchPaymentLinkExpiredEvent(PaymentLinkEntity paymentLink) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("event", "payment_link.expired");
@@ -246,7 +247,7 @@ public class PaymentLinkService {
         }
     }
 
-    private PaymentLinkResponse toResponse(PaymentLink entity) {
+    private PaymentLinkResponse toResponse(PaymentLinkEntity entity) {
         PaymentLinkResponse response = new PaymentLinkResponse();
         response.setId(entity.getId());
         response.setSlug(entity.getSlug());

@@ -273,10 +273,4 @@ public class BudgetService {
                                    BigDecimal limitAmount, BigDecimal currentSpent,
                                    BigDecimal spentPercentage, BigDecimal remainingAmount,
                                    boolean active) {}
-
-    public enum BudgetCheckStatus {
-        ALLOWED,
-        WARNING,
-        BLOCKED
-    }
 }

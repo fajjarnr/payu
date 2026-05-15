@@ -1,8 +1,8 @@
 package id.payu.support.domain.port.out;
 
-import id.payu.support.domain.AgentTraining;
-import id.payu.support.domain.SupportAgent;
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.AgentTrainingEntity;
+import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,17 +12,17 @@ import java.util.Optional;
  */
 public interface AgentTrainingPersistencePort {
 
-    AgentTraining save(AgentTraining agentTraining);
+    AgentTrainingEntity save(AgentTrainingEntity agentTraining);
 
-    List<AgentTraining> findAll();
+    List<AgentTrainingEntity> findAll();
 
-    List<AgentTraining> findByAgentId(Long agentId);
+    List<AgentTrainingEntity> findByAgentId(Long agentId);
 
-    List<AgentTraining> findByTrainingModuleId(Long moduleId);
+    List<AgentTrainingEntity> findByTrainingModuleId(Long moduleId);
 
-    Optional<AgentTraining> findByAgentIdAndTrainingModuleId(Long agentId, Long moduleId);
+    Optional<AgentTrainingEntity> findByAgentIdAndTrainingModuleId(Long agentId, Long moduleId);
 
-    Optional<AgentTraining> findByAgentAndTrainingModule(SupportAgent agent, TrainingModule module);
+    Optional<AgentTrainingEntity> findByAgentAndTrainingModule(SupportAgentEntity agent, TrainingModuleEntity module);
 
-    List<AgentTraining> findByAgent(SupportAgent agent);
+    List<AgentTrainingEntity> findByAgent(SupportAgentEntity agent);
 }

@@ -463,7 +463,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
                 .setWalletId(entry.getAccountId())
                 .setAccountId(entry.getAccountId())
                 .setTransactionId(entry.getTransactionId().toString())
-                .setType(entry.getEntryType() == LedgerEntry.EntryType.DEBIT ? EntryType.DEBIT : EntryType.CREDIT)
+                .setType(entry.getEntryType() == id.payu.wallet.domain.model.EntryType.DEBIT ? id.payu.wallet.grpc.EntryType.DEBIT : id.payu.wallet.grpc.EntryType.CREDIT)
                 .setAmount(toMoney(entry.getAmount(), entry.getCurrency()))
                 .setBalanceAfter(toMoney(entry.getBalanceAfter(), entry.getCurrency()))
                 .setReferenceType(entry.getReferenceType())
@@ -487,7 +487,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
                 .build();
     }
 
-    private WalletStatus toWalletStatus(Wallet.WalletStatus status) {
+    private WalletStatus toWalletStatus(id.payu.wallet.domain.model.WalletStatus status) {
         return switch (status) {
             case ACTIVE -> WalletStatus.ACTIVE;
             case FROZEN -> WalletStatus.FROZEN;

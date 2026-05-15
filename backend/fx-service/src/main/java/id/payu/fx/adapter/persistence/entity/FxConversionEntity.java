@@ -10,6 +10,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.fx.domain.model.ConversionStatus;
+import id.payu.security.annotation.SensitivityLevel;
 
 @Entity
 @Table(name = "fx_conversions")
@@ -19,7 +21,7 @@ public class FxConversionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
@@ -46,7 +48,7 @@ public class FxConversionEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private FxConversion.ConversionStatus status;
+    private ConversionStatus status;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -128,11 +130,11 @@ public class FxConversionEntity {
         this.conversionDate = conversionDate;
     }
 
-    public FxConversion.ConversionStatus getStatus() {
+    public ConversionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(FxConversion.ConversionStatus status) {
+    public void setStatus(ConversionStatus status) {
         this.status = status;
     }
 

@@ -7,6 +7,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.security.annotation.SensitivityLevel;
 
 @Entity
 @Table(name = "investment_transactions")
@@ -21,7 +22,7 @@ public class InvestmentTransactionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
@@ -75,17 +76,5 @@ public class InvestmentTransactionEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum TransactionType {
-        BUY, SELL
-    }
-
-    public enum InvestmentType {
-        DEPOSIT, MUTUAL_FUND, GOLD
-    }
-
-    public enum TransactionStatus {
-        PENDING, COMPLETED, FAILED, CANCELLED
     }
 }

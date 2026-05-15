@@ -65,7 +65,7 @@ class AuditAspectTest {
         when(joinPoint.getTarget()).thenReturn(this);
     }
 
-    @Audited(operation = Audited.Operation.CREATE, entityType = "TestEntity")
+    @Audited(operation = Audited.AuditOperation.CREATE, entityType = "TestEntity")
     private void annotatedMethod() {
         // Annotated method for reflection
     }

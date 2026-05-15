@@ -12,14 +12,14 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Partner Service (Spring Boot) — Hexagonal Architecture.
+ * Architecture Tests for PartnerEntity Service (Spring Boot) — Hexagonal Architecture.
  *
  * Enforces:
  * - Hexagonal layer boundaries (Adapter → Application → Domain)
  * - Naming conventions per layer
  * - Domain isolation
  */
-@DisplayName("Architecture Rules - Partner Service (Hexagonal)")
+@DisplayName("Architecture Rules - PartnerEntity Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;

@@ -1,7 +1,7 @@
 package id.payu.support.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 import id.payu.support.dto.*;
 import id.payu.support.application.service.AgentService;
 import id.payu.support.application.service.AgentTrainingService;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.Map;
+import id.payu.support.domain.TrainingStatus;
 
 @RestController
 @RequestMapping("/api/v1/support")
@@ -218,7 +219,7 @@ public class SupportController extends BaseController {
     public ResponseEntity<ApiResponse<TrainingModuleResponse>> updateModuleStatus(
             @Parameter(description = "Training module ID", required = true) @PathVariable Long id,
             @RequestBody Map<String, String> status) {
-        TrainingModule.TrainingStatus trainingStatus = TrainingModule.TrainingStatus.valueOf(status.get("status"));
+        TrainingStatus trainingStatus = TrainingStatus.valueOf(status.get("status"));
         TrainingModuleResponse module = trainingModuleService.updateModuleStatus(id, trainingStatus);
         if (module == null) {
             return notFound("MODULE_404", "Training module not found");

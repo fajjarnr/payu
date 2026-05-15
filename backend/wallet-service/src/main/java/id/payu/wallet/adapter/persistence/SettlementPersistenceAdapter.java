@@ -3,7 +3,11 @@ package id.payu.wallet.adapter.persistence;
 import id.payu.wallet.adapter.persistence.entity.*;
 import id.payu.wallet.adapter.persistence.repository.SettlementBatchJpaRepository;
 import id.payu.wallet.adapter.persistence.repository.RevenueSplitJpaRepository;
-import id.payu.wallet.domain.model.*;
+import id.payu.wallet.domain.model.Discrepancy;
+import id.payu.wallet.domain.model.RevenueSplit;
+import id.payu.wallet.domain.model.SettlementBatch;
+import id.payu.wallet.domain.model.SettlementEntry;
+import id.payu.wallet.domain.model.Stakeholder;
 import id.payu.wallet.domain.port.out.SettlementPersistencePort;
 
 import org.springframework.stereotype.Component;
@@ -109,7 +113,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
         entity.setTotalAmount(domain.getTotalAmount());
         entity.setFeeAmount(domain.getFeeAmount());
         entity.setNetAmount(domain.getNetAmount());
-        entity.setStatus(SettlementBatchEntity.SettlementStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(SettlementStatus.valueOf(domain.getStatus().name()));
         entity.setReconciliationReport(domain.getReconciliationReport());
         entity.setFailureReason(domain.getFailureReason());
         entity.setProcessedBy(domain.getProcessedBy());
@@ -154,7 +158,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
                 .totalAmount(entity.getTotalAmount())
                 .feeAmount(entity.getFeeAmount())
                 .netAmount(entity.getNetAmount())
-                .status(SettlementBatch.SettlementStatus.valueOf(entity.getStatus().name()))
+                .status(id.payu.wallet.domain.model.SettlementStatus.valueOf(entity.getStatus().name()))
                 .entries(entries)
                 .reconciliationReport(entity.getReconciliationReport())
                 .discrepancies(discrepancies)
@@ -178,7 +182,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
         entity.setCurrency(domain.getCurrency());
         entity.setFee(domain.getFee());
         entity.setNetAmount(domain.getNetAmount());
-        entity.setStatus(SettlementEntryEntity.EntryStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(EntryStatus.valueOf(domain.getStatus().name()));
         entity.setCreatedAt(domain.getCreatedAt());
         return entity;
     }
@@ -194,7 +198,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
                 .currency(entity.getCurrency())
                 .fee(entity.getFee())
                 .netAmount(entity.getNetAmount())
-                .status(SettlementEntry.EntryStatus.valueOf(entity.getStatus().name()))
+                .status(id.payu.wallet.domain.model.EntryStatus.valueOf(entity.getStatus().name()))
                 .createdAt(entity.getCreatedAt())
                 .build();
     }
@@ -204,7 +208,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
         entity.setId(domain.getId());
         entity.setSettlementBatch(batch);
         entity.setTransactionId(domain.getTransactionId());
-        entity.setType(DiscrepancyEntity.DiscrepancyType.valueOf(domain.getType().name()));
+        entity.setType(DiscrepancyType.valueOf(domain.getType().name()));
         entity.setDescription(domain.getDescription());
         entity.setExpectedAmount(domain.getExpectedAmount());
         entity.setActualAmount(domain.getActualAmount());
@@ -221,7 +225,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
                 .id(entity.getId())
                 .settlementBatchId(entity.getSettlementBatch() != null ? entity.getSettlementBatch().getId() : null)
                 .transactionId(entity.getTransactionId())
-                .type(Discrepancy.DiscrepancyType.valueOf(entity.getType().name()))
+                .type(id.payu.wallet.domain.model.DiscrepancyType.valueOf(entity.getType().name()))
                 .description(entity.getDescription())
                 .expectedAmount(entity.getExpectedAmount())
                 .actualAmount(entity.getActualAmount())
@@ -239,7 +243,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
         entity.setPartnerId(domain.getPartnerId());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
-        entity.setSplitType(RevenueSplitEntity.SplitType.valueOf(domain.getSplitType().name()));
+        entity.setSplitType(SplitType.valueOf(domain.getSplitType().name()));
         entity.setActive(domain.isActive());
         entity.setEffectiveFrom(domain.getEffectiveFrom());
         entity.setEffectiveUntil(domain.getEffectiveUntil());
@@ -268,7 +272,7 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
                 .partnerId(entity.getPartnerId())
                 .name(entity.getName())
                 .description(entity.getDescription())
-                .splitType(RevenueSplit.SplitType.valueOf(entity.getSplitType().name()))
+                .splitType(id.payu.wallet.domain.model.SplitType.valueOf(entity.getSplitType().name()))
                 .stakeholders(stakeholders)
                 .active(entity.isActive())
                 .effectiveFrom(entity.getEffectiveFrom())

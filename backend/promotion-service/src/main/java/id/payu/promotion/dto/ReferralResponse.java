@@ -1,9 +1,11 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.Referral;
+import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.promotion.domain.ReferralRewardType;
+import id.payu.promotion.domain.ReferralStatus;
 
 public record ReferralResponse(
     UUID id,
@@ -12,13 +14,13 @@ public record ReferralResponse(
     String referralCode,
     BigDecimal referrerReward,
     BigDecimal refereeReward,
-    Referral.RewardType rewardType,
-    Referral.Status status,
+    ReferralRewardType rewardType,
+    ReferralStatus status,
     LocalDateTime completedAt,
     LocalDateTime expiryDate,
     LocalDateTime createdAt
 ) {
-    public static ReferralResponse from(Referral referral) {
+    public static ReferralResponse from(ReferralEntity referral) {
         return new ReferralResponse(
             referral.getId(),
             referral.getReferrerAccountId(),

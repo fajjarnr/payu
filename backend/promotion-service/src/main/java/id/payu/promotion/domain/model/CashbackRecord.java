@@ -17,12 +17,6 @@ public class CashbackRecord {
     private Instant processedAt;
     private String walletReferenceId;
 
-    public enum CashbackStatus {
-        PENDING,
-        CREDITED,
-        FAILED
-    }
-
     public CashbackRecord() {
         this.processedAt = Instant.now();
         this.status = CashbackStatus.PENDING;

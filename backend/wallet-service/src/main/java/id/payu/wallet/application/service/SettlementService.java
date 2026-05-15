@@ -17,6 +17,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.wallet.domain.model.DiscrepancyType;
+import id.payu.wallet.domain.model.EntryStatus;
+import id.payu.wallet.domain.model.SettlementStatus;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * Application service for settlement operations (GAP-003, GAP-013).
@@ -183,7 +187,7 @@ public class SettlementService implements SettlementUseCase {
 
         if (calculatedTotal.compareTo(batch.getTotalAmount()) != 0) {
             Discrepancy discrepancy = Discrepancy.create(
-                    batchId, null, Discrepancy.DiscrepancyType.AMOUNT_MISMATCH,
+                    batchId, null, DiscrepancyType.AMOUNT_MISMATCH,
                     "Total amount mismatch: calculated=" + calculatedTotal + ", recorded=" + batch.getTotalAmount(),
                     batch.getTotalAmount(), calculatedTotal
             );
@@ -192,12 +196,12 @@ public class SettlementService implements SettlementUseCase {
 
         // Check for failed entries
         long failedCount = batch.getEntries().stream()
-                .filter(e -> e.getStatus() == SettlementEntry.EntryStatus.FAILED)
+                .filter(e -> e.getStatus() == EntryStatus.FAILED)
                 .count();
 
         if (failedCount > 0) {
             Discrepancy discrepancy = Discrepancy.create(
-                    batchId, null, Discrepancy.DiscrepancyType.OTHER,
+                    batchId, null, DiscrepancyType.OTHER,
                     "Found " + failedCount + " failed settlement entries",
                     BigDecimal.ZERO, new BigDecimal(failedCount)
             );
@@ -210,7 +214,7 @@ public class SettlementService implements SettlementUseCase {
     @Override
     @Transactional
     public RevenueSplit createRevenueSplit(String partnerId, String name, String description,
-                                            RevenueSplit.SplitType splitType, String createdBy) {
+                                            SplitType splitType, String createdBy) {
         log.info("Creating revenue split '{}' for partner {}", name, partnerId);
 
         RevenueSplit split = RevenueSplit.create(partnerId, name, description, splitType, createdBy);
@@ -340,7 +344,7 @@ public class SettlementService implements SettlementUseCase {
         // Get all pending batches for yesterday
         List<SettlementBatch> pendingBatches = settlementPersistencePort.findSettlementBatchesByDate(yesterday)
                 .stream()
-                .filter(b -> b.getStatus() == SettlementBatch.SettlementStatus.PENDING)
+                .filter(b -> b.getStatus() == SettlementStatus.PENDING)
                 .collect(Collectors.toList());
 
         for (SettlementBatch batch : pendingBatches) {

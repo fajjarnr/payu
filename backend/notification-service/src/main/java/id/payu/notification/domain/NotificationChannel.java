@@ -1,13 +1,13 @@
 package id.payu.notification.domain;
 
 /**
- * Notification channel types.
+ * NotificationEntity channel types.
  */
 public enum NotificationChannel {
-    PUSH("Push Notification"),
+    PUSH("Push NotificationEntity"),
     SMS("SMS"),
     EMAIL("Email"),
-    IN_APP("In-App Notification");
+    IN_APP("In-App NotificationEntity");
 
     private final String displayName;
 

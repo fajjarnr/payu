@@ -228,17 +228,17 @@ public class ReceiptService {
 
     private ReceiptResponse generateReceiptFallback(ReceiptGenerationRequest request, Exception ex) {
         log.error("Fallback for generateReceipt: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private ReceiptResponse getReceiptFallback(UUID receiptId, String customerId, Exception ex) {
         log.error("Fallback for getReceipt: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private byte[] generatePdfFallback(UUID receiptId, String customerId, Exception ex) {
         log.error("Fallback for generatePdf: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     /**

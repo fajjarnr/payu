@@ -15,17 +15,9 @@ public class LoanRepayment {
     private BigDecimal penalty;
     private LocalDate dueDate;
     private LocalDate paidDate;
-    private RepaymentStatus status;
+    private LoanRepaymentStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum RepaymentStatus {
-        PENDING,
-        PARTIALLY_PAID,
-        PAID,
-        OVERDUE,
-        WAIVED
-    }
 
     public LoanRepayment() {}
 
@@ -93,11 +85,11 @@ public class LoanRepayment {
         this.paidDate = paidDate;
     }
 
-    public RepaymentStatus getStatus() {
+    public LoanRepaymentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(RepaymentStatus status) {
+    public void setStatus(LoanRepaymentStatus status) {
         this.status = status;
     }
 

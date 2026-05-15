@@ -1,6 +1,6 @@
 package id.payu.backoffice.adapter.persistence.repository;
 
-import id.payu.backoffice.domain.CustomerCase;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,18 +9,19 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.backoffice.domain.CustomerCaseStatus;
 
 @Repository
-public interface CustomerCaseRepository extends JpaRepository<CustomerCase, UUID> {
-    List<CustomerCase> findByUserId(String userId);
-    List<CustomerCase> findByStatus(CustomerCase.CaseStatus status);
+public interface CustomerCaseRepository extends JpaRepository<CustomerCaseEntity, UUID> {
+    List<CustomerCaseEntity> findByUserId(String userId);
+    List<CustomerCaseEntity> findByStatus(CustomerCaseStatus status);
     // BUG-BE-043: Pageable version
-    Page<CustomerCase> findByStatus(CustomerCase.CaseStatus status, Pageable pageable);
-    List<CustomerCase> findByAssignedTo(String assignedTo);
+    Page<CustomerCaseEntity> findByStatus(CustomerCaseStatus status, Pageable pageable);
+    List<CustomerCaseEntity> findByAssignedTo(String assignedTo);
 
     // Search methods
-    List<CustomerCase> findByUserIdContainingIgnoreCase(String userId);
-    List<CustomerCase> findByAccountNumberContainingIgnoreCase(String accountNumber);
-    List<CustomerCase> findByCaseNumberContainingIgnoreCase(String caseNumber);
-    List<CustomerCase> findBySubjectContainingIgnoreCase(String subject);
+    List<CustomerCaseEntity> findByUserIdContainingIgnoreCase(String userId);
+    List<CustomerCaseEntity> findByAccountNumberContainingIgnoreCase(String accountNumber);
+    List<CustomerCaseEntity> findByCaseNumberContainingIgnoreCase(String caseNumber);
+    List<CustomerCaseEntity> findBySubjectContainingIgnoreCase(String subject);
 }

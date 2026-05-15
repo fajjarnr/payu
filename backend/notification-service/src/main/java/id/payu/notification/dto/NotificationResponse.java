@@ -1,6 +1,6 @@
 package id.payu.notification.dto;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
@@ -10,7 +10,7 @@ import java.util.UUID;
 /**
  * Response DTO for notification.
  */
-@Schema(description = "Notification details including delivery status and timestamps")
+@Schema(description = "NotificationEntity details including delivery status and timestamps")
 public record NotificationResponse(
         @Schema(
             description = "Unique notification identifier",
@@ -38,13 +38,13 @@ public record NotificationResponse(
         String recipient,
 
         @Schema(
-            description = "Notification title or subject",
+            description = "NotificationEntity title or subject",
             example = "Transfer Successful"
         )
         String title,
 
         @Schema(
-            description = "Notification body content",
+            description = "NotificationEntity body content",
             example = "Your transfer of Rp 100.000 was successful."
         )
         String body,
@@ -73,7 +73,7 @@ public record NotificationResponse(
             example = "2026-01-31T10:35:00"
         )
         LocalDateTime readAt) {
-    public static NotificationResponse from(Notification n) {
+    public static NotificationResponse from(NotificationEntity n) {
         return new NotificationResponse(
                 n.id,
                 n.userId,

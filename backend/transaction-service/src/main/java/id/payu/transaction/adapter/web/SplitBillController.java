@@ -2,7 +2,7 @@ package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.security.SplitBillSecurityService;
-import id.payu.transaction.domain.model.SplitBill;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.dto.AddParticipantRequest;
 import id.payu.transaction.dto.CreateSplitBillRequest;
@@ -88,7 +88,7 @@ public class SplitBillController {
     @GetMapping("/account/{accountId}")
     @Operation(summary = "Get account split bills", description = "Retrieve all split bills for an account")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SplitBill>> getAccountSplitBills(
+    public ResponseEntity<List<SplitBillEntity>> getAccountSplitBills(
             @PathVariable UUID accountId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -100,7 +100,7 @@ public class SplitBillController {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
 
-        List<SplitBill> splitBills = splitBillUseCase.getAccountSplitBills(accountId, page, size);
+        List<SplitBillEntity> splitBills = splitBillUseCase.getAccountSplitBills(accountId, page, size);
         return ResponseEntity.ok(splitBills);
     }
 

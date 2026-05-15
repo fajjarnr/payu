@@ -13,7 +13,7 @@ public @interface Audited {
     /**
      * Operation type
      */
-    Operation operation() default Operation.OTHER;
+    AuditOperation operation() default AuditOperation.OTHER;
 
     /**
      * Entity type being operated on
@@ -33,30 +33,8 @@ public @interface Audited {
     /**
      * Operation types
      */
-    enum Operation {
-        CREATE,
-        READ,
-        UPDATE,
-        DELETE,
-        TRANSFER,
-        LOGIN,
-        LOGOUT,
-        KYC_APPROVE,
-        KYC_REJECT,
-        PASSWORD_CHANGE,
-        PASSWORD_RESET,
-        ACCOUNT_BLOCK,
-        ACCOUNT_UNBLOCK,
-        OTHER
-    }
 
     /**
      * Audit levels
      */
-    enum AuditLevel {
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR
-    }
 }

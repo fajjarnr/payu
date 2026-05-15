@@ -14,7 +14,7 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
- * Extended Architecture Tests for Promotion Service - Hexagonal Architecture.
+ * Extended Architecture Tests for PromotionEntity Service - Hexagonal Architecture.
  * Tests for Epic E-17 implementation.
  */
 @DisplayName("Hexagonal Architecture Tests - Epic E-17")
@@ -161,7 +161,7 @@ class HexagonalArchitectureTest {
             classes()
                     .that().resideInAPackage("..application.service..")
                     .and().haveSimpleNameContaining("Promo")
-                    .or().haveSimpleNameContaining("Cashback")
+                    .or().haveSimpleNameContaining("CashbackEntity")
                     .should().haveSimpleNameEndingWith("Service")
                     .because("Services should have Service suffix")
                     .allowEmptyShould(true)

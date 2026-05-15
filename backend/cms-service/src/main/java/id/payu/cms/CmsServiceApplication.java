@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * Supports scheduled publishing, targeting rules, and A/B test integration.
  */
 @EnableJpaRepositories(basePackages = "id.payu.cms.domain.repository")
-@EntityScan(basePackages = "id.payu.cms.domain.entity")
+@EntityScan(basePackages = "id.payu.cms.adapter.persistence.entity")
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableKafka

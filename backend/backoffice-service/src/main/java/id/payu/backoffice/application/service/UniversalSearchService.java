@@ -1,8 +1,8 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.domain.CustomerCase;
-import id.payu.backoffice.domain.FraudCase;
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.UniversalSearchResponse;
 import id.payu.backoffice.adapter.persistence.repository.CustomerCaseRepository;
 import id.payu.backoffice.adapter.persistence.repository.FraudCaseRepository;
@@ -68,30 +68,30 @@ public class UniversalSearchService {
         List<UniversalSearchResponse.SearchResultItem> results = new ArrayList<>();
 
         // Search by User ID
-        List<KycReview> byUserId = kycReviewRepository.findByUserIdContainingIgnoreCase(query);
-        for (KycReview review : byUserId) {
+        List<KycReviewEntity> byUserId = kycReviewRepository.findByUserIdContainingIgnoreCase(query);
+        for (KycReviewEntity review : byUserId) {
             results.add(buildKycReviewItem(review, "userId"));
         }
 
         // Search by Account Number
-        List<KycReview> byAccountNumber = kycReviewRepository.findByAccountNumberContainingIgnoreCase(query);
-        for (KycReview review : byAccountNumber) {
+        List<KycReviewEntity> byAccountNumber = kycReviewRepository.findByAccountNumberContainingIgnoreCase(query);
+        for (KycReviewEntity review : byAccountNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(review.getId()))) {
                 results.add(buildKycReviewItem(review, "accountNumber"));
             }
         }
 
         // Search by Document Number
-        List<KycReview> byDocumentNumber = kycReviewRepository.findByDocumentNumberContainingIgnoreCase(query);
-        for (KycReview review : byDocumentNumber) {
+        List<KycReviewEntity> byDocumentNumber = kycReviewRepository.findByDocumentNumberContainingIgnoreCase(query);
+        for (KycReviewEntity review : byDocumentNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(review.getId()))) {
                 results.add(buildKycReviewItem(review, "documentNumber"));
             }
         }
 
         // Search by Full Name
-        List<KycReview> byFullName = kycReviewRepository.findByFullNameContainingIgnoreCase(query);
-        for (KycReview review : byFullName) {
+        List<KycReviewEntity> byFullName = kycReviewRepository.findByFullNameContainingIgnoreCase(query);
+        for (KycReviewEntity review : byFullName) {
             if (results.stream().noneMatch(r -> r.id().equals(review.getId()))) {
                 results.add(buildKycReviewItem(review, "fullName"));
             }
@@ -104,22 +104,22 @@ public class UniversalSearchService {
         List<UniversalSearchResponse.SearchResultItem> results = new ArrayList<>();
 
         // Search by User ID
-        List<FraudCase> byUserId = fraudCaseRepository.findByUserIdContainingIgnoreCase(query);
-        for (FraudCase fraudCase : byUserId) {
+        List<FraudCaseEntity> byUserId = fraudCaseRepository.findByUserIdContainingIgnoreCase(query);
+        for (FraudCaseEntity fraudCase : byUserId) {
             results.add(buildFraudCaseItem(fraudCase, "userId"));
         }
 
         // Search by Account Number
-        List<FraudCase> byAccountNumber = fraudCaseRepository.findByAccountNumberContainingIgnoreCase(query);
-        for (FraudCase fraudCase : byAccountNumber) {
+        List<FraudCaseEntity> byAccountNumber = fraudCaseRepository.findByAccountNumberContainingIgnoreCase(query);
+        for (FraudCaseEntity fraudCase : byAccountNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(fraudCase.getId()))) {
                 results.add(buildFraudCaseItem(fraudCase, "accountNumber"));
             }
         }
 
         // Search by Fraud Type
-        List<FraudCase> byFraudType = fraudCaseRepository.findByFraudTypeContainingIgnoreCase(query);
-        for (FraudCase fraudCase : byFraudType) {
+        List<FraudCaseEntity> byFraudType = fraudCaseRepository.findByFraudTypeContainingIgnoreCase(query);
+        for (FraudCaseEntity fraudCase : byFraudType) {
             if (results.stream().noneMatch(r -> r.id().equals(fraudCase.getId()))) {
                 results.add(buildFraudCaseItem(fraudCase, "fraudType"));
             }
@@ -132,30 +132,30 @@ public class UniversalSearchService {
         List<UniversalSearchResponse.SearchResultItem> results = new ArrayList<>();
 
         // Search by User ID
-        List<CustomerCase> byUserId = customerCaseRepository.findByUserIdContainingIgnoreCase(query);
-        for (CustomerCase customerCase : byUserId) {
+        List<CustomerCaseEntity> byUserId = customerCaseRepository.findByUserIdContainingIgnoreCase(query);
+        for (CustomerCaseEntity customerCase : byUserId) {
             results.add(buildCustomerCaseItem(customerCase, "userId"));
         }
 
         // Search by Account Number
-        List<CustomerCase> byAccountNumber = customerCaseRepository.findByAccountNumberContainingIgnoreCase(query);
-        for (CustomerCase customerCase : byAccountNumber) {
+        List<CustomerCaseEntity> byAccountNumber = customerCaseRepository.findByAccountNumberContainingIgnoreCase(query);
+        for (CustomerCaseEntity customerCase : byAccountNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(customerCase.getId()))) {
                 results.add(buildCustomerCaseItem(customerCase, "accountNumber"));
             }
         }
 
         // Search by Case Number
-        List<CustomerCase> byCaseNumber = customerCaseRepository.findByCaseNumberContainingIgnoreCase(query);
-        for (CustomerCase customerCase : byCaseNumber) {
+        List<CustomerCaseEntity> byCaseNumber = customerCaseRepository.findByCaseNumberContainingIgnoreCase(query);
+        for (CustomerCaseEntity customerCase : byCaseNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(customerCase.getId()))) {
                 results.add(buildCustomerCaseItem(customerCase, "caseNumber"));
             }
         }
 
         // Search by Subject
-        List<CustomerCase> bySubject = customerCaseRepository.findBySubjectContainingIgnoreCase(query);
-        for (CustomerCase customerCase : bySubject) {
+        List<CustomerCaseEntity> bySubject = customerCaseRepository.findBySubjectContainingIgnoreCase(query);
+        for (CustomerCaseEntity customerCase : bySubject) {
             if (results.stream().noneMatch(r -> r.id().equals(customerCase.getId()))) {
                 results.add(buildCustomerCaseItem(customerCase, "subject"));
             }
@@ -164,7 +164,7 @@ public class UniversalSearchService {
         return results;
     }
 
-    private UniversalSearchResponse.SearchResultItem buildKycReviewItem(KycReview review, String matchedField) {
+    private UniversalSearchResponse.SearchResultItem buildKycReviewItem(KycReviewEntity review, String matchedField) {
         var detailsBuilder = new java.util.HashMap<String, Object>();
         detailsBuilder.put("documentType", review.getDocumentType());
         detailsBuilder.put("documentNumber", review.getDocumentNumber());
@@ -189,7 +189,7 @@ public class UniversalSearchService {
         );
     }
 
-    private UniversalSearchResponse.SearchResultItem buildFraudCaseItem(FraudCase fraudCase, String matchedField) {
+    private UniversalSearchResponse.SearchResultItem buildFraudCaseItem(FraudCaseEntity fraudCase, String matchedField) {
         String title = fraudCase.getFraudType() != null 
                 ? "Fraud Case - " + fraudCase.getFraudType() 
                 : "Fraud Case";
@@ -224,7 +224,7 @@ public class UniversalSearchService {
         );
     }
 
-    private UniversalSearchResponse.SearchResultItem buildCustomerCaseItem(CustomerCase customerCase, String matchedField) {
+    private UniversalSearchResponse.SearchResultItem buildCustomerCaseItem(CustomerCaseEntity customerCase, String matchedField) {
         var detailsBuilder = new java.util.HashMap<String, Object>();
         detailsBuilder.put("caseNumber", customerCase.getCaseNumber());
         detailsBuilder.put("caseType", customerCase.getCaseType().name());

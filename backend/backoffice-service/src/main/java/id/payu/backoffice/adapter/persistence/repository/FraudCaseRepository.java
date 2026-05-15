@@ -1,6 +1,6 @@
 package id.payu.backoffice.adapter.persistence.repository;
 
-import id.payu.backoffice.domain.FraudCase;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,16 +9,17 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.backoffice.domain.FraudCaseStatus;
 
 @Repository
-public interface FraudCaseRepository extends JpaRepository<FraudCase, UUID> {
-    List<FraudCase> findByUserId(String userId);
-    List<FraudCase> findByStatus(FraudCase.CaseStatus status);
+public interface FraudCaseRepository extends JpaRepository<FraudCaseEntity, UUID> {
+    List<FraudCaseEntity> findByUserId(String userId);
+    List<FraudCaseEntity> findByStatus(FraudCaseStatus status);
     // BUG-BE-043: Pageable version for DB-level pagination
-    Page<FraudCase> findByStatus(FraudCase.CaseStatus status, Pageable pageable);
+    Page<FraudCaseEntity> findByStatus(FraudCaseStatus status, Pageable pageable);
 
     // Search methods
-    List<FraudCase> findByUserIdContainingIgnoreCase(String userId);
-    List<FraudCase> findByAccountNumberContainingIgnoreCase(String accountNumber);
-    List<FraudCase> findByFraudTypeContainingIgnoreCase(String fraudType);
+    List<FraudCaseEntity> findByUserIdContainingIgnoreCase(String userId);
+    List<FraudCaseEntity> findByAccountNumberContainingIgnoreCase(String accountNumber);
+    List<FraudCaseEntity> findByFraudTypeContainingIgnoreCase(String fraudType);
 }

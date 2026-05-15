@@ -13,9 +13,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Promotion Service (Spring Boot) — Hexagonal Architecture.
+ * Architecture Tests for PromotionEntity Service (Spring Boot) — Hexagonal Architecture.
  */
-@DisplayName("Architecture Rules - Promotion Service (Hexagonal)")
+@DisplayName("Architecture Rules - PromotionEntity Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;

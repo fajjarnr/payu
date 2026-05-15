@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.domain.Reward;
+import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import id.payu.promotion.dto.RewardResponse;
 import id.payu.promotion.dto.RewardSummaryResponse;
 import id.payu.promotion.application.service.RewardService;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/rewards")
-@Tag(name = "Rewards", description = "Reward management APIs")
+@Tag(name = "Rewards", description = "RewardEntity management APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class RewardResource {
 
@@ -34,20 +34,20 @@ public class RewardResource {
     @GetMapping("/{id}")
     @Operation(summary = "Get reward by ID", description = "Retrieve reward details by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Reward found",
+        @ApiResponse(responseCode = "200", description = "RewardEntity found",
             content = @Content(schema = @Schema(implementation = RewardResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Reward not found"),
+        @ApiResponse(responseCode = "404", description = "RewardEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReward(@PathVariable UUID id) {
-        Optional<Reward> rewardOpt = rewardService.getReward(id);
+        Optional<RewardEntity> rewardOpt = rewardService.getReward(id);
         if (rewardOpt.isPresent()) {
             return ResponseEntity.ok(RewardResponse.from(rewardOpt.get()));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Reward not found"));
+            .body(new ErrorResponse("RewardEntity not found"));
     }
 
     @GetMapping("/account/{accountId}")
@@ -62,14 +62,14 @@ public class RewardResource {
             @PathVariable String accountId,
             @RequestParam(defaultValue = "50") int limit,
             @RequestParam(defaultValue = "0") int offset) {
-        List<Reward> rewards = rewardService.getRewardsByAccount(accountId, limit, offset);
+        List<RewardEntity> rewards = rewardService.getRewardsByAccount(accountId, limit, offset);
         return ResponseEntity.ok(rewards.stream().map(RewardResponse::from).toList());
     }
 
     @GetMapping("/account/{accountId}/summary")
     @Operation(summary = "Get reward summary", description = "Retrieve reward summary for an account")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Reward summary retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "RewardEntity summary retrieved successfully"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")

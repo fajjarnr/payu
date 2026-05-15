@@ -68,12 +68,6 @@ public class RevenueSplitEntity {
     public RevenueSplitEntity() {
     }
 
-    public enum SplitType {
-        PERCENTAGE,
-        FIXED,
-        MIXED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

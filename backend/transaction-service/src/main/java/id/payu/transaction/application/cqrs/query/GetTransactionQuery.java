@@ -1,7 +1,7 @@
 package id.payu.transaction.application.cqrs.query;
 
 import id.payu.transaction.application.cqrs.Query;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 
 import java.util.UUID;
 
@@ -12,5 +12,5 @@ import java.util.UUID;
 public record GetTransactionQuery(
         UUID transactionId,
         String userId
-) implements Query<Transaction> {
+) implements Query<TransactionEntity> {
 }

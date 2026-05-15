@@ -2,7 +2,7 @@ package id.payu.compliance.unit;
 
 import id.payu.compliance.adapter.web.ComplianceAuditController;
 import id.payu.compliance.application.service.ComplianceAuditService;
-import id.payu.compliance.domain.model.AuditReport;
+import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
@@ -63,7 +63,7 @@ class ComplianceAuditControllerTest {
                         .build()
         );
 
-        AuditReport report = AuditReport.builder()
+        AuditReportEntity report = AuditReportEntity.builder()
                 .id(UUID.randomUUID())
                 .transactionId(transactionId)
                 .merchantId(merchantId)
@@ -90,7 +90,7 @@ class ComplianceAuditControllerTest {
         UUID reportId = UUID.randomUUID();
         UUID transactionId = UUID.randomUUID();
 
-        AuditReport report = AuditReport.builder()
+        AuditReportEntity report = AuditReportEntity.builder()
                 .id(reportId)
                 .transactionId(transactionId)
                 .merchantId("MERCHANT_001")

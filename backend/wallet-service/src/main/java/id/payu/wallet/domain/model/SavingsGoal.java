@@ -24,10 +24,6 @@ public class SavingsGoal {
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
 
-    public enum SavingsGoalStatus {
-        ACTIVE, PAUSED, COMPLETED, CANCELLED
-    }
-
     public SavingsGoal() {
     }
 

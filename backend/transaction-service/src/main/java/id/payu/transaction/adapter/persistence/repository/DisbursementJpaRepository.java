@@ -1,6 +1,6 @@
 package id.payu.transaction.adapter.persistence.repository;
 
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,19 +11,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * JPA repository for Disbursement entity.
+ * JPA repository for DisbursementEntity entity.
  */
 @Repository
-public interface DisbursementJpaRepository extends JpaRepository<Disbursement, UUID> {
+public interface DisbursementJpaRepository extends JpaRepository<DisbursementEntity, UUID> {
 
-    Optional<Disbursement> findByIdempotencyKey(String idempotencyKey);
+    Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
 
-    @Query("SELECT d FROM Disbursement d WHERE d.sourceAccountId = :accountId ORDER BY d.createdAt DESC")
-    List<Disbursement> findBySourceAccountId(@Param("accountId") UUID sourceAccountId,
+    @Query("SELECT d FROM DisbursementEntity d WHERE d.sourceAccountId = :accountId ORDER BY d.createdAt DESC")
+    List<DisbursementEntity> findBySourceAccountId(@Param("accountId") UUID sourceAccountId,
                                               org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT d FROM Disbursement d WHERE d.status = :status ORDER BY d.createdAt DESC")
-    List<Disbursement> findByStatus(@Param("status") String status,
+    @Query("SELECT d FROM DisbursementEntity d WHERE d.status = :status ORDER BY d.createdAt DESC")
+    List<DisbursementEntity> findByStatus(@Param("status") String status,
                                      org.springframework.data.domain.Pageable pageable);
 
     boolean existsByIdempotencyKey(String idempotencyKey);

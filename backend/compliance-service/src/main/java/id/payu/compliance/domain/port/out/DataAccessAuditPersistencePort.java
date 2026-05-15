@@ -1,7 +1,7 @@
 package id.payu.compliance.domain.port.out;
 
-import id.payu.compliance.domain.model.DataAccessAudit;
-import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
+import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataOperationType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +22,7 @@ public interface DataAccessAuditPersistencePort {
      * @param audit the audit entry to save
      * @return the saved audit entry
      */
-    DataAccessAudit save(DataAccessAudit audit);
+    DataAccessAuditEntity save(DataAccessAuditEntity audit);
 
     /**
      * Find audit entries by user ID with pagination.
@@ -31,7 +31,7 @@ public interface DataAccessAuditPersistencePort {
      * @param pageable pagination parameters
      * @return page of audit entries for the user
      */
-    Page<DataAccessAudit> findByUserId(String userId, Pageable pageable);
+    Page<DataAccessAuditEntity> findByUserId(String userId, Pageable pageable);
 
     /**
      * Find audit entries by user ID within a date range.
@@ -41,7 +41,7 @@ public interface DataAccessAuditPersistencePort {
      * @param endDate the end date
      * @return list of audit entries within the date range
      */
-    List<DataAccessAudit> findByUserIdAndDateRange(String userId, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> findByUserIdAndDateRange(String userId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * Find audit entries by the person who accessed data, within a date range.
@@ -51,7 +51,7 @@ public interface DataAccessAuditPersistencePort {
      * @param endDate the end date
      * @return list of audit entries
      */
-    List<DataAccessAudit> findByAccessedByAndDateRange(String accessedBy, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> findByAccessedByAndDateRange(String accessedBy, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * Find audit entries by operation type with pagination.
@@ -60,7 +60,7 @@ public interface DataAccessAuditPersistencePort {
      * @param pageable pagination parameters
      * @return page of audit entries with the specified operation type
      */
-    Page<DataAccessAudit> findByOperationType(DataOperationType operationType, Pageable pageable);
+    Page<DataAccessAuditEntity> findByOperationType(DataOperationType operationType, Pageable pageable);
 
     /**
      * Find audit entries by service name within a date range.
@@ -70,7 +70,7 @@ public interface DataAccessAuditPersistencePort {
      * @param endDate the end date
      * @return list of audit entries
      */
-    List<DataAccessAudit> findByServiceNameAndDateRange(String serviceName, LocalDateTime startDate, LocalDateTime endDate);
+    List<DataAccessAuditEntity> findByServiceNameAndDateRange(String serviceName, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * Count audit entries for a user since a specific date.
@@ -87,7 +87,7 @@ public interface DataAccessAuditPersistencePort {
      * @param since the date to search from
      * @return list of failed access attempts
      */
-    List<DataAccessAudit> findFailedAccessAttemptsSince(LocalDateTime since);
+    List<DataAccessAuditEntity> findFailedAccessAttemptsSince(LocalDateTime since);
 
     /**
      * Find audit entries by multiple filters with pagination.
@@ -101,7 +101,7 @@ public interface DataAccessAuditPersistencePort {
      * @param pageable pagination parameters
      * @return page of filtered audit entries
      */
-    Page<DataAccessAudit> findByFilters(
+    Page<DataAccessAuditEntity> findByFilters(
             String userId,
             String accessedBy,
             String serviceName,
@@ -116,7 +116,7 @@ public interface DataAccessAuditPersistencePort {
      * @param id the audit entry ID
      * @return list of matching audit entries
      */
-    List<DataAccessAudit> findById(UUID id);
+    List<DataAccessAuditEntity> findById(UUID id);
 
     /**
      * Delete an audit entry by ID.

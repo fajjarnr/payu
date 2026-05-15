@@ -85,14 +85,6 @@ public class SettlementBatchEntity {
     public SettlementBatchEntity() {
     }
 
-    public enum SettlementStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED,
-        OVERRIDDEN
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

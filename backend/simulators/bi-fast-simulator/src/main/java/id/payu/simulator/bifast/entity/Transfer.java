@@ -73,14 +73,6 @@ public class Transfer extends PanacheEntityBase {
     @Column(name = "completed_at")
     public LocalDateTime completedAt;
 
-    public enum TransferStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED,
-        TIMEOUT
-    }
-
     // Finder methods
     public static Transfer findByReference(String referenceNumber) {
         return find("referenceNumber", referenceNumber).firstResult();

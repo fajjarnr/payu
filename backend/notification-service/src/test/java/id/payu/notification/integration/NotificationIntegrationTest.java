@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutionException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Kafka Integration Tests for Notification Service.
+ * Kafka Integration Tests for NotificationEntity Service.
  *
  * These tests verify the Kafka messaging infrastructure for notification events:
  * - Publishing notification events to Kafka topics
@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @Tag("integration")
 @EnabledIfSystemProperty(named = "docker.available", matches = "true", disabledReason = "Docker is not available")
-@DisplayName("Notification Service Kafka Integration Tests")
+@DisplayName("NotificationEntity Service Kafka Integration Tests")
 public class NotificationIntegrationTest {
 
     @Container
@@ -604,7 +604,7 @@ public class NotificationIntegrationTest {
     @Test
     @DisplayName("Should verify all required fields are present in notification event")
     void shouldVerifyAllRequiredFieldsInNotificationEvent() throws ExecutionException, InterruptedException {
-        // Given - Notification event with all required fields
+        // Given - NotificationEntity event with all required fields
         String notificationId = UUID.randomUUID().toString();
         String requiredFieldsEvent = String.format(
                 "{\"notificationId\":\"%s\",\"userId\":\"user006\",\"channel\":\"PUSH\",\"recipient\":\"device123\",\"title\":\"Test\",\"body\":\"Test body\",\"priority\":\"HIGH\",\"timestamp\":\"%s\"}",

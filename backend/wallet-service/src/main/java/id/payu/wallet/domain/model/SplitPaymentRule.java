@@ -35,12 +35,6 @@ public class SplitPaymentRule {
         this.recipients = new ArrayList<>();
     }
 
-    public enum SplitType {
-        PERCENTAGE,
-        FIXED,
-        MIXED
-    }
-
     // --- Domain Methods ---
 
     /**

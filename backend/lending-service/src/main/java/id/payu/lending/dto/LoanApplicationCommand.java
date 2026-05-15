@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import id.payu.lending.domain.model.LoanType;
 
 /**
  * Command object for loan application request body.
@@ -17,7 +18,7 @@ public record LoanApplicationCommand(
         String externalId,
 
         @NotNull(message = "Loan type is required")
-        Loan.LoanType loanType,
+        LoanType loanType,
 
         @NotNull(message = "Principal amount is required")
         @DecimalMin(value = "100000.00", message = "Principal amount must be at least 100,000")

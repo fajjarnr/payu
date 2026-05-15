@@ -1,6 +1,6 @@
 package id.payu.support.domain.port.out;
 
-import id.payu.support.domain.SupportAgent;
+import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,13 +10,13 @@ import java.util.Optional;
  */
 public interface SupportAgentPersistencePort {
 
-    SupportAgent save(SupportAgent agent);
+    SupportAgentEntity save(SupportAgentEntity agent);
 
-    Optional<SupportAgent> findById(Long id);
+    Optional<SupportAgentEntity> findById(Long id);
 
-    Optional<SupportAgent> findByEmployeeId(String employeeId);
+    Optional<SupportAgentEntity> findByEmployeeId(String employeeId);
 
-    List<SupportAgent> findAll();
+    List<SupportAgentEntity> findAll();
 
     long countByActiveTrue();
 

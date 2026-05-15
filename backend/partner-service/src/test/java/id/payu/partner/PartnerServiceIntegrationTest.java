@@ -1,6 +1,6 @@
 package id.payu.partner;
 
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.dto.PartnerDTO;
@@ -38,7 +38,7 @@ public class PartnerServiceIntegrationTest {
     public void testCreateAndRetrievePartner() {
         PartnerDTO dto = new PartnerDTO(
             null,
-            "Integration Test Partner",
+            "Integration Test PartnerEntity",
             "MERCHANT",
             "integration@example.com",
             "+62123456789",
@@ -52,20 +52,20 @@ public class PartnerServiceIntegrationTest {
 
         assertNotNull(created);
         assertNotNull(created.id);
-        assertEquals("Integration Test Partner", created.name);
+        assertEquals("Integration Test PartnerEntity", created.name);
         assertNotNull(created.clientId);
         assertNotNull(created.clientSecret);
 
         PartnerDTO retrieved = partnerService.getPartnerById(created.id);
         assertNotNull(retrieved);
-        assertEquals("Integration Test Partner", retrieved.name);
+        assertEquals("Integration Test PartnerEntity", retrieved.name);
     }
 
     @Test
     public void testGetAllPartners() {
         PartnerDTO dto1 = new PartnerDTO(
             null,
-            "Partner 1",
+            "PartnerEntity 1",
             "MERCHANT",
             "partner1@example.com",
             "+62123456789",
@@ -77,7 +77,7 @@ public class PartnerServiceIntegrationTest {
 
         PartnerDTO dto2 = new PartnerDTO(
             null,
-            "Partner 2",
+            "PartnerEntity 2",
             "PAYMENT_GATEWAY",
             "partner2@example.com",
             "+62123456789",

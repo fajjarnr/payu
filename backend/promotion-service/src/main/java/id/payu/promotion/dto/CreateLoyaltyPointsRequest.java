@@ -1,12 +1,13 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.LoyaltyPoints;
+import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import java.time.LocalDateTime;
+import id.payu.promotion.domain.TransactionType;
 
 public record CreateLoyaltyPointsRequest(
     String accountId,
     String transactionId,
-    LoyaltyPoints.TransactionType transactionType,
+    TransactionType transactionType,
     Integer points,
     LocalDateTime expiryDate
 ) {}

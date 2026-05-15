@@ -1,6 +1,6 @@
 package id.payu.billing.adapter.messaging;
 
-import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import id.payu.billing.domain.model.PaymentStatus;
 
 /**
  * Kafka outbox adapter implementing the payment event port.
@@ -20,7 +21,7 @@ public class PaymentEventAdapter implements PaymentEventPort {
     private final OutboxService outboxService;
 
     @Override
-    public void publishPaymentEvent(BillPayment payment) {
+    public void publishPaymentEvent(BillPaymentEntity payment) {
         Map<String, Object> payload = Map.of(
                 "paymentId", payment.getId().toString(),
                 "referenceNumber", payment.getReferenceNumber(),
@@ -31,9 +32,9 @@ public class PaymentEventAdapter implements PaymentEventPort {
         );
 
         outboxService.createEvent(
-                "BillPayment",
+                "BillPaymentEntity",
                 payment.getId().toString(),
-                payment.getStatus() == BillPayment.PaymentStatus.COMPLETED
+                payment.getStatus() == PaymentStatus.COMPLETED
                         ? "PaymentCompleted" : "PaymentFailed",
                 payload
         );

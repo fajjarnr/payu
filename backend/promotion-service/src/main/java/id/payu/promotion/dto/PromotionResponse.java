@@ -1,27 +1,30 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.Promotion;
+import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.promotion.domain.PromotionRewardType;
+import id.payu.promotion.domain.PromotionStatus;
+import id.payu.promotion.domain.PromotionType;
 
 public record PromotionResponse(
     UUID id,
     String code,
     String name,
     String description,
-    Promotion.PromotionType promotionType,
-    Promotion.RewardType rewardType,
+    PromotionType promotionType,
+    PromotionRewardType rewardType,
     BigDecimal rewardValue,
     Integer maxRedemptions,
     Integer redemptionCount,
     BigDecimal minTransactionAmount,
-    Promotion.Status status,
+    PromotionStatus status,
     LocalDateTime startDate,
     LocalDateTime endDate,
     LocalDateTime createdAt
 ) {
-    public static PromotionResponse from(Promotion promotion) {
+    public static PromotionResponse from(PromotionEntity promotion) {
         return new PromotionResponse(
             promotion.getId(),
             promotion.getCode(),

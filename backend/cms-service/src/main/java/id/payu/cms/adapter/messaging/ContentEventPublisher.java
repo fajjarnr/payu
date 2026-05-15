@@ -1,7 +1,7 @@
 package id.payu.cms.adapter.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.cms.domain.entity.Content;
+import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -29,7 +29,7 @@ public class ContentEventPublisher {
     /**
      * Publish content published event
      */
-    public void publishContentPublished(Content content) {
+    public void publishContentPublished(ContentEntity content) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventId", java.util.UUID.randomUUID().toString());
@@ -57,7 +57,7 @@ public class ContentEventPublisher {
     /**
      * Publish content updated event
      */
-    public void publishContentUpdated(Content content) {
+    public void publishContentUpdated(ContentEntity content) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventId", java.util.UUID.randomUUID().toString());
@@ -82,7 +82,7 @@ public class ContentEventPublisher {
     /**
      * Publish content archived event
      */
-    public void publishContentArchived(Content content) {
+    public void publishContentArchived(ContentEntity content) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventId", java.util.UUID.randomUUID().toString());

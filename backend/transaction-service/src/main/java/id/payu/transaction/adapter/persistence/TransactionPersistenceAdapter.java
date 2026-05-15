@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
 import id.payu.transaction.config.ShardingConfig;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
 
     @Override
     @Transactional
-    public Transaction save(Transaction transaction) {
+    public TransactionEntity save(TransactionEntity transaction) {
         if (shardingConfig.isEnabled()) {
             int partition = shardingConfig.calculatePartition(transaction.getSenderAccountId());
             log.debug("Saving transaction {} to partition {}", transaction.getId(), partition);
@@ -38,7 +38,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
-    public Optional<Transaction> findById(UUID transactionId) {
+    public Optional<TransactionEntity> findById(UUID transactionId) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transaction by ID {} (will scan all partitions)", transactionId);
         }
@@ -46,7 +46,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
-    public List<Transaction> findByAccountId(UUID accountId, int page, int size) {
+    public List<TransactionEntity> findByAccountId(UUID accountId, int page, int size) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transactions for account {} (sender+recipient lookup)", accountId);
         }
@@ -62,7 +62,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
-    public List<Transaction> findByReferenceNumber(String referenceNumber) {
+    public List<TransactionEntity> findByReferenceNumber(String referenceNumber) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transactions by reference number {}", referenceNumber);
         }
@@ -70,7 +70,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
-    public Optional<Transaction> findByIdempotencyKey(String idempotencyKey) {
+    public Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transactions by idempotency key {}", idempotencyKey);
         }
@@ -86,7 +86,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
      * @param size page size
      * @return list of transactions
      */
-    public List<Transaction> findBySenderAccountId(UUID senderAccountId, int page, int size) {
+    public List<TransactionEntity> findBySenderAccountId(UUID senderAccountId, int page, int size) {
         if (shardingConfig.isEnabled()) {
             int partition = shardingConfig.calculatePartition(senderAccountId);
             log.debug("Querying partition {} for sender account {}", partition, senderAccountId);
@@ -103,7 +103,7 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
      * @param size page size
      * @return list of transactions
      */
-    public List<Transaction> findByRecipientAccountId(UUID recipientAccountId, int page, int size) {
+    public List<TransactionEntity> findByRecipientAccountId(UUID recipientAccountId, int page, int size) {
         if (shardingConfig.isEnabled()) {
             log.debug("Querying all partitions for recipient account {} (cross-partition scan)",
                     recipientAccountId);

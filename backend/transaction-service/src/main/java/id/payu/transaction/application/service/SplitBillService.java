@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.domain.port.out.SplitBillPersistencePort;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
@@ -18,6 +18,9 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import id.payu.transaction.domain.model.ParticipantStatus;
+import id.payu.transaction.domain.model.SplitStatus;
+import id.payu.transaction.domain.model.SplitType;
 
 @Service
 public class SplitBillService implements SplitBillUseCase {
@@ -40,7 +43,7 @@ public class SplitBillService implements SplitBillUseCase {
         String referenceNumber = generateReferenceNumber();
         Instant now = Instant.now();
 
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber(referenceNumber)
                 .creatorAccountId(request.getCreatorAccountId())
@@ -49,7 +52,7 @@ public class SplitBillService implements SplitBillUseCase {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .splitType(request.getSplitType())
-                .status(SplitBill.SplitStatus.DRAFT)
+                .status(SplitStatus.DRAFT)
                 .dueDate(request.getDueDate())
                 .createdAt(now)
                 .updatedAt(now)
@@ -67,7 +70,7 @@ public class SplitBillService implements SplitBillUseCase {
 
     @Override
     public SplitBillResponse getSplitBill(UUID splitBillId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
         splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
@@ -75,14 +78,14 @@ public class SplitBillService implements SplitBillUseCase {
     }
 
     @Override
-    public List<SplitBill> getAccountSplitBills(UUID accountId, int page, int size) {
+    public List<SplitBillEntity> getAccountSplitBills(UUID accountId, int page, int size) {
         return persistencePort.findByCreatorAccountId(accountId, page, size);
     }
 
     @Override
     @Transactional
     public SplitBillResponse updateSplitBill(UUID splitBillId, CreateSplitBillRequest request) {
-        SplitBill existing = persistencePort.findById(splitBillId)
+        SplitBillEntity existing = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
         if (!existing.canBeModified()) {
@@ -96,7 +99,7 @@ public class SplitBillService implements SplitBillUseCase {
         existing.setDueDate(request.getDueDate());
         existing.setUpdatedAt(Instant.now());
 
-        SplitBill updated = persistencePort.save(existing);
+        SplitBillEntity updated = persistencePort.save(existing);
         updated.setParticipants(persistencePort.findParticipantsBySplitBillId(updated.getId()));
 
         log.info("Split bill updated, id: {}", updated.getId());
@@ -106,16 +109,16 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse cancelSplitBill(UUID splitBillId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
         if (!splitBill.canBeCancelled()) {
             throw new IllegalStateException("Cannot cancel split bill in current status");
         }
 
-        splitBill.setStatus(SplitBill.SplitStatus.CANCELLED);
+        splitBill.setStatus(SplitStatus.CANCELLED);
         splitBill.setUpdatedAt(Instant.now());
-        SplitBill saved = persistencePort.save(splitBill);
+        SplitBillEntity saved = persistencePort.save(splitBill);
         saved.setParticipants(persistencePort.findParticipantsBySplitBillId(saved.getId()));
 
         log.info("Split bill cancelled, id: {}", splitBillId);
@@ -126,16 +129,16 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse activateSplitBill(UUID splitBillId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        if (splitBill.getStatus() != SplitBill.SplitStatus.DRAFT) {
+        if (splitBill.getStatus() != SplitStatus.DRAFT) {
             throw new IllegalStateException("Can only activate draft split bills");
         }
 
-        splitBill.setStatus(SplitBill.SplitStatus.ACTIVE);
+        splitBill.setStatus(SplitStatus.ACTIVE);
         splitBill.setUpdatedAt(Instant.now());
-        SplitBill activated = persistencePort.save(splitBill);
+        SplitBillEntity activated = persistencePort.save(splitBill);
         activated.setParticipants(persistencePort.findParticipantsBySplitBillId(activated.getId()));
 
         log.info("Split bill activated, id: {}", splitBillId);
@@ -147,14 +150,14 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse addParticipant(UUID splitBillId, AddParticipantRequest request) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
         if (!splitBill.canBeModified()) {
             throw new IllegalStateException("Cannot add participants in current status");
         }
 
-        SplitBillParticipant participant = SplitBillParticipant.builder()
+        SplitBillParticipantEntity participant = SplitBillParticipantEntity.builder()
                 .id(UUID.randomUUID())
                 .splitBillId(splitBillId)
                 .accountId(request.getAccountId())
@@ -162,7 +165,7 @@ public class SplitBillService implements SplitBillUseCase {
                 .accountName(request.getAccountName())
                 .amountOwed(request.getAmountOwed() != null ? request.getAmountOwed() : BigDecimal.ZERO)
                 .amountPaid(BigDecimal.ZERO)
-                .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                .status(ParticipantStatus.PENDING)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -179,21 +182,21 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse acceptSplitBill(UUID splitBillId, UUID participantId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        SplitBillParticipant participant = persistencePort.findParticipantById(participantId)
+        SplitBillParticipantEntity participant = persistencePort.findParticipantById(participantId)
                 .orElseThrow(() -> new IllegalArgumentException("Participant not found"));
 
-        if (participant.getStatus() != SplitBillParticipant.ParticipantStatus.PENDING) {
+        if (participant.getStatus() != ParticipantStatus.PENDING) {
             throw new IllegalStateException("Can only accept pending participants");
         }
 
-        participant.setStatus(SplitBillParticipant.ParticipantStatus.ACCEPTED);
+        participant.setStatus(ParticipantStatus.ACCEPTED);
         participant.setUpdatedAt(Instant.now());
         persistencePort.saveParticipant(participant);
 
-        splitBill.setStatus(SplitBill.SplitStatus.IN_PROGRESS);
+        splitBill.setStatus(SplitStatus.IN_PROGRESS);
         persistencePort.save(splitBill);
 
         splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
@@ -205,17 +208,17 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse declineSplitBill(UUID splitBillId, UUID participantId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        SplitBillParticipant participant = persistencePort.findParticipantById(participantId)
+        SplitBillParticipantEntity participant = persistencePort.findParticipantById(participantId)
                 .orElseThrow(() -> new IllegalArgumentException("Participant not found"));
 
-        if (participant.getStatus() != SplitBillParticipant.ParticipantStatus.PENDING) {
+        if (participant.getStatus() != ParticipantStatus.PENDING) {
             throw new IllegalStateException("Can only decline pending participants");
         }
 
-        participant.setStatus(SplitBillParticipant.ParticipantStatus.DECLINED);
+        participant.setStatus(ParticipantStatus.DECLINED);
         participant.setUpdatedAt(Instant.now());
         persistencePort.saveParticipant(participant);
 
@@ -228,14 +231,14 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse makePayment(UUID splitBillId, UUID participantId, MakePaymentRequest request) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
         if (!splitBill.canAddPayment()) {
             throw new IllegalStateException("Cannot add payment in current status");
         }
 
-        SplitBillParticipant participant = persistencePort.findParticipantById(participantId)
+        SplitBillParticipantEntity participant = persistencePort.findParticipantById(participantId)
                 .orElseThrow(() -> new IllegalArgumentException("Participant not found"));
 
         if (!participant.canMakePayment()) {
@@ -251,10 +254,10 @@ public class SplitBillService implements SplitBillUseCase {
         participant.setUpdatedAt(Instant.now());
 
         if (participant.isFullyPaid()) {
-            participant.setStatus(SplitBillParticipant.ParticipantStatus.SETTLED);
+            participant.setStatus(ParticipantStatus.SETTLED);
             participant.setSettledAt(Instant.now());
         } else {
-            participant.setStatus(SplitBillParticipant.ParticipantStatus.PARTIALLY_PAID);
+            participant.setStatus(ParticipantStatus.PARTIALLY_PAID);
         }
 
         persistencePort.saveParticipant(participant);
@@ -264,13 +267,13 @@ public class SplitBillService implements SplitBillUseCase {
         splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
 
         if (splitBill.isFullyPaid()) {
-            splitBill.setStatus(SplitBill.SplitStatus.COMPLETED);
+            splitBill.setStatus(SplitStatus.COMPLETED);
             splitBill.setCompletedAt(Instant.now());
             splitBill.setUpdatedAt(Instant.now());
             persistencePort.save(splitBill);
             eventPublisher.publishSplitBillCompleted(splitBill);
         } else {
-            splitBill.setStatus(SplitBill.SplitStatus.IN_PROGRESS);
+            splitBill.setStatus(SplitStatus.IN_PROGRESS);
             splitBill.setUpdatedAt(Instant.now());
             persistencePort.save(splitBill);
         }
@@ -289,14 +292,14 @@ public class SplitBillService implements SplitBillUseCase {
     @Override
     @Transactional
     public SplitBillResponse settleSplitBill(UUID splitBillId) {
-        SplitBill splitBill = persistencePort.findById(splitBillId)
+        SplitBillEntity splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        if (splitBill.getStatus() == SplitBill.SplitStatus.COMPLETED) {
+        if (splitBill.getStatus() == SplitStatus.COMPLETED) {
             throw new IllegalStateException("Split bill already completed");
         }
 
-        if (splitBill.getStatus() == SplitBill.SplitStatus.CANCELLED) {
+        if (splitBill.getStatus() == SplitStatus.CANCELLED) {
             throw new IllegalStateException("Cannot settle a cancelled split bill");
         }
 
@@ -307,10 +310,10 @@ public class SplitBillService implements SplitBillUseCase {
                     "Cannot settle: outstanding payments remain. Total remaining: " + splitBill.getRemainingAmount());
         }
 
-        splitBill.setStatus(SplitBill.SplitStatus.COMPLETED);
+        splitBill.setStatus(SplitStatus.COMPLETED);
         splitBill.setCompletedAt(Instant.now());
         splitBill.setUpdatedAt(Instant.now());
-        SplitBill settled = persistencePort.save(splitBill);
+        SplitBillEntity settled = persistencePort.save(splitBill);
 
         settled.setParticipants(persistencePort.findParticipantsBySplitBillId(settled.getId()));
 
@@ -320,7 +323,7 @@ public class SplitBillService implements SplitBillUseCase {
         return mapToResponse(settled);
     }
 
-    private List<SplitBillParticipant> buildParticipants(CreateSplitBillRequest request, Instant now) {
+    private List<SplitBillParticipantEntity> buildParticipants(CreateSplitBillRequest request, Instant now) {
         int participantCount = request.getParticipants().size();
         // BUG-BE-124: Fix EQUAL split rounding error
         // Calculate base amount per person, then assign remainder to last participant
@@ -338,13 +341,13 @@ public class SplitBillService implements SplitBillUseCase {
             boolean isLast = (i == participantCount - 1);
 
             BigDecimal amountOwed;
-            if (request.getSplitType() == SplitBill.SplitType.EQUAL) {
+            if (request.getSplitType() == SplitType.EQUAL) {
                 amountOwed = isLast ? lastParticipantAmount : amountPerPerson;
             } else {
                 amountOwed = p.getAmountOwed() != null ? p.getAmountOwed() : BigDecimal.ZERO;
             }
 
-            return SplitBillParticipant.builder()
+            return SplitBillParticipantEntity.builder()
                     .id(UUID.randomUUID())
                     .splitBillId(null)
                     .accountId(p.getAccountId())
@@ -352,7 +355,7 @@ public class SplitBillService implements SplitBillUseCase {
                     .accountName(p.getAccountName())
                     .amountOwed(amountOwed)
                     .amountPaid(BigDecimal.ZERO)
-                    .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                    .status(ParticipantStatus.PENDING)
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
@@ -363,7 +366,7 @@ public class SplitBillService implements SplitBillUseCase {
         return "SPL-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
-    private SplitBillResponse mapToResponse(SplitBill splitBill) {
+    private SplitBillResponse mapToResponse(SplitBillEntity splitBill) {
         return SplitBillResponse.builder()
                 .id(splitBill.getId())
                 .referenceNumber(splitBill.getReferenceNumber())

@@ -51,21 +51,4 @@ public class UpdateTransactionTagsRequest {
      * Predefined transaction categories.
      * Users can also use custom tags beyond these predefined values.
      */
-    public enum PredefinedCategory {
-        FOOD_AND_DINING,
-        SHOPPING,
-        TRANSPORTATION,
-        ENTERTAINMENT,
-        BILLS_AND_UTILITIES,
-        HEALTHCARE,
-        EDUCATION,
-        TRAVEL,
-        SALARY,
-        INVESTMENT,
-        TRANSFER,
-        GIFT,
-        DONATION,
-        SUBSCRIPTION,
-        OTHER
-    }
 }

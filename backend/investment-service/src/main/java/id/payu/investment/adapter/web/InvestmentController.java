@@ -22,13 +22,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST Controller for investment operations.
@@ -78,7 +79,7 @@ public class InvestmentController extends BaseController {
     @PostMapping("/deposits")
     @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
-            operation = Audited.Operation.OTHER,
+            operation = AuditOperation.OTHER,
             entityType = "Deposit",
             maskData = true,
             level = AuditLevel.INFO
@@ -102,7 +103,7 @@ public class InvestmentController extends BaseController {
     @PostMapping("/mutual-funds")
     @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
-            operation = Audited.Operation.OTHER,
+            operation = AuditOperation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
             level = AuditLevel.INFO
@@ -126,7 +127,7 @@ public class InvestmentController extends BaseController {
     @PostMapping("/gold")
     @PreAuthorize("isAuthenticated()")
     @Audited(
-            operation = Audited.Operation.OTHER,
+            operation = AuditOperation.OTHER,
             entityType = "Gold",
             maskData = true,
             level = AuditLevel.INFO
@@ -149,7 +150,7 @@ public class InvestmentController extends BaseController {
     @PostMapping("/sell")
     @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
-            operation = Audited.Operation.OTHER,
+            operation = AuditOperation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
             level = AuditLevel.INFO

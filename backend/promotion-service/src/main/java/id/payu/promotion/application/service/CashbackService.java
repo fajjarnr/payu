@@ -2,7 +2,7 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.application.saga.CashbackSagaContext;
 import id.payu.promotion.application.saga.CashbackSagaOrchestrator;
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.dto.CashbackSummaryResponse;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.promotion.domain.CashbackStatus;
 
 /**
  * Service for managing cashback operations.
@@ -63,7 +64,7 @@ public class CashbackService {
      * @throws CashbackCreationException if saga execution fails
      */
     @Transactional
-    public Cashback createCashback(CreateCashbackRequest request) {
+    public CashbackEntity createCashback(CreateCashbackRequest request) {
         if (request.accountId() == null || request.accountId().isBlank()) {
             throw new IllegalArgumentException("Account ID is required");
         }
@@ -77,14 +78,14 @@ public class CashbackService {
         SagaResult<CashbackSagaContext> result = sagaOrchestrator.executeCashbackSaga(context);
 
         if (result.isSuccess()) {
-            Cashback cashback = result.getData().getCashback();
-            LOG.info("Cashback saga completed successfully: id={}, amount={}",
+            CashbackEntity cashback = result.getData().getCashback();
+            LOG.info("CashbackEntity saga completed successfully: id={}, amount={}",
                 cashback.getId(), cashback.getCashbackAmount());
 
             publishCashbackEvent(cashback);
             return cashback;
         } else {
-            LOG.error("Cashback saga failed: state={}, error={}, step={}",
+            LOG.error("CashbackEntity saga failed: state={}, error={}, step={}",
                 result.getFinalState(), result.getErrorMessage(), result.getErrorStep());
 
             // If saga was compensated, the cashback might be in PENDING or VOIDED state
@@ -99,29 +100,29 @@ public class CashbackService {
         }
     }
 
-    public Optional<Cashback> getCashback(UUID id) {
+    public Optional<CashbackEntity> getCashback(UUID id) {
         return cashbackRepository.findById(id);
     }
 
-    public List<Cashback> getCashbacksByAccount(String accountId) {
+    public List<CashbackEntity> getCashbacksByAccount(String accountId) {
         return cashbackRepository.findByAccountId(accountId);
     }
 
     public CashbackSummaryResponse getCashbackSummary(String accountId) {
-        List<Cashback> cashbacks = cashbackRepository.findByAccountId(accountId);
+        List<CashbackEntity> cashbacks = cashbackRepository.findByAccountId(accountId);
 
         BigDecimal totalCashback = cashbacks.stream()
-            .map(Cashback::getCashbackAmount)
+            .map(CashbackEntity::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal pendingCashback = cashbacks.stream()
-            .filter(c -> c.getStatus() == Cashback.Status.PENDING)
-            .map(Cashback::getCashbackAmount)
+            .filter(c -> c.getStatus() == CashbackStatus.PENDING)
+            .map(CashbackEntity::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal creditedCashback = cashbacks.stream()
-            .filter(c -> c.getStatus() == Cashback.Status.CREDITED)
-            .map(Cashback::getCashbackAmount)
+            .filter(c -> c.getStatus() == CashbackStatus.CREDITED)
+            .map(CashbackEntity::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int transactionCount = cashbacks.size();
@@ -135,7 +136,7 @@ public class CashbackService {
     }
 
     // BUG-BE-073: Added metric counter for Kafka publish failures to enable alerting
-    private void publishCashbackEvent(Cashback cashback) {
+    private void publishCashbackEvent(CashbackEntity cashback) {
         try {
             Map<String, Object> event = Map.of(
                 "cashbackId", cashback.getId().toString(),

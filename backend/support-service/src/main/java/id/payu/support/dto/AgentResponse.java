@@ -1,6 +1,6 @@
 package id.payu.support.dto;
 
-import id.payu.support.domain.SupportAgent.AgentLevel;
+import id.payu.support.domain.AgentLevel;
 import java.time.LocalDateTime;
 
 public record AgentResponse(

@@ -1,7 +1,7 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.domain.Promotion;
-import id.payu.promotion.domain.Reward;
+import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
+import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.adapter.persistence.repository.PromotionRepository;
 import id.payu.promotion.adapter.persistence.repository.RewardRepository;
@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.promotion.domain.PromotionStatus;
+import id.payu.promotion.domain.PromotionType;
+import id.payu.promotion.domain.RewardStatus;
+import id.payu.promotion.domain.RewardType;
 
 @Service
 public class PromotionService {
@@ -44,12 +48,12 @@ public class PromotionService {
     }
 
     @Transactional
-    public Promotion createPromotion(CreatePromotionRequest request) {
+    public PromotionEntity createPromotion(CreatePromotionRequest request) {
         LOG.info("Creating promotion: code={}, type={}", request.code(), request.promotionType());
 
         validatePromotionDates(request.startDate(), request.endDate());
 
-        Promotion promotion = new Promotion();
+        PromotionEntity promotion = new PromotionEntity();
         promotion.setCode(request.code());
         promotion.setName(request.name());
         promotion.setDescription(request.description());
@@ -60,11 +64,11 @@ public class PromotionService {
         promotion.setMinTransactionAmount(request.minTransactionAmount());
         promotion.setStartDate(request.startDate());
         promotion.setEndDate(request.endDate());
-        promotion.setStatus(Promotion.Status.DRAFT);
+        promotion.setStatus(PromotionStatus.DRAFT);
         promotion.setRedemptionCount(0);
 
         promotion = promotionRepository.save(promotion);
-        LOG.info("Promotion created: id={}, code={}", promotion.getId(), promotion.getCode());
+        LOG.info("PromotionEntity created: id={}, code={}", promotion.getId(), promotion.getCode());
 
         publishPromotionEvent(promotion, "CREATED");
 
@@ -72,9 +76,9 @@ public class PromotionService {
     }
 
     @Transactional
-    public Promotion updatePromotion(UUID id, UpdatePromotionRequest request) {
-        Promotion promotion = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found"));
+    public PromotionEntity updatePromotion(UUID id, UpdatePromotionRequest request) {
+        PromotionEntity promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("PromotionEntity not found"));
 
         if (request.name() != null) {
             promotion.setName(request.name());
@@ -96,7 +100,7 @@ public class PromotionService {
         }
 
         promotion = promotionRepository.save(promotion);
-        LOG.info("Promotion updated: id={}", promotion.getId());
+        LOG.info("PromotionEntity updated: id={}", promotion.getId());
 
         publishPromotionEvent(promotion, "UPDATED");
 
@@ -104,16 +108,16 @@ public class PromotionService {
     }
 
     @Transactional
-    public Promotion activatePromotion(UUID id) {
-        Promotion promotion = promotionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Promotion not found"));
+    public PromotionEntity activatePromotion(UUID id) {
+        PromotionEntity promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("PromotionEntity not found"));
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(promotion.getStartDate()) || now.isAfter(promotion.getEndDate())) {
             throw new IllegalArgumentException("Cannot activate promotion outside its validity period");
         }
 
-        promotion.setStatus(Promotion.Status.ACTIVE);
+        promotion.setStatus(PromotionStatus.ACTIVE);
         promotion = promotionRepository.save(promotion);
 
         publishPromotionEvent(promotion, "ACTIVATED");
@@ -121,31 +125,31 @@ public class PromotionService {
         return promotion;
     }
 
-    public Optional<Promotion> getPromotion(UUID id) {
+    public Optional<PromotionEntity> getPromotion(UUID id) {
         return promotionRepository.findById(id);
     }
 
-    public Optional<Promotion> getPromotionByCode(String code) {
+    public Optional<PromotionEntity> getPromotionByCode(String code) {
         return promotionRepository.findByCode(code);
     }
 
-    public List<Promotion> getActivePromotions() {
+    public List<PromotionEntity> getActivePromotions() {
         LocalDateTime now = LocalDateTime.now();
-        return promotionRepository.findActivePromotions(Promotion.Status.ACTIVE, now);
+        return promotionRepository.findActivePromotions(PromotionStatus.ACTIVE, now);
     }
 
     @Transactional
-    public Reward claimPromotion(String code, ClaimPromotionRequest request) {
-        Promotion promotion = getPromotionByCode(code)
+    public RewardEntity claimPromotion(String code, ClaimPromotionRequest request) {
+        PromotionEntity promotion = getPromotionByCode(code)
             .orElseThrow(() -> new IllegalArgumentException("Invalid promotion code"));
 
-        if (promotion.getStatus() != Promotion.Status.ACTIVE) {
-            throw new IllegalArgumentException("Promotion is not active");
+        if (promotion.getStatus() != PromotionStatus.ACTIVE) {
+            throw new IllegalArgumentException("PromotionEntity is not active");
         }
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(promotion.getStartDate()) || now.isAfter(promotion.getEndDate())) {
-            throw new IllegalArgumentException("Promotion is expired or not yet started");
+            throw new IllegalArgumentException("PromotionEntity is expired or not yet started");
         }
 
         // BUG-BE-063 Fix: Use atomic increment to prevent race condition on maxRedemptions
@@ -154,7 +158,7 @@ public class PromotionService {
         // atomicIncrementRedemptionCount returns 0 if maxRedemptions already reached.
         int updated = promotionRepository.atomicIncrementRedemptionCount(promotion.getId());
         if (updated == 0) {
-            throw new IllegalArgumentException("Promotion has reached maximum redemptions");
+            throw new IllegalArgumentException("PromotionEntity has reached maximum redemptions");
         }
 
         // Refresh promotion to reflect the atomic increment in the current persistence context
@@ -167,18 +171,18 @@ public class PromotionService {
 
         BigDecimal rewardAmount = calculateRewardAmount(promotion, request.transactionAmount());
 
-        Reward reward = new Reward();
+        RewardEntity reward = new RewardEntity();
         reward.setAccountId(request.accountId());
         reward.setTransactionId(request.transactionId());
         reward.setPromotionCode(promotion.getCode());
-        reward.setType(Reward.RewardType.PROMOTION_REWARD);
+        reward.setType(RewardType.PROMOTION_REWARD);
         reward.setAmount(rewardAmount);
         reward.setTransactionAmount(request.transactionAmount());
         reward.setMerchantCode(request.merchantCode());
         reward.setCategoryCode(request.categoryCode());
-        reward.setStatus(Reward.Status.AWARDED);
+        reward.setStatus(RewardStatus.AWARDED);
 
-        if (promotion.getPromotionType() == Promotion.PromotionType.REWARD_POINTS) {
+        if (promotion.getPromotionType() == PromotionType.REWARD_POINTS) {
             reward.setPointsEarned(rewardAmount.intValue());
         }
 
@@ -187,13 +191,13 @@ public class PromotionService {
         publishPromotionEvent(promotion, "CLAIMED");
         publishRewardEvent(reward);
 
-        LOG.info("Promotion claimed: code={}, accountId={}, reward={}",
+        LOG.info("PromotionEntity claimed: code={}, accountId={}, reward={}",
             code, request.accountId(), rewardAmount);
 
         return reward;
     }
 
-    private BigDecimal calculateRewardAmount(Promotion promotion, BigDecimal transactionAmount) {
+    private BigDecimal calculateRewardAmount(PromotionEntity promotion, BigDecimal transactionAmount) {
         return switch (promotion.getRewardType()) {
             case PERCENTAGE -> transactionAmount.multiply(promotion.getRewardValue())
                 .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -211,7 +215,7 @@ public class PromotionService {
         }
     }
 
-    private void publishPromotionEvent(Promotion promotion, String eventType) {
+    private void publishPromotionEvent(PromotionEntity promotion, String eventType) {
         try {
             Map<String, Object> event = Map.of(
                 "promotionId", promotion.getId().toString(),
@@ -227,7 +231,7 @@ public class PromotionService {
         }
     }
 
-    private void publishRewardEvent(Reward reward) {
+    private void publishRewardEvent(RewardEntity reward) {
         try {
             Map<String, Object> event = Map.of(
                 "rewardId", reward.getId().toString(),

@@ -85,26 +85,6 @@ public class Citizen extends PanacheEntityBase {
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 
-    public enum Gender {
-        MALE, FEMALE
-    }
-
-    public enum Religion {
-        ISLAM, KRISTEN, KATOLIK, HINDU, BUDDHA, KONGHUCU, OTHER
-    }
-
-    public enum MaritalStatus {
-        SINGLE, MARRIED, DIVORCED, WIDOWED
-    }
-
-    public enum CitizenStatus {
-        VALID,
-        INVALID,
-        BLOCKED,
-        DECEASED,
-        NOT_FOUND
-    }
-
     // Finder methods
     public static Citizen findByNik(String nik) {
         return find("nik", nik).firstResult();

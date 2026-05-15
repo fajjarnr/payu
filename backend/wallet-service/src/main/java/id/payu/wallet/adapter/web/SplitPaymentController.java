@@ -18,11 +18,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.wallet.domain.model.RecipientType;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * REST Controller for split payment operations.
@@ -59,7 +61,7 @@ public class SplitPaymentController extends BaseController {
                 .map(dto -> SplitRecipient.builder()
                         .recipientAccountId(dto.getRecipientAccountId())
                         .recipientLabel(dto.getRecipientLabel())
-                        .type(dto.getType() != null ? SplitRecipient.RecipientType.valueOf(dto.getType()) : null)
+                        .type(dto.getType() != null ? RecipientType.valueOf(dto.getType()) : null)
                         .percentage(dto.getPercentage())
                         .fixedAmount(dto.getFixedAmount())
                         .priority(dto.getPriority())
@@ -69,7 +71,7 @@ public class SplitPaymentController extends BaseController {
         SplitPaymentRule rule = splitPaymentUseCase.createRule(
                 request.getPartnerId(),
                 request.getRuleName(),
-                SplitPaymentRule.SplitType.valueOf(request.getSplitType()),
+                SplitType.valueOf(request.getSplitType()),
                 request.getCurrency() != null ? request.getCurrency() : "IDR",
                 recipients);
 
@@ -140,7 +142,7 @@ public class SplitPaymentController extends BaseController {
                     .map(dto -> SplitRecipient.builder()
                             .recipientAccountId(dto.getRecipientAccountId())
                             .recipientLabel(dto.getRecipientLabel())
-                            .type(dto.getType() != null ? SplitRecipient.RecipientType.valueOf(dto.getType()) : null)
+                            .type(dto.getType() != null ? RecipientType.valueOf(dto.getType()) : null)
                             .percentage(dto.getPercentage())
                             .fixedAmount(dto.getFixedAmount())
                             .priority(dto.getPriority())

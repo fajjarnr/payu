@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.AccountType;
 
 /**
  * Application service for Chart of Accounts operations (IMP-002).
@@ -42,7 +43,7 @@ public class ChartOfAccountService implements ChartOfAccountUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChartOfAccount> getByType(ChartOfAccount.AccountType type) {
+    public List<ChartOfAccount> getByType(AccountType type) {
         log.debug("Getting chart of accounts by type: {}", type);
         return journalPersistencePort.findChartOfAccountsByType(type.name());
     }

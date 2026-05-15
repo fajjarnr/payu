@@ -45,7 +45,7 @@ public class PartnerControllerTest {
     public void testGetAllPartners() throws Exception {
         PartnerDTO partner = new PartnerDTO(
             1L,
-            "Test Partner",
+            "Test PartnerEntity",
             "MERCHANT",
             "test@example.com",
             "+62123456789",
@@ -59,7 +59,7 @@ public class PartnerControllerTest {
 
         mockMvc.perform(get("/partners"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].name").value("Test Partner"))
+                .andExpect(jsonPath("$.data[0].name").value("Test PartnerEntity"))
                 .andExpect(jsonPath("$.data[0].email").value("test@example.com"));
     }
 
@@ -67,7 +67,7 @@ public class PartnerControllerTest {
     public void testGetPartnerById_Found() throws Exception {
         PartnerDTO partner = new PartnerDTO(
             1L,
-            "Test Partner",
+            "Test PartnerEntity",
             "MERCHANT",
             "test@example.com",
             "+62123456789",
@@ -81,7 +81,7 @@ public class PartnerControllerTest {
 
         mockMvc.perform(get("/partners/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Test Partner"))
+                .andExpect(jsonPath("$.data.name").value("Test PartnerEntity"))
                 .andExpect(jsonPath("$.data.email").value("test@example.com"));
     }
 
@@ -97,7 +97,7 @@ public class PartnerControllerTest {
     public void testCreatePartner_Success() throws Exception {
         PartnerDTO newPartner = new PartnerDTO(
             null,
-            "New Partner",
+            "New PartnerEntity",
             "PAYMENT_GATEWAY",
             "newpartner@example.com",
             "+62812345678",
@@ -109,7 +109,7 @@ public class PartnerControllerTest {
 
         PartnerDTO createdPartner = new PartnerDTO(
             2L,
-            "New Partner",
+            "New PartnerEntity",
             "PAYMENT_GATEWAY",
             "newpartner@example.com",
             "+62812345678",
@@ -123,7 +123,7 @@ public class PartnerControllerTest {
 
         String requestBody = """
             {
-                "name": "New Partner",
+                "name": "New PartnerEntity",
                 "type": "PAYMENT_GATEWAY",
                 "email": "newpartner@example.com",
                 "phone": "+62812345678",
@@ -136,7 +136,7 @@ public class PartnerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.name").value("New Partner"))
+                .andExpect(jsonPath("$.data.name").value("New PartnerEntity"))
                 .andExpect(jsonPath("$.data.clientId").exists())
                 .andExpect(jsonPath("$.data.clientSecret").exists());
     }

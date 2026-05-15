@@ -5,6 +5,7 @@ import org.mapstruct.MappingTarget;
 import java.util.List;
 import java.util.Set;
 
+
 /**
  * Base mapper interface for entity-domain mapping.
  *
@@ -29,8 +30,8 @@ import java.util.Set;
  *     @Mapping(target = "status", expression = "java(mapStatus(entity.getStatus()))")
  *     Wallet toDomain(WalletEntity entity);
  *
- *     default Wallet.WalletStatus mapStatus(WalletEntity.WalletStatus status) {
- *         return Wallet.WalletStatus.valueOf(status.name());
+ *     default WalletStatus mapStatus(WalletStatus status) {
+ *         return WalletStatus.valueOf(status.name());
  *     }
  * }
  * </pre>

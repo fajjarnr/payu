@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * JPA Entity for Dispute persistence.
@@ -45,11 +46,11 @@ public class DisputeEntity {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "merchant_id", nullable = false)
     private UUID merchantId;
 

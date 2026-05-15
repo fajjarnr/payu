@@ -63,12 +63,4 @@ public class MutualFundEntity {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public enum FundStatus {
-        ACTIVE, SUSPENDED, CLOSED
-    }
-
-    public enum FundType {
-        MONEY_MARKET, FIXED_INCOME, MIXED, EQUITY, INDEX_FUND
-    }
 }

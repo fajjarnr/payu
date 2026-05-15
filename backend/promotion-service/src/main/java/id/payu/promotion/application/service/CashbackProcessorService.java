@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import id.payu.promotion.domain.model.CashbackStatus;
 
 /**
  * Application service for processing cashback on transaction completion.
@@ -96,7 +97,7 @@ public class CashbackProcessorService {
             }
         }
 
-        LOG.info("Cashback processing complete for transaction: {}, processed: {}, total: {}",
+        LOG.info("CashbackEntity processing complete for transaction: {}, processed: {}, total: {}",
                 event.transactionId(), processedCount, totalCashback);
 
         return CashbackResult.builder()
@@ -124,7 +125,7 @@ public class CashbackProcessorService {
                     event.accountId(),
                     amount,
                     referenceId,
-                    "Cashback for transaction " + event.transactionId() + " via rule " + rule.getRuleId()
+                    "CashbackEntity for transaction " + event.transactionId() + " via rule " + rule.getRuleId()
             );
 
             if (!credited) {
@@ -140,7 +141,7 @@ public class CashbackProcessorService {
             record.setAccountId(event.accountId());
             record.setRuleId(rule.getRuleId());
             record.setCashbackAmount(amount);
-            record.setStatus(CashbackRecord.CashbackStatus.CREDITED);
+            record.setStatus(CashbackStatus.CREDITED);
             record.setWalletReferenceId(referenceId);
 
             cashbackRecordRepository.save(record);
@@ -154,7 +155,7 @@ public class CashbackProcessorService {
             );
             notificationPort.sendCashbackNotification(notification);
 
-            LOG.info("Cashback credited: transaction={}, rule={}, amount={}",
+            LOG.info("CashbackEntity credited: transaction={}, rule={}, amount={}",
                     event.transactionId(), rule.getRuleId(), amount);
 
             return true;

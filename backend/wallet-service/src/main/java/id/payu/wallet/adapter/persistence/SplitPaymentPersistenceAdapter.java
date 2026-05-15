@@ -3,7 +3,10 @@ package id.payu.wallet.adapter.persistence;
 import id.payu.wallet.adapter.persistence.entity.*;
 import id.payu.wallet.adapter.persistence.repository.SplitPaymentExecutionRepository;
 import id.payu.wallet.adapter.persistence.repository.SplitPaymentRuleRepository;
-import id.payu.wallet.domain.model.*;
+import id.payu.wallet.domain.model.SplitPaymentExecution;
+import id.payu.wallet.domain.model.SplitPaymentLeg;
+import id.payu.wallet.domain.model.SplitPaymentRule;
+import id.payu.wallet.domain.model.SplitRecipient;
 import id.payu.wallet.domain.port.out.SplitPaymentPersistencePort;
 
 import org.springframework.stereotype.Component;
@@ -78,7 +81,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         entity.setId(domain.getId());
         entity.setPartnerId(domain.getPartnerId());
         entity.setRuleName(domain.getRuleName());
-        entity.setSplitType(SplitPaymentRuleEntity.SplitType.valueOf(domain.getSplitType().name()));
+        entity.setSplitType(SplitType.valueOf(domain.getSplitType().name()));
         entity.setCurrency(domain.getCurrency());
         entity.setActive(domain.isActive());
 
@@ -90,7 +93,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                 re.setSplitRule(entity);
                 re.setRecipientAccountId(r.getRecipientAccountId());
                 re.setRecipientLabel(r.getRecipientLabel());
-                re.setRecipientType(SplitRecipientEntity.RecipientType.valueOf(r.getType().name()));
+                re.setRecipientType(RecipientType.valueOf(r.getType().name()));
                 re.setPercentage(r.getPercentage());
                 re.setFixedAmount(r.getFixedAmount());
                 re.setPriority(r.getPriority());
@@ -108,7 +111,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                         .splitRuleId(entity.getId())
                         .recipientAccountId(re.getRecipientAccountId())
                         .recipientLabel(re.getRecipientLabel())
-                        .type(SplitRecipient.RecipientType.valueOf(re.getRecipientType().name()))
+                        .type(id.payu.wallet.domain.model.RecipientType.valueOf(re.getRecipientType().name()))
                         .percentage(re.getPercentage())
                         .fixedAmount(re.getFixedAmount())
                         .priority(re.getPriority())
@@ -120,7 +123,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                 .id(entity.getId())
                 .partnerId(entity.getPartnerId())
                 .ruleName(entity.getRuleName())
-                .splitType(SplitPaymentRule.SplitType.valueOf(entity.getSplitType().name()))
+                .splitType(id.payu.wallet.domain.model.SplitType.valueOf(entity.getSplitType().name()))
                 .currency(entity.getCurrency())
                 .active(entity.isActive())
                 .recipients(recipients)
@@ -141,7 +144,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         entity.setCurrency(domain.getCurrency());
         entity.setExternalReferenceId(domain.getExternalReferenceId());
         entity.setIdempotencyKey(domain.getIdempotencyKey());
-        entity.setStatus(SplitPaymentExecutionEntity.SplitExecutionStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(SplitExecutionStatus.valueOf(domain.getStatus().name()));
         entity.setDescription(domain.getDescription());
         entity.setCompletedAt(domain.getCompletedAt());
         entity.setFailedAt(domain.getFailedAt());
@@ -156,7 +159,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                 le.setRecipientAccountId(leg.getRecipientAccountId());
                 le.setRecipientLabel(leg.getRecipientLabel());
                 le.setAmount(leg.getAmount());
-                le.setStatus(SplitPaymentLegEntity.LegStatus.valueOf(leg.getStatus().name()));
+                le.setStatus(LegStatus.valueOf(leg.getStatus().name()));
                 le.setJournalEntryId(leg.getJournalEntryId());
                 le.setSettledAt(leg.getSettledAt());
                 legEntities.add(le);
@@ -174,7 +177,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                         .recipientAccountId(le.getRecipientAccountId())
                         .recipientLabel(le.getRecipientLabel())
                         .amount(le.getAmount())
-                        .status(SplitPaymentLeg.LegStatus.valueOf(le.getStatus().name()))
+                        .status(id.payu.wallet.domain.model.LegStatus.valueOf(le.getStatus().name()))
                         .journalEntryId(le.getJournalEntryId())
                         .settledAt(le.getSettledAt())
                         .createdAt(le.getCreatedAt())
@@ -190,7 +193,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                 .currency(entity.getCurrency())
                 .externalReferenceId(entity.getExternalReferenceId())
                 .idempotencyKey(entity.getIdempotencyKey())
-                .status(SplitPaymentExecution.SplitExecutionStatus.valueOf(entity.getStatus().name()))
+                        .status(id.payu.wallet.domain.model.SplitExecutionStatus.valueOf(entity.getStatus().name()))
                 .description(entity.getDescription())
                 .legs(legs)
                 .createdAt(entity.getCreatedAt())

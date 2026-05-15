@@ -4,11 +4,12 @@ import id.payu.commons.idempotency.Idempotent;
 import id.payu.partner.application.service.PaymentLinkService;
 import id.payu.partner.dto.PaymentLinkResponse;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * Public REST endpoint for payers to view payment link details.
@@ -36,7 +37,7 @@ public class PublicPaymentLinkController extends BaseController {
     @PostMapping("/{slug}/confirm")
     @Operation(summary = "Confirm payment on a payment link",
                description = "Called after payment is processed to mark the link as paid")
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "PaymentLink", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "PaymentLinkEntity", level = AuditLevel.INFO)
     @Idempotent(required = true)
     public ResponseEntity<ApiResponse<PaymentLinkResponse>> confirmPayment(
             @PathVariable String slug,

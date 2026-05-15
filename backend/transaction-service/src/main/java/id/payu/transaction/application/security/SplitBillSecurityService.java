@@ -1,6 +1,6 @@
 package id.payu.transaction.application.security;
 
-import id.payu.transaction.domain.model.SplitBill;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.dto.SplitBillResponse;
 import lombok.extern.slf4j.Slf4j;

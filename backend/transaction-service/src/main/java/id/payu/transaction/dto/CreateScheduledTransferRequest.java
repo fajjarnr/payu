@@ -1,13 +1,15 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import id.payu.transaction.domain.model.ScheduleType;
+import id.payu.transaction.domain.model.TransactionType;
 
 public class CreateScheduledTransferRequest {
     public CreateScheduledTransferRequest() {
@@ -36,8 +38,8 @@ public class CreateScheduledTransferRequest {
         private BigDecimal amount;
         private String currency;
         private String description;
-        private Transaction.TransactionType transferType;
-        private ScheduledTransfer.ScheduleType scheduleType;
+        private TransactionType transferType;
+        private ScheduleType scheduleType;
         private Instant startDate;
         private Instant endDate;
         private Integer frequencyDays;
@@ -64,11 +66,11 @@ public class CreateScheduledTransferRequest {
             this.description = description;
             return this;
         }
-        public CreateScheduledTransferRequestBuilder transferType(Transaction.TransactionType transferType) {
+        public CreateScheduledTransferRequestBuilder transferType(TransactionType transferType) {
             this.transferType = transferType;
             return this;
         }
-        public CreateScheduledTransferRequestBuilder scheduleType(ScheduledTransfer.ScheduleType scheduleType) {
+        public CreateScheduledTransferRequestBuilder scheduleType(ScheduleType scheduleType) {
             this.scheduleType = scheduleType;
             return this;
         }
@@ -181,19 +183,19 @@ public class CreateScheduledTransferRequest {
         this.occurrenceCount = occurrenceCount;
     }
 
-    public Transaction.TransactionType getTransferType() {
+    public TransactionType getTransferType() {
         return transferType;
     }
 
-    public void setTransferType(Transaction.TransactionType transferType) {
+    public void setTransferType(TransactionType transferType) {
         this.transferType = transferType;
     }
 
-    public ScheduledTransfer.ScheduleType getScheduleType() {
+    public ScheduleType getScheduleType() {
         return scheduleType;
     }
 
-    public void setScheduleType(ScheduledTransfer.ScheduleType scheduleType) {
+    public void setScheduleType(ScheduleType scheduleType) {
         this.scheduleType = scheduleType;
     }
 
@@ -213,10 +215,10 @@ public class CreateScheduledTransferRequest {
     private String description;
 
     @NotNull(message = "Transfer type is required")
-    private Transaction.TransactionType transferType;
+    private TransactionType transferType;
 
     @NotNull(message = "Schedule type is required")
-    private ScheduledTransfer.ScheduleType scheduleType;
+    private ScheduleType scheduleType;
 
     @NotNull(message = "Start date is required")
     private Instant startDate;

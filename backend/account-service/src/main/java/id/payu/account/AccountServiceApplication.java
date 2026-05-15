@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories(basePackages = {"id.payu.account.adapter.persistence.repository", "id.payu.account.repository"})
-@EntityScan(basePackages = {"id.payu.account.domain.model", "id.payu.account.entity"})
+@EntityScan(basePackages = {"id.payu.account.adapter.persistence.entity", "id.payu.account.entity"})
 @SpringBootApplication(exclude = {OAuth2ResourceServerAutoConfiguration.class})
 @EnableFeignClients
 public class AccountServiceApplication {

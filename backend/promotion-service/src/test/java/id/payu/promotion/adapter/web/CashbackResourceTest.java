@@ -144,7 +144,7 @@ class CashbackResourceTest {
             .get("/" + nonExistentId)
             .then()
             .statusCode(404)
-            .body("message", equalTo("Cashback not found"));
+            .body("message", equalTo("CashbackEntity not found"));
     }
 
     @Test

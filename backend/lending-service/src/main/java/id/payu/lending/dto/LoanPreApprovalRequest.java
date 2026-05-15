@@ -9,13 +9,14 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import id.payu.lending.domain.model.LoanType;
 
 public record LoanPreApprovalRequest(
         @NotNull(message = "User ID is required")
         UUID userId,
 
         @NotNull(message = "Loan type is required")
-        Loan.LoanType loanType,
+        LoanType loanType,
 
         @NotNull(message = "Principal amount is required")
         @Positive(message = "Principal amount must be positive")

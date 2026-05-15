@@ -1,6 +1,6 @@
 package id.payu.billing.domain.port.in;
 
-import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 import id.payu.billing.dto.CreatePaymentRequest;
 
 /**
@@ -11,5 +11,5 @@ public interface PayBillUseCase {
     /**
      * Create and process a bill payment.
      */
-    BillPayment createPayment(CreatePaymentRequest request);
+    BillPaymentEntity createPayment(CreatePaymentRequest request);
 }

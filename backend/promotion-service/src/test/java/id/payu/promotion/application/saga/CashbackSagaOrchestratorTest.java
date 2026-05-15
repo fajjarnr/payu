@@ -2,7 +2,7 @@ package id.payu.promotion.application.saga;
 
 import id.payu.promotion.adapter.client.WalletCreditException;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.saga.model.SagaResult;
@@ -73,7 +73,7 @@ class CashbackSagaOrchestratorTest {
         );
 
         CashbackSagaContext context = new CashbackSagaContext(request);
-        Cashback savedCashback = createTestCashback(UUID.randomUUID(), new BigDecimal("20.00"));
+        CashbackEntity savedCashback = createTestCashback(UUID.randomUUID(), new BigDecimal("20.00"));
 
         // Mock wallet credit success
         when(walletServicePort.creditWallet(any(), any(), any(), any()))
@@ -86,7 +86,7 @@ class CashbackSagaOrchestratorTest {
             .thenReturn(Optional.empty());
 
         // Mock cashback save
-        when(cashbackRepository.save(any(Cashback.class)))
+        when(cashbackRepository.save(any(CashbackEntity.class)))
             .thenReturn(savedCashback);
 
         // When
@@ -102,14 +102,14 @@ class CashbackSagaOrchestratorTest {
             eq(TEST_ACCOUNT_ID),
             eq(new BigDecimal("20.00")),
             eq(TEST_TRANSACTION_ID),
-            contains("Cashback")
+            contains("CashbackEntity")
         );
 
         // Verify cashback was recorded with CREDITED status
-        ArgumentCaptor<Cashback> cashbackCaptor = ArgumentCaptor.forClass(Cashback.class);
+        ArgumentCaptor<CashbackEntity> cashbackCaptor = ArgumentCaptor.forClass(CashbackEntity.class);
         verify(cashbackRepository).save(cashbackCaptor.capture());
-        Cashback capturedCashback = cashbackCaptor.getValue();
-        assertEquals(Cashback.Status.CREDITED, capturedCashback.getStatus());
+        CashbackEntity capturedCashback = cashbackCaptor.getValue();
+        assertEquals(CashbackEntity.Status.CREDITED, capturedCashback.getStatus());
         assertNotNull(capturedCashback.getCreditedAt());
     }
 
@@ -149,7 +149,7 @@ class CashbackSagaOrchestratorTest {
         verify(walletServicePort).creditWallet(any(), any(), any(), any());
 
         // Verify cashback was NOT recorded
-        verify(cashbackRepository, never()).save(any(Cashback.class));
+        verify(cashbackRepository, never()).save(any(CashbackEntity.class));
     }
 
     @Test
@@ -185,7 +185,7 @@ class CashbackSagaOrchestratorTest {
         assertEquals("CREDIT_WALLET", result.getErrorStep());
 
         // Verify cashback was NOT recorded
-        verify(cashbackRepository, never()).save(any(Cashback.class));
+        verify(cashbackRepository, never()).save(any(CashbackEntity.class));
     }
 
     @Test
@@ -202,7 +202,7 @@ class CashbackSagaOrchestratorTest {
 
         CashbackSagaContext context = new CashbackSagaContext(request);
         UUID cashbackId = UUID.randomUUID();
-        Cashback savedCashback = createTestCashback(cashbackId, new BigDecimal("20.00"));
+        CashbackEntity savedCashback = createTestCashback(cashbackId, new BigDecimal("20.00"));
 
         // Mock wallet credit success
         when(walletServicePort.creditWallet(any(), any(), any(), any()))
@@ -215,7 +215,7 @@ class CashbackSagaOrchestratorTest {
             .thenReturn(Optional.empty());
 
         // First save succeeds, then we simulate failure in the flow
-        when(cashbackRepository.save(any(Cashback.class)))
+        when(cashbackRepository.save(any(CashbackEntity.class)))
             .thenReturn(savedCashback)
             .thenThrow(new RuntimeException("Database error"));
 
@@ -285,7 +285,7 @@ class CashbackSagaOrchestratorTest {
     @Test
     void testSaga_Atomicity_WalletCreditMustSucceedBeforeCashbackRecord() {
         // This test verifies the core requirement of BUG-BE-062:
-        // Cashback status should only be CREDITED after wallet credit succeeds
+        // CashbackEntity status should only be CREDITED after wallet credit succeeds
 
         // Given
         CreateCashbackRequest request = new CreateCashbackRequest(
@@ -298,7 +298,7 @@ class CashbackSagaOrchestratorTest {
         );
 
         CashbackSagaContext context = new CashbackSagaContext(request);
-        Cashback savedCashback = createTestCashback(UUID.randomUUID(), new BigDecimal("20.00"));
+        CashbackEntity savedCashback = createTestCashback(UUID.randomUUID(), new BigDecimal("20.00"));
 
         // Mock wallet credit success
         when(walletServicePort.creditWallet(any(), any(), any(), any()))
@@ -311,7 +311,7 @@ class CashbackSagaOrchestratorTest {
             .thenReturn(Optional.empty());
 
         // Mock cashback save
-        when(cashbackRepository.save(any(Cashback.class)))
+        when(cashbackRepository.save(any(CashbackEntity.class)))
             .thenReturn(savedCashback);
 
         // When
@@ -323,17 +323,17 @@ class CashbackSagaOrchestratorTest {
         // Verify the order: wallet credit happens before cashback record
         var inOrder = inOrder(walletServicePort, cashbackRepository);
         inOrder.verify(walletServicePort).creditWallet(any(), any(), any(), any());
-        inOrder.verify(cashbackRepository).save(any(Cashback.class));
+        inOrder.verify(cashbackRepository).save(any(CashbackEntity.class));
     }
 
-    private Cashback createTestCashback(UUID id, BigDecimal amount) {
-        Cashback cashback = new Cashback();
+    private CashbackEntity createTestCashback(UUID id, BigDecimal amount) {
+        CashbackEntity cashback = new CashbackEntity();
         cashback.setId(id);
         cashback.setAccountId(TEST_ACCOUNT_ID);
         cashback.setTransactionId(TEST_TRANSACTION_ID);
         cashback.setTransactionAmount(new BigDecimal("1000.00"));
         cashback.setCashbackAmount(amount);
-        cashback.setStatus(Cashback.Status.CREDITED);
+        cashback.setStatus(CashbackEntity.Status.CREDITED);
         cashback.setMerchantCode("MERCHANT001");
         cashback.setCategoryCode("GROCERY");
         return cashback;

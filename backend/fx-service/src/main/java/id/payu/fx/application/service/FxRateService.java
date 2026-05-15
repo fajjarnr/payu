@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import id.payu.fx.domain.model.ConversionStatus;
 
 @Service
 public class FxRateService implements FxRateUseCase {
@@ -112,7 +113,7 @@ public class FxRateService implements FxRateUseCase {
                 .exchangeRate(rate.getRate())
                 .fee(fee)
                 .conversionDate(LocalDateTime.now())
-                .status(FxConversion.ConversionStatus.COMPLETED)
+                .status(ConversionStatus.COMPLETED)
                 .build();
         
         conversion.markCompleted();

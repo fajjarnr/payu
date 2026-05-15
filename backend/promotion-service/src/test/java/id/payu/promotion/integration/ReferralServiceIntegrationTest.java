@@ -1,8 +1,8 @@
 package id.payu.promotion.integration;
 
-import id.payu.promotion.domain.LoyaltyPoints;
-import id.payu.promotion.domain.Referral;
-import id.payu.promotion.domain.Reward;
+import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
+import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
 import id.payu.promotion.dto.ReferralSummaryResponse;
@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service-level integration tests for Referral operations.
+ * Service-level integration tests for ReferralEntity operations.
  * Tests the complete data flow from service to database.
  *
  * NOTE: These tests require Docker to be running for PostgreSQL Testcontainers.
@@ -61,11 +61,11 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-001",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
-        Referral referral = referralService.createReferral(request);
+        ReferralEntity referral = referralService.createReferral(request);
 
         Assertions.assertNotNull(referral.getId());
         Assertions.assertEquals("acc-referrer-001", referral.getReferrerAccountId());
@@ -73,14 +73,14 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(8, referral.getReferralCode().length()); // 8-character code
         Assertions.assertEquals(new BigDecimal("50000"), referral.getReferrerReward());
         Assertions.assertEquals(new BigDecimal("25000"), referral.getRefereeReward());
-        Assertions.assertEquals(Referral.RewardType.CASHBACK, referral.getRewardType());
-        Assertions.assertEquals(Referral.Status.PENDING, referral.getStatus());
+        Assertions.assertEquals(ReferralEntity.RewardType.CASHBACK, referral.getRewardType());
+        Assertions.assertEquals(ReferralEntity.Status.PENDING, referral.getStatus());
         Assertions.assertNull(referral.getRefereeAccountId());
         Assertions.assertNull(referral.getCompletedAt());
         Assertions.assertNotNull(referral.getCreatedAt());
 
         // Verify persistence by fetching from database
-        Optional<Referral> fetched = referralService.getReferral(referral.getId());
+        Optional<ReferralEntity> fetched = referralService.getReferral(referral.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("acc-referrer-001", fetched.get().getReferrerAccountId());
     }
@@ -91,13 +91,13 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-002",
             new BigDecimal("100"), // 100 points
             new BigDecimal("50"),  // 50 points
-            Referral.RewardType.POINTS,
+            ReferralEntity.RewardType.POINTS,
             LocalDateTime.now().plusMonths(6)
         );
 
-        Referral referral = referralService.createReferral(request);
+        ReferralEntity referral = referralService.createReferral(request);
 
-        Assertions.assertEquals(Referral.RewardType.POINTS, referral.getRewardType());
+        Assertions.assertEquals(ReferralEntity.RewardType.POINTS, referral.getRewardType());
         Assertions.assertEquals(new BigDecimal("100"), referral.getReferrerReward());
         Assertions.assertEquals(new BigDecimal("50"), referral.getRefereeReward());
     }
@@ -108,11 +108,11 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-003",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             null // No expiry date
         );
 
-        Referral referral = referralService.createReferral(request);
+        ReferralEntity referral = referralService.createReferral(request);
 
         Assertions.assertNull(referral.getExpiryDate());
     }
@@ -121,19 +121,19 @@ class ReferralServiceIntegrationTest {
     void testCreateReferral_MultipleReferralsForSameReferrer_ShouldGenerateDifferentCodes() {
         String referrerId = "acc-multi-referral";
 
-        Referral referral1 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId,
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
-        Referral referral2 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral2 = referralService.createReferral(new CreateReferralRequest(
             referrerId,
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -154,11 +154,11 @@ class ReferralServiceIntegrationTest {
             "acc-cashback-referrer",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
-        Referral referral = referralService.createReferral(createRequest);
+        ReferralEntity referral = referralService.createReferral(createRequest);
 
         // Complete referral
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
@@ -166,24 +166,24 @@ class ReferralServiceIntegrationTest {
             "acc-cashback-referee"
         );
 
-        Referral completed = referralService.completeReferral(completeRequest);
+        ReferralEntity completed = referralService.completeReferral(completeRequest);
 
-        Assertions.assertEquals(Referral.Status.COMPLETED, completed.getStatus());
+        Assertions.assertEquals(ReferralEntity.Status.COMPLETED, completed.getStatus());
         Assertions.assertEquals("acc-cashback-referee", completed.getRefereeAccountId());
         Assertions.assertNotNull(completed.getCompletedAt());
 
         // Verify referrer reward
-        List<Reward> referrerRewards = rewardRepository.findByAccountId("acc-cashback-referrer");
+        List<RewardEntity> referrerRewards = rewardRepository.findByAccountId("acc-cashback-referrer");
         Assertions.assertFalse(referrerRewards.isEmpty());
         Assertions.assertTrue(referrerRewards.stream()
-            .anyMatch(r -> r.getType() == Reward.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("50000")) == 0));
 
         // Verify referee reward
-        List<Reward> refereeRewards = rewardRepository.findByAccountId("acc-cashback-referee");
+        List<RewardEntity> refereeRewards = rewardRepository.findByAccountId("acc-cashback-referee");
         Assertions.assertFalse(refereeRewards.isEmpty());
         Assertions.assertTrue(refereeRewards.stream()
-            .anyMatch(r -> r.getType() == Reward.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("25000")) == 0));
     }
 
@@ -194,11 +194,11 @@ class ReferralServiceIntegrationTest {
             "acc-points-referrer",
             new BigDecimal("100"),
             new BigDecimal("50"),
-            Referral.RewardType.POINTS,
+            ReferralEntity.RewardType.POINTS,
             LocalDateTime.now().plusMonths(6)
         );
 
-        Referral referral = referralService.createReferral(createRequest);
+        ReferralEntity referral = referralService.createReferral(createRequest);
 
         // Complete referral
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
@@ -206,22 +206,22 @@ class ReferralServiceIntegrationTest {
             "acc-points-referee"
         );
 
-        Referral completed = referralService.completeReferral(completeRequest);
+        ReferralEntity completed = referralService.completeReferral(completeRequest);
 
-        Assertions.assertEquals(Referral.Status.COMPLETED, completed.getStatus());
+        Assertions.assertEquals(ReferralEntity.Status.COMPLETED, completed.getStatus());
 
         // Verify referrer points
-        List<LoyaltyPoints> referrerPoints = loyaltyPointsRepository.findByAccountId("acc-points-referrer");
+        List<LoyaltyPointsEntity> referrerPoints = loyaltyPointsRepository.findByAccountId("acc-points-referrer");
         Assertions.assertFalse(referrerPoints.isEmpty());
         Assertions.assertTrue(referrerPoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 100));
 
         // Verify referee points
-        List<LoyaltyPoints> refereePoints = loyaltyPointsRepository.findByAccountId("acc-points-referee");
+        List<LoyaltyPointsEntity> refereePoints = loyaltyPointsRepository.findByAccountId("acc-points-referee");
         Assertions.assertFalse(refereePoints.isEmpty());
         Assertions.assertTrue(refereePoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 50));
     }
 
@@ -244,11 +244,11 @@ class ReferralServiceIntegrationTest {
             "acc-already-completed",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
-        Referral referral = referralService.createReferral(createRequest);
+        ReferralEntity referral = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             referral.getReferralCode(),
@@ -275,11 +275,11 @@ class ReferralServiceIntegrationTest {
             "acc-expired-referrer",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().minusDays(1) // Expired yesterday
         );
 
-        Referral referral = referralService.createReferral(createRequest);
+        ReferralEntity referral = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             referral.getReferralCode(),
@@ -291,9 +291,9 @@ class ReferralServiceIntegrationTest {
         });
 
         // Verify status was updated to EXPIRED
-        Optional<Referral> fetched = referralService.getReferral(referral.getId());
+        Optional<ReferralEntity> fetched = referralService.getReferral(referral.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals(Referral.Status.EXPIRED, fetched.get().getStatus());
+        Assertions.assertEquals(ReferralEntity.Status.EXPIRED, fetched.get().getStatus());
     }
 
     // ==================== GET REFERRAL TESTS ====================
@@ -304,13 +304,13 @@ class ReferralServiceIntegrationTest {
             "acc-get-referral",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
-        Referral created = referralService.createReferral(request);
+        ReferralEntity created = referralService.createReferral(request);
 
-        Optional<Referral> fetched = referralService.getReferral(created.getId());
+        Optional<ReferralEntity> fetched = referralService.getReferral(created.getId());
 
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("acc-get-referral", fetched.get().getReferrerAccountId());
@@ -318,7 +318,7 @@ class ReferralServiceIntegrationTest {
 
     @Test
     void testGetReferral_WithInvalidId_ShouldReturnEmpty() {
-        Optional<Referral> fetched = referralService.getReferral(UUID.randomUUID());
+        Optional<ReferralEntity> fetched = referralService.getReferral(UUID.randomUUID());
 
         Assertions.assertTrue(fetched.isEmpty());
     }
@@ -329,13 +329,13 @@ class ReferralServiceIntegrationTest {
             "acc-by-code",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
-        Referral created = referralService.createReferral(request);
+        ReferralEntity created = referralService.createReferral(request);
 
-        Optional<Referral> fetched = referralService.getReferralByCode(created.getReferralCode());
+        Optional<ReferralEntity> fetched = referralService.getReferralByCode(created.getReferralCode());
 
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals(created.getReferralCode(), fetched.get().getReferralCode());
@@ -343,7 +343,7 @@ class ReferralServiceIntegrationTest {
 
     @Test
     void testGetReferralByCode_WithInvalidCode_ShouldReturnEmpty() {
-        Optional<Referral> fetched = referralService.getReferralByCode("INVALID-CODE");
+        Optional<ReferralEntity> fetched = referralService.getReferralByCode("INVALID-CODE");
 
         Assertions.assertTrue(fetched.isEmpty());
     }
@@ -357,18 +357,18 @@ class ReferralServiceIntegrationTest {
         // Create multiple referrals
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
-        List<Referral> referrals = referralService.getReferralsByReferrer(referrerId);
+        List<ReferralEntity> referrals = referralService.getReferralsByReferrer(referrerId);
 
         Assertions.assertEquals(3, referrals.size());
         Assertions.assertTrue(referrals.stream().allMatch(r -> r.getReferrerAccountId().equals(referrerId)));
@@ -376,7 +376,7 @@ class ReferralServiceIntegrationTest {
 
     @Test
     void testGetReferralsByReferrer_WithNoReferrals_ShouldReturnEmpty() {
-        List<Referral> referrals = referralService.getReferralsByReferrer("acc-no-referrals");
+        List<ReferralEntity> referrals = referralService.getReferralsByReferrer("acc-no-referrals");
 
         Assertions.assertTrue(referrals.isEmpty());
     }
@@ -386,9 +386,9 @@ class ReferralServiceIntegrationTest {
         String referrerId = "acc-mixed-status";
 
         // Create first referral and complete it
-        Referral referral1 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.completeReferral(new CompleteReferralRequest(
             referral1.getReferralCode(), "acc-referee-1"
@@ -397,14 +397,14 @@ class ReferralServiceIntegrationTest {
         // Create second referral (still pending)
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
-        List<Referral> referrals = referralService.getReferralsByReferrer(referrerId);
+        List<ReferralEntity> referrals = referralService.getReferralsByReferrer(referrerId);
 
         Assertions.assertEquals(2, referrals.size());
-        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == Referral.Status.COMPLETED));
-        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == Referral.Status.PENDING));
+        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralEntity.Status.COMPLETED));
+        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralEntity.Status.PENDING));
     }
 
     // ==================== REFERRAL SUMMARY TESTS ====================
@@ -414,9 +414,9 @@ class ReferralServiceIntegrationTest {
         String referrerId = "acc-summary-test";
 
         // Create 3 referrals
-        Referral referral1 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         // Complete first referral
@@ -427,11 +427,11 @@ class ReferralServiceIntegrationTest {
         // Create 2 more pending referrals
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary = referralService.getReferralSummary(referrerId);
@@ -456,18 +456,18 @@ class ReferralServiceIntegrationTest {
     void testGetReferralSummary_ShouldReturnLatestReferralCode() {
         String referrerId = "acc-latest-code";
 
-        Referral referral1 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary1 = referralService.getReferralSummary(referrerId);
         Assertions.assertEquals(referral1.getReferralCode(), summary1.referralCode());
 
         // Create another referral
-        Referral referral2 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral2 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary2 = referralService.getReferralSummary(referrerId);
@@ -482,11 +482,11 @@ class ReferralServiceIntegrationTest {
         List<String> codes = new java.util.ArrayList<>();
 
         for (int i = 0; i < 100; i++) {
-            Referral referral = referralService.createReferral(new CreateReferralRequest(
+            ReferralEntity referral = referralService.createReferral(new CreateReferralRequest(
                 "acc-unique-" + i,
                 new BigDecimal("10000"),
                 new BigDecimal("5000"),
-                Referral.RewardType.CASHBACK,
+                ReferralEntity.RewardType.CASHBACK,
                 LocalDateTime.now().plusMonths(3)
             ));
             codes.add(referral.getReferralCode());
@@ -499,11 +499,11 @@ class ReferralServiceIntegrationTest {
 
     @Test
     void testReferralCodeFormat_ShouldBe8Characters() {
-        Referral referral = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral = referralService.createReferral(new CreateReferralRequest(
             "acc-code-format",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -516,19 +516,19 @@ class ReferralServiceIntegrationTest {
     @Test
     void testMultipleReferrers_IndependentReferralPrograms() {
         // Create referrals for different referrers
-        Referral referral1 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             "acc-referrer-A",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
-        Referral referral2 = referralService.createReferral(new CreateReferralRequest(
+        ReferralEntity referral2 = referralService.createReferral(new CreateReferralRequest(
             "acc-referrer-B",
             new BigDecimal("30000"),
             new BigDecimal("15000"),
-            Referral.RewardType.CASHBACK,
+            ReferralEntity.RewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -542,12 +542,12 @@ class ReferralServiceIntegrationTest {
         ));
 
         // Verify referrer A got 50000
-        List<Reward> rewardsA = rewardRepository.findByAccountId("acc-referrer-A");
+        List<RewardEntity> rewardsA = rewardRepository.findByAccountId("acc-referrer-A");
         Assertions.assertTrue(rewardsA.stream()
             .anyMatch(r -> r.getAmount().compareTo(new BigDecimal("50000")) == 0));
 
         // Verify referrer B got 30000
-        List<Reward> rewardsB = rewardRepository.findByAccountId("acc-referrer-B");
+        List<RewardEntity> rewardsB = rewardRepository.findByAccountId("acc-referrer-B");
         Assertions.assertTrue(rewardsB.stream()
             .anyMatch(r -> r.getAmount().compareTo(new BigDecimal("30000")) == 0));
     }

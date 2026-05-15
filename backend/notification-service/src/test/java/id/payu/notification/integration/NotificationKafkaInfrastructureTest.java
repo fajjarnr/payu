@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 /**
- * Lightweight Kafka Infrastructure Tests for Notification Service.
+ * Lightweight Kafka Infrastructure Tests for NotificationEntity Service.
  *
  * These tests verify the Kafka messaging infrastructure without requiring
  * the full Quarkus application context. This allows for faster, more focused
@@ -50,7 +50,7 @@ import static org.awaitility.Awaitility.await;
 @Testcontainers
 @Tag("integration")
 @EnabledIfSystemProperty(named = "docker.available", matches = "true", disabledReason = "Docker is not available")
-@DisplayName("Notification Service Kafka Infrastructure Tests")
+@DisplayName("NotificationEntity Service Kafka Infrastructure Tests")
 public class NotificationKafkaInfrastructureTest {
 
     @Container
@@ -642,7 +642,7 @@ public class NotificationKafkaInfrastructureTest {
     @Test
     @DisplayName("Should verify all required fields are present in notification event")
     void shouldVerifyAllRequiredFieldsInNotificationEvent() throws ExecutionException, InterruptedException {
-        // Given - Notification event with all required fields
+        // Given - NotificationEntity event with all required fields
         String notificationId = UUID.randomUUID().toString();
         String requiredFieldsEvent = String.format(
                 "{\"notificationId\":\"%s\",\"userId\":\"user006\",\"channel\":\"PUSH\",\"recipient\":\"device123\",\"title\":\"Test\",\"body\":\"Test body\",\"priority\":\"HIGH\",\"timestamp\":\"%s\"}",

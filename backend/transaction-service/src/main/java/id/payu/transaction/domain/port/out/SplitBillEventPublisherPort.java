@@ -1,20 +1,20 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 
 public interface SplitBillEventPublisherPort {
-    void publishSplitBillCreated(SplitBill splitBill);
+    void publishSplitBillCreated(SplitBillEntity splitBill);
 
-    void publishSplitBillActivated(SplitBill splitBill);
+    void publishSplitBillActivated(SplitBillEntity splitBill);
 
-    void publishSplitBillCancelled(SplitBill splitBill);
+    void publishSplitBillCancelled(SplitBillEntity splitBill);
 
-    void publishParticipantAdded(SplitBill splitBill, SplitBillParticipant participant);
+    void publishParticipantAdded(SplitBillEntity splitBill, SplitBillParticipantEntity participant);
 
-    void publishPaymentMade(SplitBill splitBill, SplitBillParticipant participant, java.math.BigDecimal amount);
+    void publishPaymentMade(SplitBillEntity splitBill, SplitBillParticipantEntity participant, java.math.BigDecimal amount);
 
-    void publishSplitBillCompleted(SplitBill splitBill);
+    void publishSplitBillCompleted(SplitBillEntity splitBill);
 
-    void publishSplitBillPaymentReminder(SplitBill splitBill, SplitBillParticipant participant);
+    void publishSplitBillPaymentReminder(SplitBillEntity splitBill, SplitBillParticipantEntity participant);
 }

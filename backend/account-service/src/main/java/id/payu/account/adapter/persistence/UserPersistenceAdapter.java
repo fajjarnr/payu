@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.account.entity.KycStatus;
+import id.payu.account.entity.UserStatus;
 
 @Component
 @RequiredArgsConstructor
@@ -67,8 +69,8 @@ public class UserPersistenceAdapter implements UserPersistencePort {
                 .phoneNumber(entity.getPhoneNumber())
                 .fullName(profileOpt.map(Profile::getFullName).orElse(null))
                 .nik(profileOpt.map(Profile::getNik).orElse(null))
-                .status(User.UserStatus.valueOf(entity.getStatus().name()))
-                .kycStatus(User.KycStatus.valueOf(entity.getKycStatus().name()))
+                .status(id.payu.account.domain.model.UserStatus.valueOf(entity.getStatus().name()))
+                .kycStatus(id.payu.account.domain.model.KycStatus.valueOf(entity.getKycStatus().name()))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -81,8 +83,8 @@ public class UserPersistenceAdapter implements UserPersistencePort {
                 .username(domain.getUsername())
                 .email(domain.getEmail())
                 .phoneNumber(domain.getPhoneNumber())
-                .status(id.payu.account.entity.User.UserStatus.valueOf(domain.getStatus().name()))
-                .kycStatus(id.payu.account.entity.User.KycStatus.valueOf(domain.getKycStatus().name()))
+                .status(id.payu.account.entity.UserStatus.valueOf(domain.getStatus().name()))
+                .kycStatus(id.payu.account.entity.KycStatus.valueOf(domain.getKycStatus().name()))
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();

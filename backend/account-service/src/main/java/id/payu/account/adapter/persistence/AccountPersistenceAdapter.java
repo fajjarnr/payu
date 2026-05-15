@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.account.entity.AccountStatus;
+import id.payu.account.entity.AccountType;
 
 /**
  * Adapter implementation for Account persistence operations.
@@ -74,36 +76,36 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
                 .build();
     }
 
-    private id.payu.account.domain.model.Account.AccountStatus mapStatus(id.payu.account.entity.Account.AccountStatus entityStatus) {
+    private id.payu.account.domain.model.AccountStatus mapStatus(id.payu.account.entity.AccountStatus entityStatus) {
         if (entityStatus == null) {
-            return id.payu.account.domain.model.Account.AccountStatus.PENDING_VERIFICATION;
+            return id.payu.account.domain.model.AccountStatus.PENDING_VERIFICATION;
         }
         return switch (entityStatus) {
-            case ACTIVE -> id.payu.account.domain.model.Account.AccountStatus.ACTIVE;
-            case CLOSED -> id.payu.account.domain.model.Account.AccountStatus.CLOSED;
-            case BLOCKED, DORMANT -> id.payu.account.domain.model.Account.AccountStatus.FROZEN;
+            case ACTIVE -> id.payu.account.domain.model.AccountStatus.ACTIVE;
+            case CLOSED -> id.payu.account.domain.model.AccountStatus.CLOSED;
+            case BLOCKED, DORMANT -> id.payu.account.domain.model.AccountStatus.FROZEN;
         };
     }
 
-    private id.payu.account.entity.Account.AccountStatus mapAccountStatus(id.payu.account.domain.model.Account.AccountStatus domainStatus) {
+    private id.payu.account.entity.AccountStatus mapAccountStatus(id.payu.account.domain.model.AccountStatus domainStatus) {
         if (domainStatus == null) {
-            return id.payu.account.entity.Account.AccountStatus.DORMANT;
+            return id.payu.account.entity.AccountStatus.DORMANT;
         }
         return switch (domainStatus) {
-            case ACTIVE -> id.payu.account.entity.Account.AccountStatus.ACTIVE;
-            case CLOSED -> id.payu.account.entity.Account.AccountStatus.CLOSED;
-            case FROZEN, PENDING_VERIFICATION -> id.payu.account.entity.Account.AccountStatus.BLOCKED;
+            case ACTIVE -> id.payu.account.entity.AccountStatus.ACTIVE;
+            case CLOSED -> id.payu.account.entity.AccountStatus.CLOSED;
+            case FROZEN, PENDING_VERIFICATION -> id.payu.account.entity.AccountStatus.BLOCKED;
         };
     }
 
-    private id.payu.account.entity.Account.AccountType mapAccountType(String accountType) {
+    private id.payu.account.entity.AccountType mapAccountType(String accountType) {
         if (accountType == null) {
-            return id.payu.account.entity.Account.AccountType.POCKET;
+            return id.payu.account.entity.AccountType.POCKET;
         }
         try {
-            return id.payu.account.entity.Account.AccountType.valueOf(accountType);
+            return id.payu.account.entity.AccountType.valueOf(accountType);
         } catch (IllegalArgumentException e) {
-            return id.payu.account.entity.Account.AccountType.POCKET;
+            return id.payu.account.entity.AccountType.POCKET;
         }
     }
 }

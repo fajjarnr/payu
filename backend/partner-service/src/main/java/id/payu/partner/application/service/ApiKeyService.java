@@ -2,10 +2,10 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.ApiKeyEntity;
-import id.payu.partner.domain.ApiKeyEntity.KeyEnvironment;
-import id.payu.partner.domain.ApiKeyEntity.KeyStatus;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
+import id.payu.partner.domain.KeyEnvironment;
+import id.payu.partner.domain.KeyStatus;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.ApiKeyDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class ApiKeyService {
      * Generate a new API key for a partner.
      */
     public ApiKeyDTO createApiKey(Long partnerId, ApiKeyDTO dto) {
-        Partner partner = findActivePartner(partnerId);
+        PartnerEntity partner = findActivePartner(partnerId);
         KeyEnvironment env = parseEnvironment(dto.getEnvironment());
 
         // Enforce max keys per partner per environment
@@ -65,7 +65,7 @@ public class ApiKeyService {
                 partnerId, List.of(KeyStatus.ACTIVE, KeyStatus.ROTATED));
         if (activeCount >= MAX_KEYS_PER_PARTNER) {
             throw new IllegalStateException(
-                    "Partner has reached maximum of " + MAX_KEYS_PER_PARTNER + " active keys");
+                    "PartnerEntity has reached maximum of " + MAX_KEYS_PER_PARTNER + " active keys");
         }
 
         // Generate key
@@ -215,9 +215,9 @@ public class ApiKeyService {
 
     // --- Internal helpers ---
 
-    private Partner findActivePartner(Long partnerId) {
-        Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Partner not found: " + partnerId));
+    private PartnerEntity findActivePartner(Long partnerId) {
+        PartnerEntity partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new IllegalArgumentException("PartnerEntity not found: " + partnerId));
         if (!partner.isActive()) {
             throw new IllegalStateException("Cannot manage keys for inactive partner");
         }

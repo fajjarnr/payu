@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * Application service for NIK verification operations.
@@ -35,7 +36,7 @@ public class NikVerificationService implements VerifyNikUseCase {
     @TimeLimiter(name = "dukcapilService")
     @Bulkhead(name = "dukcapilService", fallbackMethod = "verifyNikFallback")
     @Audited(
-        operation = Audited.Operation.READ,
+        operation = AuditOperation.READ,
         entityType = "NikVerification",
         maskData = true
     )

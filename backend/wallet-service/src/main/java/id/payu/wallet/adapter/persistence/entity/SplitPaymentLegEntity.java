@@ -44,10 +44,6 @@ public class SplitPaymentLegEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public enum LegStatus {
-        PENDING, CREDITED, FAILED, REVERSED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

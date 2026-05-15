@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 
 @Entity
 @Table(name = "loans")
@@ -26,7 +28,7 @@ public class LoanEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private id.payu.lending.domain.model.Loan.LoanType type;
+    private id.payu.lending.domain.model.LoanType type;
 
     @Column(name = "principal_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal principalAmount;
@@ -45,7 +47,7 @@ public class LoanEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private id.payu.lending.domain.model.Loan.LoanStatus status;
+    private id.payu.lending.domain.model.LoanStatus status;
 
     @Column(name = "purpose")
     private String purpose;
@@ -64,10 +66,10 @@ public class LoanEntity {
 
     public LoanEntity() {}
 
-    public LoanEntity(UUID id, String externalId, UUID userId, id.payu.lending.domain.model.Loan.LoanType type, 
+    public LoanEntity(UUID id, String externalId, UUID userId, id.payu.lending.domain.model.LoanType type, 
                       BigDecimal principalAmount, BigDecimal interestRate, Integer tenureMonths, 
                       BigDecimal monthlyInstallment, BigDecimal outstandingBalance, 
-                      id.payu.lending.domain.model.Loan.LoanStatus status, String purpose, 
+                      id.payu.lending.domain.model.LoanStatus status, String purpose, 
                       LocalDate disbursementDate, LocalDate maturityDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.externalId = externalId;
@@ -92,8 +94,8 @@ public class LoanEntity {
     public void setExternalId(String externalId) { this.externalId = externalId; }
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }
-    public id.payu.lending.domain.model.Loan.LoanType getType() { return type; }
-    public void setType(id.payu.lending.domain.model.Loan.LoanType type) { this.type = type; }
+    public id.payu.lending.domain.model.LoanType getType() { return type; }
+    public void setType(id.payu.lending.domain.model.LoanType type) { this.type = type; }
     public BigDecimal getPrincipalAmount() { return principalAmount; }
     public void setPrincipalAmount(BigDecimal principalAmount) { this.principalAmount = principalAmount; }
     public BigDecimal getInterestRate() { return interestRate; }
@@ -104,8 +106,8 @@ public class LoanEntity {
     public void setMonthlyInstallment(BigDecimal monthlyInstallment) { this.monthlyInstallment = monthlyInstallment; }
     public BigDecimal getOutstandingBalance() { return outstandingBalance; }
     public void setOutstandingBalance(BigDecimal outstandingBalance) { this.outstandingBalance = outstandingBalance; }
-    public id.payu.lending.domain.model.Loan.LoanStatus getStatus() { return status; }
-    public void setStatus(id.payu.lending.domain.model.Loan.LoanStatus status) { this.status = status; }
+    public id.payu.lending.domain.model.LoanStatus getStatus() { return status; }
+    public void setStatus(id.payu.lending.domain.model.LoanStatus status) { this.status = status; }
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
     public LocalDate getDisbursementDate() { return disbursementDate; }
@@ -128,13 +130,13 @@ public class LoanEntity {
         private UUID id;
         private String externalId;
         private UUID userId;
-        private id.payu.lending.domain.model.Loan.LoanType type;
+        private id.payu.lending.domain.model.LoanType type;
         private BigDecimal principalAmount;
         private BigDecimal interestRate;
         private Integer tenureMonths;
         private BigDecimal monthlyInstallment;
         private BigDecimal outstandingBalance;
-        private id.payu.lending.domain.model.Loan.LoanStatus status;
+        private id.payu.lending.domain.model.LoanStatus status;
         private String purpose;
         private LocalDate disbursementDate;
         private LocalDate maturityDate;
@@ -144,13 +146,13 @@ public class LoanEntity {
         public Builder id(UUID id) { this.id = id; return this; }
         public Builder externalId(String externalId) { this.externalId = externalId; return this; }
         public Builder userId(UUID userId) { this.userId = userId; return this; }
-        public Builder type(id.payu.lending.domain.model.Loan.LoanType type) { this.type = type; return this; }
+        public Builder type(id.payu.lending.domain.model.LoanType type) { this.type = type; return this; }
         public Builder principalAmount(BigDecimal principalAmount) { this.principalAmount = principalAmount; return this; }
         public Builder interestRate(BigDecimal interestRate) { this.interestRate = interestRate; return this; }
         public Builder tenureMonths(Integer tenureMonths) { this.tenureMonths = tenureMonths; return this; }
         public Builder monthlyInstallment(BigDecimal monthlyInstallment) { this.monthlyInstallment = monthlyInstallment; return this; }
         public Builder outstandingBalance(BigDecimal outstandingBalance) { this.outstandingBalance = outstandingBalance; return this; }
-        public Builder status(id.payu.lending.domain.model.Loan.LoanStatus status) { this.status = status; return this; }
+        public Builder status(id.payu.lending.domain.model.LoanStatus status) { this.status = status; return this; }
         public Builder purpose(String purpose) { this.purpose = purpose; return this; }
         public Builder disbursementDate(LocalDate disbursementDate) { this.disbursementDate = disbursementDate; return this; }
         public Builder maturityDate(LocalDate maturityDate) { this.maturityDate = maturityDate; return this; }

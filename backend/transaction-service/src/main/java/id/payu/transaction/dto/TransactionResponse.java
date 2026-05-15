@@ -1,6 +1,6 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO for Transaction API responses.
+ * DTO for TransactionEntity API responses.
  * BUG-BE-135 FIX: Prevents exposing internal domain model fields
  * (audit timestamps, deprecated BigDecimal fields, idempotency key, metadata)
  * directly via the API.
@@ -241,9 +241,9 @@ public class TransactionResponse {
     private java.util.List<String> tags;
 
     /**
-     * Map domain Transaction to API response DTO.
+     * Map domain TransactionEntity to API response DTO.
      */
-    public static TransactionResponse from(Transaction tx) {
+    public static TransactionResponse from(TransactionEntity tx) {
         return TransactionResponse.builder()
                 .id(tx.getId())
                 .referenceNumber(tx.getReferenceNumber())

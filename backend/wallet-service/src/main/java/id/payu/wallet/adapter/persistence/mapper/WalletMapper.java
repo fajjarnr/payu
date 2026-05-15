@@ -7,6 +7,7 @@ import id.payu.wallet.domain.model.Wallet;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import id.payu.wallet.adapter.persistence.entity.WalletStatus;
 
 /**
  * MapStruct mapper for Wallet entity-domain conversion.
@@ -55,30 +56,30 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
     Wallet toDomain(WalletEntity entity);
 
     /**
-     * Map WalletEntity.WalletStatus to Wallet.WalletStatus.
+     * Map WalletStatus to WalletStatus.
      *
      * @param status the entity status
      * @return the domain status
      */
     @Named("mapStatusToDomain")
-    default Wallet.WalletStatus mapStatusToDomain(WalletEntity.WalletStatus status) {
+    default WalletStatus mapStatusToDomain(WalletStatus status) {
         if (status == null) {
             return null;
         }
-        return Wallet.WalletStatus.valueOf(status.name());
+        return WalletStatus.valueOf(status.name());
     }
 
     /**
-     * Map Wallet.WalletStatus to WalletEntity.WalletStatus.
+     * Map WalletStatus to WalletStatus.
      *
      * @param status the domain status
      * @return the entity status
      */
     @Named("mapStatusToEntity")
-    default WalletEntity.WalletStatus mapStatusToEntity(Wallet.WalletStatus status) {
+    default WalletStatus mapStatusToEntity(WalletStatus status) {
         if (status == null) {
             return null;
         }
-        return WalletEntity.WalletStatus.valueOf(status.name());
+        return WalletStatus.valueOf(status.name());
     }
 }

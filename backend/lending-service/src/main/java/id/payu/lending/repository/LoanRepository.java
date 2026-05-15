@@ -1,7 +1,7 @@
 package id.payu.lending.repository;
 
 import id.payu.lending.domain.model.Loan;
-import id.payu.lending.domain.model.Loan.LoanStatus;
+import id.payu.lending.domain.model.LoanStatus;
 import id.payu.lending.entity.LoanEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

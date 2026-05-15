@@ -2,7 +2,7 @@ package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.service.AuthorizationService;
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.DisbursementUseCase;
 import id.payu.transaction.dto.*;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/disbursements")
 @RequiredArgsConstructor
-@Tag(name = "Disbursements", description = "Disbursement/Payout API")
+@Tag(name = "Disbursements", description = "DisbursementEntity/Payout API")
 @SecurityRequirement(name = "bearerAuth")
 public class DisbursementController {
 
@@ -59,7 +59,7 @@ public class DisbursementController {
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
-        Disbursement disbursement = disbursementUseCase.createDisbursement(
+        DisbursementEntity disbursement = disbursementUseCase.createDisbursement(
                 sourceAccountId,
                 Money.of(request.getAmount(), request.getCurrency()),
                 request.getBankCode(),
@@ -80,10 +80,10 @@ public class DisbursementController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get disbursement by ID", description = "Retrieves disbursement details and status")
     public ResponseEntity<DisbursementResponse> getDisbursement(
-            @PathVariable @Parameter(description = "Disbursement ID") UUID id) {
+            @PathVariable @Parameter(description = "DisbursementEntity ID") UUID id) {
 
-        Disbursement disbursement = disbursementUseCase.getDisbursement(id)
-                .orElseThrow(() -> new IllegalArgumentException("Disbursement not found: " + id));
+        DisbursementEntity disbursement = disbursementUseCase.getDisbursement(id)
+                .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }
@@ -94,8 +94,8 @@ public class DisbursementController {
     public ResponseEntity<DisbursementResponse> getDisbursementByIdempotencyKey(
             @PathVariable @Parameter(description = "Idempotency key") String key) {
 
-        Disbursement disbursement = disbursementUseCase.findByIdempotencyKey(key)
-                .orElseThrow(() -> new IllegalArgumentException("Disbursement not found for key: " + key));
+        DisbursementEntity disbursement = disbursementUseCase.findByIdempotencyKey(key)
+                .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found for key: " + key));
 
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }
@@ -112,7 +112,7 @@ public class DisbursementController {
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
-        List<Disbursement> disbursements = disbursementUseCase.listDisbursementsByAccount(
+        List<DisbursementEntity> disbursements = disbursementUseCase.listDisbursementsByAccount(
                 sourceAccountId, limit, offset);
 
         List<DisbursementResponse> responses = disbursements.stream()
@@ -127,7 +127,7 @@ public class DisbursementController {
     public ResponseEntity<DisbursementResponse> handleCallback(
             @Valid @RequestBody DisbursementCallbackRequest request) {
 
-        Disbursement disbursement;
+        DisbursementEntity disbursement;
         if ("COMPLETED".equalsIgnoreCase(request.getStatus())) {
             disbursement = disbursementUseCase.completeDisbursement(
                     request.getDisbursementId(),
@@ -149,7 +149,7 @@ public class DisbursementController {
     public ResponseEntity<DisbursementResponse> processDisbursement(
             @PathVariable UUID id) {
 
-        Disbursement disbursement = disbursementUseCase.processDisbursement(id);
+        DisbursementEntity disbursement = disbursementUseCase.processDisbursement(id);
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }
 

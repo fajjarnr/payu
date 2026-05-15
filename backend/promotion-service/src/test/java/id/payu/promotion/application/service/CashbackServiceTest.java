@@ -2,7 +2,7 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.application.saga.CashbackSagaContext;
 import id.payu.promotion.application.saga.CashbackSagaOrchestrator;
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.saga.model.SagaResult;
@@ -64,8 +64,8 @@ class CashbackServiceTest {
             "CASHBACK10"
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("20.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("20.00"), CashbackEntity.Status.CREDITED);
 
         CashbackSagaContext context = new CashbackSagaContext();
         context.setCashback(expectedCashback);
@@ -80,12 +80,12 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertNotNull(result);
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
-        assertEquals(Cashback.Status.CREDITED, result.getStatus());
+        assertEquals(CashbackEntity.Status.CREDITED, result.getStatus());
 
         verify(sagaOrchestrator).executeCashbackSaga(any(CashbackSagaContext.class));
     }
@@ -172,8 +172,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("20.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("20.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("2.0000"));
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -190,7 +190,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then — verify the mock's return value
         assertEquals(new BigDecimal("20.00"), result.getCashbackAmount());
@@ -214,8 +214,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("30.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("30.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("3.0000"));
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -232,7 +232,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("30.00"), result.getCashbackAmount());
@@ -256,8 +256,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("15.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("15.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.5000"));
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -274,7 +274,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("15.00"), result.getCashbackAmount());
@@ -298,8 +298,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("10.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("10.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.0000"));
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -316,7 +316,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("10.00"), result.getCashbackAmount());
@@ -340,8 +340,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("10.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("10.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.0000"));
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -357,7 +357,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("10.00"), result.getCashbackAmount());
@@ -376,8 +376,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("24.69"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("24.69"), CashbackEntity.Status.CREDITED);
 
         CashbackSagaContext context = new CashbackSagaContext();
         context.setCashback(expectedCashback);
@@ -392,7 +392,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("24.69"), result.getCashbackAmount());
@@ -410,8 +410,8 @@ class CashbackServiceTest {
             "PROMO2024"
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("20.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("20.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setCashbackCode("PROMO2024");
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -427,7 +427,7 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
         assertEquals("PROMO2024", result.getCashbackCode());
@@ -436,7 +436,7 @@ class CashbackServiceTest {
     @Test
     void testCreateCashback_StatusOnlyCreditedAfterWalletSuccess() {
         // Given - This test verifies the core bug fix:
-        // Cashback status should only be CREDITED after wallet credit succeeds
+        // CashbackEntity status should only be CREDITED after wallet credit succeeds
 
         CreateCashbackRequest request = new CreateCashbackRequest(
             TEST_ACCOUNT_ID,
@@ -447,8 +447,8 @@ class CashbackServiceTest {
             null
         );
 
-        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
-            new BigDecimal("20.00"), Cashback.Status.CREDITED);
+        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+            new BigDecimal("20.00"), CashbackEntity.Status.CREDITED);
         expectedCashback.setCreditedAt(java.time.LocalDateTime.now());
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -466,19 +466,19 @@ class CashbackServiceTest {
             .thenReturn(successResult);
 
         // When
-        Cashback result = cashbackService.createCashback(request);
+        CashbackEntity result = cashbackService.createCashback(request);
 
         // Then
-        assertEquals(Cashback.Status.CREDITED, result.getStatus());
+        assertEquals(CashbackEntity.Status.CREDITED, result.getStatus());
         assertNotNull(result.getCreditedAt());
 
         // Verify the saga context indicates both steps succeeded
         assertTrue(context.isWalletCredited(), "Wallet should be credited");
-        assertTrue(context.isCashbackRecorded(), "Cashback should be recorded");
+        assertTrue(context.isCashbackRecorded(), "CashbackEntity should be recorded");
     }
 
-    private Cashback createTestCashback(UUID id, String accountId, BigDecimal amount, Cashback.Status status) {
-        Cashback cashback = new Cashback();
+    private CashbackEntity createTestCashback(UUID id, String accountId, BigDecimal amount, CashbackEntity.Status status) {
+        CashbackEntity cashback = new CashbackEntity();
         cashback.setId(id);
         cashback.setAccountId(accountId);
         cashback.setTransactionId(TEST_TRANSACTION_ID);

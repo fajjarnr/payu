@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.fx.domain.model.ConversionStatus;
 
 /**
  * FX Conversion application service.
@@ -46,7 +47,7 @@ public class FxConversionService implements FxConversionUseCase {
         BigDecimal convertedAmount = conversion.getFromAmount().multiply(rate.getRate());
         conversion.setToAmount(convertedAmount);
         conversion.setExchangeRate(rate.getRate());
-        conversion.setStatus(FxConversion.ConversionStatus.PENDING);
+        conversion.setStatus(ConversionStatus.PENDING);
         
         FxConversion saved = conversionRepository.save(conversion);
         String txId = saved.getId().toString();
@@ -106,7 +107,7 @@ public class FxConversionService implements FxConversionUseCase {
     public void reverseConversion(UUID conversionId) {
         FxConversion conversion = getConversion(conversionId);
         
-        if (conversion.getStatus() != FxConversion.ConversionStatus.COMPLETED) {
+        if (conversion.getStatus() != ConversionStatus.COMPLETED) {
             throw new IllegalStateException("Cannot reverse conversion with status: " + conversion.getStatus());
         }
         

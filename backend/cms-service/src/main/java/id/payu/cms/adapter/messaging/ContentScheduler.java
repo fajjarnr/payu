@@ -1,7 +1,8 @@
 package id.payu.cms.adapter.messaging;
 
 import id.payu.cms.application.service.ContentService;
-import id.payu.cms.domain.entity.Content;
+import id.payu.cms.adapter.persistence.entity.ContentEntity;
+import id.payu.cms.domain.entity.ContentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,7 +31,7 @@ public class ContentScheduler {
     public void activateScheduledContent() {
         log.info("Checking for scheduled content to activate");
 
-        List<Content> scheduledContent = contentService.getScheduledContentToActivate();
+        List<ContentEntity> scheduledContent = contentService.getScheduledContentToActivate();
 
         if (scheduledContent.isEmpty()) {
             log.debug("No scheduled content to activate");
@@ -38,7 +39,7 @@ public class ContentScheduler {
         }
 
         List<UUID> contentIds = scheduledContent.stream()
-            .map(Content::getId)
+            .map(ContentEntity::getId)
             .toList();
 
         log.info("Activating {} scheduled content items", contentIds.size());
@@ -46,7 +47,7 @@ public class ContentScheduler {
 
         // Publish events for newly activated content
         scheduledContent.forEach(content -> {
-            content.setStatus(Content.ContentStatus.ACTIVE);
+            content.setStatus(ContentStatus.ACTIVE);
             eventPublisher.publishContentPublished(content);
         });
     }
@@ -59,7 +60,7 @@ public class ContentScheduler {
     public void archiveExpiredContent() {
         log.info("Checking for expired content to archive");
 
-        List<Content> expiredContent = contentService.getExpiredActiveContent();
+        List<ContentEntity> expiredContent = contentService.getExpiredActiveContent();
 
         if (expiredContent.isEmpty()) {
             log.debug("No expired content to archive");
@@ -67,7 +68,7 @@ public class ContentScheduler {
         }
 
         List<UUID> contentIds = expiredContent.stream()
-            .map(Content::getId)
+            .map(ContentEntity::getId)
             .toList();
 
         log.info("Archiving {} expired content items", contentIds.size());

@@ -1,11 +1,12 @@
 package id.payu.billing.domain.port.in;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
-import id.payu.billing.domain.model.SubscriptionPlan;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.billing.domain.model.BillingInterval;
 
 /**
  * Input port for subscription and recurring billing use cases.
@@ -14,28 +15,28 @@ public interface SubscriptionUseCase {
 
     // --- Plan Management ---
 
-    SubscriptionPlan createPlan(String partnerId, String planName, String description,
-                                 SubscriptionPlan.BillingInterval interval,
+    SubscriptionPlanEntity createPlan(String partnerId, String planName, String description,
+                                 BillingInterval interval,
                                  java.math.BigDecimal price, String currency,
                                  int trialDays, int gracePeriodDays);
 
-    SubscriptionPlan getPlan(UUID planId);
+    SubscriptionPlanEntity getPlan(UUID planId);
 
-    List<SubscriptionPlan> getPlansByPartner(String partnerId);
+    List<SubscriptionPlanEntity> getPlansByPartner(String partnerId);
 
     void deactivatePlan(UUID planId);
 
-    // --- Subscription Lifecycle ---
+    // --- SubscriptionEntity Lifecycle ---
 
-    Subscription subscribe(String accountId, UUID planId, String externalReferenceId);
+    SubscriptionEntity subscribe(String accountId, UUID planId, String externalReferenceId);
 
-    Subscription getSubscription(UUID subscriptionId);
+    SubscriptionEntity getSubscription(UUID subscriptionId);
 
-    List<Subscription> getSubscriptionsByAccount(String accountId);
+    List<SubscriptionEntity> getSubscriptionsByAccount(String accountId);
 
-    List<Subscription> getSubscriptionsByPartner(String partnerId);
+    List<SubscriptionEntity> getSubscriptionsByPartner(String partnerId);
 
-    Subscription cancelSubscription(UUID subscriptionId, String reason);
+    SubscriptionEntity cancelSubscription(UUID subscriptionId, String reason);
 
     // --- Charging ---
 
@@ -52,5 +53,5 @@ public interface SubscriptionUseCase {
      */
     int processExpiredTrials();
 
-    List<SubscriptionCharge> getChargesBySubscription(UUID subscriptionId);
+    List<SubscriptionChargeEntity> getChargesBySubscription(UUID subscriptionId);
 }

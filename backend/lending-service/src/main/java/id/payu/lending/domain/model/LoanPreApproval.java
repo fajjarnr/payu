@@ -11,7 +11,7 @@ public class LoanPreApproval {
 
     private UUID id;
     private UUID userId;
-    private Loan.LoanType loanType;
+    private LoanType loanType;
     private BigDecimal requestedAmount;
     private BigDecimal maxApprovedAmount;
     private BigDecimal minInterestRate;
@@ -19,17 +19,11 @@ public class LoanPreApproval {
     private BigDecimal estimatedMonthlyPayment;
     private PreApprovalStatus status;
     private BigDecimal creditScore;
-    private CreditScore.RiskCategory riskCategory;
+    private RiskCategory riskCategory;
     private String reason;
     private LocalDate validUntil;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum PreApprovalStatus {
-        APPROVED,
-        CONDITIONALLY_APPROVED,
-        REJECTED
-    }
 
     public LoanPreApproval() {}
 
@@ -49,11 +43,11 @@ public class LoanPreApproval {
         this.userId = userId;
     }
 
-    public Loan.LoanType getLoanType() {
+    public LoanType getLoanType() {
         return loanType;
     }
 
-    public void setLoanType(Loan.LoanType loanType) {
+    public void setLoanType(LoanType loanType) {
         this.loanType = loanType;
     }
 
@@ -113,11 +107,11 @@ public class LoanPreApproval {
         this.creditScore = creditScore;
     }
 
-    public CreditScore.RiskCategory getRiskCategory() {
+    public RiskCategory getRiskCategory() {
         return riskCategory;
     }
 
-    public void setRiskCategory(CreditScore.RiskCategory riskCategory) {
+    public void setRiskCategory(RiskCategory riskCategory) {
         this.riskCategory = riskCategory;
     }
 

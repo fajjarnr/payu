@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.account.entity.BeneficiaryStatus;
 
 @RestController
 @RequestMapping("/api/v1/accounts/{accountId}/beneficiaries")
@@ -118,7 +119,7 @@ public class BeneficiaryController {
                 .accountNumber(request.getAccountNumber())
                 .accountName(accountName)
                 .nickname(request.getNickname())
-                .status(Beneficiary.BeneficiaryStatus.ACTIVE)
+                .status(BeneficiaryStatus.ACTIVE)
                 .verifiedAt(LocalDateTime.now())
                 .build();
 
@@ -168,7 +169,7 @@ public class BeneficiaryController {
                     .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
         }
 
-        beneficiary.setStatus(Beneficiary.BeneficiaryStatus.DELETED);
+        beneficiary.setStatus(BeneficiaryStatus.DELETED);
         beneficiary.setUpdatedAt(LocalDateTime.now());
         beneficiaryRepository.save(beneficiary);
 

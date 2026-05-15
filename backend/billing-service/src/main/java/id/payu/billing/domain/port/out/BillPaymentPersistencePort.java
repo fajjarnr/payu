@@ -1,12 +1,12 @@
 package id.payu.billing.domain.port.out;
 
-import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public interface BillPaymentPersistencePort {
-    BillPayment save(BillPayment payment);
-    Optional<BillPayment> findById(UUID id);
-    Optional<BillPayment> findByReferenceNumber(String referenceNumber);
+    BillPaymentEntity save(BillPaymentEntity payment);
+    Optional<BillPaymentEntity> findById(UUID id);
+    Optional<BillPaymentEntity> findByReferenceNumber(String referenceNumber);
 }

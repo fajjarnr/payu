@@ -55,7 +55,7 @@ public class ShardingConfig {
     private int maxQueryParallelism = 4;
 
     /**
-     * Partition key field name in the Transaction entity.
+     * Partition key field name in the TransactionEntity entity.
      */
     private String partitionKey = "senderAccountId";
 

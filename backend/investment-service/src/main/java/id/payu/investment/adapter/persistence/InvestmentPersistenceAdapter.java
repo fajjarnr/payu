@@ -18,6 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.investment.domain.model.AccountStatus;
+import id.payu.investment.domain.model.DepositStatus;
+import id.payu.investment.domain.model.FundStatus;
+import id.payu.investment.domain.model.FundType;
+import id.payu.investment.domain.model.InvestmentType;
+import id.payu.investment.domain.model.TransactionStatus;
+import id.payu.investment.domain.model.TransactionType;
 
 @Component
 @RequiredArgsConstructor
@@ -135,7 +142,7 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .totalBalance(entity.getTotalBalance())
                 .availableBalance(entity.getAvailableBalance())
                 .lockedBalance(entity.getLockedBalance())
-                .status(InvestmentAccount.AccountStatus.valueOf(entity.getStatus().name()))
+                .status(AccountStatus.valueOf(entity.getStatus().name()))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -148,7 +155,7 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .totalBalance(domain.getTotalBalance())
                 .availableBalance(domain.getAvailableBalance())
                 .lockedBalance(domain.getLockedBalance())
-                .status(InvestmentAccountEntity.AccountStatus.valueOf(domain.getStatus().name()))
+                .status(id.payu.investment.adapter.persistence.AccountStatus.valueOf(domain.getStatus().name()))
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();
@@ -164,7 +171,7 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .maturityAmount(entity.getMaturityAmount())
                 .startDate(entity.getStartDate())
                 .maturityDate(entity.getMaturityDate())
-                .status(Deposit.DepositStatus.valueOf(entity.getStatus().name()))
+                .status(DepositStatus.valueOf(entity.getStatus().name()))
                 .currency(entity.getCurrency())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -181,7 +188,7 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .maturityAmount(domain.getMaturityAmount())
                 .startDate(domain.getStartDate())
                 .maturityDate(domain.getMaturityDate())
-                .status(DepositEntity.DepositStatus.valueOf(domain.getStatus().name()))
+                .status(id.payu.investment.adapter.persistence.DepositStatus.valueOf(domain.getStatus().name()))
                 .currency(domain.getCurrency())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
@@ -193,12 +200,12 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
-                .type(MutualFund.FundType.valueOf(entity.getType().name()))
+                .type(FundType.valueOf(entity.getType().name()))
                 .navPerUnit(entity.getNavPerUnit())
                 .minimumInvestment(entity.getMinimumInvestment())
                 .managementFee(entity.getManagementFee())
                 .redemptionFee(entity.getRedemptionFee())
-                .status(MutualFund.FundStatus.valueOf(entity.getStatus().name()))
+                .status(FundStatus.valueOf(entity.getStatus().name()))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -209,12 +216,12 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .id(domain.getId())
                 .code(domain.getCode())
                 .name(domain.getName())
-                .type(MutualFundEntity.FundType.valueOf(domain.getType().name()))
+                .type(id.payu.investment.adapter.persistence.FundType.valueOf(domain.getType().name()))
                 .navPerUnit(domain.getNavPerUnit())
                 .minimumInvestment(domain.getMinimumInvestment())
                 .managementFee(domain.getManagementFee())
                 .redemptionFee(domain.getRedemptionFee())
-                .status(MutualFundEntity.FundStatus.valueOf(domain.getStatus().name()))
+                .status(id.payu.investment.adapter.persistence.FundStatus.valueOf(domain.getStatus().name()))
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();
@@ -254,15 +261,15 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
         return InvestmentTransaction.builder()
                 .id(entity.getId())
                 .accountId(entity.getAccountId())
-                .type(InvestmentTransaction.TransactionType.valueOf(entity.getType().name()))
-                .investmentType(InvestmentTransaction.InvestmentType.valueOf(entity.getInvestmentType().name()))
+                .type(TransactionType.valueOf(entity.getType().name()))
+                .investmentType(InvestmentType.valueOf(entity.getInvestmentType().name()))
                 .investmentId(entity.getInvestmentId())
                 .amount(entity.getAmount())
                 .price(entity.getPrice())
                 .units(entity.getUnits())
                 .fee(entity.getFee())
                 .currency(entity.getCurrency())
-                .status(InvestmentTransaction.TransactionStatus.valueOf(entity.getStatus().name()))
+                .status(TransactionStatus.valueOf(entity.getStatus().name()))
                 .referenceNumber(entity.getReferenceNumber())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -273,15 +280,15 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
         return InvestmentTransactionEntity.builder()
                 .id(domain.getId())
                 .accountId(domain.getAccountId())
-                .type(InvestmentTransactionEntity.TransactionType.valueOf(domain.getType().name()))
-                .investmentType(InvestmentTransactionEntity.InvestmentType.valueOf(domain.getInvestmentType().name()))
+                .type(id.payu.investment.adapter.persistence.TransactionType.valueOf(domain.getType().name()))
+                .investmentType(id.payu.investment.adapter.persistence.InvestmentType.valueOf(domain.getInvestmentType().name()))
                 .investmentId(domain.getInvestmentId())
                 .amount(domain.getAmount())
                 .price(domain.getPrice())
                 .units(domain.getUnits())
                 .fee(domain.getFee())
                 .currency(domain.getCurrency())
-                .status(InvestmentTransactionEntity.TransactionStatus.valueOf(domain.getStatus().name()))
+                .status(id.payu.investment.adapter.persistence.TransactionStatus.valueOf(domain.getStatus().name()))
                 .referenceNumber(domain.getReferenceNumber())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())

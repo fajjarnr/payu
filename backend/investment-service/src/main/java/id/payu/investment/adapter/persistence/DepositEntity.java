@@ -66,8 +66,4 @@ public class DepositEntity {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public enum DepositStatus {
-        ACTIVE, MATURED, WITHDRAWN, CANCELLED
-    }
 }

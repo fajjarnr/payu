@@ -33,11 +33,6 @@ public class WalletTransaction {
         this.createdAt = createdAt;
     }
 
-    public enum TransactionType {
-        CREDIT,
-        DEBIT
-    }
-
     public static WalletTransactionBuilder builder() {
         return new WalletTransactionBuilder();
     }

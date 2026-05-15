@@ -1,6 +1,7 @@
 package id.payu.cms.domain.port.out;
 
-import id.payu.cms.domain.entity.Content;
+import id.payu.cms.adapter.persistence.entity.ContentEntity;
+import id.payu.cms.domain.entity.ContentStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,27 +13,27 @@ import java.util.UUID;
  */
 public interface ContentPersistencePort {
 
-    Content save(Content content);
+    ContentEntity save(ContentEntity content);
 
-    Optional<Content> findById(UUID id);
+    Optional<ContentEntity> findById(UUID id);
 
-    List<Content> findAll(int page, int size, String sortBy, String sortDirection);
+    List<ContentEntity> findAll(int page, int size, String sortBy, String sortDirection);
 
     long count();
 
-    List<Content> findByContentType(String contentType);
+    List<ContentEntity> findByContentType(String contentType);
 
-    List<Content> findByStatus(Content.ContentStatus status);
+    List<ContentEntity> findByStatus(ContentStatus status);
 
-    List<Content> findActiveByContentType(String contentType, LocalDate currentDate);
+    List<ContentEntity> findActiveByContentType(String contentType, LocalDate currentDate);
 
     boolean existsByTitleIgnoreCase(String title);
 
     boolean existsById(UUID id);
 
-    List<Content> findScheduledToActivate(LocalDate currentDate);
+    List<ContentEntity> findScheduledToActivate(LocalDate currentDate);
 
-    List<Content> findActiveToArchive(LocalDate currentDate);
+    List<ContentEntity> findActiveToArchive(LocalDate currentDate);
 
     void deleteById(UUID id);
 }

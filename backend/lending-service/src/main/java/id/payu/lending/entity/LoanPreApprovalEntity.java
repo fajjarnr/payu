@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.LoanType;
+import id.payu.lending.domain.model.PreApprovalStatus;
+import id.payu.lending.domain.model.RiskCategory;
 
 @Entity
 @Table(name = "loan_pre_approvals")
@@ -23,7 +26,7 @@ public class LoanPreApprovalEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "loan_type", nullable = false)
-    private id.payu.lending.domain.model.Loan.LoanType loanType;
+    private id.payu.lending.domain.model.LoanType loanType;
 
     @Column(name = "requested_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal requestedAmount;
@@ -42,14 +45,14 @@ public class LoanPreApprovalEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus status;
+    private id.payu.lending.domain.model.PreApprovalStatus status;
 
     @Column(name = "credit_score", precision = 5, scale = 2)
     private BigDecimal creditScore;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "risk_category")
-    private id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory;
+    private id.payu.lending.domain.model.RiskCategory riskCategory;
 
     @Column(name = "reason")
     private String reason;
@@ -65,11 +68,11 @@ public class LoanPreApprovalEntity {
 
     public LoanPreApprovalEntity() {}
 
-    public LoanPreApprovalEntity(UUID id, UUID userId, id.payu.lending.domain.model.Loan.LoanType loanType, 
+    public LoanPreApprovalEntity(UUID id, UUID userId, id.payu.lending.domain.model.LoanType loanType, 
                                 BigDecimal requestedAmount, BigDecimal maxApprovedAmount, BigDecimal minInterestRate,
                                 Integer maxTenureMonths, BigDecimal estimatedMonthlyPayment,
-                                id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus status,
-                                BigDecimal creditScore, id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory,
+                                id.payu.lending.domain.model.PreApprovalStatus status,
+                                BigDecimal creditScore, id.payu.lending.domain.model.RiskCategory riskCategory,
                                 String reason, LocalDate validUntil, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
@@ -92,8 +95,8 @@ public class LoanPreApprovalEntity {
     public void setId(UUID id) { this.id = id; }
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }
-    public id.payu.lending.domain.model.Loan.LoanType getLoanType() { return loanType; }
-    public void setLoanType(id.payu.lending.domain.model.Loan.LoanType loanType) { this.loanType = loanType; }
+    public id.payu.lending.domain.model.LoanType getLoanType() { return loanType; }
+    public void setLoanType(id.payu.lending.domain.model.LoanType loanType) { this.loanType = loanType; }
     public BigDecimal getRequestedAmount() { return requestedAmount; }
     public void setRequestedAmount(BigDecimal requestedAmount) { this.requestedAmount = requestedAmount; }
     public BigDecimal getMaxApprovedAmount() { return maxApprovedAmount; }
@@ -104,12 +107,12 @@ public class LoanPreApprovalEntity {
     public void setMaxTenureMonths(Integer maxTenureMonths) { this.maxTenureMonths = maxTenureMonths; }
     public BigDecimal getEstimatedMonthlyPayment() { return estimatedMonthlyPayment; }
     public void setEstimatedMonthlyPayment(BigDecimal estimatedMonthlyPayment) { this.estimatedMonthlyPayment = estimatedMonthlyPayment; }
-    public id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus getStatus() { return status; }
-    public void setStatus(id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus status) { this.status = status; }
+    public id.payu.lending.domain.model.PreApprovalStatus getStatus() { return status; }
+    public void setStatus(id.payu.lending.domain.model.PreApprovalStatus status) { this.status = status; }
     public BigDecimal getCreditScore() { return creditScore; }
     public void setCreditScore(BigDecimal creditScore) { this.creditScore = creditScore; }
-    public id.payu.lending.domain.model.CreditScore.RiskCategory getRiskCategory() { return riskCategory; }
-    public void setRiskCategory(id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory) { this.riskCategory = riskCategory; }
+    public id.payu.lending.domain.model.RiskCategory getRiskCategory() { return riskCategory; }
+    public void setRiskCategory(id.payu.lending.domain.model.RiskCategory riskCategory) { this.riskCategory = riskCategory; }
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
     public LocalDate getValidUntil() { return validUntil; }
@@ -129,15 +132,15 @@ public class LoanPreApprovalEntity {
     public static class Builder {
         private UUID id;
         private UUID userId;
-        private id.payu.lending.domain.model.Loan.LoanType loanType;
+        private id.payu.lending.domain.model.LoanType loanType;
         private BigDecimal requestedAmount;
         private BigDecimal maxApprovedAmount;
         private BigDecimal minInterestRate;
         private Integer maxTenureMonths;
         private BigDecimal estimatedMonthlyPayment;
-        private id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus status;
+        private id.payu.lending.domain.model.PreApprovalStatus status;
         private BigDecimal creditScore;
-        private id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory;
+        private id.payu.lending.domain.model.RiskCategory riskCategory;
         private String reason;
         private LocalDate validUntil;
         private LocalDateTime createdAt;
@@ -145,15 +148,15 @@ public class LoanPreApprovalEntity {
 
         public Builder id(UUID id) { this.id = id; return this; }
         public Builder userId(UUID userId) { this.userId = userId; return this; }
-        public Builder loanType(id.payu.lending.domain.model.Loan.LoanType loanType) { this.loanType = loanType; return this; }
+        public Builder loanType(id.payu.lending.domain.model.LoanType loanType) { this.loanType = loanType; return this; }
         public Builder requestedAmount(BigDecimal requestedAmount) { this.requestedAmount = requestedAmount; return this; }
         public Builder maxApprovedAmount(BigDecimal maxApprovedAmount) { this.maxApprovedAmount = maxApprovedAmount; return this; }
         public Builder minInterestRate(BigDecimal minInterestRate) { this.minInterestRate = minInterestRate; return this; }
         public Builder maxTenureMonths(Integer maxTenureMonths) { this.maxTenureMonths = maxTenureMonths; return this; }
         public Builder estimatedMonthlyPayment(BigDecimal estimatedMonthlyPayment) { this.estimatedMonthlyPayment = estimatedMonthlyPayment; return this; }
-        public Builder status(id.payu.lending.domain.model.LoanPreApproval.PreApprovalStatus status) { this.status = status; return this; }
+        public Builder status(id.payu.lending.domain.model.PreApprovalStatus status) { this.status = status; return this; }
         public Builder creditScore(BigDecimal creditScore) { this.creditScore = creditScore; return this; }
-        public Builder riskCategory(id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory) { this.riskCategory = riskCategory; return this; }
+        public Builder riskCategory(id.payu.lending.domain.model.RiskCategory riskCategory) { this.riskCategory = riskCategory; return this; }
         public Builder reason(String reason) { this.reason = reason; return this; }
         public Builder validUntil(LocalDate validUntil) { this.validUntil = validUntil; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }

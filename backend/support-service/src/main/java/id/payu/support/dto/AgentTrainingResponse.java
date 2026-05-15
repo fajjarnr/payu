@@ -1,6 +1,6 @@
 package id.payu.support.dto;
 
-import id.payu.support.domain.AgentTraining.CompletionStatus;
+import id.payu.support.domain.CompletionStatus;
 import java.time.LocalDateTime;
 
 public record AgentTrainingResponse(

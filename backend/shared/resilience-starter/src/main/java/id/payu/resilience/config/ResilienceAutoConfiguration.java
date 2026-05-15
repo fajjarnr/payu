@@ -327,9 +327,9 @@ public class ResilienceAutoConfiguration {
     }
 
     private io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType toCircuitBreakerWindowType(
-            ResilienceProperties.SlidingWindowType windowType) {
+            SlidingWindowType windowType) {
         // In Resilience4j 2.x, use the enum directly
-        return windowType == ResilienceProperties.SlidingWindowType.COUNT_BASED
+        return windowType == SlidingWindowType.COUNT_BASED
                 ? io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
                 : io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
     }

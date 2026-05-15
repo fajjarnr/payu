@@ -13,7 +13,7 @@ import id.payu.api.common.response.PaginationInfo;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.InitiateTransferResponse;
@@ -21,7 +21,7 @@ import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.dto.TransactionResponse;
 import id.payu.transaction.dto.UpdateTransactionTagsRequest;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,9 +43,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
- * Transaction controller for PayU Digital Banking Platform.
+ * TransactionEntity controller for PayU Digital Banking Platform.
  * Handles fund transfers, QRIS payments, and transaction queries.
  */
 @RestController
@@ -116,7 +117,7 @@ public class TransactionController extends BaseController {
             String userId = extractUserId();
             UUID effectiveAccountId = accountId != null ? accountId : UUID.fromString(userId);
             var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
-            List<Transaction> transactions = transactionUseCase.getAccountTransactions(
+            List<TransactionEntity> transactions = transactionUseCase.getAccountTransactions(
                     effectiveAccountId, userId, pageable.getPageNumber(), pageable.getPageSize());
             List<TransactionResponse> responseList = transactions.stream()
                     .map(TransactionResponse::from).toList();
@@ -143,8 +144,8 @@ public class TransactionController extends BaseController {
      */
     @PostMapping("/transfer")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
-            entityType = "Transaction",
+            operation = id.payu.security.annotation.AuditOperation.TRANSFER,
+            entityType = "TransactionEntity",
             maskData = true,
             level = AuditLevel.INFO
     )
@@ -214,7 +215,7 @@ public class TransactionController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "Transaction found",
+                    description = "TransactionEntity found",
                     content = @Content(schema = @Schema(implementation = TransactionResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -223,22 +224,22 @@ public class TransactionController extends BaseController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
-                    description = "Transaction not found",
+                    description = "TransactionEntity not found",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
     @PreAuthorize("hasAuthority('read:transaction')")
     public ResponseEntity<ApiResponse<TransactionResponse>> getTransaction(
-            @Parameter(description = "Transaction ID", required = true)
+            @Parameter(description = "TransactionEntity ID", required = true)
             @PathVariable UUID transactionId
     ) {
         try {
             String userId = extractUserId();
-            Transaction transaction = transactionUseCase.getTransaction(transactionId, userId);
+            TransactionEntity transaction = transactionUseCase.getTransaction(transactionId, userId);
             // BUG-BE-135 FIX: Return DTO instead of domain entity
             return ok(TransactionResponse.from(transaction));
         } catch (BusinessException e) {
-            log.warn("Transaction not found: {}", transactionId);
+            log.warn("TransactionEntity not found: {}", transactionId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
@@ -308,7 +309,7 @@ public class TransactionController extends BaseController {
             var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
 
             // Get transactions (UseCase validates userId ownership)
-            List<Transaction> transactions = transactionUseCase.getAccountTransactions(
+            List<TransactionEntity> transactions = transactionUseCase.getAccountTransactions(
                     accountId,
                     userId,
                     pageable.getPageNumber(),
@@ -342,8 +343,8 @@ public class TransactionController extends BaseController {
      */
     @PostMapping("/qris/pay")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
-            entityType = "Transaction",
+            operation = id.payu.security.annotation.AuditOperation.TRANSFER,
+            entityType = "TransactionEntity",
             maskData = true,
             level = AuditLevel.INFO
     )
@@ -420,19 +421,19 @@ public class TransactionController extends BaseController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
-                    description = "Transaction not found",
+                    description = "TransactionEntity not found",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
     @PreAuthorize("hasAuthority('write:transaction')")
     public ResponseEntity<ApiResponse<TransactionResponse>> updateTransactionTags(
-            @Parameter(description = "Transaction ID", required = true)
+            @Parameter(description = "TransactionEntity ID", required = true)
             @PathVariable UUID transactionId,
             @Valid @RequestBody UpdateTransactionTagsRequest request
     ) {
         try {
             String userId = extractUserId();
-            Transaction transaction = transactionUseCase.updateTransactionTags(transactionId, userId, request.getTags());
+            TransactionEntity transaction = transactionUseCase.updateTransactionTags(transactionId, userId, request.getTags());
             return ok(TransactionResponse.from(transaction));
         } catch (BusinessException e) {
             log.warn("Failed to update transaction tags: {} - {}", transactionId, e.getMessage());

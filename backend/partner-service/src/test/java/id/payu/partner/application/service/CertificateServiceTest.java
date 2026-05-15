@@ -1,7 +1,7 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,22 +36,22 @@ public class CertificateServiceTest {
     @Mock
     private SnapBiSignatureService signatureService;
 
-    private Partner testPartner;
-    private PartnerCertificate testCertificate;
+    private PartnerEntity testPartner;
+    private PartnerCertificateEntity testCertificate;
     private KeyPair testKeyPair;
 
     @BeforeEach
     public void setUp() throws Exception {
-        testPartner = new Partner();
+        testPartner = new PartnerEntity();
         testPartner.setId(1L);
-        testPartner.setName("Test Partner");
+        testPartner.setName("Test PartnerEntity");
         testPartner.setEmail("test@example.com");
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         testKeyPair = keyPairGenerator.generateKeyPair();
 
-        testCertificate = new PartnerCertificate();
+        testCertificate = new PartnerCertificateEntity();
         testCertificate.setId(1L);
         testCertificate.setPartner(testPartner);
         testCertificate.setPublicKeyFingerprint("test-fingerprint");
@@ -67,7 +67,7 @@ public class CertificateServiceTest {
     public void testGenerateKeyPairAndStore() throws Exception {
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
 
-        PartnerCertificate cert = certificateService.generateKeyPairAndStore(1L, 365);
+        PartnerCertificateEntity cert = certificateService.generateKeyPairAndStore(1L, 365);
 
         assertNotNull(cert);
         assertEquals(testPartner, cert.getPartner());
@@ -87,7 +87,7 @@ public class CertificateServiceTest {
             certificateService.generateKeyPairAndStore(999L, 365);
         });
 
-        assertTrue(exception.getMessage().contains("Partner not found"));
+        assertTrue(exception.getMessage().contains("PartnerEntity not found"));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class CertificateServiceTest {
         when(certificateRepository.findActiveByPartnerId(1L))
                 .thenReturn(Optional.of(testCertificate));
 
-        Optional<PartnerCertificate> cert = certificateService.getActiveCertificate(1L);
+        Optional<PartnerCertificateEntity> cert = certificateService.getActiveCertificate(1L);
 
         assertTrue(cert.isPresent());
         assertEquals(testCertificate, cert.get());
@@ -106,7 +106,7 @@ public class CertificateServiceTest {
         when(certificateRepository.findActiveByPartnerId(1L))
                 .thenReturn(Optional.empty());
 
-        Optional<PartnerCertificate> cert = certificateService.getActiveCertificate(1L);
+        Optional<PartnerCertificateEntity> cert = certificateService.getActiveCertificate(1L);
 
         assertFalse(cert.isPresent());
     }
@@ -116,7 +116,7 @@ public class CertificateServiceTest {
         when(certificateRepository.findValidByPartnerId(1L))
                 .thenReturn(Optional.of(testCertificate));
 
-        Optional<PartnerCertificate> cert = certificateService.getValidCertificate(1L);
+        Optional<PartnerCertificateEntity> cert = certificateService.getValidCertificate(1L);
 
         assertTrue(cert.isPresent());
         assertEquals(testCertificate, cert.get());
@@ -127,7 +127,7 @@ public class CertificateServiceTest {
         when(certificateRepository.findByPartnerId(1L))
                 .thenReturn(List.of(testCertificate));
 
-        List<PartnerCertificate> certs = certificateService.getCertificatesByPartner(1L);
+        List<PartnerCertificateEntity> certs = certificateService.getCertificatesByPartner(1L);
 
         assertNotNull(certs);
         assertEquals(1, certs.size());
@@ -136,7 +136,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testGetExpiringCertificates() {
-        PartnerCertificate expiringCert = new PartnerCertificate();
+        PartnerCertificateEntity expiringCert = new PartnerCertificateEntity();
         expiringCert.setId(2L);
         expiringCert.setPartner(testPartner);
         expiringCert.setValidTo(LocalDateTime.now().plusDays(10));
@@ -145,7 +145,7 @@ public class CertificateServiceTest {
         when(certificateRepository.findExpiringSoon(1L, 30))
                 .thenReturn(List.of(expiringCert));
 
-        List<PartnerCertificate> certs = certificateService.getExpiringCertificates(1L, 30);
+        List<PartnerCertificateEntity> certs = certificateService.getExpiringCertificates(1L, 30);
 
         assertNotNull(certs);
         assertEquals(1, certs.size());
@@ -204,7 +204,7 @@ public class CertificateServiceTest {
     public void testVerifySignatureWithCertificate() throws Exception {
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
 
-        PartnerCertificate cert = certificateService.generateKeyPairAndStore(1L, 365);
+        PartnerCertificateEntity cert = certificateService.generateKeyPairAndStore(1L, 365);
         cert.setValidFrom(LocalDateTime.now().minusDays(10));
         cert.setValidTo(LocalDateTime.now().plusDays(350));
 

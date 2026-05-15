@@ -72,12 +72,6 @@ public class JournalEntryEntity {
         this.createdBy = createdBy;
     }
 
-    public enum JournalStatus {
-        PENDING,
-        POSTED,
-        REVERSED
-    }
-
     public static JournalEntryEntityBuilder builder() {
         return new JournalEntryEntityBuilder();
     }

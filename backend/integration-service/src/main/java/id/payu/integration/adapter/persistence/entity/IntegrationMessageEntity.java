@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * JPA entity for IntegrationMessage.
@@ -57,11 +58,11 @@ public class IntegrationMessageEntity {
     @Column(name = "business_reference", length = 100)
     private String businessReference;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "raw_payload", columnDefinition = "TEXT")
     private String rawPayload;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "transformed_payload", columnDefinition = "TEXT")
     private String transformedPayload;
 

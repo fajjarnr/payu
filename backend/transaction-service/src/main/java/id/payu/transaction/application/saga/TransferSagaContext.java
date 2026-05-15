@@ -7,7 +7,7 @@ import java.util.UUID;
  * Saga context for inter-bank transfer orchestration (BiFast/SKN/RGS).
  * <p>
  * Carries all the state needed across saga steps:
- * - Transaction identity
+ * - TransactionEntity identity
  * - Sender/recipient details
  * - Reservation tracking for compensation
  * <p>

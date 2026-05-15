@@ -228,8 +228,4 @@ public class ResilienceProperties {
         private TimeLimiter timeLimiter;
         private RateLimiter rateLimiter;
     }
-
-    public enum SlidingWindowType {
-        COUNT_BASED, TIME_BASED
-    }
 }

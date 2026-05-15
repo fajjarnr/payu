@@ -5,7 +5,7 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandl
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Money;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
@@ -62,7 +62,7 @@ class IdempotencyTest {
                 senderAccountId,
                 "1234567890",
                 Money.idr(new BigDecimal("50000")),
-                "Transaction description",
+                "TransactionEntity description",
                 InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER,
                 "123456",
                 "device-123",
@@ -92,12 +92,12 @@ class IdempotencyTest {
         String idempotencyKey = "key-123";
         InitiateTransferCommand command = createCommand(idempotencyKey);
 
-        Transaction existingTransaction = Transaction.builder()
+        TransactionEntity existingTransaction = TransactionEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN-EXISTING")
                 .idempotencyKey(idempotencyKey)
-                .status(Transaction.TransactionStatus.PENDING)
-                .type(Transaction.TransactionType.INTERNAL_TRANSFER)
+                .status(TransactionEntity.TransactionStatus.PENDING)
+                .type(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
                 .amount(Money.idr(new BigDecimal("50000")))
                 .build();
 
@@ -122,7 +122,7 @@ class IdempotencyTest {
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.empty());
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder()
                         .reservationId("res-123")
@@ -136,7 +136,7 @@ class IdempotencyTest {
         // Then
         assertThat(response).isNotNull();
         verify(walletServicePort, times(1)).reserveBalance(any(), any(), any());
-        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(TransactionEntity.class));
     }
 
     @Test
@@ -146,12 +146,12 @@ class IdempotencyTest {
         String idempotencyKey = "key-failed-123";
         InitiateTransferCommand command = createBifastCommand(idempotencyKey);
 
-        Transaction failedTransaction = Transaction.builder()
+        TransactionEntity failedTransaction = TransactionEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN-FAILED")
                 .idempotencyKey(idempotencyKey)
-                .status(Transaction.TransactionStatus.FAILED)
-                .type(Transaction.TransactionType.BIFAST_TRANSFER)
+                .status(TransactionEntity.TransactionStatus.FAILED)
+                .type(TransactionEntity.TransactionType.BIFAST_TRANSFER)
                 .amount(Money.idr(new BigDecimal("50000")))
                 .failureReason("BI-FAST Timeout")
                 .build();
@@ -180,7 +180,7 @@ class IdempotencyTest {
 
         when(transactionPersistencePort.findByIdempotencyKey(anyString()))
                 .thenReturn(Optional.empty());
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder()
                         .reservationId("res-123")
@@ -193,7 +193,7 @@ class IdempotencyTest {
         handler.handle(secondCommand);
 
         // Then
-        verify(transactionPersistencePort, times(6)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(6)).save(any(TransactionEntity.class));
         verify(walletServicePort, times(2)).reserveBalance(any(), any(), any());
     }
 
@@ -204,12 +204,12 @@ class IdempotencyTest {
         String idempotencyKey = "key-bifast-123";
         InitiateTransferCommand command = createBifastCommand(idempotencyKey);
 
-        Transaction existingBifastTransaction = Transaction.builder()
+        TransactionEntity existingBifastTransaction = TransactionEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN-BIFAST-EXISTING")
                 .idempotencyKey(idempotencyKey)
-                .status(Transaction.TransactionStatus.PENDING)
-                .type(Transaction.TransactionType.BIFAST_TRANSFER)
+                .status(TransactionEntity.TransactionStatus.PENDING)
+                .type(TransactionEntity.TransactionType.BIFAST_TRANSFER)
                 .amount(Money.idr(new BigDecimal("50000")))
                 .description("BI-FAST Transfer")
                 .metadata("{\"externalTransactionId\":\"BIFAST-EXT-123\"}")
@@ -233,7 +233,7 @@ class IdempotencyTest {
         // Given
         InitiateTransferCommand command = createCommand(null);
 
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder()
                         .reservationId("res-123")
@@ -246,7 +246,7 @@ class IdempotencyTest {
 
         // Then
         assertThat(response).isNotNull();
-        verify(transactionPersistencePort, atLeast(1)).save(any(Transaction.class));
+        verify(transactionPersistencePort, atLeast(1)).save(any(TransactionEntity.class));
         verify(walletServicePort).reserveBalance(any(), any(), any());
     }
 
@@ -257,12 +257,12 @@ class IdempotencyTest {
         String idempotencyKey = "key-completed-123";
         InitiateTransferCommand command = createCommand(idempotencyKey);
 
-        Transaction completedTransaction = Transaction.builder()
+        TransactionEntity completedTransaction = TransactionEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN-COMPLETED")
                 .idempotencyKey(idempotencyKey)
-                .status(Transaction.TransactionStatus.COMPLETED)
-                .type(Transaction.TransactionType.INTERNAL_TRANSFER)
+                .status(TransactionEntity.TransactionStatus.COMPLETED)
+                .type(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
                 .amount(Money.idr(new BigDecimal("50000")))
                 .build();
 
@@ -288,8 +288,8 @@ class IdempotencyTest {
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.empty());
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> {
-            Transaction t = (Transaction) i.getArguments()[0];
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> {
+            TransactionEntity t = (TransactionEntity) i.getArguments()[0];
             assertThat(t.getIdempotencyKey()).isEqualTo(idempotencyKey);
             return t;
         });
@@ -304,6 +304,6 @@ class IdempotencyTest {
         handler.handle(command);
 
         // Then - idempotency key is stored with the transaction (verified in the stub above)
-        verify(transactionPersistencePort, atLeastOnce()).save(any(Transaction.class));
+        verify(transactionPersistencePort, atLeastOnce()).save(any(TransactionEntity.class));
     }
 }

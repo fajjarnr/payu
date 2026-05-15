@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
 import id.payu.transaction.adapter.persistence.repository.BatchDisbursementJpaRepository;
-import id.payu.transaction.domain.model.BatchDisbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
 import id.payu.transaction.domain.port.out.BatchDisbursementRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Persistence adapter for BatchDisbursement aggregate.
+ * Persistence adapter for BatchDisbursementEntity aggregate.
  *
  * <p>Implements the output port using JPA repository.
  */
@@ -23,22 +23,22 @@ public class BatchDisbursementPersistenceAdapter implements BatchDisbursementRep
     private final BatchDisbursementJpaRepository jpaRepository;
 
     @Override
-    public BatchDisbursement save(BatchDisbursement batch) {
+    public BatchDisbursementEntity save(BatchDisbursementEntity batch) {
         return jpaRepository.save(batch);
     }
 
     @Override
-    public Optional<BatchDisbursement> findById(UUID id) {
+    public Optional<BatchDisbursementEntity> findById(UUID id) {
         return jpaRepository.findById(id);
     }
 
     @Override
-    public Optional<BatchDisbursement> findByIdempotencyKey(String idempotencyKey) {
+    public Optional<BatchDisbursementEntity> findByIdempotencyKey(String idempotencyKey) {
         return jpaRepository.findByIdempotencyKey(idempotencyKey);
     }
 
     @Override
-    public List<BatchDisbursement> findBySourceAccountId(UUID sourceAccountId, int limit, int offset) {
+    public List<BatchDisbursementEntity> findBySourceAccountId(UUID sourceAccountId, int limit, int offset) {
         return jpaRepository.findBySourceAccountId(
                 sourceAccountId,
                 PageRequest.of(offset / limit, limit)
@@ -46,7 +46,7 @@ public class BatchDisbursementPersistenceAdapter implements BatchDisbursementRep
     }
 
     @Override
-    public List<BatchDisbursement> findByStatus(String status, int limit) {
+    public List<BatchDisbursementEntity> findByStatus(String status, int limit) {
         return jpaRepository.findByStatus(status, PageRequest.of(0, limit));
     }
 

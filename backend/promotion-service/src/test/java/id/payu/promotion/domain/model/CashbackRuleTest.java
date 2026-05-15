@@ -38,7 +38,7 @@ class CashbackRuleTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE001")
-                .name("Min 50k Cashback")
+                .name("Min 50k CashbackEntity")
                 .minAmount(new BigDecimal("50000"))
                 .cashbackAmount(new BigDecimal("5000"))
                 .cashbackType(CashbackType.FIXED)
@@ -52,7 +52,7 @@ class CashbackRuleTest {
 
         // Then
         assertTrue(matches, "Transaction should match the rule");
-        assertEquals(new BigDecimal("5000"), cashback, "Cashback should be fixed 5000");
+        assertEquals(new BigDecimal("5000"), cashback, "CashbackEntity should be fixed 5000");
     }
 
     @Test
@@ -61,7 +61,7 @@ class CashbackRuleTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE002")
-                .name("Min 100k Cashback")
+                .name("Min 100k CashbackEntity")
                 .minAmount(new BigDecimal("100000"))
                 .cashbackAmount(new BigDecimal("10000"))
                 .cashbackType(CashbackType.FIXED)
@@ -82,7 +82,7 @@ class CashbackRuleTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE003")
-                .name("5% Cashback")
+                .name("5% CashbackEntity")
                 .cashbackPercentage(5)
                 .cashbackType(CashbackType.PERCENTAGE)
                 .maxCashback(new BigDecimal("10000"))
@@ -105,7 +105,7 @@ class CashbackRuleTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE004")
-                .name("10% Cashback Capped")
+                .name("10% CashbackEntity Capped")
                 .cashbackPercentage(10)
                 .cashbackType(CashbackType.PERCENTAGE)
                 .maxCashback(new BigDecimal("5000"))
@@ -295,7 +295,7 @@ class CashbackRuleTest {
         // Given - Tiered rule: 50k-100k = 1000, 100k-200k = 3000, 200k+ = 5000
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE013")
-                .name("Tiered Cashback")
+                .name("Tiered CashbackEntity")
                 .minAmount(new BigDecimal("50000"))
                 .tieredCashback(java.util.Map.of(
                         new BigDecimal("50000"), new BigDecimal("1000"),

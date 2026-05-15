@@ -47,22 +47,6 @@ public final class IdempotencyEntry implements Serializable {
     /**
      * Status of the idempotency entry.
      */
-    public enum EntryStatus {
-        /**
-         * Request is currently being processed (in-flight).
-         */
-        IN_PROGRESS,
-
-        /**
-         * Request has been completed successfully.
-         */
-        COMPLETED,
-
-        /**
-         * Request failed with an error.
-         */
-        FAILED
-    }
 
     /**
      * Creates a new IdempotencyEntry.

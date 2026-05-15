@@ -10,6 +10,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.Random;
 import java.util.UUID;
+import id.payu.simulator.dukcapil.entity.CitizenStatus;
+import id.payu.simulator.dukcapil.entity.VerificationResult;
+import id.payu.simulator.dukcapil.entity.VerificationType;
 
 /**
  * Service for Dukcapil simulation operations.
@@ -34,16 +37,16 @@ public class DukcapilService {
 
         if (shouldSimulateFailure()) {
             logVerification(requestId, request.nik(), 
-                VerificationLog.VerificationType.NIK_VERIFICATION,
-                VerificationLog.VerificationResult.ERROR, null, "Simulated failure");
+                VerificationType.NIK_VERIFICATION,
+                VerificationResult.ERROR, null, "Simulated failure");
             return VerifyNikResponse.error(requestId, "Simulated random failure");
         }
 
         // Validate NIK format (basic check)
         if (!isValidNikFormat(request.nik())) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.NIK_VERIFICATION,
-                VerificationLog.VerificationResult.FAILED, null, "Invalid NIK format");
+                VerificationType.NIK_VERIFICATION,
+                VerificationResult.FAILED, null, "Invalid NIK format");
             return VerifyNikResponse.invalid(requestId, request.nik());
         }
 
@@ -51,22 +54,22 @@ public class DukcapilService {
 
         if (citizen == null) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.NIK_VERIFICATION,
-                VerificationLog.VerificationResult.NOT_FOUND, null, "NIK not found");
+                VerificationType.NIK_VERIFICATION,
+                VerificationResult.NOT_FOUND, null, "NIK not found");
             return VerifyNikResponse.notFound(requestId, request.nik());
         }
 
-        if (citizen.status == Citizen.CitizenStatus.BLOCKED) {
+        if (citizen.status == CitizenStatus.BLOCKED) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.NIK_VERIFICATION,
-                VerificationLog.VerificationResult.BLOCKED, null, "NIK blocked");
+                VerificationType.NIK_VERIFICATION,
+                VerificationResult.BLOCKED, null, "NIK blocked");
             return VerifyNikResponse.blocked(requestId, citizen);
         }
 
-        if (citizen.status == Citizen.CitizenStatus.INVALID) {
+        if (citizen.status == CitizenStatus.INVALID) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.NIK_VERIFICATION,
-                VerificationLog.VerificationResult.FAILED, null, "Invalid NIK");
+                VerificationType.NIK_VERIFICATION,
+                VerificationResult.FAILED, null, "Invalid NIK");
             return VerifyNikResponse.invalid(requestId, request.nik());
         }
 
@@ -75,8 +78,8 @@ public class DukcapilService {
                 .equalsIgnoreCase(normalizeName(citizen.fullName));
 
         logVerification(requestId, request.nik(),
-            VerificationLog.VerificationType.NIK_VERIFICATION,
-            nameMatch ? VerificationLog.VerificationResult.SUCCESS : VerificationLog.VerificationResult.FAILED,
+            VerificationType.NIK_VERIFICATION,
+            nameMatch ? VerificationResult.SUCCESS : VerificationResult.FAILED,
             null, nameMatch ? "Name matched" : "Name mismatch");
 
         return VerifyNikResponse.success(requestId, citizen, nameMatch);
@@ -94,8 +97,8 @@ public class DukcapilService {
 
         if (shouldSimulateFailure()) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.FACE_MATCHING,
-                VerificationLog.VerificationResult.ERROR, null, "Simulated failure");
+                VerificationType.FACE_MATCHING,
+                VerificationResult.ERROR, null, "Simulated failure");
             return FaceMatchResponse.error(requestId, "Simulated random failure");
         }
 
@@ -103,15 +106,15 @@ public class DukcapilService {
 
         if (citizen == null) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.FACE_MATCHING,
-                VerificationLog.VerificationResult.NOT_FOUND, null, "NIK not found");
+                VerificationType.FACE_MATCHING,
+                VerificationResult.NOT_FOUND, null, "NIK not found");
             return FaceMatchResponse.nikNotFound(requestId, request.nik());
         }
 
-        if (citizen.status == Citizen.CitizenStatus.BLOCKED) {
+        if (citizen.status == CitizenStatus.BLOCKED) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.FACE_MATCHING,
-                VerificationLog.VerificationResult.BLOCKED, null, "NIK blocked");
+                VerificationType.FACE_MATCHING,
+                VerificationResult.BLOCKED, null, "NIK blocked");
             return FaceMatchResponse.blocked(requestId, request.nik());
         }
 
@@ -119,8 +122,8 @@ public class DukcapilService {
         boolean livenessDetected = simulateLivenessCheck(request.livenessCheck());
         if (request.livenessCheck() && !livenessDetected) {
             logVerification(requestId, request.nik(),
-                VerificationLog.VerificationType.FACE_MATCHING,
-                VerificationLog.VerificationResult.FAILED, 0, "Liveness failed");
+                VerificationType.FACE_MATCHING,
+                VerificationResult.FAILED, 0, "Liveness failed");
             return FaceMatchResponse.livenesssFailed(requestId, request.nik());
         }
 
@@ -130,8 +133,8 @@ public class DukcapilService {
         boolean matched = matchScore >= threshold;
 
         logVerification(requestId, request.nik(),
-            VerificationLog.VerificationType.FACE_MATCHING,
-            matched ? VerificationLog.VerificationResult.SUCCESS : VerificationLog.VerificationResult.FAILED,
+            VerificationType.FACE_MATCHING,
+            matched ? VerificationResult.SUCCESS : VerificationResult.FAILED,
             matchScore, String.format("Score: %d, Threshold: %d", matchScore, threshold));
 
         return FaceMatchResponse.success(requestId, request.nik(), matchScore, threshold, livenessDetected);
@@ -149,8 +152,8 @@ public class DukcapilService {
 
         if (shouldSimulateFailure()) {
             logVerification(requestId, nik,
-                VerificationLog.VerificationType.DATA_RETRIEVAL,
-                VerificationLog.VerificationResult.ERROR, null, "Simulated failure");
+                VerificationType.DATA_RETRIEVAL,
+                VerificationResult.ERROR, null, "Simulated failure");
             return CitizenDataResponse.error(requestId, "Simulated random failure");
         }
 
@@ -158,21 +161,21 @@ public class DukcapilService {
 
         if (citizen == null) {
             logVerification(requestId, nik,
-                VerificationLog.VerificationType.DATA_RETRIEVAL,
-                VerificationLog.VerificationResult.NOT_FOUND, null, "NIK not found");
+                VerificationType.DATA_RETRIEVAL,
+                VerificationResult.NOT_FOUND, null, "NIK not found");
             return CitizenDataResponse.notFound(requestId, nik);
         }
 
-        if (citizen.status == Citizen.CitizenStatus.BLOCKED) {
+        if (citizen.status == CitizenStatus.BLOCKED) {
             logVerification(requestId, nik,
-                VerificationLog.VerificationType.DATA_RETRIEVAL,
-                VerificationLog.VerificationResult.BLOCKED, null, "NIK blocked");
+                VerificationType.DATA_RETRIEVAL,
+                VerificationResult.BLOCKED, null, "NIK blocked");
             return CitizenDataResponse.blocked(requestId, nik);
         }
 
         logVerification(requestId, nik,
-            VerificationLog.VerificationType.DATA_RETRIEVAL,
-            VerificationLog.VerificationResult.SUCCESS, null, "Data retrieved");
+            VerificationType.DATA_RETRIEVAL,
+            VerificationResult.SUCCESS, null, "Data retrieved");
 
         return CitizenDataResponse.fromEntity(requestId, citizen);
     }
@@ -239,8 +242,8 @@ public class DukcapilService {
     }
 
     private void logVerification(String requestId, String nik, 
-                                  VerificationLog.VerificationType type,
-                                  VerificationLog.VerificationResult result,
+                                  VerificationType type,
+                                  VerificationResult result,
                                   Integer matchScore, String details) {
         VerificationLog log = new VerificationLog();
         log.requestId = requestId;

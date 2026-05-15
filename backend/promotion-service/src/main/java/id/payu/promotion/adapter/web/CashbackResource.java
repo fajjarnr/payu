@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.application.service.CashbackService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/cashbacks")
-@Tag(name = "Cashbacks", description = "Cashback management APIs")
+@Tag(name = "Cashbacks", description = "CashbackEntity management APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class CashbackResource {
 
@@ -34,7 +34,7 @@ public class CashbackResource {
     @PostMapping
     @Operation(summary = "Create cashback", description = "Create a new cashback record")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Cashback created successfully",
+        @ApiResponse(responseCode = "201", description = "CashbackEntity created successfully",
             content = @Content(schema = @Schema(implementation = CashbackResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -43,7 +43,7 @@ public class CashbackResource {
     })
     public ResponseEntity<?> createCashback(@Valid @RequestBody CreateCashbackRequest request) {
         try {
-            Cashback cashback = cashbackService.createCashback(request);
+            CashbackEntity cashback = cashbackService.createCashback(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CashbackResponse.from(cashback));
         } catch (IllegalArgumentException e) {
@@ -55,20 +55,20 @@ public class CashbackResource {
     @GetMapping("/{id}")
     @Operation(summary = "Get cashback by ID", description = "Retrieve cashback details by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cashback found",
+        @ApiResponse(responseCode = "200", description = "CashbackEntity found",
             content = @Content(schema = @Schema(implementation = CashbackResponse.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
-        @ApiResponse(responseCode = "404", description = "Cashback not found"),
+        @ApiResponse(responseCode = "404", description = "CashbackEntity not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getCashback(@PathVariable UUID id) {
-        Optional<Cashback> cashbackOpt = cashbackService.getCashback(id);
+        Optional<CashbackEntity> cashbackOpt = cashbackService.getCashback(id);
         if (cashbackOpt.isPresent()) {
             return ResponseEntity.ok(CashbackResponse.from(cashbackOpt.get()));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Cashback not found"));
+            .body(new ErrorResponse("CashbackEntity not found"));
     }
 
     @GetMapping("/account/{accountId}")
@@ -80,14 +80,14 @@ public class CashbackResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<List<CashbackResponse>> getCashbacksByAccount(@PathVariable String accountId) {
-        List<Cashback> cashbacks = cashbackService.getCashbacksByAccount(accountId);
+        List<CashbackEntity> cashbacks = cashbackService.getCashbacksByAccount(accountId);
         return ResponseEntity.ok(cashbacks.stream().map(CashbackResponse::from).toList());
     }
 
     @GetMapping("/account/{accountId}/summary")
     @Operation(summary = "Get cashback summary", description = "Retrieve cashback summary for an account")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Cashback summary retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "CashbackEntity summary retrieved successfully"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")

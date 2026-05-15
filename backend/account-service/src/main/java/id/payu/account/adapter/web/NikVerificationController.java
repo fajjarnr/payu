@@ -19,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.CompletableFuture;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for NIK verification operations.
@@ -62,7 +63,7 @@ public class NikVerificationController {
     @PostMapping(value = "/verify-nik", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority('SCOPE_account:verify')")
     @Audited(
-        operation = Audited.Operation.READ,
+        operation = AuditOperation.READ,
         entityType = "NikVerification",
         maskData = true
     )

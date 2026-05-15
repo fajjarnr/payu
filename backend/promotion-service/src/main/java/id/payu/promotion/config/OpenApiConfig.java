@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
     info = @Info(
-        title = "PayU Promotion Service API",
+        title = "PayU PromotionEntity Service API",
         version = "1.0.0",
         description = "APIs for managing promotions, cashbacks, rewards, referrals, and loyalty points in the PayU platform",
         contact = @Contact(

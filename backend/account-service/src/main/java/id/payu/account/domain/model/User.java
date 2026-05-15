@@ -208,12 +208,4 @@ public class User {
                     status, kycStatus, createdAt, updatedAt);
         }
     }
-
-    public enum UserStatus {
-        ACTIVE, LOCKED, SUSPENDED, PENDING_VERIFICATION
-    }
-
-    public enum KycStatus {
-        NOT_STARTED, PENDING, APPROVED, REJECTED, VERIFIED
-    }
 }

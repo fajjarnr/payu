@@ -19,7 +19,7 @@ public record SendNotificationRequest(
         @NotBlank(message = "User ID is required") String userId,
 
         @Schema(
-            description = "Notification channel to use for delivery",
+            description = "NotificationEntity channel to use for delivery",
             required = true,
             example = "PUSH",
             enumeration = { "PUSH", "SMS", "EMAIL", "IN_APP" }
@@ -35,7 +35,7 @@ public record SendNotificationRequest(
         @NotBlank(message = "Recipient is required") String recipient,
 
         @Schema(
-            description = "Notification title or subject line",
+            description = "NotificationEntity title or subject line",
             required = true,
             example = "Transfer Successful",
             minLength = 1,
@@ -44,7 +44,7 @@ public record SendNotificationRequest(
         @NotBlank(message = "Title is required") String title,
 
         @Schema(
-            description = "Notification body content. For templated notifications, this is optional as the template defines the body.",
+            description = "NotificationEntity body content. For templated notifications, this is optional as the template defines the body.",
             example = "Your transfer of Rp 100.000 was successful.",
             maxLength = 2000
         )

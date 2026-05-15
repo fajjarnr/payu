@@ -60,15 +60,6 @@ public class DiscrepancyEntity {
     public DiscrepancyEntity() {
     }
 
-    public enum DiscrepancyType {
-        AMOUNT_MISMATCH,
-        MISSING_TRANSACTION,
-        DUPLICATE_TRANSACTION,
-        CURRENCY_MISMATCH,
-        TIMING_DIFFERENCE,
-        OTHER
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

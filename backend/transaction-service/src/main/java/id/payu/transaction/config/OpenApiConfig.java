@@ -15,8 +15,8 @@ public class OpenApiConfig {
     public OpenAPI transactionServiceOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("PayU Transaction Service API")
-                        .description("Transaction processing, BI-FAST, QRIS payments for PayU Digital Banking Platform")
+                        .title("PayU TransactionEntity Service API")
+                        .description("TransactionEntity processing, BI-FAST, QRIS payments for PayU Digital Banking Platform")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("PayU Backend Team")

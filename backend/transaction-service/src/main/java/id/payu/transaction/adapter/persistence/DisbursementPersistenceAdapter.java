@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
 import id.payu.transaction.adapter.persistence.repository.DisbursementJpaRepository;
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.port.out.DisbursementRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Persistence adapter for Disbursement aggregate.
+ * Persistence adapter for DisbursementEntity aggregate.
  *
  * <p>Implements the output port using JPA repository.
  */
@@ -23,22 +23,22 @@ public class DisbursementPersistenceAdapter implements DisbursementRepositoryPor
     private final DisbursementJpaRepository jpaRepository;
 
     @Override
-    public Disbursement save(Disbursement disbursement) {
+    public DisbursementEntity save(DisbursementEntity disbursement) {
         return jpaRepository.save(disbursement);
     }
 
     @Override
-    public Optional<Disbursement> findById(UUID id) {
+    public Optional<DisbursementEntity> findById(UUID id) {
         return jpaRepository.findById(id);
     }
 
     @Override
-    public Optional<Disbursement> findByIdempotencyKey(String idempotencyKey) {
+    public Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey) {
         return jpaRepository.findByIdempotencyKey(idempotencyKey);
     }
 
     @Override
-    public List<Disbursement> findBySourceAccountId(UUID sourceAccountId, int limit, int offset) {
+    public List<DisbursementEntity> findBySourceAccountId(UUID sourceAccountId, int limit, int offset) {
         return jpaRepository.findBySourceAccountId(
                 sourceAccountId,
                 PageRequest.of(offset / limit, limit)
@@ -46,7 +46,7 @@ public class DisbursementPersistenceAdapter implements DisbursementRepositoryPor
     }
 
     @Override
-    public List<Disbursement> findByStatus(String status, int limit) {
+    public List<DisbursementEntity> findByStatus(String status, int limit) {
         return jpaRepository.findByStatus(status, PageRequest.of(0, limit));
     }
 

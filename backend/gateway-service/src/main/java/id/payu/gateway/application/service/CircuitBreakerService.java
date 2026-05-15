@@ -28,10 +28,6 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class CircuitBreakerService {
 
-    public enum State {
-        CLOSED, OPEN, HALF_OPEN
-    }
-
     @Inject
     GatewayConfig config;
 

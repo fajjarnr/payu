@@ -1,6 +1,6 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.PartnerDTO;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,17 +34,17 @@ public class PartnerService {
      * BUG-BE-138 FIX: Lookup partner by clientId via service layer.
      * Allows SnapBiController to use service instead of direct repository access.
      */
-    public Optional<Partner> findByClientId(String clientId) {
+    public Optional<PartnerEntity> findByClientId(String clientId) {
         return partnerRepository.findByClientId(clientId);
     }
 
     @Transactional
     public PartnerDTO createPartner(PartnerDTO partnerDTO) {
         if (partnerRepository.findByEmail(partnerDTO.email).isPresent()) {
-            throw new IllegalArgumentException("Partner with email " + partnerDTO.email + " already exists");
+            throw new IllegalArgumentException("PartnerEntity with email " + partnerDTO.email + " already exists");
         }
 
-        Partner partner = new Partner();
+        PartnerEntity partner = new PartnerEntity();
         partner.setName(partnerDTO.name);
         partner.setType(partnerDTO.type);
         partner.setEmail(partnerDTO.email);
@@ -61,7 +61,7 @@ public class PartnerService {
 
     @Transactional
     public PartnerDTO updatePartner(Long id, PartnerDTO partnerDTO) {
-        Partner partner = partnerRepository.findById(id).orElse(null);
+        PartnerEntity partner = partnerRepository.findById(id).orElse(null);
         if (partner == null) {
             return null;
         }
@@ -77,7 +77,7 @@ public class PartnerService {
 
     @Transactional
     public PartnerDTO regenerateKeys(Long id) {
-        Partner partner = partnerRepository.findById(id).orElse(null);
+        PartnerEntity partner = partnerRepository.findById(id).orElse(null);
         if (partner == null) {
             return null;
         }
@@ -102,7 +102,7 @@ public class PartnerService {
         return false;
     }
 
-    private PartnerDTO toDTO(Partner partner) {
+    private PartnerDTO toDTO(PartnerEntity partner) {
         return new PartnerDTO(partner.getId(), partner.getName(), partner.getType(), partner.getEmail(), partner.getPhone(), partner.isActive(), partner.getClientId(), partner.getClientSecret(), partner.getPublicKey());
     }
 }

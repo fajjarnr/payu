@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.wallet.adapter.persistence.entity.SavingsGoalStatus;
 
 @RestController
 @RequestMapping("/api/v1/wallets/{walletId}/savings-goals")
@@ -60,7 +61,7 @@ public class SavingsGoalController {
         }
 
         List<SavingsGoalEntity> goals = savingsGoalRepository.findByPocketIdAndStatusNot(
-                walletId, SavingsGoalEntity.SavingsGoalStatus.CANCELLED);
+                walletId, SavingsGoalStatus.CANCELLED);
 
         List<SavingsGoalResponse> responses = goals.stream()
                 .map(this::toResponse)
@@ -103,7 +104,7 @@ public class SavingsGoalController {
         goal.setCurrentAmount(BigDecimal.ZERO);
         goal.setCurrency(pocket.getCurrency());
         goal.setDeadline(request.getDeadline());
-        goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.ACTIVE);
+        goal.setStatus(SavingsGoalStatus.ACTIVE);
         goal.setIcon(request.getIcon());
         goal.setColor(request.getColor());
 
@@ -184,7 +185,7 @@ public class SavingsGoalController {
                     .body(ApiResponse.error("SAV_001", "Savings goal not found"));
         }
 
-        goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.CANCELLED);
+        goal.setStatus(SavingsGoalStatus.CANCELLED);
         goal.setUpdatedAt(LocalDateTime.now());
         savingsGoalRepository.save(goal);
 
@@ -221,8 +222,8 @@ public class SavingsGoalController {
                     .body(ApiResponse.error("SAV_001", "Savings goal not found"));
         }
 
-        if (goal.getStatus() == SavingsGoalEntity.SavingsGoalStatus.ACTIVE) {
-            goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.PAUSED);
+        if (goal.getStatus() == SavingsGoalStatus.ACTIVE) {
+            goal.setStatus(SavingsGoalStatus.PAUSED);
             goal.setUpdatedAt(LocalDateTime.now());
             savingsGoalRepository.save(goal);
         }
@@ -260,8 +261,8 @@ public class SavingsGoalController {
                     .body(ApiResponse.error("SAV_001", "Savings goal not found"));
         }
 
-        if (goal.getStatus() == SavingsGoalEntity.SavingsGoalStatus.PAUSED) {
-            goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.ACTIVE);
+        if (goal.getStatus() == SavingsGoalStatus.PAUSED) {
+            goal.setStatus(SavingsGoalStatus.ACTIVE);
             goal.setUpdatedAt(LocalDateTime.now());
             savingsGoalRepository.save(goal);
         }

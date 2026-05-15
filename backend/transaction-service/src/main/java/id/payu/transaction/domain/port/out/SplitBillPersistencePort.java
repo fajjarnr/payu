@@ -1,30 +1,30 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface SplitBillPersistencePort {
-    SplitBill save(SplitBill splitBill);
+    SplitBillEntity save(SplitBillEntity splitBill);
 
-    SplitBillParticipant saveParticipant(SplitBillParticipant participant);
+    SplitBillParticipantEntity saveParticipant(SplitBillParticipantEntity participant);
 
-    Optional<SplitBill> findById(UUID id);
+    Optional<SplitBillEntity> findById(UUID id);
 
-    Optional<SplitBill> findByReferenceNumber(String referenceNumber);
+    Optional<SplitBillEntity> findByReferenceNumber(String referenceNumber);
 
-    List<SplitBill> findByCreatorAccountId(UUID accountId, int page, int size);
+    List<SplitBillEntity> findByCreatorAccountId(UUID accountId, int page, int size);
 
-    List<SplitBillParticipant> findParticipantsBySplitBillId(UUID splitBillId);
+    List<SplitBillParticipantEntity> findParticipantsBySplitBillId(UUID splitBillId);
 
-    Optional<SplitBillParticipant> findParticipantById(UUID participantId);
+    Optional<SplitBillParticipantEntity> findParticipantById(UUID participantId);
 
-    List<SplitBillParticipant> findByAccountId(UUID accountId, int page, int size);
+    List<SplitBillParticipantEntity> findByAccountId(UUID accountId, int page, int size);
 
-    void delete(SplitBill splitBill);
+    void delete(SplitBillEntity splitBill);
 
     void deleteParticipant(UUID participantId);
 }

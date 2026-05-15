@@ -14,9 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.util.Map;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for API key lifecycle management.
@@ -52,9 +53,9 @@ public class ApiKeyController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.CREATE, entityType = "ApiKey", maskData = true, level = AuditLevel.WARN)
+    @Audited(operation = AuditOperation.CREATE, entityType = "ApiKey", maskData = true, level = AuditLevel.WARN)
     public ResponseEntity<?> createApiKey(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId,
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId,
             @Valid @RequestBody ApiKeyDTO dto) {
         return created(apiKeyService.createApiKey(partnerId, dto));
     }
@@ -63,7 +64,7 @@ public class ApiKeyController extends BaseController {
     @Operation(summary = "List all API keys", description = "Lists all API keys for a partner (without key values).")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> listApiKeys(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId) {
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId) {
         return ok(apiKeyService.listApiKeys(partnerId));
     }
 
@@ -71,7 +72,7 @@ public class ApiKeyController extends BaseController {
     @Operation(summary = "Get API key details", description = "Get details of a specific API key (without key value).")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> getApiKey(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId,
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId,
             @Parameter(description = "Key ID") @PathVariable Long keyId) {
         return ok(apiKeyService.getApiKey(partnerId, keyId));
     }
@@ -82,9 +83,9 @@ public class ApiKeyController extends BaseController {
         description = "Update the name, rate plan, or rate limits for an API key."
     )
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "ApiKey", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "ApiKey", level = AuditLevel.INFO)
     public ResponseEntity<?> updateApiKey(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId,
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId,
             @Parameter(description = "Key ID") @PathVariable Long keyId,
             @RequestBody ApiKeyDTO dto) {
         return ok(apiKeyService.updateApiKey(partnerId, keyId, dto));
@@ -107,9 +108,9 @@ public class ApiKeyController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "ApiKey", maskData = true, level = AuditLevel.WARN)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "ApiKey", maskData = true, level = AuditLevel.WARN)
     public ResponseEntity<?> rotateApiKey(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId,
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId,
             @Parameter(description = "Key ID") @PathVariable Long keyId) {
         return ok(apiKeyService.rotateApiKey(partnerId, keyId));
     }
@@ -120,9 +121,9 @@ public class ApiKeyController extends BaseController {
         description = "Immediately revokes an API key. Revoked keys cannot be re-activated."
     )
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.DELETE, entityType = "ApiKey", level = AuditLevel.WARN)
+    @Audited(operation = AuditOperation.DELETE, entityType = "ApiKey", level = AuditLevel.WARN)
     public ResponseEntity<?> revokeApiKey(
-            @Parameter(description = "Partner ID") @PathVariable Long partnerId,
+            @Parameter(description = "PartnerEntity ID") @PathVariable Long partnerId,
             @Parameter(description = "Key ID") @PathVariable Long keyId,
             @RequestBody(required = false) Map<String, String> body) {
         String reason = body != null ? body.get("reason") : null;

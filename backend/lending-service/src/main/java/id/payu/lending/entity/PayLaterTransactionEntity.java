@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.TransactionStatus;
+import id.payu.lending.domain.model.TransactionType;
 
 @Entity
 @Table(name = "paylater_transactions")
@@ -25,7 +27,7 @@ public class PayLaterTransactionEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private id.payu.lending.domain.model.PayLaterTransaction.TransactionType type;
+    private id.payu.lending.domain.model.TransactionType type;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
@@ -38,7 +40,7 @@ public class PayLaterTransactionEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus status;
+    private id.payu.lending.domain.model.TransactionStatus status;
 
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
@@ -52,9 +54,9 @@ public class PayLaterTransactionEntity {
     public PayLaterTransactionEntity() {}
 
     public PayLaterTransactionEntity(UUID id, String externalId, UUID paylaterAccountId, 
-                                     id.payu.lending.domain.model.PayLaterTransaction.TransactionType type, 
+                                     id.payu.lending.domain.model.TransactionType type, 
                                      BigDecimal amount, String merchantName, String description, 
-                                     id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus status, 
+                                     id.payu.lending.domain.model.TransactionStatus status, 
                                      LocalDateTime transactionDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.externalId = externalId;
@@ -75,16 +77,16 @@ public class PayLaterTransactionEntity {
     public void setExternalId(String externalId) { this.externalId = externalId; }
     public UUID getPaylaterAccountId() { return paylaterAccountId; }
     public void setPaylaterAccountId(UUID paylaterAccountId) { this.paylaterAccountId = paylaterAccountId; }
-    public id.payu.lending.domain.model.PayLaterTransaction.TransactionType getType() { return type; }
-    public void setType(id.payu.lending.domain.model.PayLaterTransaction.TransactionType type) { this.type = type; }
+    public id.payu.lending.domain.model.TransactionType getType() { return type; }
+    public void setType(id.payu.lending.domain.model.TransactionType type) { this.type = type; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getMerchantName() { return merchantName; }
     public void setMerchantName(String merchantName) { this.merchantName = merchantName; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus getStatus() { return status; }
-    public void setStatus(id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus status) { this.status = status; }
+    public id.payu.lending.domain.model.TransactionStatus getStatus() { return status; }
+    public void setStatus(id.payu.lending.domain.model.TransactionStatus status) { this.status = status; }
     public LocalDateTime getTransactionDate() { return transactionDate; }
     public void setTransactionDate(LocalDateTime transactionDate) { this.transactionDate = transactionDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -103,11 +105,11 @@ public class PayLaterTransactionEntity {
         private UUID id;
         private String externalId;
         private UUID paylaterAccountId;
-        private id.payu.lending.domain.model.PayLaterTransaction.TransactionType type;
+        private id.payu.lending.domain.model.TransactionType type;
         private BigDecimal amount;
         private String merchantName;
         private String description;
-        private id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus status;
+        private id.payu.lending.domain.model.TransactionStatus status;
         private LocalDateTime transactionDate;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -115,11 +117,11 @@ public class PayLaterTransactionEntity {
         public Builder id(UUID id) { this.id = id; return this; }
         public Builder externalId(String externalId) { this.externalId = externalId; return this; }
         public Builder paylaterAccountId(UUID paylaterAccountId) { this.paylaterAccountId = paylaterAccountId; return this; }
-        public Builder type(id.payu.lending.domain.model.PayLaterTransaction.TransactionType type) { this.type = type; return this; }
+        public Builder type(id.payu.lending.domain.model.TransactionType type) { this.type = type; return this; }
         public Builder amount(BigDecimal amount) { this.amount = amount; return this; }
         public Builder merchantName(String merchantName) { this.merchantName = merchantName; return this; }
         public Builder description(String description) { this.description = description; return this; }
-        public Builder status(id.payu.lending.domain.model.PayLaterTransaction.TransactionStatus status) { this.status = status; return this; }
+        public Builder status(id.payu.lending.domain.model.TransactionStatus status) { this.status = status; return this; }
         public Builder transactionDate(LocalDateTime transactionDate) { this.transactionDate = transactionDate; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Builder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }

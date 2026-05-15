@@ -507,11 +507,4 @@ public class Account {
                 ", updatedAt=" + updatedAt +
                 '}';
     }
-
-    public enum AccountStatus {
-        ACTIVE,
-        FROZEN,
-        CLOSED,
-        PENDING_VERIFICATION
-    }
 }

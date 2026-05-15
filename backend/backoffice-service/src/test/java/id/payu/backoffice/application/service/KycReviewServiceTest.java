@@ -1,6 +1,6 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.KycReviewDecisionRequest;
 import id.payu.backoffice.dto.KycReviewRequest;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class KycReviewServiceTest {
                 "Initial KYC submission"
         );
 
-        KycReview result = kycReviewService.create(request);
+        KycReviewEntity result = kycReviewService.create(request);
 
         assertNotNull(result);
         assertNotNull(result.getId());
@@ -61,7 +61,7 @@ class KycReviewServiceTest {
         assertEquals("123 Main St, Jakarta", result.getAddress());
         assertEquals("+628123456789", result.getPhoneNumber());
         assertEquals("Initial KYC submission", result.getNotes());
-        assertEquals(KycReview.KycStatus.PENDING, result.getStatus());
+        assertEquals(KycReviewEntity.KycStatus.PENDING, result.getStatus());
         assertNotNull(result.getCreatedAt());
     }
 
@@ -80,7 +80,7 @@ class KycReviewServiceTest {
                 "Minimal submission"
         );
 
-        KycReview result = kycReviewService.create(request);
+        KycReviewEntity result = kycReviewService.create(request);
 
         assertNotNull(result);
         assertEquals(testUserId, result.getUserId());
@@ -105,9 +105,9 @@ class KycReviewServiceTest {
                 "Test review"
         );
 
-        KycReview review = kycReviewService.create(request);
+        KycReviewEntity review = kycReviewService.create(request);
 
-        Optional<KycReview> result = kycReviewService.getById(review.getId());
+        Optional<KycReviewEntity> result = kycReviewService.getById(review.getId());
 
         assertTrue(result.isPresent());
         assertEquals(review.getId(), result.get().getId());
@@ -115,7 +115,7 @@ class KycReviewServiceTest {
 
     @Test
     void testGetById_NotFound() {
-        Optional<KycReview> result = kycReviewService.getById(UUID.randomUUID());
+        Optional<KycReviewEntity> result = kycReviewService.getById(UUID.randomUUID());
 
         assertFalse(result.isPresent());
     }
@@ -137,7 +137,7 @@ class KycReviewServiceTest {
 
         kycReviewService.create(request);
 
-        Optional<KycReview> result = kycReviewService.getByUserId(testUserId);
+        Optional<KycReviewEntity> result = kycReviewService.getByUserId(testUserId);
 
         assertTrue(result.isPresent());
         assertEquals(testUserId, result.get().getUserId());
@@ -145,7 +145,7 @@ class KycReviewServiceTest {
 
     @Test
     void testGetByUserId_NotFound() {
-        Optional<KycReview> result = kycReviewService.getByUserId("nonexistent-user");
+        Optional<KycReviewEntity> result = kycReviewService.getByUserId("nonexistent-user");
 
         assertFalse(result.isPresent());
     }
@@ -167,10 +167,10 @@ class KycReviewServiceTest {
 
         kycReviewService.create(request);
 
-        List<KycReview> results = kycReviewService.listByStatus(KycReview.KycStatus.PENDING, 0, 10);
+        List<KycReviewEntity> results = kycReviewService.listByStatus(KycReviewEntity.KycStatus.PENDING, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(r -> r.getStatus() == KycReview.KycStatus.PENDING));
+        assertTrue(results.stream().allMatch(r -> r.getStatus() == KycReviewEntity.KycStatus.PENDING));
     }
 
     @Test
@@ -190,7 +190,7 @@ class KycReviewServiceTest {
 
         kycReviewService.create(request);
 
-        List<KycReview> results = kycReviewService.listAll(0, 10);
+        List<KycReviewEntity> results = kycReviewService.listAll(0, 10);
 
         assertNotNull(results);
         assertTrue(results.size() >= 1);
@@ -213,17 +213,17 @@ class KycReviewServiceTest {
                 "Review test"
         );
 
-        KycReview review = kycReviewService.create(request);
+        KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
                 KycReviewDecisionRequest.KycReviewStatus.APPROVED,
                 "Documents verified, KYC approved"
         );
 
-        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
+        KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
 
         assertNotNull(result);
-        assertEquals(KycReview.KycStatus.APPROVED, result.getStatus());
+        assertEquals(KycReviewEntity.KycStatus.APPROVED, result.getStatus());
         assertEquals("Documents verified, KYC approved", result.getNotes());
         assertEquals("admin1", result.getReviewedBy());
         assertNotNull(result.getReviewedAt());
@@ -244,16 +244,16 @@ class KycReviewServiceTest {
                 "Review test"
         );
 
-        KycReview review = kycReviewService.create(request);
+        KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
                 KycReviewDecisionRequest.KycReviewStatus.REJECTED,
                 "Document blurry, please resubmit"
         );
 
-        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
+        KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
 
-        assertEquals(KycReview.KycStatus.REJECTED, result.getStatus());
+        assertEquals(KycReviewEntity.KycStatus.REJECTED, result.getStatus());
         assertEquals("Document blurry, please resubmit", result.getNotes());
         assertEquals("admin2", result.getReviewedBy());
     }
@@ -273,16 +273,16 @@ class KycReviewServiceTest {
                 "Review test"
         );
 
-        KycReview review = kycReviewService.create(request);
+        KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
                 KycReviewDecisionRequest.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
                 "Please provide proof of address"
         );
 
-        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin3");
+        KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin3");
 
-        assertEquals(KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO, result.getStatus());
+        assertEquals(KycReviewEntity.KycStatus.REQUIRES_ADDITIONAL_INFO, result.getStatus());
         assertEquals("Please provide proof of address", result.getNotes());
     }
 
@@ -316,12 +316,12 @@ class KycReviewServiceTest {
                 "Delete test"
         );
 
-        KycReview review = kycReviewService.create(request);
+        KycReviewEntity review = kycReviewService.create(request);
         UUID reviewId = review.getId();
 
         kycReviewService.delete(reviewId);
 
-        Optional<KycReview> result = kycReviewService.getById(reviewId);
+        Optional<KycReviewEntity> result = kycReviewService.getById(reviewId);
         assertFalse(result.isPresent());
     }
 
@@ -367,7 +367,7 @@ class KycReviewServiceTest {
         kycReviewService.create(secondRequest);
 
         // Should return the most recent review
-        Optional<KycReview> result = kycReviewService.getByUserId(uniqueUserId);
+        Optional<KycReviewEntity> result = kycReviewService.getByUserId(uniqueUserId);
 
         assertTrue(result.isPresent());
         assertEquals(uniqueUserId, result.get().getUserId());

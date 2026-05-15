@@ -1,8 +1,8 @@
 package id.payu.partner.adapter.web.filter;
 
 import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
-import id.payu.partner.domain.ApiKeyEntity;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,7 +50,7 @@ class SandboxFilterTest {
         String apiKey = "payu_test_sandbox_key_12345";
         String keyHash = hashApiKey(apiKey);
 
-        Partner partner = new Partner();
+        PartnerEntity partner = new PartnerEntity();
         partner.setId(1L);
 
         ApiKeyEntity sandboxKey = new ApiKeyEntity(
@@ -77,7 +77,7 @@ class SandboxFilterTest {
         String apiKey = "payu_live_production_key_12345";
         String keyHash = hashApiKey(apiKey);
 
-        Partner partner = new Partner();
+        PartnerEntity partner = new PartnerEntity();
         partner.setId(1L);
 
         ApiKeyEntity productionKey = new ApiKeyEntity(
@@ -134,7 +134,7 @@ class SandboxFilterTest {
         String apiKey = "payu_test_sandbox_key_12345";
         String keyHash = hashApiKey(apiKey);
 
-        Partner partner = new Partner();
+        PartnerEntity partner = new PartnerEntity();
         partner.setId(1L);
 
         ApiKeyEntity sandboxKey = new ApiKeyEntity(

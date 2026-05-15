@@ -16,13 +16,6 @@ public record HeaderOperation(Type type, String headerName, String value, String
         Objects.requireNonNull(headerName, "Header name cannot be null");
     }
 
-    public enum Type {
-        ADD,
-        REMOVE,
-        REWRITE,
-        ADD_IF_MISSING
-    }
-
     public static HeaderOperation add(String headerName, String value) {
         return new HeaderOperation(Type.ADD, headerName, value, null);
     }

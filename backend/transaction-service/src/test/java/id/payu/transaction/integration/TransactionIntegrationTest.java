@@ -4,7 +4,7 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.application.service.TransactionService;
 import id.payu.transaction.domain.model.Money;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.BifastServicePort;
 import id.payu.transaction.domain.port.out.QrisServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
@@ -37,7 +37,7 @@ import static org.mockito.BDDMockito.given;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
 @Tag("integration")
-@DisplayName("Transaction Integration Test")
+@DisplayName("TransactionEntity Integration Test")
 class TransactionIntegrationTest {
 
     @Container
@@ -221,9 +221,9 @@ class TransactionIntegrationTest {
         assertThat(response.transactionId()).isNotNull();
 
         // Verify fetching from DB
-        Transaction saved = transactionService.getTransaction(response.transactionId(), userId.toString());
+        TransactionEntity saved = transactionService.getTransaction(response.transactionId(), userId.toString());
         assertThat(saved.getAmount()).isNotNull();
-        assertThat(saved.getStatus()).isEqualTo(Transaction.TransactionStatus.VALIDATING);
+        assertThat(saved.getStatus()).isEqualTo(TransactionEntity.TransactionStatus.VALIDATING);
     }
 
     @DynamicPropertySource

@@ -42,14 +42,6 @@ public class SplitPaymentExecution {
         this.legs = new ArrayList<>();
     }
 
-    public enum SplitExecutionStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED,
-        REVERSED
-    }
-
     // --- Domain Methods ---
 
     public void startProcessing() {

@@ -1,10 +1,10 @@
 package id.payu.billing.domain.port.out;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 
 public interface SubscriptionEventPort {
-    void publishSubscriptionCreated(Subscription subscription);
-    void publishChargeSucceeded(Subscription subscription, SubscriptionCharge charge);
-    void publishChargeFailed(Subscription subscription, SubscriptionCharge charge);
+    void publishSubscriptionCreated(SubscriptionEntity subscription);
+    void publishChargeSucceeded(SubscriptionEntity subscription, SubscriptionChargeEntity charge);
+    void publishChargeFailed(SubscriptionEntity subscription, SubscriptionChargeEntity charge);
 }

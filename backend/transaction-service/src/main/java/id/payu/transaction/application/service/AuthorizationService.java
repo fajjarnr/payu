@@ -1,6 +1,6 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +51,8 @@ public class AuthorizationService {
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the transaction
      */
     public void verifyTransactionAccess(java.util.UUID transactionId, String userId) {
-        Transaction transaction = transactionPersistencePort.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+        TransactionEntity transaction = transactionPersistencePort.findById(transactionId)
+                .orElseThrow(() -> new IllegalArgumentException("TransactionEntity not found"));
 
         // Get all account IDs for the user (multi-account support)
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);

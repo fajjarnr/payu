@@ -9,7 +9,7 @@ import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQueryHandler;
 import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
 import id.payu.transaction.application.cqrs.query.GetTransactionQueryHandler;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Transaction service implementing CQRS pattern.
+ * TransactionEntity service implementing CQRS pattern.
  *
  * <p>This service acts as a facade that delegates to specialized command and query handlers.
  * It maintains backward compatibility through deprecated methods while encouraging
@@ -81,13 +81,13 @@ public class TransactionService implements TransactionUseCase {
     // CQRS Methods - Query Side (Read Operations)
 
     @Override
-    public Transaction getTransaction(GetTransactionQuery query) {
+    public TransactionEntity getTransaction(GetTransactionQuery query) {
         log.info("Delegating to GetTransactionQueryHandler");
         return getTransactionHandler.handle(query);
     }
 
     @Override
-    public List<Transaction> getAccountTransactions(GetAccountTransactionsQuery query) {
+    public List<TransactionEntity> getAccountTransactions(GetAccountTransactionsQuery query) {
         log.info("Delegating to GetAccountTransactionsQueryHandler");
         return getAccountTransactionsQueryHandler.handle(query);
     }
@@ -112,7 +112,7 @@ public class TransactionService implements TransactionUseCase {
 
     @Override
     @Deprecated
-    public Transaction getTransaction(UUID transactionId, String userId) {
+    public TransactionEntity getTransaction(UUID transactionId, String userId) {
         log.warn("Using deprecated getTransaction method - consider using GetTransactionQuery");
         GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
         return getTransaction(query);
@@ -120,7 +120,7 @@ public class TransactionService implements TransactionUseCase {
 
     @Override
     @Deprecated
-    public List<Transaction> getAccountTransactions(UUID accountId, String userId, int page, int size) {
+    public List<TransactionEntity> getAccountTransactions(UUID accountId, String userId, int page, int size) {
         log.warn("Using deprecated getAccountTransactions method - consider using GetAccountTransactionsQuery");
         GetAccountTransactionsQuery query = new GetAccountTransactionsQuery(
                 accountId.toString(), userId, page, size);
@@ -129,12 +129,12 @@ public class TransactionService implements TransactionUseCase {
 
     @Override
     @Transactional
-    public Transaction updateTransactionTags(UUID transactionId, String userId, List<String> tags) {
+    public TransactionEntity updateTransactionTags(UUID transactionId, String userId, List<String> tags) {
         log.info("Updating tags for transaction: {}", transactionId);
 
         // Verify ownership and get transaction
         GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
-        Transaction transaction = getTransaction(query);
+        TransactionEntity transaction = getTransaction(query);
 
         // Convert tags to JSON
         try {

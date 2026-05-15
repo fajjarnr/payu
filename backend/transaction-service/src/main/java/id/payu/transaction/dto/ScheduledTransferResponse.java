@@ -1,6 +1,6 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

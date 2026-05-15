@@ -38,7 +38,7 @@ public class Dispute {
             throw new IllegalArgumentException("Transaction ID cannot be null");
         }
         if (partnerId == null || partnerId.isBlank()) {
-            throw new IllegalArgumentException("Partner ID cannot be blank");
+            throw new IllegalArgumentException("PartnerEntity ID cannot be blank");
         }
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Reason cannot be blank");

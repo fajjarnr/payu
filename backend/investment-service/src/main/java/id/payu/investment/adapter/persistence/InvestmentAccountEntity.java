@@ -8,6 +8,7 @@ import org.springframework.data.domain.Persistable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.security.annotation.SensitivityLevel;
 
 @Entity
 @Table(name = "investment_accounts")
@@ -21,7 +22,7 @@ public class InvestmentAccountEntity implements Persistable<UUID> {
     @Id
     private UUID id;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "user_id", nullable = false, unique = true)
     private String userId;
 
@@ -72,9 +73,5 @@ public class InvestmentAccountEntity implements Persistable<UUID> {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum AccountStatus {
-        ACTIVE, SUSPENDED, CLOSED, PENDING_VERIFICATION
     }
 }

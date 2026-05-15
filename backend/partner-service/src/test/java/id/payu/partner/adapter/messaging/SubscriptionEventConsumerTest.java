@@ -45,7 +45,7 @@ class SubscriptionEventConsumerTest {
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
         ConsumerRecord<String, String> record = createRecord(payload,
                 "X-Event-Type", "subscription.created",
-                "X-Partner-Id", "partner-nobar");
+                "X-PartnerEntity-Id", "partner-nobar");
 
         // When
         consumer.consumeSubscriptionEvent(record);
@@ -70,7 +70,7 @@ class SubscriptionEventConsumerTest {
                 "\"data\":{\"amount\":99000,\"currency\":\"IDR\",\"status\":\"SUCCEEDED\",\"partnerId\":\"partner-nobar\"}}";
         ConsumerRecord<String, String> record = createRecord(payload,
                 "X-Event-Type", "charge.succeeded",
-                "X-Partner-Id", "partner-nobar");
+                "X-PartnerEntity-Id", "partner-nobar");
 
         // When
         consumer.consumeSubscriptionEvent(record);
@@ -96,7 +96,7 @@ class SubscriptionEventConsumerTest {
                 "\"data\":{\"amount\":99000,\"status\":\"FAILED\",\"failureReason\":\"Insufficient balance\",\"partnerId\":\"partner-nobar\"}}";
         ConsumerRecord<String, String> record = createRecord(payload,
                 "X-Event-Type", "charge.failed",
-                "X-Partner-Id", "partner-nobar");
+                "X-PartnerEntity-Id", "partner-nobar");
 
         // When
         consumer.consumeSubscriptionEvent(record);

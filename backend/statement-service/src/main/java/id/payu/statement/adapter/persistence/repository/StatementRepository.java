@@ -1,6 +1,6 @@
 package id.payu.statement.adapter.persistence.repository;
 
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,23 +12,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.statement.domain.entity.StatementStatus;
 
 /**
- * Extended Repository for Statement entity
+ * Extended Repository for StatementEntity entity
  */
 @Repository
-public interface StatementRepository extends JpaRepository<Statement, UUID> {
+public interface StatementRepository extends JpaRepository<StatementEntity, UUID> {
 
     /**
      * Find all statements for a customer with pagination
      */
-    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId ORDER BY s.statementPeriod DESC")
-    Page<Statement> findAllByCustomerId(@Param("customerId") String customerId, Pageable pageable);
+    @Query("SELECT s FROM StatementEntity s WHERE s.customerId = :customerId ORDER BY s.statementPeriod DESC")
+    Page<StatementEntity> findAllByCustomerId(@Param("customerId") String customerId, Pageable pageable);
 
     /**
      * Find statement by customer and period
      */
-    Optional<Statement> findByCustomerIdAndStatementPeriod(String customerId, LocalDate statementPeriod);
+    Optional<StatementEntity> findByCustomerIdAndStatementPeriod(String customerId, LocalDate statementPeriod);
 
     /**
      * Check if statement exists for customer and period
@@ -38,18 +39,18 @@ public interface StatementRepository extends JpaRepository<Statement, UUID> {
     /**
      * Find statements by status
      */
-    List<Statement> findByStatus(Statement.StatementStatus status);
+    List<StatementEntity> findByStatus(StatementStatus status);
 
     /**
      * Find statement by ID and customer ID (security check)
      */
-    Optional<Statement> findByIdAndCustomerId(UUID id, String customerId);
+    Optional<StatementEntity> findByIdAndCustomerId(UUID id, String customerId);
 
     /**
      * Get latest completed statement for customer
      */
-    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId AND s.status = 'COMPLETED' ORDER BY s.statementPeriod DESC LIMIT 1")
-    Optional<Statement> findLatestCompletedByCustomerId(@Param("customerId") String customerId);
+    @Query("SELECT s FROM StatementEntity s WHERE s.customerId = :customerId AND s.status = 'COMPLETED' ORDER BY s.statementPeriod DESC LIMIT 1")
+    Optional<StatementEntity> findLatestCompletedByCustomerId(@Param("customerId") String customerId);
 
     /**
      * Count statements by customer
@@ -59,18 +60,18 @@ public interface StatementRepository extends JpaRepository<Statement, UUID> {
     /**
      * Find statements needing archival (older than 24 months)
      */
-    @Query("SELECT s FROM Statement s WHERE s.statementPeriod < :cutoffDate AND s.status = 'COMPLETED'")
-    List<Statement> findStatementsForArchival(@Param("cutoffDate") LocalDate cutoffDate);
+    @Query("SELECT s FROM StatementEntity s WHERE s.statementPeriod < :cutoffDate AND s.status = 'COMPLETED'")
+    List<StatementEntity> findStatementsForArchival(@Param("cutoffDate") LocalDate cutoffDate);
 
     /**
      * Find statements by date range for customer
      */
-    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId AND s.statementPeriod BETWEEN :startDate AND :endDate ORDER BY s.statementPeriod DESC")
-    List<Statement> findByCustomerIdAndStatementPeriodBetween(String customerId, LocalDate startDate, LocalDate endDate);
+    @Query("SELECT s FROM StatementEntity s WHERE s.customerId = :customerId AND s.statementPeriod BETWEEN :startDate AND :endDate ORDER BY s.statementPeriod DESC")
+    List<StatementEntity> findByCustomerIdAndStatementPeriodBetween(String customerId, LocalDate startDate, LocalDate endDate);
 
     /**
      * Find statements in generating status that may be stuck
      */
-    @Query("SELECT s FROM Statement s WHERE s.status = 'GENERATING' AND s.createdAt < :staleTime")
-    List<Statement> findStaleGeneratingStatements(@Param("staleTime") java.time.LocalDateTime staleTime);
+    @Query("SELECT s FROM StatementEntity s WHERE s.status = 'GENERATING' AND s.createdAt < :staleTime")
+    List<StatementEntity> findStaleGeneratingStatements(@Param("staleTime") java.time.LocalDateTime staleTime);
 }

@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.messaging;
 
 import id.payu.outbox.service.OutboxService;
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     private static final Logger log = LoggerFactory.getLogger(SplitBillEventPublisherAdapter.class);
     private final OutboxService outboxService;
 
-    private static final String AGGREGATE_TYPE = "SplitBill";
+    private static final String AGGREGATE_TYPE = "SplitBillEntity";
     private static final String TOPIC_SPLIT_BILLS = "payu.split-bills";
 
     public SplitBillEventPublisherAdapter(OutboxService outboxService) {
@@ -29,7 +29,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishSplitBillCreated(SplitBill splitBill) {
+    public void publishSplitBillCreated(SplitBillEntity splitBill) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "split-bill-created");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -48,7 +48,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishSplitBillActivated(SplitBill splitBill) {
+    public void publishSplitBillActivated(SplitBillEntity splitBill) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "split-bill-activated");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -63,7 +63,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishSplitBillCancelled(SplitBill splitBill) {
+    public void publishSplitBillCancelled(SplitBillEntity splitBill) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "split-bill-cancelled");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -78,7 +78,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishParticipantAdded(SplitBill splitBill, SplitBillParticipant participant) {
+    public void publishParticipantAdded(SplitBillEntity splitBill, SplitBillParticipantEntity participant) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "participant-added");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -98,7 +98,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishPaymentMade(SplitBill splitBill, SplitBillParticipant participant, BigDecimal amount) {
+    public void publishPaymentMade(SplitBillEntity splitBill, SplitBillParticipantEntity participant, BigDecimal amount) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "payment-made");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -120,7 +120,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishSplitBillCompleted(SplitBill splitBill) {
+    public void publishSplitBillCompleted(SplitBillEntity splitBill) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "split-bill-completed");
         payload.put("splitBillId", splitBill.getId().toString());
@@ -138,7 +138,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
     }
 
     @Override
-    public void publishSplitBillPaymentReminder(SplitBill splitBill, SplitBillParticipant participant) {
+    public void publishSplitBillPaymentReminder(SplitBillEntity splitBill, SplitBillParticipantEntity participant) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "payment-reminder");
         payload.put("splitBillId", splitBill.getId().toString());

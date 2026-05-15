@@ -1,6 +1,6 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.DisbursementStatus;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.out.BifastServicePort;
@@ -53,7 +53,7 @@ class DisbursementServiceTest {
     private static final Money AMOUNT = Money.idr("100000");
 
     @Nested
-    @DisplayName("Create Disbursement")
+    @DisplayName("Create DisbursementEntity")
     class CreateDisbursementTests {
 
         @Test
@@ -69,7 +69,7 @@ class DisbursementServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
-            Disbursement result = disbursementService.createDisbursement(
+            DisbursementEntity result = disbursementService.createDisbursement(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME,
                     "Test description", idempotencyKey
             );
@@ -87,14 +87,14 @@ class DisbursementServiceTest {
         void shouldReturnExistingDisbursementForDuplicateIdempotencyKey() {
             // Given
             String idempotencyKey = "idem-key-123";
-            Disbursement existing = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity existing = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, idempotencyKey
             );
             when(disbursementRepository.findByIdempotencyKey(idempotencyKey))
                     .thenReturn(Optional.of(existing));
 
             // When
-            Disbursement result = disbursementService.createDisbursement(
+            DisbursementEntity result = disbursementService.createDisbursement(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME,
                     "Test description", idempotencyKey
             );
@@ -107,14 +107,14 @@ class DisbursementServiceTest {
     }
 
     @Nested
-    @DisplayName("Process Disbursement")
+    @DisplayName("Process DisbursementEntity")
     class ProcessDisbursementTests {
 
         @Test
         @DisplayName("Should process pending disbursement")
         void shouldProcessPendingDisbursement() throws Exception {
             // Given
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
             );
             when(disbursementRepository.findById(any()))
@@ -128,7 +128,7 @@ class DisbursementServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
-            Disbursement result = disbursementService.processDisbursement(disbursement.getId());
+            DisbursementEntity result = disbursementService.processDisbursement(disbursement.getId());
 
             // Then
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.PROCESSING);
@@ -138,14 +138,14 @@ class DisbursementServiceTest {
     }
 
     @Nested
-    @DisplayName("Complete Disbursement")
+    @DisplayName("Complete DisbursementEntity")
     class CompleteDisbursementTests {
 
         @Test
         @DisplayName("Should complete processing disbursement")
         void shouldCompleteProcessingDisbursement() throws Exception {
             // Given
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
             );
             disbursement.process();
@@ -156,7 +156,7 @@ class DisbursementServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
-            Disbursement result = disbursementService.completeDisbursement(disbursement.getId(), "BANK-REF-123");
+            DisbursementEntity result = disbursementService.completeDisbursement(disbursement.getId(), "BANK-REF-123");
 
             // Then
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.COMPLETED);
@@ -167,14 +167,14 @@ class DisbursementServiceTest {
     }
 
     @Nested
-    @DisplayName("Fail Disbursement")
+    @DisplayName("Fail DisbursementEntity")
     class FailDisbursementTests {
 
         @Test
         @DisplayName("Should fail processing disbursement and release funds")
         void shouldFailProcessingDisbursementAndReleaseFunds() {
             // Given
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
             );
             disbursement.process();
@@ -185,7 +185,7 @@ class DisbursementServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
-            Disbursement result = disbursementService.failDisbursement(disbursement.getId(), "Invalid account");
+            DisbursementEntity result = disbursementService.failDisbursement(disbursement.getId(), "Invalid account");
 
             // Then
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.FAILED);

@@ -12,7 +12,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Notification Service (Quarkus) — Hexagonal Architecture.
+ * Architecture Tests for NotificationEntity Service (Quarkus) — Hexagonal Architecture.
  *
  * Enforces:
  * - Hexagonal layer boundaries (Adapter → Application → Domain)
@@ -20,7 +20,7 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
  * - Domain isolation
  * - Sender abstraction patterns
  */
-@DisplayName("Architecture Rules - Notification Service (Hexagonal)")
+@DisplayName("Architecture Rules - NotificationEntity Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;

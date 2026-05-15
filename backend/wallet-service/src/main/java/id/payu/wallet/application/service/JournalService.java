@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.JournalStatus;
 
 /**
  * Application service for double-entry journal operations (IMP-001).
@@ -53,7 +55,7 @@ public class JournalService implements JournalUseCase {
                 .description(description)
                 .referenceType(referenceType)
                 .referenceId(referenceId)
-                .status(JournalEntry.JournalStatus.PENDING)
+                .status(JournalStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .createdBy(createdBy)
                 .entries(new ArrayList<>())
@@ -144,12 +146,12 @@ public class JournalService implements JournalUseCase {
             List<LedgerEntry> entries = group.getValue();
 
             BigDecimal debitTotal = entries.stream()
-                    .filter(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT)
+                    .filter(e -> e.getEntryType() == EntryType.DEBIT)
                     .map(LedgerEntry::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             BigDecimal creditTotal = entries.stream()
-                    .filter(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT)
+                    .filter(e -> e.getEntryType() == EntryType.CREDIT)
                     .map(LedgerEntry::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 

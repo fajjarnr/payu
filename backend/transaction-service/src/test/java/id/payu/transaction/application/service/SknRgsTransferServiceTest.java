@@ -5,7 +5,7 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandl
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Money;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
@@ -92,7 +92,7 @@ class SknRgsTransferServiceTest {
     void shouldInitiateSknTransferSuccessfully() {
         // Given
         InitiateTransferCommand command = createSknCommand();
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(transactionPersistencePort.save(any(TransactionEntity.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
                 ReserveBalanceResponse.builder()
@@ -109,7 +109,7 @@ class SknRgsTransferServiceTest {
         assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("5000"));
         assertThat(result.estimatedCompletionTime()).isEqualTo("Same day");
-        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(TransactionEntity.class));
         verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("100000.00")));
     }
 
@@ -118,7 +118,7 @@ class SknRgsTransferServiceTest {
     void shouldInitiateRgsTransferSuccessfully() {
         // Given
         InitiateTransferCommand command = createRgsCommand();
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(transactionPersistencePort.save(any(TransactionEntity.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
                 ReserveBalanceResponse.builder()
@@ -135,7 +135,7 @@ class SknRgsTransferServiceTest {
         assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("25000"));
         assertThat(result.estimatedCompletionTime()).isEqualTo("Real-time");
-        verify(transactionPersistencePort, times(3)).save(any(Transaction.class));
+        verify(transactionPersistencePort, times(3)).save(any(TransactionEntity.class));
         verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("50000000.00")));
     }
 
@@ -144,7 +144,7 @@ class SknRgsTransferServiceTest {
     void shouldFailTransferWhenBalanceInsufficient() {
         // Given
         InitiateTransferCommand command = createSknCommand();
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(transactionPersistencePort.save(any(TransactionEntity.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
                 ReserveBalanceResponse.builder()
@@ -157,6 +157,6 @@ class SknRgsTransferServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Insufficient balance");
 
-        verify(eventPublisherPort).publishTransactionFailed(any(Transaction.class), anyString());
+        verify(eventPublisherPort).publishTransactionFailed(any(TransactionEntity.class), anyString());
     }
 }

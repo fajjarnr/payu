@@ -2,7 +2,7 @@ package id.payu.transaction.application.service;
 
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.domain.port.in.ScheduledTransferUseCase;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import id.payu.transaction.domain.model.ScheduleType;
+import id.payu.transaction.domain.model.ScheduledStatus;
+import id.payu.transaction.dto.TransactionType;
 
 @Service
 public class ScheduledTransferService implements ScheduledTransferUseCase {
@@ -39,7 +42,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         Instant nextExecutionDate = calculateNextExecutionDate(request.getScheduleType(), request.getStartDate(),
                 request.getFrequencyDays(), request.getDayOfMonth());
 
-        ScheduledTransfer scheduledTransfer = ScheduledTransfer.builder()
+        ScheduledTransferEntity scheduledTransfer = ScheduledTransferEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber(referenceNumber)
                 .senderAccountId(request.getSenderAccountId())
@@ -56,7 +59,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                 .dayOfMonth(request.getDayOfMonth())
                 .occurrenceCount(request.getOccurrenceCount())
                 .executedCount(0)
-                .status(ScheduledTransfer.ScheduledStatus.ACTIVE)
+                .status(ScheduledStatus.ACTIVE)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -70,7 +73,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
 
     @Override
     public ScheduledTransferResponse getScheduledTransfer(UUID id) {
-        ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
+        ScheduledTransferEntity scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
         return mapToResponse(scheduledTransfer);
     }
@@ -78,11 +81,11 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
     @Override
     @Transactional
     public ScheduledTransferResponse updateScheduledTransfer(UUID id, CreateScheduledTransferRequest request) {
-        ScheduledTransfer existing = persistencePort.findById(id)
+        ScheduledTransferEntity existing = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
-        if (existing.getStatus() == ScheduledTransfer.ScheduledStatus.COMPLETED ||
-            existing.getStatus() == ScheduledTransfer.ScheduledStatus.CANCELLED) {
+        if (existing.getStatus() == ScheduledStatus.COMPLETED ||
+            existing.getStatus() == ScheduledStatus.CANCELLED) {
             throw new IllegalStateException("Cannot update completed or cancelled scheduled transfer");
         }
 
@@ -101,7 +104,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         existing.setDayOfMonth(request.getDayOfMonth());
         existing.setOccurrenceCount(request.getOccurrenceCount());
 
-        ScheduledTransfer updated = persistencePort.save(existing);
+        ScheduledTransferEntity updated = persistencePort.save(existing);
         log.info("Scheduled transfer updated, id: {}", updated.getId());
 
         return mapToResponse(updated);
@@ -110,11 +113,11 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
     @Override
     @Transactional
     public ScheduledTransferResponse cancelScheduledTransfer(UUID id) {
-        ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
+        ScheduledTransferEntity scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.CANCELLED);
-        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
+        scheduledTransfer.setStatus(ScheduledStatus.CANCELLED);
+        ScheduledTransferEntity saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer cancelled, id: {}", id);
         return mapToResponse(saved);
@@ -123,15 +126,15 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
     @Override
     @Transactional
     public ScheduledTransferResponse pauseScheduledTransfer(UUID id) {
-        ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
+        ScheduledTransferEntity scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
-        if (scheduledTransfer.getStatus() != ScheduledTransfer.ScheduledStatus.ACTIVE) {
+        if (scheduledTransfer.getStatus() != ScheduledStatus.ACTIVE) {
             throw new IllegalStateException("Can only pause active scheduled transfers");
         }
 
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.PAUSED);
-        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
+        scheduledTransfer.setStatus(ScheduledStatus.PAUSED);
+        ScheduledTransferEntity saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer paused, id: {}", id);
         return mapToResponse(saved);
@@ -140,27 +143,27 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
     @Override
     @Transactional
     public ScheduledTransferResponse resumeScheduledTransfer(UUID id) {
-        ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
+        ScheduledTransferEntity scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
-        if (scheduledTransfer.getStatus() != ScheduledTransfer.ScheduledStatus.PAUSED) {
+        if (scheduledTransfer.getStatus() != ScheduledStatus.PAUSED) {
             throw new IllegalStateException("Can only resume paused scheduled transfers");
         }
 
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.ACTIVE);
-        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
+        scheduledTransfer.setStatus(ScheduledStatus.ACTIVE);
+        ScheduledTransferEntity saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer resumed, id: {}", id);
         return mapToResponse(saved);
     }
 
     @Override
-    public List<ScheduledTransfer> getAccountScheduledTransfers(UUID accountId) {
+    public List<ScheduledTransferEntity> getAccountScheduledTransfers(UUID accountId) {
         return persistencePort.findBySenderAccountId(accountId);
     }
 
     @Transactional
-    public void processDueScheduledTransfer(ScheduledTransfer scheduledTransfer) {
+    public void processDueScheduledTransfer(ScheduledTransferEntity scheduledTransfer) {
         if (!scheduledTransfer.isDueForExecution()) {
             return;
         }
@@ -172,7 +175,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     .amount(scheduledTransfer.getAmount())
                     .currency(scheduledTransfer.getCurrency())
                     .description(scheduledTransfer.getDescription())
-                    .type(InitiateTransferRequest.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
+                    .type(id.payu.transaction.dto.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
                     .build();
 
             InitiateTransferCommand command = InitiateTransferCommand.from(request, scheduledTransfer.getSenderAccountId().toString());
@@ -182,7 +185,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
             scheduledTransfer.setLastTransactionId(response.transactionId());
 
             if (scheduledTransfer.isCompleted()) {
-                scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.COMPLETED);
+                scheduledTransfer.setStatus(ScheduledStatus.COMPLETED);
             } else {
                 Instant nextExecution = calculateNextExecutionDate(
                         scheduledTransfer.getScheduleType(),
@@ -200,7 +203,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         } catch (Exception e) {
             // BUG-BE-116: For recurring transfers, don't permanently FAIL on first error.
             // Keep ACTIVE and advance to next execution date so it retries next cycle.
-            if (scheduledTransfer.getScheduleType() != ScheduledTransfer.ScheduleType.ONE_TIME) {
+            if (scheduledTransfer.getScheduleType() != ScheduleType.ONE_TIME) {
                 scheduledTransfer.setFailureReason(e.getMessage());
                 Instant nextExecution = calculateNextExecutionDate(
                         scheduledTransfer.getScheduleType(),
@@ -214,7 +217,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                         scheduledTransfer.getId(), e.getMessage());
             } else {
                 // ONE_TIME: set FAILED permanently since there's no next cycle
-                scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.FAILED);
+                scheduledTransfer.setStatus(ScheduledStatus.FAILED);
                 scheduledTransfer.setFailureReason(e.getMessage());
                 persistencePort.save(scheduledTransfer);
                 log.error("One-time scheduled transfer execution failed, id: {}, error: {}",
@@ -227,7 +230,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         return "SCH-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
-    private Instant calculateNextExecutionDate(ScheduledTransfer.ScheduleType scheduleType, Instant baseDate,
+    private Instant calculateNextExecutionDate(ScheduleType scheduleType, Instant baseDate,
                                                Integer frequencyDays, Integer dayOfMonth) {
         return switch (scheduleType) {
             case ONE_TIME -> baseDate;
@@ -249,7 +252,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         };
     }
 
-    private ScheduledTransferResponse mapToResponse(ScheduledTransfer scheduledTransfer) {
+    private ScheduledTransferResponse mapToResponse(ScheduledTransferEntity scheduledTransfer) {
         return ScheduledTransferResponse.builder()
                 .id(scheduledTransfer.getId())
                 .referenceNumber(scheduledTransfer.getReferenceNumber())

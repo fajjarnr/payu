@@ -1,8 +1,8 @@
 package id.payu.billing.adapter.messaging;
 
 import id.payu.billing.domain.event.SubscriptionEvent;
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +42,7 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish subscription.created event to correct topic")
     void shouldPublishSubscriptionCreatedEvent() {
         // Given
-        Subscription subscription = createSampleSubscription();
+        SubscriptionEntity subscription = createSampleSubscription();
         CompletableFuture future = CompletableFuture.completedFuture(null);
         when(kafkaTemplate.send(any(Message.class))).thenReturn(future);
 
@@ -68,8 +68,8 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish charge.succeeded event to correct topic")
     void shouldPublishChargeSucceededEvent() {
         // Given
-        Subscription subscription = createSampleSubscription();
-        SubscriptionCharge charge = createSampleCharge(subscription.getId(), true);
+        SubscriptionEntity subscription = createSampleSubscription();
+        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), true);
         CompletableFuture future = CompletableFuture.completedFuture(null);
         when(kafkaTemplate.send(any(Message.class))).thenReturn(future);
 
@@ -85,7 +85,7 @@ class SubscriptionEventAdapterTest {
         assertEquals(charge.getId().toString(), message.getHeaders().get(KafkaHeaders.KEY));
         assertEquals(SubscriptionEvent.CHARGE_SUCCEEDED, message.getHeaders().get("X-Event-Type"));
         assertEquals(subscription.getPartnerId(), message.getHeaders().get("X-Partner-Id"));
-        assertEquals(subscription.getId().toString(), message.getHeaders().get("X-Subscription-Id"));
+        assertEquals(subscription.getId().toString(), message.getHeaders().get("X-SubscriptionEntity-Id"));
 
         CloudEventEnvelope payload = (CloudEventEnvelope) message.getPayload();
         assertNotNull(payload);
@@ -96,8 +96,8 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish charge.failed event to correct topic")
     void shouldPublishChargeFailedEvent() {
         // Given
-        Subscription subscription = createSampleSubscription();
-        SubscriptionCharge charge = createSampleCharge(subscription.getId(), false);
+        SubscriptionEntity subscription = createSampleSubscription();
+        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), false);
         charge.markFailed("Insufficient balance");
         CompletableFuture future = CompletableFuture.completedFuture(null);
         when(kafkaTemplate.send(any(Message.class))).thenReturn(future);
@@ -114,7 +114,7 @@ class SubscriptionEventAdapterTest {
         assertEquals(charge.getId().toString(), message.getHeaders().get(KafkaHeaders.KEY));
         assertEquals(SubscriptionEvent.CHARGE_FAILED, message.getHeaders().get("X-Event-Type"));
         assertEquals(subscription.getPartnerId(), message.getHeaders().get("X-Partner-Id"));
-        assertEquals(subscription.getId().toString(), message.getHeaders().get("X-Subscription-Id"));
+        assertEquals(subscription.getId().toString(), message.getHeaders().get("X-SubscriptionEntity-Id"));
 
         CloudEventEnvelope payload = (CloudEventEnvelope) message.getPayload();
         assertNotNull(payload);
@@ -125,7 +125,7 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should handle Kafka publish failure gracefully")
     void shouldHandlePublishFailure() {
         // Given
-        Subscription subscription = createSampleSubscription();
+        SubscriptionEntity subscription = createSampleSubscription();
         CompletableFuture future = new CompletableFuture();
         future.completeExceptionally(new RuntimeException("Kafka unavailable"));
         when(kafkaTemplate.send(any(Message.class))).thenReturn(future);
@@ -139,13 +139,13 @@ class SubscriptionEventAdapterTest {
 
     // Helper methods
 
-    private Subscription createSampleSubscription() {
-        Subscription sub = new Subscription();
+    private SubscriptionEntity createSampleSubscription() {
+        SubscriptionEntity sub = new SubscriptionEntity();
         sub.setId(UUID.randomUUID());
         sub.setAccountId("acc-123456");
         sub.setPlanId(UUID.randomUUID());
         sub.setPartnerId("partner-nobar");
-        sub.setStatus(Subscription.SubscriptionStatus.ACTIVE);
+        sub.setStatus(SubscriptionEntity.SubscriptionStatus.ACTIVE);
         sub.setCurrentPrice(new BigDecimal("99000"));
         sub.setCurrency("IDR");
         sub.setExternalReferenceId("ext-ref-001");
@@ -153,8 +153,8 @@ class SubscriptionEventAdapterTest {
         return sub;
     }
 
-    private SubscriptionCharge createSampleCharge(UUID subscriptionId, boolean succeeded) {
-        SubscriptionCharge charge = new SubscriptionCharge();
+    private SubscriptionChargeEntity createSampleCharge(UUID subscriptionId, boolean succeeded) {
+        SubscriptionChargeEntity charge = new SubscriptionChargeEntity();
         charge.setId(UUID.randomUUID());
         charge.setSubscriptionId(subscriptionId);
         charge.setAccountId("acc-123456");
@@ -167,7 +167,7 @@ class SubscriptionEventAdapterTest {
         if (succeeded) {
             charge.markSucceeded();
         } else {
-            charge.setStatus(SubscriptionCharge.ChargeStatus.FAILED);
+            charge.setStatus(SubscriptionChargeEntity.ChargeStatus.FAILED);
         }
 
         return charge;

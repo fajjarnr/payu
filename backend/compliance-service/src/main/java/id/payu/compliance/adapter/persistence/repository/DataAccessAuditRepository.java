@@ -1,7 +1,7 @@
 package id.payu.compliance.adapter.persistence.repository;
 
-import id.payu.compliance.domain.model.DataAccessAudit;
-import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
+import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataOperationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,44 +14,44 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface DataAccessAuditRepository extends JpaRepository<DataAccessAudit, UUID> {
+public interface DataAccessAuditRepository extends JpaRepository<DataAccessAuditEntity, UUID> {
 
-    Page<DataAccessAudit> findByUserIdOrderByAccessedAtDesc(String userId, Pageable pageable);
+    Page<DataAccessAuditEntity> findByUserIdOrderByAccessedAtDesc(String userId, Pageable pageable);
 
-    List<DataAccessAudit> findByUserIdAndAccessedAtBetweenOrderByAccessedAtDesc(
+    List<DataAccessAuditEntity> findByUserIdAndAccessedAtBetweenOrderByAccessedAtDesc(
             String userId,
             LocalDateTime startDate,
             LocalDateTime endDate
     );
 
-    List<DataAccessAudit> findByAccessedByAndAccessedAtBetweenOrderByAccessedAtDesc(
+    List<DataAccessAuditEntity> findByAccessedByAndAccessedAtBetweenOrderByAccessedAtDesc(
             String accessedBy,
             LocalDateTime startDate,
             LocalDateTime endDate
     );
 
-    Page<DataAccessAudit> findByOperationTypeOrderByAccessedAtDesc(
+    Page<DataAccessAuditEntity> findByOperationTypeOrderByAccessedAtDesc(
             DataOperationType operationType,
             Pageable pageable
     );
 
-    @Query("SELECT da FROM DataAccessAudit da WHERE da.serviceName = :serviceName AND da.accessedAt BETWEEN :startDate AND :endDate ORDER BY da.accessedAt DESC")
-    List<DataAccessAudit> findByServiceNameAndDateRange(
+    @Query("SELECT da FROM DataAccessAuditEntity da WHERE da.serviceName = :serviceName AND da.accessedAt BETWEEN :startDate AND :endDate ORDER BY da.accessedAt DESC")
+    List<DataAccessAuditEntity> findByServiceNameAndDateRange(
             @Param("serviceName") String serviceName,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
-    @Query("SELECT COUNT(da) FROM DataAccessAudit da WHERE da.userId = :userId AND da.accessedAt >= :startDate")
+    @Query("SELECT COUNT(da) FROM DataAccessAuditEntity da WHERE da.userId = :userId AND da.accessedAt >= :startDate")
     long countByUserIdSinceDate(
             @Param("userId") String userId,
             @Param("startDate") LocalDateTime startDate
     );
 
-    @Query("SELECT da FROM DataAccessAudit da WHERE da.success = false AND da.accessedAt >= :startDate")
-    List<DataAccessAudit> findFailedAccessAttemptsSince(@Param("startDate") LocalDateTime startDate);
+    @Query("SELECT da FROM DataAccessAuditEntity da WHERE da.success = false AND da.accessedAt >= :startDate")
+    List<DataAccessAuditEntity> findFailedAccessAttemptsSince(@Param("startDate") LocalDateTime startDate);
 
-    @Query("SELECT da FROM DataAccessAudit da WHERE " +
+    @Query("SELECT da FROM DataAccessAuditEntity da WHERE " +
            "(:userId IS NULL OR da.userId = :userId) AND " +
            "(:accessedBy IS NULL OR da.accessedBy = :accessedBy) AND " +
            "(:serviceName IS NULL OR da.serviceName = :serviceName) AND " +
@@ -59,7 +59,7 @@ public interface DataAccessAuditRepository extends JpaRepository<DataAccessAudit
            "(:startDate IS NULL OR da.accessedAt >= :startDate) AND " +
            "(:endDate IS NULL OR da.accessedAt <= :endDate) " +
            "ORDER BY da.accessedAt DESC")
-    Page<DataAccessAudit> findByFilters(
+    Page<DataAccessAuditEntity> findByFilters(
             @Param("userId") String userId,
             @Param("accessedBy") String accessedBy,
             @Param("serviceName") String serviceName,

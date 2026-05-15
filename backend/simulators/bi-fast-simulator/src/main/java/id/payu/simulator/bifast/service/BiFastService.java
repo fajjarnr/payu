@@ -10,6 +10,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.Random;
 import java.util.UUID;
+import id.payu.simulator.bifast.entity.AccountStatus;
+import id.payu.simulator.bifast.entity.TransferStatus;
 
 /**
  * Service for BI-FAST simulation operations.
@@ -93,17 +95,17 @@ public class BiFastService {
             return TransferResponse.fromEntity(failed);
         }
 
-        if (destAccount.status == BankAccount.AccountStatus.BLOCKED) {
+        if (destAccount.status == AccountStatus.BLOCKED) {
             Transfer failed = createTransfer(request);
             failed.fail("Destination account is blocked");
             failed.persist();
             return TransferResponse.fromEntity(failed);
         }
 
-        if (destAccount.status == BankAccount.AccountStatus.TIMEOUT) {
+        if (destAccount.status == AccountStatus.TIMEOUT) {
             simulateTimeout();
             Transfer timeout = createTransfer(request);
-            timeout.status = Transfer.TransferStatus.TIMEOUT;
+            timeout.status = TransferStatus.TIMEOUT;
             timeout.persist();
             return TransferResponse.fromEntity(timeout);
         }

@@ -47,23 +47,17 @@ public class JournalEntry {
         this.entries = entries != null ? entries : new ArrayList<>();
     }
 
-    public enum JournalStatus {
-        PENDING,
-        POSTED,
-        REVERSED
-    }
-
     /**
      * Validates that the journal is balanced: sum(debit) == sum(credit).
      */
     public boolean isBalanced() {
         BigDecimal totalDebit = entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT)
+                .filter(e -> e.getEntryType() == EntryType.DEBIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalCredit = entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT)
+                .filter(e -> e.getEntryType() == EntryType.CREDIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -75,7 +69,7 @@ public class JournalEntry {
      */
     public BigDecimal getTotalDebit() {
         return entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT)
+                .filter(e -> e.getEntryType() == EntryType.DEBIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -85,7 +79,7 @@ public class JournalEntry {
      */
     public BigDecimal getTotalCredit() {
         return entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT)
+                .filter(e -> e.getEntryType() == EntryType.CREDIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -95,9 +89,9 @@ public class JournalEntry {
      */
     public boolean hasMatchingPairs() {
         boolean hasDebit = entries.stream()
-                .anyMatch(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT);
+                .anyMatch(e -> e.getEntryType() == EntryType.DEBIT);
         boolean hasCredit = entries.stream()
-                .anyMatch(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT);
+                .anyMatch(e -> e.getEntryType() == EntryType.CREDIT);
         return hasDebit && hasCredit;
     }
 

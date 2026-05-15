@@ -1,6 +1,6 @@
 package id.payu.support.application.service;
 
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 import id.payu.support.dto.CreateTrainingModuleRequest;
 import id.payu.support.dto.TrainingModuleResponse;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import id.payu.support.domain.TrainingStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -43,13 +44,13 @@ public class TrainingModuleService {
     public TrainingModuleResponse createModule(CreateTrainingModuleRequest request) {
         log.info("Creating new training module: {} ({})", request.title(), request.code());
 
-        TrainingModule module = TrainingModule.builder()
+        TrainingModuleEntity module = TrainingModuleEntity.builder()
                 .code(request.code())
                 .title(request.title())
                 .description(request.description())
                 .category(request.category())
                 .durationMinutes(request.durationMinutes())
-                .status(request.status() != null ? request.status() : TrainingModule.TrainingStatus.DRAFT)
+                .status(request.status() != null ? request.status() : TrainingStatus.DRAFT)
                 .mandatory(request.mandatory())
                 .build();
 
@@ -62,11 +63,11 @@ public class TrainingModuleService {
     @CircuitBreaker(name = "support", fallbackMethod = "updateModuleStatusFallback")
     @Retry(name = "support")
     @Transactional
-    public TrainingModuleResponse updateModuleStatus(Long id, TrainingModule.TrainingStatus status) {
+    public TrainingModuleResponse updateModuleStatus(Long id, TrainingStatus status) {
         return moduleRepository.findById(id)
                 .map(module -> {
                     module.setStatus(status);
-                    TrainingModule updated = moduleRepository.save(module);
+                    TrainingModuleEntity updated = moduleRepository.save(module);
                     log.info("Training module {} status updated: {}", id, status);
                     return toResponse(updated);
                 })
@@ -74,13 +75,13 @@ public class TrainingModuleService {
     }
 
     public List<TrainingModuleResponse> getMandatoryModules() {
-        return moduleRepository.findByStatusAndMandatoryTrue(TrainingModule.TrainingStatus.ACTIVE)
+        return moduleRepository.findByStatusAndMandatoryTrue(TrainingStatus.ACTIVE)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    private TrainingModuleResponse toResponse(TrainingModule module) {
+    private TrainingModuleResponse toResponse(TrainingModuleEntity module) {
         return new TrainingModuleResponse(
                 module.getId(),
                 module.getCode(),
@@ -114,7 +115,7 @@ public class TrainingModuleService {
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
-    private TrainingModuleResponse updateModuleStatusFallback(Long id, TrainingModule.TrainingStatus status, Exception ex) {
+    private TrainingModuleResponse updateModuleStatusFallback(Long id, TrainingStatus status, Exception ex) {
         log.error("Fallback for updateModuleStatus: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }

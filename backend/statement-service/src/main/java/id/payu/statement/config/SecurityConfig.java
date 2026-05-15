@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Security configuration for Statement Service
+ * Security configuration for StatementEntity Service
  */
 @Configuration
 @EnableWebSecurity

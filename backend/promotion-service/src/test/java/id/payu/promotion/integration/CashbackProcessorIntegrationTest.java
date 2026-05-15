@@ -23,13 +23,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Integration tests for Cashback Processor feature.
+ * Integration tests for CashbackEntity Processor feature.
  * Tests the complete flow from Kafka event through service to wallet credit.
  */
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("Cashback Processor Integration Tests")
+@DisplayName("CashbackEntity Processor Integration Tests")
 class CashbackProcessorIntegrationTest {
 
     @Autowired
@@ -64,7 +64,7 @@ class CashbackProcessorIntegrationTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE001")
-                .name("Fixed Cashback")
+                .name("Fixed CashbackEntity")
                 .cashbackType(CashbackType.FIXED)
                 .cashbackAmount(new BigDecimal("5000"))
                 .minAmount(new BigDecimal("50000"))
@@ -102,7 +102,7 @@ class CashbackProcessorIntegrationTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE002")
-                .name("Percentage Cashback")
+                .name("Percentage CashbackEntity")
                 .cashbackType(CashbackType.PERCENTAGE)
                 .cashbackPercentage(5.0)
                 .maxCashback(new BigDecimal("10000"))
@@ -167,7 +167,7 @@ class CashbackProcessorIntegrationTest {
         // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE004")
-                .name("Fixed Cashback")
+                .name("Fixed CashbackEntity")
                 .cashbackType(CashbackType.FIXED)
                 .cashbackAmount(new BigDecimal("5000"))
                 .minAmount(new BigDecimal("10000"))

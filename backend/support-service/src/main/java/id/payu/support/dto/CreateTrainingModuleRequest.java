@@ -1,7 +1,7 @@
 package id.payu.support.dto;
 
-import id.payu.support.domain.TrainingModule.TrainingCategory;
-import id.payu.support.domain.TrainingModule.TrainingStatus;
+import id.payu.support.domain.TrainingCategory;
+import id.payu.support.domain.TrainingStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 

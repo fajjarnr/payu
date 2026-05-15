@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import id.payu.lending.domain.model.LoanType;
 
 public record LoanApplicationRequest(
         @NotNull(message = "User ID is required")
@@ -16,7 +17,7 @@ public record LoanApplicationRequest(
         String externalId,
 
         @NotNull(message = "Loan type is required")
-        id.payu.lending.domain.model.Loan.LoanType loanType,
+        id.payu.lending.domain.model.LoanType loanType,
 
         @NotNull(message = "Principal amount is required")
         @DecimalMin(value = "100000.00", message = "Principal amount must be at least 100,000")

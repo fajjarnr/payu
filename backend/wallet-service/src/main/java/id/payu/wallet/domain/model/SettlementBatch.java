@@ -163,14 +163,6 @@ public class SettlementBatch {
         this.netAmount = this.totalAmount.subtract(this.feeAmount);
     }
 
-    public enum SettlementStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED,
-        OVERRIDDEN
-    }
-
     public static SettlementBatchBuilder builder() {
         return new SettlementBatchBuilder();
     }

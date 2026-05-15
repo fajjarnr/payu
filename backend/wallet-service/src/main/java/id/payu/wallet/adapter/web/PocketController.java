@@ -21,10 +21,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST Controller for pocket operations.
@@ -122,7 +123,7 @@ public class PocketController extends BaseController {
 
     @PostMapping("/{pocketId}/credit")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "Pocket",
             maskData = true,
             level = AuditLevel.INFO
@@ -150,7 +151,7 @@ public class PocketController extends BaseController {
 
     @PostMapping("/{pocketId}/debit")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "Pocket",
             maskData = true,
             level = AuditLevel.INFO

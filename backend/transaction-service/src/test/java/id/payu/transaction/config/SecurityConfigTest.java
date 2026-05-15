@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Security configuration tests for Transaction Service.
+ * Security configuration tests for TransactionEntity Service.
  *
  * Tests verify that:
  * - All actuator endpoints are publicly accessible (bypassed by WebSecurityCustomizer)

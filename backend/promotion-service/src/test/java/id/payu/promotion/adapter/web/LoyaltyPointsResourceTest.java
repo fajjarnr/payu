@@ -42,7 +42,7 @@ class LoyaltyPointsResourceTest {
         var request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -65,7 +65,7 @@ class LoyaltyPointsResourceTest {
         var request = new CreateLoyaltyPointsRequest(
             null,
             "txn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -84,7 +84,7 @@ class LoyaltyPointsResourceTest {
         var earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-earn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -136,7 +136,7 @@ class LoyaltyPointsResourceTest {
         var request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -174,7 +174,7 @@ class LoyaltyPointsResourceTest {
         var request1 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -182,7 +182,7 @@ class LoyaltyPointsResourceTest {
         var request2 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-002",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             50,
             LocalDateTime.now().plusMonths(6)
         );
@@ -211,7 +211,7 @@ class LoyaltyPointsResourceTest {
         var request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-001",
-            id.payu.promotion.domain.LoyaltyPoints.TransactionType.EARNED,
+            id.payu.promotion.domain.TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );

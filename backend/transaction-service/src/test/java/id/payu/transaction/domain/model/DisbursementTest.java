@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for Disbursement Aggregate Root.
+ * Unit tests for DisbursementEntity Aggregate Root.
  *
  * <p>P0 Critical Tests - These tests verify the core disbursement lifecycle
  * and state transitions that must be correct for financial integrity.</p>
@@ -27,10 +27,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *   <li>Edge Cases - invalid transitions, null checks</li>
  * </ul>
  *
- * @see Disbursement
+ * @see DisbursementEntity
  */
 @Execution(ExecutionMode.CONCURRENT)
-@DisplayName("Disbursement Aggregate Root Tests")
+@DisplayName("DisbursementEntity Aggregate Root Tests")
 class DisbursementTest {
 
     private static final UUID SOURCE_ACCOUNT_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -50,7 +50,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should create disbursement with PENDING status")
         void shouldCreateDisbursementWithPendingStatus() {
-            Disbursement disbursement = Disbursement.create(
+            DisbursementEntity disbursement = DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -71,7 +71,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should create disbursement with idempotency key")
         void shouldCreateDisbursementWithIdempotencyKey() {
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -87,7 +87,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should generate idempotency key if not provided")
         void shouldGenerateIdempotencyKeyIfNotProvided() {
-            Disbursement disbursement = Disbursement.create(
+            DisbursementEntity disbursement = DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -102,7 +102,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when source account ID is null")
         void shouldThrowExceptionWhenSourceAccountIdIsNull() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     null,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -116,7 +116,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when amount is null")
         void shouldThrowExceptionWhenAmountIsNull() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     null,
                     BANK_CODE,
@@ -130,7 +130,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when amount is zero or negative")
         void shouldThrowExceptionWhenAmountIsZeroOrNegative() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(BigDecimal.ZERO),
                     BANK_CODE,
@@ -144,7 +144,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when bank code is null or empty")
         void shouldThrowExceptionWhenBankCodeIsNullOrEmpty() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     null,
@@ -154,7 +154,7 @@ class DisbursementTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Bank code cannot be null or empty");
 
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     "",
@@ -168,7 +168,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when account number is null or empty")
         void shouldThrowExceptionWhenAccountNumberIsNullOrEmpty() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -178,7 +178,7 @@ class DisbursementTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Account number cannot be null or empty");
 
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -192,7 +192,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when account name is null or empty")
         void shouldThrowExceptionWhenAccountNameIsNullOrEmpty() {
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -202,7 +202,7 @@ class DisbursementTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Account name cannot be null or empty");
 
-            assertThatThrownBy(() -> Disbursement.create(
+            assertThatThrownBy(() -> DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -223,7 +223,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should transition from PENDING to PROCESSING")
         void shouldTransitionFromPendingToProcessing() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
 
             disbursement.process();
 
@@ -234,7 +234,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should transition from PROCESSING to COMPLETED")
         void shouldTransitionFromProcessingToCompleted() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             disbursement.complete("REF12345");
@@ -247,7 +247,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should transition from PROCESSING to FAILED")
         void shouldTransitionFromProcessingToFailed() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             disbursement.fail("Invalid account number");
@@ -260,7 +260,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when processing non-PENDING disbursement")
         void shouldThrowExceptionWhenProcessingNonPendingDisbursement() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             assertThatThrownBy(disbursement::process)
@@ -271,7 +271,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when completing non-PROCESSING disbursement")
         void shouldThrowExceptionWhenCompletingNonProcessingDisbursement() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
 
             assertThatThrownBy(() -> disbursement.complete("REF12345"))
                     .isInstanceOf(IllegalStateException.class)
@@ -281,7 +281,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when failing non-PROCESSING disbursement")
         void shouldThrowExceptionWhenFailingNonProcessingDisbursement() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
 
             assertThatThrownBy(() -> disbursement.fail("Some reason"))
                     .isInstanceOf(IllegalStateException.class)
@@ -291,7 +291,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when completing with null bank reference")
         void shouldThrowExceptionWhenCompletingWithNullBankReference() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             assertThatThrownBy(() -> disbursement.complete(null))
@@ -302,7 +302,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should throw exception when failing with null reason")
         void shouldThrowExceptionWhenFailingWithNullReason() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             assertThatThrownBy(() -> disbursement.fail(null))
@@ -320,7 +320,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for matching idempotency key")
         void shouldReturnTrueForMatchingIdempotencyKey() {
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -335,7 +335,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return false for non-matching idempotency key")
         void shouldReturnFalseForNonMatchingIdempotencyKey() {
-            Disbursement disbursement = Disbursement.createWithIdempotencyKey(
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -350,7 +350,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return false for null idempotency key check")
         void shouldReturnFalseForNullIdempotencyKeyCheck() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
 
             assertThat(disbursement.matchesIdempotencyKey(null)).isFalse();
         }
@@ -365,7 +365,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for isPending when status is PENDING")
         void shouldReturnTrueForIsPendingWhenStatusIsPending() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
 
             assertThat(disbursement.isPending()).isTrue();
             assertThat(disbursement.isProcessing()).isFalse();
@@ -376,7 +376,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for isProcessing when status is PROCESSING")
         void shouldReturnTrueForIsProcessingWhenStatusIsProcessing() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
 
             assertThat(disbursement.isPending()).isFalse();
@@ -388,7 +388,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for isCompleted when status is COMPLETED")
         void shouldReturnTrueForIsCompletedWhenStatusIsCompleted() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
             disbursement.complete("REF123");
 
@@ -401,7 +401,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for isFailed when status is FAILED")
         void shouldReturnTrueForIsFailedWhenStatusIsFailed() {
-            Disbursement disbursement = createSampleDisbursement();
+            DisbursementEntity disbursement = createSampleDisbursement();
             disbursement.process();
             disbursement.fail("Some error");
 
@@ -414,16 +414,16 @@ class DisbursementTest {
         @Test
         @DisplayName("Should return true for isTerminal when status is COMPLETED or FAILED")
         void shouldReturnTrueForIsTerminalWhenStatusIsCompletedOrFailed() {
-            Disbursement completed = createSampleDisbursement();
+            DisbursementEntity completed = createSampleDisbursement();
             completed.process();
             completed.complete("REF123");
 
-            Disbursement failed = createSampleDisbursement();
+            DisbursementEntity failed = createSampleDisbursement();
             failed.process();
             failed.fail("Some error");
 
-            Disbursement pending = createSampleDisbursement();
-            Disbursement processing = createSampleDisbursement();
+            DisbursementEntity pending = createSampleDisbursement();
+            DisbursementEntity processing = createSampleDisbursement();
             processing.process();
 
             assertThat(completed.isTerminal()).isTrue();
@@ -442,7 +442,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should set and get description")
         void shouldSetAndGetDescription() {
-            Disbursement disbursement = Disbursement.create(
+            DisbursementEntity disbursement = DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -458,7 +458,7 @@ class DisbursementTest {
         @Test
         @DisplayName("Should allow null description")
         void shouldAllowNullDescription() {
-            Disbursement disbursement = Disbursement.create(
+            DisbursementEntity disbursement = DisbursementEntity.create(
                     SOURCE_ACCOUNT_ID,
                     Money.idr(AMOUNT),
                     BANK_CODE,
@@ -474,8 +474,8 @@ class DisbursementTest {
 
     // ==================== HELPER METHODS ====================
 
-    private Disbursement createSampleDisbursement() {
-        return Disbursement.create(
+    private DisbursementEntity createSampleDisbursement() {
+        return DisbursementEntity.create(
                 SOURCE_ACCOUNT_ID,
                 Money.idr(AMOUNT),
                 BANK_CODE,

@@ -42,10 +42,6 @@ public class SplitRecipientEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public enum RecipientType {
-        MERCHANT, PLATFORM, TAX, OTHER
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

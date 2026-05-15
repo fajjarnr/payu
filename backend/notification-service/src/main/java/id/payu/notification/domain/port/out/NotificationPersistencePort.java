@@ -1,6 +1,6 @@
 package id.payu.notification.domain.port.out;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,17 +8,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Outbound port for Notification persistence.
+ * Outbound port for NotificationEntity persistence.
  */
 public interface NotificationPersistencePort {
 
-    Notification save(Notification notification);
+    NotificationEntity save(NotificationEntity notification);
 
-    Optional<Notification> findById(UUID id);
+    Optional<NotificationEntity> findById(UUID id);
 
-    List<Notification> findByUserId(String userId, int limit);
+    List<NotificationEntity> findByUserId(String userId, int limit);
 
-    List<Notification> findAll(int limit);
+    List<NotificationEntity> findAll(int limit);
 
-    List<Notification> findPendingScheduledBefore(LocalDateTime dateTime);
+    List<NotificationEntity> findPendingScheduledBefore(LocalDateTime dateTime);
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import id.payu.wallet.adapter.persistence.entity.SettlementStatus;
 
 @Repository
 public interface SettlementBatchJpaRepository extends JpaRepository<SettlementBatchEntity, UUID> {
@@ -18,7 +19,7 @@ public interface SettlementBatchJpaRepository extends JpaRepository<SettlementBa
 
     List<SettlementBatchEntity> findBySettlementDate(LocalDate settlementDate);
 
-    List<SettlementBatchEntity> findByStatus(SettlementBatchEntity.SettlementStatus status);
+    List<SettlementBatchEntity> findByStatus(SettlementStatus status);
 
     @Query("SELECT s FROM SettlementBatchEntity s WHERE s.partnerId = :partnerId AND s.settlementDate = :date")
     List<SettlementBatchEntity> findByPartnerIdAndSettlementDate(

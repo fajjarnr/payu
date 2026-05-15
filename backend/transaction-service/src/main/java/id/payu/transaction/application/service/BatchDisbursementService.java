@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.BatchDisbursement;
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.BatchDisbursementUseCase;
 import id.payu.transaction.domain.port.out.BatchDisbursementRepositoryPort;
@@ -29,7 +29,7 @@ import java.util.UUID;
  * <p>The service processes batch items sequentially with continue-on-error semantics,
  * ensuring partial failures don't stop the entire batch.
  *
- * @see BatchDisbursement
+ * @see BatchDisbursementEntity
  * @see BatchDisbursementUseCase
  */
 @Service
@@ -53,7 +53,7 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
 
     @Override
     @Transactional
-    public BatchDisbursement createBatch(
+    public BatchDisbursementEntity createBatch(
             UUID sourceAccountId,
             String name,
             String description,
@@ -64,7 +64,7 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
 
         // Check idempotency
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            Optional<BatchDisbursement> existing = batchRepository.findByIdempotencyKey(idempotencyKey);
+            Optional<BatchDisbursementEntity> existing = batchRepository.findByIdempotencyKey(idempotencyKey);
             if (existing.isPresent()) {
                 log.info("Returning existing batch for idempotency key: {}", idempotencyKey);
                 return existing.get();
@@ -72,7 +72,7 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
         }
 
         // Create batch
-        BatchDisbursement batch = BatchDisbursement.createWithIdempotencyKey(
+        BatchDisbursementEntity batch = BatchDisbursementEntity.createWithIdempotencyKey(
                 sourceAccountId,
                 name,
                 idempotencyKey != null && !idempotencyKey.isBlank()
@@ -84,7 +84,7 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
             batch.setDescription(description);
         }
 
-        BatchDisbursement saved = batchRepository.save(batch);
+        BatchDisbursementEntity saved = batchRepository.save(batch);
         log.info("Created batch disbursement: {}", saved.getId());
 
         return saved;
@@ -92,7 +92,7 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
 
     @Override
     @Transactional
-    public Disbursement addBatchItem(
+    public DisbursementEntity addBatchItem(
             UUID batchId,
             Money amount,
             String bankCode,
@@ -103,11 +103,11 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
         log.info("Adding item to batch: {}, amount: {}, bank: {}",
                 batchId, amount, bankCode);
 
-        BatchDisbursement batch = batchRepository.findById(batchId)
+        BatchDisbursementEntity batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
         // Create disbursement item
-        Disbursement item = Disbursement.createWithIdempotencyKey(
+        DisbursementEntity item = DisbursementEntity.createWithIdempotencyKey(
                 batch.getSourceAccountId(),
                 amount,
                 bankCode,
@@ -132,26 +132,26 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
     }
 
     @Override
-    public Optional<BatchDisbursement> getBatch(UUID id) {
+    public Optional<BatchDisbursementEntity> getBatch(UUID id) {
         return batchRepository.findById(id);
     }
 
     @Override
-    public Optional<BatchDisbursement> findBatchByIdempotencyKey(String idempotencyKey) {
+    public Optional<BatchDisbursementEntity> findBatchByIdempotencyKey(String idempotencyKey) {
         return batchRepository.findByIdempotencyKey(idempotencyKey);
     }
 
     @Override
-    public List<BatchDisbursement> listBatchesByAccount(UUID sourceAccountId, int limit, int offset) {
+    public List<BatchDisbursementEntity> listBatchesByAccount(UUID sourceAccountId, int limit, int offset) {
         return batchRepository.findBySourceAccountId(sourceAccountId, limit, offset);
     }
 
     @Override
     @Transactional
-    public BatchDisbursement processBatch(UUID id) {
+    public BatchDisbursementEntity processBatch(UUID id) {
         log.info("Processing batch: {}", id);
 
-        BatchDisbursement batch = batchRepository.findById(id)
+        BatchDisbursementEntity batch = batchRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + id));
 
         // Transition to PROCESSING
@@ -176,14 +176,14 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
     public void processBatchItems(String batchId) {
         log.info("Processing batch items for batch: {}", batchId);
 
-        BatchDisbursement batch = batchRepository.findById(UUID.fromString(batchId))
+        BatchDisbursementEntity batch = batchRepository.findById(UUID.fromString(batchId))
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
-        List<Disbursement> items = batch.getItems();
+        List<DisbursementEntity> items = batch.getItems();
         int successCount = 0;
         int failCount = 0;
 
-        for (Disbursement item : items) {
+        for (DisbursementEntity item : items) {
             try {
                 if (item.isPending()) {
                     // Process the disbursement
@@ -203,29 +203,29 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
     }
 
     @Override
-    public List<Disbursement> getBatchItems(UUID batchId) {
-        BatchDisbursement batch = batchRepository.findById(batchId)
+    public List<DisbursementEntity> getBatchItems(UUID batchId) {
+        BatchDisbursementEntity batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
         return batch.getItems();
     }
 
     @Override
     public int getBatchProgress(UUID batchId) {
-        BatchDisbursement batch = batchRepository.findById(batchId)
+        BatchDisbursementEntity batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
         return batch.getProgressPercentage();
     }
 
     @Override
     @Transactional
-    public BatchDisbursement completeBatch(UUID id) {
+    public BatchDisbursementEntity completeBatch(UUID id) {
         log.info("Completing batch: {}", id);
 
-        BatchDisbursement batch = batchRepository.findById(id)
+        BatchDisbursementEntity batch = batchRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + id));
 
         batch.complete();
-        BatchDisbursement saved = batchRepository.save(batch);
+        BatchDisbursementEntity saved = batchRepository.save(batch);
 
         log.info("Batch {} completed with status: {}", id, saved.getStatus());
         return saved;

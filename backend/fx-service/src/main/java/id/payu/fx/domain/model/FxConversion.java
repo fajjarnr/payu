@@ -17,10 +17,6 @@ public class FxConversion {
     private LocalDateTime conversionDate;
     private ConversionStatus status;
 
-    public enum ConversionStatus {
-        PENDING, COMPLETED, FAILED, REVERSED
-    }
-
     public FxConversion() {
     }
 

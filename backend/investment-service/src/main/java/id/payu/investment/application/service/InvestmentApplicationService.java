@@ -25,6 +25,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import id.payu.investment.domain.model.AccountStatus;
+import id.payu.investment.domain.model.DepositStatus;
+import id.payu.investment.domain.model.FundStatus;
+import id.payu.investment.domain.model.InvestmentType;
+import id.payu.investment.domain.model.TransactionStatus;
+import id.payu.investment.domain.model.TransactionType;
 
 @Service
 @RequiredArgsConstructor
@@ -77,7 +83,7 @@ public class InvestmentApplicationService implements
                 .totalBalance(BigDecimal.ZERO)
                 .availableBalance(BigDecimal.ZERO)
                 .lockedBalance(BigDecimal.ZERO)
-                .status(InvestmentAccount.AccountStatus.ACTIVE)
+                .status(AccountStatus.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -132,7 +138,7 @@ public class InvestmentApplicationService implements
                     .maturityAmount(maturityAmount)
                     .startDate(now)
                     .maturityDate(now.plusMonths(tenure))
-                    .status(Deposit.DepositStatus.ACTIVE)
+                    .status(DepositStatus.ACTIVE)
                     .currency("IDR")
                     .createdAt(now)
                     .updatedAt(now)
@@ -144,15 +150,15 @@ public class InvestmentApplicationService implements
             InvestmentTransaction transaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(accountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.DEPOSIT)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.DEPOSIT)
                     .investmentId(savedDeposit.getId().toString())
                     .amount(amount)
                     .price(BigDecimal.ZERO)
                     .units(BigDecimal.ONE)
                     .fee(BigDecimal.ZERO)
                     .currency("IDR")
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .referenceNumber("DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                     .createdAt(now)
                     .updatedAt(now)
@@ -199,7 +205,7 @@ public class InvestmentApplicationService implements
                 .orElseThrow(() -> new IllegalArgumentException("Investment account not found"));
 
         MutualFund fund = investmentPersistencePort.getLatestFundPrice(fundCode);
-        if (fund == null || fund.getStatus() != MutualFund.FundStatus.ACTIVE) {
+        if (fund == null || fund.getStatus() != FundStatus.ACTIVE) {
             throw new IllegalArgumentException("Mutual fund not available");
         }
 
@@ -223,15 +229,15 @@ public class InvestmentApplicationService implements
             InvestmentTransaction transaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(accountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(amount)
                     .price(fund.getNavPerUnit())
                     .units(units)
                     .fee(fee)
                     .currency("IDR")
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .referenceNumber("MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                     .createdAt(now)
                     .updatedAt(now)
@@ -364,19 +370,19 @@ public class InvestmentApplicationService implements
             throw new IllegalArgumentException("Transaction does not belong to account: " + accountId);
         }
 
-        if (existingTransaction.getStatus() != InvestmentTransaction.TransactionStatus.COMPLETED) {
+        if (existingTransaction.getStatus() != TransactionStatus.COMPLETED) {
             throw new IllegalArgumentException("Cannot sell investment with status: " + existingTransaction.getStatus());
         }
 
-        if (existingTransaction.getType() != InvestmentTransaction.TransactionType.BUY) {
+        if (existingTransaction.getType() != TransactionType.BUY) {
             throw new IllegalArgumentException("Can only sell purchased investments");
         }
 
         BigDecimal currentPrice;
-        if (existingTransaction.getInvestmentType() == InvestmentTransaction.InvestmentType.MUTUAL_FUND) {
+        if (existingTransaction.getInvestmentType() == InvestmentType.MUTUAL_FUND) {
             MutualFund fund = investmentPersistencePort.getLatestFundPrice(existingTransaction.getInvestmentId());
             currentPrice = fund.getNavPerUnit();
-        } else if (existingTransaction.getInvestmentType() == InvestmentTransaction.InvestmentType.GOLD) {
+        } else if (existingTransaction.getInvestmentType() == InvestmentType.GOLD) {
             currentPrice = investmentPersistencePort.getLatestGoldPrice();
         } else {
             throw new IllegalArgumentException("Cannot sell deposit before maturity");
@@ -405,7 +411,7 @@ public class InvestmentApplicationService implements
         InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
                 .id(UUID.randomUUID())
                 .accountId(accountId)
-                .type(InvestmentTransaction.TransactionType.SELL)
+                .type(TransactionType.SELL)
                 .investmentType(existingTransaction.getInvestmentType())
                 .investmentId(existingTransaction.getInvestmentId())
                 .amount(sellAmount)
@@ -413,7 +419,7 @@ public class InvestmentApplicationService implements
                 .units(unitsToSell)
                 .fee(fee)
                 .currency("IDR")
-                .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                .status(TransactionStatus.COMPLETED)
                 .referenceNumber("SELL-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                 .createdAt(now)
                 .updatedAt(now)

@@ -156,12 +156,6 @@ public class RevenueSplit {
         return active;
     }
 
-    public enum SplitType {
-        PERCENTAGE,
-        FIXED,
-        MIXED
-    }
-
     public static RevenueSplitBuilder builder() {
         return new RevenueSplitBuilder();
     }

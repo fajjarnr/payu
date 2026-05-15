@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * Input port for settlement operations (GAP-003, GAP-013).
@@ -70,7 +71,7 @@ public interface SettlementUseCase {
      * Create a revenue split configuration.
      */
     RevenueSplit createRevenueSplit(String partnerId, String name, String description,
-                                     RevenueSplit.SplitType splitType, String createdBy);
+                                     SplitType splitType, String createdBy);
 
     /**
      * Get revenue split by ID.

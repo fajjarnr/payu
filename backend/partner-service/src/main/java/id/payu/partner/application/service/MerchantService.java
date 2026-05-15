@@ -3,9 +3,9 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.repository.MerchantQrPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.MerchantRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.Merchant;
-import id.payu.partner.domain.MerchantQrPayment;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.MerchantEntity;
+import id.payu.partner.adapter.persistence.entity.MerchantQrPaymentEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.CreateMerchantRequest;
 import id.payu.partner.dto.CreateQrPaymentRequest;
 import id.payu.partner.dto.MerchantResponse;
@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import id.payu.partner.domain.MerchantCategory;
 
 /**
  * Manages merchant lifecycle and dynamic QRIS payment generation.
@@ -74,23 +75,23 @@ public class MerchantService {
      * Onboard a new merchant under a partner.
      */
     public MerchantResponse createMerchant(Long partnerId, CreateMerchantRequest request) {
-        Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Partner not found: " + partnerId));
+        PartnerEntity partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new IllegalArgumentException("PartnerEntity not found: " + partnerId));
 
         if (!partner.isActive()) {
             throw new IllegalStateException("Cannot create merchant for inactive partner");
         }
 
-        Merchant.MerchantCategory category;
+        MerchantCategory category;
         try {
-            category = Merchant.MerchantCategory.valueOf(request.getCategory());
+            category = MerchantCategory.valueOf(request.getCategory());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid merchant category: " + request.getCategory());
         }
 
         String merchantCode = generateMerchantCode();
 
-        Merchant merchant = new Merchant(partner, merchantCode, request.getBusinessName(),
+        MerchantEntity merchant = new MerchantEntity(partner, merchantCode, request.getBusinessName(),
                 category, request.getAddress());
         merchant.setBusinessType(request.getBusinessType());
         merchant.setCity(request.getCity());
@@ -113,8 +114,8 @@ public class MerchantService {
      */
     @Transactional(readOnly = true)
     public MerchantResponse getMerchant(Long merchantId) {
-        Merchant merchant = merchantRepository.findById(merchantId)
-                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("MerchantEntity not found: " + merchantId));
         return toMerchantResponse(merchant);
     }
 
@@ -131,8 +132,8 @@ public class MerchantService {
      * Activate a pending merchant.
      */
     public MerchantResponse activateMerchant(Long merchantId) {
-        Merchant merchant = merchantRepository.findById(merchantId)
-                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("MerchantEntity not found: " + merchantId));
         merchant.activate();
         merchant = merchantRepository.save(merchant);
         log.info("Activated merchant {} (code={})", merchantId, merchant.getMerchantCode());
@@ -143,17 +144,17 @@ public class MerchantService {
      * Generate a dynamic QR code for a merchant payment.
      */
     public QrPaymentResponse generateDynamicQr(Long merchantId, CreateQrPaymentRequest request) {
-        Merchant merchant = merchantRepository.findById(merchantId)
-                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("MerchantEntity not found: " + merchantId));
 
         if (!merchant.isActive()) {
-            throw new IllegalStateException("Merchant is not active: " + merchant.getStatus());
+            throw new IllegalStateException("MerchantEntity is not active: " + merchant.getStatus());
         }
 
         int expiryMinutes = request.getExpiryMinutes() != null ? request.getExpiryMinutes() : 30;
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expiryMinutes);
 
-        MerchantQrPayment qrPayment = new MerchantQrPayment(
+        MerchantQrPaymentEntity qrPayment = new MerchantQrPaymentEntity(
                 merchant,
                 request.getAmount(),
                 request.getCurrency() != null ? request.getCurrency() : "IDR",
@@ -173,7 +174,7 @@ public class MerchantService {
      */
     @Transactional(readOnly = true)
     public QrPaymentResponse getQrPayment(String referenceId) {
-        MerchantQrPayment qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
+        MerchantQrPaymentEntity qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
                 .orElseThrow(() -> new IllegalArgumentException("QR payment not found: " + referenceId));
         return toQrResponse(qrPayment);
     }
@@ -183,7 +184,7 @@ public class MerchantService {
      * Triggers settlement to merchant wallet.
      */
     public QrPaymentResponse confirmQrPayment(String referenceId, String payerAccountId) {
-        MerchantQrPayment qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
+        MerchantQrPaymentEntity qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
                 .orElseThrow(() -> new IllegalArgumentException("QR payment not found: " + referenceId));
 
         if (!qrPayment.isPending()) {
@@ -211,13 +212,13 @@ public class MerchantService {
      * BUG-BE-184 FIX: Debits payer wallet before crediting merchant wallet
      * to prevent money creation from nothing.
      */
-    private void settleToMerchantWallet(MerchantQrPayment qrPayment) {
+    private void settleToMerchantWallet(MerchantQrPaymentEntity qrPayment) {
         try {
-            Merchant merchant = qrPayment.getMerchant();
+            MerchantEntity merchant = qrPayment.getMerchant();
             String settlementAccountId = merchant.getSettlementAccountId();
 
             if (settlementAccountId == null || settlementAccountId.isEmpty()) {
-                log.warn("Merchant {} has no settlement account configured", merchant.getId());
+                log.warn("MerchantEntity {} has no settlement account configured", merchant.getId());
                 return;
             }
 
@@ -283,7 +284,7 @@ public class MerchantService {
     /**
      * Dispatch webhook for QR payment paid event.
      */
-    private void dispatchQrPaymentPaidEvent(MerchantQrPayment qrPayment) {
+    private void dispatchQrPaymentPaidEvent(MerchantQrPaymentEntity qrPayment) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("event", "qr_payment.paid");
@@ -308,7 +309,7 @@ public class MerchantService {
     /**
      * Publish settlement event to Kafka.
      */
-    private void publishSettlementEvent(MerchantQrPayment qrPayment, Merchant merchant, String status) {
+    private void publishSettlementEvent(MerchantQrPaymentEntity qrPayment, MerchantEntity merchant, String status) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventType", "merchant.settlement");
@@ -347,9 +348,9 @@ public class MerchantService {
      */
     @Scheduled(fixedRate = 120000)
     public void expireQrPayments() {
-        List<MerchantQrPayment> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
+        List<MerchantQrPaymentEntity> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
         if (!expired.isEmpty()) {
-            expired.forEach(MerchantQrPayment::markExpired);
+            expired.forEach(MerchantQrPaymentEntity::markExpired);
             qrPaymentRepository.saveAll(expired);
             log.info("Expired {} QR payments", expired.size());
         }
@@ -363,7 +364,7 @@ public class MerchantService {
         return code;
     }
 
-    private MerchantResponse toMerchantResponse(Merchant entity) {
+    private MerchantResponse toMerchantResponse(MerchantEntity entity) {
         MerchantResponse response = new MerchantResponse();
         response.setId(entity.getId());
         response.setMerchantCode(entity.getMerchantCode());
@@ -383,7 +384,7 @@ public class MerchantService {
         return response;
     }
 
-    private QrPaymentResponse toQrResponse(MerchantQrPayment entity) {
+    private QrPaymentResponse toQrResponse(MerchantQrPaymentEntity entity) {
         QrPaymentResponse response = new QrPaymentResponse();
         response.setId(entity.getId());
         response.setReferenceId(entity.getReferenceId());

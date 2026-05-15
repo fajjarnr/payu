@@ -1,6 +1,6 @@
 package id.payu.lending.entity;
 
-import id.payu.lending.domain.model.InstallmentCheckout.CheckoutStatus;
+import id.payu.lending.domain.model.CheckoutStatus;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;

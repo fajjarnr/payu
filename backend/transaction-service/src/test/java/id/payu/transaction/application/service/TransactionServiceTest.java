@@ -9,7 +9,7 @@ import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQueryHandler;
 import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
 import id.payu.transaction.application.cqrs.query.GetTransactionQueryHandler;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -77,11 +77,11 @@ class TransactionServiceTest {
     void shouldDelegateGetTransactionToHandler() {
         // Given
         GetTransactionQuery query = mock(GetTransactionQuery.class);
-        Transaction expectedTransaction = mock(Transaction.class);
+        TransactionEntity expectedTransaction = mock(TransactionEntity.class);
         when(getTransactionHandler.handle(query)).thenReturn(expectedTransaction);
 
         // When
-        Transaction result = transactionService.getTransaction(query);
+        TransactionEntity result = transactionService.getTransaction(query);
 
         // Then
         assertThat(result).isEqualTo(expectedTransaction);
@@ -93,11 +93,11 @@ class TransactionServiceTest {
     void shouldDelegateGetAccountTransactionsToHandler() {
         // Given
         GetAccountTransactionsQuery query = mock(GetAccountTransactionsQuery.class);
-        List<Transaction> expectedList = Collections.emptyList();
+        List<TransactionEntity> expectedList = Collections.emptyList();
         when(getAccountTransactionsQueryHandler.handle(query)).thenReturn(expectedList);
 
         // When
-        List<Transaction> result = transactionService.getAccountTransactions(query);
+        List<TransactionEntity> result = transactionService.getAccountTransactions(query);
 
         // Then
         assertThat(result).isEqualTo(expectedList);

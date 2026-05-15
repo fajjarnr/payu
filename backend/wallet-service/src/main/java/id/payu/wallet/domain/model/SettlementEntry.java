@@ -71,12 +71,6 @@ public class SettlementEntry {
         this.status = EntryStatus.FAILED;
     }
 
-    public enum EntryStatus {
-        PENDING,
-        SETTLED,
-        FAILED
-    }
-
     public static SettlementEntryBuilder builder() {
         return new SettlementEntryBuilder();
     }

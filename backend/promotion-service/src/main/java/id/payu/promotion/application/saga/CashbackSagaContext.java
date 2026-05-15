@@ -1,6 +1,6 @@
 package id.payu.promotion.application.saga;
 
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.dto.CreateCashbackRequest;
 
 import java.io.Serializable;
@@ -14,7 +14,7 @@ import java.util.UUID;
 public class CashbackSagaContext implements Serializable {
 
     private CreateCashbackRequest request;
-    private Cashback cashback;
+    private CashbackEntity cashback;
     private UUID cashbackId;
     private String accountId;
     private BigDecimal amount;
@@ -61,11 +61,11 @@ public class CashbackSagaContext implements Serializable {
         this.request = request;
     }
 
-    public Cashback getCashback() {
+    public CashbackEntity getCashback() {
         return cashback;
     }
 
-    public void setCashback(Cashback cashback) {
+    public void setCashback(CashbackEntity cashback) {
         this.cashback = cashback;
     }
 

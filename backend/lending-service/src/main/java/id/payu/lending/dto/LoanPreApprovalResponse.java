@@ -6,11 +6,13 @@ import id.payu.lending.domain.model.CreditScore;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.LoanType;
+import id.payu.lending.domain.model.RiskCategory;
 
 public record LoanPreApprovalResponse(
         UUID preApprovalId,
         UUID userId,
-        Loan.LoanType loanType,
+        LoanType loanType,
         BigDecimal principalAmount,
         BigDecimal maxApprovedAmount,
         BigDecimal minInterestRate,
@@ -18,15 +20,9 @@ public record LoanPreApprovalResponse(
         BigDecimal estimatedMonthlyPayment,
         PreApprovalStatus status,
         BigDecimal creditScore,
-        CreditScore.RiskCategory riskCategory,
+        RiskCategory riskCategory,
         String reason,
         LocalDateTime validUntil,
         LocalDateTime createdAt
 ) {
-
-    public enum PreApprovalStatus {
-        APPROVED,
-        CONDITIONALLY_APPROVED,
-        REJECTED
-    }
 }

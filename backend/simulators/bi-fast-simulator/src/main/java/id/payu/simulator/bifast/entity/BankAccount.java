@@ -35,13 +35,6 @@ public class BankAccount extends PanacheEntityBase {
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 
-    public enum AccountStatus {
-        ACTIVE,
-        BLOCKED,
-        DORMANT,
-        TIMEOUT  // Special status to simulate timeout scenarios
-    }
-
     // Finder methods
     public static BankAccount findByBankAndAccount(String bankCode, String accountNumber) {
         return find("bankCode = ?1 and accountNumber = ?2", bankCode, accountNumber).firstResult();

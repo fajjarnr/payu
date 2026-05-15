@@ -9,11 +9,12 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.account.entity.BeneficiaryStatus;
 
 @Repository
 public interface BeneficiaryRepository extends JpaRepository<Beneficiary, UUID> {
 
-    List<Beneficiary> findByUserIdAndStatusNot(UUID userId, Beneficiary.BeneficiaryStatus status);
+    List<Beneficiary> findByUserIdAndStatusNot(UUID userId, BeneficiaryStatus status);
 
     @Query("SELECT b FROM Beneficiary b WHERE b.user.id = :userId AND b.status != 'DELETED'")
     List<Beneficiary> findActiveByUserId(@Param("userId") UUID userId);

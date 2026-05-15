@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.sender;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
@@ -13,7 +13,7 @@ public class PushSender {
 
     private static final Logger LOG = Logger.getLogger(PushSender.class);
 
-    public boolean send(Notification notification) {
+    public boolean send(NotificationEntity notification) {
         try {
             LOG.infof("Sending push notification to device: %s", notification.recipient);
 

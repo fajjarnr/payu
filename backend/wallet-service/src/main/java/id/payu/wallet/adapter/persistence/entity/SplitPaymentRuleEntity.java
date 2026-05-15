@@ -54,10 +54,6 @@ public class SplitPaymentRuleEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public enum SplitType {
-        PERCENTAGE, FIXED, MIXED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

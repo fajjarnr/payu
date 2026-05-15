@@ -3,9 +3,9 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.repository.MerchantQrPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.MerchantRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.Merchant;
-import id.payu.partner.domain.MerchantQrPayment;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.MerchantEntity;
+import id.payu.partner.adapter.persistence.entity.MerchantQrPaymentEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.CreateMerchantRequest;
 import id.payu.partner.dto.CreateQrPaymentRequest;
 import id.payu.partner.dto.MerchantResponse;
@@ -52,21 +52,21 @@ class MerchantServiceTest {
 
     private MerchantService merchantService;
 
-    private Partner activePartner;
-    private Merchant activeMerchant;
+    private PartnerEntity activePartner;
+    private MerchantEntity activeMerchant;
 
     @BeforeEach
     void setUp() {
         merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, kafkaTemplate, objectMapper);
 
-        activePartner = new Partner("Test Partner", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
+        activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
         activePartner.setActive(true);
 
-        activeMerchant = new Merchant(activePartner, "MCH001TEST", "Warung Kopi",
-                Merchant.MerchantCategory.FOOD_BEVERAGE, "Jl. Test 1");
+        activeMerchant = new MerchantEntity(activePartner, "MCH001TEST", "Warung Kopi",
+                MerchantEntity.MerchantCategory.FOOD_BEVERAGE, "Jl. Test 1");
         activeMerchant.setId(10L);
-        activeMerchant.setStatus(Merchant.MerchantStatus.ACTIVE);
+        activeMerchant.setStatus(MerchantEntity.MerchantStatus.ACTIVE);
     }
 
     @Nested
@@ -85,8 +85,8 @@ class MerchantServiceTest {
 
             when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
             when(merchantRepository.existsByMerchantCode(anyString())).thenReturn(false);
-            when(merchantRepository.save(any(Merchant.class))).thenAnswer(invocation -> {
-                Merchant saved = invocation.getArgument(0);
+            when(merchantRepository.save(any(MerchantEntity.class))).thenAnswer(invocation -> {
+                MerchantEntity saved = invocation.getArgument(0);
                 saved.setId(100L);
                 return saved;
             });
@@ -105,7 +105,7 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should fail for inactive partner")
         void shouldFailForInactivePartner() {
-            Partner inactive = new Partner("Inactive", "MERCHANT", "x@y.com", "08111", "key");
+            PartnerEntity inactive = new PartnerEntity("Inactive", "MERCHANT", "x@y.com", "08111", "key");
             inactive.setId(2L);
             inactive.setActive(false);
             when(partnerRepository.findById(2L)).thenReturn(Optional.of(inactive));
@@ -141,12 +141,12 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should activate pending merchant")
         void shouldActivatePendingMerchant() {
-            Merchant pending = new Merchant(activePartner, "MCH002", "Test Store",
-                    Merchant.MerchantCategory.RETAIL, "Addr");
+            MerchantEntity pending = new MerchantEntity(activePartner, "MCH002", "Test Store",
+                    MerchantEntity.MerchantCategory.RETAIL, "Addr");
             pending.setId(20L);
 
             when(merchantRepository.findById(20L)).thenReturn(Optional.of(pending));
-            when(merchantRepository.save(any(Merchant.class))).thenAnswer(i -> i.getArgument(0));
+            when(merchantRepository.save(any(MerchantEntity.class))).thenAnswer(i -> i.getArgument(0));
 
             MerchantResponse response = merchantService.activateMerchant(20L);
 
@@ -176,8 +176,8 @@ class MerchantServiceTest {
             request.setExpiryMinutes(30);
 
             when(merchantRepository.findById(10L)).thenReturn(Optional.of(activeMerchant));
-            when(qrPaymentRepository.save(any(MerchantQrPayment.class))).thenAnswer(invocation -> {
-                MerchantQrPayment saved = invocation.getArgument(0);
+            when(qrPaymentRepository.save(any(MerchantQrPaymentEntity.class))).thenAnswer(invocation -> {
+                MerchantQrPaymentEntity saved = invocation.getArgument(0);
                 saved.setId(200L);
                 return saved;
             });
@@ -197,10 +197,10 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should fail for inactive merchant")
         void shouldFailForInactiveMerchant() {
-            Merchant suspended = new Merchant(activePartner, "MCH003", "Suspended",
-                    Merchant.MerchantCategory.RETAIL, "Addr");
+            MerchantEntity suspended = new MerchantEntity(activePartner, "MCH003", "Suspended",
+                    MerchantEntity.MerchantCategory.RETAIL, "Addr");
             suspended.setId(30L);
-            suspended.setStatus(Merchant.MerchantStatus.SUSPENDED);
+            suspended.setStatus(MerchantEntity.MerchantStatus.SUSPENDED);
 
             when(merchantRepository.findById(30L)).thenReturn(Optional.of(suspended));
 
@@ -219,14 +219,14 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should confirm QR payment successfully")
         void shouldConfirmQrPayment() {
-            MerchantQrPayment qrPayment = new MerchantQrPayment(
+            MerchantQrPaymentEntity qrPayment = new MerchantQrPaymentEntity(
                     activeMerchant, BigDecimal.valueOf(50000), "IDR",
                     "Test", LocalDateTime.now().plusMinutes(30));
             qrPayment.setId(200L);
 
             when(qrPaymentRepository.findByReferenceId(qrPayment.getReferenceId()))
                     .thenReturn(Optional.of(qrPayment));
-            when(qrPaymentRepository.save(any(MerchantQrPayment.class)))
+            when(qrPaymentRepository.save(any(MerchantQrPaymentEntity.class)))
                     .thenAnswer(i -> i.getArgument(0));
 
             QrPaymentResponse response = merchantService.confirmQrPayment(
@@ -241,7 +241,7 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should fail for expired QR payment")
         void shouldFailForExpiredQrPayment() {
-            MerchantQrPayment qrPayment = new MerchantQrPayment(
+            MerchantQrPaymentEntity qrPayment = new MerchantQrPaymentEntity(
                     activeMerchant, BigDecimal.valueOf(50000), "IDR",
                     "Test", LocalDateTime.now().minusMinutes(5));
             qrPayment.setId(201L);
@@ -261,7 +261,7 @@ class MerchantServiceTest {
         @Test
         @DisplayName("should expire pending QR payments")
         void shouldExpirePendingPayments() {
-            MerchantQrPayment qr = new MerchantQrPayment(
+            MerchantQrPaymentEntity qr = new MerchantQrPaymentEntity(
                     activeMerchant, BigDecimal.valueOf(10000), "IDR",
                     "Old", LocalDateTime.now().minusMinutes(5));
             qr.setId(300L);
@@ -272,7 +272,7 @@ class MerchantServiceTest {
 
             merchantService.expireQrPayments();
 
-            assertEquals(MerchantQrPayment.QrPaymentStatus.EXPIRED, qr.getStatus());
+            assertEquals(MerchantQrPaymentEntity.QrPaymentStatus.EXPIRED, qr.getStatus());
             verify(qrPaymentRepository).saveAll(anyList());
         }
     }

@@ -3,9 +3,9 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.repository.WebhookDeliveryRepository;
 import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.WebhookDelivery;
-import id.payu.partner.domain.WebhookSubscription;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
 import id.payu.partner.dto.WebhookDeliveryDTO;
 import id.payu.partner.dto.WebhookSubscriptionDTO;
 import org.slf4j.Logger;
@@ -50,8 +50,8 @@ public class WebhookService {
      * Generates HMAC secret and returns it once (not stored in response after creation).
      */
     public WebhookSubscriptionDTO createSubscription(Long partnerId, WebhookSubscriptionDTO dto) {
-        Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Partner not found: " + partnerId));
+        PartnerEntity partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new IllegalArgumentException("PartnerEntity not found: " + partnerId));
 
         if (!partner.isActive()) {
             throw new IllegalStateException("Cannot create webhook for inactive partner");
@@ -63,7 +63,7 @@ public class WebhookService {
 
         String secret = generateSecret();
 
-        WebhookSubscription subscription = new WebhookSubscription(
+        WebhookSubscriptionEntity subscription = new WebhookSubscriptionEntity(
                 partner, dto.getUrl(), dto.getEvents(), secret);
         subscription.setDescription(dto.getDescription());
         if (dto.getMaxRetries() != null) {
@@ -84,7 +84,7 @@ public class WebhookService {
      */
     public WebhookSubscriptionDTO updateSubscription(Long partnerId, Long subscriptionId,
                                                      WebhookSubscriptionDTO dto) {
-        WebhookSubscription subscription = findSubscriptionForPartner(partnerId, subscriptionId);
+        WebhookSubscriptionEntity subscription = findSubscriptionForPartner(partnerId, subscriptionId);
 
         if (dto.getUrl() != null) {
             subscription.setUrl(dto.getUrl());
@@ -112,7 +112,7 @@ public class WebhookService {
      * Delete a webhook subscription.
      */
     public void deleteSubscription(Long partnerId, Long subscriptionId) {
-        WebhookSubscription subscription = findSubscriptionForPartner(partnerId, subscriptionId);
+        WebhookSubscriptionEntity subscription = findSubscriptionForPartner(partnerId, subscriptionId);
         subscriptionRepository.delete(subscription);
         log.info("Deleted webhook subscription {} for partner {}", subscriptionId, partnerId);
     }
@@ -122,7 +122,7 @@ public class WebhookService {
      */
     @Transactional(readOnly = true)
     public WebhookSubscriptionDTO getSubscription(Long partnerId, Long subscriptionId) {
-        WebhookSubscription subscription = findSubscriptionForPartner(partnerId, subscriptionId);
+        WebhookSubscriptionEntity subscription = findSubscriptionForPartner(partnerId, subscriptionId);
         return toDTO(subscription, false);
     }
 
@@ -132,7 +132,7 @@ public class WebhookService {
     @Transactional(readOnly = true)
     public List<WebhookSubscriptionDTO> listSubscriptions(Long partnerId) {
         partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Partner not found: " + partnerId));
+                .orElseThrow(() -> new IllegalArgumentException("PartnerEntity not found: " + partnerId));
         return subscriptionRepository.findByPartnerId(partnerId)
                 .stream()
                 .map(s -> toDTO(s, false))
@@ -144,7 +144,7 @@ public class WebhookService {
      * Returns the new secret (shown only once).
      */
     public WebhookSubscriptionDTO regenerateSecret(Long partnerId, Long subscriptionId) {
-        WebhookSubscription subscription = findSubscriptionForPartner(partnerId, subscriptionId);
+        WebhookSubscriptionEntity subscription = findSubscriptionForPartner(partnerId, subscriptionId);
         String newSecret = generateSecret();
         subscription.setSecret(newSecret);
         subscription = subscriptionRepository.save(subscription);
@@ -165,8 +165,8 @@ public class WebhookService {
 
     // --- Internal helpers ---
 
-    private WebhookSubscription findSubscriptionForPartner(Long partnerId, Long subscriptionId) {
-        WebhookSubscription subscription = subscriptionRepository.findById(subscriptionId)
+    private WebhookSubscriptionEntity findSubscriptionForPartner(Long partnerId, Long subscriptionId) {
+        WebhookSubscriptionEntity subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Webhook subscription not found: " + subscriptionId));
 
@@ -186,7 +186,7 @@ public class WebhookService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    private WebhookSubscriptionDTO toDTO(WebhookSubscription entity, boolean includeSecret) {
+    private WebhookSubscriptionDTO toDTO(WebhookSubscriptionEntity entity, boolean includeSecret) {
         WebhookSubscriptionDTO dto = new WebhookSubscriptionDTO();
         dto.setId(entity.getId());
         dto.setUrl(entity.getUrl());
@@ -206,7 +206,7 @@ public class WebhookService {
         return dto;
     }
 
-    private WebhookDeliveryDTO toDeliveryDTO(WebhookDelivery entity) {
+    private WebhookDeliveryDTO toDeliveryDTO(WebhookDeliveryEntity entity) {
         WebhookDeliveryDTO dto = new WebhookDeliveryDTO();
         dto.setId(entity.getId());
         dto.setEventId(entity.getEventId());

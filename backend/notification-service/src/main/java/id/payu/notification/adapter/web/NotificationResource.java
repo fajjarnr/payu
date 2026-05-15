@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.web;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.dto.NotificationResponse;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
@@ -35,7 +35,7 @@ import java.util.UUID;
 @Path("/api/v1/notifications")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Notifications", description = "Notification management APIs for sending and tracking notifications via Push, SMS, Email, and In-App channels")
+@Tag(name = "Notifications", description = "NotificationEntity management APIs for sending and tracking notifications via Push, SMS, Email, and In-App channels")
 @SecurityRequirement(name = "bearerAuth")
 // BUG-SECURITY-029 FIX: Per-endpoint ownership check required
     @Authenticated
@@ -80,7 +80,7 @@ public class NotificationResource {
     @APIResponses(value = {
         @APIResponse(
             responseCode = "201",
-            description = "Notification created and queued for delivery",
+            description = "NotificationEntity created and queued for delivery",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON,
                 schema = @Schema(implementation = NotificationResponse.class)
@@ -119,7 +119,7 @@ public class NotificationResource {
         )
     })
     @RequestBody(
-        description = "Notification request with channel, recipient, and content",
+        description = "NotificationEntity request with channel, recipient, and content",
         content = @Content(
             mediaType = MediaType.APPLICATION_JSON,
             schema = @Schema(implementation = SendNotificationRequest.class)
@@ -130,7 +130,7 @@ public class NotificationResource {
         LOG.infof("Received notification request: channel=%s, recipient=%s",
                 request.channel(), request.recipient());
 
-        Notification notification = notificationService.send(request);
+        NotificationEntity notification = notificationService.send(request);
         return Response.status(Response.Status.CREATED)
                 .entity(NotificationResponse.from(notification))
                 .build();
@@ -194,7 +194,7 @@ public class NotificationResource {
             Retrieves detailed information about a specific notification including
             delivery status, timestamps, and failure reasons if applicable.
 
-            **Notification Statuses:**
+            **NotificationEntity Statuses:**
             - `PENDING`: Queued for delivery
             - `SENDING`: Currently being sent
             - `SENT`: Successfully sent to provider
@@ -206,7 +206,7 @@ public class NotificationResource {
     @APIResponses(value = {
         @APIResponse(
             responseCode = "200",
-            description = "Notification found",
+            description = "NotificationEntity found",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON,
                 schema = @Schema(implementation = NotificationResponse.class)
@@ -222,7 +222,7 @@ public class NotificationResource {
         ),
         @APIResponse(
             responseCode = "404",
-            description = "Notification not found",
+            description = "NotificationEntity not found",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON,
                 schema = @Schema(implementation = ErrorResponse.class)
@@ -235,7 +235,7 @@ public class NotificationResource {
     })
     public Response getById(
         @Parameter(
-            description = "Notification UUID",
+            description = "NotificationEntity UUID",
             required = true,
             example = "123e4567-e89b-12d3-a456-426614174000"
         )
@@ -243,7 +243,7 @@ public class NotificationResource {
         return notificationService.getById(id)
                 .map(n -> Response.ok(NotificationResponse.from(n)).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("Notification not found"))
+                        .entity(new ErrorResponse("NotificationEntity not found"))
                         .build());
     }
 
@@ -342,7 +342,7 @@ public class NotificationResource {
     @APIResponses(value = {
         @APIResponse(
             responseCode = "200",
-            description = "Notification marked as read successfully",
+            description = "NotificationEntity marked as read successfully",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON,
                 schema = @Schema(implementation = SuccessResponse.class),
@@ -359,7 +359,7 @@ public class NotificationResource {
         ),
         @APIResponse(
             responseCode = "404",
-            description = "Notification not found",
+            description = "NotificationEntity not found",
             content = @Content(
                 mediaType = MediaType.APPLICATION_JSON,
                 schema = @Schema(implementation = ErrorResponse.class)
@@ -372,7 +372,7 @@ public class NotificationResource {
     })
     public Response markAsRead(
         @Parameter(
-            description = "Notification UUID to mark as read",
+            description = "NotificationEntity UUID to mark as read",
             required = true,
             example = "123e4567-e89b-12d3-a456-426614174000"
         )
@@ -388,7 +388,7 @@ public class NotificationResource {
     record ErrorResponse(
         @Schema(
             description = "Human-readable error message",
-            example = "Notification not found"
+            example = "NotificationEntity not found"
         )
         String message
     ) {}

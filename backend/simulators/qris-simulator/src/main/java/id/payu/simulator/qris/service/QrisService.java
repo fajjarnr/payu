@@ -15,6 +15,10 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
+import id.payu.simulator.qris.entity.MerchantCategory;
+import id.payu.simulator.qris.entity.MerchantStatus;
+import id.payu.simulator.qris.entity.PaymentStatus;
+import id.payu.simulator.qris.entity.QrType;
 
 /**
  * Service for QRIS simulation operations.
@@ -50,7 +54,7 @@ public class QrisService {
             return GenerateQrResponse.merchantNotFound(request.merchantId());
         }
 
-        if (merchant.status != Merchant.MerchantStatus.ACTIVE) {
+        if (merchant.status != MerchantStatus.ACTIVE) {
             return GenerateQrResponse.merchantBlocked(request.merchantId());
         }
 
@@ -59,7 +63,7 @@ public class QrisService {
         payment.qrId = generateQrId();
         payment.referenceNumber = generateReferenceNumber();
         payment.merchant = merchant;
-        payment.qrType = QrisPayment.QrType.DYNAMIC;
+        payment.qrType = QrType.DYNAMIC;
         payment.amount = request.amount();
         payment.tipAmount = request.tipAmount();
         payment.webhookUrl = request.webhookUrl();
@@ -113,13 +117,13 @@ public class QrisService {
         }
 
         // Check if already paid
-        if (payment.status == QrisPayment.PaymentStatus.PAID) {
+        if (payment.status == PaymentStatus.PAID) {
             return PaymentResponse.alreadyPaid(payment);
         }
 
         // Check if failed or cancelled
-        if (payment.status == QrisPayment.PaymentStatus.FAILED || 
-            payment.status == QrisPayment.PaymentStatus.CANCELLED) {
+        if (payment.status == PaymentStatus.FAILED || 
+            payment.status == PaymentStatus.CANCELLED) {
             return PaymentResponse.failed(payment, "QR code is no longer valid");
         }
 
@@ -157,7 +161,7 @@ public class QrisService {
         }
 
         // Check and update expired status
-        if (payment.status == QrisPayment.PaymentStatus.PENDING && payment.isExpired()) {
+        if (payment.status == PaymentStatus.PENDING && payment.isExpired()) {
             payment.markAsExpired();
         }
 

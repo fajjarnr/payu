@@ -8,7 +8,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * PayU Statement Service Application
+ * PayU StatementEntity Service Application
  *
  * Service for generating and managing monthly e-statements (PDF) for users.
  * Supports transaction history aggregation, balance snapshots, and secure PDF delivery.

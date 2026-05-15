@@ -1,7 +1,7 @@
 package id.payu.partner.adapter.web.filter;
 
 import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
-import id.payu.partner.domain.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

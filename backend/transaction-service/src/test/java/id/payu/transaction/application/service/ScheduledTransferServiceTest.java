@@ -2,8 +2,8 @@ package id.payu.transaction.application.service;
 
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
-import id.payu.transaction.domain.model.ScheduledTransfer;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
@@ -38,7 +38,7 @@ class ScheduledTransferServiceTest {
     private ScheduledTransferService service;
 
     private CreateScheduledTransferRequest request;
-    private ScheduledTransfer scheduledTransfer;
+    private ScheduledTransferEntity scheduledTransfer;
 
     @BeforeEach
     void setUp() {
@@ -48,14 +48,14 @@ class ScheduledTransferServiceTest {
                 .amount(new BigDecimal("100000"))
                 .currency("IDR")
                 .description("Monthly transfer")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.RECURRING_MONTHLY)
                 .startDate(Instant.now())
                 .dayOfMonth(1)
                 .occurrenceCount(12)
                 .build();
 
-        scheduledTransfer = ScheduledTransfer.builder()
+        scheduledTransfer = ScheduledTransferEntity.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("SCH1234567890")
                 .senderAccountId(request.getSenderAccountId())
@@ -69,7 +69,7 @@ class ScheduledTransferServiceTest {
                 .dayOfMonth(request.getDayOfMonth())
                 .occurrenceCount(request.getOccurrenceCount())
                 .executedCount(0)
-                .status(ScheduledTransfer.ScheduledStatus.ACTIVE)
+                .status(ScheduledTransferEntity.ScheduledStatus.ACTIVE)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -77,7 +77,7 @@ class ScheduledTransferServiceTest {
 
     @Test
     void createScheduledTransfer_Success() {
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         ScheduledTransferResponse response = service.createScheduledTransfer(request);
 
@@ -85,7 +85,7 @@ class ScheduledTransferServiceTest {
         assertEquals("SCH1234567890", response.getReferenceNumber());
         assertEquals(request.getSenderAccountId(), response.getSenderAccountId());
         assertEquals("ACTIVE", response.getStatus());
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
@@ -112,29 +112,29 @@ class ScheduledTransferServiceTest {
     void cancelScheduledTransfer_Success() {
         UUID id = scheduledTransfer.getId();
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         service.cancelScheduledTransfer(id);
 
         verify(persistencePort, times(1)).findById(id);
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
     void pauseScheduledTransfer_Success() {
         UUID id = scheduledTransfer.getId();
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         service.pauseScheduledTransfer(id);
 
         verify(persistencePort, times(1)).findById(id);
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
     void pauseScheduledTransfer_NotActive() {
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.PAUSED);
+        scheduledTransfer.setStatus(ScheduledTransferEntity.ScheduledStatus.PAUSED);
         UUID id = scheduledTransfer.getId();
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
 
@@ -143,15 +143,15 @@ class ScheduledTransferServiceTest {
 
     @Test
     void resumeScheduledTransfer_Success() {
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.PAUSED);
+        scheduledTransfer.setStatus(ScheduledTransferEntity.ScheduledStatus.PAUSED);
         UUID id = scheduledTransfer.getId();
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         service.resumeScheduledTransfer(id);
 
         verify(persistencePort, times(1)).findById(id);
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
@@ -165,10 +165,10 @@ class ScheduledTransferServiceTest {
     @Test
     void getAccountScheduledTransfers_Success() {
         UUID accountId = UUID.randomUUID();
-        List<ScheduledTransfer> transfers = List.of(scheduledTransfer);
+        List<ScheduledTransferEntity> transfers = List.of(scheduledTransfer);
         when(persistencePort.findBySenderAccountId(accountId)).thenReturn(transfers);
 
-        List<ScheduledTransfer> result = service.getAccountScheduledTransfers(accountId);
+        List<ScheduledTransferEntity> result = service.getAccountScheduledTransfers(accountId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -188,12 +188,12 @@ class ScheduledTransferServiceTest {
         );
 
         when(transactionUseCase.initiateTransfer(any(InitiateTransferCommand.class))).thenReturn(transactionResponse);
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         service.processDueScheduledTransfer(scheduledTransfer);
 
         verify(transactionUseCase, times(1)).initiateTransfer(any(InitiateTransferCommand.class));
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
@@ -203,7 +203,7 @@ class ScheduledTransferServiceTest {
         service.processDueScheduledTransfer(scheduledTransfer);
 
         verify(transactionUseCase, never()).initiateTransfer(any(InitiateTransferCommand.class));
-        verify(persistencePort, never()).save(any(ScheduledTransfer.class));
+        verify(persistencePort, never()).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
@@ -215,25 +215,25 @@ class ScheduledTransferServiceTest {
                 .amount(new BigDecimal("200000"))
                 .currency("IDR")
                 .description("Updated transfer")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.RECURRING_MONTHLY)
                 .startDate(Instant.now().plusSeconds(300))
                 .dayOfMonth(15)
                 .build();
 
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
-        when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
+        when(persistencePort.save(any(ScheduledTransferEntity.class))).thenReturn(scheduledTransfer);
 
         ScheduledTransferResponse response = service.updateScheduledTransfer(id, updateRequest);
 
         assertNotNull(response);
         verify(persistencePort, times(1)).findById(id);
-        verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
+        verify(persistencePort, times(1)).save(any(ScheduledTransferEntity.class));
     }
 
     @Test
     void updateScheduledTransfer_Completed_ShouldFail() {
-        scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.COMPLETED);
+        scheduledTransfer.setStatus(ScheduledTransferEntity.ScheduledStatus.COMPLETED);
         UUID id = scheduledTransfer.getId();
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));
 

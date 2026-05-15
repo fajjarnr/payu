@@ -1,6 +1,6 @@
 package id.payu.transaction.domain.port.in;
 
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.UUID;
  *   <li>Query disbursement status</li>
  * </ul>
  *
- * @see Disbursement
+ * @see DisbursementEntity
  */
 public interface DisbursementUseCase {
 
@@ -41,7 +41,7 @@ public interface DisbursementUseCase {
      * @throws IllegalArgumentException if parameters are invalid
      * @throws IllegalStateException if duplicate idempotency key exists with different parameters
      */
-    Disbursement createDisbursement(
+    DisbursementEntity createDisbursement(
             UUID sourceAccountId,
             Money amount,
             String bankCode,
@@ -57,7 +57,7 @@ public interface DisbursementUseCase {
      * @param id the disbursement ID
      * @return optional containing the disbursement if found
      */
-    Optional<Disbursement> getDisbursement(UUID id);
+    Optional<DisbursementEntity> getDisbursement(UUID id);
 
     /**
      * Finds a disbursement by idempotency key.
@@ -65,7 +65,7 @@ public interface DisbursementUseCase {
      * @param idempotencyKey the idempotency key
      * @return optional containing the disbursement if found
      */
-    Optional<Disbursement> findByIdempotencyKey(String idempotencyKey);
+    Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
 
     /**
      * Lists disbursements for a source account.
@@ -75,7 +75,7 @@ public interface DisbursementUseCase {
      * @param offset pagination offset
      * @return list of disbursements
      */
-    List<Disbursement> listDisbursementsByAccount(UUID sourceAccountId, int limit, int offset);
+    List<DisbursementEntity> listDisbursementsByAccount(UUID sourceAccountId, int limit, int offset);
 
     /**
      * Processes a pending disbursement.
@@ -85,7 +85,7 @@ public interface DisbursementUseCase {
      * @return the updated disbursement
      * @throws IllegalStateException if disbursement is not in PENDING status
      */
-    Disbursement processDisbursement(UUID id);
+    DisbursementEntity processDisbursement(UUID id);
 
     /**
      * Handles successful BI-FAST callback.
@@ -95,7 +95,7 @@ public interface DisbursementUseCase {
      * @param bankReference the bank reference number
      * @return the updated disbursement
      */
-    Disbursement completeDisbursement(UUID id, String bankReference);
+    DisbursementEntity completeDisbursement(UUID id, String bankReference);
 
     /**
      * Handles failed BI-FAST callback.
@@ -105,7 +105,7 @@ public interface DisbursementUseCase {
      * @param reason the failure reason
      * @return the updated disbursement
      */
-    Disbursement failDisbursement(UUID id, String reason);
+    DisbursementEntity failDisbursement(UUID id, String reason);
 
     /**
      * Lists disbursements by status.
@@ -114,5 +114,5 @@ public interface DisbursementUseCase {
      * @param limit maximum number of results
      * @return list of disbursements
      */
-    List<Disbursement> listDisbursementsByStatus(String status, int limit);
+    List<DisbursementEntity> listDisbursementsByStatus(String status, int limit);
 }

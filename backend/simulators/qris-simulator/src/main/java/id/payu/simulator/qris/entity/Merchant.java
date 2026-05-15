@@ -42,25 +42,6 @@ public class Merchant extends PanacheEntityBase {
     @Column(name = "created_at", nullable = false)
     public LocalDateTime createdAt = LocalDateTime.now();
 
-    public enum MerchantCategory {
-        FOOD_BEVERAGE,
-        RETAIL,
-        ELECTRONICS,
-        FASHION,
-        HEALTH,
-        TRANSPORT,
-        ENTERTAINMENT,
-        UTILITIES,
-        OTHER
-    }
-
-    public enum MerchantStatus {
-        ACTIVE,
-        INACTIVE,
-        BLOCKED,
-        SUSPENDED
-    }
-
     // Finder methods
     public static Merchant findByMerchantId(String merchantId) {
         return find("merchantId", merchantId).firstResult();

@@ -1,6 +1,6 @@
 package id.payu.partner.adapter.web;
 
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import id.payu.partner.dto.CertificateRequest;
 import id.payu.partner.dto.PartnerCertificateDTO;
 import id.payu.partner.application.service.CertificateRotationService;
@@ -53,7 +53,7 @@ public class CertificateController extends BaseController {
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<ApiResponse<List<PartnerCertificateDTO>>> getCertificatesByPartner(
         @PathVariable("partnerId") Long partnerId) {
-        List<PartnerCertificate> certificates = certificateService.getCertificatesByPartner(partnerId);
+        List<PartnerCertificateEntity> certificates = certificateService.getCertificatesByPartner(partnerId);
         List<PartnerCertificateDTO> dtos = certificates.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -65,7 +65,7 @@ public class CertificateController extends BaseController {
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<ApiResponse<PartnerCertificateDTO>> getActiveCertificate(
         @PathVariable("partnerId") Long partnerId) {
-        PartnerCertificate cert = certificateService.getActiveCertificate(partnerId).orElse(null);
+        PartnerCertificateEntity cert = certificateService.getActiveCertificate(partnerId).orElse(null);
         if (cert == null) {
             return notFound("Active certificate not found for partner", partnerId);
         }
@@ -77,7 +77,7 @@ public class CertificateController extends BaseController {
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<ApiResponse<PartnerCertificateDTO>> getValidCertificate(
         @PathVariable("partnerId") Long partnerId) {
-        PartnerCertificate cert = certificateService.getValidCertificate(partnerId).orElse(null);
+        PartnerCertificateEntity cert = certificateService.getValidCertificate(partnerId).orElse(null);
         if (cert == null) {
             return notFound("Valid certificate not found for partner", partnerId);
         }
@@ -91,7 +91,7 @@ public class CertificateController extends BaseController {
         @PathVariable("partnerId") Long partnerId,
         @RequestParam(value = "days", defaultValue = "30") @Min(1) int days) {
         int daysToCheck = days > 0 ? days : 30;
-        List<PartnerCertificate> certificates = certificateService.getExpiringCertificates(partnerId, daysToCheck);
+        List<PartnerCertificateEntity> certificates = certificateService.getExpiringCertificates(partnerId, daysToCheck);
         List<PartnerCertificateDTO> dtos = certificates.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -105,7 +105,7 @@ public class CertificateController extends BaseController {
         @PathVariable("partnerId") Long partnerId,
         @Valid @RequestBody CertificateRequest request) {
         try {
-            PartnerCertificate cert = certificateService.addCertificate(
+            PartnerCertificateEntity cert = certificateService.addCertificate(
                     partnerId, request.certificatePem, request.privateKeyPem
             );
             return created(toDTO(cert));
@@ -125,7 +125,7 @@ public class CertificateController extends BaseController {
         @RequestParam(value = "validityDays", defaultValue = "365") @Min(1) int validityDays) {
         try {
             int days = validityDays > 0 ? validityDays : 365;
-            PartnerCertificate cert = certificateService.generateKeyPairAndStore(partnerId, days);
+            PartnerCertificateEntity cert = certificateService.generateKeyPairAndStore(partnerId, days);
             return created(toDTO(cert));
         } catch (IllegalArgumentException e) {
             return (ResponseEntity) notFound(e.getMessage());
@@ -214,7 +214,7 @@ public class CertificateController extends BaseController {
         return ok(response);
     }
 
-    private PartnerCertificateDTO toDTO(PartnerCertificate cert) {
+    private PartnerCertificateDTO toDTO(PartnerCertificateEntity cert) {
         return new PartnerCertificateDTO(
                 cert.getId(),
                 cert.getPartner() != null ? cert.getPartner().getId() : null,

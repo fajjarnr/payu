@@ -1,6 +1,6 @@
 package id.payu.partner.adapter.persistence.repository;
 
-import id.payu.partner.domain.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import id.payu.partner.domain.KeyEnvironment;
+import id.payu.partner.domain.KeyStatus;
 
 @Repository
 public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, Long> {
@@ -17,14 +19,14 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, Long> {
 
     List<ApiKeyEntity> findByPartnerId(Long partnerId);
 
-    List<ApiKeyEntity> findByPartnerIdAndStatus(Long partnerId, ApiKeyEntity.KeyStatus status);
+    List<ApiKeyEntity> findByPartnerIdAndStatus(Long partnerId, KeyStatus status);
 
     @Query("SELECT k FROM ApiKeyEntity k WHERE k.partner.id = :partnerId " +
            "AND k.status IN ('ACTIVE', 'ROTATED') " +
            "AND k.environment = :env")
     List<ApiKeyEntity> findActiveKeysByPartnerAndEnv(
             @Param("partnerId") Long partnerId,
-            @Param("env") ApiKeyEntity.KeyEnvironment env);
+            @Param("env") KeyEnvironment env);
 
     @Query("SELECT k FROM ApiKeyEntity k WHERE k.status = 'ROTATED' " +
            "AND k.gracePeriodEndsAt <= :now")
@@ -35,7 +37,7 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, Long> {
     List<ApiKeyEntity> findExpiredKeys(@Param("now") LocalDateTime now);
 
     long countByPartnerIdAndStatusIn(Long partnerId,
-                                     List<ApiKeyEntity.KeyStatus> statuses);
+                                     List<KeyStatus> statuses);
 
     boolean existsByKeyHash(String keyHash);
 }

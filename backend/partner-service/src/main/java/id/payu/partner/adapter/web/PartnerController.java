@@ -16,12 +16,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 import java.util.List;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for managing partners.
@@ -29,7 +30,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/partners")
-@Tag(name = OpenApiConstants.TAG_PARTNER, description = "Partner management operations")
+@Tag(name = OpenApiConstants.TAG_PARTNER, description = "PartnerEntity management operations")
 // BUG-BE-164: Allow authenticated users (USER/ADMIN) to view partners; mutations require ADMIN
 public class PartnerController extends BaseController {
 
@@ -97,15 +98,15 @@ public class PartnerController extends BaseController {
     public ResponseEntity<?> getPartnerById(@PathVariable("id") Long id) {
         PartnerDTO partner = partnerService.getPartnerById(id);
         if (partner == null) {
-            return notFound("Partner", id);
+            return notFound("PartnerEntity", id);
         }
         return ok(partner);
     }
 
     @PostMapping
     @Audited(
-            operation = Audited.Operation.CREATE,
-            entityType = "Partner",
+            operation = AuditOperation.CREATE,
+            entityType = "PartnerEntity",
             maskData = true,
             level = AuditLevel.INFO
     )
@@ -190,7 +191,7 @@ public class PartnerController extends BaseController {
             @Valid @RequestBody PartnerDTO partnerDTO) {
         PartnerDTO updatedPartner = partnerService.updatePartner(id, partnerDTO);
         if (updatedPartner == null) {
-            return notFound("Partner", id);
+            return notFound("PartnerEntity", id);
         }
         return ok(updatedPartner);
     }
@@ -198,8 +199,8 @@ public class PartnerController extends BaseController {
     @PostMapping("/{id}/keys/regenerate")
     @RateLimiter(name = "regenerateKeys") // BUG-BE-165: Rate limiting to prevent abuse
     @Audited(
-            operation = Audited.Operation.OTHER,
-            entityType = "Partner",
+            operation = AuditOperation.OTHER,
+            entityType = "PartnerEntity",
             maskData = true,
             level = AuditLevel.WARN
     )
@@ -234,7 +235,7 @@ public class PartnerController extends BaseController {
     public ResponseEntity<?> regenerateKeys(@PathVariable("id") Long id) {
         PartnerDTO partner = partnerService.regenerateKeys(id);
         if (partner == null) {
-            return notFound("Partner", id);
+            return notFound("PartnerEntity", id);
         }
         // BUG-BE-165: Mask the client secret instead of returning it fully
         if (partner.clientSecret != null && partner.clientSecret.length() >= 4) {
@@ -274,7 +275,7 @@ public class PartnerController extends BaseController {
     public ResponseEntity<?> deletePartner(@PathVariable("id") Long id) {
         boolean deleted = partnerService.deletePartner(id);
         if (!deleted) {
-            return notFound("Partner", id);
+            return notFound("PartnerEntity", id);
         }
         return noContent();
     }

@@ -1,6 +1,6 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.PartnerCertificate;
+import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class CertificateRotationService {
 
     @Transactional
     public void rotateCertificate(Long certificateId, int newValidityDays) {
-        PartnerCertificate oldCert = certificateRepository.findById(certificateId).orElse(null);
+        PartnerCertificateEntity oldCert = certificateRepository.findById(certificateId).orElse(null);
         if (oldCert == null) {
             throw new IllegalArgumentException("Certificate not found with id: " + certificateId);
         }
@@ -32,7 +32,7 @@ public class CertificateRotationService {
         Long partnerId = oldCert.getPartner().getId();
 
         try {
-            PartnerCertificate newCert = certificateService.generateKeyPairAndStore(partnerId, newValidityDays);
+            PartnerCertificateEntity newCert = certificateService.generateKeyPairAndStore(partnerId, newValidityDays);
 
             oldCert.setActive(false);
             certificateRepository.save(oldCert);
@@ -59,10 +59,10 @@ public class CertificateRotationService {
 
     @Transactional
     public int rotateExpiringCertificates(int daysUntilExpiry) {
-        List<PartnerCertificate> expiringCerts = certificateRepository.findExpiringSoon(null, daysUntilExpiry);
+        List<PartnerCertificateEntity> expiringCerts = certificateRepository.findExpiringSoon(null, daysUntilExpiry);
 
         int rotatedCount = 0;
-        for (PartnerCertificate cert : expiringCerts) {
+        for (PartnerCertificateEntity cert : expiringCerts) {
             try {
                 rotateCertificate(cert.getId());
                 rotatedCount++;
@@ -77,10 +77,10 @@ public class CertificateRotationService {
 
     @Transactional
     public int rotateAllExpiredCertificates() {
-        List<PartnerCertificate> expiredCerts = certificateRepository.findExpiredCertificates();
+        List<PartnerCertificateEntity> expiredCerts = certificateRepository.findExpiredCertificates();
 
         int rotatedCount = 0;
-        for (PartnerCertificate cert : expiredCerts) {
+        for (PartnerCertificateEntity cert : expiredCerts) {
             try {
                 rotateCertificate(cert.getId());
                 rotatedCount++;
@@ -95,10 +95,10 @@ public class CertificateRotationService {
 
     @Transactional
     public void rotateCertificateForPartner(Long partnerId, int newValidityDays) {
-        List<PartnerCertificate> certs = certificateRepository.findByPartnerId(partnerId);
+        List<PartnerCertificateEntity> certs = certificateRepository.findByPartnerId(partnerId);
 
-        PartnerCertificate activeCert = null;
-        for (PartnerCertificate cert : certs) {
+        PartnerCertificateEntity activeCert = null;
+        for (PartnerCertificateEntity cert : certs) {
             if (cert.isActive()) {
                 activeCert = cert;
                 break;
@@ -118,7 +118,7 @@ public class CertificateRotationService {
         }
     }
 
-    public boolean shouldRotateCertificate(PartnerCertificate cert, int rotationThresholdDays) {
+    public boolean shouldRotateCertificate(PartnerCertificateEntity cert, int rotationThresholdDays) {
         if (!cert.isActive()) {
             return false;
         }

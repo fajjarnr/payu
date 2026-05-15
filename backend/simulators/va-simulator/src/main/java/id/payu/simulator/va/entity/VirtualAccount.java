@@ -21,13 +21,6 @@ import java.time.LocalDateTime;
        })
 public class VirtualAccount extends PanacheEntity {
 
-    public enum VaStatus {
-        PENDING,
-        PAID,
-        EXPIRED,
-        CANCELLED
-    }
-
     @Column(name = "va_number", nullable = false, unique = true, length = 30)
     public String vaNumber;
 

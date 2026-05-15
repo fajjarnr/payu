@@ -1,6 +1,6 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,13 +75,13 @@ class AuthorizationServiceTest {
     // ==================== TRANSACTION ACCESS TESTS ====================
 
     @Nested
-    @DisplayName("Transaction Access Verification")
+    @DisplayName("TransactionEntity Access Verification")
     class TransactionAccessTests {
 
         @Test
         @DisplayName("Should allow access when user owns the transaction (single account)")
         void shouldAllowAccessWhenUserOwnsTransaction() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(userId)).thenReturn(List.of(senderAccountId));
 
@@ -95,7 +95,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should allow access when user owns the transaction (multi-account)")
         void shouldAllowAccessWhenUserOwnsTransactionMultiAccount() {
-            Transaction transaction = createTransaction(secondAccountId);
+            TransactionEntity transaction = createTransaction(secondAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             // User has multiple accounts including the sender account
             when(accountServicePort.getAccountIdsByUserId(userId)).thenReturn(List.of(senderAccountId, secondAccountId));
@@ -110,7 +110,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should deny access when user does not own the transaction")
         void shouldDenyAccessWhenUserDoesNotOwnTransaction() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             // Other user has different accounts
             when(accountServicePort.getAccountIdsByUserId(otherUserId)).thenReturn(List.of(otherAccountId));
@@ -126,7 +126,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should deny access when user has no accounts")
         void shouldDenyAccessWhenUserHasNoAccounts() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             // User has no accounts
             when(accountServicePort.getAccountIdsByUserId(otherUserId)).thenReturn(Collections.emptyList());
@@ -146,7 +146,7 @@ class AuthorizationServiceTest {
 
             assertThatThrownBy(() -> authorizationService.verifyTransactionAccess(transactionId, userId))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Transaction not found");
+                    .hasMessageContaining("TransactionEntity not found");
         }
     }
 
@@ -269,13 +269,13 @@ class AuthorizationServiceTest {
         void shouldHandleNullTransactionIdGracefully() {
             assertThatThrownBy(() -> authorizationService.verifyTransactionAccess(null, userId))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Transaction not found");
+                    .hasMessageContaining("TransactionEntity not found");
         }
 
         @Test
         @DisplayName("Should handle null user ID gracefully")
         void shouldHandleNullUserIdGracefully() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(null)).thenReturn(Collections.emptyList());
 
@@ -328,7 +328,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should not leak user IDs in error messages")
         void shouldNotLeakUserIdsInErrorMessages() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(otherUserId)).thenReturn(List.of(otherAccountId));
 
@@ -357,7 +357,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should log successful access without sensitive data")
         void shouldLogSuccessfulAccessWithoutSensitiveData() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(userId)).thenReturn(List.of(senderAccountId));
 
@@ -371,7 +371,7 @@ class AuthorizationServiceTest {
         @Test
         @DisplayName("Should log denied access attempts with masked user ID")
         void shouldLogDeniedAccessAttemptsWithMaskedUserId() {
-            Transaction transaction = createTransaction(senderAccountId);
+            TransactionEntity transaction = createTransaction(senderAccountId);
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(otherUserId)).thenReturn(List.of(otherAccountId));
 
@@ -399,9 +399,9 @@ class AuthorizationServiceTest {
                 manyAccounts.add(UUID.randomUUID());
             }
 
-            // Transaction from the last account
+            // TransactionEntity from the last account
             UUID lastAccount = manyAccounts.get(9);
-            Transaction transaction = createTransaction(lastAccount);
+            TransactionEntity transaction = createTransaction(lastAccount);
 
             when(transactionPersistencePort.findById(transactionId)).thenReturn(Optional.of(transaction));
             when(accountServicePort.getAccountIdsByUserId(userId)).thenReturn(manyAccounts);
@@ -446,16 +446,16 @@ class AuthorizationServiceTest {
 
     // ==================== HELPER METHODS ====================
 
-    private Transaction createTransaction(UUID senderAccountId) {
-        return Transaction.builder()
+    private TransactionEntity createTransaction(UUID senderAccountId) {
+        return TransactionEntity.builder()
                 .id(transactionId)
                 .referenceNumber("TXN123456")
                 .senderAccountId(senderAccountId)
                 .recipientAccountId(UUID.randomUUID())
                 .amount(id.payu.transaction.domain.model.Money.idr("100000"))
                 .description("Test transaction")
-                .type(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .status(Transaction.TransactionStatus.PENDING)
+                .type(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .status(TransactionEntity.TransactionStatus.PENDING)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

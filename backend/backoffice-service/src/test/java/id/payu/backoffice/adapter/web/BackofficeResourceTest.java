@@ -1,8 +1,8 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.domain.CustomerCase;
-import id.payu.backoffice.domain.FraudCase;
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.*;
 import id.payu.backoffice.testutil.IntegrationTest;
 import io.restassured.RestAssured;
@@ -125,8 +125,8 @@ public class BackofficeResourceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 "customer-1",
                 "ACC-CUST-1",
-                CustomerCase.CaseType.ACCOUNT_ISSUE,
-                CustomerCase.Priority.HIGH,
+                CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
+                CustomerCaseEntity.Priority.HIGH,
                 "Login issue",
                 "Cannot login",
                 "Please check"

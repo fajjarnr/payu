@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.PocketStatus;
 
 @Service
 public class PocketService implements PocketUseCase {
@@ -37,7 +38,7 @@ public class PocketService implements PocketUseCase {
                 .description(description)
                 .currency(currency)
                 .balance(BigDecimal.ZERO)
-                .status(Pocket.PocketStatus.ACTIVE)
+                .status(PocketStatus.ACTIVE)
                 .build();
 
         Pocket saved = pocketPersistencePort.save(pocket);

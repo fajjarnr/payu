@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import id.payu.wallet.domain.model.SplitType;
 
 /**
  * REST Controller for Settlement operations (GAP-003, GAP-013).
@@ -152,7 +153,7 @@ public class SettlementController extends BaseController {
 
         RevenueSplit split = settlementUseCase.createRevenueSplit(
                 request.getPartnerId(), request.getName(), request.getDescription(),
-                RevenueSplit.SplitType.valueOf(request.getSplitType()), request.getCreatedBy());
+                SplitType.valueOf(request.getSplitType()), request.getCreatedBy());
 
         RevenueSplitResponse response = toRevenueSplitResponse(split);
         String location = "/api/v1/settlements/revenue-splits/" + split.getId();

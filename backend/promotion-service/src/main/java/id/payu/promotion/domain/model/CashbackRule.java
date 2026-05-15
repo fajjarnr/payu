@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Aggregate Root representing a Cashback Rule in the domain.
+ * Aggregate Root representing a CashbackEntity Rule in the domain.
  * Rich domain model with behavior methods for evaluating and calculating cashback.
  */
 public class CashbackRule {

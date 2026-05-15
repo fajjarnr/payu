@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Base controller for Promotion Service providing common API response functionality.
+ * Base controller for PromotionEntity Service providing common API response functionality.
  * Spring Boot-specific implementation using Spring MVC.
  */
 public abstract class BaseController {

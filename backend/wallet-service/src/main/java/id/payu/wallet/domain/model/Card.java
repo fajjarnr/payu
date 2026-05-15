@@ -39,12 +39,6 @@ public class Card {
         this.updatedAt = updatedAt;
     }
 
-    public enum CardStatus {
-        ACTIVE,
-        BLOCKED,
-        FROZEN
-    }
-
     public boolean isActive() {
         return this.status == CardStatus.ACTIVE;
     }

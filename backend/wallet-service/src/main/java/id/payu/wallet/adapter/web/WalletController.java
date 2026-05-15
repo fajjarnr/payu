@@ -23,13 +23,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST Controller for wallet operations.
@@ -223,7 +224,7 @@ public class WalletController extends BaseController {
 
     @PostMapping("/{accountId}/credit")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "Wallet",
             maskData = true,
             level = AuditLevel.INFO

@@ -2,7 +2,7 @@ package id.payu.compliance.unit;
 
 import id.payu.compliance.adapter.persistence.AuditReportPersistenceAdapter;
 import id.payu.compliance.adapter.persistence.repository.AuditReportRepository;
-import id.payu.compliance.domain.model.AuditReport;
+import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
@@ -39,7 +39,7 @@ class AuditReportPersistenceAdapterTest {
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_001";
 
-        AuditReport report = AuditReport.builder()
+        AuditReportEntity report = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.PCI_DSS)
@@ -48,9 +48,9 @@ class AuditReportPersistenceAdapterTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(repository.save(any(AuditReport.class))).thenReturn(report);
+        when(repository.save(any(AuditReportEntity.class))).thenReturn(report);
 
-        AuditReport result = adapter.save(report);
+        AuditReportEntity result = adapter.save(report);
 
         assertNotNull(result);
         assertEquals(transactionId, result.getTransactionId());
@@ -60,7 +60,7 @@ class AuditReportPersistenceAdapterTest {
     @Test
     void shouldFindById() {
         UUID id = UUID.randomUUID();
-        AuditReport report = AuditReport.builder()
+        AuditReportEntity report = AuditReportEntity.builder()
                 .id(id)
                 .transactionId(UUID.randomUUID())
                 .merchantId("MERCHANT_001")
@@ -72,7 +72,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findById(id)).thenReturn(Optional.of(report));
 
-        Optional<AuditReport> result = adapter.findById(id);
+        Optional<AuditReportEntity> result = adapter.findById(id);
 
         assertTrue(result.isPresent());
         assertEquals(id, result.get().getId());
@@ -85,7 +85,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        Optional<AuditReport> result = adapter.findById(id);
+        Optional<AuditReportEntity> result = adapter.findById(id);
 
         assertFalse(result.isPresent());
         verify(repository, times(1)).findById(id);
@@ -94,8 +94,8 @@ class AuditReportPersistenceAdapterTest {
     @Test
     void shouldFindByTransactionId() {
         UUID transactionId = UUID.randomUUID();
-        List<AuditReport> reports = List.of(
-                AuditReport.builder()
+        List<AuditReportEntity> reports = List.of(
+                AuditReportEntity.builder()
                         .id(UUID.randomUUID())
                         .transactionId(transactionId)
                         .merchantId("MERCHANT_001")
@@ -108,7 +108,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findByTransactionId(transactionId)).thenReturn(reports);
 
-        List<AuditReport> result = adapter.findByTransactionId(transactionId);
+        List<AuditReportEntity> result = adapter.findByTransactionId(transactionId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -119,8 +119,8 @@ class AuditReportPersistenceAdapterTest {
     @Test
     void shouldFindByMerchantId() {
         String merchantId = "MERCHANT_001";
-        List<AuditReport> reports = List.of(
-                AuditReport.builder()
+        List<AuditReportEntity> reports = List.of(
+                AuditReportEntity.builder()
                         .id(UUID.randomUUID())
                         .transactionId(UUID.randomUUID())
                         .merchantId(merchantId)
@@ -133,7 +133,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findByMerchantId(merchantId)).thenReturn(reports);
 
-        List<AuditReport> result = adapter.findByMerchantId(merchantId);
+        List<AuditReportEntity> result = adapter.findByMerchantId(merchantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());

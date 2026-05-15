@@ -8,10 +8,4 @@ public record FraudCaseDecisionRequest(
 
         String notes
 ) {
-    public enum FraudCaseStatus {
-        UNDER_INVESTIGATION,
-        RESOLVED,
-        CLOSED,
-        ESCALATED
-    }
 }

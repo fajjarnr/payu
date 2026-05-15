@@ -1,6 +1,6 @@
 package id.payu.notification.application.service;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.domain.NotificationChannel;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.adapter.sender.EmailSender;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Integration tests require Docker for Kafka DevServices and PostgreSQL")
-@DisplayName("Notification Service Unit Tests")
+@DisplayName("NotificationEntity Service Unit Tests")
 class NotificationServiceTest {
 
     @Inject
@@ -39,7 +39,7 @@ class NotificationServiceTest {
     PushSender pushSender;
 
     @Nested
-    @DisplayName("Send Notification Tests")
+    @DisplayName("Send NotificationEntity Tests")
     class SendNotificationTests {
 
         @Test
@@ -59,7 +59,7 @@ class NotificationServiceTest {
             when(emailSender.send(any())).thenReturn(true);
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
@@ -68,7 +68,7 @@ class NotificationServiceTest {
             assertEquals("user@example.com", notification.recipient);
             assertEquals("Test Subject", notification.title);
             assertEquals("Test body content", notification.body);
-            assertEquals(Notification.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
             assertNotNull(notification.sentAt);
 
             verify(emailSender).send(any());
@@ -93,13 +93,13 @@ class NotificationServiceTest {
             when(smsSender.send(any())).thenReturn(true);
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.SMS, notification.channel);
             assertEquals("+6281234567890", notification.recipient);
-            assertEquals(Notification.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
 
             verify(smsSender).send(any());
             verifyNoInteractions(emailSender);
@@ -123,13 +123,13 @@ class NotificationServiceTest {
             when(pushSender.send(any())).thenReturn(true);
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.PUSH, notification.channel);
             assertEquals("device-token-xyz", notification.recipient);
-            assertEquals(Notification.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
 
             verify(pushSender).send(any());
             verifyNoInteractions(emailSender);
@@ -153,11 +153,11 @@ class NotificationServiceTest {
             when(emailSender.send(any())).thenReturn(false);
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
-            assertEquals(Notification.NotificationStatus.FAILED, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.FAILED, notification.status);
             assertEquals("Send failed", notification.failureReason);
             assertNull(notification.sentAt);
         }
@@ -179,11 +179,11 @@ class NotificationServiceTest {
             when(emailSender.send(any())).thenThrow(new RuntimeException("SMTP connection failed"));
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
-            assertEquals(Notification.NotificationStatus.FAILED, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.FAILED, notification.status);
             assertEquals("SMTP connection failed", notification.failureReason);
             assertEquals(1, notification.retryCount);
         }
@@ -205,12 +205,12 @@ class NotificationServiceTest {
             when(pushSender.send(any())).thenReturn(true);
 
             // When
-            Notification notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.IN_APP, notification.channel);
-            assertEquals(Notification.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
 
             verify(pushSender).send(any());
         }
@@ -224,7 +224,7 @@ class NotificationServiceTest {
         @DisplayName("should return empty list for unknown user")
         void shouldReturnEmptyListForUnknownUser() {
             // When
-            List<Notification> notifications = notificationService.getByUserId("unknown-user", 10);
+            List<NotificationEntity> notifications = notificationService.getByUserId("unknown-user", 10);
 
             // Then
             assertNotNull(notifications);
@@ -233,7 +233,7 @@ class NotificationServiceTest {
     }
 
     @Nested
-    @DisplayName("Send Transaction Notification Tests")
+    @DisplayName("Send Transaction NotificationEntity Tests")
     class SendTransactionNotificationTests {
 
         @Test

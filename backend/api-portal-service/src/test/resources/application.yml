@@ -26,3 +26,15 @@ quarkus:
   # Test Configuration
   test:
     continuous-testing: disabled
+
+# Portal config for tests - uses Java Duration format for TTL
+portal:
+  cache:
+    ttl: PT5M
+
+# Sandbox config - latency disabled for faster tests
+sandbox:
+  latency:
+    enabled: false
+    min: 0
+    max: 0

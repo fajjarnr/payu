@@ -1,6 +1,6 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.BatchDisbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
 import id.payu.transaction.domain.model.BatchDisbursementStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -233,7 +233,7 @@ public class BatchResponse {
      * @param batch the domain entity
      * @return the response DTO
      */
-    public static BatchResponse fromEntity(BatchDisbursement batch) {
+    public static BatchResponse fromEntity(BatchDisbursementEntity batch) {
         return BatchResponse.builder()
                 .id(batch.getId())
                 .idempotencyKey(batch.getIdempotencyKey())

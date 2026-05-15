@@ -2,8 +2,8 @@ package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.service.AuthorizationService;
-import id.payu.transaction.domain.model.BatchDisbursement;
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.BatchDisbursementUseCase;
 import id.payu.transaction.dto.*;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/disbursements/batch")
 @RequiredArgsConstructor
-@Tag(name = "Batch Disbursements", description = "Batch/Bulk Disbursement API")
+@Tag(name = "Batch Disbursements", description = "Batch/Bulk DisbursementEntity API")
 @SecurityRequirement(name = "bearerAuth")
 public class BatchDisbursementController {
 
@@ -69,7 +69,7 @@ public class BatchDisbursementController {
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(request.getSourceAccountId(), userId);
 
-        BatchDisbursement batch = batchUseCase.createBatch(
+        BatchDisbursementEntity batch = batchUseCase.createBatch(
                 request.getSourceAccountId(),
                 request.getName(),
                 request.getDescription(),
@@ -104,7 +104,7 @@ public class BatchDisbursementController {
             @PathVariable @Parameter(description = "Batch ID") UUID id,
             @Valid @RequestBody BatchItemRequest request) {
 
-        Disbursement item = batchUseCase.addBatchItem(
+        DisbursementEntity item = batchUseCase.addBatchItem(
                 id,
                 Money.of(request.getAmount(), request.getCurrency()),
                 request.getBankCode(),
@@ -123,7 +123,7 @@ public class BatchDisbursementController {
     public ResponseEntity<BatchResponse> getBatch(
             @PathVariable @Parameter(description = "Batch ID") UUID id) {
 
-        BatchDisbursement batch = batchUseCase.getBatch(id)
+        BatchDisbursementEntity batch = batchUseCase.getBatch(id)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + id));
 
         return ResponseEntity.ok(BatchResponse.fromEntity(batch));
@@ -135,7 +135,7 @@ public class BatchDisbursementController {
     public ResponseEntity<List<DisbursementResponse>> getBatchItems(
             @PathVariable @Parameter(description = "Batch ID") UUID id) {
 
-        List<Disbursement> items = batchUseCase.getBatchItems(id);
+        List<DisbursementEntity> items = batchUseCase.getBatchItems(id);
 
         List<DisbursementResponse> responses = items.stream()
                 .map(DisbursementResponse::fromEntity)
@@ -164,7 +164,7 @@ public class BatchDisbursementController {
     public ResponseEntity<BatchResponse> processBatch(
             @PathVariable @Parameter(description = "Batch ID") UUID id) {
 
-        BatchDisbursement batch = batchUseCase.processBatch(id);
+        BatchDisbursementEntity batch = batchUseCase.processBatch(id);
         return ResponseEntity.ok(BatchResponse.fromEntity(batch));
     }
 
@@ -174,7 +174,7 @@ public class BatchDisbursementController {
     public ResponseEntity<BatchResponse> completeBatch(
             @PathVariable @Parameter(description = "Batch ID") UUID id) {
 
-        BatchDisbursement batch = batchUseCase.completeBatch(id);
+        BatchDisbursementEntity batch = batchUseCase.completeBatch(id);
         return ResponseEntity.ok(BatchResponse.fromEntity(batch));
     }
 
@@ -190,7 +190,7 @@ public class BatchDisbursementController {
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
-        List<BatchDisbursement> batches = batchUseCase.listBatchesByAccount(
+        List<BatchDisbursementEntity> batches = batchUseCase.listBatchesByAccount(
                 sourceAccountId, limit, offset);
 
         List<BatchResponse> responses = batches.stream()

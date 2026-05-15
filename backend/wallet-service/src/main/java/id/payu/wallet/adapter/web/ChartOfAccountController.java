@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.wallet.domain.model.AccountType;
 
 /**
  * REST Controller for Chart of Accounts (IMP-002).
@@ -58,7 +59,7 @@ public class ChartOfAccountController extends BaseController {
     public ResponseEntity<ApiResponse<List<ChartOfAccount>>> getByType(
             @Parameter(description = "Account type") @PathVariable String type) {
         log.info("Getting chart of accounts by type: {}", type);
-        ChartOfAccount.AccountType accountType = ChartOfAccount.AccountType.valueOf(type.toUpperCase());
+        AccountType accountType = AccountType.valueOf(type.toUpperCase());
         List<ChartOfAccount> accounts = chartOfAccountUseCase.getByType(accountType);
         return ok(accounts);
     }

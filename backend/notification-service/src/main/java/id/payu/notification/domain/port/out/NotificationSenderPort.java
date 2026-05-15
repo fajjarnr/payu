@@ -1,15 +1,15 @@
 package id.payu.notification.domain.port.out;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 
 /**
  * Outbound port for sending notifications through external channels.
  */
 public interface NotificationSenderPort {
 
-    boolean sendEmail(Notification notification);
+    boolean sendEmail(NotificationEntity notification);
 
-    boolean sendSms(Notification notification);
+    boolean sendSms(NotificationEntity notification);
 
-    boolean sendPush(Notification notification);
+    boolean sendPush(NotificationEntity notification);
 }

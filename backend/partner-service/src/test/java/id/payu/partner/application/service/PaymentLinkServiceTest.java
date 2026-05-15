@@ -2,8 +2,8 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.PaymentLinkRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.PaymentLink;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.PaymentLinkEntity;
 import id.payu.partner.dto.CreatePaymentLinkRequest;
 import id.payu.partner.dto.PaymentLinkResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,13 +45,13 @@ class PaymentLinkServiceTest {
 
     private PaymentLinkService paymentLinkService;
 
-    private Partner activePartner;
+    private PartnerEntity activePartner;
 
     @BeforeEach
     void setUp() {
         paymentLinkService = new PaymentLinkService(paymentLinkRepository, partnerRepository, webhookDispatcher, kafkaTemplate);
 
-        activePartner = new Partner("Test Partner", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
+        activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
         activePartner.setActive(true);
     }
@@ -71,9 +71,9 @@ class PaymentLinkServiceTest {
             request.setExpiryHours(48);
 
             when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
-            when(paymentLinkRepository.save(any(PaymentLink.class)))
+            when(paymentLinkRepository.save(any(PaymentLinkEntity.class)))
                     .thenAnswer(invocation -> {
-                        PaymentLink saved = invocation.getArgument(0);
+                        PaymentLinkEntity saved = invocation.getArgument(0);
                         saved.setId(100L);
                         return saved;
                     });
@@ -90,10 +90,10 @@ class PaymentLinkServiceTest {
             assertEquals("ACTIVE", response.getStatus());
             assertEquals("John Doe", response.getCustomerName());
 
-            ArgumentCaptor<PaymentLink> captor = ArgumentCaptor.forClass(PaymentLink.class);
+            ArgumentCaptor<PaymentLinkEntity> captor = ArgumentCaptor.forClass(PaymentLinkEntity.class);
             verify(paymentLinkRepository).save(captor.capture());
-            PaymentLink saved = captor.getValue();
-            assertEquals(PaymentLink.PaymentLinkStatus.ACTIVE, saved.getStatus());
+            PaymentLinkEntity saved = captor.getValue();
+            assertEquals(PaymentLinkEntity.PaymentLinkStatus.ACTIVE, saved.getStatus());
             assertNotNull(saved.getExpiresAt());
         }
 
@@ -113,7 +113,7 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should fail for inactive partner")
         void shouldFailForInactivePartner() {
-            Partner inactivePartner = new Partner("Inactive", "MERCHANT", "x@y.com", "08111", "key");
+            PartnerEntity inactivePartner = new PartnerEntity("Inactive", "MERCHANT", "x@y.com", "08111", "key");
             inactivePartner.setId(2L);
             inactivePartner.setActive(false);
 
@@ -150,7 +150,7 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should return active payment link")
         void shouldReturnActivePaymentLink() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().plusHours(24));
             link.setId(1L);
 
@@ -165,12 +165,12 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should auto-expire past-due link")
         void shouldAutoExpirePastDueLink() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().minusHours(1));
             link.setId(1L);
 
             when(paymentLinkRepository.findBySlug("expired123")).thenReturn(Optional.of(link));
-            when(paymentLinkRepository.save(any(PaymentLink.class))).thenAnswer(i -> i.getArgument(0));
+            when(paymentLinkRepository.save(any(PaymentLinkEntity.class))).thenAnswer(i -> i.getArgument(0));
 
             PaymentLinkResponse response = paymentLinkService.getBySlug("expired123");
 
@@ -194,12 +194,12 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should confirm payment successfully")
         void shouldConfirmPaymentSuccessfully() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().plusHours(24));
             link.setId(1L);
 
             when(paymentLinkRepository.findBySlug("pay123")).thenReturn(Optional.of(link));
-            when(paymentLinkRepository.save(any(PaymentLink.class))).thenAnswer(i -> i.getArgument(0));
+            when(paymentLinkRepository.save(any(PaymentLinkEntity.class))).thenAnswer(i -> i.getArgument(0));
 
             PaymentLinkResponse response = paymentLinkService.confirmPayment("pay123", "WALLET", "ref-001");
 
@@ -212,7 +212,7 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should fail for expired payment link")
         void shouldFailForExpiredPaymentLink() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().minusHours(1));
             link.setId(1L);
 
@@ -230,7 +230,7 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should cancel active payment link")
         void shouldCancelActivePaymentLink() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().plusHours(24));
             link.setId(10L);
 
@@ -238,16 +238,16 @@ class PaymentLinkServiceTest {
 
             assertDoesNotThrow(() -> paymentLinkService.cancelPaymentLink(1L, 10L));
 
-            verify(paymentLinkRepository).save(any(PaymentLink.class));
+            verify(paymentLinkRepository).save(any(PaymentLinkEntity.class));
         }
 
         @Test
         @DisplayName("should fail cancel for wrong partner")
         void shouldFailCancelForWrongPartner() {
-            Partner otherPartner = new Partner("Other", "MERCHANT", "o@y.com", "08111", "key");
+            PartnerEntity otherPartner = new PartnerEntity("Other", "MERCHANT", "o@y.com", "08111", "key");
             otherPartner.setId(99L);
 
-            PaymentLink link = new PaymentLink(otherPartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(otherPartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().plusHours(24));
             link.setId(10L);
 
@@ -265,12 +265,12 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should list payment links with pagination")
         void shouldListPaymentLinksWithPagination() {
-            PaymentLink link1 = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link1 = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Link 1", LocalDateTime.now().plusHours(24));
             link1.setId(1L);
 
             PageRequest pageable = PageRequest.of(0, 10);
-            Page<PaymentLink> page = new PageImpl<>(List.of(link1), pageable, 1);
+            Page<PaymentLinkEntity> page = new PageImpl<>(List.of(link1), pageable, 1);
 
             when(paymentLinkRepository.findByPartnerId(eq(1L), any())).thenReturn(page);
 
@@ -288,7 +288,7 @@ class PaymentLinkServiceTest {
         @Test
         @DisplayName("should expire past-due active links")
         void shouldExpirePastDueActiveLinks() {
-            PaymentLink link = new PaymentLink(activePartner, BigDecimal.valueOf(100000), "IDR",
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Expired", LocalDateTime.now().minusHours(1));
             link.setId(1L);
 
@@ -298,7 +298,7 @@ class PaymentLinkServiceTest {
 
             paymentLinkService.expirePaymentLinks();
 
-            assertEquals(PaymentLink.PaymentLinkStatus.EXPIRED, link.getStatus());
+            assertEquals(PaymentLinkEntity.PaymentLinkStatus.EXPIRED, link.getStatus());
             verify(paymentLinkRepository).saveAll(anyList());
         }
 

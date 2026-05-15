@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.wallet.domain.model.CardStatus;
 
 /**
  * JPA Entity for Card persistence.
@@ -55,7 +56,7 @@ public class CardEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Card.CardStatus status;
+    private CardStatus status;
 
     @Column(name = "daily_limit")
     private BigDecimal dailyLimit;

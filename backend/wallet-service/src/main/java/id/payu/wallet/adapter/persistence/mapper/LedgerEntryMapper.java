@@ -7,6 +7,7 @@ import id.payu.wallet.adapter.persistence.entity.LedgerEntryEntity;
 import id.payu.wallet.domain.model.LedgerEntry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import id.payu.wallet.domain.model.EntryType;
 
 /**
  * MapStruct mapper for LedgerEntry entity-domain conversion.
@@ -69,12 +70,12 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
     LedgerEntry toDomain(LedgerEntryEntity entity);
 
     /**
-     * Map LedgerEntry.EntryType to String for entity.
+     * Map EntryType to String for entity.
      *
      * @param entryType the domain entry type
      * @return the entity entry type string
      */
-    default String mapEntryTypeToEntity(LedgerEntry.EntryType entryType) {
+    default String mapEntryTypeToEntity(EntryType entryType) {
         if (entryType == null) {
             return null;
         }
@@ -82,15 +83,15 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
     }
 
     /**
-     * Map String to LedgerEntry.EntryType for domain.
+     * Map String to EntryType for domain.
      *
      * @param entryType the entity entry type string
      * @return the domain entry type
      */
-    default LedgerEntry.EntryType mapEntryTypeToDomain(String entryType) {
+    default EntryType mapEntryTypeToDomain(String entryType) {
         if (entryType == null) {
             return null;
         }
-        return LedgerEntry.EntryType.valueOf(entryType);
+        return EntryType.valueOf(entryType);
     }
 }

@@ -7,7 +7,7 @@ import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,15 +30,16 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import id.payu.statement.domain.entity.StatementStatus;
 
 /**
- * REST Controller for Statement operations
+ * REST Controller for StatementEntity operations
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/statements")
 @RequiredArgsConstructor
-@Tag(name = "Statement", description = "E-Statement generation and management APIs")
+@Tag(name = "StatementEntity", description = "E-StatementEntity generation and management APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class StatementController extends BaseController {
 
@@ -47,7 +48,7 @@ public class StatementController extends BaseController {
 
     @PostMapping("/generate")
     @Operation(summary = "Generate statement", description = "Generate e-statement for a specific month and year")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "Statement generation request accepted",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "StatementEntity generation request accepted",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -64,21 +65,21 @@ public class StatementController extends BaseController {
         statementService.generateStatement(request);
         StatementResponse response = StatementResponse.builder()
                 .customerId(customerId)
-                .status(Statement.StatementStatus.GENERATING)
+                .status(StatementStatus.GENERATING)
                 .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get statement by ID", description = "Retrieve statement details by statement ID")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Statement found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "StatementEntity found",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "StatementEntity not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<StatementResponse>> getStatement(
-            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "StatementEntity ID", required = true) @PathVariable UUID id,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -125,12 +126,12 @@ public class StatementController extends BaseController {
     @Operation(summary = "Download statement PDF", description = "Download e-statement as PDF file")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
             content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "StatementEntity not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<byte[]> downloadStatement(
-            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "StatementEntity ID", required = true) @PathVariable UUID id,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -149,18 +150,18 @@ public class StatementController extends BaseController {
 
     @PostMapping("/{id}/regenerate")
     @Operation(summary = "Regenerate statement", description = "Regenerate an existing e-statement (admin only)")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "Statement regeneration request accepted",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "StatementEntity regeneration request accepted",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "StatementEntity not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - admin access required")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StatementResponse>> regenerateStatement(
-            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id) {
+            @Parameter(description = "StatementEntity ID", required = true) @PathVariable UUID id) {
         statementService.regenerateStatement(id);
         StatementResponse response = StatementResponse.builder()
                 .id(id)
-                .status(Statement.StatementStatus.GENERATING)
+                .status(StatementStatus.GENERATING)
                 .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
     }

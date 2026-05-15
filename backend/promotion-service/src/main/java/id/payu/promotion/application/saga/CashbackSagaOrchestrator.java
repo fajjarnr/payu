@@ -1,6 +1,6 @@
 package id.payu.promotion.application.saga;
 
-import id.payu.promotion.domain.Cashback;
+import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.saga.model.SagaResult;
@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import id.payu.promotion.domain.CashbackStatus;
 
 /**
  * Saga orchestrator for cashback credit workflow.
@@ -78,7 +79,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
                 context.getAccountId(),
                 context.getAmount(),
                 context.getTransactionId(),
-                "Cashback for transaction " + context.getTransactionId()
+                "CashbackEntity for transaction " + context.getTransactionId()
             );
 
             if (credited) {
@@ -121,7 +122,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
         try {
             var request = context.getRequest();
 
-            Cashback cashback = new Cashback();
+            CashbackEntity cashback = new CashbackEntity();
             cashback.setAccountId(request.accountId());
             cashback.setTransactionId(request.transactionId());
             cashback.setTransactionAmount(request.transactionAmount());
@@ -131,7 +132,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             cashback.setCategoryCode(request.categoryCode());
             cashback.setCashbackCode(request.cashbackCode());
             // IMPORTANT: Status is only set to CREDITED after wallet credit succeeds
-            cashback.setStatus(Cashback.Status.CREDITED);
+            cashback.setStatus(CashbackStatus.CREDITED);
             cashback.setCreditedAt(LocalDateTime.now());
 
             cashback = cashbackRepository.save(cashback);
@@ -139,7 +140,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             context.setCashbackId(cashback.getId());
             context.setCashbackRecorded(true);
 
-            LOG.info("Cashback recorded successfully: id={}", cashback.getId());
+            LOG.info("CashbackEntity recorded successfully: id={}", cashback.getId());
             return StepResult.success(context, Map.of(
                 "cashbackId", cashback.getId().toString()
             ));
@@ -161,10 +162,10 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             if (context.getCashbackId() != null) {
                 var cashbackOpt = cashbackRepository.findById(context.getCashbackId());
                 if (cashbackOpt.isPresent()) {
-                    Cashback cashback = cashbackOpt.get();
-                    cashback.setStatus(Cashback.Status.VOIDED);
+                    CashbackEntity cashback = cashbackOpt.get();
+                    cashback.setStatus(CashbackStatus.VOIDED);
                     cashbackRepository.save(cashback);
-                    LOG.info("Cashback marked as VOIDED: id={}", context.getCashbackId());
+                    LOG.info("CashbackEntity marked as VOIDED: id={}", context.getCashbackId());
                 }
             }
             return StepResult.success(context, "Record cashback compensation completed");

@@ -5,7 +5,7 @@ import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import id.payu.security.annotation.AuditOperation;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
@@ -45,7 +46,7 @@ public class OnboardingController {
     @PostMapping("/register")
     @Idempotent(required = true)
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            operation = id.payu.security.annotation.AuditOperation.CREATE,
             entityType = "User",
             maskData = true,
             level = AuditLevel.INFO

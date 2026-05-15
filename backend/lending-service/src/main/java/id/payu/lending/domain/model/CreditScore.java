@@ -14,14 +14,6 @@ public class CreditScore {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum RiskCategory {
-        EXCELLENT,
-        GOOD,
-        FAIR,
-        POOR,
-        VERY_POOR
-    }
-
     public CreditScore() {}
 
     public UUID getId() {

@@ -5,6 +5,7 @@ import id.payu.wallet.domain.model.ChartOfAccount;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.AccountType;
 
 /**
  * Input port for Chart of Accounts use cases.
@@ -24,7 +25,7 @@ public interface ChartOfAccountUseCase {
     /**
      * Get chart of accounts by type.
      */
-    List<ChartOfAccount> getByType(ChartOfAccount.AccountType type);
+    List<ChartOfAccount> getByType(AccountType type);
 
     /**
      * Get children of a parent account.

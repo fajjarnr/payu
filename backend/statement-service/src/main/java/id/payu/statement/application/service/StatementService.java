@@ -1,6 +1,6 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
@@ -39,6 +39,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.statement.domain.entity.StatementStatus;
 
 /**
  * Service for generating and managing e-statements
@@ -80,18 +81,18 @@ public class StatementService {
 
         // Check if statement already exists
         if (statementRepository.existsByCustomerIdAndStatementPeriod(request.getCustomerId(), statementPeriod)) {
-            log.info("Statement already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
+            log.info("StatementEntity already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
             return;
         }
 
         try {
             // Create statement entity
-            Statement statement = Statement.builder()
+            StatementEntity statement = StatementEntity.builder()
                 .id(UUID.randomUUID())
                 .customerId(request.getCustomerId())
                 .accountNumber(request.getAccountNumber())
                 .statementPeriod(statementPeriod)
-                .status(Statement.StatementStatus.GENERATING)
+                .status(StatementStatus.GENERATING)
                 .build();
 
             statement = statementRepository.save(statement);
@@ -125,7 +126,7 @@ public class StatementService {
                 request.getCustomerId(), statementPeriod, e);
 
             // Mark as failed
-            Optional<Statement> failedStatement = statementRepository.findByCustomerIdAndStatementPeriod(
+            Optional<StatementEntity> failedStatement = statementRepository.findByCustomerIdAndStatementPeriod(
                 request.getCustomerId(), statementPeriod);
             failedStatement.ifPresent(s -> {
                 s.markFailed();
@@ -144,8 +145,8 @@ public class StatementService {
     @Retry(name = "statement")
     @Transactional
     public StatementResponse getStatement(UUID statementId, String customerId) {
-        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
-            .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
+        StatementEntity statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
+            .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
         statement.recordAccess();
         statementRepository.save(statement);
@@ -160,7 +161,7 @@ public class StatementService {
     @Retry(name = "statement")
     @Transactional(readOnly = true)
     public Page<StatementResponse> listStatements(String customerId, Pageable pageable) {
-        Page<Statement> statements = statementRepository.findAllByCustomerId(customerId, pageable);
+        Page<StatementEntity> statements = statementRepository.findAllByCustomerId(customerId, pageable);
         return new PageImpl<>(
             statements.stream().map(this::mapToResponse).toList(),
             statements.getPageable(),
@@ -185,11 +186,11 @@ public class StatementService {
     @CircuitBreaker(name = "statement", fallbackMethod = "getStatementPdfFallback")
     @Retry(name = "statement")
     public byte[] getStatementPdf(UUID statementId, String customerId) {
-        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
-            .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
+        StatementEntity statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
+            .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
-        if (statement.getStatus() != Statement.StatementStatus.COMPLETED) {
-            throw new StatementException("STATEMENT_003", "Statement is not ready for download");
+        if (statement.getStatus() != StatementStatus.COMPLETED) {
+            throw new StatementException("STATEMENT_003", "StatementEntity is not ready for download");
         }
 
         try {
@@ -207,8 +208,8 @@ public class StatementService {
     @Async
     @Transactional
     public void regenerateStatement(UUID statementId) {
-        Statement statement = statementRepository.findById(statementId)
-            .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
+        StatementEntity statement = statementRepository.findById(statementId)
+            .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
         StatementGenerationRequest request = StatementGenerationRequest.builder()
             .customerId(statement.getCustomerId())
@@ -227,7 +228,7 @@ public class StatementService {
         }
 
         // Reset and regenerate
-        statement.setStatus(Statement.StatementStatus.GENERATING);
+        statement.setStatus(StatementStatus.GENERATING);
         statementRepository.save(statement);
 
         generateStatement(request);
@@ -239,22 +240,22 @@ public class StatementService {
 
     private StatementResponse getStatementFallback(UUID statementId, String customerId, Exception ex) {
         log.error("Fallback for getStatement: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private Page<StatementResponse> listStatementsFallback(String customerId, Pageable pageable, Exception ex) {
         log.error("Fallback for listStatements: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private Optional<StatementResponse> getLatestStatementFallback(String customerId, Exception ex) {
         log.error("Fallback for getLatestStatement: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private byte[] getStatementPdfFallback(UUID statementId, String customerId, Exception ex) {
         log.error("Fallback for getStatementPdf: {}", ex.getMessage());
-        throw new RuntimeException("Statement service temporarily unavailable", ex);
+        throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     /**
@@ -343,7 +344,7 @@ public class StatementService {
                 // Header - Company Info
                 yPosition = drawHeader(contentStream, startX, yPosition, font, fontBold, pageWidth);
 
-                // Statement Title
+                // StatementEntity Title
                 yPosition -= 20;
                 contentStream.setFont(fontBold, 16);
                 contentStream.beginText();
@@ -614,7 +615,7 @@ public class StatementService {
         return filePath.toString();
     }
 
-    private void publishStatementGeneratedEvent(Statement statement) {
+    private void publishStatementGeneratedEvent(StatementEntity statement) {
         StatementGeneratedEvent event = StatementGeneratedEvent.builder()
             .statementId(statement.getId())
             .customerId(statement.getCustomerId())
@@ -627,7 +628,7 @@ public class StatementService {
         kafkaTemplate.send("payu.statements.generated", event);
     }
 
-    private StatementResponse mapToResponse(Statement statement) {
+    private StatementResponse mapToResponse(StatementEntity statement) {
         return StatementResponse.builder()
             .id(statement.getId())
             .customerId(statement.getCustomerId())
@@ -665,10 +666,6 @@ public class StatementService {
         private String description;
         private BigDecimal amount;
         private TransactionType type;
-    }
-
-    public enum TransactionType {
-        CREDIT, DEBIT
     }
 
     @lombok.Data

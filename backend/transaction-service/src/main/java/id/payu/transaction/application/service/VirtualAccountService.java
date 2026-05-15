@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
-import id.payu.transaction.domain.model.VirtualAccount;
+import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
 import id.payu.transaction.dto.VirtualAccountResponse;
@@ -14,6 +14,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import id.payu.transaction.domain.model.BankCode;
+import id.payu.transaction.domain.model.VaStatus;
 
 /**
  * Manages Virtual Account lifecycle: creation, callback handling, and auto-expiry.
@@ -36,13 +38,13 @@ public class VirtualAccountService {
      * Create a new Virtual Account with a generated VA number.
      */
     public VirtualAccountResponse createVirtualAccount(CreateVirtualAccountRequest request) {
-        VirtualAccount.BankCode bank = VirtualAccount.BankCode.fromCode(request.getBankCode());
+        BankCode bank = BankCode.fromCode(request.getBankCode());
 
         String vaNumber = generateVaNumber(bank);
 
         int expiryHours = request.getExpiryHours() != null ? request.getExpiryHours() : 24;
 
-        VirtualAccount va = VirtualAccount.builder()
+        VirtualAccountEntity va = VirtualAccountEntity.builder()
                 .vaNumber(vaNumber)
                 .bankCode(bank.name())
                 .bankName(bank.getBankName())
@@ -55,7 +57,7 @@ public class VirtualAccountService {
                 .customerEmail(request.getCustomerEmail())
                 .customerPhone(request.getCustomerPhone())
                 .callbackUrl(request.getCallbackUrl())
-                .status(VirtualAccount.VaStatus.PENDING)
+                .status(VaStatus.PENDING)
                 .expiresAt(Instant.now().plus(expiryHours, ChronoUnit.HOURS))
                 .build();
 
@@ -71,7 +73,7 @@ public class VirtualAccountService {
      */
     @Transactional(readOnly = true)
     public VirtualAccountResponse getById(UUID vaId) {
-        VirtualAccount va = virtualAccountRepository.findById(vaId)
+        VirtualAccountEntity va = virtualAccountRepository.findById(vaId)
                 .orElseThrow(() -> new IllegalArgumentException("Virtual account not found: " + vaId));
         return toResponse(va);
     }
@@ -81,7 +83,7 @@ public class VirtualAccountService {
      */
     @Transactional(readOnly = true)
     public VirtualAccountResponse getByVaNumber(String vaNumber) {
-        VirtualAccount va = virtualAccountRepository.findByVaNumber(vaNumber)
+        VirtualAccountEntity va = virtualAccountRepository.findByVaNumber(vaNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Virtual account not found: " + vaNumber));
         return toResponse(va);
     }
@@ -91,7 +93,7 @@ public class VirtualAccountService {
      * Called when bank confirms customer has paid to the VA number.
      */
     public VirtualAccountResponse handleBankCallback(VaCallbackRequest callback) {
-        VirtualAccount va = virtualAccountRepository.findByVaNumber(callback.getVaNumber())
+        VirtualAccountEntity va = virtualAccountRepository.findByVaNumber(callback.getVaNumber())
                 .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
 
         if (!va.isPending()) {
@@ -120,15 +122,15 @@ public class VirtualAccountService {
      * Called by PaymentExpiryScheduler (not scheduled here to avoid duplication).
      */
     public void expireVirtualAccounts() {
-        List<VirtualAccount> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
+        List<VirtualAccountEntity> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
         if (!expired.isEmpty()) {
-            expired.forEach(VirtualAccount::markExpired);
+            expired.forEach(VirtualAccountEntity::markExpired);
             virtualAccountRepository.saveAll(expired);
             log.info("Expired {} virtual accounts", expired.size());
         }
     }
 
-    private String generateVaNumber(VirtualAccount.BankCode bank) {
+    private String generateVaNumber(BankCode bank) {
         String vaNumber;
         do {
             // Format: bankPrefix + 12 random digits
@@ -138,7 +140,7 @@ public class VirtualAccountService {
         return vaNumber;
     }
 
-    private VirtualAccountResponse toResponse(VirtualAccount va) {
+    private VirtualAccountResponse toResponse(VirtualAccountEntity va) {
         return VirtualAccountResponse.builder()
                 .id(va.getId())
                 .vaNumber(va.getVaNumber())

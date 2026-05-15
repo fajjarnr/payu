@@ -2,10 +2,10 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
-import id.payu.partner.domain.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import id.payu.partner.domain.ApiKeyEntity.KeyEnvironment;
 import id.payu.partner.domain.ApiKeyEntity.KeyStatus;
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.ApiKeyDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,20 +41,20 @@ class ApiKeyServiceTest {
     @InjectMocks
     private ApiKeyService apiKeyService;
 
-    private Partner activePartner;
-    private Partner inactivePartner;
+    private PartnerEntity activePartner;
+    private PartnerEntity inactivePartner;
     private ApiKeyEntity activeKey;
 
     @BeforeEach
     void setUp() {
-        activePartner = new Partner();
+        activePartner = new PartnerEntity();
         activePartner.setId(1L);
         activePartner.setName("TokoBapak");
         activePartner.setType("MERCHANT");
         activePartner.setEmail("partner@tokobapak.com");
         activePartner.setActive(true);
 
-        inactivePartner = new Partner();
+        inactivePartner = new PartnerEntity();
         inactivePartner.setId(2L);
         inactivePartner.setName("InactivePartner");
         inactivePartner.setType("MERCHANT");

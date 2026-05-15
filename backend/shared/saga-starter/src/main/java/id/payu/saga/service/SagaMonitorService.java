@@ -83,13 +83,13 @@ public class SagaMonitorService {
         long incompleteCount = sagaRepository.findIncompleteSagas().size();
         long stalledCount = getStalledSagas(Duration.ofHours(1)).size();
 
-        SagaHealth.SagaHealthStatus status;
+        SagaHealthStatus status;
         if (stalledCount > 100) {
-            status = SagaHealth.SagaHealthStatus.DOWN;
+            status = SagaHealthStatus.DOWN;
         } else if (stalledCount > 10 || incompleteCount > 1000) {
-            status = SagaHealth.SagaHealthStatus.DEGRADED;
+            status = SagaHealthStatus.DEGRADED;
         } else {
-            status = SagaHealth.SagaHealthStatus.UP;
+            status = SagaHealthStatus.UP;
         }
 
         return SagaHealth.builder()
@@ -129,9 +129,5 @@ public class SagaMonitorService {
         private SagaHealthStatus status;
         private long incompleteSagas;
         private long stalledSagas;
-
-        public enum SagaHealthStatus {
-            UP, DEGRADED, DOWN
-        }
     }
 }

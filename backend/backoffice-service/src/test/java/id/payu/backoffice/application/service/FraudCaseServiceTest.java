@@ -1,6 +1,6 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.domain.FraudCase;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import id.payu.backoffice.dto.FraudCaseDecisionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,14 +38,14 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testCreateFraudCase_Success() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-001",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("1000.00"),
                 "PHISHING",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Suspicious activity detected",
                 "{\"file\": \"logs.txt\"}"
         );
@@ -58,8 +58,8 @@ class FraudCaseServiceTest {
         assertEquals("TRANSFER", fraudCase.getTransactionType());
         assertEquals(new BigDecimal("1000.00"), fraudCase.getAmount());
         assertEquals("PHISHING", fraudCase.getFraudType());
-        assertEquals(FraudCase.RiskLevel.HIGH, fraudCase.getRiskLevel());
-        assertEquals(FraudCase.CaseStatus.OPEN, fraudCase.getStatus());
+        assertEquals(FraudCaseEntity.RiskLevel.HIGH, fraudCase.getRiskLevel());
+        assertEquals(FraudCaseEntity.CaseStatus.OPEN, fraudCase.getStatus());
         assertEquals("Suspicious activity detected", fraudCase.getDescription());
         assertEquals("{\"file\": \"logs.txt\"}", fraudCase.getEvidence());
         assertNotNull(fraudCase.getCreatedAt());
@@ -68,7 +68,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testCreateFraudCase_WithDefaultRiskLevel() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-002",
                 testTransactionId,
@@ -81,7 +81,7 @@ class FraudCaseServiceTest {
         );
 
         assertNotNull(fraudCase);
-        assertEquals(FraudCase.RiskLevel.MEDIUM, fraudCase.getRiskLevel());
+        assertEquals(FraudCaseEntity.RiskLevel.MEDIUM, fraudCase.getRiskLevel());
     }
 
     // Query Fraud Case Tests
@@ -89,19 +89,19 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testGetById_Success() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-QUERY",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("2000.00"),
                 "MONEY_LAUNDERING",
-                FraudCase.RiskLevel.CRITICAL,
+                FraudCaseEntity.RiskLevel.CRITICAL,
                 "Suspicious pattern",
                 null
         );
 
-        Optional<FraudCase> result = fraudCaseService.getById(fraudCase.getId());
+        Optional<FraudCaseEntity> result = fraudCaseService.getById(fraudCase.getId());
 
         assertTrue(result.isPresent());
         assertEquals(fraudCase.getId(), result.get().getId());
@@ -109,7 +109,7 @@ class FraudCaseServiceTest {
 
     @Test
     void testGetById_NotFound() {
-        Optional<FraudCase> result = fraudCaseService.getById(UUID.randomUUID());
+        Optional<FraudCaseEntity> result = fraudCaseService.getById(UUID.randomUUID());
 
         assertFalse(result.isPresent());
     }
@@ -124,12 +124,12 @@ class FraudCaseServiceTest {
                 "TRANSFER",
                 new BigDecimal("2000.00"),
                 "MONEY_LAUNDERING",
-                FraudCase.RiskLevel.CRITICAL,
+                FraudCaseEntity.RiskLevel.CRITICAL,
                 "Suspicious pattern",
                 null
         );
 
-        List<FraudCase> results = fraudCaseService.getByUserId(testUserId);
+        List<FraudCaseEntity> results = fraudCaseService.getByUserId(testUserId);
 
         assertFalse(results.isEmpty());
         assertTrue(results.stream().anyMatch(fc -> fc.getUserId().equals(testUserId)));
@@ -145,15 +145,15 @@ class FraudCaseServiceTest {
                 "TRANSFER",
                 new BigDecimal("2000.00"),
                 "MONEY_LAUNDERING",
-                FraudCase.RiskLevel.CRITICAL,
+                FraudCaseEntity.RiskLevel.CRITICAL,
                 "Suspicious pattern",
                 null
         );
 
-        List<FraudCase> results = fraudCaseService.listByStatus(FraudCase.CaseStatus.OPEN, 0, 10);
+        List<FraudCaseEntity> results = fraudCaseService.listByStatus(FraudCaseEntity.CaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(fc -> fc.getStatus() == FraudCase.CaseStatus.OPEN));
+        assertTrue(results.stream().allMatch(fc -> fc.getStatus() == FraudCaseEntity.CaseStatus.OPEN));
     }
 
     @Test
@@ -166,15 +166,15 @@ class FraudCaseServiceTest {
                 "TRANSFER",
                 new BigDecimal("2000.00"),
                 "MONEY_LAUNDERING",
-                FraudCase.RiskLevel.CRITICAL,
+                FraudCaseEntity.RiskLevel.CRITICAL,
                 "Suspicious pattern",
                 null
         );
 
-        List<FraudCase> results = fraudCaseService.listByRiskLevel(FraudCase.RiskLevel.CRITICAL, 0, 10);
+        List<FraudCaseEntity> results = fraudCaseService.listByRiskLevel(FraudCaseEntity.RiskLevel.CRITICAL, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(fc -> fc.getRiskLevel() == FraudCase.RiskLevel.CRITICAL));
+        assertTrue(results.stream().allMatch(fc -> fc.getRiskLevel() == FraudCaseEntity.RiskLevel.CRITICAL));
     }
 
     @Test
@@ -187,12 +187,12 @@ class FraudCaseServiceTest {
                 "TRANSFER",
                 new BigDecimal("2000.00"),
                 "MONEY_LAUNDERING",
-                FraudCase.RiskLevel.CRITICAL,
+                FraudCaseEntity.RiskLevel.CRITICAL,
                 "Suspicious pattern",
                 null
         );
 
-        List<FraudCase> results = fraudCaseService.listAll(0, 10);
+        List<FraudCaseEntity> results = fraudCaseService.listAll(0, 10);
 
         assertNotNull(results);
         assertTrue(results.size() >= 1);
@@ -203,23 +203,23 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testAssign_Success() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-ASSIGN",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("3000.00"),
                 "PHISHING",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Needs investigation",
                 null
         );
 
-        FraudCase result = fraudCaseService.assign(fraudCase.getId(), "admin1");
+        FraudCaseEntity result = fraudCaseService.assign(fraudCase.getId(), "admin1");
 
         assertNotNull(result);
         assertEquals("admin1", result.getAssignedTo());
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
+        assertEquals(FraudCaseEntity.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
     }
 
     @Test
@@ -235,14 +235,14 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsResolved() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-RESOLVE",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("4000.00"),
                 "FRAUD",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Fraud detected",
                 null
         );
@@ -252,10 +252,10 @@ class FraudCaseServiceTest {
                 "Case resolved - confirmed fraud"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertNotNull(result);
-        assertEquals(FraudCase.CaseStatus.RESOLVED, result.getStatus());
+        assertEquals(FraudCaseEntity.CaseStatus.RESOLVED, result.getStatus());
         assertEquals("Case resolved - confirmed fraud", result.getNotes());
         assertEquals("admin2", result.getResolvedBy());
         assertNotNull(result.getResolvedAt());
@@ -264,14 +264,14 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsClosed() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-CLOSE",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("4000.00"),
                 "FRAUD",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Fraud detected",
                 null
         );
@@ -281,23 +281,23 @@ class FraudCaseServiceTest {
                 "False positive"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.CLOSED, result.getStatus());
+        assertEquals(FraudCaseEntity.CaseStatus.CLOSED, result.getStatus());
         assertEquals("False positive", result.getNotes());
     }
 
     @Test
     @Transactional
     void testResolve_AsEscalated() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-ESCALATE",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("4000.00"),
                 "FRAUD",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Fraud detected",
                 null
         );
@@ -307,23 +307,23 @@ class FraudCaseServiceTest {
                 "Escalating to legal team"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.ESCALATED, result.getStatus());
+        assertEquals(FraudCaseEntity.CaseStatus.ESCALATED, result.getStatus());
         assertEquals("Escalating to legal team", result.getNotes());
     }
 
     @Test
     @Transactional
     void testResolve_AsUnderInvestigation() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-INV",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("4000.00"),
                 "FRAUD",
-                FraudCase.RiskLevel.HIGH,
+                FraudCaseEntity.RiskLevel.HIGH,
                 "Fraud detected",
                 null
         );
@@ -333,9 +333,9 @@ class FraudCaseServiceTest {
                 "Need more evidence"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
+        assertEquals(FraudCaseEntity.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
     }
 
     @Test
@@ -356,14 +356,14 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testDelete_Success() {
-        FraudCase fraudCase = fraudCaseService.create(
+        FraudCaseEntity fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-DELETE",
                 testTransactionId,
                 "TRANSFER",
                 new BigDecimal("5000.00"),
                 "TEST_FRAUD",
-                FraudCase.RiskLevel.LOW,
+                FraudCaseEntity.RiskLevel.LOW,
                 "Test delete",
                 null
         );
@@ -371,7 +371,7 @@ class FraudCaseServiceTest {
         UUID fraudCaseId = fraudCase.getId();
         fraudCaseService.delete(fraudCaseId);
 
-        Optional<FraudCase> result = fraudCaseService.getById(fraudCaseId);
+        Optional<FraudCaseEntity> result = fraudCaseService.getById(fraudCaseId);
         assertFalse(result.isPresent());
     }
 }

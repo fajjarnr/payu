@@ -83,7 +83,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                             .setAmount(amount.toPlainString())
                             .build())
                     .setReferenceId(transactionId)
-                    .setDescription("Transaction reserve")
+                    .setDescription("TransactionEntity reserve")
                     .build();
 
             ReservationResponse response = walletStub.reserveBalance(request);

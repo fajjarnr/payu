@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import id.payu.simulator.va.entity.VaStatus;
 
 /**
  * Service for Virtual Account simulation.
@@ -71,7 +72,7 @@ public class VaSimulatorService {
         }
 
         // Check if already paid
-        if (va.status == VirtualAccount.VaStatus.PAID) {
+        if (va.status == VaStatus.PAID) {
             Log.warnf("VA already paid: %s", request.vaNumber());
             return VaInquiryResponse.alreadyPaid(request.vaNumber());
         }
@@ -113,7 +114,7 @@ public class VaSimulatorService {
         }
 
         // Check if already paid
-        if (va.status == VirtualAccount.VaStatus.PAID) {
+        if (va.status == VaStatus.PAID) {
             Log.warnf("VA already paid: %s", request.vaNumber());
             return VaPaymentResponse.alreadyPaid(request.vaNumber());
         }
@@ -184,8 +185,8 @@ public class VaSimulatorService {
     public void expirePendingVas() {
         int expired = VirtualAccount.update(
             "status = ?1 WHERE status = ?2 AND expiresAt < ?3",
-            VirtualAccount.VaStatus.EXPIRED,
-            VirtualAccount.VaStatus.PENDING,
+            VaStatus.EXPIRED,
+            VaStatus.PENDING,
             Instant.now()
         );
 

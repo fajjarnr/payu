@@ -239,8 +239,4 @@ public class Beneficiary {
                     nickname, status, verifiedAt, createdAt, updatedAt);
         }
     }
-
-    public enum BeneficiaryStatus {
-        ACTIVE, INACTIVE, DELETED
-    }
 }

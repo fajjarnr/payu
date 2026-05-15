@@ -407,7 +407,7 @@ class InitiateTransferRequestValidationTest {
         }
     }
 
-    // Transaction PIN validation tests
+    // TransactionEntity PIN validation tests
 
     @ParameterizedTest
     @ValueSource(strings = {"12345", "1234567", "abcdef", "12345!", "12 34 56"})

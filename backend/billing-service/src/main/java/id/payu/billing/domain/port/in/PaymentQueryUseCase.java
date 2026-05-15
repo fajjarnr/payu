@@ -1,6 +1,6 @@
 package id.payu.billing.domain.port.in;
 
-import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -13,10 +13,10 @@ public interface PaymentQueryUseCase {
     /**
      * Find a payment by its ID.
      */
-    Optional<BillPayment> getPayment(UUID id);
+    Optional<BillPaymentEntity> getPayment(UUID id);
 
     /**
      * Find a payment by its reference number.
      */
-    Optional<BillPayment> getPaymentByReference(String referenceNumber);
+    Optional<BillPaymentEntity> getPaymentByReference(String referenceNumber);
 }

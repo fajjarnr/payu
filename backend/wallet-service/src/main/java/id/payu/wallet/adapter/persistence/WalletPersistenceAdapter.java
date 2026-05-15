@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import id.payu.wallet.adapter.persistence.entity.TransactionType;
 
 /**
  * Persistence adapter for Wallet domain using MapStruct mappers.
@@ -138,8 +139,8 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
                 .build();
     }
 
-    private WalletTransactionEntity.TransactionType toEntityType(WalletTransaction.TransactionType type) {
-        return WalletTransactionEntity.TransactionType.valueOf(type.name());
+    private TransactionType toEntityType(id.payu.wallet.domain.model.TransactionType type) {
+        return TransactionType.valueOf(type.name());
     }
 
     private WalletTransaction toTransactionDomain(WalletTransactionEntity entity) {
@@ -147,7 +148,7 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
                 .id(entity.getId())
                 .walletId(entity.getWalletId())
                 .referenceId(entity.getReferenceId())
-                .type(WalletTransaction.TransactionType.valueOf(entity.getType().name()))
+                .type(id.payu.wallet.domain.model.TransactionType.valueOf(entity.getType().name()))
                 .amount(entity.getAmount())
                 .balanceAfter(entity.getBalanceAfter())
                 .description(entity.getDescription())

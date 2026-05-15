@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutionException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Kafka Integration Tests for Transaction Service Event Publishing.
+ * Kafka Integration Tests for TransactionEntity Service Event Publishing.
  * 
  * These tests verify the Kafka infrastructure for transaction events:
  * - payu.transactions.initiated
@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DisplayName("Transaction Service Kafka Integration Tests")
+@DisplayName("TransactionEntity Service Kafka Integration Tests")
 public class TransactionKafkaIntegrationTest {
 
     @Container
@@ -201,7 +201,7 @@ public class TransactionKafkaIntegrationTest {
     }
 
     @Test
-    @DisplayName("Transaction topics should follow naming convention")
+    @DisplayName("TransactionEntity topics should follow naming convention")
     void transactionTopicsShouldFollowNamingConvention() {
         String topicPrefix = "payu.transactions.";
         List<String> expectedSuffixes = List.of("initiated", "validated", "completed", "failed");

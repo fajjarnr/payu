@@ -1,6 +1,7 @@
 package id.payu.transaction.dto;
 
 import id.payu.security.annotation.Sensitive;
+import id.payu.security.annotation.SensitivityLevel;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
+import id.payu.transaction.dto.TransactionType;
 
 /**
  * Transfer request DTO with comprehensive input validation.
@@ -203,9 +205,9 @@ public class InitiateTransferRequest {
 
     private TransactionType type;
 
-    @Size(min = 6, max = 6, message = "Transaction PIN must be exactly 6 digits")
-    @Pattern(regexp = "^\\d{6}$", message = "Transaction PIN must be exactly 6 digits")
-    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
+    @Size(min = 6, max = 6, message = "TransactionEntity PIN must be exactly 6 digits")
+    @Pattern(regexp = "^\\d{6}$", message = "TransactionEntity PIN must be exactly 6 digits")
+    @Sensitive(value = SensitivityLevel.CRITICAL)
     private String transactionPin;
 
     @Size(max = 100, message = "Device ID is too long")
@@ -217,15 +219,4 @@ public class InitiateTransferRequest {
 
     @Size(max = 140, message = "Memo must not exceed 140 characters")
     private String memo;
-
-    // BUG-CROSS-004: Sync with Transaction.TransactionType — Frontend sends BILL_PAYMENT/TOP_UP/QRIS_PAYMENT
-    public enum TransactionType {
-        INTERNAL_TRANSFER,
-        BIFAST_TRANSFER,
-        SKN_TRANSFER,
-        RTGS_TRANSFER,
-        QRIS_PAYMENT,
-        BILL_PAYMENT,
-        TOP_UP
-    }
 }

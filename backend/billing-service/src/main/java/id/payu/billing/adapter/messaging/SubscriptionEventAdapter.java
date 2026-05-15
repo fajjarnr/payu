@@ -1,8 +1,8 @@
 package id.payu.billing.adapter.messaging;
 
 import id.payu.billing.domain.event.SubscriptionEvent;
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public void publishSubscriptionCreated(Subscription subscription) {
+    public void publishSubscriptionCreated(SubscriptionEntity subscription) {
         CloudEventEnvelope<SubscriptionEvent.SubscriptionCreatedPayload> event =
                 SubscriptionEvent.createSubscriptionCreatedEvent(subscription);
 
@@ -50,7 +50,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     }
 
     @Override
-    public void publishChargeSucceeded(Subscription subscription, SubscriptionCharge charge) {
+    public void publishChargeSucceeded(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
                 SubscriptionEvent.createChargeSucceededEvent(subscription, charge);
 
@@ -60,7 +60,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
                 .setHeader(KafkaHeaders.KEY, charge.getId().toString())
                 .setHeader("X-Event-Type", SubscriptionEvent.CHARGE_SUCCEEDED)
                 .setHeader("X-Partner-Id", subscription.getPartnerId())
-                .setHeader("X-Subscription-Id", subscription.getId().toString())
+                .setHeader("X-SubscriptionEntity-Id", subscription.getId().toString())
                 .build();
 
         kafkaTemplate.send(message)
@@ -77,7 +77,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     }
 
     @Override
-    public void publishChargeFailed(Subscription subscription, SubscriptionCharge charge) {
+    public void publishChargeFailed(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
                 SubscriptionEvent.createChargeFailedEvent(subscription, charge);
 
@@ -87,7 +87,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
                 .setHeader(KafkaHeaders.KEY, charge.getId().toString())
                 .setHeader("X-Event-Type", SubscriptionEvent.CHARGE_FAILED)
                 .setHeader("X-Partner-Id", subscription.getPartnerId())
-                .setHeader("X-Subscription-Id", subscription.getId().toString())
+                .setHeader("X-SubscriptionEntity-Id", subscription.getId().toString())
                 .build();
 
         kafkaTemplate.send(message)

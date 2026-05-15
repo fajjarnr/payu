@@ -8,11 +8,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Main Spring Boot application class for Partner Service.
+ * Main Spring Boot application class for PartnerEntity Service.
  *
  * <p>This service manages partner integrations, including:
  * <ul>
- *   <li>Partner registration and credential management</li>
+ *   <li>PartnerEntity registration and credential management</li>
  *   <li>Certificate management and rotation</li>
  *   <li>Snap BI integration for payment processing</li>
  *   <li>Webhook handling for payment notifications</li>

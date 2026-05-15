@@ -45,7 +45,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -71,7 +71,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("1000.00"),
             new BigDecimal("500.00"),
-            id.payu.promotion.domain.Referral.RewardType.POINTS,
+            id.payu.promotion.domain.ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -92,7 +92,7 @@ class ReferralResourceTest {
             null,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -111,7 +111,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -162,7 +162,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -190,7 +190,7 @@ class ReferralResourceTest {
             .post("/complete")
             .then()
             .statusCode(400)
-            .body("message", equalTo("Referral already completed or expired"));
+            .body("message", equalTo("ReferralEntity already completed or expired"));
     }
 
     @Test
@@ -199,7 +199,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -229,7 +229,7 @@ class ReferralResourceTest {
             .get("/" + nonExistentId)
             .then()
             .statusCode(404)
-            .body("message", equalTo("Referral not found"));
+            .body("message", equalTo("ReferralEntity not found"));
     }
 
     @Test
@@ -238,7 +238,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -266,7 +266,7 @@ class ReferralResourceTest {
             .get("/code/NONEXISTENT")
             .then()
             .statusCode(404)
-            .body("message", equalTo("Referral code not found"));
+            .body("message", equalTo("ReferralEntity code not found"));
     }
 
     @Test
@@ -275,7 +275,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -283,7 +283,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -312,7 +312,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -320,7 +320,7 @@ class ReferralResourceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            id.payu.promotion.domain.Referral.RewardType.CASHBACK,
+            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 

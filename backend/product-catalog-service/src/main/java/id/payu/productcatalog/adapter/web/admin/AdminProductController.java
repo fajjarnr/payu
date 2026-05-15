@@ -8,6 +8,7 @@ import id.payu.productcatalog.dto.CreateProductRequest;
 import id.payu.productcatalog.dto.ProductResponse;
 import id.payu.productcatalog.dto.UpdateProductRequest;
 import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.AuditOperation;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class AdminProductController extends BaseController {
      * Create a new product definition.
      */
     @PostMapping
-    @Audited(operation = Audited.Operation.CREATE)
+    @Audited(operation = AuditOperation.CREATE)
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody CreateProductRequest request) {
         log.info("Admin creating product: {}", request.getProductCode());
 
@@ -59,7 +60,7 @@ public class AdminProductController extends BaseController {
      * Get all products (including inactive).
      */
     @GetMapping
-    @Audited(operation = Audited.Operation.READ)
+    @Audited(operation = AuditOperation.READ)
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         log.debug("Admin listing all products");
         List<ProductDefinition> products = productCatalogUseCase.getAllProducts();
@@ -70,7 +71,7 @@ public class AdminProductController extends BaseController {
      * Get a specific product by code.
      */
     @GetMapping("/{code}")
-    @Audited(operation = Audited.Operation.READ)
+    @Audited(operation = AuditOperation.READ)
     public ResponseEntity<ProductResponse> getProduct(@PathVariable String code) {
         log.debug("Admin getting product: {}", code);
         return productCatalogUseCase.getProduct(code)
@@ -83,7 +84,7 @@ public class AdminProductController extends BaseController {
      * Update a product definition.
      */
     @PutMapping("/{code}")
-    @Audited(operation = Audited.Operation.UPDATE)
+    @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable String code,
             @Valid @RequestBody UpdateProductRequest request) {
@@ -104,7 +105,7 @@ public class AdminProductController extends BaseController {
      * Soft delete (deactivate) a product.
      */
     @DeleteMapping("/{code}")
-    @Audited(operation = Audited.Operation.UPDATE)
+    @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<Void> deactivateProduct(@PathVariable String code) {
         log.info("Admin deactivating product: {}", code);
         productCatalogUseCase.deactivateProduct(code);
@@ -115,7 +116,7 @@ public class AdminProductController extends BaseController {
      * Activate a product.
      */
     @PostMapping("/{code}/activate")
-    @Audited(operation = Audited.Operation.UPDATE)
+    @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<Void> activateProduct(@PathVariable String code) {
         log.info("Admin activating product: {}", code);
         productCatalogUseCase.activateProduct(code);
@@ -126,7 +127,7 @@ public class AdminProductController extends BaseController {
      * Get products by type.
      */
     @GetMapping("/type/{type}")
-    @Audited(operation = Audited.Operation.READ)
+    @Audited(operation = AuditOperation.READ)
     public ResponseEntity<List<ProductResponse>> getProductsByType(@PathVariable ProductType type) {
         log.debug("Admin listing products by type: {}", type);
         List<ProductDefinition> products = productCatalogUseCase.getProductsByType(type);

@@ -1,6 +1,6 @@
 package id.payu.transaction.domain.port.in;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
 import id.payu.transaction.dto.ScheduledTransferResponse;
 
@@ -14,5 +14,5 @@ public interface ScheduledTransferUseCase {
     ScheduledTransferResponse cancelScheduledTransfer(UUID id);
     ScheduledTransferResponse pauseScheduledTransfer(UUID id);
     ScheduledTransferResponse resumeScheduledTransfer(UUID id);
-    List<ScheduledTransfer> getAccountScheduledTransfers(UUID accountId);
+    List<ScheduledTransferEntity> getAccountScheduledTransfers(UUID accountId);
 }

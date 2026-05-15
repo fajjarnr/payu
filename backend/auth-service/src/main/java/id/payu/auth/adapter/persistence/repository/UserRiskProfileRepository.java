@@ -1,6 +1,6 @@
 package id.payu.auth.adapter.persistence.repository;
 
-import id.payu.auth.domain.model.UserRiskProfileEntity;
+import id.payu.auth.adapter.persistence.entity.UserRiskProfileEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

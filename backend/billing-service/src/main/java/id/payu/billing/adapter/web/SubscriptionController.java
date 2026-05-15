@@ -2,10 +2,10 @@ package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.billing.application.service.SubscriptionService;
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
-import id.payu.billing.domain.model.SubscriptionPlan;
-import id.payu.billing.domain.model.SubscriptionPlan.BillingInterval;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.domain.model.BillingInterval;
 import id.payu.billing.dto.CreateSubscriptionPlanRequest;
 import id.payu.billing.dto.SubscribeRequest;
 import id.payu.billing.dto.SubscriptionChargeResponse;
@@ -13,7 +13,7 @@ import id.payu.billing.dto.SubscriptionPlanResponse;
 import id.payu.billing.dto.SubscriptionResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST Controller for subscription and recurring billing management.
@@ -37,7 +38,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/subscriptions")
 @RequiredArgsConstructor
-@Tag(name = "Subscriptions", description = "Subscription & recurring billing APIs")
+@Tag(name = "Subscriptions", description = "SubscriptionEntity & recurring billing APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class SubscriptionController {
 
@@ -60,7 +61,7 @@ public class SubscriptionController {
 
     @PostMapping("/plans")
     @ResponseStatus(HttpStatus.CREATED)
-    @Audited(operation = Audited.Operation.CREATE, entityType = "SubscriptionPlan",
+    @Audited(operation = AuditOperation.CREATE, entityType = "SubscriptionPlanEntity",
             maskData = true, level = AuditLevel.INFO)
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
@@ -69,7 +70,7 @@ public class SubscriptionController {
     public ApiResponse<SubscriptionPlanResponse> createPlan(
             @Valid @RequestBody CreateSubscriptionPlanRequest request) {
         BillingInterval interval = BillingInterval.valueOf(request.billingInterval().toUpperCase());
-        SubscriptionPlan plan = subscriptionService.createPlan(
+        SubscriptionPlanEntity plan = subscriptionService.createPlan(
                 request.partnerId(), request.planName(), request.description(),
                 interval, request.price(), request.currency(),
                 request.trialDays(), request.gracePeriodDays());
@@ -81,7 +82,7 @@ public class SubscriptionController {
     @Operation(summary = "Get subscription plan by ID")
     public ApiResponse<SubscriptionPlanResponse> getPlan(
             @Parameter(description = "Plan UUID") @PathVariable UUID planId) {
-        SubscriptionPlan plan = subscriptionService.getPlan(planId);
+        SubscriptionPlanEntity plan = subscriptionService.getPlan(planId);
         return ApiResponse.success(SubscriptionPlanResponse.from(plan));
     }
 
@@ -98,7 +99,7 @@ public class SubscriptionController {
     }
 
     @DeleteMapping("/plans/{planId}")
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "SubscriptionPlan",
+    @Audited(operation = AuditOperation.UPDATE, entityType = "SubscriptionPlanEntity",
             maskData = true, level = AuditLevel.INFO)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Deactivate a subscription plan",
@@ -110,12 +111,12 @@ public class SubscriptionController {
     }
 
     // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle
+    //  SubscriptionEntity Lifecycle
     // ═══════════════════════════════════════════════════════
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Audited(operation = Audited.Operation.CREATE, entityType = "Subscription",
+    @Audited(operation = AuditOperation.CREATE, entityType = "SubscriptionEntity",
             maskData = true, level = AuditLevel.INFO)
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
@@ -123,7 +124,7 @@ public class SubscriptionController {
             description = "Subscribe a user account to a plan. Starts trial if plan has trial days.")
     public ApiResponse<SubscriptionResponse> subscribe(
             @Valid @RequestBody SubscribeRequest request) {
-        Subscription sub = subscriptionService.subscribe(
+        SubscriptionEntity sub = subscriptionService.subscribe(
                 request.accountId(), request.planId(), request.externalReferenceId());
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
@@ -132,12 +133,12 @@ public class SubscriptionController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get subscription by ID")
     public ApiResponse<SubscriptionResponse> getSubscription(
-            @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId) {
-        Subscription sub = subscriptionService.getSubscription(subscriptionId);
+            @Parameter(description = "SubscriptionEntity UUID") @PathVariable UUID subscriptionId) {
+        SubscriptionEntity sub = subscriptionService.getSubscription(subscriptionId);
         // BUG-SECURITY-002 FIX: Validate authenticated user owns this subscription
         String userId = extractUserId();
         if (userId != null && sub.getAccountId() != null && !sub.getAccountId().equals(userId)) {
-            throw new IllegalArgumentException("Subscription not found");
+            throw new IllegalArgumentException("SubscriptionEntity not found");
         }
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
@@ -172,15 +173,15 @@ public class SubscriptionController {
     }
 
     @PostMapping("/{subscriptionId}/cancel")
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "Subscription",
+    @Audited(operation = AuditOperation.UPDATE, entityType = "SubscriptionEntity",
             maskData = true, level = AuditLevel.INFO)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cancel a subscription",
             description = "Immediately cancels the subscription with an optional reason")
     public ApiResponse<SubscriptionResponse> cancelSubscription(
-            @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId,
+            @Parameter(description = "SubscriptionEntity UUID") @PathVariable UUID subscriptionId,
             @RequestParam(required = false) String reason) {
-        Subscription sub = subscriptionService.cancelSubscription(subscriptionId, reason);
+        SubscriptionEntity sub = subscriptionService.cancelSubscription(subscriptionId, reason);
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
 
@@ -192,7 +193,7 @@ public class SubscriptionController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get charge history for a subscription")
     public ApiResponse<List<SubscriptionChargeResponse>> getCharges(
-            @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId) {
+            @Parameter(description = "SubscriptionEntity UUID") @PathVariable UUID subscriptionId) {
         List<SubscriptionChargeResponse> charges = subscriptionService
                 .getChargesBySubscription(subscriptionId)
                 .stream()

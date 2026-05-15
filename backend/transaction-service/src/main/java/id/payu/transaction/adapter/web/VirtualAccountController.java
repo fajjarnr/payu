@@ -5,7 +5,7 @@ import id.payu.api.common.openapi.OpenApiConstants;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import id.payu.transaction.application.service.VirtualAccountService;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for Virtual Account payment collection.
@@ -44,7 +45,7 @@ public class VirtualAccountController extends BaseController {
     @Operation(summary = "Create a Virtual Account",
                description = "Generate a VA number at the specified bank for payment collection")
     @PreAuthorize("isAuthenticated()")
-    @Audited(operation = Audited.Operation.CREATE, entityType = "VirtualAccount", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.CREATE, entityType = "VirtualAccountEntity", level = AuditLevel.INFO)
     @Idempotent(required = true)
     public ResponseEntity<ApiResponse<VirtualAccountResponse>> create(
             @Valid @RequestBody CreateVirtualAccountRequest request) {
@@ -69,7 +70,7 @@ public class VirtualAccountController extends BaseController {
     @PostMapping("/callback")
     @Operation(summary = "Bank callback for VA payment confirmation",
                description = "Called by bank (simulated) when customer pays to the VA number")
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "VirtualAccount", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "VirtualAccountEntity", level = AuditLevel.INFO)
     public ResponseEntity<ApiResponse<VirtualAccountResponse>> bankCallback(
             @Valid @RequestBody VaCallbackRequest callback) {
         log.info("Received VA callback for VA={}, amount={}", callback.getVaNumber(), callback.getAmount());

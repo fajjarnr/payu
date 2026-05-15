@@ -3,9 +3,9 @@ package id.payu.billing.adapter.persistence;
 import id.payu.billing.adapter.persistence.repository.SubscriptionChargeRepository;
 import id.payu.billing.adapter.persistence.repository.SubscriptionPlanRepository;
 import id.payu.billing.adapter.persistence.repository.SubscriptionRepository;
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
-import id.payu.billing.domain.model.SubscriptionPlan;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,67 +24,67 @@ public class SubscriptionPersistenceAdapter implements SubscriptionPersistencePo
     private final SubscriptionChargeRepository chargeRepository;
 
     @Override
-    public SubscriptionPlan savePlan(SubscriptionPlan plan) {
+    public SubscriptionPlanEntity savePlan(SubscriptionPlanEntity plan) {
         return planRepository.save(plan);
     }
 
     @Override
-    public Optional<SubscriptionPlan> findPlanById(UUID id) {
+    public Optional<SubscriptionPlanEntity> findPlanById(UUID id) {
         return planRepository.findById(id);
     }
 
     @Override
-    public List<SubscriptionPlan> findPlansByPartnerId(String partnerId) {
+    public List<SubscriptionPlanEntity> findPlansByPartnerId(String partnerId) {
         return planRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId);
     }
 
     @Override
-    public Subscription saveSubscription(Subscription subscription) {
+    public SubscriptionEntity saveSubscription(SubscriptionEntity subscription) {
         return subscriptionRepository.save(subscription);
     }
 
     @Override
-    public Optional<Subscription> findSubscriptionById(UUID id) {
+    public Optional<SubscriptionEntity> findSubscriptionById(UUID id) {
         return subscriptionRepository.findById(id);
     }
 
     @Override
-    public List<Subscription> findSubscriptionsByAccountId(String accountId) {
+    public List<SubscriptionEntity> findSubscriptionsByAccountId(String accountId) {
         return subscriptionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
     }
 
     @Override
-    public List<Subscription> findSubscriptionsByPartnerId(String partnerId) {
+    public List<SubscriptionEntity> findSubscriptionsByPartnerId(String partnerId) {
         return subscriptionRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId);
     }
 
     @Override
-    public List<Subscription> findDueSubscriptions(LocalDateTime cutoff) {
+    public List<SubscriptionEntity> findDueSubscriptions(LocalDateTime cutoff) {
         return subscriptionRepository.findDueSubscriptions(cutoff);
     }
 
     @Override
-    public List<Subscription> findPastDueSubscriptions() {
+    public List<SubscriptionEntity> findPastDueSubscriptions() {
         return subscriptionRepository.findPastDueSubscriptions();
     }
 
     @Override
-    public List<Subscription> findExpiredTrials(LocalDateTime now) {
+    public List<SubscriptionEntity> findExpiredTrials(LocalDateTime now) {
         return subscriptionRepository.findExpiredTrials(now);
     }
 
     @Override
-    public SubscriptionCharge saveCharge(SubscriptionCharge charge) {
+    public SubscriptionChargeEntity saveCharge(SubscriptionChargeEntity charge) {
         return chargeRepository.save(charge);
     }
 
     @Override
-    public Optional<SubscriptionCharge> findChargeByIdempotencyKey(String idempotencyKey) {
+    public Optional<SubscriptionChargeEntity> findChargeByIdempotencyKey(String idempotencyKey) {
         return chargeRepository.findByIdempotencyKey(idempotencyKey);
     }
 
     @Override
-    public List<SubscriptionCharge> findChargesBySubscriptionId(UUID subscriptionId) {
+    public List<SubscriptionChargeEntity> findChargesBySubscriptionId(UUID subscriptionId) {
         return chargeRepository.findBySubscriptionIdOrderByCreatedAtDesc(subscriptionId);
     }
 }

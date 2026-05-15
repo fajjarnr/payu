@@ -1,7 +1,7 @@
 package id.payu.support.application.service;
 
-import id.payu.support.domain.AgentTraining;
-import id.payu.support.domain.SupportAgent;
+import id.payu.support.adapter.persistence.entity.AgentTrainingEntity;
+import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import id.payu.support.domain.AgentLevel;
 
 @Service
 @RequiredArgsConstructor
@@ -50,12 +51,12 @@ public class AgentService {
     public AgentResponse createAgent(CreateAgentRequest request) {
         log.info("Creating new agent: {} ({})", request.name(), request.employeeId());
 
-        SupportAgent agent = SupportAgent.builder()
+        SupportAgentEntity agent = SupportAgentEntity.builder()
                 .employeeId(request.employeeId())
                 .name(request.name())
                 .email(request.email())
                 .department(request.department())
-                .level(request.level() != null ? request.level() : SupportAgent.AgentLevel.JUNIOR)
+                .level(request.level() != null ? request.level() : AgentLevel.JUNIOR)
                 .build();
 
         agent = agentRepository.save(agent);
@@ -71,7 +72,7 @@ public class AgentService {
         return agentRepository.findById(id)
                 .map(agent -> {
                     agent.setActive(active);
-                    SupportAgent updated = agentRepository.save(agent);
+                    SupportAgentEntity updated = agentRepository.save(agent);
                     log.info("Agent {} status updated: active={}", id, active);
                     return toResponse(updated);
                 })
@@ -86,7 +87,7 @@ public class AgentService {
         return agentRepository.countTrainedAgents();
     }
 
-    private AgentResponse toResponse(SupportAgent agent) {
+    private AgentResponse toResponse(SupportAgentEntity agent) {
         return new AgentResponse(
                 agent.getId(),
                 agent.getEmployeeId(),

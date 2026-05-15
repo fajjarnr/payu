@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.persistence;
 
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 import id.payu.transaction.domain.port.out.SplitBillPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.SplitBillJpaRepository;
 import id.payu.transaction.adapter.persistence.repository.SplitBillParticipantJpaRepository;
@@ -21,47 +21,47 @@ public class SplitBillPersistenceAdapter implements SplitBillPersistencePort {
     private final SplitBillParticipantJpaRepository participantJpaRepository;
 
     @Override
-    public SplitBill save(SplitBill splitBill) {
+    public SplitBillEntity save(SplitBillEntity splitBill) {
         return splitBillJpaRepository.save(splitBill);
     }
 
     @Override
-    public SplitBillParticipant saveParticipant(SplitBillParticipant participant) {
+    public SplitBillParticipantEntity saveParticipant(SplitBillParticipantEntity participant) {
         return participantJpaRepository.save(participant);
     }
 
     @Override
-    public Optional<SplitBill> findById(UUID id) {
+    public Optional<SplitBillEntity> findById(UUID id) {
         return splitBillJpaRepository.findById(id);
     }
 
     @Override
-    public Optional<SplitBill> findByReferenceNumber(String referenceNumber) {
+    public Optional<SplitBillEntity> findByReferenceNumber(String referenceNumber) {
         return splitBillJpaRepository.findByReferenceNumber(referenceNumber);
     }
 
     @Override
-    public List<SplitBill> findByCreatorAccountId(UUID accountId, int page, int size) {
+    public List<SplitBillEntity> findByCreatorAccountId(UUID accountId, int page, int size) {
         return splitBillJpaRepository.findByCreatorAccountId(accountId, PageRequest.of(page, size));
     }
 
     @Override
-    public List<SplitBillParticipant> findParticipantsBySplitBillId(UUID splitBillId) {
+    public List<SplitBillParticipantEntity> findParticipantsBySplitBillId(UUID splitBillId) {
         return participantJpaRepository.findBySplitBillId(splitBillId);
     }
 
     @Override
-    public Optional<SplitBillParticipant> findParticipantById(UUID participantId) {
+    public Optional<SplitBillParticipantEntity> findParticipantById(UUID participantId) {
         return participantJpaRepository.findById(participantId);
     }
 
     @Override
-    public List<SplitBillParticipant> findByAccountId(UUID accountId, int page, int size) {
+    public List<SplitBillParticipantEntity> findByAccountId(UUID accountId, int page, int size) {
         return participantJpaRepository.findByAccountId(accountId, PageRequest.of(page, size));
     }
 
     @Override
-    public void delete(SplitBill splitBill) {
+    public void delete(SplitBillEntity splitBill) {
         splitBillJpaRepository.delete(splitBill);
     }
 

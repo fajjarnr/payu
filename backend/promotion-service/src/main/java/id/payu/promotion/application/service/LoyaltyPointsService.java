@@ -1,6 +1,6 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.domain.LoyaltyPoints;
+import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
 import id.payu.promotion.dto.LoyaltyBalanceResponse;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.promotion.domain.TransactionType;
 
 @Service
 public class LoyaltyPointsService {
@@ -48,13 +49,13 @@ public class LoyaltyPointsService {
      * @return the created loyalty points record
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public LoyaltyPoints addPoints(CreateLoyaltyPointsRequest request) {
+    public LoyaltyPointsEntity addPoints(CreateLoyaltyPointsRequest request) {
         LOG.info("Adding points: accountId={}, points={}", request.accountId(), request.points());
 
         // Use atomic balance calculation with pessimistic lock to prevent race conditions
         Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
-        LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
+        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
         loyaltyPoints.setAccountId(request.accountId());
         loyaltyPoints.setTransactionId(request.transactionId());
         loyaltyPoints.setTransactionType(request.transactionType());
@@ -82,7 +83,7 @@ public class LoyaltyPointsService {
      * @throws IllegalArgumentException if insufficient balance
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public LoyaltyPoints redeemPoints(RedeemLoyaltyPointsRequest request) {
+    public LoyaltyPointsEntity redeemPoints(RedeemLoyaltyPointsRequest request) {
         LOG.info("Redeeming points: accountId={}, points={}",
             request.accountId(), request.points());
 
@@ -93,10 +94,10 @@ public class LoyaltyPointsService {
             throw new IllegalArgumentException("Insufficient loyalty points balance");
         }
 
-        LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
+        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
         loyaltyPoints.setAccountId(request.accountId());
         loyaltyPoints.setTransactionId(request.transactionId());
-        loyaltyPoints.setTransactionType(LoyaltyPoints.TransactionType.REDEEMED);
+        loyaltyPoints.setTransactionType(TransactionType.REDEEMED);
         loyaltyPoints.setPoints(-request.points());
         loyaltyPoints.setBalanceAfter(currentBalance - request.points());
         loyaltyPoints.setRedeemedAt(LocalDateTime.now());
@@ -111,32 +112,32 @@ public class LoyaltyPointsService {
         return loyaltyPoints;
     }
 
-    public Optional<LoyaltyPoints> getLoyaltyPoints(UUID id) {
+    public Optional<LoyaltyPointsEntity> getLoyaltyPoints(UUID id) {
         return loyaltyPointsRepository.findById(id);
     }
 
-    public List<LoyaltyPoints> getLoyaltyPointsByAccount(String accountId) {
+    public List<LoyaltyPointsEntity> getLoyaltyPointsByAccount(String accountId) {
         return loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
     }
 
     public LoyaltyBalanceResponse getBalance(String accountId) {
         Integer currentBalance = calculateCurrentBalance(accountId);
 
-        List<LoyaltyPoints> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        List<LoyaltyPointsEntity> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
         // BUG-BE-065 Fix: Use .sum() of actual points, not .count() of records.
         // .count() returned number of transactions, not total points value.
         long totalEarned = allPoints.stream()
-            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
-            .mapToInt(LoyaltyPoints::getPoints)
+            .filter(p -> p.getTransactionType() == TransactionType.EARNED)
+            .mapToInt(LoyaltyPointsEntity::getPoints)
             .sum();
 
         long totalRedeemed = allPoints.stream()
-            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REDEEMED)
+            .filter(p -> p.getTransactionType() == TransactionType.REDEEMED)
             .mapToInt(p -> Math.abs(p.getPoints()))
             .sum();
 
         long expiredPointsCount = allPoints.stream()
-            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EXPIRED)
+            .filter(p -> p.getTransactionType() == TransactionType.EXPIRED)
             .mapToInt(p -> Math.abs(p.getPoints()))
             .sum();
 
@@ -147,20 +148,20 @@ public class LoyaltyPointsService {
 
         // Find the nearest expiry date among earned, non-expired points  
         java.time.LocalDateTime nearestExpiry = allPoints.stream()
-            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
+            .filter(p -> p.getTransactionType() == TransactionType.EARNED)
             .filter(p -> p.getExpiryDate() != null)
             .filter(p -> p.getExpiryDate().isAfter(now))
             .filter(p -> p.getExpiryDate().isBefore(expiryWindow))
-            .map(LoyaltyPoints::getExpiryDate)
+            .map(LoyaltyPointsEntity::getExpiryDate)
             .min(java.time.LocalDateTime::compareTo)
             .orElse(null);
 
         // Sum points expiring within the 30-day window
         int pointsExpiring = nearestExpiry == null ? 0 : allPoints.stream()
-            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
+            .filter(p -> p.getTransactionType() == TransactionType.EARNED)
             .filter(p -> p.getExpiryDate() != null)
             .filter(p -> p.getExpiryDate().isAfter(now) && p.getExpiryDate().isBefore(expiryWindow))
-            .mapToInt(LoyaltyPoints::getPoints)
+            .mapToInt(LoyaltyPointsEntity::getPoints)
             .sum();
 
         java.time.Instant expiryInstant = nearestExpiry != null
@@ -209,7 +210,7 @@ public class LoyaltyPointsService {
         return balance != null ? balance : 0;
     }
 
-    private void publishLoyaltyEvent(LoyaltyPoints loyaltyPoints) {
+    private void publishLoyaltyEvent(LoyaltyPointsEntity loyaltyPoints) {
         try {
             Map<String, Object> event = Map.of(
                 "pointsId", loyaltyPoints.getId().toString(),

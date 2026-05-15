@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.domain.port.in.ScheduledTransferUseCase;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
 import id.payu.transaction.dto.ScheduledTransferResponse;
@@ -159,7 +159,7 @@ public class ScheduledTransferController {
                     description = "Forbidden - account mismatch"
             )
     })
-    public ResponseEntity<List<ScheduledTransfer>> getAccountScheduledTransfers(
+    public ResponseEntity<List<ScheduledTransferEntity>> getAccountScheduledTransfers(
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId) {
         // BUG-BE-148: Verify caller owns the account
@@ -168,7 +168,7 @@ public class ScheduledTransferController {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
 
-        List<ScheduledTransfer> transfers = scheduledTransferUseCase.getAccountScheduledTransfers(accountId);
+        List<ScheduledTransferEntity> transfers = scheduledTransferUseCase.getAccountScheduledTransfers(accountId);
         return ResponseEntity.ok(transfers);
     }
 

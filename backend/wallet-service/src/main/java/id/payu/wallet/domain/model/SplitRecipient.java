@@ -23,13 +23,6 @@ public class SplitRecipient {
     public SplitRecipient() {
     }
 
-    public enum RecipientType {
-        MERCHANT,
-        PLATFORM,
-        TAX,
-        OTHER
-    }
-
     public static SplitRecipientBuilder builder() {
         return new SplitRecipientBuilder();
     }

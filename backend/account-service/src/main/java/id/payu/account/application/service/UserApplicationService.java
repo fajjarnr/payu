@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
+import id.payu.account.domain.model.KycStatus;
+import id.payu.account.domain.model.UserStatus;
+import id.payu.security.annotation.AuditOperation;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +39,7 @@ public class UserApplicationService implements RegisterUserUseCase {
     // KYC call is wrapped in try-catch and fails fast on error, so holding a tx is acceptable.
     // Resilience4j annotations removed — they caused double-fallback (duplicate key errors).
     @Transactional
-    @Audited(operation = Audited.Operation.CREATE, entityType = "User")
+    @Audited(operation = AuditOperation.CREATE, entityType = "User")
     public CompletableFuture<User> registerUser(RegisterUserRequest command) {
         log.info("Processing registration for user: {}", command.username());
 
@@ -66,19 +69,19 @@ public class UserApplicationService implements RegisterUserUseCase {
         // Simple try-catch replaces resilience4j annotations which caused double-fallback
         // (both @CircuitBreaker and @Bulkhead fired registerFallback, leading to duplicate key errors).
         // Registration is low-throughput and non-idempotent — circuit breaking adds no value here.
-        User.KycStatus kycStatus;
-        User.UserStatus userStatus;
+        KycStatus kycStatus;
+        UserStatus userStatus;
         try {
             DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(), command.fullName());
-            kycStatus = kycResponse.verified() ? User.KycStatus.APPROVED : User.KycStatus.REJECTED;
+            kycStatus = kycResponse.verified() ? KycStatus.APPROVED : KycStatus.REJECTED;
             // BUG-BE-027 Fix: Set user status based on KYC result.
             userStatus = kycResponse.verified()
-                    ? User.UserStatus.ACTIVE
-                    : User.UserStatus.PENDING_VERIFICATION;
+                    ? UserStatus.ACTIVE
+                    : UserStatus.PENDING_VERIFICATION;
         } catch (Exception e) {
             log.warn("KYC service unavailable, registering with PENDING status. Error: {}", e.getMessage());
-            kycStatus = User.KycStatus.PENDING;
-            userStatus = User.UserStatus.PENDING_VERIFICATION;
+            kycStatus = KycStatus.PENDING;
+            userStatus = UserStatus.PENDING_VERIFICATION;
         }
 
         User user = User.builder()

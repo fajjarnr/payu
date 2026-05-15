@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.TransactionType;
+import id.payu.wallet.domain.model.WalletStatus;
 
 @Service
 public class WalletService implements WalletUseCase {
@@ -90,7 +93,7 @@ public class WalletService implements WalletUseCase {
                 .balance(BigDecimal.ZERO)
                 .reservedBalance(BigDecimal.ZERO)
                 .currency("IDR")
-                .status(Wallet.WalletStatus.ACTIVE)
+                .status(WalletStatus.ACTIVE)
                 .build();
 
         Wallet savedWallet = walletPersistencePort.save(wallet);
@@ -165,7 +168,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry debitEntry = LedgerEntry.builder()
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId) // accountId is String in both Wallet and Ledger now
-                .entryType(LedgerEntry.EntryType.DEBIT)
+                .entryType(EntryType.DEBIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
                 .balanceAfter(wallet.getAvailableBalance())
@@ -211,7 +214,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry commitEntry = LedgerEntry.builder()
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
-                .entryType(LedgerEntry.EntryType.DEBIT)
+                .entryType(EntryType.DEBIT)
                 .amount(reservedAmount)
                 .currency(wallet.getCurrency())
                 .balanceAfter(wallet.getAvailableBalance())
@@ -256,7 +259,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
-                .entryType(LedgerEntry.EntryType.CREDIT)
+                .entryType(EntryType.CREDIT)
                 .amount(reservedAmount)
                 .currency(wallet.getCurrency())
                 .balanceAfter(wallet.getAvailableBalance())
@@ -316,7 +319,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .transactionId(transactionId)
                 .accountId(accountId)
-                .entryType(LedgerEntry.EntryType.CREDIT)
+                .entryType(EntryType.CREDIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
                 .balanceAfter(wallet.getAvailableBalance())
@@ -332,7 +335,7 @@ public class WalletService implements WalletUseCase {
                 .id(transactionId)
                 .walletId(wallet.getId())
                 .referenceId(referenceId)
-                .type(WalletTransaction.TransactionType.CREDIT)
+                .type(TransactionType.CREDIT)
                 .amount(amount)
                 .balanceAfter(wallet.getBalance())
                 .description(description)

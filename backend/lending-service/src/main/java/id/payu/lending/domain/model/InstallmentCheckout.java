@@ -27,15 +27,6 @@ public class InstallmentCheckout {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum CheckoutStatus {
-        PENDING,
-        APPROVED,
-        DISBURSED,
-        REJECTED,
-        CANCELLED,
-        EXPIRED
-    }
-
     public InstallmentCheckout() {}
 
     // Domain methods

@@ -1,24 +1,26 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.domain.Reward;
+import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.promotion.domain.RewardStatus;
+import id.payu.promotion.domain.RewardType;
 
 public record RewardResponse(
     UUID id,
     String accountId,
     String transactionId,
     String promotionCode,
-    Reward.RewardType type,
+    RewardType type,
     BigDecimal amount,
     Integer pointsEarned,
     BigDecimal transactionAmount,
-    Reward.Status status,
+    RewardStatus status,
     LocalDateTime expiryDate,
     LocalDateTime createdAt
 ) {
-    public static RewardResponse from(Reward reward) {
+    public static RewardResponse from(RewardEntity reward) {
         return new RewardResponse(
             reward.getId(),
             reward.getAccountId(),

@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.domain.model.SplitBill;
-import id.payu.transaction.domain.model.SplitBillParticipant;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
+import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity;
 import id.payu.transaction.domain.port.out.SplitBillPersistencePort;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
 import id.payu.transaction.dto.AddParticipantRequest;
@@ -56,7 +56,7 @@ class SplitBillServiceTest {
                 .currency("IDR")
                 .title("Makan Bersama")
                 .description("Makan di restoran Padang")
-                .splitType(SplitBill.SplitType.EQUAL)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
                 .dueDate(Instant.now().plusSeconds(86400 * 7))
                 .participants(List.of(
                         CreateSplitBillRequest.ParticipantRequest.builder()
@@ -76,7 +76,7 @@ class SplitBillServiceTest {
 
     @Test
     void createSplitBill_ShouldCreateWithEqualSplit() {
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(persistencePort.save(any(SplitBillEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(persistencePort.findParticipantsBySplitBillId(any())).thenReturn(List.of());
 
         SplitBillResponse response = splitBillService.createSplitBill(createRequest);
@@ -85,24 +85,24 @@ class SplitBillServiceTest {
         assertThat(response.getTitle()).isEqualTo("Makan Bersama");
         assertThat(response.getTotalAmount()).isEqualByComparingTo("1000.00");
         assertThat(response.getCurrency()).isEqualTo("IDR");
-        assertThat(response.getSplitType()).isEqualTo(SplitBill.SplitType.EQUAL.name());
-        assertThat(response.getStatus()).isEqualTo(SplitBill.SplitStatus.DRAFT.name());
+        assertThat(response.getSplitType()).isEqualTo(SplitBillEntity.SplitType.EQUAL.name());
+        assertThat(response.getStatus()).isEqualTo(SplitBillEntity.SplitStatus.DRAFT.name());
 
-        verify(persistencePort).save(any(SplitBill.class));
-        verify(eventPublisher).publishSplitBillCreated(any(SplitBill.class));
+        verify(persistencePort).save(any(SplitBillEntity.class));
+        verify(eventPublisher).publishSplitBillCreated(any(SplitBillEntity.class));
     }
 
     @Test
     void createSplitBill_WithMultipleParticipants_ShouldSplitEqually() {
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> {
-            SplitBill bill = invocation.getArgument(0);
+        when(persistencePort.save(any(SplitBillEntity.class))).thenAnswer(invocation -> {
+            SplitBillEntity bill = invocation.getArgument(0);
             bill.setId(splitBillId);
             return bill;
         });
         when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenAnswer(invocation -> {
             // Return the participants that would have been saved
             return List.of(
-                    SplitBillParticipant.builder()
+                    SplitBillParticipantEntity.builder()
                             .id(UUID.randomUUID())
                             .splitBillId(splitBillId)
                             .accountId(createRequest.getParticipants().get(0).getAccountId())
@@ -110,9 +110,9 @@ class SplitBillServiceTest {
                             .accountName(createRequest.getParticipants().get(0).getAccountName())
                             .amountOwed(new BigDecimal("500.00"))
                             .amountPaid(new BigDecimal("0.00"))
-                            .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                            .status(SplitBillParticipantEntity.ParticipantStatus.PENDING)
                             .build(),
-                    SplitBillParticipant.builder()
+                    SplitBillParticipantEntity.builder()
                             .id(UUID.randomUUID())
                             .splitBillId(splitBillId)
                             .accountId(createRequest.getParticipants().get(1).getAccountId())
@@ -120,17 +120,17 @@ class SplitBillServiceTest {
                             .accountName(createRequest.getParticipants().get(1).getAccountName())
                             .amountOwed(new BigDecimal("500.00"))
                             .amountPaid(new BigDecimal("0.00"))
-                            .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                            .status(SplitBillParticipantEntity.ParticipantStatus.PENDING)
                             .build()
             );
         });
 
         SplitBillResponse response = splitBillService.createSplitBill(createRequest);
 
-        ArgumentCaptor<SplitBill> captor = ArgumentCaptor.forClass(SplitBill.class);
+        ArgumentCaptor<SplitBillEntity> captor = ArgumentCaptor.forClass(SplitBillEntity.class);
         verify(persistencePort).save(captor.capture());
 
-        SplitBill savedSplitBill = captor.getValue();
+        SplitBillEntity savedSplitBill = captor.getValue();
         assertThat(savedSplitBill.getParticipants()).hasSize(2);
         assertThat(savedSplitBill.getParticipants().get(0).getAmountOwed())
                 .isEqualByComparingTo("500.00");
@@ -140,24 +140,24 @@ class SplitBillServiceTest {
 
     @Test
     void getSplitBill_WhenExists_ShouldReturnSplitBill() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Makan Bersama")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.ACTIVE)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.ACTIVE)
                 .participants(List.of(
-                        SplitBillParticipant.builder()
+                        SplitBillParticipantEntity.builder()
                                 .id(participantId)
                                 .accountId(accountId)
                                 .accountNumber("1234567890")
                                 .accountName("John Doe")
                                 .amountOwed(new BigDecimal("500.00"))
                                 .amountPaid(new BigDecimal("250.00"))
-                                .status(SplitBillParticipant.ParticipantStatus.PARTIALLY_PAID)
+                                .status(SplitBillParticipantEntity.ParticipantStatus.PARTIALLY_PAID)
                                 .build()
                 ))
                 .build();
@@ -185,35 +185,35 @@ class SplitBillServiceTest {
 
     @Test
     void activateSplitBill_WhenInDraft_ShouldActivateAndPublishEvent() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
-                .splitType(SplitBill.SplitType.EQUAL)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
-                .status(SplitBill.SplitStatus.DRAFT)
+                .status(SplitBillEntity.SplitStatus.DRAFT)
                 .build();
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(persistencePort.save(any(SplitBillEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenReturn(List.of());
 
         splitBillService.activateSplitBill(splitBillId);
 
-        ArgumentCaptor<SplitBill> captor = ArgumentCaptor.forClass(SplitBill.class);
+        ArgumentCaptor<SplitBillEntity> captor = ArgumentCaptor.forClass(SplitBillEntity.class);
         verify(persistencePort).save(captor.capture());
 
-        assertThat(captor.getValue().getStatus()).isEqualTo(SplitBill.SplitStatus.ACTIVE);
-        verify(eventPublisher).publishSplitBillActivated(any(SplitBill.class));
+        assertThat(captor.getValue().getStatus()).isEqualTo(SplitBillEntity.SplitStatus.ACTIVE);
+        verify(eventPublisher).publishSplitBillActivated(any(SplitBillEntity.class));
     }
 
     @Test
     void activateSplitBill_WhenNotDraft_ShouldThrowException() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
-                .splitType(SplitBill.SplitType.EQUAL)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
-                .status(SplitBill.SplitStatus.ACTIVE)
+                .status(SplitBillEntity.SplitStatus.ACTIVE)
                 .build();
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
@@ -226,7 +226,7 @@ class SplitBillServiceTest {
     @Test
     void makePayment_WhenValid_ShouldUpdateParticipantAndPublishEvent() {
         UUID participantAccountId = UUID.randomUUID();
-        SplitBillParticipant participant = SplitBillParticipant.builder()
+        SplitBillParticipantEntity participant = SplitBillParticipantEntity.builder()
                 .id(participantId)
                 .splitBillId(splitBillId)
                 .accountId(participantAccountId)
@@ -234,18 +234,18 @@ class SplitBillServiceTest {
                 .accountName("John Doe")
                 .amountOwed(new BigDecimal("500.00"))
                 .amountPaid(new BigDecimal("200.00"))
-                .status(SplitBillParticipant.ParticipantStatus.PARTIALLY_PAID)
+                .status(SplitBillParticipantEntity.ParticipantStatus.PARTIALLY_PAID)
                 .build();
 
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Test Split Bill")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.IN_PROGRESS)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.IN_PROGRESS)
                 .participants(List.of(participant))
                 .build();
 
@@ -255,45 +255,45 @@ class SplitBillServiceTest {
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
         when(persistencePort.findParticipantById(participantId)).thenReturn(Optional.of(participant));
-        when(persistencePort.saveParticipant(any(SplitBillParticipant.class)))
+        when(persistencePort.saveParticipant(any(SplitBillParticipantEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(persistencePort.save(any(SplitBillEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenReturn(List.of(participant));
 
         splitBillService.makePayment(splitBillId, participantId, paymentRequest);
 
-        ArgumentCaptor<SplitBillParticipant> participantCaptor = ArgumentCaptor.forClass(SplitBillParticipant.class);
+        ArgumentCaptor<SplitBillParticipantEntity> participantCaptor = ArgumentCaptor.forClass(SplitBillParticipantEntity.class);
         verify(persistencePort).saveParticipant(participantCaptor.capture());
 
         assertThat(participantCaptor.getValue().getAmountPaid()).isEqualByComparingTo("500.00");
         assertThat(participantCaptor.getValue().getStatus())
-                .isEqualTo(SplitBillParticipant.ParticipantStatus.SETTLED);
+                .isEqualTo(SplitBillParticipantEntity.ParticipantStatus.SETTLED);
 
-        verify(eventPublisher).publishPaymentMade(any(SplitBill.class), any(SplitBillParticipant.class),
+        verify(eventPublisher).publishPaymentMade(any(SplitBillEntity.class), any(SplitBillParticipantEntity.class),
                 eq(new BigDecimal("300.00")));
     }
 
     @Test
     void makePayment_WhenExceedsOwedAmount_ShouldThrowException() {
         UUID participantAccountId = UUID.randomUUID();
-        SplitBillParticipant participant = SplitBillParticipant.builder()
+        SplitBillParticipantEntity participant = SplitBillParticipantEntity.builder()
                 .id(participantId)
                 .splitBillId(splitBillId)
                 .accountId(participantAccountId)
                 .amountOwed(new BigDecimal("500.00"))
                 .amountPaid(new BigDecimal("300.00"))
-                .status(SplitBillParticipant.ParticipantStatus.PARTIALLY_PAID)
+                .status(SplitBillParticipantEntity.ParticipantStatus.PARTIALLY_PAID)
                 .build();
 
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Test Split Bill")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.IN_PROGRESS)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.IN_PROGRESS)
                 .participants(List.of(participant))
                 .build();
 
@@ -311,15 +311,15 @@ class SplitBillServiceTest {
 
     @Test
     void addParticipant_WhenInDraft_ShouldAddParticipantAndPublishEvent() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Test Split Bill")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.DRAFT)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.DRAFT)
                 .build();
 
         AddParticipantRequest addRequest = AddParticipantRequest.builder()
@@ -330,54 +330,54 @@ class SplitBillServiceTest {
                 .build();
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
-        when(persistencePort.saveParticipant(any(SplitBillParticipant.class)))
+        when(persistencePort.saveParticipant(any(SplitBillParticipantEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenReturn(List.of());
 
         splitBillService.addParticipant(splitBillId, addRequest);
 
-        verify(persistencePort).saveParticipant(any(SplitBillParticipant.class));
-        verify(eventPublisher).publishParticipantAdded(any(SplitBill.class), any(SplitBillParticipant.class));
+        verify(persistencePort).saveParticipant(any(SplitBillParticipantEntity.class));
+        verify(eventPublisher).publishParticipantAdded(any(SplitBillEntity.class), any(SplitBillParticipantEntity.class));
     }
 
     @Test
     void cancelSplitBill_WhenActive_ShouldCancelAndPublishEvent() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Test Split Bill")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.ACTIVE)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.ACTIVE)
                 .build();
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(persistencePort.save(any(SplitBillEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenReturn(List.of());
 
         SplitBillResponse response = splitBillService.cancelSplitBill(splitBillId);
 
         assertThat(response).isNotNull();
-        ArgumentCaptor<SplitBill> captor = ArgumentCaptor.forClass(SplitBill.class);
+        ArgumentCaptor<SplitBillEntity> captor = ArgumentCaptor.forClass(SplitBillEntity.class);
         verify(persistencePort).save(captor.capture());
 
-        assertThat(captor.getValue().getStatus()).isEqualTo(SplitBill.SplitStatus.CANCELLED);
-        verify(eventPublisher).publishSplitBillCancelled(any(SplitBill.class));
+        assertThat(captor.getValue().getStatus()).isEqualTo(SplitBillEntity.SplitStatus.CANCELLED);
+        verify(eventPublisher).publishSplitBillCancelled(any(SplitBillEntity.class));
     }
 
     @Test
     void cancelSplitBill_WhenCompleted_ShouldThrowException() {
-        SplitBill splitBill = SplitBill.builder()
+        SplitBillEntity splitBill = SplitBillEntity.builder()
                 .id(splitBillId)
                 .referenceNumber("SPL123456")
                 .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Test Split Bill")
-                .splitType(SplitBill.SplitType.EQUAL)
-                .status(SplitBill.SplitStatus.COMPLETED)
+                .splitType(SplitBillEntity.SplitType.EQUAL)
+                .status(SplitBillEntity.SplitStatus.COMPLETED)
                 .build();
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));

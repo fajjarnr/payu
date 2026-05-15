@@ -9,9 +9,9 @@ public class FeeCalculationResult {
 
     private final BigDecimal feeAmount;
     private final BigDecimal totalAmount;
-    private final RateCard.FeeType feeType;
+    private final FeeType feeType;
 
-    public FeeCalculationResult(BigDecimal feeAmount, BigDecimal totalAmount, RateCard.FeeType feeType) {
+    public FeeCalculationResult(BigDecimal feeAmount, BigDecimal totalAmount, FeeType feeType) {
         this.feeAmount = feeAmount;
         this.totalAmount = totalAmount;
         this.feeType = feeType;
@@ -25,7 +25,7 @@ public class FeeCalculationResult {
         return totalAmount;
     }
 
-    public RateCard.FeeType getFeeType() {
+    public FeeType getFeeType() {
         return feeType;
     }
 

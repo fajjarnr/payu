@@ -1,6 +1,6 @@
 package id.payu.transaction.domain.port.in;
 
-import id.payu.transaction.domain.model.SplitBill;
+import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
 import id.payu.transaction.dto.CreateSplitBillRequest;
 import id.payu.transaction.dto.SplitBillResponse;
 import id.payu.transaction.dto.AddParticipantRequest;
@@ -15,7 +15,7 @@ public interface SplitBillUseCase {
 
     SplitBillResponse getSplitBill(UUID splitBillId);
 
-    List<SplitBill> getAccountSplitBills(UUID accountId, int page, int size);
+    List<SplitBillEntity> getAccountSplitBills(UUID accountId, int page, int size);
 
     SplitBillResponse updateSplitBill(UUID splitBillId, CreateSplitBillRequest request);
 

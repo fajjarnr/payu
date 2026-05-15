@@ -1,6 +1,6 @@
 package id.payu.transaction.adapter.persistence.repository;
 
-import id.payu.transaction.domain.model.BatchDisbursement;
+import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,19 +11,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * JPA repository for BatchDisbursement entity.
+ * JPA repository for BatchDisbursementEntity entity.
  */
 @Repository
-public interface BatchDisbursementJpaRepository extends JpaRepository<BatchDisbursement, UUID> {
+public interface BatchDisbursementJpaRepository extends JpaRepository<BatchDisbursementEntity, UUID> {
 
-    Optional<BatchDisbursement> findByIdempotencyKey(String idempotencyKey);
+    Optional<BatchDisbursementEntity> findByIdempotencyKey(String idempotencyKey);
 
-    @Query("SELECT b FROM BatchDisbursement b WHERE b.sourceAccountId = :accountId ORDER BY b.createdAt DESC")
-    List<BatchDisbursement> findBySourceAccountId(@Param("accountId") UUID sourceAccountId,
+    @Query("SELECT b FROM BatchDisbursementEntity b WHERE b.sourceAccountId = :accountId ORDER BY b.createdAt DESC")
+    List<BatchDisbursementEntity> findBySourceAccountId(@Param("accountId") UUID sourceAccountId,
                                                    org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT b FROM BatchDisbursement b WHERE b.status = :status ORDER BY b.createdAt DESC")
-    List<BatchDisbursement> findByStatus(@Param("status") String status,
+    @Query("SELECT b FROM BatchDisbursementEntity b WHERE b.status = :status ORDER BY b.createdAt DESC")
+    List<BatchDisbursementEntity> findByStatus(@Param("status") String status,
                                           org.springframework.data.domain.Pageable pageable);
 
     boolean existsByIdempotencyKey(String idempotencyKey);

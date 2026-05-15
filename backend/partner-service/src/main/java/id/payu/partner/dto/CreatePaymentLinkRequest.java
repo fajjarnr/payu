@@ -32,7 +32,7 @@ public class CreatePaymentLinkRequest {
     @Schema(description = "Customer email for receipt", example = "john@example.com")
     private String customerEmail;
 
-    @Schema(description = "Partner's external reference ID", example = "order-123")
+    @Schema(description = "PartnerEntity's external reference ID", example = "order-123")
     private String externalId;
 
     @Schema(description = "Webhook callback URL for payment status", example = "https://partner.com/webhook")

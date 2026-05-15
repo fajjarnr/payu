@@ -91,12 +91,6 @@ public class Wallet {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public enum WalletStatus {
-        ACTIVE,
-        FROZEN,
-        CLOSED
-    }
-
     public static WalletBuilder builder() {
         return new WalletBuilder();
     }

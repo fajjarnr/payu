@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.security.annotation.SensitivityLevel;
 
 /**
  * JPA Entity for Receipt persistence.
@@ -58,7 +59,7 @@ public class ReceiptEntity {
     @Column(name = "sender_name", nullable = false, length = 200)
     private String senderName;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "sender_account_number", nullable = false, length = 50)
     private String senderAccountNumber;
 
@@ -70,7 +71,7 @@ public class ReceiptEntity {
     @Column(name = "recipient_name", nullable = false, length = 200)
     private String recipientName;
 
-    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
+    @Sensitive(value = SensitivityLevel.HIGH)
     @Column(name = "recipient_account_number", nullable = false, length = 50)
     private String recipientAccountNumber;
 

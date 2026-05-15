@@ -1,6 +1,6 @@
 package id.payu.backoffice.adapter.persistence.repository;
 
-import id.payu.backoffice.domain.KycReview;
+import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,18 +9,19 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
+import id.payu.backoffice.domain.KycStatus;
 
 @Repository
-public interface KycReviewRepository extends JpaRepository<KycReview, UUID> {
-    List<KycReview> findByStatus(KycReview.KycStatus status);
+public interface KycReviewRepository extends JpaRepository<KycReviewEntity, UUID> {
+    List<KycReviewEntity> findByStatus(KycStatus status);
     // BUG-BE-043: Pageable version
-    Page<KycReview> findByStatus(KycReview.KycStatus status, Pageable pageable);
-    List<KycReview> findByUserId(String userId);
-    List<KycReview> findByUserIdOrderByCreatedAtDesc(String userId);
+    Page<KycReviewEntity> findByStatus(KycStatus status, Pageable pageable);
+    List<KycReviewEntity> findByUserId(String userId);
+    List<KycReviewEntity> findByUserIdOrderByCreatedAtDesc(String userId);
 
     // Search methods
-    List<KycReview> findByUserIdContainingIgnoreCase(String userId);
-    List<KycReview> findByAccountNumberContainingIgnoreCase(String accountNumber);
-    List<KycReview> findByDocumentNumberContainingIgnoreCase(String documentNumber);
-    List<KycReview> findByFullNameContainingIgnoreCase(String fullName);
+    List<KycReviewEntity> findByUserIdContainingIgnoreCase(String userId);
+    List<KycReviewEntity> findByAccountNumberContainingIgnoreCase(String accountNumber);
+    List<KycReviewEntity> findByDocumentNumberContainingIgnoreCase(String documentNumber);
+    List<KycReviewEntity> findByFullNameContainingIgnoreCase(String fullName);
 }

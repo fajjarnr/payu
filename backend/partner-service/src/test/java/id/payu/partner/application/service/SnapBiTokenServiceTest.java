@@ -61,7 +61,7 @@ public class SnapBiTokenServiceTest {
     public void testGenerateAccessToken() {
         String clientId = "test-client-id";
         String partnerId = "123";
-        String partnerName = "Test Partner";
+        String partnerName = "Test PartnerEntity";
 
         String token = tokenService.generateAccessToken(clientId, partnerId, partnerName);
 
@@ -74,7 +74,7 @@ public class SnapBiTokenServiceTest {
     public void testValidateValidToken() {
         String clientId = "test-client-id";
         String partnerId = "123";
-        String partnerName = "Test Partner";
+        String partnerName = "Test PartnerEntity";
 
         String token = tokenService.generateAccessToken(clientId, partnerId, partnerName);
         var claims = tokenService.validateToken(token);
@@ -96,7 +96,7 @@ public class SnapBiTokenServiceTest {
     public void testRevokeToken() {
         String clientId = "test-client-id";
         String partnerId = "123";
-        String partnerName = "Test Partner";
+        String partnerName = "Test PartnerEntity";
 
         String token = tokenService.generateAccessToken(clientId, partnerId, partnerName);
         assertNotNull(tokenService.validateToken(token));

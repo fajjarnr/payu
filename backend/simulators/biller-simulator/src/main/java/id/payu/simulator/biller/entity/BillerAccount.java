@@ -33,10 +33,6 @@ public class BillerAccount extends PanacheEntityBase {
     @Column(nullable = false)
     public AccountStatus status;
 
-    public enum AccountStatus {
-        ACTIVE, BLOCKED, NOT_FOUND
-    }
-
     public static BillerAccount findByBillerAndCustomer(String billerCode, String customerNumber) {
         return find("billerCode = ?1 and customerNumber = ?2", billerCode, customerNumber).firstResult();
     }

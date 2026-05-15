@@ -3,6 +3,7 @@ package id.payu.account.dto;
 import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import id.payu.security.annotation.SensitivityLevel;
 
 public record RegisterUserRequest(
     @NotBlank(message = "External ID is required")
@@ -30,6 +31,6 @@ public record RegisterUserRequest(
     String nik,
 
     @NotBlank(message = "Password is required")
-    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
+    @Sensitive(value = SensitivityLevel.CRITICAL)
     String password
 ) {}

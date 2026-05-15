@@ -77,7 +77,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                             .setAmount(amount.toPlainString())
                             .build())
                     .setReferenceId(referenceId)
-                    .setDescription(description != null ? description : "Promotion credit")
+                    .setDescription(description != null ? description : "PromotionEntity credit")
                     .build();
 
             TransactionResponse response = walletStub.credit(request);

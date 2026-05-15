@@ -18,7 +18,7 @@ import id.payu.auth.adapter.persistence.RefreshTokenService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * Authentication controller for PayU Digital Banking Platform.
@@ -67,7 +68,7 @@ public class AuthController extends BaseController {
 
     @PostMapping("/login")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.LOGIN,
+            operation = id.payu.security.annotation.AuditOperation.LOGIN,
             entityType = "User",
             maskData = true,
             level = AuditLevel.INFO
@@ -224,7 +225,7 @@ public class AuthController extends BaseController {
      */
     @PostMapping("/refresh")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "AuthToken",
             maskData = true,
             level = AuditLevel.INFO
@@ -314,7 +315,7 @@ public class AuthController extends BaseController {
      */
     @PostMapping("/register")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            operation = id.payu.security.annotation.AuditOperation.CREATE,
             entityType = "User",
             maskData = true,
             level = AuditLevel.INFO

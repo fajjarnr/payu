@@ -49,7 +49,7 @@ public class SubscriptionEventConsumer {
 
             Map<String, Object> payload = extractPayload(parsed);
 
-            String pid = extractHeader(record, "X-Partner-Id");
+            String pid = extractHeader(record, "X-PartnerEntity-Id");
             if (pid == null) pid = (String) payload.get("partnerId");
             if (pid == null) pid = (String) parsed.get("partnerId");
             payload.put("partnerId", pid);

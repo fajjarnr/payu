@@ -1,7 +1,7 @@
 package id.payu.billing.domain.event;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import lombok.Builder;
 import lombok.Data;
@@ -72,7 +72,7 @@ public class SubscriptionEvent {
      * Create a CloudEvent envelope for subscription.created event.
      */
     public static CloudEventEnvelope<SubscriptionCreatedPayload> createSubscriptionCreatedEvent(
-            Subscription subscription) {
+            SubscriptionEntity subscription) {
 
         SubscriptionCreatedPayload payload = SubscriptionCreatedPayload.builder()
                 .subscriptionId(subscription.getId().toString())
@@ -105,7 +105,7 @@ public class SubscriptionEvent {
      * Create a CloudEvent envelope for charge.succeeded event.
      */
     public static CloudEventEnvelope<ChargePayload> createChargeSucceededEvent(
-            Subscription subscription, SubscriptionCharge charge) {
+            SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
 
         ChargePayload payload = ChargePayload.builder()
                 .chargeId(charge.getId().toString())
@@ -138,7 +138,7 @@ public class SubscriptionEvent {
      * Create a CloudEvent envelope for charge.failed event.
      */
     public static CloudEventEnvelope<ChargePayload> createChargeFailedEvent(
-            Subscription subscription, SubscriptionCharge charge) {
+            SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
 
         ChargePayload payload = ChargePayload.builder()
                 .chargeId(charge.getId().toString())

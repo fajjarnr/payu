@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.sender;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,7 +18,7 @@ public class EmailSender {
     @Inject
     Mailer mailer;
 
-    public boolean send(Notification notification) {
+    public boolean send(NotificationEntity notification) {
         try {
             LOG.infof("Sending email to: %s", notification.recipient);
 

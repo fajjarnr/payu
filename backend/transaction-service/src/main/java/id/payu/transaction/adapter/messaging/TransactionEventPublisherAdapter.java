@@ -3,7 +3,7 @@ package id.payu.transaction.adapter.messaging;
 import id.payu.events.cloudevents.CloudEventBuilder;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import id.payu.outbox.service.OutboxService;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,12 +32,12 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         this.outboxService = outboxService;
     }
 
-    private static final String AGGREGATE_TYPE = "Transaction";
+    private static final String AGGREGATE_TYPE = "TransactionEntity";
     private static final String TOPIC_TRANSACTIONS = "payu.transactions";
     private static final String SERVICE_NAME = "transaction-service";
 
     @Override
-    public void publishTransactionInitiated(Transaction transaction) {
+    public void publishTransactionInitiated(TransactionEntity transaction) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
@@ -67,7 +67,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     }
 
     @Override
-    public void publishTransactionValidated(Transaction transaction) {
+    public void publishTransactionValidated(TransactionEntity transaction) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
@@ -93,7 +93,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     }
 
     @Override
-    public void publishTransactionCompleted(Transaction transaction) {
+    public void publishTransactionCompleted(TransactionEntity transaction) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
@@ -123,7 +123,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     }
 
     @Override
-    public void publishTransactionFailed(Transaction transaction, String reason) {
+    public void publishTransactionFailed(TransactionEntity transaction, String reason) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());

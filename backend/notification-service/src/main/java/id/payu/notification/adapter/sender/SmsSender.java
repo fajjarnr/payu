@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.sender;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -25,7 +25,7 @@ public class SmsSender {
     @ConfigProperty(name = "payu.sms.provider", defaultValue = "LOG")
     String smsProvider;
 
-    public boolean send(Notification notification) {
+    public boolean send(NotificationEntity notification) {
         return switch (smsProvider.toUpperCase()) {
             case "LOG" -> sendViaLog(notification);
             case "TWILIO" -> sendViaTwilio(notification);
@@ -42,7 +42,7 @@ public class SmsSender {
      * LOG mode: prints full SMS content to console.
      * OTP codes and message bodies are fully visible for debugging.
      */
-    private boolean sendViaLog(Notification notification) {
+    private boolean sendViaLog(NotificationEntity notification) {
         LOG.infof("╔══════════════════════════════════════════════════╗");
         LOG.infof("║           📱 SMS (LOG MODE)                     ║");
         LOG.infof("╠══════════════════════════════════════════════════╣");
@@ -58,7 +58,7 @@ public class SmsSender {
      * To enable: set payu.sms.provider=TWILIO and configure:
      *   payu.sms.twilio.account-sid, payu.sms.twilio.auth-token, payu.sms.twilio.from-number
      */
-    private boolean sendViaTwilio(Notification notification) {
+    private boolean sendViaTwilio(NotificationEntity notification) {
         // TODO: Implement Twilio REST API call
         // POST https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json
         // Body: To, From, Body
@@ -71,7 +71,7 @@ public class SmsSender {
      * To enable: set payu.sms.provider=VONAGE and configure:
      *   payu.sms.vonage.api-key, payu.sms.vonage.api-secret, payu.sms.vonage.from
      */
-    private boolean sendViaVonage(Notification notification) {
+    private boolean sendViaVonage(NotificationEntity notification) {
         // TODO: Implement Vonage REST API call
         // POST https://rest.nexmo.com/sms/json
         LOG.warnf("Vonage SMS provider not yet implemented — falling back to LOG mode");
@@ -83,7 +83,7 @@ public class SmsSender {
      * To enable: set payu.sms.provider=ZENZIVA and configure:
      *   payu.sms.zenziva.userkey, payu.sms.zenziva.passkey
      */
-    private boolean sendViaZenziva(Notification notification) {
+    private boolean sendViaZenziva(NotificationEntity notification) {
         // TODO: Implement Zenziva API call
         // POST https://console.zenziva.net/wareguler/api/sendWA/
         LOG.warnf("Zenziva SMS provider not yet implemented — falling back to LOG mode");

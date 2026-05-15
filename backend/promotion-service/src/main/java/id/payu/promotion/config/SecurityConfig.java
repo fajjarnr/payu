@@ -11,7 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security configuration for Promotion Service.
+ * Security configuration for PromotionEntity Service.
  */
 @Configuration
 @EnableWebSecurity

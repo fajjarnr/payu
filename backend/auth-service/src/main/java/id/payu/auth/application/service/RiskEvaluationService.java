@@ -1,9 +1,9 @@
 package id.payu.auth.application.service;
 
 import id.payu.auth.domain.model.LoginContext;
-import id.payu.auth.domain.model.UserRiskProfileEntity;
-import id.payu.auth.domain.model.UserKnownDeviceEntity;
-import id.payu.auth.domain.model.UserKnownIpEntity;
+import id.payu.auth.adapter.persistence.entity.UserRiskProfileEntity;
+import id.payu.auth.adapter.persistence.entity.UserKnownDeviceEntity;
+import id.payu.auth.adapter.persistence.entity.UserKnownIpEntity;
 import id.payu.auth.adapter.persistence.repository.UserRiskProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,9 @@ package id.payu.backoffice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import id.payu.backoffice.domain.CustomerCase;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.Priority;
 
 public record CustomerCaseRequest(
         @NotBlank(message = "User ID is required")
@@ -11,9 +13,9 @@ public record CustomerCaseRequest(
         String accountNumber,
 
         @NotNull(message = "Case type is required")
-        CustomerCase.CaseType caseType,
+        CaseType caseType,
 
-        CustomerCase.Priority priority,
+        Priority priority,
 
         @NotBlank(message = "Subject is required")
         String subject,

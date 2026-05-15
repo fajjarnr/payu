@@ -2,7 +2,7 @@ package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.CommandHandler;
 import id.payu.transaction.application.service.AuthorizationService;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.InitiateTransferRequest;
@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import id.payu.transaction.domain.model.TransactionStatus;
+import id.payu.transaction.domain.model.TransactionType;
 
 /**
  * Handler for the InitiateTransferCommand.
@@ -69,7 +71,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         }
 
         // Create and persist the transaction
-        Transaction transaction = createTransaction(command);
+        TransactionEntity transaction = createTransaction(command);
         transaction = transactionPersistencePort.save(transaction);
         eventPublisherPort.publishTransactionInitiated(transaction);
 
@@ -81,7 +83,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         );
 
         if (!balanceResponse.isSuccess()) {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("Insufficient balance");
             transactionPersistencePort.save(transaction);
             eventPublisherPort.publishTransactionFailed(transaction, "Insufficient balance");
@@ -90,7 +92,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
         String reservationId = balanceResponse.getReservationId();
 
-        transaction.setStatus(Transaction.TransactionStatus.VALIDATING);
+        transaction.setStatus(TransactionStatus.VALIDATING);
         transactionPersistencePort.save(transaction);
 
         // Process based on transfer type (BUG-BE-007: handle all types, not just BIFAST)
@@ -99,7 +101,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             case INTERNAL_TRANSFER -> processInternalTransfer(transaction, command, reservationId);
             case SKN_TRANSFER, RTGS_TRANSFER -> processInterBankTransfer(transaction, command, reservationId);
             default -> {
-                transaction.setStatus(Transaction.TransactionStatus.FAILED);
+                transaction.setStatus(TransactionStatus.FAILED);
                 transaction.setFailureReason("Unsupported transfer type: " + command.type());
                 transactionPersistencePort.save(transaction);
                 eventPublisherPort.publishTransactionFailed(transaction, "Unsupported transfer type");
@@ -111,16 +113,16 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         return buildResult(transaction);
     }
 
-    private Transaction createTransaction(InitiateTransferCommand command) {
+    private TransactionEntity createTransaction(InitiateTransferCommand command) {
         String referenceNumber = generateReferenceNumber();
 
-        return Transaction.builder()
+        return TransactionEntity.builder()
                 .referenceNumber(referenceNumber)
                 .senderAccountId(command.senderAccountId())
                 .amount(command.amount())
                 .description(command.description())
-                .type(Transaction.TransactionType.valueOf(command.type().name()))
-                .status(Transaction.TransactionStatus.PENDING)
+                .type(TransactionType.valueOf(command.type().name()))
+                .status(TransactionStatus.PENDING)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .idempotencyKey(command.idempotencyKey())
@@ -133,7 +135,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 .orElse(null);
     }
 
-    private InitiateTransferCommandResult buildResult(Transaction transaction) {
+    private InitiateTransferCommandResult buildResult(TransactionEntity transaction) {
         return new InitiateTransferCommandResult(
                 transaction.getId(),
                 transaction.getReferenceNumber(),
@@ -143,7 +145,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         );
     }
 
-    private void processBiFastTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
+    private void processBiFastTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
         try {
             BifastTransferRequest bifastRequest = BifastTransferRequest.builder()
                     .referenceNumber(transaction.getReferenceNumber())
@@ -158,10 +160,10 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     .build();
 
             bifastServicePort.initiateTransfer(bifastRequest);
-            transaction.setStatus(Transaction.TransactionStatus.PENDING);
+            transaction.setStatus(TransactionStatus.PENDING);
         } catch (Exception e) {
             // SAGA COMPENSATION: Release reserved balance on BiFast failure
-            log.error("BiFast transfer failed, initiating compensation. Transaction: {}, Error: {}",
+            log.error("BiFast transfer failed, initiating compensation. TransactionEntity: {}, Error: {}",
                     transaction.getId(), e.getMessage());
 
             // Compensate: Release the reserved balance back to wallet
@@ -180,7 +182,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 // In production, this should trigger an alert for manual intervention
             }
 
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("BiFast transfer failed: " + e.getMessage());
             eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
         } finally {
@@ -192,7 +194,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * Process internal transfer — immediately completes by committing the reserved balance.
      * BUG-BE-007 fix: Previously, INTERNAL_TRANSFER was left stuck in VALIDATING status.
      */
-    private void processInternalTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
+    private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
         try {
             // For internal transfers, commit the reservation immediately
             walletServicePort.commitBalance(
@@ -209,11 +211,11 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     command.amount().getAmount()
             );
 
-            transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
+            transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(java.time.Instant.now());
             eventPublisherPort.publishTransactionCompleted(transaction);
         } catch (Exception e) {
-            log.error("Internal transfer failed, initiating compensation. Transaction: {}, Error: {}",
+            log.error("Internal transfer failed, initiating compensation. TransactionEntity: {}, Error: {}",
                     transaction.getId(), e.getMessage());
 
             try {
@@ -229,7 +231,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                         transaction.getId(), compensationError.getMessage());
             }
 
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("Internal transfer failed: " + e.getMessage());
             eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
         } finally {
@@ -241,10 +243,10 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * Process inter-bank transfer (SKN/RTGS) — sets to PENDING for downstream clearing.
      * BUG-BE-007 fix: Previously, SKN and RTGS were left stuck in VALIDATING status.
      */
-    private void processInterBankTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
+    private void processInterBankTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
         // SKN/RTGS transfers are queued for batch/real-time clearing
         // The actual clearing is handled by the downstream clearing system
-        transaction.setStatus(Transaction.TransactionStatus.PENDING);
+        transaction.setStatus(TransactionStatus.PENDING);
         transactionPersistencePort.save(transaction);
         log.info("{} transfer queued for clearing: {}", command.type(), transaction.getId());
     }
@@ -252,7 +254,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
-    private BigDecimal calculateFee(Transaction.TransactionType type) {
+    private BigDecimal calculateFee(TransactionType type) {
         return switch (type) {
             case INTERNAL_TRANSFER -> BigDecimal.ZERO;
             case BIFAST_TRANSFER -> new BigDecimal("2500");
@@ -262,7 +264,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         };
     }
 
-    private String getEstimatedCompletionTime(Transaction.TransactionType type) {
+    private String getEstimatedCompletionTime(TransactionType type) {
         return switch (type) {
             case INTERNAL_TRANSFER, BIFAST_TRANSFER -> "2 seconds";
             case SKN_TRANSFER -> "Same day";

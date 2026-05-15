@@ -69,15 +69,6 @@ public class Discrepancy {
         this.resolvedAt = LocalDateTime.now();
     }
 
-    public enum DiscrepancyType {
-        AMOUNT_MISMATCH,
-        MISSING_TRANSACTION,
-        DUPLICATE_TRANSACTION,
-        CURRENCY_MISMATCH,
-        TIMING_DIFFERENCE,
-        OTHER
-    }
-
     public static DiscrepancyBuilder builder() {
         return new DiscrepancyBuilder();
     }

@@ -1,11 +1,11 @@
 package id.payu.billing.application.service;
 
-import id.payu.billing.domain.model.Subscription;
-import id.payu.billing.domain.model.Subscription.SubscriptionStatus;
-import id.payu.billing.domain.model.SubscriptionCharge;
-import id.payu.billing.domain.model.SubscriptionCharge.ChargeStatus;
-import id.payu.billing.domain.model.SubscriptionPlan;
-import id.payu.billing.domain.model.SubscriptionPlan.BillingInterval;
+import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.domain.model.SubscriptionStatus;
+import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.ChargeStatus;
+import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.domain.model.BillingInterval;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import id.payu.billing.exception.SubscriptionNotFoundException;
@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Subscription Service Unit Tests")
+@DisplayName("SubscriptionEntity Service Unit Tests")
 class SubscriptionServiceTest {
 
     @InjectMocks
@@ -43,7 +43,7 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionEventPort eventPort;
 
-    private SubscriptionPlan samplePlan;
+    private SubscriptionPlanEntity samplePlan;
     private UUID planId;
     private UUID subscriptionId;
 
@@ -52,7 +52,7 @@ class SubscriptionServiceTest {
         planId = UUID.randomUUID();
         subscriptionId = UUID.randomUUID();
 
-        samplePlan = new SubscriptionPlan();
+        samplePlan = new SubscriptionPlanEntity();
         samplePlan.setId(planId);
         samplePlan.setPartnerId("partner-nobar");
         samplePlan.setPlanName("Premium Monthly");
@@ -66,31 +66,31 @@ class SubscriptionServiceTest {
         samplePlan.setCreatedAt(LocalDateTime.now());
         samplePlan.setUpdatedAt(LocalDateTime.now());
 
-        lenient().when(persistencePort.savePlan(any(SubscriptionPlan.class)))
+        lenient().when(persistencePort.savePlan(any(SubscriptionPlanEntity.class)))
                 .thenAnswer(inv -> {
-                    SubscriptionPlan p = inv.getArgument(0);
+                    SubscriptionPlanEntity p = inv.getArgument(0);
                     if (p.getId() == null) p.setId(UUID.randomUUID());
                     return p;
                 });
 
-        lenient().when(persistencePort.saveSubscription(any(Subscription.class)))
+        lenient().when(persistencePort.saveSubscription(any(SubscriptionEntity.class)))
                 .thenAnswer(inv -> {
-                    Subscription s = inv.getArgument(0);
+                    SubscriptionEntity s = inv.getArgument(0);
                     if (s.getId() == null) s.setId(UUID.randomUUID());
                     return s;
                 });
 
-        lenient().when(persistencePort.saveCharge(any(SubscriptionCharge.class)))
+        lenient().when(persistencePort.saveCharge(any(SubscriptionChargeEntity.class)))
                 .thenAnswer(inv -> {
-                    SubscriptionCharge c = inv.getArgument(0);
+                    SubscriptionChargeEntity c = inv.getArgument(0);
                     if (c.getId() == null) c.setId(UUID.randomUUID());
                     return c;
                 });
 
         // Don't fail tests on event publishing
-        lenient().doNothing().when(eventPort).publishSubscriptionCreated(any(Subscription.class));
-        lenient().doNothing().when(eventPort).publishChargeSucceeded(any(Subscription.class), any(SubscriptionCharge.class));
-        lenient().doNothing().when(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+        lenient().doNothing().when(eventPort).publishSubscriptionCreated(any(SubscriptionEntity.class));
+        lenient().doNothing().when(eventPort).publishChargeSucceeded(any(SubscriptionEntity.class), any(SubscriptionChargeEntity.class));
+        lenient().doNothing().when(eventPort).publishChargeFailed(any(SubscriptionEntity.class), any(SubscriptionChargeEntity.class));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -104,7 +104,7 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should create subscription plan successfully")
         void shouldCreatePlanSuccessfully() {
-            SubscriptionPlan result = subscriptionService.createPlan(
+            SubscriptionPlanEntity result = subscriptionService.createPlan(
                     "partner-nobar", "Premium Monthly", "Full access",
                     BillingInterval.MONTHLY, new BigDecimal("99000"), "IDR", 7, 3);
 
@@ -114,7 +114,7 @@ class SubscriptionServiceTest {
             assertEquals(BillingInterval.MONTHLY, result.getBillingInterval());
             assertEquals(new BigDecimal("99000"), result.getPrice());
             assertTrue(result.isActive());
-            verify(persistencePort).savePlan(any(SubscriptionPlan.class));
+            verify(persistencePort).savePlan(any(SubscriptionPlanEntity.class));
         }
 
         @Test
@@ -124,7 +124,7 @@ class SubscriptionServiceTest {
                     "partner-1", "Basic", null,
                     BillingInterval.WEEKLY, new BigDecimal("25000"), null, 0, 0);
 
-            ArgumentCaptor<SubscriptionPlan> captor = ArgumentCaptor.forClass(SubscriptionPlan.class);
+            ArgumentCaptor<SubscriptionPlanEntity> captor = ArgumentCaptor.forClass(SubscriptionPlanEntity.class);
             verify(persistencePort).savePlan(captor.capture());
             assertEquals("IDR", captor.getValue().getCurrency());
         }
@@ -134,7 +134,7 @@ class SubscriptionServiceTest {
         void shouldGetPlanById() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            SubscriptionPlan result = subscriptionService.getPlan(planId);
+            SubscriptionPlanEntity result = subscriptionService.getPlan(planId);
             assertEquals(planId, result.getId());
             assertEquals("Premium Monthly", result.getPlanName());
         }
@@ -154,7 +154,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlansByPartnerId("partner-nobar"))
                     .thenReturn(List.of(samplePlan));
 
-            List<SubscriptionPlan> result = subscriptionService.getPlansByPartner("partner-nobar");
+            List<SubscriptionPlanEntity> result = subscriptionService.getPlansByPartner("partner-nobar");
             assertEquals(1, result.size());
             assertEquals("Premium Monthly", result.get(0).getPlanName());
         }
@@ -172,11 +172,11 @@ class SubscriptionServiceTest {
     }
 
     // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle Tests
+    //  SubscriptionEntity Lifecycle Tests
     // ═══════════════════════════════════════════════════════
 
     @Nested
-    @DisplayName("Subscription Lifecycle")
+    @DisplayName("SubscriptionEntity Lifecycle")
     class SubscriptionLifecycleTests {
 
         @Test
@@ -184,7 +184,7 @@ class SubscriptionServiceTest {
         void shouldCreateSubscriptionWithTrial() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            Subscription result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+            SubscriptionEntity result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
 
             assertNotNull(result);
             assertEquals("acc-001", result.getAccountId());
@@ -201,7 +201,7 @@ class SubscriptionServiceTest {
             samplePlan.setTrialDays(0);
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            Subscription result = subscriptionService.subscribe("acc-002", planId, null);
+            SubscriptionEntity result = subscriptionService.subscribe("acc-002", planId, null);
 
             assertEquals(SubscriptionStatus.ACTIVE, result.getStatus());
             assertNotNull(result.getCurrentPeriodStart());
@@ -222,10 +222,10 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should get subscription by ID")
         void shouldGetSubscriptionById() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
-            Subscription result = subscriptionService.getSubscription(subscriptionId);
+            SubscriptionEntity result = subscriptionService.getSubscription(subscriptionId);
             assertEquals(subscriptionId, result.getId());
         }
 
@@ -241,21 +241,21 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should get subscriptions by account")
         void shouldGetSubscriptionsByAccount() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             when(persistencePort.findSubscriptionsByAccountId("acc-001"))
                     .thenReturn(List.of(sub));
 
-            List<Subscription> result = subscriptionService.getSubscriptionsByAccount("acc-001");
+            List<SubscriptionEntity> result = subscriptionService.getSubscriptionsByAccount("acc-001");
             assertEquals(1, result.size());
         }
 
         @Test
         @DisplayName("should cancel subscription")
         void shouldCancelSubscription() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
-            Subscription result = subscriptionService.cancelSubscription(subscriptionId, "Too expensive");
+            SubscriptionEntity result = subscriptionService.cancelSubscription(subscriptionId, "Too expensive");
 
             assertEquals(SubscriptionStatus.CANCELLED, result.getStatus());
             assertNotNull(result.getCancelledAt());
@@ -265,7 +265,7 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should reject cancelling already cancelled subscription")
         void shouldRejectDoubleCancellation() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.cancel("first");
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
@@ -285,7 +285,7 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should process due subscriptions and charge them")
         void shouldProcessDueSubscriptions() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
             when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
                     .thenReturn(List.of(sub));
@@ -297,32 +297,32 @@ class SubscriptionServiceTest {
             int processed = subscriptionService.processDueSubscriptions();
 
             assertEquals(1, processed);
-            verify(persistencePort).saveCharge(any(SubscriptionCharge.class));
-            verify(persistencePort, atLeast(1)).saveSubscription(any(Subscription.class));
+            verify(persistencePort).saveCharge(any(SubscriptionChargeEntity.class));
+            verify(persistencePort, atLeast(1)).saveSubscription(any(SubscriptionEntity.class));
         }
 
         @Test
         @DisplayName("should skip duplicate charge via idempotency key")
         void shouldSkipDuplicateCharge() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
             when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
                     .thenReturn(List.of(sub));
             when(persistencePort.findPastDueSubscriptions())
                     .thenReturn(Collections.emptyList());
             when(persistencePort.findChargeByIdempotencyKey(any()))
-                    .thenReturn(Optional.of(new SubscriptionCharge()));
+                    .thenReturn(Optional.of(new SubscriptionChargeEntity()));
 
             int processed = subscriptionService.processDueSubscriptions();
 
             assertEquals(1, processed);
-            verify(persistencePort, never()).saveCharge(any(SubscriptionCharge.class));
+            verify(persistencePort, never()).saveCharge(any(SubscriptionChargeEntity.class));
         }
 
         @Test
         @DisplayName("should suspend subscription after dunning exhaustion (>=3 attempts)")
         void shouldSuspendAfterDunningExhaustion() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.setStatus(SubscriptionStatus.PAST_DUE);
             sub.setDunningAttempts(3);
 
@@ -352,7 +352,7 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should process expired trials and activate them")
         void shouldProcessExpiredTrials() {
-            Subscription sub = createTrialSub();
+            SubscriptionEntity sub = createTrialSub();
             when(persistencePort.findExpiredTrials(any(LocalDateTime.class)))
                     .thenReturn(List.of(sub));
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
@@ -392,13 +392,13 @@ class SubscriptionServiceTest {
 
             subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
 
-            verify(eventPort).publishSubscriptionCreated(any(Subscription.class));
+            verify(eventPort).publishSubscriptionCreated(any(SubscriptionEntity.class));
         }
 
         @Test
         @DisplayName("should publish charge.succeeded event on successful charge")
         void shouldPublishChargeSucceededEvent() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
             when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
                     .thenReturn(List.of(sub));
@@ -409,13 +409,13 @@ class SubscriptionServiceTest {
 
             subscriptionService.processDueSubscriptions();
 
-            verify(eventPort).publishChargeSucceeded(any(Subscription.class), any(SubscriptionCharge.class));
+            verify(eventPort).publishChargeSucceeded(any(SubscriptionEntity.class), any(SubscriptionChargeEntity.class));
         }
 
         @Test
         @DisplayName("should publish charge.failed event on failed charge")
         void shouldPublishChargeFailedEvent() {
-            Subscription sub = createActiveSub();
+            SubscriptionEntity sub = createActiveSub();
             sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
             when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
                     .thenReturn(List.of(sub));
@@ -431,16 +431,16 @@ class SubscriptionServiceTest {
                 if (callCount.incrementAndGet() == 1) {
                     throw new RuntimeException("Wallet service unavailable");
                 }
-                Subscription s = inv.getArgument(0);
+                SubscriptionEntity s = inv.getArgument(0);
                 if (s.getId() == null) s.setId(UUID.randomUUID());
                 return s;
-            }).when(persistencePort).saveSubscription(any(Subscription.class));
+            }).when(persistencePort).saveSubscription(any(SubscriptionEntity.class));
 
             // Should not throw, but log error
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
             // The charge.failed event should be published before the exception
-            verify(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+            verify(eventPort).publishChargeFailed(any(SubscriptionEntity.class), any(SubscriptionChargeEntity.class));
         }
 
         @Test
@@ -448,13 +448,13 @@ class SubscriptionServiceTest {
         void shouldContinueOnEventPublishFailure() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
             doThrow(new RuntimeException("Kafka unavailable"))
-                    .when(eventPort).publishSubscriptionCreated(any(Subscription.class));
+                    .when(eventPort).publishSubscriptionCreated(any(SubscriptionEntity.class));
 
-            Subscription result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+            SubscriptionEntity result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
 
             assertNotNull(result);
             assertEquals("acc-001", result.getAccountId());
-            verify(persistencePort).saveSubscription(any(Subscription.class));
+            verify(persistencePort).saveSubscription(any(SubscriptionEntity.class));
         }
     }
 
@@ -469,7 +469,7 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should get charges by subscription")
         void shouldGetChargesBySubscription() {
-            SubscriptionCharge charge = new SubscriptionCharge();
+            SubscriptionChargeEntity charge = new SubscriptionChargeEntity();
             charge.setId(UUID.randomUUID());
             charge.setSubscriptionId(subscriptionId);
             charge.setAmount(new BigDecimal("99000"));
@@ -478,7 +478,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findChargesBySubscriptionId(subscriptionId))
                     .thenReturn(List.of(charge));
 
-            List<SubscriptionCharge> result = subscriptionService
+            List<SubscriptionChargeEntity> result = subscriptionService
                     .getChargesBySubscription(subscriptionId);
 
             assertEquals(1, result.size());
@@ -491,7 +491,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findChargesBySubscriptionId(subscriptionId))
                     .thenReturn(Collections.emptyList());
 
-            List<SubscriptionCharge> result = subscriptionService
+            List<SubscriptionChargeEntity> result = subscriptionService
                     .getChargesBySubscription(subscriptionId);
 
             assertTrue(result.isEmpty());
@@ -502,8 +502,8 @@ class SubscriptionServiceTest {
     //  Helpers
     // ═══════════════════════════════════════════════════════
 
-    private Subscription createActiveSub() {
-        Subscription sub = new Subscription();
+    private SubscriptionEntity createActiveSub() {
+        SubscriptionEntity sub = new SubscriptionEntity();
         sub.setId(subscriptionId);
         sub.setAccountId("acc-001");
         sub.setPlanId(planId);
@@ -520,8 +520,8 @@ class SubscriptionServiceTest {
         return sub;
     }
 
-    private Subscription createTrialSub() {
-        Subscription sub = new Subscription();
+    private SubscriptionEntity createTrialSub() {
+        SubscriptionEntity sub = new SubscriptionEntity();
         sub.setId(subscriptionId);
         sub.setAccountId("acc-trial");
         sub.setPlanId(planId);

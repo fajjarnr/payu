@@ -1,30 +1,32 @@
 package id.payu.support.adapter.persistence.repository;
 
-import id.payu.support.domain.AgentTraining;
-import id.payu.support.domain.SupportAgent;
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.AgentTrainingEntity;
+import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import id.payu.support.domain.CompletionStatus;
+import id.payu.support.domain.TrainingStatus;
 
-public interface AgentTrainingRepository extends JpaRepository<AgentTraining, Long> {
+public interface AgentTrainingRepository extends JpaRepository<AgentTrainingEntity, Long> {
 
-    List<AgentTraining> findByAgent(SupportAgent agent);
+    List<AgentTrainingEntity> findByAgent(SupportAgentEntity agent);
 
-    List<AgentTraining> findByTrainingModule(TrainingModule trainingModule);
+    List<AgentTrainingEntity> findByTrainingModule(TrainingModuleEntity trainingModule);
 
-    Optional<AgentTraining> findByAgentAndTrainingModule(SupportAgent agent, TrainingModule trainingModule);
+    Optional<AgentTrainingEntity> findByAgentAndTrainingModule(SupportAgentEntity agent, TrainingModuleEntity trainingModule);
 
-    Optional<AgentTraining> findByAgentIdAndTrainingModuleId(Long agentId, Long moduleId);
+    Optional<AgentTrainingEntity> findByAgentIdAndTrainingModuleId(Long agentId, Long moduleId);
 
-    List<AgentTraining> findByAgentId(Long agentId);
+    List<AgentTrainingEntity> findByAgentId(Long agentId);
 
-    List<AgentTraining> findByTrainingModuleId(Long moduleId);
+    List<AgentTrainingEntity> findByTrainingModuleId(Long moduleId);
 
-    @Query("SELECT COUNT(at) FROM AgentTraining at " +
+    @Query("SELECT COUNT(at) FROM AgentTrainingEntity at " +
            "WHERE at.agent.id = :agentId " +
            "AND at.trainingModule.mandatory = true " +
            "AND at.trainingModule.status = :moduleStatus " +
@@ -32,6 +34,6 @@ public interface AgentTrainingRepository extends JpaRepository<AgentTraining, Lo
     long countByAgentIdAndTrainingModuleMandatoryTrueAndTrainingModuleStatusAndStatus(
             @Param("agentId") Long agentId,
             @Param("mandatory") boolean mandatory,
-            @Param("moduleStatus") TrainingModule.TrainingStatus moduleStatus,
-            @Param("completionStatus") AgentTraining.CompletionStatus completionStatus);
+            @Param("moduleStatus") TrainingStatus moduleStatus,
+            @Param("completionStatus") CompletionStatus completionStatus);
 }

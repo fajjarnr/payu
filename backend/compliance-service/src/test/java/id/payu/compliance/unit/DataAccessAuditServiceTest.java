@@ -1,8 +1,8 @@
 package id.payu.compliance.unit;
 
 import id.payu.compliance.application.service.DataAccessAuditService;
-import id.payu.compliance.domain.model.DataAccessAudit;
-import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
+import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataOperationType;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.domain.port.out.DataAccessAuditPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +40,7 @@ class DataAccessAuditServiceTest {
     @BeforeEach
     void setUp() {
         dataAccessAuditUseCase = new DataAccessAuditService(persistencePort);
-        when(persistencePort.save(any(DataAccessAudit.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(persistencePort.save(any(DataAccessAuditEntity.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
@@ -63,7 +63,7 @@ class DataAccessAuditServiceTest {
                 purpose
         );
 
-        verify(persistencePort, times(1)).save(any(DataAccessAudit.class));
+        verify(persistencePort, times(1)).save(any(DataAccessAuditEntity.class));
     }
 
     @Test
@@ -94,10 +94,10 @@ class DataAccessAuditServiceTest {
                 errorMessage
         );
 
-        ArgumentCaptor<DataAccessAudit> captor = ArgumentCaptor.forClass(DataAccessAudit.class);
+        ArgumentCaptor<DataAccessAuditEntity> captor = ArgumentCaptor.forClass(DataAccessAuditEntity.class);
         verify(persistencePort, times(1)).save(captor.capture());
 
-        DataAccessAudit savedAudit = captor.getValue();
+        DataAccessAuditEntity savedAudit = captor.getValue();
         assertEquals(userId, savedAudit.getUserId());
         assertEquals(accessedBy, savedAudit.getAccessedBy());
         assertEquals(serviceName, savedAudit.getServiceName());
@@ -137,10 +137,10 @@ class DataAccessAuditServiceTest {
                 errorMessage
         );
 
-        ArgumentCaptor<DataAccessAudit> captor = ArgumentCaptor.forClass(DataAccessAudit.class);
+        ArgumentCaptor<DataAccessAuditEntity> captor = ArgumentCaptor.forClass(DataAccessAuditEntity.class);
         verify(persistencePort, times(1)).save(captor.capture());
 
-        DataAccessAudit savedAudit = captor.getValue();
+        DataAccessAuditEntity savedAudit = captor.getValue();
         assertFalse(savedAudit.getSuccess());
         assertEquals(errorMessage, savedAudit.getErrorMessage());
     }
@@ -148,7 +148,7 @@ class DataAccessAuditServiceTest {
     @Test
     void shouldRetrieveDataAccessAuditById() {
         UUID auditId = UUID.randomUUID();
-        DataAccessAudit expectedAudit = DataAccessAudit.builder()
+        DataAccessAuditEntity expectedAudit = DataAccessAuditEntity.builder()
                 .id(auditId)
                 .userId("user123")
                 .accessedBy("admin")
@@ -160,7 +160,7 @@ class DataAccessAuditServiceTest {
 
         when(persistencePort.findById(auditId)).thenReturn(List.of(expectedAudit));
 
-        DataAccessAudit result = dataAccessAuditUseCase.getDataAccessAudit(auditId);
+        DataAccessAuditEntity result = dataAccessAuditUseCase.getDataAccessAudit(auditId);
 
         assertNotNull(result);
         assertEquals(auditId, result.getId());
@@ -186,7 +186,7 @@ class DataAccessAuditServiceTest {
         String userId = "user123";
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("admin")
@@ -195,7 +195,7 @@ class DataAccessAuditServiceTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        DataAccessAudit audit2 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit2 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("user123")
@@ -204,10 +204,10 @@ class DataAccessAuditServiceTest {
                 .accessedAt(LocalDateTime.now().minusHours(1))
                 .build();
 
-        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1, audit2), pageable, 2);
+        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1, audit2), pageable, 2);
         when(persistencePort.findByUserId(userId, pageable)).thenReturn(expectedPage);
 
-        Page<DataAccessAudit> result = dataAccessAuditUseCase.getUserDataAccessHistory(userId, pageable);
+        Page<DataAccessAuditEntity> result = dataAccessAuditUseCase.getUserDataAccessHistory(userId, pageable);
 
         assertNotNull(result);
         assertEquals(2, result.getTotalElements());
@@ -221,7 +221,7 @@ class DataAccessAuditServiceTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("admin")
@@ -233,7 +233,7 @@ class DataAccessAuditServiceTest {
         when(persistencePort.findByUserIdAndDateRange(userId, startDate, endDate))
                 .thenReturn(List.of(audit1));
 
-        List<DataAccessAudit> result = dataAccessAuditUseCase.getUserDataAccessHistoryByDateRange(
+        List<DataAccessAuditEntity> result = dataAccessAuditUseCase.getUserDataAccessHistoryByDateRange(
                 userId, startDate, endDate
         );
 
@@ -249,7 +249,7 @@ class DataAccessAuditServiceTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy(accessedBy)
@@ -261,7 +261,7 @@ class DataAccessAuditServiceTest {
         when(persistencePort.findByAccessedByAndDateRange(accessedBy, startDate, endDate))
                 .thenReturn(List.of(audit1));
 
-        List<DataAccessAudit> result = dataAccessAuditUseCase.getAccessedByUserHistory(
+        List<DataAccessAuditEntity> result = dataAccessAuditUseCase.getAccessedByUserHistory(
                 accessedBy, startDate, endDate
         );
 
@@ -276,7 +276,7 @@ class DataAccessAuditServiceTest {
         DataOperationType operationType = DataOperationType.READ;
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -285,10 +285,10 @@ class DataAccessAuditServiceTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
+        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
         when(persistencePort.findByOperationType(operationType, pageable)).thenReturn(expectedPage);
 
-        Page<DataAccessAudit> result = dataAccessAuditUseCase.getDataAccessByOperationType(
+        Page<DataAccessAuditEntity> result = dataAccessAuditUseCase.getDataAccessByOperationType(
                 operationType, pageable
         );
 
@@ -304,7 +304,7 @@ class DataAccessAuditServiceTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -316,7 +316,7 @@ class DataAccessAuditServiceTest {
         when(persistencePort.findByServiceNameAndDateRange(serviceName, startDate, endDate))
                 .thenReturn(List.of(audit1));
 
-        List<DataAccessAudit> result = dataAccessAuditUseCase.getServiceDataAccessHistory(
+        List<DataAccessAuditEntity> result = dataAccessAuditUseCase.getServiceDataAccessHistory(
                 serviceName, startDate, endDate
         );
 
@@ -344,7 +344,7 @@ class DataAccessAuditServiceTest {
     void shouldGetFailedAccessAttempts() {
         LocalDateTime since = LocalDateTime.now().minusDays(7);
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -357,7 +357,7 @@ class DataAccessAuditServiceTest {
 
         when(persistencePort.findFailedAccessAttemptsSince(since)).thenReturn(List.of(audit1));
 
-        List<DataAccessAudit> result = dataAccessAuditUseCase.getFailedAccessAttempts(since);
+        List<DataAccessAuditEntity> result = dataAccessAuditUseCase.getFailedAccessAttempts(since);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -372,7 +372,7 @@ class DataAccessAuditServiceTest {
         DataOperationType operationType = DataOperationType.READ;
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAudit audit1 = DataAccessAudit.builder()
+        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("admin")
@@ -381,11 +381,11 @@ class DataAccessAuditServiceTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
+        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
         when(persistencePort.findByFilters(userId, null, serviceName, operationType, null, null, pageable))
                 .thenReturn(expectedPage);
 
-        Page<DataAccessAudit> result = dataAccessAuditUseCase.searchDataAccessAudit(
+        Page<DataAccessAuditEntity> result = dataAccessAuditUseCase.searchDataAccessAudit(
                 userId, null, serviceName, operationType, null, null, pageable
         );
 

@@ -18,9 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 
 import java.util.List;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for managing outbound webhook subscriptions.
@@ -60,7 +61,7 @@ public class WebhookController extends BaseController {
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "404",
-            description = "Partner not found",
+            description = "PartnerEntity not found",
             content = @Content(schema = @Schema(implementation = ApiResponse.class))
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -70,9 +71,9 @@ public class WebhookController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.CREATE, entityType = "WebhookSubscription", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.CREATE, entityType = "WebhookSubscriptionEntity", level = AuditLevel.INFO)
     public ResponseEntity<?> createWebhook(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Valid @RequestBody WebhookSubscriptionDTO dto) {
         return created(webhookService.createSubscription(partnerId, dto));
@@ -91,13 +92,13 @@ public class WebhookController extends BaseController {
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "404",
-            description = "Partner not found",
+            description = "PartnerEntity not found",
             content = @Content(schema = @Schema(implementation = ApiResponse.class))
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> listWebhooks(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId) {
         return ok(webhookService.listSubscriptions(partnerId));
     }
@@ -121,7 +122,7 @@ public class WebhookController extends BaseController {
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> getWebhook(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId) {
@@ -147,9 +148,9 @@ public class WebhookController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "WebhookSubscription", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "WebhookSubscriptionEntity", level = AuditLevel.INFO)
     public ResponseEntity<?> updateWebhook(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId,
@@ -174,9 +175,9 @@ public class WebhookController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.DELETE, entityType = "WebhookSubscription", level = AuditLevel.WARN)
+    @Audited(operation = AuditOperation.DELETE, entityType = "WebhookSubscriptionEntity", level = AuditLevel.WARN)
     public ResponseEntity<?> deleteWebhook(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId) {
@@ -203,9 +204,9 @@ public class WebhookController extends BaseController {
         )
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.UPDATE, entityType = "WebhookSubscription", maskData = true, level = AuditLevel.WARN)
+    @Audited(operation = AuditOperation.UPDATE, entityType = "WebhookSubscriptionEntity", maskData = true, level = AuditLevel.WARN)
     public ResponseEntity<?> regenerateSecret(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId) {
@@ -232,7 +233,7 @@ public class WebhookController extends BaseController {
     })
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> getDeliveries(
-            @Parameter(description = "Partner ID", required = true)
+            @Parameter(description = "PartnerEntity ID", required = true)
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId,

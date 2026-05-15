@@ -55,53 +55,14 @@ public class ChartOfAccount {
     /**
      * Top-level account classification per PSAK (Indonesian Accounting Standards).
      */
-    public enum AccountType {
-        ASSET,
-        LIABILITY,
-        EQUITY,
-        REVENUE,
-        EXPENSE
-    }
 
     /**
      * Sub-categories for more granular GL classification.
      */
-    public enum AccountCategory {
-        // Asset categories
-        USER_WALLET,
-        BANK_ACCOUNT,
-        ESCROW_RECEIVABLE,
-        SETTLEMENT_RECEIVABLE,
-
-        // Liability categories
-        ESCROW_HOLDING,
-        MERCHANT_PAYABLE,
-        PARTNER_PAYABLE,
-        FEE_PAYABLE,
-
-        // Equity categories
-        CAPITAL,
-        RETAINED_EARNINGS,
-
-        // Revenue categories
-        TRANSACTION_FEE,
-        INTEREST_INCOME,
-        FX_SPREAD,
-        SERVICE_FEE,
-
-        // Expense categories
-        OPERATIONAL_COST,
-        SETTLEMENT_COST,
-        REFUND_COST
-    }
 
     /**
      * Normal balance side for accounting equation.
      */
-    public enum NormalBalance {
-        DEBIT,
-        CREDIT
-    }
 
     /**
      * Determines if this is a balance sheet account (ASSET, LIABILITY, EQUITY).

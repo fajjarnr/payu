@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.PayLaterStatus;
 
 @Entity
 @Table(name = "paylater_accounts")
@@ -34,7 +35,7 @@ public class PayLaterEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private id.payu.lending.domain.model.PayLater.PayLaterStatus status;
+    private id.payu.lending.domain.model.PayLaterStatus status;
 
     @Column(name = "billing_cycle_day")
     private Integer billingCycleDay;
@@ -51,7 +52,7 @@ public class PayLaterEntity {
     public PayLaterEntity() {}
 
     public PayLaterEntity(UUID id, String externalId, UUID userId, BigDecimal creditLimit, BigDecimal usedCredit, 
-                          BigDecimal availableCredit, id.payu.lending.domain.model.PayLater.PayLaterStatus status, 
+                          BigDecimal availableCredit, id.payu.lending.domain.model.PayLaterStatus status, 
                           Integer billingCycleDay, BigDecimal interestRate, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.externalId = externalId;
@@ -78,8 +79,8 @@ public class PayLaterEntity {
     public void setUsedCredit(BigDecimal usedCredit) { this.usedCredit = usedCredit; }
     public BigDecimal getAvailableCredit() { return availableCredit; }
     public void setAvailableCredit(BigDecimal availableCredit) { this.availableCredit = availableCredit; }
-    public id.payu.lending.domain.model.PayLater.PayLaterStatus getStatus() { return status; }
-    public void setStatus(id.payu.lending.domain.model.PayLater.PayLaterStatus status) { this.status = status; }
+    public id.payu.lending.domain.model.PayLaterStatus getStatus() { return status; }
+    public void setStatus(id.payu.lending.domain.model.PayLaterStatus status) { this.status = status; }
     public Integer getBillingCycleDay() { return billingCycleDay; }
     public void setBillingCycleDay(Integer billingCycleDay) { this.billingCycleDay = billingCycleDay; }
     public BigDecimal getInterestRate() { return interestRate; }
@@ -103,7 +104,7 @@ public class PayLaterEntity {
         private BigDecimal creditLimit;
         private BigDecimal usedCredit;
         private BigDecimal availableCredit;
-        private id.payu.lending.domain.model.PayLater.PayLaterStatus status;
+        private id.payu.lending.domain.model.PayLaterStatus status;
         private Integer billingCycleDay;
         private BigDecimal interestRate;
         private LocalDateTime createdAt;
@@ -115,7 +116,7 @@ public class PayLaterEntity {
         public Builder creditLimit(BigDecimal creditLimit) { this.creditLimit = creditLimit; return this; }
         public Builder usedCredit(BigDecimal usedCredit) { this.usedCredit = usedCredit; return this; }
         public Builder availableCredit(BigDecimal availableCredit) { this.availableCredit = availableCredit; return this; }
-        public Builder status(id.payu.lending.domain.model.PayLater.PayLaterStatus status) { this.status = status; return this; }
+        public Builder status(id.payu.lending.domain.model.PayLaterStatus status) { this.status = status; return this; }
         public Builder billingCycleDay(Integer billingCycleDay) { this.billingCycleDay = billingCycleDay; return this; }
         public Builder interestRate(BigDecimal interestRate) { this.interestRate = interestRate; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }

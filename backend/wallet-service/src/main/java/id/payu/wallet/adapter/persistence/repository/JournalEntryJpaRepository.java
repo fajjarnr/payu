@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.wallet.adapter.persistence.entity.JournalStatus;
 
 @Repository
 public interface JournalEntryJpaRepository extends JpaRepository<JournalEntryEntity, UUID> {
@@ -21,7 +22,7 @@ public interface JournalEntryJpaRepository extends JpaRepository<JournalEntryEnt
                                              @Param("refId") String referenceId);
 
     @Query("SELECT j FROM JournalEntryEntity j WHERE j.status = :status ORDER BY j.createdAt DESC")
-    List<JournalEntryEntity> findByStatus(@Param("status") JournalEntryEntity.JournalStatus status);
+    List<JournalEntryEntity> findByStatus(@Param("status") JournalStatus status);
 
     @Query("SELECT j FROM JournalEntryEntity j WHERE j.postedAt BETWEEN :from AND :to ORDER BY j.postedAt")
     List<JournalEntryEntity> findByPostedAtBetween(@Param("from") LocalDateTime from,

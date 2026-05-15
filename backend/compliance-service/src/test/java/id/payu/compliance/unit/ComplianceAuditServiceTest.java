@@ -1,7 +1,7 @@
 package id.payu.compliance.unit;
 
 import id.payu.compliance.application.service.ComplianceAuditService;
-import id.payu.compliance.domain.model.AuditReport;
+import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
@@ -60,7 +60,7 @@ class ComplianceAuditServiceTest {
         List<ComplianceCheck> checks = List.of(cardDataCheck, accessControlCheck);
         boolean passed = checks.stream().allMatch(c -> c.getStatus() == ComplianceCheckResult.PASS);
 
-        AuditReport expectedReport = AuditReport.builder()
+        AuditReportEntity expectedReport = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.PCI_DSS)
@@ -69,9 +69,9 @@ class ComplianceAuditServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(persistencePort.save(any(AuditReport.class))).thenReturn(expectedReport);
+        when(persistencePort.save(any(AuditReportEntity.class))).thenReturn(expectedReport);
 
-        AuditReport result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+        AuditReportEntity result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
 
         assertNotNull(result);
         assertEquals(transactionId, result.getTransactionId());
@@ -80,7 +80,7 @@ class ComplianceAuditServiceTest {
         assertEquals(ComplianceCheckResult.PASS, result.getOverallStatus());
         assertEquals(2, result.getChecks().size());
 
-        verify(persistencePort, times(1)).save(any(AuditReport.class));
+        verify(persistencePort, times(1)).save(any(AuditReportEntity.class));
     }
 
     @Test
@@ -109,7 +109,7 @@ class ComplianceAuditServiceTest {
         List<ComplianceCheck> checks = List.of(knowYourCustomerCheck, suspiciousActivityCheck);
         boolean passed = checks.stream().allMatch(c -> c.getStatus() == ComplianceCheckResult.PASS);
 
-        AuditReport expectedReport = AuditReport.builder()
+        AuditReportEntity expectedReport = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.OJK)
@@ -118,16 +118,16 @@ class ComplianceAuditServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(persistencePort.save(any(AuditReport.class))).thenReturn(expectedReport);
+        when(persistencePort.save(any(AuditReportEntity.class))).thenReturn(expectedReport);
 
-        AuditReport result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.OJK, checks);
+        AuditReportEntity result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.OJK, checks);
 
         assertNotNull(result);
         assertEquals(ComplianceStandard.OJK, result.getStandard());
         assertEquals(2, result.getChecks().size());
         assertEquals(ComplianceCheckResult.PASS, result.getOverallStatus());
 
-        verify(persistencePort, times(1)).save(any(AuditReport.class));
+        verify(persistencePort, times(1)).save(any(AuditReportEntity.class));
     }
 
     @Test
@@ -155,7 +155,7 @@ class ComplianceAuditServiceTest {
 
         List<ComplianceCheck> checks = List.of(passedCheck, failedCheck);
 
-        AuditReport expectedReport = AuditReport.builder()
+        AuditReportEntity expectedReport = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.PCI_DSS)
@@ -164,9 +164,9 @@ class ComplianceAuditServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(persistencePort.save(any(AuditReport.class))).thenReturn(expectedReport);
+        when(persistencePort.save(any(AuditReportEntity.class))).thenReturn(expectedReport);
 
-        AuditReport result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+        AuditReportEntity result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
 
         assertNotNull(result);
         assertEquals(ComplianceCheckResult.FAIL, result.getOverallStatus());
@@ -179,7 +179,7 @@ class ComplianceAuditServiceTest {
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_001";
 
-        AuditReport expectedReport = AuditReport.builder()
+        AuditReportEntity expectedReport = AuditReportEntity.builder()
                 .id(reportId)
                 .transactionId(transactionId)
                 .merchantId(merchantId)
@@ -191,7 +191,7 @@ class ComplianceAuditServiceTest {
 
         when(persistencePort.findById(reportId)).thenReturn(java.util.Optional.of(expectedReport));
 
-        AuditReport result = auditReportUseCase.getAuditReport(reportId);
+        AuditReportEntity result = auditReportUseCase.getAuditReport(reportId);
 
         assertNotNull(result);
         assertEquals(reportId, result.getId());
@@ -207,7 +207,7 @@ class ComplianceAuditServiceTest {
 
         when(persistencePort.findById(reportId)).thenReturn(java.util.Optional.empty());
 
-        java.util.Optional<AuditReport> result = auditReportUseCase.findAuditReport(reportId);
+        java.util.Optional<AuditReportEntity> result = auditReportUseCase.findAuditReport(reportId);
 
         assertTrue(result.isEmpty());
         verify(persistencePort, times(1)).findById(reportId);
@@ -216,8 +216,8 @@ class ComplianceAuditServiceTest {
     @Test
     void shouldRetrieveReportsByTransactionId() {
         UUID transactionId = UUID.randomUUID();
-        List<AuditReport> expectedReports = List.of(
-                AuditReport.builder()
+        List<AuditReportEntity> expectedReports = List.of(
+                AuditReportEntity.builder()
                         .id(UUID.randomUUID())
                         .transactionId(transactionId)
                         .merchantId("MERCHANT_001")
@@ -230,7 +230,7 @@ class ComplianceAuditServiceTest {
 
         when(persistencePort.findByTransactionId(transactionId)).thenReturn(expectedReports);
 
-        List<AuditReport> result = auditReportUseCase.getReportsByTransaction(transactionId);
+        List<AuditReportEntity> result = auditReportUseCase.getReportsByTransaction(transactionId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -242,8 +242,8 @@ class ComplianceAuditServiceTest {
     @Test
     void shouldRetrieveReportsByMerchantId() {
         String merchantId = "MERCHANT_001";
-        List<AuditReport> expectedReports = List.of(
-                AuditReport.builder()
+        List<AuditReportEntity> expectedReports = List.of(
+                AuditReportEntity.builder()
                         .id(UUID.randomUUID())
                         .transactionId(UUID.randomUUID())
                         .merchantId(merchantId)
@@ -256,7 +256,7 @@ class ComplianceAuditServiceTest {
 
         when(persistencePort.findByMerchantId(merchantId)).thenReturn(expectedReports);
 
-        List<AuditReport> result = auditReportUseCase.getReportsByMerchant(merchantId);
+        List<AuditReportEntity> result = auditReportUseCase.getReportsByMerchant(merchantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -290,7 +290,7 @@ class ComplianceAuditServiceTest {
 
         List<ComplianceCheck> checks = List.of(passedCheck, warningCheck);
 
-        AuditReport expectedReport = AuditReport.builder()
+        AuditReportEntity expectedReport = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.PCI_DSS)
@@ -299,9 +299,9 @@ class ComplianceAuditServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(persistencePort.save(any(AuditReport.class))).thenReturn(expectedReport);
+        when(persistencePort.save(any(AuditReportEntity.class))).thenReturn(expectedReport);
 
-        AuditReport result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+        AuditReportEntity result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
 
         assertNotNull(result);
         assertEquals(ComplianceCheckResult.WARNING, result.getOverallStatus());

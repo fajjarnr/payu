@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.lending.domain.model.PreApprovalStatus;
+import id.payu.lending.domain.model.RiskCategory;
 
 @Service
 public class LoanPreApprovalService implements LoanPreApprovalUseCase {
@@ -89,19 +91,19 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         PreApprovalDecision decision = new PreApprovalDecision();
 
         if (creditScore.compareTo(MIN_CREDIT_SCORE_FOR_APPROVAL) >= 0) {
-            decision.status = LoanPreApprovalResponse.PreApprovalStatus.APPROVED;
+            decision.status = PreApprovalStatus.APPROVED;
             decision.maxApprovedAmount = request.principalAmount();
             decision.minInterestRate = calculateInterestRate(creditScore);
             decision.maxTenureMonths = request.tenureMonths();
             decision.reason = null;
         } else if (creditScore.compareTo(MIN_CREDIT_SCORE_FOR_CONDITIONAL) >= 0) {
-            decision.status = LoanPreApprovalResponse.PreApprovalStatus.CONDITIONALLY_APPROVED;
+            decision.status = PreApprovalStatus.CONDITIONALLY_APPROVED;
             decision.maxApprovedAmount = calculateConditionalAmount(creditScore, request.principalAmount());
             decision.minInterestRate = calculateInterestRate(creditScore);
             decision.maxTenureMonths = Math.min(request.tenureMonths(), 24);
             decision.reason = "Conditional approval: Higher interest rate and lower loan amount may apply";
         } else {
-            decision.status = LoanPreApprovalResponse.PreApprovalStatus.REJECTED;
+            decision.status = PreApprovalStatus.REJECTED;
             decision.maxApprovedAmount = BigDecimal.ZERO;
             decision.minInterestRate = BigDecimal.ZERO;
             decision.maxTenureMonths = 0;
@@ -128,7 +130,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         preApproval.setMinInterestRate(decision.minInterestRate);
         preApproval.setMaxTenureMonths(decision.maxTenureMonths);
         preApproval.setEstimatedMonthlyPayment(decision.estimatedMonthlyPayment);
-        preApproval.setStatus(convertStatus(decision.status));
+        preApproval.setStatus(decision.status);
         preApproval.setCreditScore(creditScore);
         preApproval.setRiskCategory(determineRiskCategory(creditScore));
         preApproval.setReason(decision.reason);
@@ -178,22 +180,22 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         return numerator.divide(denominator, 2, RoundingMode.HALF_UP);
     }
 
-    private CreditScore.RiskCategory determineRiskCategory(BigDecimal score) {
+    private RiskCategory determineRiskCategory(BigDecimal score) {
         if (score.compareTo(new BigDecimal("750")) >= 0) {
-            return CreditScore.RiskCategory.EXCELLENT;
+            return RiskCategory.EXCELLENT;
         } else if (score.compareTo(new BigDecimal("700")) >= 0) {
-            return CreditScore.RiskCategory.GOOD;
+            return RiskCategory.GOOD;
         } else if (score.compareTo(new BigDecimal("650")) >= 0) {
-            return CreditScore.RiskCategory.FAIR;
+            return RiskCategory.FAIR;
         } else if (score.compareTo(new BigDecimal("600")) >= 0) {
-            return CreditScore.RiskCategory.POOR;
+            return RiskCategory.POOR;
         } else {
-            return CreditScore.RiskCategory.VERY_POOR;
+            return RiskCategory.VERY_POOR;
         }
     }
 
-    private LoanPreApproval.PreApprovalStatus convertStatus(LoanPreApprovalResponse.PreApprovalStatus responseStatus) {
-        return LoanPreApproval.PreApprovalStatus.valueOf(responseStatus.name());
+    private PreApprovalStatus convertStatus(id.payu.lending.dto.PreApprovalStatus responseStatus) {
+        return PreApprovalStatus.valueOf(responseStatus.name());
     }
 
     private LoanPreApprovalResponse mapToResponse(LoanPreApproval preApproval) {
@@ -206,7 +208,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
                 preApproval.getMinInterestRate(),
                 preApproval.getMaxTenureMonths(),
                 preApproval.getEstimatedMonthlyPayment(),
-                LoanPreApprovalResponse.PreApprovalStatus.valueOf(preApproval.getStatus().name()),
+                id.payu.lending.dto.PreApprovalStatus.valueOf(preApproval.getStatus().name()),
                 preApproval.getCreditScore(),
                 preApproval.getRiskCategory(),
                 preApproval.getReason(),
@@ -216,7 +218,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
     }
 
     private static class PreApprovalDecision {
-        LoanPreApprovalResponse.PreApprovalStatus status;
+        PreApprovalStatus status;
         BigDecimal maxApprovedAmount;
         BigDecimal minInterestRate;
         Integer maxTenureMonths;

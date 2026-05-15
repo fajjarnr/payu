@@ -2,8 +2,8 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
-import id.payu.partner.domain.SnapBiPayment;
-import id.payu.partner.domain.SnapBiRefund;
+import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
+import id.payu.partner.adapter.persistence.entity.SnapBiRefundEntity;
 import id.payu.partner.dto.snap.PaymentRequest;
 import id.payu.partner.dto.snap.PaymentResponse;
 import id.payu.partner.dto.snap.PaymentStatusResponse;
@@ -21,7 +21,7 @@ import java.util.UUID;
  * SNAP BI Payment Service.
  *
  * BUG-BE-182 FIX: Replaced in-memory ConcurrentHashMap stores with JPA-backed
- * persistence (SnapBiPayment / SnapBiRefund entities) so payment and refund
+ * persistence (SnapBiPaymentEntity / SnapBiRefundEntity entities) so payment and refund
  * records survive service restarts.
  */
 @Service
@@ -53,7 +53,7 @@ public class SnapBiPaymentService {
 
         String payuReferenceNo = "PAYU-" + UUID.randomUUID().toString();
 
-        SnapBiPayment record = new SnapBiPayment(
+        SnapBiPaymentEntity record = new SnapBiPaymentEntity(
             payuReferenceNo,
             partnerId,
             request.partnerReferenceNo,
@@ -80,7 +80,7 @@ public class SnapBiPaymentService {
 
     @Transactional(readOnly = true)
     public PaymentStatusResponse getPaymentStatus(String partnerId, String referenceNo) {
-        SnapBiPayment record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
+        SnapBiPaymentEntity record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
             .or(() -> paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, referenceNo))
             .orElse(null);
 
@@ -113,7 +113,7 @@ public class SnapBiPaymentService {
 
     @Transactional
     public void updatePaymentStatus(String payuReferenceNo, String status) {
-        SnapBiPayment record = paymentRepository.findByPayuReferenceNo(payuReferenceNo).orElse(null);
+        SnapBiPaymentEntity record = paymentRepository.findByPayuReferenceNo(payuReferenceNo).orElse(null);
         if (record != null) {
             record.setStatus(status);
             paymentRepository.save(record);
@@ -132,7 +132,7 @@ public class SnapBiPaymentService {
 
     @Transactional
     public RefundResponse createRefund(String partnerId, String referenceNo, RefundRequest request) {
-        SnapBiPayment record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
+        SnapBiPaymentEntity record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
             .or(() -> paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, referenceNo))
             .orElse(null);
 
@@ -190,7 +190,7 @@ public class SnapBiPaymentService {
 
         String payuRefundNo = "REFUND-" + UUID.randomUUID().toString();
 
-        SnapBiRefund refundRecord = new SnapBiRefund(
+        SnapBiRefundEntity refundRecord = new SnapBiRefundEntity(
             payuRefundNo,
             partnerId,
             record.getPayuReferenceNo(),
@@ -219,11 +219,11 @@ public class SnapBiPaymentService {
         );
     }
 
-    private void sendWebhookNotification(SnapBiPayment record, String eventType) {
+    private void sendWebhookNotification(SnapBiPaymentEntity record, String eventType) {
         LOG.info("Webhook notification sent for payment event payuRef={} eventType={}", record.getPayuReferenceNo(), eventType);
     }
 
-    private void sendRefundWebhookNotification(SnapBiRefund refundRecord) {
+    private void sendRefundWebhookNotification(SnapBiRefundEntity refundRecord) {
         LOG.info("Webhook notification sent for completed refund refundRef={}", refundRecord.getPayuRefundNo());
     }
 }

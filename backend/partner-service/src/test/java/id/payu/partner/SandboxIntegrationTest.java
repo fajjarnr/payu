@@ -4,6 +4,8 @@ import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
 import id.payu.partner.adapter.persistence.repository.MerchantRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.domain.*;
+import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +43,7 @@ class SandboxIntegrationTest {
     @Autowired
     private MerchantRepository merchantRepository;
 
-    private Partner testPartner;
+    private PartnerEntity testPartner;
     private ApiKeyEntity sandboxKey;
     private ApiKeyEntity productionKey;
 
@@ -53,9 +55,9 @@ class SandboxIntegrationTest {
         partnerRepository.deleteAll();
 
         // Create test partner
-        testPartner = new Partner();
+        testPartner = new PartnerEntity();
         testPartner.setPartnerCode("TEST-PARTNER-001");
-        testPartner.setName("Test Partner");
+        testPartner.setName("Test PartnerEntity");
         testPartner.setEmail("test@partner.com");
         testPartner.setType("MERCHANT");
         testPartner.setStatus(PartnerStatus.ACTIVE);

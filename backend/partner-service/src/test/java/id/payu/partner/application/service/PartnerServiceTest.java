@@ -1,6 +1,6 @@
 package id.payu.partner.application.service;
 
-import id.payu.partner.domain.Partner;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.PartnerDTO;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,13 +26,13 @@ public class PartnerServiceTest {
     @InjectMocks
     private PartnerService partnerService;
 
-    private Partner testPartner;
+    private PartnerEntity testPartner;
 
     @BeforeEach
     public void setUp() {
-        testPartner = new Partner();
+        testPartner = new PartnerEntity();
         testPartner.setId(1L);
-        testPartner.setName("Test Partner");
+        testPartner.setName("Test PartnerEntity");
         testPartner.setType("MERCHANT");
         testPartner.setEmail("test@example.com");
         testPartner.setPhone("+62123456789");
@@ -51,7 +51,7 @@ public class PartnerServiceTest {
 
         assertNotNull(partners);
         assertEquals(1, partners.size());
-        assertEquals("Test Partner", partners.get(0).name);
+        assertEquals("Test PartnerEntity", partners.get(0).name);
         assertEquals("test@example.com", partners.get(0).email);
     }
 
@@ -72,7 +72,7 @@ public class PartnerServiceTest {
         PartnerDTO partner = partnerService.getPartnerById(1L);
 
         assertNotNull(partner);
-        assertEquals("Test Partner", partner.name);
+        assertEquals("Test PartnerEntity", partner.name);
         assertEquals("test@example.com", partner.email);
         assertEquals("MERCHANT", partner.type);
     }
@@ -90,7 +90,7 @@ public class PartnerServiceTest {
     public void testCreatePartner_Success() {
         PartnerDTO dto = new PartnerDTO(
             null,
-            "New Partner",
+            "New PartnerEntity",
             "PAYMENT_GATEWAY",
             "newpartner@example.com",
             "+62812345678",
@@ -101,8 +101,8 @@ public class PartnerServiceTest {
         );
 
         when(partnerRepository.findByEmail("newpartner@example.com")).thenReturn(Optional.empty());
-        when(partnerRepository.save(any(Partner.class))).thenAnswer(invocation -> {
-            Partner p = invocation.getArgument(0);
+        when(partnerRepository.save(any(PartnerEntity.class))).thenAnswer(invocation -> {
+            PartnerEntity p = invocation.getArgument(0);
             p.setId(2L);
             return p;
         });
@@ -110,7 +110,7 @@ public class PartnerServiceTest {
         PartnerDTO result = partnerService.createPartner(dto);
 
         assertNotNull(result);
-        assertEquals("New Partner", result.name);
+        assertEquals("New PartnerEntity", result.name);
         assertEquals("PAYMENT_GATEWAY", result.type);
         assertEquals("newpartner@example.com", result.email);
         assertNotNull(result.clientId);
@@ -121,7 +121,7 @@ public class PartnerServiceTest {
     public void testCreatePartner_EmailAlreadyExists() {
         PartnerDTO dto = new PartnerDTO(
             null,
-            "Duplicate Partner",
+            "Duplicate PartnerEntity",
             "MERCHANT",
             "test@example.com",
             "+62812345678",
@@ -145,7 +145,7 @@ public class PartnerServiceTest {
     public void testUpdatePartner_Success() {
         PartnerDTO dto = new PartnerDTO(
             1L,
-            "Updated Partner",
+            "Updated PartnerEntity",
             "BANK",
             "updated@example.com",
             "+62898765432",
@@ -156,12 +156,12 @@ public class PartnerServiceTest {
         );
 
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
-        when(partnerRepository.save(any(Partner.class))).thenReturn(testPartner);
+        when(partnerRepository.save(any(PartnerEntity.class))).thenReturn(testPartner);
 
         PartnerDTO result = partnerService.updatePartner(1L, dto);
 
         assertNotNull(result);
-        assertEquals("Updated Partner", result.name);
+        assertEquals("Updated PartnerEntity", result.name);
         assertEquals("BANK", result.type);
     }
 
@@ -189,7 +189,7 @@ public class PartnerServiceTest {
     @Test
     public void testRegenerateKeys_Success() {
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
-        when(partnerRepository.save(any(Partner.class))).thenReturn(testPartner);
+        when(partnerRepository.save(any(PartnerEntity.class))).thenReturn(testPartner);
 
         PartnerDTO result = partnerService.regenerateKeys(1L);
 

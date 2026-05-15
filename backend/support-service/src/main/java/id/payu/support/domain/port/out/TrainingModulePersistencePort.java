@@ -1,22 +1,23 @@
 package id.payu.support.domain.port.out;
 
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 
 import java.util.List;
 import java.util.Optional;
+import id.payu.support.domain.TrainingStatus;
 
 /**
  * Outbound port for Training Module persistence.
  */
 public interface TrainingModulePersistencePort {
 
-    TrainingModule save(TrainingModule module);
+    TrainingModuleEntity save(TrainingModuleEntity module);
 
-    Optional<TrainingModule> findById(Long id);
+    Optional<TrainingModuleEntity> findById(Long id);
 
-    List<TrainingModule> findAll();
+    List<TrainingModuleEntity> findAll();
 
-    List<TrainingModule> findByStatusAndMandatoryTrue(TrainingModule.TrainingStatus status);
+    List<TrainingModuleEntity> findByStatusAndMandatoryTrue(TrainingStatus status);
 
-    long countByMandatoryTrueAndStatus(TrainingModule.TrainingStatus status);
+    long countByMandatoryTrueAndStatus(TrainingStatus status);
 }

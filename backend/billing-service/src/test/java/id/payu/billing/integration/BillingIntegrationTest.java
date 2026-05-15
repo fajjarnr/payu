@@ -89,7 +89,7 @@ public class BillingIntegrationTest {
 
         // 3. Verify Outbox Event Created
         Mockito.verify(outboxService, Mockito.timeout(5000)).createEvent(
-                Mockito.eq("BillPayment"),
+                Mockito.eq("BillPaymentEntity"),
                 Mockito.anyString(),
                 Mockito.eq("PaymentCompleted"),
                 Mockito.any(Map.class),

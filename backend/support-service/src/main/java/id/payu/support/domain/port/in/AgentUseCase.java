@@ -1,25 +1,26 @@
 package id.payu.support.domain.port.in;
 
-import id.payu.support.domain.SupportAgent;
+import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
 
 import java.util.List;
 import java.util.Optional;
+import id.payu.support.domain.AgentLevel;
 
 /**
  * Inbound port for Support Agent use cases.
  */
 public interface AgentUseCase {
 
-    List<SupportAgent> getAllAgents();
+    List<SupportAgentEntity> getAllAgents();
 
-    Optional<SupportAgent> getAgentById(Long id);
+    Optional<SupportAgentEntity> getAgentById(Long id);
 
-    Optional<SupportAgent> getAgentByEmployeeId(String employeeId);
+    Optional<SupportAgentEntity> getAgentByEmployeeId(String employeeId);
 
-    SupportAgent createAgent(String employeeId, String name, String email,
-                             String department, SupportAgent.AgentLevel level);
+    SupportAgentEntity createAgent(String employeeId, String name, String email,
+                             String department, AgentLevel level);
 
-    SupportAgent updateAgentStatus(Long id, boolean active);
+    SupportAgentEntity updateAgentStatus(Long id, boolean active);
 
     long countActiveAgents();
 

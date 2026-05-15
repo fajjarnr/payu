@@ -1,34 +1,37 @@
 package id.payu.backoffice.domain.port.in;
 
-import id.payu.backoffice.domain.CustomerCase;
+import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.CustomerCaseStatus;
+import id.payu.backoffice.domain.Priority;
 
 /**
  * Inbound port for Customer Case use cases.
  */
 public interface CustomerCaseUseCase {
 
-    CustomerCase create(String userId, String accountNumber, CustomerCase.CaseType caseType,
-                        CustomerCase.Priority priority, String subject, String description, String notes);
+    CustomerCaseEntity create(String userId, String accountNumber, CaseType caseType,
+                        Priority priority, String subject, String description, String notes);
 
-    Optional<CustomerCase> getById(UUID id);
+    Optional<CustomerCaseEntity> getById(UUID id);
 
-    Optional<CustomerCase> getByCaseNumber(String caseNumber);
+    Optional<CustomerCaseEntity> getByCaseNumber(String caseNumber);
 
-    List<CustomerCase> getByUserId(String userId);
+    List<CustomerCaseEntity> getByUserId(String userId);
 
-    List<CustomerCase> listByStatus(CustomerCase.CaseStatus status, int page, int size);
+    List<CustomerCaseEntity> listByStatus(CustomerCaseStatus status, int page, int size);
 
-    List<CustomerCase> listByPriority(CustomerCase.Priority priority, int page, int size);
+    List<CustomerCaseEntity> listByPriority(Priority priority, int page, int size);
 
-    List<CustomerCase> listAll(int page, int size);
+    List<CustomerCaseEntity> listAll(int page, int size);
 
-    CustomerCase assign(UUID id, String assignedTo);
+    CustomerCaseEntity assign(UUID id, String assignedTo);
 
-    CustomerCase update(UUID id, CustomerCase.CaseStatus status, String notes, String updatedBy);
+    CustomerCaseEntity update(UUID id, CustomerCaseStatus status, String notes, String updatedBy);
 
     void delete(UUID id);
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.lending.domain.model.RiskCategory;
 
 @Entity
 @Table(name = "credit_scores")
@@ -25,7 +26,7 @@ public class CreditScoreEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "risk_category", nullable = false)
-    private id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory;
+    private id.payu.lending.domain.model.RiskCategory riskCategory;
 
     @Column(name = "last_calculated_at")
     private LocalDateTime lastCalculatedAt;
@@ -39,7 +40,7 @@ public class CreditScoreEntity {
     public CreditScoreEntity() {}
 
     public CreditScoreEntity(UUID id, UUID userId, BigDecimal score, 
-                             id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory, 
+                             id.payu.lending.domain.model.RiskCategory riskCategory, 
                              LocalDateTime lastCalculatedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
@@ -56,8 +57,8 @@ public class CreditScoreEntity {
     public void setUserId(UUID userId) { this.userId = userId; }
     public BigDecimal getScore() { return score; }
     public void setScore(BigDecimal score) { this.score = score; }
-    public id.payu.lending.domain.model.CreditScore.RiskCategory getRiskCategory() { return riskCategory; }
-    public void setRiskCategory(id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory) { this.riskCategory = riskCategory; }
+    public id.payu.lending.domain.model.RiskCategory getRiskCategory() { return riskCategory; }
+    public void setRiskCategory(id.payu.lending.domain.model.RiskCategory riskCategory) { this.riskCategory = riskCategory; }
     public LocalDateTime getLastCalculatedAt() { return lastCalculatedAt; }
     public void setLastCalculatedAt(LocalDateTime lastCalculatedAt) { this.lastCalculatedAt = lastCalculatedAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -76,7 +77,7 @@ public class CreditScoreEntity {
         private UUID id;
         private UUID userId;
         private BigDecimal score;
-        private id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory;
+        private id.payu.lending.domain.model.RiskCategory riskCategory;
         private LocalDateTime lastCalculatedAt;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -84,7 +85,7 @@ public class CreditScoreEntity {
         public Builder id(UUID id) { this.id = id; return this; }
         public Builder userId(UUID userId) { this.userId = userId; return this; }
         public Builder score(BigDecimal score) { this.score = score; return this; }
-        public Builder riskCategory(id.payu.lending.domain.model.CreditScore.RiskCategory riskCategory) { this.riskCategory = riskCategory; return this; }
+        public Builder riskCategory(id.payu.lending.domain.model.RiskCategory riskCategory) { this.riskCategory = riskCategory; return this; }
         public Builder lastCalculatedAt(LocalDateTime lastCalculatedAt) { this.lastCalculatedAt = lastCalculatedAt; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Builder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }

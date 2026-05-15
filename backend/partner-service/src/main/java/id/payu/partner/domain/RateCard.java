@@ -212,12 +212,6 @@ public class RateCard {
         return active;
     }
 
-    public enum FeeType {
-        FLAT,
-        PERCENTAGE,
-        TIERED
-    }
-
     public static RateCardBuilder builder() {
         return new RateCardBuilder();
     }

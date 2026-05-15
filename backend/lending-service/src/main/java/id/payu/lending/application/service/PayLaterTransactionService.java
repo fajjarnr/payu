@@ -14,6 +14,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import id.payu.lending.domain.model.PayLaterStatus;
+import id.payu.lending.domain.model.TransactionStatus;
+import id.payu.lending.domain.model.TransactionType;
 
 @Service
 public class PayLaterTransactionService implements PayLaterTransactionUseCase {
@@ -37,7 +40,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         PayLater payLater = payLaterPersistencePort.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("PayLater account not found for user: " + userId));
 
-        if (payLater.getStatus() != PayLater.PayLaterStatus.ACTIVE) {
+        if (payLater.getStatus() != PayLaterStatus.ACTIVE) {
             throw new IllegalStateException("PayLater account is not active");
         }
 
@@ -56,11 +59,11 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         PayLaterTransaction transaction = new PayLaterTransaction();
         transaction.setExternalId(generateExternalId());
         transaction.setPayLaterAccountId(payLater.getId());
-        transaction.setType(PayLaterTransaction.TransactionType.PURCHASE);
+        transaction.setType(TransactionType.PURCHASE);
         transaction.setAmount(amount);
         transaction.setMerchantName(merchantName);
         transaction.setDescription(description);
-        transaction.setStatus(PayLaterTransaction.TransactionStatus.COMPLETED);
+        transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setTransactionDate(LocalDateTime.now());
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setUpdatedAt(LocalDateTime.now());
@@ -94,10 +97,10 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         PayLaterTransaction transaction = new PayLaterTransaction();
         transaction.setExternalId(generateExternalId());
         transaction.setPayLaterAccountId(payLater.getId());
-        transaction.setType(PayLaterTransaction.TransactionType.PAYMENT);
+        transaction.setType(TransactionType.PAYMENT);
         transaction.setAmount(amount);
         transaction.setDescription("PayLater payment");
-        transaction.setStatus(PayLaterTransaction.TransactionStatus.COMPLETED);
+        transaction.setStatus(TransactionStatus.COMPLETED);
         transaction.setTransactionDate(LocalDateTime.now());
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setUpdatedAt(LocalDateTime.now());

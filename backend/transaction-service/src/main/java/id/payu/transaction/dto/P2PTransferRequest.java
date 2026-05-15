@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import id.payu.security.annotation.SensitivityLevel;
 
 public class P2PTransferRequest {
 
@@ -30,9 +31,9 @@ public class P2PTransferRequest {
     @Size(max = 140, message = "Memo must not exceed 140 characters")
     private String memo;
 
-    @Size(min = 6, max = 6, message = "Transaction PIN must be exactly 6 digits")
-    @Pattern(regexp = "^\\d{6}$", message = "Transaction PIN must be exactly 6 digits")
-    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
+    @Size(min = 6, max = 6, message = "TransactionEntity PIN must be exactly 6 digits")
+    @Pattern(regexp = "^\\d{6}$", message = "TransactionEntity PIN must be exactly 6 digits")
+    @Sensitive(value = SensitivityLevel.CRITICAL)
     private String transactionPin;
 
     @Size(max = 100, message = "Idempotency key is too long")

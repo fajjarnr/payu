@@ -31,16 +31,4 @@ public class InvestmentTransaction {
     private String referenceNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public enum TransactionType {
-        BUY, SELL
-    }
-
-    public enum InvestmentType {
-        DEPOSIT, MUTUAL_FUND, GOLD
-    }
-
-    public enum TransactionStatus {
-        PENDING, COMPLETED, FAILED, CANCELLED
-    }
 }

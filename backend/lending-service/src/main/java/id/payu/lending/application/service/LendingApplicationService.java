@@ -29,6 +29,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.PayLaterStatus;
+import id.payu.lending.domain.model.RiskCategory;
 
 @Service
 public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCase, PayLaterUseCase, CreditScoreUseCase {
@@ -74,7 +77,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
             rejectedLoan.setPrincipalAmount(command.principalAmount());
             rejectedLoan.setTenureMonths(command.tenureMonths());
             rejectedLoan.setPurpose(command.purpose());
-            rejectedLoan.setStatus(Loan.LoanStatus.REJECTED);
+            rejectedLoan.setStatus(LoanStatus.REJECTED);
             rejectedLoan.setCreatedAt(LocalDateTime.now());
             rejectedLoan.setUpdatedAt(LocalDateTime.now());
 
@@ -106,7 +109,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
         loan.setTenureMonths(command.tenureMonths());
         loan.setMonthlyInstallment(monthlyInstallment);
         loan.setOutstandingBalance(command.principalAmount());
-        loan.setStatus(Loan.LoanStatus.APPROVED);
+        loan.setStatus(LoanStatus.APPROVED);
         loan.setPurpose(command.purpose());
         loan.setDisbursementDate(LocalDate.now());
         loan.setMaturityDate(LocalDate.now().plusMonths(command.tenureMonths()));
@@ -146,7 +149,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
             rejectedLoan.setPrincipalAmount(command.principalAmount());
             rejectedLoan.setTenureMonths(command.tenureMonths());
             rejectedLoan.setPurpose(command.purpose());
-            rejectedLoan.setStatus(Loan.LoanStatus.REJECTED);
+            rejectedLoan.setStatus(LoanStatus.REJECTED);
             rejectedLoan.setCreatedAt(LocalDateTime.now());
             rejectedLoan.setUpdatedAt(LocalDateTime.now());
 
@@ -162,7 +165,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
         loan.setTenureMonths(command.tenureMonths());
         loan.setMonthlyInstallment(monthlyInstallment);
         loan.setOutstandingBalance(command.principalAmount());
-        loan.setStatus(Loan.LoanStatus.PENDING_APPROVAL);
+        loan.setStatus(LoanStatus.PENDING_APPROVAL);
         loan.setPurpose(command.purpose());
         loan.setCreatedAt(LocalDateTime.now());
         loan.setUpdatedAt(LocalDateTime.now());
@@ -191,7 +194,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
         payLater.setCreditLimit(request.creditLimit());
         payLater.setUsedCredit(BigDecimal.ZERO);
         payLater.setAvailableCredit(request.creditLimit());
-        payLater.setStatus(id.payu.lending.domain.model.PayLater.PayLaterStatus.ACTIVE);
+        payLater.setStatus(id.payu.lending.domain.model.PayLaterStatus.ACTIVE);
         payLater.setBillingCycleDay(request.billingCycleDay() != null ? request.billingCycleDay() : 1);
         payLater.setInterestRate(new BigDecimal("0.025"));
         payLater.setCreatedAt(LocalDateTime.now());
@@ -290,17 +293,17 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
         return numerator.divide(denominator, 2, RoundingMode.HALF_UP);
     }
 
-    private CreditScore.RiskCategory determineRiskCategory(BigDecimal score) {
+    private RiskCategory determineRiskCategory(BigDecimal score) {
         if (score.compareTo(new BigDecimal("750")) >= 0) {
-            return CreditScore.RiskCategory.EXCELLENT;
+            return RiskCategory.EXCELLENT;
         } else if (score.compareTo(new BigDecimal("700")) >= 0) {
-            return CreditScore.RiskCategory.GOOD;
+            return RiskCategory.GOOD;
         } else if (score.compareTo(new BigDecimal("650")) >= 0) {
-            return CreditScore.RiskCategory.FAIR;
+            return RiskCategory.FAIR;
         } else if (score.compareTo(new BigDecimal("600")) >= 0) {
-            return CreditScore.RiskCategory.POOR;
+            return RiskCategory.POOR;
         } else {
-            return CreditScore.RiskCategory.VERY_POOR;
+            return RiskCategory.VERY_POOR;
         }
     }
 }

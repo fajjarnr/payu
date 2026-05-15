@@ -1,7 +1,7 @@
 package id.payu.transaction.integration;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.ScheduledTransferPersistenceAdapter;
 import id.payu.transaction.adapter.persistence.repository.ScheduledTransferJpaRepository;
 import id.payu.transaction.application.service.ScheduledTransferService;
@@ -85,8 +85,8 @@ class ScheduledTransferIntegrationTest {
                 .amount(new BigDecimal("100000"))
                 .currency("IDR")
                 .description("Monthly transfer")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.RECURRING_MONTHLY)
                 .startDate(Instant.now().plusSeconds(300))
                 .dayOfMonth(1)
                 .occurrenceCount(12)
@@ -112,7 +112,7 @@ class ScheduledTransferIntegrationTest {
     void getAccountScheduledTransfers() {
         scheduledTransferService.createScheduledTransfer(request);
 
-        List<ScheduledTransfer> transfers = scheduledTransferService.getAccountScheduledTransfers(accountId);
+        List<ScheduledTransferEntity> transfers = scheduledTransferService.getAccountScheduledTransfers(accountId);
 
         assertNotNull(transfers);
         assertEquals(1, transfers.size());
@@ -156,8 +156,8 @@ class ScheduledTransferIntegrationTest {
                 .amount(new BigDecimal("200000"))
                 .currency("IDR")
                 .description("Updated monthly transfer")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.RECURRING_MONTHLY)
                 .startDate(Instant.now().plusSeconds(300))
                 .dayOfMonth(15)
                 .occurrenceCount(6)
@@ -180,8 +180,8 @@ class ScheduledTransferIntegrationTest {
                 .amount(new BigDecimal("50000"))
                 .currency("IDR")
                 .description("One time transfer")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.ONE_TIME)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.ONE_TIME)
                 .startDate(Instant.now().plusSeconds(300))
                 .build();
 
@@ -202,8 +202,8 @@ class ScheduledTransferIntegrationTest {
                 .amount(new BigDecimal("10000"))
                 .currency("IDR")
                 .description("Daily savings")
-                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_DAILY)
+                .transferType(TransactionEntity.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransferEntity.ScheduleType.RECURRING_DAILY)
                 .startDate(Instant.now().plusSeconds(300))
                 .frequencyDays(1)
                 .build();

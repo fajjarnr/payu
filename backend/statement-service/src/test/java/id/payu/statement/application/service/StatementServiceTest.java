@@ -1,6 +1,6 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
@@ -55,7 +55,7 @@ class StatementServiceTest {
     private UUID testUserId;
     private String testAccountNumber;
     private UUID testStatementId;
-    private Statement testStatement;
+    private StatementEntity testStatement;
 
     @BeforeEach
     void setUp() {
@@ -63,12 +63,12 @@ class StatementServiceTest {
         testAccountNumber = "1234567890";
         testStatementId = UUID.randomUUID();
 
-        testStatement = Statement.builder()
+        testStatement = StatementEntity.builder()
                 .id(testStatementId)
                 .customerId(testUserId.toString())
                 .accountNumber(testAccountNumber)
                 .statementPeriod(LocalDate.of(2024, 1, 1))
-                .status(Statement.StatementStatus.COMPLETED)
+                .status(StatementEntity.StatementStatus.COMPLETED)
                 .openingBalance(new BigDecimal("10000000"))
                 .closingBalance(new BigDecimal("15000000"))
                 .totalCredits(new BigDecimal("10000000"))
@@ -98,8 +98,8 @@ class StatementServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(testStatementId);
             assertThat(result.getCustomerId()).isEqualTo(testUserId.toString());
-            assertThat(result.getStatus()).isEqualTo(Statement.StatementStatus.COMPLETED);
-            verify(statementRepository).save(any(Statement.class));
+            assertThat(result.getStatus()).isEqualTo(StatementEntity.StatementStatus.COMPLETED);
+            verify(statementRepository).save(any(StatementEntity.class));
         }
 
         @Test
@@ -110,7 +110,7 @@ class StatementServiceTest {
 
             assertThatThrownBy(() -> statementService.getStatement(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
-                    .hasMessageContaining("Statement not found");
+                    .hasMessageContaining("StatementEntity not found");
         }
 
         @Test
@@ -121,7 +121,7 @@ class StatementServiceTest {
 
             statementService.getStatement(testStatementId, testUserId.toString());
 
-            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
+            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
             verify(statementRepository).save(captor.capture());
             assertThat(captor.getValue().getLastAccessedAt()).isNotNull();
         }
@@ -135,7 +135,7 @@ class StatementServiceTest {
         @DisplayName("should list statements for user")
         void shouldListStatementsForUser() {
             Pageable pageable = PageRequest.of(0, 20);
-            Page<Statement> statementPage = new PageImpl<>(List.of(testStatement), pageable, 1);
+            Page<StatementEntity> statementPage = new PageImpl<>(List.of(testStatement), pageable, 1);
 
             when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(statementPage);
@@ -151,7 +151,7 @@ class StatementServiceTest {
         @DisplayName("should return empty page when no statements found")
         void shouldReturnEmptyPageWhenNoStatementsFound() {
             Pageable pageable = PageRequest.of(0, 20);
-            Page<Statement> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+            Page<StatementEntity> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
             when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(emptyPage);
@@ -202,19 +202,19 @@ class StatementServiceTest {
 
             assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
-                    .hasMessageContaining("Statement not found");
+                    .hasMessageContaining("StatementEntity not found");
         }
 
         @Test
         @DisplayName("should throw exception when statement not completed")
         void shouldThrowExceptionWhenStatementNotCompleted() {
-            testStatement.setStatus(Statement.StatementStatus.GENERATING);
+            testStatement.setStatus(StatementEntity.StatementStatus.GENERATING);
             when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
             assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
-                    .hasMessageContaining("Statement is not ready for download");
+                    .hasMessageContaining("StatementEntity is not ready for download");
         }
     }
 
@@ -230,7 +230,7 @@ class StatementServiceTest {
 
             assertThatThrownBy(() -> statementService.regenerateStatement(testStatementId))
                     .isInstanceOf(StatementException.class)
-                    .hasMessageContaining("Statement not found");
+                    .hasMessageContaining("StatementEntity not found");
         }
 
         @Test
@@ -238,19 +238,19 @@ class StatementServiceTest {
         void shouldResetStatusToGenerating() {
             when(statementRepository.findById(testStatementId))
                     .thenReturn(Optional.of(testStatement));
-            when(statementRepository.save(any(Statement.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(statementRepository.save(any(StatementEntity.class))).thenAnswer(inv -> inv.getArgument(0));
             // Mock the exists check to return true so generateStatement doesn't run
             when(statementRepository.existsByCustomerIdAndStatementPeriod(any(), any()))
                     .thenReturn(true);
 
             statementService.regenerateStatement(testStatementId);
 
-            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
+            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
             verify(statementRepository, atLeast(1)).save(captor.capture());
 
             // One of the saved statements should have GENERATING status
-            List<Statement> savedStatements = captor.getAllValues();
-            assertThat(savedStatements).anyMatch(s -> s.getStatus() == Statement.StatementStatus.GENERATING);
+            List<StatementEntity> savedStatements = captor.getAllValues();
+            assertThat(savedStatements).anyMatch(s -> s.getStatus() == StatementEntity.StatementStatus.GENERATING);
         }
     }
 }

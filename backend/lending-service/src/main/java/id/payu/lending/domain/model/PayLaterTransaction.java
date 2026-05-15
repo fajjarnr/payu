@@ -18,19 +18,6 @@ public class PayLaterTransaction {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum TransactionType {
-        PURCHASE,
-        PAYMENT,
-        REFUND
-    }
-
-    public enum TransactionStatus {
-        PENDING,
-        COMPLETED,
-        FAILED,
-        CANCELLED
-    }
-
     public PayLaterTransaction() {}
 
     public UUID getId() {

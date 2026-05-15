@@ -5,7 +5,7 @@ import id.payu.partner.application.service.PaymentLinkService;
 import id.payu.partner.dto.CreatePaymentLinkRequest;
 import id.payu.partner.dto.PaymentLinkResponse;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST controller for managing payment links / invoices.
@@ -41,12 +42,12 @@ public class PaymentLinkController extends BaseController {
     @Operation(summary = "Create a payment link",
                description = "Generate a shareable payment URL with amount, description, and expiry")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.CREATE, entityType = "PaymentLink", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.CREATE, entityType = "PaymentLinkEntity", level = AuditLevel.INFO)
     @Idempotent(required = true)
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment link created"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Partner not found")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PartnerEntity not found")
     })
     public ResponseEntity<ApiResponse<PaymentLinkResponse>> create(
             @PathVariable Long partnerId,
@@ -80,7 +81,7 @@ public class PaymentLinkController extends BaseController {
     @DeleteMapping("/{linkId}")
     @Operation(summary = "Cancel a payment link")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    @Audited(operation = Audited.Operation.DELETE, entityType = "PaymentLink", level = AuditLevel.INFO)
+    @Audited(operation = AuditOperation.DELETE, entityType = "PaymentLinkEntity", level = AuditLevel.INFO)
     public ResponseEntity<Void> cancel(
             @PathVariable Long partnerId,
             @PathVariable Long linkId) {

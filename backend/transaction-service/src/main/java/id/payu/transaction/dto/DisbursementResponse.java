@@ -1,6 +1,6 @@
 package id.payu.transaction.dto;
 
-import id.payu.transaction.domain.model.Disbursement;
+import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.DisbursementStatus;
 
 import java.math.BigDecimal;
@@ -62,7 +62,7 @@ public class DisbursementResponse {
      * @param disbursement the domain entity
      * @return the response DTO
      */
-    public static DisbursementResponse fromEntity(Disbursement disbursement) {
+    public static DisbursementResponse fromEntity(DisbursementEntity disbursement) {
         return DisbursementResponse.builder()
                 .id(disbursement.getId())
                 .idempotencyKey(disbursement.getIdempotencyKey())

@@ -1,7 +1,7 @@
 package id.payu.partner.multitenancy;
 
-import id.payu.partner.domain.Partner;
-import id.payu.partner.domain.WebhookSubscription;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
 import id.payu.security.multitenancy.TenantContext;
 import id.payu.security.multitenancy.TenantEntityListener;
 import org.junit.jupiter.api.*;
@@ -73,11 +73,11 @@ class MultiTenancyTest {
         private final TenantEntityListener listener = new TenantEntityListener();
 
         @Test
-        @DisplayName("should auto-set tenantId on Partner creation")
+        @DisplayName("should auto-set tenantId on PartnerEntity creation")
         void shouldAutoSetTenantIdOnPartnerCreate() {
             TenantContext.setTenantId("tokobapak");
 
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setName("TokoBapak");
             partner.setType("MERCHANT");
             partner.setEmail("test@example.com");
@@ -92,7 +92,7 @@ class MultiTenancyTest {
         void shouldNotOverwriteExistingTenantId() {
             TenantContext.setTenantId("new-tenant");
 
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setTenantId("existing-tenant");
 
             listener.setTenantOnCreate(partner);
@@ -101,15 +101,15 @@ class MultiTenancyTest {
         }
 
         @Test
-        @DisplayName("should auto-set tenantId on WebhookSubscription creation")
+        @DisplayName("should auto-set tenantId on WebhookSubscriptionEntity creation")
         void shouldAutoSetTenantIdOnWebhookCreate() {
             TenantContext.setTenantId("nobar");
 
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setId(1L);
             partner.setActive(true);
 
-            WebhookSubscription sub = new WebhookSubscription(
+            WebhookSubscriptionEntity sub = new WebhookSubscriptionEntity(
                     partner, "https://example.com/wh", "*", "secret");
 
             listener.setTenantOnCreate(sub);
@@ -122,7 +122,7 @@ class MultiTenancyTest {
         void shouldRejectCrossTenantUpdate() {
             TenantContext.setTenantId("tenant-a");
 
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setTenantId("tenant-b");
 
             assertThrows(SecurityException.class,
@@ -134,7 +134,7 @@ class MultiTenancyTest {
         void shouldAllowSameTenantUpdate() {
             TenantContext.setTenantId("tenant-a");
 
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setTenantId("tenant-a");
 
             assertDoesNotThrow(() -> listener.validateTenantOnUpdate(partner));
@@ -144,7 +144,7 @@ class MultiTenancyTest {
         @DisplayName("should skip validation when tenant context not set")
         void shouldSkipValidationWhenNotSet() {
             // TenantContext defaults to "default", isSet() returns false
-            Partner partner = new Partner();
+            PartnerEntity partner = new PartnerEntity();
             partner.setTenantId("any-tenant");
 
             assertDoesNotThrow(() -> listener.validateTenantOnUpdate(partner));

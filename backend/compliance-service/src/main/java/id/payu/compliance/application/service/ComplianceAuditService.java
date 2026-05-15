@@ -1,6 +1,6 @@
 package id.payu.compliance.application.service;
 
-import id.payu.compliance.domain.model.AuditReport;
+import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
@@ -29,7 +29,7 @@ public class ComplianceAuditService implements AuditReportUseCase {
     @CircuitBreaker(name = "compliance", fallbackMethod = "createAuditReportFallback")
     @Retry(name = "compliance")
     @Transactional
-    public AuditReport createAuditReport(UUID transactionId, String merchantId, ComplianceStandard standard, List<ComplianceCheck> checks) {
+    public AuditReportEntity createAuditReport(UUID transactionId, String merchantId, ComplianceStandard standard, List<ComplianceCheck> checks) {
         log.info("Creating {} audit report for transaction: {}, merchant: {}", standard, transactionId, merchantId);
 
         boolean allPassed = checks.stream().allMatch(c -> c.getStatus() == ComplianceCheckResult.PASS);
@@ -45,7 +45,7 @@ public class ComplianceAuditService implements AuditReportUseCase {
             overallStatus = ComplianceCheckResult.PASS;
         }
 
-        AuditReport report = AuditReport.builder()
+        AuditReportEntity report = AuditReportEntity.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(standard)
@@ -54,7 +54,7 @@ public class ComplianceAuditService implements AuditReportUseCase {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        AuditReport savedReport = persistencePort.save(report);
+        AuditReportEntity savedReport = persistencePort.save(report);
 
         log.info("Audit report created with ID: {}, overall status: {}", savedReport.getId(), overallStatus);
 
@@ -64,7 +64,7 @@ public class ComplianceAuditService implements AuditReportUseCase {
     @Override
     @CircuitBreaker(name = "compliance", fallbackMethod = "getAuditReportFallback")
     @Retry(name = "compliance")
-    public AuditReport getAuditReport(UUID reportId) {
+    public AuditReportEntity getAuditReport(UUID reportId) {
         log.info("Retrieving audit report: {}", reportId);
         return persistencePort.findById(reportId)
                 .orElseThrow(() -> new IllegalArgumentException("Audit report not found: " + reportId));
@@ -73,14 +73,14 @@ public class ComplianceAuditService implements AuditReportUseCase {
     @Override
     @CircuitBreaker(name = "compliance", fallbackMethod = "findAuditReportFallback")
     @Retry(name = "compliance")
-    public Optional<AuditReport> findAuditReport(UUID reportId) {
+    public Optional<AuditReportEntity> findAuditReport(UUID reportId) {
         return persistencePort.findById(reportId);
     }
 
     @Override
     @CircuitBreaker(name = "compliance", fallbackMethod = "getReportsByTransactionFallback")
     @Retry(name = "compliance")
-    public List<AuditReport> getReportsByTransaction(UUID transactionId) {
+    public List<AuditReportEntity> getReportsByTransaction(UUID transactionId) {
         log.info("Retrieving audit reports for transaction: {}", transactionId);
         return persistencePort.findByTransactionId(transactionId);
     }
@@ -88,32 +88,32 @@ public class ComplianceAuditService implements AuditReportUseCase {
     @Override
     @CircuitBreaker(name = "compliance", fallbackMethod = "getReportsByMerchantFallback")
     @Retry(name = "compliance")
-    public List<AuditReport> getReportsByMerchant(String merchantId) {
+    public List<AuditReportEntity> getReportsByMerchant(String merchantId) {
         log.info("Retrieving audit reports for merchant: {}", merchantId);
         return persistencePort.findByMerchantId(merchantId);
     }
 
-    private AuditReport createAuditReportFallback(UUID transactionId, String merchantId, ComplianceStandard standard, List<ComplianceCheck> checks, Exception ex) {
+    private AuditReportEntity createAuditReportFallback(UUID transactionId, String merchantId, ComplianceStandard standard, List<ComplianceCheck> checks, Exception ex) {
         log.error("Fallback for createAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
-    private AuditReport getAuditReportFallback(UUID reportId, Exception ex) {
+    private AuditReportEntity getAuditReportFallback(UUID reportId, Exception ex) {
         log.error("Fallback for getAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
-    private Optional<AuditReport> findAuditReportFallback(UUID reportId, Exception ex) {
+    private Optional<AuditReportEntity> findAuditReportFallback(UUID reportId, Exception ex) {
         log.error("Fallback for findAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
-    private List<AuditReport> getReportsByTransactionFallback(UUID transactionId, Exception ex) {
+    private List<AuditReportEntity> getReportsByTransactionFallback(UUID transactionId, Exception ex) {
         log.error("Fallback for getReportsByTransaction: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
-    private List<AuditReport> getReportsByMerchantFallback(String merchantId, Exception ex) {
+    private List<AuditReportEntity> getReportsByMerchantFallback(String merchantId, Exception ex) {
         log.error("Fallback for getReportsByMerchant: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }

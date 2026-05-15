@@ -1,7 +1,7 @@
 package id.payu.transaction.application.cqrs.query;
 
 import id.payu.transaction.application.cqrs.Query;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 
 import java.util.List;
 
@@ -14,5 +14,5 @@ public record GetAccountTransactionsQuery(
         String userId,
         int page,
         int size
-) implements Query<List<Transaction>> {
+) implements Query<List<TransactionEntity>> {
 }

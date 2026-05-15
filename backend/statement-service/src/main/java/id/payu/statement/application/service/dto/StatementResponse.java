@@ -1,6 +1,6 @@
 package id.payu.statement.application.service.dto;
 
-import id.payu.statement.domain.entity.Statement;
+import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import id.payu.statement.domain.entity.StatementStatus;
 
 /**
  * Response DTO for statement
@@ -29,7 +30,7 @@ public class StatementResponse {
     private BigDecimal totalCredits;
     private BigDecimal totalDebits;
     private Integer transactionCount;
-    private Statement.StatementStatus status;
+    private StatementStatus status;
     private LocalDateTime generatedAt;
     private LocalDateTime createdAt;
 
@@ -44,7 +45,7 @@ public class StatementResponse {
     /**
      * Create formatted response from entity
      */
-    public static StatementResponse fromEntity(Statement entity, String baseUrl) {
+    public static StatementResponse fromEntity(StatementEntity entity, String baseUrl) {
         StatementResponse response = StatementResponse.builder()
             .id(entity.getId())
             .customerId(entity.getCustomerId())

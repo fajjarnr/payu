@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Main Spring Boot application class for PayU Promotion Service.
+ * Main Spring Boot application class for PayU PromotionEntity Service.
  *
  * This service manages:
  * - Promotions and campaigns
- * - Cashback rewards
+ * - CashbackEntity rewards
  * - Loyalty points
  * - Referrals
  * - Customer segmentation

@@ -1,25 +1,27 @@
 package id.payu.support.domain.port.in;
 
-import id.payu.support.domain.TrainingModule;
+import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
 
 import java.util.List;
 import java.util.Optional;
+import id.payu.support.domain.TrainingCategory;
+import id.payu.support.domain.TrainingStatus;
 
 /**
  * Inbound port for Training Module use cases.
  */
 public interface TrainingModuleUseCase {
 
-    List<TrainingModule> getAllTrainingModules();
+    List<TrainingModuleEntity> getAllTrainingModules();
 
-    Optional<TrainingModule> getModuleById(Long id);
+    Optional<TrainingModuleEntity> getModuleById(Long id);
 
-    TrainingModule createModule(String code, String title, String description,
-                                TrainingModule.TrainingCategory category,
-                                Integer durationMinutes, TrainingModule.TrainingStatus status,
+    TrainingModuleEntity createModule(String code, String title, String description,
+                                TrainingCategory category,
+                                Integer durationMinutes, TrainingStatus status,
                                 boolean mandatory);
 
-    TrainingModule updateModuleStatus(Long id, TrainingModule.TrainingStatus status);
+    TrainingModuleEntity updateModuleStatus(Long id, TrainingStatus status);
 
-    List<TrainingModule> getMandatoryModules();
+    List<TrainingModuleEntity> getMandatoryModules();
 }

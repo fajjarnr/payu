@@ -23,23 +23,6 @@ public class Loan {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum LoanType {
-        PERSONAL_LOAN,
-        INSTALMENT_LOAN,
-        MICRO_LOAN
-    }
-
-    public enum LoanStatus {
-        PENDING_APPROVAL,
-        APPROVED,
-        DISBURSED,
-        ACTIVE,
-        FULLY_PAID,
-        DEFAULTED,
-        REJECTED,
-        CANCELLED
-    }
-
     public Loan() {}
 
     public UUID getId() {

@@ -1,34 +1,36 @@
 package id.payu.backoffice.domain.port.in;
 
-import id.payu.backoffice.domain.FraudCase;
+import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.backoffice.domain.FraudCaseStatus;
+import id.payu.backoffice.domain.RiskLevel;
 
 /**
  * Inbound port for Fraud Case use cases.
  */
 public interface FraudCaseUseCase {
 
-    FraudCase create(String userId, String accountNumber, UUID transactionId,
+    FraudCaseEntity create(String userId, String accountNumber, UUID transactionId,
                      String transactionType, BigDecimal amount, String fraudType,
-                     FraudCase.RiskLevel riskLevel, String description, String evidence);
+                     RiskLevel riskLevel, String description, String evidence);
 
-    Optional<FraudCase> getById(UUID id);
+    Optional<FraudCaseEntity> getById(UUID id);
 
-    List<FraudCase> getByUserId(String userId);
+    List<FraudCaseEntity> getByUserId(String userId);
 
-    List<FraudCase> listByStatus(FraudCase.CaseStatus status, int page, int size);
+    List<FraudCaseEntity> listByStatus(FraudCaseStatus status, int page, int size);
 
-    List<FraudCase> listByRiskLevel(FraudCase.RiskLevel riskLevel, int page, int size);
+    List<FraudCaseEntity> listByRiskLevel(RiskLevel riskLevel, int page, int size);
 
-    List<FraudCase> listAll(int page, int size);
+    List<FraudCaseEntity> listAll(int page, int size);
 
-    FraudCase assign(UUID id, String assignedTo);
+    FraudCaseEntity assign(UUID id, String assignedTo);
 
-    FraudCase resolve(UUID id, FraudCase.CaseStatus newStatus, String notes, String resolvedBy);
+    FraudCaseEntity resolve(UUID id, FraudCaseStatus newStatus, String notes, String resolvedBy);
 
     void delete(UUID id);
 }

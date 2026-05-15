@@ -8,9 +8,4 @@ public record KycReviewDecisionRequest(
 
         String notes
 ) {
-    public enum KycReviewStatus {
-        APPROVED,
-        REJECTED,
-        REQUIRES_ADDITIONAL_INFO
-    }
 }

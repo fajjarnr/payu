@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import id.payu.wallet.domain.model.EntryType;
 
 /**
  * REST Controller for double-entry journal operations (IMP-001).
@@ -59,7 +60,7 @@ public class JournalController extends BaseController {
                     .id(UUID.randomUUID())
                     .accountId(entryReq.getAccountId())
                     .coaCode(entryReq.getCoaCode())
-                    .entryType(LedgerEntry.EntryType.valueOf(entryReq.getEntryType()))
+                    .entryType(EntryType.valueOf(entryReq.getEntryType()))
                     .amount(entryReq.getAmount())
                     .currency(entryReq.getCurrency() != null ? entryReq.getCurrency() : "IDR")
                     .balanceAfter(BigDecimal.ZERO)

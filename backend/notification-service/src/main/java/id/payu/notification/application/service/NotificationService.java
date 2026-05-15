@@ -1,6 +1,6 @@
 package id.payu.notification.application.service;
 
-import id.payu.notification.domain.Notification;
+import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.domain.NotificationChannel;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.adapter.sender.EmailSender;
@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import id.payu.notification.domain.NotificationStatus;
 
 /**
  * Service for managing notifications.
@@ -35,11 +36,11 @@ public class NotificationService {
     SmsSender smsSender;
 
     @Transactional
-    public Notification send(SendNotificationRequest request) {
+    public NotificationEntity send(SendNotificationRequest request) {
         LOG.infof("Sending notification: channel=%s, recipient=%s",
                 request.channel(), request.recipient());
 
-        Notification notification = new Notification();
+        NotificationEntity notification = new NotificationEntity();
         notification.userId = request.userId();
         notification.channel = request.channel();
         notification.recipient = request.recipient();
@@ -47,13 +48,13 @@ public class NotificationService {
         notification.body = request.body();
         notification.templateId = request.templateId();
         notification.data = request.data();
-        notification.status = Notification.NotificationStatus.PENDING;
+        notification.status = NotificationStatus.PENDING;
 
         notification.persist();
 
         // Send based on channel
         try {
-            notification.status = Notification.NotificationStatus.SENDING;
+            notification.status = NotificationStatus.SENDING;
 
             boolean success = switch (request.channel()) {
                 case EMAIL -> emailSender.send(notification);
@@ -62,9 +63,9 @@ public class NotificationService {
             };
 
             if (success) {
-                notification.status = Notification.NotificationStatus.SENT;
+                notification.status = NotificationStatus.SENT;
                 notification.sentAt = LocalDateTime.now();
-                LOG.infof("Notification sent: id=%s", notification.id);
+                LOG.infof("NotificationEntity sent: id=%s", notification.id);
             } else {
                 handleFailedNotification(notification, "Send failed");
             }
@@ -76,26 +77,26 @@ public class NotificationService {
         return notification;
     }
 
-    public Optional<Notification> getById(UUID id) {
-        return Notification.findByIdOptional(id);
+    public Optional<NotificationEntity> getById(UUID id) {
+        return NotificationEntity.findByIdOptional(id);
     }
 
-    public List<Notification> getByUserId(String userId, int limit) {
-        return Notification.find("userId = ?1 ORDER BY createdAt DESC", userId)
+    public List<NotificationEntity> getByUserId(String userId, int limit) {
+        return NotificationEntity.find("userId = ?1 ORDER BY createdAt DESC", userId)
                 .page(0, limit)
                 .list();
     }
 
-    public List<Notification> getAllNotifications(int limit) {
-        return Notification.find("ORDER BY createdAt DESC")
+    public List<NotificationEntity> getAllNotifications(int limit) {
+        return NotificationEntity.find("ORDER BY createdAt DESC")
                 .page(0, Math.min(limit, 100))
                 .list();
     }
 
     @Transactional
     public void markAsRead(UUID id) {
-        Notification.<Notification>findByIdOptional(id).ifPresent(n -> {
-            n.status = Notification.NotificationStatus.READ;
+        NotificationEntity.<NotificationEntity>findByIdOptional(id).ifPresent(n -> {
+            n.status = NotificationStatus.READ;
             n.readAt = LocalDateTime.now();
             n.persist();
         });
@@ -107,15 +108,15 @@ public class NotificationService {
     @io.quarkus.scheduler.Scheduled(every = "1m")
     @Transactional
     public void retryPendingNotifications() {
-        List<Notification> pendingNotifications = Notification.find("status = ?1 and scheduledAt <= ?2",
-                Notification.NotificationStatus.PENDING, LocalDateTime.now()).list();
+        List<NotificationEntity> pendingNotifications = NotificationEntity.find("status = ?1 and scheduledAt <= ?2",
+                NotificationStatus.PENDING, LocalDateTime.now()).list();
 
-        for (Notification notification : pendingNotifications) {
+        for (NotificationEntity notification : pendingNotifications) {
             LOG.infof("Retrying notification %s (attempt %d of %d)",
                     notification.id, notification.retryCount + 1, MAX_RETRY_ATTEMPTS);
 
             try {
-                notification.status = Notification.NotificationStatus.SENDING;
+                notification.status = NotificationStatus.SENDING;
                 boolean success = switch (notification.channel) {
                     case EMAIL -> emailSender.send(notification);
                     case SMS -> smsSender.send(notification);
@@ -123,9 +124,9 @@ public class NotificationService {
                 };
 
                 if (success) {
-                    notification.status = Notification.NotificationStatus.SENT;
+                    notification.status = NotificationStatus.SENT;
                     notification.sentAt = LocalDateTime.now();
-                    LOG.infof("Notification retry successful: id=%s", notification.id);
+                    LOG.infof("NotificationEntity retry successful: id=%s", notification.id);
                 } else {
                     handleFailedNotification(notification, "Send failed");
                 }
@@ -137,18 +138,18 @@ public class NotificationService {
         }
     }
 
-    private void handleFailedNotification(Notification notification, String errorReason) {
+    private void handleFailedNotification(NotificationEntity notification, String errorReason) {
         LOG.errorf("Failed to send notification: %s", errorReason);
-        notification.status = Notification.NotificationStatus.FAILED;
+        notification.status = NotificationStatus.FAILED;
         notification.failureReason = errorReason;
         notification.retryCount++;
 
         if (notification.retryCount < MAX_RETRY_ATTEMPTS) {
-            notification.status = Notification.NotificationStatus.PENDING;
+            notification.status = NotificationStatus.PENDING;
             notification.scheduledAt = LocalDateTime.now().plusMinutes(
                     (long) Math.pow(2, notification.retryCount) // Exponential backoff: 2, 4, 8 min
             );
-            LOG.infof("Notification %s scheduled for retry %d at %s",
+            LOG.infof("NotificationEntity %s scheduled for retry %d at %s",
                     notification.id, notification.retryCount, notification.scheduledAt);
         }
     }

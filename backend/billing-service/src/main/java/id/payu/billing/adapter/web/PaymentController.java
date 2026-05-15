@@ -1,7 +1,7 @@
 package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.PaymentResponse;
 import id.payu.billing.application.service.PaymentService;
@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import id.payu.billing.exception.PaymentNotFoundException;
 import id.payu.security.annotation.Audited;
-import id.payu.security.annotation.Audited.AuditLevel;
+import id.payu.security.annotation.AuditLevel;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import id.payu.security.annotation.AuditOperation;
 
 /**
  * REST Controller for bill payments.
@@ -56,7 +57,7 @@ public class PaymentController {
      * BUG-BE-159 FIX: Validate that the authenticated user owns the payment.
      * Prevents unauthorized access to other users' payment details.
      */
-    private void validateOwnership(BillPayment payment) {
+    private void validateOwnership(BillPaymentEntity payment) {
         String userId = extractUserId();
         if (userId != null && payment.getAccountId() != null
                 && !payment.getAccountId().equals(userId)) {
@@ -83,8 +84,8 @@ public class PaymentController {
 
     @PostMapping
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
-            entityType = "BillPayment",
+            operation = id.payu.security.annotation.AuditOperation.TRANSFER,
+            entityType = "BillPaymentEntity",
             maskData = true,
             level = AuditLevel.INFO
     )
@@ -106,7 +107,7 @@ public class PaymentController {
             throw new PaymentNotFoundException("Unauthorized payment attempt: account ownership mismatch");
         }
 
-        BillPayment payment = paymentService.createPayment(request);
+        BillPaymentEntity payment = paymentService.createPayment(request);
         return ApiResponse.success(PaymentResponse.from(payment));
     }
 

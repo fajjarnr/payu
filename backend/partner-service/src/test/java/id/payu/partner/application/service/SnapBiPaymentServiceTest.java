@@ -2,7 +2,7 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
-import id.payu.partner.domain.SnapBiPayment;
+import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
 import id.payu.partner.dto.snap.PaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,16 +37,16 @@ public class SnapBiPaymentServiceTest {
     @InjectMocks
     private SnapBiPaymentService paymentService;
 
-    private Map<String, SnapBiPayment> paymentsByPayuRef;
-    private Map<String, SnapBiPayment> paymentsByPartnerRef;
+    private Map<String, SnapBiPaymentEntity> paymentsByPayuRef;
+    private Map<String, SnapBiPaymentEntity> paymentsByPartnerRef;
 
     @BeforeEach
     void setUp() {
         paymentsByPayuRef = new HashMap<>();
         paymentsByPartnerRef = new HashMap<>();
 
-        when(paymentRepository.save(any(SnapBiPayment.class))).thenAnswer(inv -> {
-            SnapBiPayment p = inv.getArgument(0);
+        when(paymentRepository.save(any(SnapBiPaymentEntity.class))).thenAnswer(inv -> {
+            SnapBiPaymentEntity p = inv.getArgument(0);
             if (p.getCreatedAt() == null) {
                 p.setCreatedAt(Instant.now());
             }

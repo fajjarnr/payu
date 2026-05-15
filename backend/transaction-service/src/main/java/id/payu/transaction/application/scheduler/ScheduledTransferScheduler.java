@@ -1,6 +1,6 @@
 package id.payu.transaction.application.scheduler;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.application.service.ScheduledTransferService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class ScheduledTransferScheduler {
             }
 
             Instant now = Instant.now();
-            List<ScheduledTransfer> dueTransfers = persistencePort.findDueScheduledTransfers(now);
+            List<ScheduledTransferEntity> dueTransfers = persistencePort.findDueScheduledTransfers(now);
 
             if (dueTransfers.isEmpty()) {
                 return;
@@ -54,7 +54,7 @@ public class ScheduledTransferScheduler {
 
             log.info("Processing due scheduled transfers, count: {}", dueTransfers.size());
 
-            for (ScheduledTransfer transfer : dueTransfers) {
+            for (ScheduledTransferEntity transfer : dueTransfers) {
                 try {
                     scheduledTransferService.processDueScheduledTransfer(transfer);
                 } catch (Exception e) {

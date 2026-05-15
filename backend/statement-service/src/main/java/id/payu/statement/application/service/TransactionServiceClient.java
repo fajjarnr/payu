@@ -39,7 +39,7 @@ public class TransactionServiceClient {
                         t.getDate(),
                         t.getDescription(),
                         t.getAmount(),
-                        "CREDIT".equals(t.getType()) ? StatementService.TransactionType.CREDIT : StatementService.TransactionType.DEBIT
+                        "CREDIT".equals(t.getType()) ? TransactionType.CREDIT : TransactionType.DEBIT
                     ))
                     .toList();
             }
@@ -65,7 +65,7 @@ public class TransactionServiceClient {
                     response.getDate(),
                     response.getDescription(),
                     response.getAmount(),
-                    "CREDIT".equals(response.getType()) ? StatementService.TransactionType.CREDIT : StatementService.TransactionType.DEBIT
+                    "CREDIT".equals(response.getType()) ? TransactionType.CREDIT : TransactionType.DEBIT
                 );
             }
 

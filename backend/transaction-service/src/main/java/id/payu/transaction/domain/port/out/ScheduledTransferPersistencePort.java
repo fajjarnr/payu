@@ -1,6 +1,6 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 
 import java.time.Instant;
 import java.util.List;
@@ -9,15 +9,15 @@ import java.util.UUID;
 
 public interface ScheduledTransferPersistencePort {
 
-    ScheduledTransfer save(ScheduledTransfer scheduledTransfer);
+    ScheduledTransferEntity save(ScheduledTransferEntity scheduledTransfer);
 
-    Optional<ScheduledTransfer> findById(UUID id);
+    Optional<ScheduledTransferEntity> findById(UUID id);
 
-    Optional<ScheduledTransfer> findByReferenceNumber(String referenceNumber);
+    Optional<ScheduledTransferEntity> findByReferenceNumber(String referenceNumber);
 
-    List<ScheduledTransfer> findBySenderAccountId(UUID senderAccountId);
+    List<ScheduledTransferEntity> findBySenderAccountId(UUID senderAccountId);
 
-    List<ScheduledTransfer> findDueScheduledTransfers(Instant now);
+    List<ScheduledTransferEntity> findDueScheduledTransfers(Instant now);
 
-    void delete(ScheduledTransfer scheduledTransfer);
+    void delete(ScheduledTransferEntity scheduledTransfer);
 }

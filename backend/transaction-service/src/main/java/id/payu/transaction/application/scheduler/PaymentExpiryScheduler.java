@@ -2,8 +2,8 @@ package id.payu.transaction.application.scheduler;
 
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
-import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.model.VirtualAccount;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import id.payu.transaction.domain.model.TransactionStatus;
 
 /**
  * Scheduler to auto-cancel expired payments (VA, payment links, pending transactions).
@@ -63,10 +64,10 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expirePendingTransactions() {
-        List<Transaction> expired = transactionRepository.findExpiredPendingTransactions(Instant.now());
+        List<TransactionEntity> expired = transactionRepository.findExpiredPendingTransactions(Instant.now());
         if (!expired.isEmpty()) {
             expired.forEach(tx -> {
-                tx.setStatus(Transaction.TransactionStatus.CANCELLED);
+                tx.setStatus(TransactionStatus.CANCELLED);
                 tx.setFailureReason("Payment expired");
                 tx.setUpdatedAt(Instant.now());
 
@@ -88,7 +89,7 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {
-        List<VirtualAccount> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
+        List<VirtualAccountEntity> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
         if (!expired.isEmpty()) {
             expired.forEach(va -> {
                 va.markExpired();
@@ -102,7 +103,7 @@ public class PaymentExpiryScheduler {
     /**
      * Release reserved balance for expired transaction.
      */
-    private void releaseReservedBalance(Transaction tx) {
+    private void releaseReservedBalance(TransactionEntity tx) {
         try {
             if (tx.getSourceAccountId() != null && tx.getAmount() != null) {
                 // Call wallet-service to release reserved balance
@@ -124,7 +125,7 @@ public class PaymentExpiryScheduler {
     /**
      * Publish payment.expired Kafka event.
      */
-    private void publishPaymentExpiredEvent(Transaction tx) {
+    private void publishPaymentExpiredEvent(TransactionEntity tx) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventType", "payment.expired");
@@ -148,7 +149,7 @@ public class PaymentExpiryScheduler {
     /**
      * Publish VA expired Kafka event.
      */
-    private void publishVaExpiredEvent(VirtualAccount va) {
+    private void publishVaExpiredEvent(VirtualAccountEntity va) {
         try {
             Map<String, Object> event = new HashMap<>();
             event.put("eventType", "va.expired");

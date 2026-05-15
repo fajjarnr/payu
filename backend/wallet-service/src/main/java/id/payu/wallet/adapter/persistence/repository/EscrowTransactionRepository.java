@@ -1,7 +1,7 @@
 package id.payu.wallet.adapter.persistence.repository;
 
 import id.payu.wallet.adapter.persistence.entity.EscrowTransactionEntity;
-import id.payu.wallet.adapter.persistence.entity.EscrowTransactionEntity.EscrowStatus;
+import id.payu.wallet.adapter.persistence.entity.EscrowStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

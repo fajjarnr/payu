@@ -20,6 +20,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import id.payu.wallet.domain.model.AccountType;
+import id.payu.wallet.domain.model.EntryType;
+import id.payu.wallet.domain.model.NormalBalance;
 
 /**
  * General Ledger engine for financial reporting (IMP-012).
@@ -144,10 +147,10 @@ public class GeneralLedgerService implements GeneralLedgerUseCase {
                     amount
             );
 
-            if (coa.getAccountType() == ChartOfAccount.AccountType.REVENUE) {
+            if (coa.getAccountType() == AccountType.REVENUE) {
                 revenues.add(isEntry);
                 totalRevenue = totalRevenue.add(amount);
-            } else if (coa.getAccountType() == ChartOfAccount.AccountType.EXPENSE) {
+            } else if (coa.getAccountType() == AccountType.EXPENSE) {
                 expenses.add(isEntry);
                 totalExpenses = totalExpenses.add(amount);
             }
@@ -182,13 +185,13 @@ public class GeneralLedgerService implements GeneralLedgerUseCase {
         for (JournalEntry journal : journals) {
             // Find debit and credit accounts from entries
             String debitAccount = journal.getEntries().stream()
-                    .filter(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT)
+                    .filter(e -> e.getEntryType() == EntryType.DEBIT)
                     .map(e -> e.getCoaCode() != null ? e.getCoaCode() : e.getAccountId())
                     .findFirst()
                     .orElse("N/A");
 
             String creditAccount = journal.getEntries().stream()
-                    .filter(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT)
+                    .filter(e -> e.getEntryType() == EntryType.CREDIT)
                     .map(e -> e.getCoaCode() != null ? e.getCoaCode() : e.getAccountId())
                     .findFirst()
                     .orElse("N/A");
@@ -226,18 +229,18 @@ public class GeneralLedgerService implements GeneralLedgerUseCase {
      * For DEBIT-normal accounts (Assets, Expenses): balance = sum(debit) - sum(credit)
      * For CREDIT-normal accounts (Liabilities, Equity, Revenue): balance = sum(credit) - sum(debit)
      */
-    private BigDecimal computeBalance(List<LedgerEntry> entries, ChartOfAccount.NormalBalance normalBalance) {
+    private BigDecimal computeBalance(List<LedgerEntry> entries, NormalBalance normalBalance) {
         BigDecimal totalDebit = entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.DEBIT)
+                .filter(e -> e.getEntryType() == EntryType.DEBIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalCredit = entries.stream()
-                .filter(e -> e.getEntryType() == LedgerEntry.EntryType.CREDIT)
+                .filter(e -> e.getEntryType() == EntryType.CREDIT)
                 .map(LedgerEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (normalBalance == ChartOfAccount.NormalBalance.DEBIT) {
+        if (normalBalance == NormalBalance.DEBIT) {
             return totalDebit.subtract(totalCredit);
         } else {
             return totalCredit.subtract(totalDebit);

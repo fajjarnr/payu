@@ -5,7 +5,7 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandl
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Money;
-import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.BifastTransferResponse;
 import id.payu.transaction.dto.InitiateTransferRequest;
@@ -80,7 +80,7 @@ class BiFastTransferTest {
         // Given
         InitiateTransferCommand command = createBifastCommand();
 
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder().status("RESERVED").build()
         );
@@ -100,7 +100,7 @@ class BiFastTransferTest {
         // Given
         InitiateTransferCommand command = createBifastCommand();
 
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder().status("RESERVED").build()
         );
@@ -120,7 +120,7 @@ class BiFastTransferTest {
         // Given
         InitiateTransferCommand command = createBifastCommand();
 
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder().status("RESERVED").build()
         );
@@ -131,7 +131,7 @@ class BiFastTransferTest {
         // Then
         assertThat(response).isNotNull();
         verify(bifastServicePort).initiateTransfer(any());
-        verify(transactionPersistencePort, atLeastOnce()).save(any(Transaction.class));
+        verify(transactionPersistencePort, atLeastOnce()).save(any(TransactionEntity.class));
     }
 
     @Test
@@ -140,7 +140,7 @@ class BiFastTransferTest {
         // Given
         InitiateTransferCommand command = createBifastCommand();
 
-        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(transactionPersistencePort.save(any(TransactionEntity.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
                 ReserveBalanceResponse.builder()
                         .reservationId("res-123")

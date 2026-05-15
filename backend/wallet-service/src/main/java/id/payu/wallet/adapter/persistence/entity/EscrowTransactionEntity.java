@@ -93,15 +93,6 @@ public class EscrowTransactionEntity {
     public EscrowTransactionEntity() {
     }
 
-    public enum EscrowStatus {
-        CREATED,
-        HELD,
-        RELEASED,
-        SETTLED,
-        REFUNDED,
-        EXPIRED
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
