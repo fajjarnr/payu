@@ -1,5 +1,6 @@
 package id.payu.compliance.domain.model;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +30,11 @@ public class DataAccessAudit {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Sensitive
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Sensitive
     @Column(name = "accessed_by", nullable = false)
     private String accessedBy;
 
@@ -51,6 +54,7 @@ public class DataAccessAudit {
     @Column(name = "purpose", length = 500)
     private String purpose;
 
+    @Sensitive
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 

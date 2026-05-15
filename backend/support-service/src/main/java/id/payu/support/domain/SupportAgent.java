@@ -1,5 +1,6 @@
 package id.payu.support.domain;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,9 +31,11 @@ public class SupportAgent {
     @Column(unique = true, nullable = false)
     private String employeeId;
 
+    @Sensitive
     @Column(nullable = false)
     private String name;
 
+    @Sensitive
     @Column(unique = true, nullable = false)
     private String email;
 

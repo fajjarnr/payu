@@ -21,15 +21,15 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟢 91/100                                | May 15 Batch 2 fixes — infra hardening, secrets, probes, Flyway. Score: 83→91. |
+| **Production Readiness** | 🟢 95/100                                | May 15 Batch 3 fixes — PII, ServiceAccounts, Resilience, Hexagonal ports, profiles. Score: 91→95. |
 | GlobalExceptionHandler   | 🟢 18/18                                 | All Spring services covered — 6 new handlers created May 15 |
 | Distributed Tracing      | 🟢 Fixed                                 | `CorrelationIdInterceptor` in rest-client-starter — X-Correlation-Id propagated |
 | Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟡 12 open                               | 2 P0 (arch refactors), 1 P1 (K8S-003 ServiceAccounts), 10 P2 — 17 closed May 15 Batch 2 |
+| Open Bugs (TODOS.md)     | 🟡 7 open                                | 1 P0 (ARCH-008 entity refactor), 5 P1 (CQ-001, PERF-002, OBS-001, ARCH-009/010, TEST-001–003), rest P2 — Batch 3 closed 5 items |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-05-15                               | v1.8.4 — Infrastructure hardening. Score: 91/100. |
+| Last Status Update       | 2026-05-15                               | v1.8.5 — PII compliance, K8S ServiceAccounts, Resilience full coverage. Score: 95/100. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |

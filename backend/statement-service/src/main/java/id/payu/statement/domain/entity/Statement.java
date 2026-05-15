@@ -1,5 +1,6 @@
 package id.payu.statement.domain.entity;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,9 +38,11 @@ public class Statement {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Sensitive
     @Column(name = "customer_id", nullable = false, length = 50)
     private String customerId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "account_number", nullable = false, length = 50)
     private String accountNumber;
 

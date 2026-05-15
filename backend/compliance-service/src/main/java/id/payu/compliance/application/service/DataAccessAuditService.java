@@ -4,6 +4,8 @@ import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.model.DataAccessAudit.DataOperationType;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.domain.port.out.DataAccessAuditPersistencePort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,8 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     private final DataAccessAuditPersistencePort persistencePort;
 
     @Override
+    @CircuitBreaker(name = "compliance", fallbackMethod = "logDataAccessFallback")
+    @Retry(name = "compliance")
     public DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
@@ -35,6 +39,8 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "compliance", fallbackMethod = "logDataAccessFullFallback")
+    @Retry(name = "compliance")
     public DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
@@ -73,6 +79,8 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "compliance", fallbackMethod = "getDataAccessAuditFallback")
+    @Retry(name = "compliance")
     public DataAccessAudit getDataAccessAudit(UUID auditId) {
         log.info("Retrieving data access audit: {}", auditId);
         return persistencePort.findById(auditId).stream()
@@ -81,6 +89,8 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "compliance", fallbackMethod = "getUserDataAccessHistoryFallback")
+    @Retry(name = "compliance")
     public Page<DataAccessAudit> getUserDataAccessHistory(String userId, Pageable pageable) {
         log.info("Retrieving data access history for user: {}", userId);
         return persistencePort.findByUserId(userId, pageable);
@@ -123,6 +133,8 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "compliance", fallbackMethod = "searchDataAccessAuditFallback")
+    @Retry(name = "compliance")
     public Page<DataAccessAudit> searchDataAccessAudit(
             String userId,
             String accessedBy,
@@ -134,6 +146,43 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     ) {
         log.info("Searching data access audit with filters");
         return persistencePort.findByFilters(userId, accessedBy, serviceName, operationType, startDate, endDate, pageable);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private DataAccessAudit logDataAccessFallback(String userId, String accessedBy, String serviceName,
+                                                   String resourceType, String resourceId,
+                                                   DataOperationType operationType, String purpose, Exception ex) {
+        log.error("Fallback for logDataAccess: {}", ex.getMessage());
+        throw new RuntimeException("Compliance service temporarily unavailable", ex);
+    }
+
+    private DataAccessAudit logDataAccessFullFallback(String userId, String accessedBy, String serviceName,
+                                                      String resourceType, String resourceId,
+                                                      DataOperationType operationType, String purpose,
+                                                      String ipAddress, String userAgent, boolean success,
+                                                      String errorMessage, Exception ex) {
+        log.error("Fallback for logDataAccess: {}", ex.getMessage());
+        throw new RuntimeException("Compliance service temporarily unavailable", ex);
+    }
+
+    private DataAccessAudit getDataAccessAuditFallback(UUID auditId, Exception ex) {
+        log.error("Fallback for getDataAccessAudit: {}", ex.getMessage());
+        throw new RuntimeException("Compliance service temporarily unavailable", ex);
+    }
+
+    private Page<DataAccessAudit> getUserDataAccessHistoryFallback(String userId, Pageable pageable, Exception ex) {
+        log.error("Fallback for getUserDataAccessHistory: {}", ex.getMessage());
+        throw new RuntimeException("Compliance service temporarily unavailable", ex);
+    }
+
+    private Page<DataAccessAudit> searchDataAccessAuditFallback(String userId, String accessedBy, String serviceName,
+                                                                 DataOperationType operationType, LocalDateTime startDate,
+                                                                 LocalDateTime endDate, Pageable pageable, Exception ex) {
+        log.error("Fallback for searchDataAccessAudit: {}", ex.getMessage());
+        throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
 }

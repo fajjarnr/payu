@@ -1,5 +1,6 @@
 package id.payu.billing.domain.model;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -24,9 +25,11 @@ public class BillPayment {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "reference_number", nullable = false, unique = true, length = 100)
     private String referenceNumber;
 
@@ -34,6 +37,7 @@ public class BillPayment {
     @Column(name = "biller_type", nullable = false, length = 50)
     private BillerType billerType;
 
+    @Sensitive
     @Column(name = "customer_id", nullable = false, length = 100)
     private String customerId; // PLN meter number, phone number, etc.
 

@@ -1,5 +1,6 @@
 package id.payu.partner.domain;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -78,18 +79,23 @@ public class Merchant {
     @Column(length = 10)
     private String postalCode;
 
+    @Sensitive
     @Column(name = "pic_name", length = 200)
     private String picName;
 
+    @Sensitive
     @Column(name = "pic_phone", length = 20)
     private String picPhone;
 
+    @Sensitive
     @Column(name = "pic_email", length = 200)
     private String picEmail;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "settlement_account_id", length = 64)
     private String settlementAccountId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "settlement_account", length = 32)
     private String settlementAccount;
 

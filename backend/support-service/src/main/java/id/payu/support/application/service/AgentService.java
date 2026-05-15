@@ -5,6 +5,8 @@ import id.payu.support.domain.SupportAgent;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ public class AgentService {
 
     private final SupportAgentRepository agentRepository;
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getAllAgentsFallback")
+    @Retry(name = "support")
     public List<AgentResponse> getAllAgents() {
         return agentRepository.findAll()
                 .stream()
@@ -26,6 +30,8 @@ public class AgentService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getAgentByIdFallback")
+    @Retry(name = "support")
     public AgentResponse getAgentById(Long id) {
         return agentRepository.findById(id)
                 .map(this::toResponse)
@@ -38,6 +44,8 @@ public class AgentService {
                 .orElse(null);
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "createAgentFallback")
+    @Retry(name = "support")
     @Transactional
     public AgentResponse createAgent(CreateAgentRequest request) {
         log.info("Creating new agent: {} ({})", request.name(), request.employeeId());
@@ -56,6 +64,8 @@ public class AgentService {
         return toResponse(agent);
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "updateAgentStatusFallback")
+    @Retry(name = "support")
     @Transactional
     public AgentResponse updateAgentStatus(Long id, boolean active) {
         return agentRepository.findById(id)
@@ -88,5 +98,29 @@ public class AgentService {
                 agent.getCreatedAt(),
                 agent.getUpdatedAt()
         );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private List<AgentResponse> getAllAgentsFallback(Exception ex) {
+        log.error("Fallback for getAllAgents: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private AgentResponse getAgentByIdFallback(Long id, Exception ex) {
+        log.error("Fallback for getAgentById: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private AgentResponse createAgentFallback(CreateAgentRequest request, Exception ex) {
+        log.error("Fallback for createAgent: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private AgentResponse updateAgentStatusFallback(Long id, boolean active, Exception ex) {
+        log.error("Fallback for updateAgentStatus: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 }

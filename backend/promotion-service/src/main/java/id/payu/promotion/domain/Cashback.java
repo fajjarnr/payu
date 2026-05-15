@@ -1,5 +1,6 @@
 package id.payu.promotion.domain;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,6 +24,7 @@ public class Cashback implements Serializable {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 

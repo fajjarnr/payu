@@ -5,6 +5,8 @@ import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
 import id.payu.fx.domain.port.out.FxRateRepositoryPort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ public class FxRateService implements FxRateUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "getCurrentRateFallback")
+    @Retry(name = "fx")
     public FxRate getCurrentRate(String fromCurrency, String toCurrency) {
         validateCurrencyPair(fromCurrency, toCurrency);
         
@@ -45,11 +49,15 @@ public class FxRateService implements FxRateUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "saveRateFallback")
+    @Retry(name = "fx")
     public FxRate saveRate(FxRate fxRate) {
         return fxRateRepository.save(fxRate);
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "updateRatesFallback")
+    @Retry(name = "fx")
     public void updateRates() {
         if (!fxRateProvider.isAvailable()) {
             return;
@@ -77,11 +85,15 @@ public class FxRateService implements FxRateUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "getAllRatesFallback")
+    @Retry(name = "fx")
     public List<FxRate> getAllRates() {
         return fxRateRepository.findAll();
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "convertCurrencyFallback")
+    @Retry(name = "fx")
     public FxConversion convertCurrency(String accountId, String fromCurrency, String toCurrency, BigDecimal amount) {
         FxRate rate = getCurrentRate(fromCurrency, toCurrency);
         BigDecimal toAmount = amount.multiply(rate.getRate());
@@ -117,6 +129,34 @@ public class FxRateService implements FxRateUseCase {
         rate.setValidUntil(validUntil);
         
         return fxRateRepository.save(rate);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private FxRate getCurrentRateFallback(String fromCurrency, String toCurrency, Exception ex) {
+        log.error("Fallback for getCurrentRate: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private FxRate saveRateFallback(FxRate fxRate, Exception ex) {
+        log.error("Fallback for saveRate: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private void updateRatesFallback(Exception ex) {
+        log.error("Fallback for updateRates: {}", ex.getMessage());
+    }
+
+    private List<FxRate> getAllRatesFallback(Exception ex) {
+        log.error("Fallback for getAllRates: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private FxConversion convertCurrencyFallback(String accountId, String fromCurrency, String toCurrency, BigDecimal amount, Exception ex) {
+        log.error("Fallback for convertCurrency: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private void validateCurrencyPair(String fromCurrency, String toCurrency) {

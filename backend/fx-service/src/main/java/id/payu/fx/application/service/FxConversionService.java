@@ -6,6 +6,8 @@ import id.payu.fx.domain.port.in.FxConversionUseCase;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxConversionRepositoryPort;
 import id.payu.fx.domain.port.out.WalletServicePort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,8 @@ public class FxConversionService implements FxConversionUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "createConversionFallback")
+    @Retry(name = "fx")
     public FxConversion createConversion(FxConversion conversion) {
         FxRate rate = fxRateUseCase.getCurrentRate(conversion.getFromCurrency(), conversion.getToCurrency());
         
@@ -79,6 +83,8 @@ public class FxConversionService implements FxConversionUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "getConversionFallback")
+    @Retry(name = "fx")
     public FxConversion getConversion(UUID conversionId) {
         Optional<FxConversion> conversion = conversionRepository.findById(conversionId);
         if (conversion.isEmpty()) {
@@ -88,11 +94,15 @@ public class FxConversionService implements FxConversionUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "getConversionsByAccountFallback")
+    @Retry(name = "fx")
     public List<FxConversion> getConversionsByAccount(String accountId) {
         return conversionRepository.findByAccountId(accountId);
     }
 
     @Override
+    @CircuitBreaker(name = "fx", fallbackMethod = "reverseConversionFallback")
+    @Retry(name = "fx")
     public void reverseConversion(UUID conversionId) {
         FxConversion conversion = getConversion(conversionId);
         
@@ -135,5 +145,29 @@ public class FxConversionService implements FxConversionUseCase {
         log.info("FX conversion {} reversed: debited {} {}, credited {} {}",
                 txId, conversion.getToAmount(), conversion.getToCurrency(),
                 conversion.getFromAmount(), conversion.getFromCurrency());
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private FxConversion createConversionFallback(FxConversion conversion, Exception ex) {
+        log.error("Fallback for createConversion: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private FxConversion getConversionFallback(UUID conversionId, Exception ex) {
+        log.error("Fallback for getConversion: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private List<FxConversion> getConversionsByAccountFallback(String accountId, Exception ex) {
+        log.error("Fallback for getConversionsByAccount: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
+    }
+
+    private void reverseConversionFallback(UUID conversionId, Exception ex) {
+        log.error("Fallback for reverseConversion: {}", ex.getMessage());
+        throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 }

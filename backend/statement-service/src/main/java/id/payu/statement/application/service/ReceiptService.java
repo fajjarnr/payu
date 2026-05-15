@@ -8,6 +8,8 @@ import id.payu.statement.domain.model.SenderInfo;
 import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;
 import id.payu.statement.application.service.exception.ReceiptException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -66,6 +68,8 @@ public class ReceiptService {
      * @return The generated or existing receipt response
      * @throws ReceiptException if transaction data cannot be fetched
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "generateReceiptFallback")
+    @Retry(name = "statement")
     @Transactional
     public ReceiptResponse generateReceipt(ReceiptGenerationRequest request) {
         log.info("Generating receipt for transaction: {}", request.getTransactionId());
@@ -127,6 +131,8 @@ public class ReceiptService {
      * @return The receipt response
      * @throws ReceiptException if receipt not found
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "getReceiptFallback")
+    @Retry(name = "statement")
     @Transactional(readOnly = true)
     public ReceiptResponse getReceipt(UUID receiptId, String customerId) {
         log.info("Fetching receipt: {} for customer: {}", receiptId, customerId);
@@ -169,6 +175,8 @@ public class ReceiptService {
      * @return PDF bytes
      * @throws ReceiptException if receipt not found or PDF generation fails
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "generatePdfFallback")
+    @Retry(name = "statement")
     @Transactional
     public byte[] generatePdf(UUID receiptId, String customerId) {
         log.info("Generating PDF for receipt: {} and customer: {}", receiptId, customerId);
@@ -212,6 +220,25 @@ public class ReceiptService {
         validateOwnership(receipt, customerId);
 
         return generatePdf(receipt.getId(), customerId);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private ReceiptResponse generateReceiptFallback(ReceiptGenerationRequest request, Exception ex) {
+        log.error("Fallback for generateReceipt: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
+    }
+
+    private ReceiptResponse getReceiptFallback(UUID receiptId, String customerId, Exception ex) {
+        log.error("Fallback for getReceipt: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
+    }
+
+    private byte[] generatePdfFallback(UUID receiptId, String customerId, Exception ex) {
+        log.error("Fallback for generatePdf: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
     }
 
     /**

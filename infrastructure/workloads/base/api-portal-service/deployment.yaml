@@ -24,6 +24,7 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      serviceAccountName: api-portal-service
       terminationGracePeriodSeconds: 60
       topologySpreadConstraints:
       - maxSkew: 1

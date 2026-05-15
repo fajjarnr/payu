@@ -1,5 +1,6 @@
 package id.payu.investment.adapter.persistence;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class InvestmentTransactionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 

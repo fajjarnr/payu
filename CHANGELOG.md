@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Production Readiness Fixes — Batch 3 (2026-05-15)
+
+- **PII-001 — @Sensitive Annotations (12 services)**: Added `@Sensitive` to PII fields across 17 entity files: partner (email, phone, apiKey/CRITICAL, clientSecret/CRITICAL, publicKey/CRITICAL, merchant PIC data, settlement accounts/HIGH), billing (accountId/HIGH, referenceNumber/HIGH, customerId), compliance (userId, accessedBy, ipAddress, merchantId), dispute (customerId/HIGH, merchantId/HIGH), fx (accountId/HIGH), investment (userId/HIGH, accountId/HIGH), statement (customerId, accountNumber/HIGH, sender/recipient data), support (name, email), integration (rawPayload/HIGH, transformedPayload/HIGH, businessReference), promotion (accountId/HIGH across 4 entities). All 18 services now have PII protection.
+- **K8S-003 — Dedicated ServiceAccounts (24 services)**: Created `serviceaccount.yaml` with `automountServiceAccountToken: false` for all 24 services. Updated all `deployment.yaml` with `serviceAccountName` and all `kustomization.yaml` with the new resource. Least-privilege security enforced.
+- **RES-004 — Resilience Annotations (6 services)**: Added `@CircuitBreaker` + `@Retry` with fallback methods to billing (PaymentService, SubscriptionService), compliance (ComplianceAuditService, DataAccessAuditService), fx (FxRateService, FxConversionService), integration (IntegrationService), statement (StatementService, ReceiptService), support (AgentService, TrainingModuleService, AgentTrainingService). All 18 services now have active resilience patterns.
+- **ARCH-011 — Hexagonal Architecture Ports (4 services)**: Created `domain/port/in/` (use case interfaces) and `domain/port/out/` (persistence/event ports) for backoffice (7 files), cms (3 files), notification (3 files), support (6 files). Total 19 interface files establishing proper port-adapter boundaries.
+- **CFG-002/003 — Deployment Profiles**: Created `application-container.yml` for product-catalog-service and integration-service with proper datasource, HikariCP, Flyway (validate-on-migrate: true), Kafka, Redis, OIDC, and management configuration.
+
 ### Production Readiness Fixes — Batch 2 (2026-05-15)
 
 - **ERR-001/ERR-005 — GlobalExceptionHandler (6 services)**: Created service-specific `@RestControllerAdvice` handlers for backoffice (`BO_`), cms (`CMS_`), dispute (`DISP_`), promotion (`PROMO_`), transaction (`TXN_`). Upgraded support-service handler (`SUP_`) with full coverage: `AccessDeniedException`, `MethodArgumentNotValidException`, `ConstraintViolationException`, `IllegalArgumentException`, `DataIntegrityViolationException`, generic `Exception`. All 18 Spring services now have local exception handlers.

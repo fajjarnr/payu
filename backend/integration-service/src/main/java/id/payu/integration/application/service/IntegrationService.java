@@ -4,6 +4,8 @@ import id.payu.integration.application.port.in.IntegrationUseCase;
 import id.payu.integration.application.port.out.MessagePublisherPort;
 import id.payu.integration.domain.model.*;
 import id.payu.integration.domain.service.MessageProcessingService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
@@ -30,6 +32,8 @@ public class IntegrationService implements IntegrationUseCase {
     private final ProducerTemplate producerTemplate;
 
     @Override
+    @CircuitBreaker(name = "integration", fallbackMethod = "processSwiftMessageFallback")
+    @Retry(name = "integration")
     @Transactional
     public String processSwiftMessage(String swiftMessage, String messageType) {
         log.info("Processing SWIFT message of type: {}", messageType);
@@ -58,6 +62,8 @@ public class IntegrationService implements IntegrationUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "integration", fallbackMethod = "generateOjkReportFallback")
+    @Retry(name = "integration")
     @Transactional
     public String generateOjkReport(String reportType, LocalDate date) {
         log.info("Generating OJK report of type: {} for date: {}", reportType, date);
@@ -87,6 +93,8 @@ public class IntegrationService implements IntegrationUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "integration", fallbackMethod = "sendSoapRequestFallback")
+    @Retry(name = "integration")
     @Transactional
     public String sendSoapRequest(String endpoint, String operation, String payload) {
         log.info("Sending SOAP request to: {} operation: {}", endpoint, operation);
@@ -123,6 +131,8 @@ public class IntegrationService implements IntegrationUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "integration", fallbackMethod = "sendHttpRequestFallback")
+    @Retry(name = "integration")
     @Transactional
     public String sendHttpRequest(String url, String method, Map<String, String> headers, String body) {
         log.info("Sending HTTP {} request to: {}", method, url);
@@ -167,6 +177,8 @@ public class IntegrationService implements IntegrationUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "integration", fallbackMethod = "retryMessageFallback")
+    @Retry(name = "integration")
     @Transactional
     public boolean retryMessage(String messageId) {
         return messageProcessingService.retryMessage(messageId);
@@ -195,6 +207,35 @@ public class IntegrationService implements IntegrationUseCase {
             case "MT940" -> MessageType.SWIFT_MT940;
             default -> throw new IllegalArgumentException("Unsupported SWIFT message type: " + messageType);
         };
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private String processSwiftMessageFallback(String swiftMessage, String messageType, Exception ex) {
+        log.error("Fallback for processSwiftMessage: {}", ex.getMessage());
+        throw new RuntimeException("Integration service temporarily unavailable", ex);
+    }
+
+    private String generateOjkReportFallback(String reportType, LocalDate date, Exception ex) {
+        log.error("Fallback for generateOjkReport: {}", ex.getMessage());
+        throw new RuntimeException("Integration service temporarily unavailable", ex);
+    }
+
+    private String sendSoapRequestFallback(String endpoint, String operation, String payload, Exception ex) {
+        log.error("Fallback for sendSoapRequest: {}", ex.getMessage());
+        throw new RuntimeException("Integration service temporarily unavailable", ex);
+    }
+
+    private String sendHttpRequestFallback(String url, String method, Map<String, String> headers, String body, Exception ex) {
+        log.error("Fallback for sendHttpRequest: {}", ex.getMessage());
+        throw new RuntimeException("Integration service temporarily unavailable", ex);
+    }
+
+    private boolean retryMessageFallback(String messageId, Exception ex) {
+        log.error("Fallback for retryMessage: {}", ex.getMessage());
+        throw new RuntimeException("Integration service temporarily unavailable", ex);
     }
 
     private String extractBusinessReference(String swiftMessage) {

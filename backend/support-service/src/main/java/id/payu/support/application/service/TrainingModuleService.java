@@ -4,6 +4,8 @@ import id.payu.support.domain.TrainingModule;
 import id.payu.support.dto.CreateTrainingModuleRequest;
 import id.payu.support.dto.TrainingModuleResponse;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ public class TrainingModuleService {
 
     private final TrainingModuleRepository moduleRepository;
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getAllTrainingModulesFallback")
+    @Retry(name = "support")
     public List<TrainingModuleResponse> getAllTrainingModules() {
         return moduleRepository.findAll()
                 .stream()
@@ -25,12 +29,16 @@ public class TrainingModuleService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getModuleByIdFallback")
+    @Retry(name = "support")
     public TrainingModuleResponse getModuleById(Long id) {
         return moduleRepository.findById(id)
                 .map(this::toResponse)
                 .orElse(null);
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "createModuleFallback")
+    @Retry(name = "support")
     @Transactional
     public TrainingModuleResponse createModule(CreateTrainingModuleRequest request) {
         log.info("Creating new training module: {} ({})", request.title(), request.code());
@@ -51,6 +59,8 @@ public class TrainingModuleService {
         return toResponse(module);
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "updateModuleStatusFallback")
+    @Retry(name = "support")
     @Transactional
     public TrainingModuleResponse updateModuleStatus(Long id, TrainingModule.TrainingStatus status) {
         return moduleRepository.findById(id)
@@ -83,5 +93,29 @@ public class TrainingModuleService {
                 module.getCreatedAt(),
                 module.getUpdatedAt()
         );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private List<TrainingModuleResponse> getAllTrainingModulesFallback(Exception ex) {
+        log.error("Fallback for getAllTrainingModules: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private TrainingModuleResponse getModuleByIdFallback(Long id, Exception ex) {
+        log.error("Fallback for getModuleById: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private TrainingModuleResponse createModuleFallback(CreateTrainingModuleRequest request, Exception ex) {
+        log.error("Fallback for createModule: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private TrainingModuleResponse updateModuleStatusFallback(Long id, TrainingModule.TrainingStatus status, Exception ex) {
+        log.error("Fallback for updateModuleStatus: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 }

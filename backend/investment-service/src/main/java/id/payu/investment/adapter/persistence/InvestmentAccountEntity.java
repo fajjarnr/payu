@@ -1,5 +1,6 @@
 package id.payu.investment.adapter.persistence;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.domain.Persistable;
@@ -20,6 +21,7 @@ public class InvestmentAccountEntity implements Persistable<UUID> {
     @Id
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "user_id", nullable = false, unique = true)
     private String userId;
 

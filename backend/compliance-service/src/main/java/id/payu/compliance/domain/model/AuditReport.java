@@ -1,5 +1,6 @@
 package id.payu.compliance.domain.model;
 
+import id.payu.security.annotation.Sensitive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +30,7 @@ public class AuditReport {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
+    @Sensitive
     @Column(name = "merchant_id", nullable = false)
     private String merchantId;
 

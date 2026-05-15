@@ -1,5 +1,6 @@
 package id.payu.partner.domain;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -32,16 +33,22 @@ public class Partner {
 
     @NotBlank
     @Email
+    @Sensitive
     private String email;
 
+    @Sensitive
     private String phone;
     
+    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
     private String apiKey;
 
+    @Sensitive
     private String clientId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
     private String clientSecret;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
     private String publicKey;
 
     private boolean active;

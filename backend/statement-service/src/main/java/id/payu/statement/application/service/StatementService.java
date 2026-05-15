@@ -5,6 +5,8 @@ import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.application.service.exception.StatementException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -138,6 +140,8 @@ public class StatementService {
      * Get statement by ID (with user validation)
      */
     // BUG-BE-059: Removed readOnly=true — this method calls recordAccess() + save()
+    @CircuitBreaker(name = "statement", fallbackMethod = "getStatementFallback")
+    @Retry(name = "statement")
     @Transactional
     public StatementResponse getStatement(UUID statementId, String customerId) {
         Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
@@ -152,6 +156,8 @@ public class StatementService {
     /**
      * List all statements for a user
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "listStatementsFallback")
+    @Retry(name = "statement")
     @Transactional(readOnly = true)
     public Page<StatementResponse> listStatements(String customerId, Pageable pageable) {
         Page<Statement> statements = statementRepository.findAllByCustomerId(customerId, pageable);
@@ -165,6 +171,8 @@ public class StatementService {
     /**
      * Get latest statement for user
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "getLatestStatementFallback")
+    @Retry(name = "statement")
     @Transactional(readOnly = true)
     public Optional<StatementResponse> getLatestStatement(String customerId) {
         return statementRepository.findLatestCompletedByCustomerId(customerId)
@@ -174,6 +182,8 @@ public class StatementService {
     /**
      * Get statement PDF bytes
      */
+    @CircuitBreaker(name = "statement", fallbackMethod = "getStatementPdfFallback")
+    @Retry(name = "statement")
     public byte[] getStatementPdf(UUID statementId, String customerId) {
         Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
@@ -221,6 +231,30 @@ public class StatementService {
         statementRepository.save(statement);
 
         generateStatement(request);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private StatementResponse getStatementFallback(UUID statementId, String customerId, Exception ex) {
+        log.error("Fallback for getStatement: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
+    }
+
+    private Page<StatementResponse> listStatementsFallback(String customerId, Pageable pageable, Exception ex) {
+        log.error("Fallback for listStatements: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
+    }
+
+    private Optional<StatementResponse> getLatestStatementFallback(String customerId, Exception ex) {
+        log.error("Fallback for getLatestStatement: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
+    }
+
+    private byte[] getStatementPdfFallback(UUID statementId, String customerId, Exception ex) {
+        log.error("Fallback for getStatementPdf: {}", ex.getMessage());
+        throw new RuntimeException("Statement service temporarily unavailable", ex);
     }
 
     /**

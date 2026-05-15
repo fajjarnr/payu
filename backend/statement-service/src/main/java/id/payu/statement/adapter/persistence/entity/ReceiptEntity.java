@@ -1,5 +1,6 @@
 package id.payu.statement.adapter.persistence.entity;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.statement.domain.model.ReceiptStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,7 @@ public class ReceiptEntity {
     @Column(name = "transaction_id", nullable = false, length = 100, unique = true)
     private String transactionId;
 
+    @Sensitive
     @Column(name = "customer_id", nullable = false, length = 100)
     private String customerId;
 
@@ -52,9 +54,11 @@ public class ReceiptEntity {
     private String currency;
 
     // Sender info
+    @Sensitive
     @Column(name = "sender_name", nullable = false, length = 200)
     private String senderName;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "sender_account_number", nullable = false, length = 50)
     private String senderAccountNumber;
 
@@ -62,9 +66,11 @@ public class ReceiptEntity {
     private String senderBankName;
 
     // Recipient info
+    @Sensitive
     @Column(name = "recipient_name", nullable = false, length = 200)
     private String recipientName;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "recipient_account_number", nullable = false, length = 50)
     private String recipientAccountNumber;
 

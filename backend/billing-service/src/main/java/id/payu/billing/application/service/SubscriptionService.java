@@ -10,6 +10,8 @@ import id.payu.billing.domain.port.in.SubscriptionUseCase;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import id.payu.billing.exception.SubscriptionNotFoundException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,6 +48,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     // ═══════════════════════════════════════════════════════
 
     @Override
+    @CircuitBreaker(name = "billing", fallbackMethod = "createPlanFallback")
+    @Retry(name = "billing")
     @Transactional
     public SubscriptionPlan createPlan(String partnerId, String planName, String description,
                                         BillingInterval interval, BigDecimal price, String currency,
@@ -96,6 +100,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     // ═══════════════════════════════════════════════════════
 
     @Override
+    @CircuitBreaker(name = "billing", fallbackMethod = "subscribeFallback")
+    @Retry(name = "billing")
     @Transactional
     public Subscription subscribe(String accountId, UUID planId, String externalReferenceId) {
         SubscriptionPlan plan = getPlan(planId);
@@ -161,6 +167,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "billing", fallbackMethod = "cancelSubscriptionFallback")
+    @Retry(name = "billing")
     @Transactional
     public Subscription cancelSubscription(UUID subscriptionId, String reason) {
         Subscription sub = getSubscription(subscriptionId);
@@ -178,6 +186,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     // ═══════════════════════════════════════════════════════
 
     @Override
+    @CircuitBreaker(name = "billing", fallbackMethod = "processDueSubscriptionsFallback")
+    @Retry(name = "billing")
     @Scheduled(fixedDelayString = "${payu.billing.subscription.charge-interval-ms:300000}")
     @Transactional
     public int processDueSubscriptions() {
@@ -210,6 +220,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     }
 
     @Override
+    @CircuitBreaker(name = "billing", fallbackMethod = "processExpiredTrialsFallback")
+    @Retry(name = "billing")
     @Scheduled(fixedDelayString = "${payu.billing.subscription.trial-check-interval-ms:600000}")
     @Transactional
     public int processExpiredTrials() {
@@ -244,6 +256,37 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Transactional(readOnly = true)
     public List<SubscriptionCharge> getChargesBySubscription(UUID subscriptionId) {
         return persistencePort.findChargesBySubscriptionId(subscriptionId);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private SubscriptionPlan createPlanFallback(String partnerId, String planName, String description,
+                                                BillingInterval interval, BigDecimal price, String currency,
+                                                int trialDays, int gracePeriodDays, Exception ex) {
+        log.error("Fallback for createPlan: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private Subscription subscribeFallback(String accountId, UUID planId, String externalReferenceId, Exception ex) {
+        log.error("Fallback for subscribe: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private Subscription cancelSubscriptionFallback(UUID subscriptionId, String reason, Exception ex) {
+        log.error("Fallback for cancelSubscription: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private int processDueSubscriptionsFallback(Exception ex) {
+        log.error("Fallback for processDueSubscriptions: {}", ex.getMessage());
+        return 0;
+    }
+
+    private int processExpiredTrialsFallback(Exception ex) {
+        log.error("Fallback for processExpiredTrials: {}", ex.getMessage());
+        return 0;
     }
 
     // ═══════════════════════════════════════════════════════

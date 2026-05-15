@@ -1,5 +1,6 @@
 package id.payu.promotion.domain;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -22,9 +23,11 @@ public class Referral {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "referrer_account_id", nullable = false)
     private String referrerAccountId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "referee_account_id")
     private String refereeAccountId;
 

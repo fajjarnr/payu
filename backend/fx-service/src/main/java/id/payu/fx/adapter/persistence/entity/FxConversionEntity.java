@@ -1,6 +1,7 @@
 package id.payu.fx.adapter.persistence.entity;
 
 import id.payu.fx.domain.model.FxConversion;
+import id.payu.security.annotation.Sensitive;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,6 +19,7 @@ public class FxConversionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "account_id", nullable = false)
     private String accountId;
 

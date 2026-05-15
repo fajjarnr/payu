@@ -3,6 +3,7 @@ package id.payu.integration.adapter.persistence.entity;
 import id.payu.integration.domain.model.MessageDirection;
 import id.payu.integration.domain.model.MessageStatus;
 import id.payu.integration.domain.model.MessageType;
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,12 +53,15 @@ public class IntegrationMessageEntity {
     @Column(name = "correlation_id", length = 36)
     private String correlationId;
 
+    @Sensitive
     @Column(name = "business_reference", length = 100)
     private String businessReference;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "raw_payload", columnDefinition = "TEXT")
     private String rawPayload;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "transformed_payload", columnDefinition = "TEXT")
     private String transformedPayload;
 

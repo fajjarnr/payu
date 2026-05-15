@@ -8,6 +8,8 @@ import id.payu.support.dto.AssignTrainingRequest;
 import id.payu.support.adapter.persistence.repository.AgentTrainingRepository;
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class AgentTrainingService {
     private final SupportAgentRepository agentRepository;
     private final TrainingModuleRepository moduleRepository;
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getAllAgentTrainingsFallback")
+    @Retry(name = "support")
     @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getAllAgentTrainings() {
         return agentTrainingRepository.findAll()
@@ -33,6 +37,8 @@ public class AgentTrainingService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getTrainingsByAgentFallback")
+    @Retry(name = "support")
     @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getTrainingsByAgent(Long agentId) {
         return agentTrainingRepository.findByAgentId(agentId)
@@ -41,6 +47,8 @@ public class AgentTrainingService {
                 .toList();
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "getTrainingsByModuleFallback")
+    @Retry(name = "support")
     @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getTrainingsByModule(Long moduleId) {
         return agentTrainingRepository.findByTrainingModuleId(moduleId)
@@ -56,6 +64,8 @@ public class AgentTrainingService {
                 .orElse(null);
     }
 
+    @CircuitBreaker(name = "support", fallbackMethod = "assignTrainingFallback")
+    @Retry(name = "support")
     @Transactional
     public AgentTrainingResponse assignTraining(AssignTrainingRequest request) {
         log.info("Assigning training: agent={}, module={}", request.agentId(), request.moduleId());
@@ -140,5 +150,29 @@ public class AgentTrainingService {
                 training.getCreatedAt(),
                 training.getUpdatedAt()
         );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Resilience Fallback Methods
+    // ═══════════════════════════════════════════════════════
+
+    private List<AgentTrainingResponse> getAllAgentTrainingsFallback(Exception ex) {
+        log.error("Fallback for getAllAgentTrainings: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private List<AgentTrainingResponse> getTrainingsByAgentFallback(Long agentId, Exception ex) {
+        log.error("Fallback for getTrainingsByAgent: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private List<AgentTrainingResponse> getTrainingsByModuleFallback(Long moduleId, Exception ex) {
+        log.error("Fallback for getTrainingsByModule: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
+    }
+
+    private AgentTrainingResponse assignTrainingFallback(AssignTrainingRequest request, Exception ex) {
+        log.error("Fallback for assignTraining: {}", ex.getMessage());
+        throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 }

@@ -11,6 +11,8 @@ import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.TopUpRequest;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,8 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     private final BillerPort billerPort;
     private final PaymentEventPort eventPort;
 
+    @CircuitBreaker(name = "billing", fallbackMethod = "createPaymentFallback")
+    @Retry(name = "billing")
     @Transactional
     public BillPayment createPayment(CreatePaymentRequest request) {
         log.info("Creating payment: biller={}, customerId={}, amount={}",
@@ -122,6 +126,8 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         return payment;
     }
 
+    @CircuitBreaker(name = "billing", fallbackMethod = "createTopUpFallback")
+    @Retry(name = "billing")
     @Transactional
     public BillPayment createTopUp(TopUpRequest request) {
         log.info("Creating top-up: provider={}, walletNumber={}, amount={}",
@@ -203,10 +209,14 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         return payment;
     }
 
+    @CircuitBreaker(name = "billing", fallbackMethod = "getPaymentFallback")
+    @Retry(name = "billing")
     public Optional<BillPayment> getPayment(UUID id) {
         return persistencePort.findById(id);
     }
 
+    @CircuitBreaker(name = "billing", fallbackMethod = "getPaymentByReferenceFallback")
+    @Retry(name = "billing")
     public Optional<BillPayment> getPaymentByReference(String referenceNumber) {
         return persistencePort.findByReferenceNumber(referenceNumber);
     }
@@ -218,6 +228,26 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
             }
         }
         return Optional.empty();
+    }
+
+    private BillPayment createPaymentFallback(CreatePaymentRequest request, Exception ex) {
+        log.error("Fallback for createPayment: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private BillPayment createTopUpFallback(TopUpRequest request, Exception ex) {
+        log.error("Fallback for createTopUp: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private Optional<BillPayment> getPaymentFallback(UUID id, Exception ex) {
+        log.error("Fallback for getPayment: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
+    }
+
+    private Optional<BillPayment> getPaymentByReferenceFallback(String referenceNumber, Exception ex) {
+        log.error("Fallback for getPaymentByReference: {}", ex.getMessage());
+        throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private BigDecimal calculateAdminFee(BillerType type) {

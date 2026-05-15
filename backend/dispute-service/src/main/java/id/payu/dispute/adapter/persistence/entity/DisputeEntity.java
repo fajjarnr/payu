@@ -2,6 +2,7 @@ package id.payu.dispute.adapter.persistence.entity;
 
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.model.DisputeStatus;
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -44,9 +45,11 @@ public class DisputeEntity {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
+    @Sensitive(value = Sensitive.SensitivityLevel.HIGH)
     @Column(name = "merchant_id", nullable = false)
     private UUID merchantId;
 
