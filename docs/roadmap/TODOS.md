@@ -14,18 +14,10 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 1 (ARCH-008) |
-| **Open P1s** | 3 (OBS-001, ARCH-009-010, TEST-001–003) |
+| **Open P1s** | 5 (ARCH-009, ARCH-010, TEST-001, TEST-002, TEST-003) |
 | **Open P2s** | 22 |
-| **Last Audit** | May 15, 2026 — Batch 4 fixes applied: CQ-001 (26 `as any` removed), SEO-001/002 (metadata + robots + sitemap), PERF-002 (loading.tsx confirmed all routes), DB-002 (5 services ddl-auto→validate), DB-003 (promotion+billing dev profile), DX-002 (.env.example), YAML-009 (already done) |
-| **Production Score** | 97/100 (+2 from Batch 4 fixes) |
-| **Podman Compose** | 36 healthy, 3 starting, 2 exited (pre-existing Quarkus) |
-| **GlobalExceptionHandler** | 18/18 Spring services done ✅ |
-| **@PreAuthorize** | 13/18 services have method-level security (5 missing: cms, dispute, fx, integration, notification — all have `@PreAuthorize` per audit recheck) |
-| **@Sensitive PII** | 18/18 services annotated ✅ |
-| **Resilience Annotations** | 18/18 services have active annotations ✅ |
-| **Idempotency (wallet)** | Full coverage — PocketController, SettlementController, SavingsGoalController patched |
-| **TRACE-001** | ✅ Fixed — CorrelationIdInterceptor added to rest-client-starter |
-| **Dev Tools** | ✅ Installed — Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
+| **Last Audit** | May 15, 2026 — Cleanup: all ✅ Fixed items archived to CHANGELOG.md |
+| **Production Score** | 97/100 |
 
 ---
 
@@ -80,126 +72,34 @@
 
 ---
 
-## 🏗️ Infrastructure YAML Audit Fixes (May 8, 2026)
-
-| Key | Priority | Summary | Status |
-|:---|:---:|:---|:---|
-| YAML-001 | P0 | Fix web-app deployment YAML syntax error (`env` nested under `resources.limits`) | ✅ Fixed |
-| YAML-002 | P0 | Fix fx-service version mismatch (labels 1.8.1 vs image 1.8.2) | ✅ Fixed |
-| YAML-003 | P1 | Fix HPA/VPA `DeploymentConfig` → `Deployment` (6 resources) | ✅ Fixed |
-| YAML-004 | P1 | Fix PDB selectors `app:` → `app.kubernetes.io/name:` (21 resources) | ✅ Fixed |
-| YAML-005 | P1 | Fix `commonLabels` → `labels` with `includeSelectors: false` in all overlays | ✅ Fixed |
-| YAML-006 | P1 | Update all base service/kustomization versions to match deployments (1.7.9 → 1.8.x) | ✅ Fixed |
-| YAML-007 | P1 | Remove hardcoded `namespace: payu` from base/hpa-enhanced.yaml and base/vpa.yaml | ✅ Fixed |
-| YAML-008 | P1 | Fix ServiceMonitor metrics path `/actuator/prometheus` → `/q/metrics` | ✅ Fixed |
-| YAML-009 | P2 | Add OIDC issuer patches for all services in payu-dev overlay | ✅ Fixed — All 18 Spring Boot services have `OIDC_ISSUER` + `OIDC_JWK_SET_URI` patches, all 3 Quarkus services have `QUARKUS_OIDC_TOKEN_ISSUER` + `QUARKUS_TLS_TRUST_ALL` patches in payu-dev kustomization.yaml. |
-
----
-
 ## 🔐 Auth & Health Endpoint Stabilization (May 9–14, 2026)
 
-### Completed Fixes
-
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| AUTH-024 | P0 | Gateway `AuthorizationFilter.java`: whitelist `/public/health` paths for all core services | ✅ Fixed |
-| AUTH-030 | P1 | `/api/v1/{service}/public/health` returns 401 — dual-layer auth conflict | ✅ Fixed May 14 — 18 SecurityConfigs patched, Gateway filter wildcard, 8 HealthControllers created |
-| AUTH-031 | P1 | k6 smoke-test `http_req_failed` ~50% — downstream of AUTH-030 | ✅ Resolved — dependent on AUTH-030 |
-| SEC-SPRING-001 | P1 | Patch Spring Security `SecurityConfig.java`: add `"/**/public/**"` to `requestMatchers().permitAll()` | ✅ Fixed — All 18 Spring services patched |
-| INFRA-KAFKA-001 | P0 | Sync Kafka bootstrap env vars across all deployment.yaml | ✅ Fixed — 6 services patched |
-| INFRA-REDIS-001 | P0 | Standardize Redis/DataGrid port `11222` (RESP protocol) | ✅ Fixed — verified all services |
-
-### AUTH-030 Resolution Summary (May 14, 2026)
-
-**Root Cause**: Two independent issues:
-1. **Gateway `AuthorizationFilter`** only whitelisted 5 specific health endpoints (`/api/v1/accounts/public/health`, etc.) — not all 18 services
-2. **11 of 18 SecurityConfigs** were missing `"/**/public/**"` + `"/api/v1/**/public/**"` permitAll patterns (SEC-SPRING-001 only covered 7 services)
-3. **14 of 18 services** were missing `HealthController.java` (only account, wallet, transaction had it)
-
-**Fix Applied**:
-- **18 SecurityConfigs**: All now have `"/**/public/**"` + `"/api/v1/**/public/**"` patterns
-- **18 HealthControllers**: All 18 Spring services now have HealthController.java
-- **Gateway AuthFilter**: Added generic `endsWith("/public/health")` check — all services auto-permit
-- **Gateway Quarkus**: Single `permission` entry `"/**/public/health"` → `permit` at Vert.x layer
-
-### New Findings from Audit (May 14, 2026)
-
-| Key | Priority | Summary | Status |
-|:---|:---:|:---|:---|
-| KYC-001 | P0 | `kyc-service` has NO authentication — **FALSE POSITIVE**: KYC already has inline `require_auth` in `kyc.py` with all 5 protected endpoints using `Depends(require_auth)`. Uses `python-jose` JWT validation. | ✅ Resolved — auth already present, not a gap |
-| AUTH-032 | P1 | 10 Spring services missing `HealthController`: auth, cms, support, promotion, partner, lending, investment, dispute, billing, backoffice | ✅ Fixed May 14 — all 10 created |
 | AUTH-033 | P1 | All 18 HealthControllers return hardcoded `{"status": "UP"}` without checking DB/Redis/Kafka — false positive health checks in production. Follow L-018 pattern with `@Readiness` (DB ping + Redis PING + Kafka cluster metadata). | ⏳ Open — deferred to next sprint |
-| AUTH-034 | P2 | `api-portal-service` & `notification-service` (Quarkus): no explicit `/**/public/health` permit in their own config | ✅ Fixed — `quarkus.http.auth.permission.public-health` added to both |
-| AUTH-035 | P2 | `support-service` & `promotion-service`: `@Profile("!test")` disables SecurityConfig in tests — security regressions pass CI unnoticed | ✅ Fixed — `@Profile("!test")` removed from both, unused import cleaned |
-| AUTH-036 | P2 | `fx-service` HealthController at `/v1/public/health` — Gateway route is `/fx-api/v1/`, path mismatch | ✅ Mitigated — Gateway `AuthorizationFilter` `endsWith("/public/health")` covers all. No action needed at service level. |
 
 ---
 
 ## 🏭 Production Readiness Audit (May 14, 2026)
 
-> Comprehensive audit across 23 backend services + web-app frontend. 3 parallel audit streams: backend production code, code-quality/architecture, and web-app.
-
-### 📊 Scorecard
-
-| Domain | Score | Critical | High | Medium | Low |
-|:-------|:-----:|:--------:|:----:|:------:|:---:|
-| Web-App | 92/100 (+7) | 0 | 5 | 4 | — |
-| Backend (Code) | 88/100 (+6) | 1 | 6 | 4 | — |
-| Backend (Arch) | 60/100 | 3 | 4 | 6 | 2 |
-| **Overall** | **80/100 (+4)** | **4** | **15** | **14** | **2** |
-
-### 🔴 P0 — Critical (Must Fix Before Production)
+### 🔴 P0 — Critical
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| SEC-003 | Web-App | `chart.tsx:81` — `dangerouslySetInnerHTML` injects user colors without sanitization. XSS vector. | ✅ Fixed |
-| SEC-004 | Web-App | `next.config.ts:37` — CSP allows `'unsafe-eval'` + `'unsafe-inline'`. | ✅ Fixed |
-| SEC-005 | Web-App | BFF proxy defaults to `http://gateway-service:8080` (plain HTTP). | ✅ Fixed |
-| ARCH-007 | Backend | **5 services have zero `@PreAuthorize`**: cms, dispute, fx, integration, notification. Gateway is external entry point but defense-in-depth requires method-level auth. | ✅ Resolved — audit recheck confirmed all 5 services already have `@PreAuthorize` per-endpoint. cms/dispute/fx/integration use Spring `@PreAuthorize`, notification uses Quarkus `@Authenticated` (equivalent). |
-| PII-001 | Backend | **13 services have zero `@Sensitive`** annotation on PII fields. Only account, auth, lending, transaction, wallet have it. Critical for: billing (payment details), partner (merchant data), compliance (KYC data), investment (financial data). | ✅ Fixed — All 12 remaining services annotated: partner (11 fields), billing (3), compliance (4), dispute (2), fx (1), investment (2), statement (7), support (2), integration (3), promotion (5). Total 17 entity files updated. |
 | ARCH-008 | Backend | **13 services put `@Entity` in domain layer**. | ⏳ Open — Requires per-service incremental refactoring. Entities have inner enums, reference domain value objects, and serve as both domain model + persistence in most services. Bulk move approach failed due to cascading import issues. Needs service-by-service approach with proper domain model extraction. |
-| ERR-001 | Backend | **19 of 23 services missing `GlobalExceptionHandler`**. | ✅ Fixed — all 18 Spring services now have `GlobalExceptionHandler`. backoffice, cms, dispute, promotion, transaction created; support-service handler upgraded with full coverage. |
-| RES-001 | Backend | Gateway 20 silent `catch(Exception)` blocks. | ✅ Fixed |
-| RES-002 | Backend | notification-service loses Kafka messages — no DLQ. | ✅ Fixed |
-| RES-003 | Backend | wallet-service auth bypass via exception swallowing. | ✅ Fixed |
-| DB-001 | Backend | partner-service default `ddl-auto: update`. | ✅ Fixed |
 
-### 🟠 P1 — High (Next Sprint)
+### 🟠 P1 — High
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| CQ-001 | Web-App | **26 `as any` casts** in rewards, cards, notifications, etc. | ✅ Fixed — All 26 casts replaced with proper types: rewards (14→LoyaltyBalanceResponse/ReferralSummaryResponse/Promotion), cards (8→ExtendedCardData), notifications (2→Notification), analytics (1→AnalyticsData.trajectoryData), scheduled-transfers (1→union type), split-bill (1→CreateSplitBillRequest) |
-| SEC-006 | Web-App | **9 empty `catch {}` blocks**. | ✅ Fixed |
-| A11Y-001 | Web-App | `pockets/page.tsx` — `<div onClick>` no keyboard support. | ✅ Fixed — added role, tabIndex, onKeyDown |
-| PERF-001 | Web-App | CMS `localStorage.getItem()` in `useMemo`. | ✅ Fixed |
-| PERF-002 | Web-App | Multiple pages no `<Suspense>` boundary. | ✅ Fixed — All 24 data-loading routes confirmed to have `loading.tsx` (Next.js App Router Suspense boundary). No routes missing. |
-| RES-004 | Backend | **9 services have `resilience-starter` but zero annotations**: backoffice, billing, cms, compliance, dispute, fx, integration, statement, support. Starter is a dependency but no `@CircuitBreaker`, `@Retry`, `@RateLimiter` used. | ✅ Fixed — All 9 services now have `@CircuitBreaker` + `@Retry` on I/O methods with proper fallbacks. billing (4 methods), compliance (10), fx (9), integration (5), statement (7), support (12). |
-| RES-005 | Backend | billing-service `RestTemplate` no timeouts. | ✅ Fixed |
-| OBS-001 | Backend | **17 services have zero custom business metrics**. | ✅ Fixed (5 critical services) — Added `BusinessMetrics` @Component with Micrometer counters/gauges to transaction-service, wallet-service, auth-service, billing-service, partner-service. Remaining 12 services deferred (non-critical). |
-| RES-006 | Backend | api-portal `HttpClient.newHttpClient()` — no timeout. | ✅ Fixed — added 5s connectTimeout |
-| ERR-002 | Backend | partner-service 14 silent catch blocks. | ✅ Fixed |
-| ERR-003 | Backend | integration-service swallows all exceptions. | ✅ Fixed |
 | ARCH-009 | Backend | **~70+ inner-class enums** across all services. | ⏳ Open |
 | ARCH-010 | Backend | **Quarkus services missing all shared starters**. | ⏳ Open |
-| ARCH-011 | Backend | **4 services missing `domain/port/` interfaces** (Hexagonal Architecture): backoffice, cms, notification, support. | ✅ Fixed — All 4 services now have `domain/port/in/` (use case interfaces) and `domain/port/out/` (persistence/event ports). backoffice (7 files), cms (3), notification (3), support (6). |
 
-### 🟡 P2 — Medium (Backlog)
+### 🟡 P2 — Medium
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| A11Y-002 | Web-App | `MobileHeader.tsx` — back button missing `aria-label`. | ✅ Fixed — added `aria-label="Kembali"` |
-| PERF-003 | Web-App | `cms/page.tsx` — plain `<img>` instead of Next.js `<Image>`. | ✅ Fixed |
-| SEC-007 | Web-App | `next.config.ts` — image wildcard `*.payu.fajjjar.my.id`. | ✅ Fixed — restricted to 3 specific subdomains |
-| CQ-002 | Web-App | `StatementService.ts` — 4 `(response.data as any)?.data` fallbacks. | ✅ Fixed — direct `response.data` with generic types |
 | DX-001 | Web-App | 4 barrel export `index.ts` files bypass tree-shaking. | ⏳ Open |
-| CQ-003 | Web-App | `eslint.config.mjs` — no `no-explicit-any` or `no-console` rules. | ✅ Fixed |
-| A11Y-003 | Web-App | `stepper.tsx` — `text-[10px]` below 12px minimum. | ✅ Fixed — changed to `text-xs` |
-| ERR-004 | Web-App | 37 `error.tsx` files use raw `console.error`. | ✅ Fixed (sample) — 3 files updated with `[ErrorBoundary:scope]` prefix |
-| CACHE-001 | Backend | account-service `@Cacheable` NIK verification — no TTL. | ✅ Fixed — 5min TTL added to both configs |
-| LOG-002 | Backend | notification `EventConsumer` stack trace lost. | ✅ Fixed (part of RES-002) |
-| DB-002 | Backend | 6 services `ddl-auto: update` in container test profile. | ✅ Fixed — 5 services (lending, partner, investment, promotion, support) changed from `ddl-auto: update` to `ddl-auto: validate` in `application-container.yml`. Flyway handles schema migrations in deployed environments. |
-| DB-003 | Backend | promotion + billing `ddl-auto: drop-and-create` on dev profile. | ✅ Fixed — Changed to `create-drop` (Hibernate-standard for dev). `drop-and-create` is a Hibernate 5 legacy value; `create-drop` is the correct Hibernate 6 equivalent that drops schema on SessionFactory close. |
-| OBS-002 | Backend | api-portal `checkServiceHealth()` no logging on failure. | ✅ Fixed — `Log.warnf()` added for DOWN/UNKNOWN |
 | CFG-001 | Backend | 21 services hardcode `localhost` as fallback. | ⏳ Open |
 | ARCH-012 | Backend | `BaseController` duplicated across 11 services. | ⏳ Open |
 | ARCH-013 | Backend | `SecurityConfig` size range 32–244 lines. | ⏳ Open |
@@ -228,9 +128,6 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⏳ Open |
-| INFRA-002 | P0 | Build container images via Tekton | ✅ Done — Built via Podman, Tekton pipeline manifests ready |
-| INFRA-003 | P0 | Deploy all 23 services to payu-dev | ✅ Done — 39 pods Running (28 services + web-app + infra) |
-| INFRA-004 | P0 | Create ArgoCD ApplicationSet for all services | ✅ Done — YAML fixed, GitOps operator installed |
 | INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline | ⏳ Open |
 | INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT | ⏳ Open — Manifests ready, Service Mesh operator installed |
 | INFRA-012 | P0 | Complete ArgoCD Image Updater setup | ⏳ Open |
@@ -238,42 +135,28 @@
 | INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) | ⏳ Open |
 | INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure | ⏳ Open |
 | INFRA-010 | P1 | Configure ComplianceOperator CIS scan | ⏳ Open |
-| INFRA-011 | P1 | Deploy Wazuh manager + agent for SIEM |
-| INFRA-013 | P1 | Enable Tekton Chains for SLSA provenance |
-| INFRA-014 | P1 | Configure Tekton Results for audit trail |
-| INFRA-015 | P1 | Deploy Coraza WAF with OWASP CRS v4.x |
-| INFRA-020 | P1 | Define severity P1-P4 + escalation path |
-| INFRA-022 | P1 | Setup PagerDuty/Opsgenie for P1/P2 alerting |
-| INFRA-018 | P2 | Setup registry GC policy |
-| INFRA-019 | P2 | Configure Quay.io auto-prune policy |
+| INFRA-011 | P1 | Deploy Wazuh manager + agent for SIEM | ⏳ Open |
+| INFRA-013 | P1 | Enable Tekton Chains for SLSA provenance | ⏳ Open |
+| INFRA-014 | P1 | Configure Tekton Results for audit trail | ⏳ Open |
+| INFRA-015 | P1 | Deploy Coraza WAF with OWASP CRS v4.x | ⏳ Open |
+| INFRA-020 | P1 | Define severity P1-P4 + escalation path | ⏳ Open |
+| INFRA-022 | P1 | Setup PagerDuty/Opsgenie for P1/P2 alerting | ⏳ Open |
+| INFRA-018 | P2 | Setup registry GC policy | ⏳ Open |
+| INFRA-019 | P2 | Configure Quay.io auto-prune policy | ⏳ Open |
 
 ---
 
 ## 🔬 Comprehensive Production Readiness Audit (May 15, 2026)
 
-> Full audit across 23 backend services + web-app frontend. Covers idempotency, test coverage, configuration profiles, SEO, caching, tracing, and developer experience.
-
-### 🔴 P0 — Critical (New Findings)
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| IDEM-001 | Backend | **account-service has zero `@Idempotent`** — account creation (`POST /register`) can create duplicate accounts on retry. OnboardingController, UserAccountController, BeneficiaryController all unprotected. | ✅ Resolved — audit recheck confirmed `OnboardingController.register()` and `BeneficiaryController.createBeneficiary()` + `updateBeneficiary()` already have `@Idempotent(required = true)`. `UserAccountController` is GET-only, no idempotency needed. |
-
-### 🟠 P1 — High (New Findings)
+### 🟠 P1 — High
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
 | TEST-001 | Backend | **cms-service has only 2 test files** (1 ArchUnit, 1 unit test, 0 integration tests). Critical content management service with near-zero coverage. | ⏳ Open |
 | TEST-002 | Backend | **api-portal-service has only 4 test files** (2 controller, 2 service, 0 integration tests). Partner-facing API portal with minimal coverage. | ⏳ Open |
 | TEST-003 | Backend | **product-catalog-service has only 4 test files** (1 integration test). Core catalog service undercovered. | ⏳ Open |
-| TRACE-001 | Backend | **rest-client-starter has no correlation ID propagation interceptor**. Gateway sets `X-Correlation-Id` but inter-service calls via RestTemplate/WebClient don't propagate it. Distributed tracing breaks at service boundaries. | ✅ Fixed — `CorrelationIdInterceptor` created and registered in `RestClientAutoConfiguration.payuRestClientBuilder()`. Reads `correlationId` + `requestId` from MDC, propagates as `X-Correlation-Id` + `X-Request-Id` headers on all outbound calls. |
-| CFG-002 | Backend | **product-catalog-service missing deployment profiles** — only has `application.yml`. No `application-dev.yml`, `application-staging.yml`, or `application-container.yml`. | ✅ Fixed — `application-container.yml` created with proper datasource, HikariCP, Flyway, Kafka, Redis, OIDC, and management config. |
-| CFG-003 | Backend | **integration-service missing deployment profiles** — only has `application.yml`. No environment-specific configuration. | ✅ Fixed — `application-container.yml` created with proper datasource, HikariCP, Flyway, Kafka (consumer+producer), Redis, OIDC, and management config. |
-| IDEM-002 | Backend | **wallet-service partial idempotency** — WalletController and EscrowController have `@Idempotent`, but PocketController (credit/debit), SplitPaymentController, SettlementController, JournalController, and SavingsGoalController do NOT. Financial operations at risk. | ✅ Fixed — `PocketController` (create, freeze, unfreeze, close), `SettlementController` (process, complete, fail, override), `SavingsGoalController` (create, update, pause, resume) all annotated with `@Idempotent`. `SplitPaymentController` and `JournalController` were already covered. |
-| SEO-001 | Web-App | **No per-page `generateMetadata`** — only static metadata in root layout. No dynamic titles/descriptions for dashboard, transactions, settings pages. | ✅ Fixed — Added `metadata` exports to 10 route layouts: dashboard, transactions, notifications, cards, rewards, bills, investments, lending, analytics, support. Settings/transfer already had metadata. |
-| SEO-002 | Web-App | **No `robots.txt` or `sitemap.xml`** generation — missing for public-facing pages (landing, docs). | ✅ Fixed — Created `src/app/robots.ts` and `src/app/sitemap.ts` using Next.js Metadata API. Sitemap covers all locales (id/en) with public + app routes. robots.txt disallows /api/ and /backoffice/. |
 
-### 🟡 P2 — Medium (New Findings)
+### 🟡 P2 — Medium
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
@@ -281,95 +164,11 @@
 | TEST-005 | Backend | **integration-service has 6 test files but 0 integration tests**. Ironic — the integration service has no integration tests. | ⏳ Open |
 | TEST-006 | Backend | **investment-service has only 6 test files** (2 integration tests). Financial operations need higher coverage. | ⏳ Open |
 | CACHE-002 | Web-App | **No explicit `revalidate` or `unstable_cache` usage** — no data freshness strategy for server-fetched data. Risk of stale data in production. | ⏳ Open |
-| DX-002 | Web-App | **No `.env.example` in frontend/web-app/** — developers must guess required environment variables. Only root-level `.env.example` exists. | ✅ Fixed — Created `frontend/web-app/.env.example` with all required env vars: API gateway, OIDC, WebSocket, feature flags, observability. |
-| ERR-005 | Backend | **6 Spring services still missing local `GlobalExceptionHandler`**: backoffice, cms, dispute, promotion, support, transaction. They rely on `api-commons` auto-config but should have service-specific exception mappings. | ✅ Fixed — all 6 created: `backoffice` (BO_4xx/5xx), `cms` (CMS_4xx/5xx), `dispute` (DISP_4xx/5xx), `promotion` (PROMO_4xx/5xx), `transaction` (TXN_4xx/5xx), `support` handler upgraded with full coverage (SUP_4xx/5xx). |
 | IDEM-003 | Backend | **notification-service (Quarkus) has no idempotency** — duplicate notifications possible on retry. Not critical but poor UX. | ⏳ Open |
 
 ---
 
-### 📊 Service Health Matrix (May 15, 2026)
-
-| Service | @PreAuthorize | @Sensitive | Resilience | Idempotency | Port/Adapter | Tests | GlobalExcHandler |
-|:--------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| account-service | ✅ 14 | ✅ 12 | ✅ 10 | ✅ | ✅ | 16 | ✅ |
-| auth-service | ⚠️ 0* | ✅ 4 | ✅ 2 | N/A | ✅ | 9 | ✅ |
-| backoffice-service | ✅ 19 | ⚠️ 2 | ✅ 1 | N/A | ✅ | 9 | ✅ |
-| billing-service | ✅ 18 | ✅ 3 | ✅ 4 | ✅ | ✅ | 10 | ✅ |
-| cms-service | ✅ * | ❌ 0 | ✅ 2 | N/A | ✅ | 2 | ✅ |
-| compliance-service | ✅ 13 | ✅ 4 | ✅ 10 | N/A | ✅ | 9 | ✅ |
-| dispute-service | ✅ * | ✅ 2 | ✅ 2 | N/A | ✅ | 7 | ✅ |
-| fx-service | ✅ * | ✅ 1 | ✅ 9 | ✅ | ✅ | 8 | ✅ |
-| integration-service | ✅ * | ✅ 3 | ✅ 5 | N/A | ✅ | 6 | ❌ |
-| investment-service | ✅ 9 | ✅ 2 | ✅ 17 | ✅ | ✅ | 6 | ✅ |
-| lending-service | ✅ 21 | ✅ 5 | ✅ 3 | ✅ | ✅ | 12 | ✅ |
-| notification-service | ✅ * | ❌ 0 | ❌ 0 | ❌ | ✅ | 7 | ❌ |
-| partner-service | ✅ 13 | ✅ 11 | ⚠️ 1 | ✅ | ✅ | 21 | ✅ |
-| product-catalog-service | ⚠️ 1 | ❌ 0 | ❌ 0 | N/A | ✅ | 4 | ✅ |
-| promotion-service | ✅ 9 | ✅ 5 | ⚠️ 2 | N/A | ✅ | 21 | ✅ |
-| statement-service | ✅ 11 | ✅ 7 | ✅ 7 | N/A | ✅ | 8 | ✅ |
-| support-service | ✅ 6 | ✅ 2 | ✅ 12 | N/A | ✅ | 5 | ✅ |
-| transaction-service | ✅ 30+ | ✅ 10 | N/A | ✅ | N/A | 26 | ✅ |
-| wallet-service | ✅ 62 | ✅ 4 | ❌ 0 | ✅ | ✅ | 26 | ✅ |
-
-> \* auth-service: `@PreAuthorize` not applicable (handles auth itself)
-> \* cms/dispute/fx/integration: confirmed have `@PreAuthorize` per-endpoint (audit recheck May 15)
-> \* notification-service: uses Quarkus `@Authenticated` (class-level) — equivalent to Spring `@PreAuthorize("isAuthenticated()")`
-
-**Legend**: ✅ Good | ⚠️ Partial | ❌ Missing | N/A Not applicable
-
----
-
-### 🌐 Web-App Frontend Gaps
-
-| Area | Status | Detail |
-|:-----|:------:|:-------|
-| Error Boundaries | ✅ | Custom `ErrorBoundary` + route-level `error.tsx` |
-| Loading States | ✅ | 20+ `loading.tsx` + comprehensive Skeleton library |
-| Security Headers | ✅ | CSP, HSTS, X-Frame-Options, Permissions-Policy |
-| Accessibility | ✅ | axe-core, a11y audit scripts, ARIA compliance |
-| Testing | ✅ | Vitest (86 files) + Playwright E2E (31 files) |
-| Server Components | ✅ | `"use client"` only on leaf components |
-| i18n | ✅ | next-intl with locale routing |
-| Per-page SEO | ✅ | `metadata` exports in 12 route layouts |
-| robots.txt / sitemap | ✅ | Generated via Next.js Metadata API |
-| Data Revalidation | ❌ | No `revalidate` / `unstable_cache` strategy |
-| .env.example | ✅ | Frontend-specific env template created |
-| `as any` casts | ✅ | All 26 instances fixed with proper types |
-| Suspense boundaries | ✅ | All 24 data routes have `loading.tsx` |
-
----
-
 ## 🔒 Infrastructure & Backend Deep Audit (May 15, 2026 — Batch 2)
-
-> Focused audit on Kubernetes deployment manifests (`infrastructure/workloads/base/`), Containerfile patterns, and backend configuration hardening. Findings below are NEW items not previously tracked.
-
-### 🔴 P0 — Critical (Must Fix Before Production)
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| SEC-INFRA-001 | Infra | **All 21 base deployments hardcode `SPRING_DATASOURCE_PASSWORD: "payu-dev-password"`** in plaintext env vars. Production overlay (`payu-prod/kustomization.yaml`) does NOT patch these to `secretKeyRef`. Any deployment to prod leaks DB credentials in pod spec. | ✅ Fixed |
-| SEC-INFRA-002 | Infra | **Gateway deployment has `WEBHOOK_PARTNER_1_SECRET: "dev_partner_1_secret"` hardcoded** in base deployment.yaml. Not patched in prod overlay. HMAC signing key exposed. | ✅ Fixed |
-| SEC-INFRA-003 | Infra | **`GATEWAY_RATE_LIMIT_TEST_MODE=true` in base gateway deployment** — rate limiting is BYPASSED for any request with `X-E2E-Test` header. This is in the BASE (shared by all overlays including prod). Must be `false` in base, overridden to `true` only in dev overlay. | ✅ Fixed |
-| SEC-INFRA-004 | Infra | **Production overlay has zero `secretKeyRef` patches** — all secrets (DB passwords, Redis passwords, JWT secrets) remain as plaintext `value:` fields. Prod kustomization only patches replicas and image registries. | ✅ Fixed |
-| CFG-PROD-001 | Backend | **16 services have `show-details: always` for health endpoint** — exposes DB connection status, Redis connectivity, Kafka cluster info, disk space to any caller hitting `/actuator/health`. Must be `when-authorized` or `never` in production. | ✅ Fixed |
-
-### 🟠 P1 — High (Next Sprint)
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| K8S-001 | Infra | **Zero `startupProbe` on any service deployment** — JVM services (Spring Boot) take 30-90s to start. Without startupProbe, livenessProbe can kill pods during startup (initialDelaySeconds is a fragile workaround). All 23 deployments affected. | ✅ Fixed |
-| K8S-002 | Infra | **Zero `topologySpreadConstraints` or pod anti-affinity** on any workload deployment — all replicas can land on the same node. A single node failure takes down entire service. Critical for gateway, transaction, wallet, auth. | ✅ Fixed |
-| K8S-003 | Infra | **No `serviceAccountName` defined in any deployment** — all pods run with the `default` ServiceAccount which may have excessive RBAC permissions. Each service should have a dedicated SA with least-privilege. | ✅ Fixed — All 24 services now have dedicated ServiceAccount with `automountServiceAccountToken: false`, referenced in deployment.yaml, and included in kustomization.yaml. |
-| K8S-004 | Infra | **No `seccompProfile: RuntimeDefault` on service deployments** — only simulators have it. All 23 service deployments missing this Pod Security Standard requirement. Required for `restricted` PSA level. | ✅ Fixed |
-| K8S-005 | Infra | **No `terminationGracePeriodSeconds` configured** — defaults to 30s which may be insufficient for services with long-running transactions (transaction-service, lending-service). Spring `server.shutdown: graceful` needs matching K8s grace period. | ✅ Fixed |
-| K8S-006 | Infra | **HPA and PDB not included in base `kustomization.yaml`** — `hpa.yaml`, `hpa-enhanced.yaml`, `vpa.yaml`, `pdb.yaml` exist but are NOT referenced in `infrastructure/workloads/base/kustomization.yaml`. They are never applied. | ✅ Fixed |
-| K8S-007 | Infra | **VPA `updateMode: Auto` conflicts with HPA** — both VPA and HPA target the same deployments (account-service, transaction-service). VPA Auto mode adjusts resource requests which destabilizes HPA scaling decisions. Must use `updateMode: Off` (recommendation-only) when HPA is active. | ✅ Fixed |
-| K8S-008 | Infra | **Production overlay resource-limits patch is a template (`REPLACE_ME`)** — `patches/resource-limits.yaml` has `name: REPLACE_ME` and is never actually applied. Prod services run with dev-sized resources (256Mi-512Mi). | ✅ Fixed |
-| K8S-009 | Infra | **web-app deployment missing `NODE_ENV=production`** — Next.js performance optimizations and error handling depend on this. Currently no environment variables set beyond OIDC. | ✅ Fixed |
-| CONTAINER-001 | Backend | **Java Containerfiles use `target/*.jar` glob** — could match multiple JARs (e.g., original + repackaged). Should use explicit `target/app.jar` or Spring Boot's `<finalName>`. All 18 Spring service Containerfiles affected. | ✅ Fixed |
-| CONTAINER-002 | Backend | **No HEALTHCHECK instruction in any Java Containerfile** — template in `.agent/resources/templates/` has it, but actual service Containerfiles don't. Podman/Docker health status unavailable for local development and CI. | ✅ Fixed |
-| DB-FLYWAY-001 | Backend | **All 16 container profiles disable `validate-on-migrate`** — `application-container.yml` sets `validate-on-migrate: false` across all services. This means Flyway won't detect schema drift or corrupted migrations in deployed environments. Should be `true` in staging/prod. | ✅ Fixed |
-| SEC-BACKEND-001 | Backend | **`WebSecurityCustomizer.ignoring()` used for actuator in wallet-service and transaction-service** — this completely bypasses the Spring Security filter chain (no CORS, no headers, no logging). Should use `requestMatchers().permitAll()` inside the filter chain instead. | ✅ Fixed |
 
 ### 🟡 P2 — Medium (Backlog)
 
@@ -408,5 +207,5 @@
 
 ---
 
-_Last Updated: May 15, 2026 — Batch 2 fixes applied: SEC-INFRA-001–004 (prod secrets), CFG-PROD-001 (health details), K8S-001/002/004–009 (startupProbe, topology, seccomp, terminationGrace, HPA/PDB, VPA, NODE_ENV, prod resources), CONTAINER-001/002 (app.jar + HEALTHCHECK), DB-FLYWAY-001 (validate-on-migrate), SEC-BACKEND-001 (WebSecurityCustomizer removed). Score: 79→91/100._
+_Last Updated: May 15, 2026 — Cleaned up: all ✅ Fixed items archived. Only open/deferred items remain._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
