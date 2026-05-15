@@ -24,6 +24,14 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      terminationGracePeriodSeconds: 30
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: web-app
       volumes:
       - name: tmp
         emptyDir: {}
@@ -40,6 +48,8 @@ spec:
           capabilities:
             drop:
             - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         - name: tmp
           mountPath: /tmp
@@ -55,6 +65,13 @@ spec:
             port: 3000
           initialDelaySeconds: 60
           periodSeconds: 15
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
         resources:
           requests:
             cpu: 100m
@@ -67,3 +84,5 @@ spec:
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+        - name: NODE_ENV
+          value: "production"

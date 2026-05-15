@@ -12,7 +12,7 @@ spec:
     kind: Deployment
     name: account-service
   updatePolicy:
-    updateMode: "Auto"
+    updateMode: "Off"
   resourcePolicy:
     containerPolicies:
       - containerName: "*"
@@ -41,7 +41,7 @@ spec:
     kind: Deployment
     name: transaction-service
   updatePolicy:
-    updateMode: "Auto"
+    updateMode: "Off"
   resourcePolicy:
     containerPolicies:
       - containerName: "*"
@@ -68,7 +68,7 @@ spec:
     kind: Deployment
     name: billing-service
   updatePolicy:
-    updateMode: "Auto"
+    updateMode: "Off"
   resourcePolicy:
     containerPolicies:
       - containerName: "*"

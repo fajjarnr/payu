@@ -24,6 +24,14 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      terminationGracePeriodSeconds: 60
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: gateway-service
       volumes:
       - name: tmp
         emptyDir: {}
@@ -41,6 +49,8 @@ spec:
           capabilities:
             drop:
             - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         - name: tmp
           mountPath: /tmp
@@ -56,6 +66,13 @@ spec:
             port: 8080
           initialDelaySeconds: 90
           periodSeconds: 15
+        startupProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
         resources:
           requests:
             cpu: 100m
@@ -103,11 +120,14 @@ spec:
         - name: QUARKUS_TLS_TRUST_ALL
           value: "false"
         - name: GATEWAY_RATE_LIMIT_TEST_MODE
-          value: "true"
+          value: "false"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: payu-secrets
               key: JWT_SECRET
         - name: WEBHOOK_PARTNER_1_SECRET
-          value: "dev_partner_1_secret"
+          valueFrom:
+            secretKeyRef:
+              name: payu-secrets
+              key: WEBHOOK_PARTNER_1_SECRET

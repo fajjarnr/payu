@@ -54,6 +54,7 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-prod/web-app
 patches:
+# Replica count patches (3 replicas for production HA)
 - target:
     kind: Deployment
     name: account-service
@@ -150,13 +151,81 @@ patches:
     kind: Deployment
     name: web-app
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 3}]'
+# Production resource limits (higher than dev)
+- target:
+    kind: Deployment
+    labelSelector: app.kubernetes.io/component=backend
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: not-important
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 1536Mi
+# Production OIDC (HTTPS endpoints)
+- target:
+    kind: Deployment
+    labelSelector: app.kubernetes.io/component=backend
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: not-important
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
+            - name: QUARKUS_OIDC_TOKEN_ISSUER
+              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
+# Production secrets — override hardcoded dev passwords with secretKeyRef
+- target:
+    kind: Deployment
+    labelSelector: app.kubernetes.io/component=backend
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: not-important
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-db-credentials
+                  key: password
+            - name: PAYU_CACHE_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: REDIS_PASSWORD
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: payu-secrets
+                  key: ENCRYPTION_KEY
 labels:
 - pairs:
     environment: prod
   includeSelectors: false
-
-- target:
-    kind: Deployment
-  patch: |-
-      value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
-      value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"

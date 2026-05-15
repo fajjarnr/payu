@@ -534,3 +534,21 @@ patches:
               value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
+
+# Dev-only: Enable rate limit test mode for e2e testing
+- target:
+    kind: Deployment
+    name: gateway-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: gateway-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: GATEWAY_RATE_LIMIT_TEST_MODE
+              value: "true"

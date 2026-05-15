@@ -27,7 +27,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    validate-on-migrate: false
+    validate-on-migrate: true
 
   data:
     redis:
@@ -49,9 +49,9 @@ spring:
 management:
   endpoint:
     health:
+      show-details: when-authorized
       probes:
         enabled: true
-      show-details: always
   health:
     kafka:
       enabled: true

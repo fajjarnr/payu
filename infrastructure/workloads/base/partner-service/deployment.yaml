@@ -24,6 +24,14 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      terminationGracePeriodSeconds: 60
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: partner-service
       volumes:
       - name: tmp
         emptyDir: {}
@@ -40,6 +48,8 @@ spec:
           capabilities:
             drop:
             - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         - name: tmp
           mountPath: /tmp
@@ -55,6 +65,13 @@ spec:
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 15
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
         resources:
           requests:
             cpu: 100m

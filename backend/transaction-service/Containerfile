@@ -15,7 +15,7 @@ LABEL id.payu.service.tier="core"
 USER 185
 WORKDIR /deployments
 
-COPY --chown=185 target/*.jar /deployments/app.jar
+COPY --chown=185 target/app.jar /deployments/app.jar
 
 EXPOSE 8080
 
@@ -29,5 +29,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:HeapDumpPath=/deployments/heapdump.hprof \
     -Dspring.application.name=transaction-service \
     -Djava.security.egd=file:/dev/./urandom"
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
+    CMD curl -sf http://localhost:8080/actuator/health/liveness || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

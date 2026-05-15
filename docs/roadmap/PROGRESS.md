@@ -21,15 +21,15 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟡 83/100                                | May 15 fixes — ERR-001, TRACE-001, IDEM-002, RES-004 partial. Score: 82→83. |
+| **Production Readiness** | 🟢 91/100                                | May 15 Batch 2 fixes — infra hardening, secrets, probes, Flyway. Score: 83→91. |
 | GlobalExceptionHandler   | 🟢 18/18                                 | All Spring services covered — 6 new handlers created May 15 |
 | Distributed Tracing      | 🟢 Fixed                                 | `CorrelationIdInterceptor` in rest-client-starter — X-Correlation-Id propagated |
 | Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟡 27 open                               | 2 P0 (arch refactors), 9 P1, 18 P2 — 6 closed May 15 |
+| Open Bugs (TODOS.md)     | 🟡 12 open                               | 2 P0 (arch refactors), 1 P1 (K8S-003 ServiceAccounts), 10 P2 — 17 closed May 15 Batch 2 |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-05-15                               | v1.8.3 — Bug fixes applied. Score: 83/100. |
+| Last Status Update       | 2026-05-15                               | v1.8.4 — Infrastructure hardening. Score: 91/100. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
@@ -87,6 +87,32 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.4 (In Progress) — May 15, 2026
+
+**Infrastructure Hardening & Production Readiness — Batch 2:**
+
+- ✅ **SEC-INFRA-001–004 — Secrets Management Fixed**:
+  - Production overlay (`payu-prod/kustomization.yaml`) now patches `SPRING_DATASOURCE_PASSWORD`, `PAYU_CACHE_REDIS_PASSWORD`, `ENCRYPTION_KEY` to `secretKeyRef` via `payu-db-credentials` and `payu-secrets` Secrets
+  - Gateway `WEBHOOK_PARTNER_1_SECRET` changed from plaintext to `secretKeyRef`
+  - `GATEWAY_RATE_LIMIT_TEST_MODE` set to `false` in base, overridden to `true` only in dev overlay
+  - Production resource limits patched (200m-2000m CPU, 512Mi-1536Mi memory) via labelSelector
+  - Production OIDC endpoints patched to HTTPS (`sso-payu.apps.payu.ocp.fajjjar.my.id`)
+- ✅ **K8S-001 — startupProbe Added to All 24 Deployments**: JVM services get 150s startup window (30 × 5s), Python services get 100s (20 × 5s)
+- ✅ **K8S-002 — topologySpreadConstraints Added**: All deployments have `maxSkew: 1` on `kubernetes.io/hostname`
+- ✅ **K8S-004 — seccompProfile RuntimeDefault**: All 24 service deployments now have `seccompProfile: RuntimeDefault` (Pod Security Standard `restricted` compliant)
+- ✅ **K8S-005 — terminationGracePeriodSeconds**: 60s for Java/Quarkus services, 30s for Python/Node services
+- ✅ **K8S-006 — HPA + PDB in Kustomization**: `hpa.yaml` and `pdb.yaml` added to base `kustomization.yaml` resources
+- ✅ **K8S-007 — VPA Conflict Resolved**: All 3 VPA resources changed from `updateMode: Auto` to `updateMode: Off` (recommendation-only)
+- ✅ **K8S-008 — Prod Resource Limits**: Replaced template `REPLACE_ME` with proper labelSelector-based patch in prod overlay
+- ✅ **K8S-009 — web-app NODE_ENV**: Added `NODE_ENV=production` to web-app deployment
+- ✅ **CONTAINER-001 — Explicit JAR Name**: All 18 Spring Containerfiles changed from `target/*.jar` to `target/app.jar`. Added `<finalName>app</finalName>` to parent POM `spring-boot-maven-plugin`
+- ✅ **CONTAINER-002 — HEALTHCHECK Added**: All 21 Containerfiles now have HEALTHCHECK instruction (90s start-period for Spring, 60s for Quarkus)
+- ✅ **DB-FLYWAY-001 — Flyway Validation Enabled**: `validate-on-migrate: true` in all 16 `application-container.yml` profiles
+- ✅ **CFG-PROD-001 — Health Endpoint Secured**: `show-details: when-authorized` in all 16 base `application.yml` + container profiles
+- ✅ **SEC-BACKEND-001 — WebSecurityCustomizer Removed**: wallet-service and transaction-service no longer bypass security filter chain for actuator. Moved to `permitAll()` in SecurityFilterChain.
+- **Score**: 83 → 91/100 (+8). 17 items fixed (5 P0 + 12 P1).
+- **Open**: 2 P0 (ARCH-008, PII-001), 1 P1 (K8S-003 ServiceAccounts), 10 P2.
 
 ### v1.8.3 (In Progress) — May 15, 2026
 

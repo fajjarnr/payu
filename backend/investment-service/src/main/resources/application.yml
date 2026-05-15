@@ -107,7 +107,7 @@ services:
 management:
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
       probes:
         enabled: true
   endpoints:

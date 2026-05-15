@@ -36,4 +36,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -Dquarkus.http.host=0.0.0.0 \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:8080/q/health/live || exit 1
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

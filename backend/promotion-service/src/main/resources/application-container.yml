@@ -32,7 +32,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    validate-on-migrate: false
+    validate-on-migrate: true
 
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
@@ -62,6 +62,9 @@ spring:
 
 # Disable health checks for external services in container mode
 management:
+  endpoint:
+    health:
+      show-details: when-authorized
   health:
     redis:
       enabled: true

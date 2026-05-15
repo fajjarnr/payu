@@ -27,7 +27,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    validate-on-migrate: false
+    validate-on-migrate: true
   
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
@@ -42,6 +42,9 @@ spring:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
           jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
 management:
+  endpoint:
+    health:
+      show-details: when-authorized
   health:
     kafka:
       enabled: true

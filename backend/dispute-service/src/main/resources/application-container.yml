@@ -34,7 +34,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    validate-on-migrate: false
+    validate-on-migrate: true
     locations: classpath:db/migration
 
   kafka:
@@ -65,6 +65,9 @@ spring:
 
 # Disable health checks for external services in container mode
 management:
+  endpoint:
+    health:
+      show-details: when-authorized
   health:
     redis:
       enabled: true
