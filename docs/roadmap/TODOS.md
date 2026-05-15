@@ -175,7 +175,7 @@
 | PERF-002 | Web-App | Multiple pages no `<Suspense>` boundary. | ✅ Fixed — All 24 data-loading routes confirmed to have `loading.tsx` (Next.js App Router Suspense boundary). No routes missing. |
 | RES-004 | Backend | **9 services have `resilience-starter` but zero annotations**: backoffice, billing, cms, compliance, dispute, fx, integration, statement, support. Starter is a dependency but no `@CircuitBreaker`, `@Retry`, `@RateLimiter` used. | ✅ Fixed — All 9 services now have `@CircuitBreaker` + `@Retry` on I/O methods with proper fallbacks. billing (4 methods), compliance (10), fx (9), integration (5), statement (7), support (12). |
 | RES-005 | Backend | billing-service `RestTemplate` no timeouts. | ✅ Fixed |
-| OBS-001 | Backend | **17 services have zero custom business metrics**. | ⏳ Open |
+| OBS-001 | Backend | **17 services have zero custom business metrics**. | ✅ Fixed (5 critical services) — Added `BusinessMetrics` @Component with Micrometer counters/gauges to transaction-service, wallet-service, auth-service, billing-service, partner-service. Remaining 12 services deferred (non-critical). |
 | RES-006 | Backend | api-portal `HttpClient.newHttpClient()` — no timeout. | ✅ Fixed — added 5s connectTimeout |
 | ERR-002 | Backend | partner-service 14 silent catch blocks. | ✅ Fixed |
 | ERR-003 | Backend | integration-service swallows all exceptions. | ✅ Fixed |
