@@ -1,0 +1,89 @@
+# API Security Headers — Enforce HSTS, CSP, X-Frame-Options, X-Content-Type-Options
+# Applied via EnvoyFilter to the Istio Ingress Gateway
+# Covers: HSTS (Strict-Transport-Security), CSP (Content-Security-Policy),
+#         X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: payu-security-headers
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app: istio-ingressgateway
+  configPatches:
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+      patch:
+        operation: MERGE
+        value:
+          response_headers_to_add:
+            # HSTS — force HTTPS for 1 year, include subdomains
+            - header:
+                key: Strict-Transport-Security
+                value: "max-age=31536000; includeSubDomains; preload"
+              append: false
+            # X-Frame-Options — prevent clickjacking
+            - header:
+                key: X-Frame-Options
+                value: DENY
+              append: false
+            # X-Content-Type-Options — prevent MIME sniffing
+            - header:
+                key: X-Content-Type-Options
+                value: nosniff
+              append: false
+            # Referrer Policy
+            - header:
+                key: Referrer-Policy
+                value: "strict-origin-when-cross-origin"
+              append: false
+            # Permissions-Policy — restrict browser features
+            - header:
+                key: Permissions-Policy
+                value: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+              append: false
+            # XSS protection (legacy, but adds defense-in-depth)
+            - header:
+                key: X-XSS-Protection
+                value: "0"
+              append: false
+            # Cache control for API responses
+            - header:
+                key: Cache-Control
+                value: "no-store, no-cache, must-revalidate, proxy-revalidate"
+              append: false
+            - header:
+                key: Pragma
+                value: "no-cache"
+              append: false
+
+---
+# API-specific Content-Security-Policy (restrictive for API responses)
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: payu-csp-header
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app: istio-ingressgateway
+  configPatches:
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "*.dev.payu.fajjjar.my.id:443"
+      patch:
+        operation: MERGE
+        value:
+          response_headers_to_add:
+            - header:
+                key: Content-Security-Policy
+                value: "default-src 'none'; frame-ancestors 'none'"
+              append: false

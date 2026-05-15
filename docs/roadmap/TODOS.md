@@ -16,7 +16,7 @@
 | **Open P0s** | 1 (ARCH-008) |
 | **Open P1s** | 5 (ARCH-009, ARCH-010, TEST-001, TEST-002, TEST-003) |
 | **Open P2s** | 22 |
-| **Last Audit** | May 15, 2026 — Cleanup: all ✅ Fixed items archived to CHANGELOG.md |
+| **Last Audit** | May 15, 2026 — P0 Sprint: 7/8 INFRA P0s resolved. ARCH-008 remains (code refactoring). |
 | **Production Score** | 97/100 |
 
 ---
@@ -119,21 +119,21 @@
 
 | Key | Priority | Summary |
 |:---|:---:|:---|
-| INFRA-005 | P0 | Configure Vault Raft auto-snapshot to encrypted S3 |
-| INFRA-006 | P0 | Configure Vault auto-unseal (Transit or KMS) |
-| INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh |
+| INFRA-005 | P0 | Configure Vault Raft auto-snapshot to encrypted S3 | ✅ Done (May 15) — Production Vault StatefulSet (3 replicas, Raft, AWS KMS auto-unseal) + CronJob snapshot to S3 every 6h created at `infrastructure/platform/security/vault/vault-production.yaml` |
+| INFRA-006 | P0 | Configure Vault auto-unseal (Transit or KMS) | ✅ Done (May 15) — Combined with INFRA-005 above |
+| INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⏳ Open |
 
 ### Phase 2 — Hardening (Paused)
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⏳ Open |
-| INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline | ⏳ Open |
-| INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT | ⏳ Open — Manifests ready, Service Mesh operator installed |
-| INFRA-012 | P0 | Complete ArgoCD Image Updater setup | ⏳ Open |
-| INFRA-016 | P0 | Configure rate limiting (global 1000 req/s per IP) | ⏳ Open |
-| INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) | ⏳ Open |
-| INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure | ⏳ Open |
+| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⏳ Open — Trivy task exists in build-pipeline, blocked by registry.redhat.io pull secret for pilot image. gate is RHACS (step 6), trivy is warn-only |
+| INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline | ✅ Done (May 15) — ZAP & Schemathesis tasks wired in deploy-pipeline.yaml for DEV→SIT→UAT stages |
+| INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT | ✅ Done (May 15) — Istio control plane (Sail operator v3.3.3) running: istiod + IstioCNI Healthy. PeerAuthentication mesh-wide STRICT + per-namespace (payu-dev PERMISSIVE, prod STRICT). AuthorizationPolicy, RequestAuthentication, DestinationRules deployed. Security headers EnvoyFilter (HSTS, CSP, XFO) deployed. Ingress gateway deployed via manual Deployment (pending tuning). |
+| INFRA-012 | P0 | Complete ArgoCD Image Updater setup | ✅ Done (May 15) — Image Updater deployed (deployment + RBAC + ConfigMap), ApplicationSets created (5 envs), auto-rollback CronJob active, drift detection configured, 22 applications synced |
+| INFRA-016 | P0 | Configure rate limiting (global 1000 req/s per IP) | ✅ Done (May 15) — Rate limit service (envoyproxy/ratelimit) deployed with Redis backend, ConfigMap with per-IP/per-API-key rules, EnvoyFilter wiring at ingress gateway |
+| INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) | ✅ Done (May 15) — EnvoyFilter deployed: HSTS (max-age=1y), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy, CSP, Cache-Control |
+| INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure | ✅ Done (May 15) — CronJob every 2 min + auto-rollback-policy.yaml with retry (3x, exponential backoff), Slack notifications |
 | INFRA-010 | P1 | Configure ComplianceOperator CIS scan | ⏳ Open |
 | INFRA-011 | P1 | Deploy Wazuh manager + agent for SIEM | ⏳ Open |
 | INFRA-013 | P1 | Enable Tekton Chains for SLSA provenance | ⏳ Open |

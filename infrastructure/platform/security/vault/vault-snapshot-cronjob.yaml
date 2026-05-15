@@ -1,0 +1,185 @@
+# =============================================================================
+# PayU Platform - Vault Raft Snapshot CronJob
+# =============================================================================
+# INFRA-005: Automated Raft snapshots to encrypted S3 every 6 hours
+#
+# This CronJob:
+#   1. Authenticates to the Vault cluster using the bootstrap token
+#   2. Executes `vault operator raft snapshot save` to create a snapshot
+#   3. Uploads the snapshot to an S3 bucket (encrypted at rest via S3 SSE)
+#   4. Cleans up the local snapshot file
+#
+# Prerequisites:
+#   Secret `payu/vault-snapshot-s3` must exist with keys:
+#     - s3-bucket:       S3 bucket name (e.g., payu-vault-snapshots)
+#     - aws-region:      AWS region of the S3 bucket
+#     - aws-access-key-id:     AWS IAM access key (S3 PutObject permission)
+#     - aws-secret-access-key: AWS IAM secret key
+#   Secret `payu/vault-bootstrap` must exist with key `root-token`
+#
+# Retention:
+#   - successfulJobsHistoryLimit: 7 (~2 days of history)
+#   - failedJobsHistoryLimit: 3
+#   - S3 lifecycle policy recommended for snapshot rotation (e.g., 30 days)
+# =============================================================================
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vault-raft-snapshot
+  namespace: payu
+  labels:
+    app.kubernetes.io/name: vault-raft-snapshot
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+    app.kubernetes.io/version: "1.15"
+    team: platform
+    cost-center: platform-team
+    environment: prod
+spec:
+  # Every 6 hours: at 00:00, 06:00, 12:00, 18:00 UTC
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid              # Prevent overlapping snapshots
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300           # Allow 5-min delay if scheduler is busy
+
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 3600      # Clean up completed jobs after 1 hour
+
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: vault-raft-snapshot
+            app.kubernetes.io/part-of: payu
+            app.kubernetes.io/component: secrets
+            team: platform
+            environment: prod
+        spec:
+          restartPolicy: OnFailure
+
+          # --- Security Context (OpenShift restricted-v2 compatible) ---
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+
+          containers:
+            - name: vault-snapshot
+              image: docker.io/hashicorp/vault:1.15
+              imagePullPolicy: IfNotPresent
+
+              env:
+                # Vault connection (internal service)
+                - name: VAULT_ADDR
+                  value: "http://vault.payu.svc.cluster.local:8200"
+                - name: VAULT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: vault-bootstrap
+                      key: root-token
+                - name: VAULT_SKIP_VERIFY
+                  value: "true"
+
+                # S3 upload configuration (from k8s Secret)
+                - name: S3_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: vault-snapshot-s3
+                      key: s3-bucket
+                - name: AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: vault-snapshot-s3
+                      key: aws-region
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: vault-snapshot-s3
+                      key: aws-access-key-id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: vault-snapshot-s3
+                      key: aws-secret-access-key
+
+                # Home directory for temporary files
+                - name: HOME
+                  value: /tmp
+
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+
+                  TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+                  SNAPSHOT_FILE="/tmp/vault-raft-snapshot-${TIMESTAMP}.snap"
+                  S3_KEY="vault-snapshots/vault-raft-snapshot-${TIMESTAMP}.snap"
+
+                  echo "=== Vault Raft Snapshot — $(date -u) ==="
+
+                  # 1. Verify Vault is reachable and unsealed
+                  echo "[1/5] Checking Vault status..."
+                  if ! vault status -format=json 2>/dev/null | grep -q '"sealed":false'; then
+                    echo "ERROR: Vault is sealed or unreachable. Aborting snapshot."
+                    exit 1
+                  fi
+                  echo "Vault is unsealed and healthy."
+
+                  # 2. Create Raft snapshot
+                  echo "[2/5] Creating Raft snapshot: ${SNAPSHOT_FILE}"
+                  vault operator raft snapshot save "${SNAPSHOT_FILE}"
+                  SNAPSHOT_SIZE="$(du -h "${SNAPSHOT_FILE}" | cut -f1)"
+                  echo "Snapshot created: ${SNAPSHOT_FILE} (${SNAPSHOT_SIZE})"
+
+                  # 3. Install AWS CLI (Alpine-based Vault image)
+                  echo "[3/5] Installing AWS CLI..."
+                  apk add --no-cache aws-cli 2>/dev/null || {
+                    echo "aws-cli package not available; installing via pip..."
+                    apk add --no-cache python3 py3-pip
+                    pip3 install --no-cache-dir --quiet awscli
+                  }
+                  echo "AWS CLI ready."
+
+                  # 4. Upload snapshot to S3 with server-side encryption
+                  echo "[4/5] Uploading snapshot to s3://${S3_BUCKET}/${S3_KEY}"
+                  aws s3 cp "${SNAPSHOT_FILE}" "s3://${S3_BUCKET}/${S3_KEY}" \
+                    --region "${AWS_REGION}" \
+                    --sse AES256 \
+                    --storage-class STANDARD_IA
+                  echo "Upload complete: s3://${S3_BUCKET}/${S3_KEY}"
+
+                  # 5. Cleanup local snapshot
+                  echo "[5/5] Cleaning up local snapshot..."
+                  rm -f "${SNAPSHOT_FILE}"
+
+                  echo "=== Snapshot completed successfully at $(date -u) ==="
+
+              # --- Resource limits (snapshot is CPU/memory-bound briefly) ---
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "200m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+
+              # --- Container security context ---
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: false
+
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+
+          volumes:
+            - name: tmp
+              emptyDir:
+                sizeLimit: "2Gi"        # Ensure enough space for snapshot file

@@ -25,15 +25,15 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟢 97/100                                | May 15 Batch 4 fixes — CQ-001, SEO-001/002, PERF-002, DB-002/003, DX-002, YAML-009. Score: 95→97. |
+| **Production Readiness** | 🟢 98/100                                | May 15 P0 Sprint — INFRA-009/017/016/012/021/005/006/008 resolved. Score: 97→98. |
 | GlobalExceptionHandler   | 🟢 18/18                                 | All Spring services covered — 6 new handlers created May 15 |
 | Distributed Tracing      | 🟢 Fixed                                 | `CorrelationIdInterceptor` in rest-client-starter — X-Correlation-Id propagated |
 | Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟡 4 open                                | 1 P0 (ARCH-008 entity refactor), 3 P1 (OBS-001, ARCH-009/010, TEST-001–003), rest P2 — Batch 4 closed CQ-001, PERF-002, SEO-001/002, DB-002/003, DX-002, YAML-009 |
+| Open Bugs (TODOS.md)     | 🟡 2 P0 remaining                        | ARCH-008 (@Entity refactor 13 svc), INFRA-001 (trivy registry auth). 8/10 INFRA P0 resolved. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-05-15                               | v1.8.5 — CQ-001 type safety, SEO, DB hardening, DX. Score: 97/100. |
+| Last Status Update       | 2026-05-15                               | v1.8.6 — P0 Sprint: 8/10 INFRA P0 resolved. Service Mesh STRICT, Rate Limiting, Security Headers, ArgoCD, Vault (Raft+KMS). Score: 98/100. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |

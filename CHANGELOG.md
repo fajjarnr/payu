@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### P0 Infrastructure Sprint — Service Mesh, Security & CD (2026-05-15)
+
+- **INFRA-009 — Service Mesh mTLS STRICT**: Deployed Istio control plane (Sail operator v3.3.3, Istio 1.28.4) on OpenShift 4.20+. istiod + IstioCNI Healthy. 20 security resources: mesh-wide STRICT PeerAuthentication, per-namespace policies (payu-dev PERMISSIVE, prod STRICT), AuthorizationPolicy (zero-trust deny-all + service-specific ALLOW), RequestAuthentication (JWT), DestinationRules (14 services with circuit breaker).
+- **INFRA-017 — API Security Headers**: EnvoyFilter deployed on ingress gateway: Strict-Transport-Security (max-age=1y), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy, Content-Security-Policy, Cache-Control, X-XSS-Protection.
+- **INFRA-016 — Rate Limiting**: Deployed envoyproxy/ratelimit service with Redis backend. Global 1000 req/s per IP, 100 req/s per API key. Login brute-force protection (10 req/min). EnvoyFilter wired at Istio ingress gateway.
+- **INFRA-012 — ArgoCD Image Updater**: Deployed argocd-image-updater (v0.15.0) with RBAC, ConfigMap (digest strategy). 22 Applications synced via ApplicationSet across 5 environments + monitoring/devsecops/identity.
+- **INFRA-021 — ArgoCD Auto-Rollback**: CronJob every 2 min monitoring all PayU Applications. Auto-rollback to previous revision if health degraded within 5-min window. Slack notifications on sync-failed/health-degraded.
+- **INFRA-008 — OWASP ZAP + Schemathesis**: Both already wired in Tekton deploy-pipeline.yaml (ZAP baseline in DEV→SIT, Schemathesis in SIT→UAT). Verified task definitions (zap-baseline-task, schemathesis-task v3.39.16).
+- **INFRA-005/006 — Vault Production (Raft + KMS)**: Created production StatefulSet (3 replicas, Raft storage, PVC 20Gi, AWS KMS auto-unseal) + CronJob auto-snapshot to S3 every 6h (AES256 SSE). ESO ClusterSecretStore bridge. Manifests at `infrastructure/platform/security/vault/vault-production.yaml`.
+- **Manifest Migration (OSS M 2→3)**: Converted `maistra.io/v2` ServiceMeshControlPlane → `sailoperator.io/v1` Istio/IstioCNI CRs. Updated `control-plane.yaml`, `istio-cni.yaml`, `service-mesh.yaml`, `kustomization.yaml`. Created `ratelimit-service.yaml`, `security-headers.yaml`.
+
 ### Code Quality, SEO & Database Hardening — Batch 4 (2026-05-15)
 
 - **CQ-001 — Type Safety (26 `as any` removed)**: Replaced all unsafe type casts across 6 frontend files with proper TypeScript types. rewards/page.tsx (14→`LoyaltyBalanceResponse`/`ReferralSummaryResponse`/`Promotion`), cards/page.tsx (8→`ExtendedCardData`), notifications/page.tsx (2→`Notification`), analytics/page.tsx (1→`AnalyticsData.trajectoryData`), scheduled-transfers/page.tsx (1→union type), split-bill/page.tsx (1→`CreateSplitBillRequest`), i18n/request.ts (1→`typeof locales[number]`).

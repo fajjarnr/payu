@@ -1,3 +1,5 @@
+# Istio CNI — Sail Operator (OSSM 3.x)
+# Handles network setup for sidecar injection
 apiVersion: sailoperator.io/v1
 kind: IstioCNI
 metadata:
@@ -6,3 +8,24 @@ metadata:
 spec:
   version: v1.28.4
   namespace: istio-system
+  values:
+    cni:
+      chained: false
+      cniBinDir: /var/lib/cni/bin
+      cniConfDir: /etc/cni/net.d
+      cniConfFileName: istio-cni.conf
+      excludeNamespaces:
+        - istio-system
+        - kube-system
+      logLevel: info
+      repair:
+        enabled: true
+        hub: ""
+        tag: ""
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi

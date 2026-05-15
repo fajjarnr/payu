@@ -1,5 +1,7 @@
-# Service Mesh - using Sail operator (OpenShift Service Mesh 3.x)
-# CRD: istios.sailoperator.io (NOT maistra.io)
+# OpenShift Service Mesh 3.x — Sail Operator Istio CR
+# Operator: servicemeshoperator3.v3.3.3 → Istio 1.28.4
+# CRD: istios.sailoperator.io/v1
+# NOTE: Do NOT set hub/tag — operator auto-fills correct Red Hat registry images
 apiVersion: sailoperator.io/v1
 kind: Istio
 metadata:
@@ -8,11 +10,134 @@ metadata:
 spec:
   version: v1.28.4
   namespace: istio-system
+  profile: default
+  updateStrategy:
+    type: RevisionBased
+    updateWorkloads: true
   values:
     global:
+      istioNamespace: istio-system
+      logging:
+        level: default:info
+      logAsJson: true
       meshID: payu-mesh
-    pilot:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
+      proxy:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+    meshConfig:
+      trustDomain: payu.local
+      trustDomainAliases:
+        - payu.local
+      defaultConfig:
+        proxyMetadata:
+          ISTIO_META_DNS_CAPTURE: "true"
+          ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+        tracing:
+          sampling: 10.0
+          customTags:
+            x-request-id:
+              environment:
+                name: X_REQUEST_ID
+                defaultValue: unknown
+            user-id:
+              header:
+                name: x-user-id
+                defaultValue: anonymous
+        proxyStatsMatcher:
+          inclusionRegexps:
+            - ".*_cx_.*"
+            - ".*_rq_.*"
+            - ".*_rs_.*"
+      accessLogFile: "/dev/stdout"
+      accessLogEncoding: JSON
+      accessLogFormat: |
+        {
+          "start_time": "%START_TIME%",
+          "method": "%REQ(:METHOD)%",
+          "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
+          "protocol": "%PROTOCOL%",
+          "response_code": "%RESPONSE_CODE%",
+          "response_flags": "%RESPONSE_FLAGS%",
+          "bytes_received": "%BYTES_RECEIVED%",
+          "bytes_sent": "%BYTES_SENT%",
+          "duration": "%DURATION%",
+          "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",
+          "x_forwarded_for": "%REQ(X-FORWARDED-FOR)%",
+          "user_agent": "%REQ(USER-AGENT)%",
+          "request_id": "%REQ(X-REQUEST-ID)%",
+          "authority": "%REQ(:AUTHORITY)%",
+          "upstream_host": "%UPSTREAM_HOST%",
+          "upstream_cluster": "%UPSTREAM_CLUSTER%",
+          "upstream_local_address": "%UPSTREAM_LOCAL_ADDRESS%",
+          "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",
+          "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
+          "requested_server_name": "%REQUESTED_SERVER_NAME%",
+          "route_name": "%ROUTE_NAME%",
+          "response_code_details": "%RESPONSE_CODE_DETAILS%"
+        }
+    gateways:
+      istio-ingressgateway:
+        enabled: true
+        name: istio-ingressgateway
+        replicas: 3
+        nodeSelector:
+          node-role.kubernetes.io/router: ""
+        tolerations:
+          - key: node-role.kubernetes.io/router
+            operator: Exists
+            effect: NoSchedule
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: istio-ingressgateway
+              topologyKey: kubernetes.io/hostname
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        rolloutMaxSurge: 100%
+        rolloutMaxUnavailable: 25%
+        service:
+          type: LoadBalancer
+          ports:
+            - name: http2
+              port: 8080
+              targetPort: 8080
+            - name: https
+              port: 8443
+              targetPort: 8443
+            - name: status
+              port: 15021
+              targetPort: 15021
+            - name: tls
+              port: 15443
+              targetPort: 15443
+      istio-egressgateway:
+        enabled: true
+        name: istio-egressgateway
+        replicas: 1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        service:
+          type: ClusterIP
+          ports:
+            - name: http2
+              port: 80
+              targetPort: 8080
+            - name: https
+              port: 443
+              targetPort: 8443

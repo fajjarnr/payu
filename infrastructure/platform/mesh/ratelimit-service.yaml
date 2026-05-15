@@ -1,0 +1,164 @@
+# Rate Limit Service — Envoy-compatible rate limit backend
+# Required by the EnvoyFilter in gateway.yaml for global rate limiting
+# Uses envoyproxy/ratelimit with Redis backend (Red Hat Data Grid RESP mode)
+
+---
+# ConfigMap for rate limit configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratelimit-config
+  namespace: istio-system
+data:
+  config.yaml: |
+    domain: payu-ratelimit
+    descriptors:
+      # Per-IP rate limit: 1000 req/s
+      - key: remote_address
+        rate_limit:
+          requests_per_unit: 1000
+          unit: second
+      # Per-API-key rate limit: 100 req/s (partner tier)
+      - key: api_key
+        rate_limit:
+          requests_per_unit: 100
+          unit: second
+      # Login endpoint: 10 req/min per IP (brute force protection)
+      - key: remote_address
+        value: login
+        rate_limit:
+          requests_per_unit: 10
+          unit: minute
+      # Health endpoint: unlimited
+      - key: generic_key
+        value: health
+      # Per-endpoint tiered limits
+      - key: generic_key
+        value: transactions
+        rate_limit:
+          requests_per_unit: 500
+          unit: second
+      - key: generic_key
+        value: wallet
+        rate_limit:
+          requests_per_unit: 300
+          unit: second
+
+---
+# Deployment for the rate limit service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimit
+  namespace: istio-system
+  labels:
+    app: ratelimit
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ratelimit
+  template:
+    metadata:
+      labels:
+        app: ratelimit
+        app.kubernetes.io/part-of: payu
+    spec:
+      serviceAccountName: ratelimit
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ratelimit
+          image: envoyproxy/ratelimit:e059638d
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 8081
+              protocol: TCP
+            - name: http-debug
+              containerPort: 6070
+              protocol: TCP
+          env:
+            - name: USE_STATSD
+              value: "false"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: REDIS_SOCKET_TYPE
+              value: "tcp"
+            - name: REDIS_URL
+              value: "payu-datagrid.payu-dev.svc.cluster.local:11222"
+            - name: RUNTIME_ROOT
+              value: "/data"
+            - name: RUNTIME_SUBDIRECTORY
+              value: "ratelimit"
+            - name: RUNTIME_IGNOREDOTFILES
+              value: "true"
+          volumeMounts:
+            - name: config
+              mountPath: /data/ratelimit/config
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 6070
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 6070
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: config
+          configMap:
+            name: ratelimit-config
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ratelimit
+
+---
+# Service for the rate limit service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratelimit
+  namespace: istio-system
+  labels:
+    app: ratelimit
+    app.kubernetes.io/part-of: payu
+spec:
+  ports:
+    - name: grpc
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+    - name: http-debug
+      port: 6070
+      targetPort: 6070
+      protocol: TCP
+  selector:
+    app: ratelimit
+
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ratelimit
+  namespace: istio-system
