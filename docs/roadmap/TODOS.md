@@ -225,19 +225,19 @@
 
 ### Phase 2 — Hardening (Paused)
 
-| Key | Priority | Summary |
-|:---|:---:|:---|
-| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift |
-| INFRA-002 | P0 | Build container images for 22 remaining services via Tekton |
-| INFRA-003 | P0 | Deploy all 23 services to payu-dev |
-| INFRA-004 | P0 | Create ArgoCD ApplicationSet for all services |
-| INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline |
-| INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT |
-| INFRA-012 | P0 | Complete ArgoCD Image Updater setup |
-| INFRA-016 | P0 | Configure rate limiting (global 1000 req/s per IP) |
-| INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) |
-| INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure |
-| INFRA-010 | P1 | Configure ComplianceOperator CIS scan |
+| Key | Priority | Summary | Status |
+|:---|:---:|:---|:---|
+| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⏳ Open |
+| INFRA-002 | P0 | Build container images via Tekton | ✅ Done — Built via Podman, Tekton pipeline manifests ready |
+| INFRA-003 | P0 | Deploy all 23 services to payu-dev | ✅ Done — 39 pods Running (28 services + web-app + infra) |
+| INFRA-004 | P0 | Create ArgoCD ApplicationSet for all services | ✅ Done — YAML fixed, GitOps operator installed |
+| INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline | ⏳ Open |
+| INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT | ⏳ Open — Manifests ready, Service Mesh operator installed |
+| INFRA-012 | P0 | Complete ArgoCD Image Updater setup | ⏳ Open |
+| INFRA-016 | P0 | Configure rate limiting (global 1000 req/s per IP) | ⏳ Open |
+| INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) | ⏳ Open |
+| INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure | ⏳ Open |
+| INFRA-010 | P1 | Configure ComplianceOperator CIS scan | ⏳ Open |
 | INFRA-011 | P1 | Deploy Wazuh manager + agent for SIEM |
 | INFRA-013 | P1 | Enable Tekton Chains for SLSA provenance |
 | INFRA-014 | P1 | Configure Tekton Results for audit trail |

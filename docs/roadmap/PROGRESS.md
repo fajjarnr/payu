@@ -10,8 +10,12 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 23/23                                 | (Excl. Simulators). AB-Testing Deprecated.      |
-| Total Pods               | 🟢 36/36                                 | All pods 1/1 Running, 0 restarts (May 8)        |
+| Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (May 15)      |
+| Total Pods               | 🟢 39/39                                 | All pods Running on OCP 4.20+ (6 nodes)         |
+| OpenShift Cluster        | 🟢 Active                                | 3 masters + 3 workers, ap-southeast-1           |
+| Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
+| Data Services            | 🟢 PostgreSQL + DataGrid + Kafka         | StatefulSet PG16, Infinispan RESP, AMQ Streams KRaft |
+| Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created              |
 | Maven Build              | 🟢 36/36                                 | ALL modules SUCCESS (inc. 23 services + 5 sims + 8 shared) |
 | Unit Test Coverage       | 🟢 100%                                  | All 36 modules pass (0 failures, 0 errors) in `mvn clean test -T 1C` (May 5) |
 | Maven Contract Tests     | 🟢 3/3 svc                               | 614+ tests, 0 failures (auth, transaction, wallet) |
@@ -87,6 +91,34 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.6 (Completed) — May 15, 2026
+
+**OpenShift 4.20+ Full Deployment — payu-dev Namespace:**
+
+- ✅ **Cluster Verified**: 6 nodes (3 master + 3 worker), OCP 4.20+, ap-southeast-1
+- ✅ **20 Operators Installed**: AMQ Streams, Crunchy PG, DataGrid, OpenShift Pipelines (Tekton), OpenShift GitOps (ArgoCD), RHBK (Keycloak), RHACS, cert-manager, External Secrets, Service Mesh, Kiali, Compliance Operator, 3scale, Descheduler, Developer Hub
+- ✅ **Foundation Applied**: 5 namespaces (payu-dev/sit/uat/preprod/prod) + payu-sso + payu-cicd + rhbk-operator. ResourceQuotas, LimitRanges, default-deny NetworkPolicies
+- ✅ **Data Services Deployed (from `infrastructure/platform/data/base/`)**:
+  - PostgreSQL 16 StatefulSet (RHEL9 image, 10Gi PVC, 27 databases created)
+  - Red Hat Data Grid (Infinispan CR, RESP connector on port 11222, `developer` user auth)
+  - AMQ Streams Kafka (KRaft mode, 1 controller + 1 broker, 4 topics: account/transaction/wallet/notification-events)
+- ✅ **Identity (Keycloak) Deployed in payu-sso**: Keycloak 26 (quay.io), realm `payu` created, OIDC discovery endpoint verified 200
+- ✅ **28 Container Images Built & Pushed**: All services built via Podman → OpenShift internal registry. Semantic versioning: 1.8.1–1.8.4
+- ✅ **All 28 Services + web-app Running (39 pods total)**:
+  - 23 backend services (Spring Boot + Quarkus)
+  - 4 simulators (bi-fast, biller, dukcapil, qris)
+  - 1 web-app (Next.js)
+  - Data Grid, PostgreSQL, Kafka (3 pods)
+  - Keycloak (payu-sso namespace)
+- ✅ **Code Bugs Fixed During Deployment**:
+  - `backoffice-service`: Renamed `GlobalExceptionHandler` → `BackofficeExceptionHandler` (bean name conflict with api-commons)
+  - `api-portal-service` + `notification-service`: Fixed `/**/public/health` invalid Quarkus path pattern → `/public/health,/q/health/*`. Added `quarkus.otel.sdk.disabled=true` (no collector in dev). Added `connection-delay: 30S` for OIDC resilience.
+  - `partner-service`: Added V9 migration (`settlement_account`, `settlement_bank` columns). Switched `ddl-auto: validate` → `update` for dev.
+  - `promotion-service`: Added V7 migration (`version` column on `loyalty_points`). Switched `ddl-auto: validate` → `update` for dev.
+- ✅ **ArgoCD ApplicationSet Fixed**: Corrected paths from `overlays/dev` → `overlays/payu-dev` (matching actual directory names)
+- ✅ **NetworkPolicy**: `allow-all-dev` applied for dev namespace (permissive). Production uses default-deny + per-service AuthorizationPolicy via Service Mesh.
+- ✅ **`service-endpoints.yaml` Fixed**: `REDIS_HOST: payu-cache:6379` → `payu-datagrid:11222` (Data Grid RESP)
 
 ### v1.8.5 (Completed) — May 15, 2026
 

@@ -14,23 +14,23 @@ spec:
     - list:
         elements:
           - name: dev
-            path: infrastructure/workloads/overlays/dev
+            path: infrastructure/workloads/overlays/payu-dev
             namespace: payu-dev
             project: payu-dev
           - name: sit
-            path: infrastructure/workloads/overlays/sit
+            path: infrastructure/workloads/overlays/payu-sit
             namespace: payu-sit
             project: payu-sit
           - name: uat
-            path: infrastructure/workloads/overlays/uat
+            path: infrastructure/workloads/overlays/payu-uat
             namespace: payu-uat
             project: payu-uat
           - name: preprod
-            path: infrastructure/workloads/overlays/preprod
+            path: infrastructure/workloads/overlays/payu-preprod
             namespace: payu-preprod
             project: payu-preprod
           - name: prod
-            path: infrastructure/workloads/overlays/prod
+            path: infrastructure/workloads/overlays/payu-prod
             namespace: payu
             project: payu
 

@@ -22,6 +22,6 @@ data:
   KEYCLOAK_URL: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
   POSTGRES_HOST: "payu-postgres"
   POSTGRES_PORT: "5432"
-  REDIS_HOST: "payu-cache"
-  REDIS_PORT: "6379"
+  REDIS_HOST: "payu-datagrid"
+  REDIS_PORT: "11222"
   KAFKA_URL: "payu-kafka-kafka-bootstrap:9092"

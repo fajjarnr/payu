@@ -8,11 +8,12 @@ quarkus:
     auth:
       permission:
         public-health:
-          paths: "/**/public/health"
+          paths: "/public/health,/q/health/*"
           policy: permit
   oidc:
     auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:payu}
     client-id: ${OIDC_CLIENT_ID:api-portal-service}
+    connection-delay: 30S
     tls:
       verification: none
     token:
@@ -46,6 +47,8 @@ quarkus:
             type: STRING
   # OpenTelemetry
   otel:
+    sdk:
+      disabled: ${OTEL_SDK_DISABLED:true}
     service:
       name: api-portal-service
     exporter:

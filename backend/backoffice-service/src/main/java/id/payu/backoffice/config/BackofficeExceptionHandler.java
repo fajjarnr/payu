@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
  * Provides consistent error responses across all controllers.
  */
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class BackofficeExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(BackofficeExceptionHandler.class);
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
