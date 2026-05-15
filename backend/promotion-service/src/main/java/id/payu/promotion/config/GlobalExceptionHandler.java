@@ -1,10 +1,8 @@
-package id.payu.support.config;
+package id.payu.promotion.config;
 
-import id.payu.api.common.response.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,18 +16,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Global exception handler for support-service.
+ * Global exception handler for promotion-service.
  * Provides consistent error responses across all controllers.
  */
 @RestControllerAdvice
-public class SupportServiceExceptionHandler {
+public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(SupportServiceExceptionHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
-        return buildResponse(HttpStatus.FORBIDDEN, "SUP_403", "Insufficient permissions");
+        return buildResponse(HttpStatus.FORBIDDEN, "PROMO_403", "Insufficient permissions");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -38,31 +36,31 @@ public class SupportServiceExceptionHandler {
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         log.warn("Validation failed: {}", errors);
-        return buildResponse(HttpStatus.BAD_REQUEST, "SUP_400", errors);
+        return buildResponse(HttpStatus.BAD_REQUEST, "PROMO_400", errors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
         log.warn("Constraint violation: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "SUP_400", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "PROMO_400", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         log.warn("Invalid argument: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "SUP_400", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "PROMO_400", ex.getMessage());
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        log.warn("Data integrity violation: {}", ex.getMessage());
-        return buildResponse(HttpStatus.CONFLICT, "SUP_409", "Resource already exists or constraint violated");
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        log.warn("Illegal state: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "PROMO_409", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
-        log.error("Unhandled exception in support-service", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "SUP_500",
+        log.error("Unhandled exception in promotion-service", ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "PROMO_500",
                 "An unexpected error occurred");
     }
 

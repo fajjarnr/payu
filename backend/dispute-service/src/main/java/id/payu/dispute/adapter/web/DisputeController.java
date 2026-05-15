@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class DisputeController {
     private final DisputeUseCase disputeUseCase;
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "List disputes", description = "Lists all disputes in the system")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -49,6 +51,7 @@ public class DisputeController {
 
     @PostMapping
     @Idempotent(required = true)
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
     @Operation(summary = "Open a dispute", description = "Creates a new dispute for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Dispute created successfully",
@@ -72,6 +75,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/investigate")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Start investigation", description = "Transitions dispute from OPEN to INVESTIGATING")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Investigation started",
@@ -88,6 +92,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/resolve")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Resolve a dispute", description = "Transitions dispute from INVESTIGATING to RESOLVED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute resolved",
@@ -105,6 +110,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/reject")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Reject a dispute", description = "Transitions dispute to REJECTED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute rejected",
@@ -121,6 +127,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/escalate")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Escalate a dispute", description = "Transitions dispute from INVESTIGATING to ESCALATED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute escalated",
@@ -137,6 +144,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/evidence")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
     @Operation(summary = "Add evidence", description = "Adds evidence to a dispute")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Evidence added",
@@ -158,6 +166,7 @@ public class DisputeController {
     }
 
     @GetMapping("/{disputeId}")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
     @Operation(summary = "Get dispute by ID", description = "Retrieves a dispute by its ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute found",
@@ -174,6 +183,7 @@ public class DisputeController {
     }
 
     @GetMapping("/transaction/{transactionId}")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
     @Operation(summary = "Get disputes by transaction", description = "Retrieves all disputes for a transaction")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -185,6 +195,7 @@ public class DisputeController {
     }
 
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
     @Operation(summary = "Get disputes by customer", description = "Retrieves all disputes for a customer")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -196,6 +207,7 @@ public class DisputeController {
     }
 
     @GetMapping("/merchant/{merchantId}")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Get disputes by merchant", description = "Retrieves all disputes for a merchant")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -207,6 +219,7 @@ public class DisputeController {
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
     @Operation(summary = "Get disputes by status", description = "Retrieves disputes filtered by status")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))

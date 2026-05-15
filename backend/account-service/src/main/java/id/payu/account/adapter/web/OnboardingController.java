@@ -3,6 +3,7 @@ package id.payu.account.adapter.web;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +43,7 @@ public class OnboardingController {
     }
 
     @PostMapping("/register")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.CREATE,
             entityType = "User",

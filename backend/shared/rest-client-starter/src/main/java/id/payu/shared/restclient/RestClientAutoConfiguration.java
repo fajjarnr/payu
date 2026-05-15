@@ -49,6 +49,9 @@ public class RestClientAutoConfiguration {
     /**
      * Provides a pre-configured {@link RestClient.Builder} with PayU defaults.
      * Services can inject this builder to create customized RestClient instances.
+     *
+     * <p>Includes {@link CorrelationIdInterceptor} to propagate {@code X-Correlation-Id}
+     * and {@code X-Request-Id} headers on all outbound inter-service calls (TRACE-001).
      */
     @Bean
     @ConditionalOnMissingBean(name = "payuRestClientBuilder")
@@ -63,7 +66,8 @@ public class RestClientAutoConfiguration {
         return RestClient.builder()
                 .requestFactory(factory)
                 .defaultHeader("User-Agent", "PayU-RestClient/1.0")
-                .defaultStatusHandler(new RestClientErrorHandler());
+                .defaultStatusHandler(new RestClientErrorHandler())
+                .requestInterceptor(new CorrelationIdInterceptor());
     }
 
     /**

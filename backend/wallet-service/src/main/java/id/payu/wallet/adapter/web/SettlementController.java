@@ -81,6 +81,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/process")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = false)
     @Operation(summary = "Start processing settlement", description = "Start processing a settlement batch")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> startProcessing(
             @PathVariable UUID batchId,
@@ -91,6 +92,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/complete")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = false)
     @Operation(summary = "Complete settlement", description = "Mark settlement batch as completed")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> completeSettlement(
             @PathVariable UUID batchId) {
@@ -100,6 +102,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/fail")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = false)
     @Operation(summary = "Fail settlement", description = "Mark settlement batch as failed")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> failSettlement(
             @PathVariable UUID batchId,
@@ -110,6 +113,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/override")
     @PreAuthorize("hasRole('ADMIN')")
+    @Idempotent(required = true)
     @Operation(summary = "Manual override settlement", description = "Manually override a failed settlement")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> manualOverride(
             @PathVariable UUID batchId,

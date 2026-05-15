@@ -4,6 +4,8 @@ import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
 import id.payu.backoffice.adapter.persistence.repository.CustomerCaseRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,8 @@ public class CustomerCaseService {
     private final CustomerCaseRepository repository;
 
     @Transactional
+    @CircuitBreaker(name = "backofficeService", fallbackMethod = "createFallback")
+    @Retry(name = "backofficeService")
     public CustomerCase create(CustomerCaseRequest request) {
         log.info("Creating customer case for user: {}, type: {}", request.userId(), request.caseType());
 
@@ -111,5 +115,13 @@ public class CustomerCaseService {
     public void delete(UUID id) {
         log.info("Deleting customer case: id={}", id);
         repository.deleteById(id);
+    }
+
+    // ─── Fallback methods ──────────────────────────────────────────────────────
+
+    private CustomerCase createFallback(CustomerCaseRequest request, Throwable ex) {
+        log.error("Circuit breaker triggered for CustomerCaseService.create [userId={}]: {}",
+                request.userId(), ex.getMessage());
+        throw new IllegalStateException("Backoffice service temporarily unavailable. Please retry later.", ex);
     }
 }

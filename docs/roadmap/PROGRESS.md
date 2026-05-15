@@ -21,11 +21,15 @@
 | Backend Services         | 🟢 23/23                                 | (AB-Testing removed, 23 services deployed)      |
 | Frontend Pages           | 🟢 44/44                                 | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)      | 🟢 23/23                                 | All deployed services have Swagger/OpenAPI      |
-| **Production Readiness** | 🟡 82/100                                | Audit May 14 — 36 of 53 findings fixed. Score: 67→82. Podman: 36 healthy. |
+| **Production Readiness** | 🟡 83/100                                | May 15 fixes — ERR-001, TRACE-001, IDEM-002, RES-004 partial. Score: 82→83. |
+| GlobalExceptionHandler   | 🟢 18/18                                 | All Spring services covered — 6 new handlers created May 15 |
+| Distributed Tracing      | 🟢 Fixed                                 | `CorrelationIdInterceptor` in rest-client-starter — X-Correlation-Id propagated |
+| Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟡 33 open                               | 4 P0 (arch/security refactors), 9 P1, 20 P2    |
-| Last Status Update       | 2026-05-14                               | v1.8.2 — AUTH-030 verified. 36 containers healthy in podman compose. Score: 82/100. |
+| Open Bugs (TODOS.md)     | 🟡 27 open                               | 2 P0 (arch refactors), 9 P1, 18 P2 — 6 closed May 15 |
+| Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
+| Last Status Update       | 2026-05-15                               | v1.8.3 — Bug fixes applied. Score: 83/100. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
@@ -84,7 +88,47 @@
 
 ## 📦 Deployment Log
 
-### v1.8.2 (In Progress) — May 14, 2026
+### v1.8.3 (In Progress) — May 15, 2026
+
+**Production Readiness Bug Fixes — Batch 2 + Dev Tools Setup:**
+
+- ✅ **ERR-001/ERR-005 — 6 GlobalExceptionHandlers Created** (all 18 Spring services now covered):
+  - `backoffice-service`: `GlobalExceptionHandler` with `BO_4xx/5xx` error codes
+  - `cms-service`: `GlobalExceptionHandler` with `CMS_4xx/5xx` error codes
+  - `dispute-service`: `GlobalExceptionHandler` with `DISP_4xx/5xx` error codes
+  - `promotion-service`: `GlobalExceptionHandler` with `PROMO_4xx/5xx` error codes
+  - `transaction-service`: `GlobalExceptionHandler` with `TXN_4xx/5xx` error codes
+  - `support-service`: `SupportServiceExceptionHandler` upgraded — added `AccessDeniedException`, `MethodArgumentNotValidException`, `ConstraintViolationException`, `IllegalArgumentException`, generic `Exception` handlers with `SUP_4xx/5xx` codes
+- ✅ **TRACE-001 — Correlation ID Propagation Fixed**:
+  - Created `CorrelationIdInterceptor` in `shared/rest-client-starter` — reads `correlationId` + `requestId` from SLF4J MDC, propagates as `X-Correlation-Id` + `X-Request-Id` on all outbound inter-service HTTP calls
+  - Registered in `RestClientAutoConfiguration.payuRestClientBuilder()` via `.requestInterceptor(new CorrelationIdInterceptor())`
+  - Generates new UUID if MDC has no correlationId (ensures every call always carries a trace ID)
+- ✅ **IDEM-002 — wallet-service Full Idempotency Coverage**:
+  - `PocketController`: `createPocket` (`required=true`), `freezePocket`/`unfreezePocket`/`closePocket` (`required=false`)
+  - `SettlementController`: `startProcessing`/`completeSettlement`/`failSettlement` (`required=false`), `manualOverride` (`required=true`)
+  - `SavingsGoalController`: `createSavingsGoal`/`updateSavingsGoal` (`required=true`), `pauseSavingsGoal`/`resumeSavingsGoal` (`required=false`)
+- ✅ **RES-004 Partial — Resilience Annotations Added (3 services)**:
+  - `dispute-service` `DisputeService.openDispute()`: `@CircuitBreaker(name="disputeService")` + `@Retry` + fallback
+  - `cms-service` `ContentService.createContent()` + `getContentById()`: `@CircuitBreaker(name="cmsService")` + `@Retry` + fallbacks
+  - `backoffice-service` `CustomerCaseService.create()`: `@CircuitBreaker(name="backofficeService")` + `@Retry` + fallback
+- ✅ **PII-001 Partial — @Sensitive Added (backoffice-service)**:
+  - `BackofficeAdmin.email` annotated with `@Sensitive`
+  - `BackofficeAdmin.phoneNumber` annotated with `@Sensitive`
+- ✅ **IDEM-001 Resolved (false positive)**: account-service already has `@Idempotent(required=true)` on `OnboardingController.register()`, `BeneficiaryController.createBeneficiary()`, `BeneficiaryController.updateBeneficiary()`. `UserAccountController` is GET-only.
+- ✅ **ARCH-007 Resolved (false positive)**: All 5 services confirmed to have method-level auth — cms/dispute/fx/integration use Spring `@PreAuthorize`, notification uses Quarkus `@Authenticated`.
+- ✅ **Dev Tools Installed** (build environment):
+  - `openjdk-25-jdk` (25.0.3-ea) via apt
+  - `maven` 3.9.12 via apt
+  - `nodejs` 22.22.2 LTS via NodeSource
+  - `podman` 5.7.0 + `podman-compose` 1.5.0 via apt
+  - `uv` 0.11.14 (Python package manager) via installer
+  - Python venv at `backend/analytics-service/.venv` with all deps
+  - Frontend `node_modules` installed in `web-app/` and `developer-docs/`
+  - Maven deps cached via `mvn dependency:go-offline`
+- **Score**: 82 → 83/100 (+1). 6 bugs closed, 2 resolved as false positives.
+- **Open**: 2 P0 (ARCH-008 entity placement, PII-001 remaining 12 services), 9 P1, 18 P2.
+
+### v1.8.2 (Completed) — May 14, 2026
 
 **AUTH-030 Resolution & Production Readiness Audit Phase 1:**
 

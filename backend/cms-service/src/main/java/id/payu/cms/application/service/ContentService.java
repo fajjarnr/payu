@@ -5,6 +5,8 @@ import id.payu.cms.domain.dto.ContentResponse;
 import id.payu.cms.domain.dto.ContentListResponse;
 import id.payu.cms.domain.entity.Content;
 import id.payu.cms.domain.repository.ContentRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -39,6 +41,8 @@ public class ContentService {
      */
     @Transactional
     @CacheEvict(value = "contents", allEntries = true)
+    @CircuitBreaker(name = "cmsService", fallbackMethod = "createContentFallback")
+    @Retry(name = "cmsService")
     public ContentResponse createContent(ContentRequest request, String createdBy) {
         log.info("Creating new content: {}", request.getTitle());
 
@@ -124,6 +128,8 @@ public class ContentService {
      * Get content by ID
      */
     @Cacheable(value = "contents", key = "#id")
+    @CircuitBreaker(name = "cmsService", fallbackMethod = "getContentByIdFallback")
+    @Retry(name = "cmsService")
     public ContentResponse getContentById(UUID id) {
         Content content = contentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Content not found with ID: " + id));
@@ -232,6 +238,17 @@ public class ContentService {
         return contentRepository.findActiveToArchive(LocalDate.now());
     }
 
+    // ─── Fallback methods ──────────────────────────────────────────────────────
+
+    private ContentResponse createContentFallback(ContentRequest request, String createdBy, Throwable ex) {
+        log.error("Circuit breaker triggered for createContent [title={}]: {}", request.getTitle(), ex.getMessage());
+        throw new IllegalStateException("CMS service temporarily unavailable. Please retry later.", ex);
+    }
+
+    private ContentResponse getContentByIdFallback(UUID id, Throwable ex) {
+        log.error("Circuit breaker triggered for getContentById [id={}]: {}", id, ex.getMessage());
+        throw new IllegalStateException("CMS service temporarily unavailable. Please retry later.", ex);
+    }
     /**
      * Activate scheduled content
      */

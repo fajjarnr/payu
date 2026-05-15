@@ -5,6 +5,8 @@ import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.model.DisputeStatus;
 import id.payu.dispute.domain.port.in.DisputeUseCase;
 import id.payu.dispute.domain.port.out.DisputePersistencePort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ public class DisputeService implements DisputeUseCase {
     private final DisputePersistencePort disputePersistencePort;
 
     @Override
+    @CircuitBreaker(name = "disputeService", fallbackMethod = "openDisputeFallback")
+    @Retry(name = "disputeService")
     public Dispute openDispute(UUID transactionId, UUID customerId, UUID merchantId,
                                BigDecimal disputedAmount, String currency, String reason) {
         log.info("Opening dispute for transaction: {} by customer: {}", transactionId, customerId);
@@ -159,5 +163,15 @@ public class DisputeService implements DisputeUseCase {
     public List<Dispute> getAllDisputes() {
         log.debug("Getting all disputes");
         return disputePersistencePort.findAll();
+    }
+
+    // ─── Fallback methods ──────────────────────────────────────────────────────
+
+    private Dispute openDisputeFallback(UUID transactionId, UUID customerId, UUID merchantId,
+                                        BigDecimal disputedAmount, String currency, String reason,
+                                        Throwable ex) {
+        log.error("Circuit breaker triggered for openDispute [transactionId={}]: {}",
+                transactionId, ex.getMessage());
+        throw new IllegalStateException("Dispute service temporarily unavailable. Please retry later.", ex);
     }
 }

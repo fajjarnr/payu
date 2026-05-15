@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ public class IntegrationController {
     private final IntegrationUseCase integrationUseCase;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get integration service info",
             description = "Retrieve service status and available endpoints")
     @ApiResponses(value = {
@@ -64,6 +66,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/swift/process")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
     @Operation(summary = "Process SWIFT message",
             description = "Process an incoming SWIFT MT message (MT103, MT202, MT940)")
     @ApiResponses(value = {
@@ -89,6 +92,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/ojk/generate-report")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'compliance_officer')")
     @Operation(summary = "Generate OJK regulatory report",
             description = "Generate and submit OJK regulatory report (CSV or XML format)")
     @ApiResponses(value = {
@@ -114,6 +118,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/soap/send")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
     @Operation(summary = "Send SOAP request",
             description = "Send SOAP request to legacy system endpoint")
     @ApiResponses(value = {
@@ -139,6 +144,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/http/send")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
     @Operation(summary = "Send HTTP request",
             description = "Send generic HTTP request to external system")
     @ApiResponses(value = {
@@ -164,6 +170,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/status")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get integration service status",
             description = "Retrieve the current operational status of the integration service")
     @ApiResponses(value = {
@@ -180,6 +187,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/messages/{messageId}/status")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
     @Operation(summary = "Get message processing status",
             description = "Retrieve the current status of an integration message")
     @ApiResponses(value = {
@@ -196,6 +204,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/messages")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
     @Operation(summary = "Get messages by status",
             description = "List integration messages filtered by status")
     @ApiResponses(value = {
@@ -215,6 +224,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/messages/{messageId}/retry")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator')")
     @Operation(summary = "Retry failed message",
             description = "Queue a failed message for retry processing")
     @ApiResponses(value = {
@@ -245,6 +255,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/messages/{messageId}/cancel")
+    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator')")
     @Operation(summary = "Cancel pending message",
             description = "Cancel a message that has not been processed yet")
     @ApiResponses(value = {

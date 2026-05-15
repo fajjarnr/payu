@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -38,6 +39,7 @@ public class ContentController {
     private final ContentService contentService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
     @Operation(
         summary = "Create new content",
         description = "Create a new content (banner, promo, alert, or popup)"
@@ -49,6 +51,8 @@ public class ContentController {
             content = @Content(schema = @Schema(implementation = ContentResponse.class))
         ),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden — insufficient permissions"),
         @ApiResponse(responseCode = "409", description = "Content with same title already exists")
     })
     public ResponseEntity<ContentResponse> createContent(
@@ -61,6 +65,7 @@ public class ContentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
     @Operation(
         summary = "Update content",
         description = "Update an existing content by ID"
@@ -72,6 +77,8 @@ public class ContentController {
             content = @Content(schema = @Schema(implementation = ContentResponse.class))
         ),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden — insufficient permissions"),
         @ApiResponse(responseCode = "404", description = "Content not found"),
         @ApiResponse(responseCode = "409", description = "Content with same title already exists")
     })
@@ -87,6 +94,7 @@ public class ContentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get content by ID",
         description = "Retrieve a specific content by its ID"
@@ -97,6 +105,7 @@ public class ContentController {
             description = "Content retrieved successfully",
             content = @Content(schema = @Schema(implementation = ContentResponse.class))
         ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "404", description = "Content not found")
     })
     public ResponseEntity<ContentResponse> getContentById(
@@ -108,6 +117,7 @@ public class ContentController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all content",
         description = "Retrieve paginated list of all content"
@@ -117,7 +127,8 @@ public class ContentController {
             responseCode = "200",
             description = "Content list retrieved successfully",
             content = @Content(schema = @Schema(implementation = ContentListResponse.class))
-        )
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<ContentListResponse> getAllContent(
         @Parameter(description = "Page number (0-based)", example = "0")
@@ -137,6 +148,7 @@ public class ContentController {
     }
 
     @GetMapping("/type/{type}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get content by type",
         description = "Retrieve all content of a specific type (BANNER, PROMO, ALERT, POPUP)"
@@ -145,7 +157,8 @@ public class ContentController {
         @ApiResponse(
             responseCode = "200",
             description = "Content list retrieved successfully"
-        )
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<ContentResponse>> getContentByType(
         @Parameter(description = "Content type", required = true, example = "BANNER")
@@ -156,6 +169,7 @@ public class ContentController {
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get content by status",
         description = "Retrieve all content with a specific status (DRAFT, SCHEDULED, ACTIVE, PAUSED, ARCHIVED)"
@@ -164,7 +178,8 @@ public class ContentController {
         @ApiResponse(
             responseCode = "200",
             description = "Content list retrieved successfully"
-        )
+        ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<ContentResponse>> getContentByStatus(
         @Parameter(description = "Content status", required = true, example = "ACTIVE")
@@ -175,6 +190,7 @@ public class ContentController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
     @Operation(
         summary = "Update content status",
         description = "Update the status of a content (e.g., DRAFT -> ACTIVE)"
@@ -185,6 +201,8 @@ public class ContentController {
             description = "Status updated successfully",
             content = @Content(schema = @Schema(implementation = ContentResponse.class))
         ),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden — insufficient permissions"),
         @ApiResponse(responseCode = "404", description = "Content not found"),
         @ApiResponse(responseCode = "400", description = "Invalid status value")
     })
@@ -203,12 +221,15 @@ public class ContentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('admin', 'cms_admin')")
     @Operation(
         summary = "Delete content",
         description = "Permanently delete a content by ID"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Content deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden — insufficient permissions"),
         @ApiResponse(responseCode = "404", description = "Content not found")
     })
     public ResponseEntity<Void> deleteContent(

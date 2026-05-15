@@ -1,6 +1,7 @@
 package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.wallet.adapter.persistence.entity.SavingsGoalEntity;
 import id.payu.wallet.adapter.persistence.repository.PocketJpaRepository;
 import id.payu.wallet.adapter.persistence.repository.SavingsGoalJpaRepository;
@@ -69,6 +70,7 @@ public class SavingsGoalController {
     }
 
     @PostMapping
+    @Idempotent(required = true)
     @Operation(summary = "Create a new savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> createSavingsGoal(
@@ -111,6 +113,7 @@ public class SavingsGoalController {
     }
 
     @PutMapping("/{goalId}")
+    @Idempotent(required = true)
     @Operation(summary = "Update savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> updateSavingsGoal(
@@ -189,6 +192,7 @@ public class SavingsGoalController {
     }
 
     @PostMapping("/{goalId}/pause")
+    @Idempotent(required = false)
     @Operation(summary = "Pause a savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> pauseSavingsGoal(
@@ -227,6 +231,7 @@ public class SavingsGoalController {
     }
 
     @PostMapping("/{goalId}/resume")
+    @Idempotent(required = false)
     @Operation(summary = "Resume a paused savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> resumeSavingsGoal(

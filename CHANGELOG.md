@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Production Readiness Fixes — Batch 2 (2026-05-15)
+
+- **ERR-001/ERR-005 — GlobalExceptionHandler (6 services)**: Created service-specific `@RestControllerAdvice` handlers for backoffice (`BO_`), cms (`CMS_`), dispute (`DISP_`), promotion (`PROMO_`), transaction (`TXN_`). Upgraded support-service handler (`SUP_`) with full coverage: `AccessDeniedException`, `MethodArgumentNotValidException`, `ConstraintViolationException`, `IllegalArgumentException`, `DataIntegrityViolationException`, generic `Exception`. All 18 Spring services now have local exception handlers.
+- **TRACE-001 — Correlation ID Propagation**: Created `CorrelationIdInterceptor` in `shared/rest-client-starter`. Reads `correlationId`/`requestId` from SLF4J MDC, propagates as `X-Correlation-Id`/`X-Request-Id` on all outbound `RestClient` calls. Registered in `RestClientAutoConfiguration.payuRestClientBuilder()`. Distributed tracing now works across all service boundaries.
+- **IDEM-002 — wallet-service Full Idempotency**: Added `@Idempotent` to `PocketController` (create/freeze/unfreeze/close), `SettlementController` (process/complete/fail/override), `SavingsGoalController` (create/update/pause/resume). `SplitPaymentController` and `JournalController` were already covered.
+- **RES-004 Partial — Resilience Annotations**: Added `@CircuitBreaker` + `@Retry` + fallback methods to `DisputeService.openDispute()`, `ContentService.createContent()`/`getContentById()`, `CustomerCaseService.create()`.
+- **PII-001 Partial — @Sensitive**: Annotated `BackofficeAdmin.email` and `BackofficeAdmin.phoneNumber` with `@Sensitive` from security-starter.
+- **IDEM-001 Resolved (false positive)**: account-service already has `@Idempotent(required=true)` on all state-changing endpoints.
+- **ARCH-007 Resolved (false positive)**: All 5 flagged services confirmed to have method-level auth.
+
+### Dev Tools Installation (2026-05-15)
+
+- Installed `openjdk-25-jdk` (25.0.3-ea), `maven` 3.9.12, `nodejs` 22.22.2 LTS, `podman` 5.7.0, `podman-compose` 1.5.0, `uv` 0.11.14, `jq` 1.8.1 on build environment.
+- Created Python venv at `backend/analytics-service/.venv` with all service dependencies.
+- Installed frontend `node_modules` for `web-app/` and `developer-docs/`.
+- Cached Maven dependencies via `mvn dependency:go-offline`. Backend compiles clean.
+
 ### AUTH-030 — Health Endpoint Stabilization & Production Readiness Audit (2026-05-14)
 
 - **AUTH-030/031 Resolved (verified in podman compose)**: Zero 401 errors on all health endpoints. 18 HealthController + 18 SecurityConfig + Gateway `AuthorizationFilter.endsWith("/public/health")`.

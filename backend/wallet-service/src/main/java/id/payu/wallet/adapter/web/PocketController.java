@@ -48,6 +48,7 @@ public class PocketController extends BaseController {
         }
 
     @PostMapping
+    @Idempotent(required = true)
     @Operation(summary = "Create pocket", description = "Creates a new pocket for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket created successfully",
             content = @Content(schema = @Schema(implementation = PocketResponse.class)))
@@ -177,6 +178,7 @@ public class PocketController extends BaseController {
     }
 
     @PostMapping("/{pocketId}/freeze")
+    @Idempotent(required = false)
     @Operation(summary = "Freeze pocket", description = "Freezes a pocket to prevent transactions")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket frozen successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
@@ -196,6 +198,7 @@ public class PocketController extends BaseController {
     }
 
     @PostMapping("/{pocketId}/unfreeze")
+    @Idempotent(required = false)
     @Operation(summary = "Unfreeze pocket", description = "Unfreezes a pocket to allow transactions")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket unfrozen successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
@@ -215,6 +218,7 @@ public class PocketController extends BaseController {
     }
 
     @PostMapping("/{pocketId}/close")
+    @Idempotent(required = false)
     @Operation(summary = "Close pocket", description = "Closes a pocket")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket closed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")

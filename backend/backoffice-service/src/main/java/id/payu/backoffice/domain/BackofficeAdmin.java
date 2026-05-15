@@ -1,5 +1,6 @@
 package id.payu.backoffice.domain;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +28,7 @@ public class BackofficeAdmin {
     private String username;
 
     @Column(nullable = false, unique = true)
+    @Sensitive
     private String email;
 
     @Column(length = 255)
@@ -39,6 +41,7 @@ public class BackofficeAdmin {
     private String lastName;
 
     @Column(length = 20)
+    @Sensitive
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)

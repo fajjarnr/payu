@@ -6,6 +6,7 @@ import id.payu.account.entity.Beneficiary;
 import id.payu.account.repository.BeneficiaryRepository;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.api.common.response.ApiResponse;
+import id.payu.commons.idempotency.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -66,6 +67,7 @@ public class BeneficiaryController {
     }
 
     @PostMapping
+    @Idempotent(required = true)
     @Operation(summary = "Add a new beneficiary")
     @PreAuthorize("hasAuthority('write:account')")
     public ResponseEntity<ApiResponse<BeneficiaryResponse>> createBeneficiary(
@@ -126,6 +128,7 @@ public class BeneficiaryController {
     }
 
     @PutMapping("/{beneficiaryId}")
+    @Idempotent(required = true)
     @Operation(summary = "Update beneficiary nickname")
     @PreAuthorize("hasAuthority('write:account')")
     public ResponseEntity<ApiResponse<BeneficiaryResponse>> updateBeneficiary(

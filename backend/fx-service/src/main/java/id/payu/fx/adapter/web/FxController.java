@@ -23,6 +23,7 @@ import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -64,6 +65,7 @@ public class FxController extends BaseController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "FX service status", description = "Returns FX service health and available endpoints")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFxStatus() {
         return ResponseEntity.ok(ApiResponse.success(Map.of(
@@ -74,6 +76,7 @@ public class FxController extends BaseController {
     }
 
     @GetMapping("/rates/{fromCurrency}/{toCurrency}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get current FX rate", description = "Retrieve the current exchange rate between two currencies")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "FX rate retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
@@ -89,6 +92,7 @@ public class FxController extends BaseController {
     }
 
     @GetMapping("/rates")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get all FX rates", description = "Retrieve all available exchange rates")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "FX rates retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
@@ -102,6 +106,7 @@ public class FxController extends BaseController {
     }
 
     @PostMapping("/conversions/estimate")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Estimate conversion", description = "Get a conversion estimate without executing the transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion estimate retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
@@ -126,6 +131,7 @@ public class FxController extends BaseController {
 
     @PostMapping("/conversions")
     @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated()")
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
             entityType = "FxConversion",
@@ -169,6 +175,7 @@ public class FxController extends BaseController {
     }
 
     @GetMapping("/conversions/{conversionId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get conversion by ID", description = "Retrieve conversion transaction details")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion found",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
@@ -182,6 +189,7 @@ public class FxController extends BaseController {
     }
 
     @GetMapping("/conversions")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user conversions", description = "Retrieve all conversion transactions for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversions retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
