@@ -35,15 +35,15 @@ export default function NotificationsPage() {
   const { data: notificationsData, isLoading } = useNotifications(userId);
   const markRead = useMarkNotificationRead();
 
-  const rawNotifications: any[] = Array.isArray(notificationsData) ? notificationsData : (notificationsData as any)?.content ?? [];
+  const rawNotifications = Array.isArray(notificationsData) ? notificationsData : [];
   // BUG-CROSS-032: Map backend field names (body/sentAt) to frontend display fields (content/timestamp)
-  const notifications = rawNotifications.map((n: any) => ({
-    id: n.id as string,
-    title: n.title as string ?? '',
-    content: (n.body ?? n.content ?? n.message ?? '') as string,
-    type: n.type as string ?? 'INFO',
-    read: n.read as boolean ?? false,
-    timestamp: (n.sentAt ?? n.timestamp ?? n.createdAt ?? '') as string,
+  const notifications = rawNotifications.map((n) => ({
+    id: n.id,
+    title: n.title ?? '',
+    content: n.body ?? '',
+    type: n.channel ?? 'IN_APP',
+    read: !!n.readAt,
+    timestamp: n.sentAt ?? n.createdAt ?? '',
   }));
 
   const filteredNotifs = notifications.filter((n: { title: string; content: string; type: string; read: boolean }) => {

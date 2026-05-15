@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
   };
 
   // BUG-FE-062: Use trajectory data from analytics instead of hardcoded array
-  const trajectoryData: { day: string; masuk: number; keluar: number }[] = (analytics as any)?.trajectoryData ?? []
+  const trajectoryData: { day: string; masuk: number; keluar: number }[] = analytics?.trajectoryData ?? []
 
   const breakdownData = analyticsData.spendingBreakdown.map(cat => ({
     name: cat.label,

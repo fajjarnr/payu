@@ -163,7 +163,7 @@ spring:
       on-profile: dev
   jpa:
     hibernate:
-      ddl-auto: drop-and-create
+      ddl-auto: create-drop
     show-sql: true
   flyway:
     enabled: false

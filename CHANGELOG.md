@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Code Quality, SEO & Database Hardening — Batch 4 (2026-05-15)
+
+- **CQ-001 — Type Safety (26 `as any` removed)**: Replaced all unsafe type casts across 6 frontend files with proper TypeScript types. rewards/page.tsx (14→`LoyaltyBalanceResponse`/`ReferralSummaryResponse`/`Promotion`), cards/page.tsx (8→`ExtendedCardData`), notifications/page.tsx (2→`Notification`), analytics/page.tsx (1→`AnalyticsData.trajectoryData`), scheduled-transfers/page.tsx (1→union type), split-bill/page.tsx (1→`CreateSplitBillRequest`), i18n/request.ts (1→`typeof locales[number]`).
+- **SEO-001 — Per-Page Metadata**: Added `metadata` exports to 10 route layouts (dashboard, transactions, notifications, cards, rewards, bills, investments, lending, analytics, support). Indonesian-language titles and descriptions for SEO.
+- **SEO-002 — robots.txt + sitemap.xml**: Created `src/app/robots.ts` and `src/app/sitemap.ts` using Next.js Metadata API. Covers all locales (id/en) with proper priority and changeFrequency.
+- **PERF-002 — Suspense Boundaries Confirmed**: All 24 data-loading routes verified to have `loading.tsx` (Next.js App Router Suspense boundary).
+- **DB-002 — Container Profile Hardening (5 services)**: Changed `ddl-auto: update` → `validate` in `application-container.yml` for lending, partner, investment, promotion, support. Flyway handles schema in deployed environments.
+- **DB-003 — Dev Profile Fix (2 services)**: Changed `ddl-auto: drop-and-create` → `create-drop` in promotion-service and billing-service dev profiles (Hibernate 6 standard).
+- **DX-002 — Frontend .env.example**: Created `frontend/web-app/.env.example` with all required environment variables (gateway, OIDC, WebSocket, feature flags, observability).
+- **YAML-009 — OIDC Patches Confirmed**: payu-dev overlay already has OIDC patches for all 21 services (18 Spring + 3 Quarkus).
+
 ### Production Readiness Fixes — Batch 3 (2026-05-15)
 
 - **PII-001 — @Sensitive Annotations (12 services)**: Added `@Sensitive` to PII fields across 17 entity files: partner (email, phone, apiKey/CRITICAL, clientSecret/CRITICAL, publicKey/CRITICAL, merchant PIC data, settlement accounts/HIGH), billing (accountId/HIGH, referenceNumber/HIGH, customerId), compliance (userId, accessedBy, ipAddress, merchantId), dispute (customerId/HIGH, merchantId/HIGH), fx (accountId/HIGH), investment (userId/HIGH, accountId/HIGH), statement (customerId, accountNumber/HIGH, sender/recipient data), support (name, email), integration (rawPayload/HIGH, transformedPayload/HIGH, businessReference), promotion (accountId/HIGH across 4 entities). All 18 services now have PII protection.

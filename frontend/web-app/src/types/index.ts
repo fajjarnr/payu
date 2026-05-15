@@ -211,6 +211,7 @@ export interface AnalyticsData {
   savingsChange: number;
   roiChange: number;
   spendingBreakdown: SpendingCategory[];
+  trajectoryData?: { day: string; masuk: number; keluar: number }[];
 }
 
 export interface SpendingCategory {

@@ -67,7 +67,11 @@ export default function ScheduledTransfersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    amount: number;
+    description: string;
+    scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
+  }>({
     amount: 0,
     description: '',
     scheduleType: 'ONE_TIME',
@@ -96,7 +100,7 @@ export default function ScheduledTransfersPage() {
       data: {
         amount: editForm.amount,
         description: editForm.description,
-        scheduleType: editForm.scheduleType as any,
+        scheduleType: editForm.scheduleType,
       },
     });
 
@@ -378,7 +382,7 @@ export default function ScheduledTransfersPage() {
               <label className="text-sm font-medium">Tipe Jadwal</label>
               <Select
                 value={editForm.scheduleType}
-                onValueChange={(value: string) => setEditForm((prev) => ({ ...prev, scheduleType: value }))}
+                onValueChange={(value: string) => setEditForm((prev) => ({ ...prev, scheduleType: value as typeof prev.scheduleType }))}
               >
                 <SelectTrigger>
                   <SelectValue />

@@ -7,7 +7,7 @@ export default getRequestConfig(async ({ locale }) => {
   const resolvedLocale = locale || defaultLocale;
   
   // Validate locale
-  const finalLocale = locales.includes(resolvedLocale as any) ? resolvedLocale : defaultLocale;
+  const finalLocale = locales.includes(resolvedLocale as typeof locales[number]) ? resolvedLocale : defaultLocale;
 
   return {
     locale: finalLocale,

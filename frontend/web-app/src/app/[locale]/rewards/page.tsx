@@ -10,13 +10,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLoyaltyBalance, useLoyaltyPoints, useCashbacks, useReferrals, useReferralSummary, useActivePromotions, useRewardsSummary } from '@/hooks';
 import { useGamificationSummary, useGamificationStreak, useCheckin } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import type { LoyaltyBalanceResponse, Cashback, ReferralSummaryResponse, Promotion } from '@/services/PromotionService';
 
 export default function RewardsPage() {
   const [activeTab, setActiveTab] = useState<'points' | 'cashback' | 'referral'>('points');
   const { user, accountId } = useAuthStore();
   const acctId = accountId ?? '';
   const userId = user?.id ?? '';
-  const { data: loyaltyData } = useLoyaltyPoints(acctId);
+  const { data: loyaltyData } = useLoyaltyBalance(acctId);
   const { data: cashbackData } = useCashbacks(acctId);
   const { data: referralData } = useReferralSummary(acctId);
   const { data: promotionsData } = useActivePromotions();
@@ -25,33 +26,51 @@ export default function RewardsPage() {
   const checkinMutation = useCheckin();
 
   // BUG-FE-023: Use real data with skeleton/empty state instead of hardcoded fake data
+  const loyaltyBalance = loyaltyData as LoyaltyBalanceResponse | undefined;
   const loyaltyStats = {
-    totalEarned: (loyaltyData as any)?.totalEarned ?? 0,
-    totalRedeemed: (loyaltyData as any)?.totalRedeemed ?? 0,
-    currentBalance: (loyaltyData as any)?.currentBalance ?? 0,
-    pointsExpiring: (loyaltyData as any)?.pointsExpiring ?? 0,
-    expiryDate: (loyaltyData as any)?.expiryDate ?? '-'
+    totalEarned: loyaltyBalance?.totalEarned ?? 0,
+    totalRedeemed: loyaltyBalance?.totalRedeemed ?? 0,
+    currentBalance: loyaltyBalance?.currentBalance ?? 0,
+    pointsExpiring: loyaltyBalance?.pointsExpiring ?? 0,
+    expiryDate: loyaltyBalance?.expiryDate ?? '-'
   };
 
-  const recentPoints: Array<{ id: number; type: string; points: number; description: string; date: string }> = (loyaltyData as any)?.history ?? [];
+  const recentPoints: Array<{ id: number; type: string; points: number; description: string; date: string }> = [];
 
-  const cashbackHistory: Array<{ id: number; merchant: string; amount: number; status: string; date: string; description: string }> = Array.isArray(cashbackData) ? (cashbackData as any) : [];
+  const cashbackList = (cashbackData ?? []) as Cashback[];
+  const cashbackHistory = cashbackList.map(cb => ({
+    id: cb.id,
+    merchant: cb.merchantName ?? '',
+    amount: cb.amount,
+    status: cb.status.toLowerCase(),
+    date: cb.createdAt,
+    description: cb.referenceId,
+  }));
 
   // Compute cashback summary from actual data
   const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => sum + cb.amount, 0);
   const cashbackPending = cashbackHistory.filter(cb => cb.status === 'pending').reduce((sum, cb) => sum + cb.amount, 0);
   const cashbackTotal = cashbackCredited + cashbackPending;
 
+  const referralSummary = referralData as ReferralSummaryResponse | undefined;
   const referralStats = {
-    code: (referralData as any)?.code ?? '-',
-    totalReferrals: (referralData as any)?.totalReferrals ?? 0,
-    completedReferrals: (referralData as any)?.completedReferrals ?? 0,
-    pendingReferrals: (referralData as any)?.pendingReferrals ?? 0,
-    rewardPerReferral: (referralData as any)?.rewardPerReferral ?? 0,
-    totalEarnings: (referralData as any)?.totalEarnings ?? 0
+    code: '-',
+    totalReferrals: referralSummary?.totalReferrals ?? 0,
+    completedReferrals: referralSummary?.completedReferrals ?? 0,
+    pendingReferrals: referralSummary?.pendingReferrals ?? 0,
+    rewardPerReferral: 0,
+    totalEarnings: referralSummary?.totalEarnings ?? 0
   };
 
-  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string }> = Array.isArray(promotionsData) ? (promotionsData as any) : [];
+  const promotionsList = (promotionsData ?? []) as Promotion[];
+  const activePromotions = promotionsList.map(p => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    type: p.type,
+    value: String(p.value),
+    endDate: p.endDate,
+  }));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);

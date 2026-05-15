@@ -1,4 +1,10 @@
 import { SilentRefreshProvider } from '@/components/auth/SilentRefreshProvider';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard | PayU Digital Banking',
+  description: 'Kelola keuangan Anda dengan mudah. Lihat saldo, transaksi terbaru, dan ringkasan finansial.',
+};
 
 /**
  * Dashboard layout — Forces dynamic rendering for all dashboard routes.

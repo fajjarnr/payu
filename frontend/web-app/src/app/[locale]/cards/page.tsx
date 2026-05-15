@@ -28,6 +28,16 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import type { VirtualCard } from '@/services/WalletService';
 
+// Extended card properties that may come from backend but aren't in the base interface yet
+interface ExtendedCardData extends VirtualCard {
+  monthlyLimit?: number;
+  dailySpent?: number;
+  onlineEnabled?: boolean;
+  internationalEnabled?: boolean;
+  subscriptionEnabled?: boolean;
+  atmEnabled?: boolean;
+}
+
 interface CardData {
   id: string;
   cardNumber: string;
@@ -67,7 +77,7 @@ export default function CardsPage() {
       setSelectedCard(card);
       setLimitForm({
         dailyLimit: card.dailyLimit || 25000000,
-        monthlyLimit: (card as any).monthlyLimit || 100000000,
+        monthlyLimit: (card as ExtendedCardData).monthlyLimit || 100000000,
       });
       setIsLimitModalOpen(true);
     }
@@ -228,7 +238,7 @@ export default function CardsPage() {
                       <div className="space-y-6">
                         <div>
                           <p className="text-xs text-white/40 font-bold tracking-widest uppercase mb-2">Terpakai Hari Ini</p>
-                          <p className="text-3xl font-bold tabular-nums">{primaryCard ? `Rp ${((cardsData?.[0] as any)?.dailySpent ?? 0).toLocaleString('id-ID')}` : '\u2014'}</p>
+                          <p className="text-3xl font-bold tabular-nums">{primaryCard ? `Rp ${((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0).toLocaleString('id-ID')}` : '\u2014'}</p>
                         </div>
 
                         <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-center gap-3">
@@ -245,10 +255,10 @@ export default function CardsPage() {
 
                     <div className="relative z-10 space-y-4">
                         <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: `${limitForm.dailyLimit > 0 ? Math.min(100, (((cardsData?.[0] as any)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}%` }} />
+                        <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: `${limitForm.dailyLimit > 0 ? Math.min(100, (((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}%` }} />
                       </div>
                       <div className="flex justify-between items-end">
-                        <p className="text-xs font-bold text-emerald-400">{limitForm.dailyLimit > 0 ? Math.round((((cardsData?.[0] as any)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}% Terpakai</p>
+                        <p className="text-xs font-bold text-emerald-400">{limitForm.dailyLimit > 0 ? Math.round((((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}% Terpakai</p>
                         <p className="text-xs font-bold text-white/40 tabular-nums">Limit: Rp {(limitForm.dailyLimit / 1000000).toFixed(1)}jt</p>
                       </div>
                       <Button
@@ -269,10 +279,10 @@ export default function CardsPage() {
               <h3 className="text-lg font-bold text-foreground">Kontrol Operasional</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Transaksi Online', desc: 'Situs web & retail', icon: Zap, status: (cardsData?.[0] as any)?.onlineEnabled ?? false, tag: 'REKOMENDASI' },
-                  { label: 'Internasional', desc: 'Transaksi lintas negara', icon: ShieldCheck, status: (cardsData?.[0] as any)?.internationalEnabled ?? false, tag: 'AMAN' },
-                  { label: 'Langganan', desc: 'Merchant & auto-debit', icon: RefreshCw, status: (cardsData?.[0] as any)?.subscriptionEnabled ?? false, tag: 'AKTIF' },
-                  { label: 'Penarikan ATM', desc: 'Izin tarik tunai fisik', icon: Sliders, status: (cardsData?.[0] as any)?.atmEnabled ?? false, tag: 'BLOKIR' },
+                  { label: 'Transaksi Online', desc: 'Situs web & retail', icon: Zap, status: (cardsData?.[0] as ExtendedCardData)?.onlineEnabled ?? false, tag: 'REKOMENDASI' },
+                  { label: 'Internasional', desc: 'Transaksi lintas negara', icon: ShieldCheck, status: (cardsData?.[0] as ExtendedCardData)?.internationalEnabled ?? false, tag: 'AMAN' },
+                  { label: 'Langganan', desc: 'Merchant & auto-debit', icon: RefreshCw, status: (cardsData?.[0] as ExtendedCardData)?.subscriptionEnabled ?? false, tag: 'AKTIF' },
+                  { label: 'Penarikan ATM', desc: 'Izin tarik tunai fisik', icon: Sliders, status: (cardsData?.[0] as ExtendedCardData)?.atmEnabled ?? false, tag: 'BLOKIR' },
                 ].map((item, i) => (
                   <StaggerItem key={i}>
                     <div className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
