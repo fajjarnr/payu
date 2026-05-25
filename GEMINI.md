@@ -70,6 +70,43 @@
 
 > **Catatan**: Daftar lengkap microservices dan shared libraries dapat dilihat di `docs/roadmap/SERVICES.md` atau ditelusuri langsung pada direktori `backend/services/` dan `backend/shared/`.
 
+### 🏛️ 14 Immutable Laws of PayU Architecture
+
+| # | Law | Deskripsi |
+|:--|:----|:----------|
+| 1 | **Domain-Driven Boundaries** | Setiap service = 1 bounded context. Cross-domain hanya via events atau well-defined APIs |
+| 2 | **Hexagonal Architecture** | Core business logic terisolasi dari infrastructure. External deps via ports & adapters |
+| 3 | **Event-First Communication** | Prefer async events over sync HTTP untuk cross-service state |
+| 4 | **Immutable Financial Records** | No UPDATE/DELETE pada data keuangan. Semua perubahan via entry baru + audit trail |
+| 5 | **Zero Trust Security** | Setiap service authenticate setiap request. No implicit trust based on network |
+| 6 | **API-First Design** | OpenAPI/AsyncAPI contracts SEBELUM implementasi dimulai |
+| 7 | **Configuration as Code** | Semua infrastructure dan config di Git. No manual changes to production |
+| 8 | **Observability by Default** | Logs, metrics, traces wajib sebelum deploy. No deployment tanpa observability |
+| 9 | **Graceful Degradation** | Circuit breakers dan fallbacks wajib untuk handle downstream failures |
+| 10 | **Data Residency Compliance** | User data stays within regional boundaries. Explicit residency tags on PII |
+| 11 | **Independent Deployability** | Services deployable dan scalable independently. No coordinated releases |
+| 12 | **Test Automation First** | No merge tanpa automated tests. Coverage thresholds enforced di CI |
+| 13 | **Documentation as Code** | ADRs, API specs, runbooks versioned alongside code di Git |
+| 14 | **Continuous Improvement** | 20% sprint dedicated untuk tech debt, tooling, dan developer experience |
+
+### 🎯 Technology Radar
+
+| Ring | Technologies |
+|:-----|:-------------|
+| **ADOPT** | Java + Spring Boot, TypeScript, Python + FastAPI, Next.js, Expo SDK, React Native, PostgreSQL, Redis, Kafka (Strimzi), ArgoCD, Tekton, Istio, Tailwind CSS |
+| **TRIAL** | Kotlin (Android modules), Serverless/Knative, TimescaleDB (time-series analytics) |
+| **ASSESS** | Go (high-performance utilities) |
+| **HOLD** | MongoDB (avoid for new services), Vue.js (legacy only) |
+
+### 📈 DORA Metrics Targets
+
+| Metric | PayU Target |
+|:-------|:-----------:|
+| **Deployment Frequency** | ≥ 1 per day |
+| **Lead Time for Changes** | < 4 hours |
+| **Mean Time to Recovery** | < 30 minutes |
+| **Change Failure Rate** | < 10% |
+
 ---
 
 ## ⚡ Decentralized Orchestration (Swarm Mode)
@@ -140,6 +177,12 @@ payu/
 9. **Gateway-First Thinking**: Sebelum mengimplementasikan fitur, tanya: "Apakah ini relevan untuk payment gateway yang melayani TokoBapak/Nobar, atau hanya untuk consumer app?" Lihat `docs/roadmap/GATEWAY_ARCH.md` untuk konteks.
 
 10. **Frontend Principles**: Untuk Next.js web-app, maksimalkan Server Components; gunakan `"use client"` se-minimal mungkin hanya pada _leaf components_ yang membutuhkan interaksi DOM/State.
+11. **Event Publishing**: Semua service yang publish events WAJIB menggunakan `outbox-starter` (bukan direct `kafkaTemplate.send()`). Format CloudEvents 1.0.2 wajib.
+12. **Topic Naming**: Format `payu.<domain>.<event-type>.<version>` (contoh: `payu.wallet.transfer-initiated.v1`). DLQ: tambahkan `.dlq` suffix.
+13. **Port 8080 Standard**: Semua backend service WAJIB listen di port 8080 internal. External port mapping via compose/K8s.
+14. **Container Base**: Gunakan UBI9 (Red Hat Universal Base Image). Run as non-root (UID 1001), drop ALL capabilities, read-only root filesystem.
+15. **Conventional Commits**: Format `type(scope): message` wajib. Branch naming: `feature/*`, `fix/*`, `chore/*`. No force push ke protected branches.
+16. **Financial Calculations**: `BigDecimal` ONLY (NEVER `float`/`double`). Rounding mode: `HALF_EVEN`. Double-entry ledger wajib (setiap transaksi = debit + credit entry).
 
 ### Testing Guidelines (TDD)
 
@@ -156,9 +199,189 @@ payu/
 
 AI Assistant harus mematuhi aturan keamanan berikut:
 
+### Aturan Dasar
+
 1. **PII Protection**: Data sensitif (NIK, PIN, Phone) harus di-mask di logs dan di-encrypt di DB (pake `@Sensitive` & `security-starter`).
 2. **No Credentials**: Jangan pernah menuliskan password/key di `application.yml`. Gunakan placeholder atau Vault reference.
 3. **Idempotency**: Semua API kritis (transfer, payment) harus mendukung idempotency key.
+
+### Zero-Trust & Network Security
+
+4. **mTLS Strict Mode**: Mutual TLS wajib antar semua service di mesh. No plain HTTP internal.
+5. **CSP Headers**: Strict Content-Security-Policy di semua web applications.
+6. **Secret Scanning**: Gitleaks + TruffleHog wajib di CI pipeline sebelum build image.
+7. **Image Signing**: Semua production container images wajib signed dengan Cosign + SBOM (Syft).
+
+### Token & Auth Standards
+
+| Platform | Storage | Catatan |
+|:---------|:--------|:--------|
+| **Web** | HttpOnly Cookies / Memory | NEVER localStorage untuk tokens |
+| **Mobile** | SecureStore (iOS Keychain / Android Keystore) | Encrypted storage wajib |
+
+8. **Biometric Auth**: Wajib untuk semua financial mutations di mobile (transfer, payment, PIN change).
+9. **SSL Pinning**: Mandated untuk production mobile API calls (anti MiTM).
+
+### Container Security
+
+10. **Non-Root Execution**: Semua container run as UID 1001, drop ALL capabilities, `seccompProfile: RuntimeDefault`.
+11. **Read-Only Filesystem**: Root filesystem read-only. Gunakan `emptyDir` untuk `/tmp` dan `/app/logs`.
+12. **SELinux Enforced**: JANGAN pernah `setenforce 0` di production. Gunakan volume label `:Z` untuk private mounts.
+
+### Data Governance (UU PDP Compliance)
+
+| Klasifikasi | Contoh Data | Perlakuan |
+|:------------|:------------|:----------|
+| **Public** | Nama produk, kurs | Bebas akses |
+| **Internal** | Transaction ID, timestamps | Akses terbatas per service |
+| **Confidential** | Email, nama lengkap, alamat | Encrypted at rest, masked di logs |
+| **Restricted** | NIK, PIN, nomor rekening | Encrypted + tokenized, akses audit-logged |
+
+13. **Data Retention**: Definisikan retention policy per data class. Right to erasure wajib didukung.
+14. **Data Lineage**: Setiap transformasi data harus traceable dari source ke destination.
+
+---
+
+## 🌐 API & Integration Standards
+
+### 1. REST API Naming & Structure
+- **Versioned Path**: Selalu sertakan version prefix pada resource URI (contoh: `/v1/accounts`).
+- **Nouns Only**: Path menggunakan kata benda jamak (plural nouns) bergaya kebab-case (contoh: `/bank-accounts`).
+- **Deprecation**: Selalu sertakan header `Deprecation` dan `Sunset` jika merilis versi API baru.
+
+### 2. Standard Response & Error Formats
+- **Success Envelope**: Semua response sukses dibungkus envelope standard (`success` boolean, `data` object, `meta` object).
+- **Standardized Errors**: Gunakan spesifikasi RFC 9457 (Problem Details) untuk error responses. Wajib mencantumkan field `type`, `title`, `status`, `detail`, `instance`, `error_code`, dan `trace_id`.
+
+### 3. Integration Robustness
+- **Timeout Management**: Koneksi eksternal wajib menetapkan Connect & Read timeouts secara eksplisit (dilarang menggunakan library default).
+- **Retry Pattern**: Semua call partner/bank wajib menggunakan Exponential Backoff + Jitter untuk status 5xx dan 429.
+- **Webhook Security**: Inbound webhooks wajib memverifikasi signature HMAC menggunakan rolling timestamp. Gunakan caching Redis untuk pengecekan idempotensi `webhook_id`.
+
+---
+
+## 🗄️ Database & Schema Standards
+
+### 1. The Immutable Ledger Pattern
+- **Double-Entry Ledger**: Data keuangan tidak boleh di-UPDATE atau di-DELETE. Semua mutasi balance dicatat sebagai entry baru (append-only) di tabel ledger.
+- **Ledger Invariant**: Balance saat ini adalah `SUM(amount)` dari baris ledger bersangkutan. Gunakan snapshot/materialized view untuk real-time query, diperbarui via triggers/CDC.
+- **Reversal Entry**: Pembatalan atau koreksi transaksi dilakukan dengan membuat baris balance baru bermuatan korektif, bukan menghapus baris lama.
+
+### 2. Data Definition & Performance
+- **Data Types**: Kolom finansial wajib bertipe `DECIMAL(19,4)`. Timestamps wajib menggunakan `TIMESTAMPTZ`.
+- **Primary Keys**: Gunakan UUID dengan default generator `gen_random_uuid()` untuk kompatibilitas skala distributed.
+- **Index Guard**: Buat partial index untuk data yang sangat aktif (hot data seperti `status = 'PENDING'`). Gunakan keyword `CONCURRENTLY` saat migrasi index di production agar tidak men-lock tabel.
+- **Schema Migrations**: Semua perubahan schema wajib lewat script Flyway dengan penamaan standard bergaya sequential (`V[No]__description.sql`).
+
+### 3. Security & HA
+- **Row-Level Security**: Terapkan RLS untuk multi-tenancy isolation di database level.
+- **PII Encryption**: Encrypt kolom NIK, PIN, dan data restricted lainnya menggunakan extension `pgcrypto` (`pgp_sym_encrypt`).
+
+---
+
+## 🐍 Python & Machine Learning Standards
+
+### 1. FastAPI Architecture
+- **Domain-Based Directory**: Struktur service berbasis domain terisolasi (`models/`, `api/`, `services/`, `utils/`).
+- **Async Execution Strategy**: Gunakan `async def` eksklusif untuk I/O-bound tasks (database, network I/O).
+- **Event Loop Protection**: Untuk CPU-bound tasks (seperti run ML model inference), gunakan `def` biasa agar FastAPI menjalankan route tersebut di internal thread pool secara otomatis, atau dispatch via `run_in_executor`.
+
+### 2. Validation & Inference
+- **Pydantic v2**: Semua parsing dan validasi input data wajib dideklarasikan secara strict menggunakan Pydantic v2.
+- **ONNX Pipeline**: Simpan dan deploy model ML dalam format ONNX Runtime (`.onnx`) untuk mengoptimalkan latency inference di production.
+- **Feature Store & Cache**: Gunakan caching layer untuk meminimalkan latensi saat query feature engineering dari TimescaleDB.
+
+### 3. Model Monitoring & Guardrails
+- **Inference Metrics**: Promosikan latency dan prediction distribution ke Prometheus.
+- **Model Drift**: Monitor feature drift secara berkala menggunakan metric Population Stability Index (PSI).
+- **LLM Guardrails**: Sanitasi input LLM (redact PII seperti NIK/Credit Card) secara lokal sebelum dikirim ke API external, dan validasi output secara ketat sebelum ditampilkan ke customer.
+
+---
+
+## 💻 Frontend TypeScript & Next.js Standards
+
+### 1. Strict TypeScript Patterns
+- **Const Assertions**: Dilarang menggunakan enum standard. Selalu gunakan `const` objects + `typeof` mapping untuk tipe status/type.
+- **Flat Interfaces**: Hindari nested inline interfaces. Ekstrak data model ter-nest ke dalam interface mandiri yang reusable.
+- **No-Any Policy**: Menolak penulisan tipe `any`. Gunakan `unknown` digabungkan dengan type-guard function (`isSomething(input: unknown): input is Something`).
+
+### 2. Next.js 15+ Core Strategies
+- **Server Components (RSC)**: Maksimalkan RSC untuk heavy operations, data fetching, dan loading data rahasia. Client components dibatasi hanya untuk elemen interaktif (form, dialog, dsb).
+- **Form Actions**: Gunakan React 19 `useActionState` Hook untuk interaksi form dengan Server Actions secara robust.
+- **Async Next.js APIs**: Selalu gunakan kata kunci `await` saat memanggil runtime API asinkron Next.js 15 (`cookies()`, `headers()`, `params`).
+- **Eliminate Waterfalls**: Terapkan parallel fetching (`Promise.all`) daripada sequential await untuk mencegah perlambatan rendering halaman.
+
+---
+
+## 🛰️ AI Orchestration & Skill Map
+
+Untuk efisiensi eksekusi dan meminimalkan duplikasi instruksi, AI Agent wajib memetakan tugasnya ke spesialisasi skill berikut sebelum mengeksekusi perubahan:
+
+| Domain Tugas | Skill Utama (.agent/skills/) | Deskripsi & Kegunaan |
+|:---|:---|:---|
+| API Contract & REST Design | `api-architect` | Desain endpoint SNAP-BI, error response, OpenAPI & Spectral linting |
+| Database & Schema Migration | `data-architect` | Desain DDL PostgreSQL, setup index, Flyway scripts, pgcrypto, TimescaleDB |
+| Machine Learning & LLM Ops | `ai-engineer` | Python microservices, FastAPI, model ONNX, prompt engineering, guardrails |
+| Next.js & TypeScript | `frontend-architect` | UI web-app, state management (Zustand/React Query), strict TS types |
+| Mobile Development | `mobile-architect` | React Native & Expo Router, secure store, Skia rendering, offline sync |
+| Security Audit & PCI-DSS | `security-audit` (workflow) | Cek kebocoran PII, audit dependency, mTLS verification |
+| TDD & Quality Assurance | `quality-engineer` | Unit & integration tests, Playwright E2E, mock strategies, ArchUnit |
+
+---
+
+## 🎨 Design System Principles (Premium Emerald)
+
+| Aspek | Standar |
+|:------|:--------|
+| **Brand Color** | Primary: `#10b981` (Emerald-500). Success: `#22c55e`. Warning: `#f59e0b`. Error: `#ef4444` |
+| **Typography** | Headers/Display: **Outfit**. Body/UI: **Inter**. Monospace: **JetBrains Mono** |
+| **Min Font Size** | `text-xs` (12px) — NEVER smaller |
+| **Corner Radius** | Cards: `rounded-2xl` (16px). Buttons: `rounded-xl` (12px) |
+| **Dark Mode Surface** | `bg-gray-950` + `bg-white/5` overlays. Glassmorphism: `backdrop-blur-xl` |
+| **Layout** | Dashboard = full-width fluid (NO `max-w-7xl` centering). Mobile-first responsive |
+| **A11y** | WCAG 2.1 AA: contrast 4.5:1, keyboard nav, touch targets > 44px, ARIA labels |
+| **Icons** | SVG only (Heroicons/Lucide). No emojis. Fixed `w-6 h-6` |
+| **Philosophy** | "Anti-AI Slop" — bespoke, premium, memorable. Bukan generic template |
+
+---
+
+## 📱 Mobile Standards
+
+| Aspek | Standar |
+|:------|:--------|
+| **Core Stack** | Expo SDK 54+, React Native 0.77+ (Bridgeless), Expo Router v5 (Typed Routes) |
+| **Styling** | NativeWind v5 (Tailwind CSS v4) + `react-native-unistyles` |
+| **Networking** | TanStack Query v5 dengan `networkMode: 'offlineFirst'` sebagai default |
+| **Graphics** | Shopify Skia (high-performance 2D). Animations: Reanimated 4 |
+| **Security** | SecureStore untuk JWT/PIN. Biometric auth untuk financial mutations. SSL Pinning wajib |
+| **Env Vars** | Gunakan `EXPO_PUBLIC_` prefix. JANGAN pernah taruh secrets (private keys, DB passwords) di sini |
+| **Anti-Log** | NEVER log PII atau bearer tokens di production builds |
+
+---
+
+## 💰 FinOps & Financial Integrity
+
+1. **Double-Entry Ledger**: Setiap transaksi = minimal 2 ledger entries (debit + credit). Ledger WAJIB selalu balance: `sum(credits) - sum(debits) == current_balance`.
+2. **Reconciliation**: T+1 automated reconciliation wajib untuk semua settlement flows.
+3. **Cost Attribution**: Semua K8s resources WAJIB punya label `cost-center` dan `owner`.
+4. **Capacity Planning**: Sprint capacity allocation: 60% features, 15% bug fixes, 20% tech debt, 5% on-call buffer.
+
+---
+
+## 🗼 Testing Pyramid & Coverage Targets
+
+| Layer | Target Coverage | Max Waktu Eksekusi | Frekuensi |
+|:------|:----------------|:-------------------|:----------|
+| **Unit** | > 80% (100% untuk core domain) | < 5 menit | Setiap commit |
+| **Integration** | > 70% (critical paths) | < 10 menit | Setiap PR |
+| **Contract** | 100% (public APIs) | < 5 menit | Setiap PR |
+| **E2E** | Critical user journeys | < 20 menit | Pre-deploy |
+| **Performance** | Load scenarios | 30-60 menit | Weekly / Pre-release |
+
+**Financial Integrity Tests (Wajib):**
+- No `float`/`double` dalam domain layer (enforce via ArchUnit)
+- Ledger balance invariant: `sum(credits) == sum(debits) + current_balance`
+- Idempotency stress test: 10 concurrent duplicate requests → hanya 1 yang diproses
 
 ---
 

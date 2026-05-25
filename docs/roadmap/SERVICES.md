@@ -26,6 +26,35 @@
 
 ---
 
+## 🚨 Platform Readiness Matrix (Audit Status)
+
+> Dirangkum dari audit status semua skills. Lihat masing-masing `SKILL.md` untuk detail.
+
+| Domain | Status | P0 Blockers |
+|:-------|:-------|:------------|
+| **Core Banking (Hexagonal)** | ⚠️ Partial | Shared starters built but unused by any service |
+| **Event Architecture** | 🔴 Dead Code | `events-starter`, `outbox-starter`, `saga-starter` = 0 consumers |
+| **Security (Zero-Trust)** | ⚠️ Partial | mTLS not enforced, secret scanning partial |
+| **Testing** | 🔴 Critical | E2E pass rate < 15%. 7 services with ZERO integration tests |
+| **Container Hardening** | ⚠️ Partial | Not all services run as non-root |
+| **Data Governance (UU PDP)** | 🔴 Not Started | No data classification, no lineage tracking |
+| **API Contracts** | ⚠️ Partial | No contract testing (Pact) in CI |
+| **Performance Testing** | 🔴 Empty | Load test scaffold empty, no Gatling simulations |
+
+**Services Requiring Immediate Test Coverage:**
+
+| Service | Unit Tests | Integration Tests | Priority |
+|:--------|:-----------|:-----------------|:---------|
+| `outbox-starter` | 🔴 ZERO | 🔴 ZERO | P0 |
+| `saga-starter` | 🔴 ZERO | 🔴 ZERO | P0 |
+| `lending-service` | ⚠️ Unit only | 🔴 ZERO | P0 |
+| `fx-service` | ⚠️ Unit only | 🔴 ZERO | P0 |
+| `cms-service` | ⚠️ Minimal | 🔴 ZERO | P1 |
+| `ab-testing-service` | ⚠️ Minimal | 🔴 ZERO | P1 |
+| `statement-service` | 🔴 Minimal | 🔴 ZERO | P1 |
+
+---
+
 ## Services Overview
 
 ### ✅ Feature-Complete Services (Implementation)
