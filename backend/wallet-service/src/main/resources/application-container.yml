@@ -4,7 +4,7 @@ spring:
     allow-bean-definition-overriding: true
   
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_wallet}
+    url: ${DB_URL:jdbc:postgresql://payu-postgres:5432/payu_test_wallet}
     username: ${DB_USERNAME:payu_test}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -31,22 +31,22 @@ spring:
     validate-on-migrate: true
   
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}
     consumer:
       auto-startup: true
       group-id: wallet-service-container
   
   data:
     redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:payu-datagrid}
+      port: ${REDIS_PORT:11222}
   
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs}
 management:
   endpoint:
     health:

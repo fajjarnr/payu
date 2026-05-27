@@ -4,7 +4,7 @@ spring:
     allow-bean-definition-overriding: true
   
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_investment}
+    url: ${DB_URL:jdbc:postgresql://payu-postgres:5432/payu_test_investment}
     username: ${DB_USERNAME:payu_test}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -30,7 +30,7 @@ spring:
     validate-on-migrate: true
   
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}
     consumer:
       auto-startup: true
       group-id: investment-service-container
@@ -39,8 +39,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs}
 management:
   endpoint:
     health:

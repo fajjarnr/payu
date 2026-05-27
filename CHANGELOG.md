@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CFG-001 — Standardize Container Configuration Fallbacks (2026-05-27)
+
+- **Resilient Container Fallbacks**: Refactored the container configuration profile (`application-container.yml`) for all 18 Spring Boot microservices to replace hardcoded `localhost` and generic defaults with resilient internal Kubernetes/OpenShift service DNS hostnames.
+- **Fail-Safe Service Discovery**: Standardized database, caching, messaging, and authentication resource URLs so they fail-safely connect to cluster services inside Kubernetes/OpenShift namespace environments even if their environment variables are not explicitly defined:
+  - **Database hostnames** updated to `payu-postgres:5432`.
+  - **Kafka bootstrap servers** updated to `payu-kafka-kafka-bootstrap:9092`.
+  - **Redis hosts/ports** updated to `payu-datagrid` on port `11222`.
+  - **Keycloak OIDC issuer & JWK URIs** updated to `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu`.
+- **Backward Compatibility**: Kept the default local profiles unchanged, ensuring developers can still spin up microservices locally using standard `localhost` defaults without configuring extra environmental flags.
+- **Backlog Alignment**: Updated the central project backlog by removing `CFG-001` from `docs/roadmap/TODOS.md`.
+
 ### DX-001 — Frontend Tree-Shaking Optimization via Barrel Bypass (2026-05-27)
 
 - **Flagged Side Effects**: Configured `"sideEffects": ["**/*.css"]` in the frontend `package.json` to explicitly notify modern bundlers (Webpack/Turbopack) that TSX/TS files in the project are side-effect-free, enabling aggressive tree-shaking of unused modules.
