@@ -2,7 +2,7 @@ package id.payu.partner.adapter.webhook;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,7 +21,7 @@ import java.time.Instant;
  * @author PayU Platform Engineering
  * @since 1.0.0
  */
-@Service
+@Component
 public class PaymentNotificationService {
 
     private static final Logger LOG = LoggerFactory.getLogger(PaymentNotificationService.class);

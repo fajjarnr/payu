@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -26,7 +26,7 @@ import java.util.UUID;
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc6819#section-4.7.1">OAuth 2.0 Threat Model - Refresh Token Rotation</a>
  */
 @Slf4j
-@Service
+@Component
 public class RefreshTokenService {
 
     private final RedisTemplate<String, Object> redisTemplate;
