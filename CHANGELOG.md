@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-013 — SecurityConfig Size Standardization & Cleanups (2026-05-27)
+
+- **Boilerplate and Redundancy Reduction**: Standardized the size of `SecurityConfig.java` across the Spring-based microservices, removing custom redundant configurations and dead code:
+  - In **`account-service`**, deleted the custom `@PostConstruct initEncryptedStringConverter` and its duplicate `@Value` fields, relying strictly on our central `security-starter` autoconfiguration for JPA field-level encryption.
+  - In **`integration-service`**, externalized the local development OIDC properties directly into `application.yml`, allowing the removal of the custom `jwtDecoder()` bean and its unused Nimbus/Jwt imports.
+  - In **`cms-service`**, removed the custom `sessionAuthenticationStrategy()` bean returning `NullAuthenticatedSessionStrategy` as it is redundant dead code under Spring's stateless security model.
+- **Backlog Alignment**: Updated the central project backlog by removing `ARCH-013` from `docs/roadmap/TODOS.md`.
+
 ### ARCH-012 — Deduplicate BaseController Across Backend Services (2026-05-27)
 
 - **Centralized Base Controller**: Standardized the core controller layer across Spring Boot microservices by inheriting from the central `id.payu.api.common.controller.BaseController` class from the `api-commons` library.

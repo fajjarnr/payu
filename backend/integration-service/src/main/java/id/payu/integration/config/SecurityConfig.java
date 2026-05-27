@@ -7,9 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -34,17 +32,5 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Configure JWT decoder for OAuth2 Resource Server.
-     */
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        String issuerUri = System.getenv().getOrDefault("OIDC_ISSUER", "http://localhost:8080/realms/payu");
-        String jwkSetUri = System.getenv().getOrDefault("OIDC_JWK_SET_URI",
-            "http://localhost:8080/realms/payu/protocol/openid-connect/certs");
 
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
-        return jwtDecoder;
-    }
 }

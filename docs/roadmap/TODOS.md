@@ -71,15 +71,7 @@
 
 ---
 
-## 🏭 Production Readiness Audit (May 14, 2026)
 
-### 🟡 P2 — Medium
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| ARCH-013 | Backend | `SecurityConfig` size range 32–244 lines. | ⏳ Open |
-
----
 
 ## 🏗️ DevSecOps Architecture (Suspended — OCP Destroyed)
 
