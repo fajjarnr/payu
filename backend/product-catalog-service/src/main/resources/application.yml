@@ -85,7 +85,7 @@ management:
       enabled: true
   tracing:
     sampling:
-      probability: 0.1
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
   otlp:
     tracing:
       endpoint: ${OTEL_ENDPOINT:http://localhost:4317}

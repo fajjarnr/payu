@@ -166,7 +166,7 @@ management:
         enabled: true
   tracing:
     sampling:
-      probability: 0.1
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
 
 # Logging
 logging:

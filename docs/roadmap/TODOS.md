@@ -126,7 +126,6 @@
 | K8S-012 | Infra | **No `preStop` lifecycle hook** — services with graceful shutdown need `preStop: sleep 5` to allow load balancer deregistration before SIGTERM. Prevents connection drops during rolling updates. | ⏳ Open |
 | CONTAINER-003 | Backend | **No multi-stage build for Java services** — Containerfiles expect pre-built JARs (`COPY target/*.jar`). Multi-stage builds would make CI simpler and ensure reproducible builds. Only Python services (analytics, kyc) use multi-stage. | ⏳ Open |
 | CONTAINER-004 | Backend | **Containerfile image version labels are stale** — e.g., account-service label says `1.5.0` but deployment uses `1.8.1`. Labels should use build-time ARG or be removed. | ⏳ Open |
-| CFG-PROD-003 | Backend | **Tracing probability `0.1` (10%) may be insufficient** — for debugging production issues, 10% sampling means 90% of traces are lost. Consider 100% for errors, 10% for success (head-based sampling with tail-based for errors). | ⏳ Open |
 | K8S-013 | Infra | **No `podDisruptionBudget` for web-app in prod** — PDB exists in base but prod overlay sets 3 replicas. With `minAvailable: 1`, 2 pods can be evicted simultaneously leaving only 1 serving traffic. Should be `minAvailable: 2` for prod. | ⏳ Open |
 | K8S-014 | Infra | **No resource quotas referenced in workload overlays** — namespace-level ResourceQuotas exist in `foundation/namespaces/` but workload deployments don't account for them. Risk of deployment failures if quotas are tight. | ⏳ Open |
 

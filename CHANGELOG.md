@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CFG-PROD-003 — Configurable Tracing Sampling Probability (2026-05-27)
+
+- **Configurable Tracing Standard**: Replaced hardcoded tracing sampling probabilities across all 11 Spring Boot microservices with dynamic, environment-driven configurations using `TRACING_SAMPLING_PROBABILITY`.
+- **Intelligent Fallbacks**: Established default fallbacks matching domain-specific requirements to ensure optimal production observability controls while preserving native environments:
+  - Standardized tracing sampling probability to `probability: ${TRACING_SAMPLING_PROBABILITY:0.1}` across 10 microservices: `auth-service`, `statement-service`, `cms-service`, `transaction-service`, `wallet-service`, `lending-service`, `compliance-service`, `account-service`, `investment-service`, and `product-catalog-service`.
+  - Preserved a higher 100% trace auditing requirement for **`billing-service`** by using `probability: ${TRACING_SAMPLING_PROBABILITY:1.0}` by default.
+- **Backlog Alignment**: Removed `CFG-PROD-003` from the central project backlog in `docs/roadmap/TODOS.md`.
+
 ### SEC-BACKEND-003 — CORS Configuration Standardization & Fallbacks (2026-05-27)
 
 - **CORS Fallback Standardization**: Eliminated hardcoded allowed origin domains and added missing CORS protections across Spring-based microservices:
