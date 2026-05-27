@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-014 — Centralize CorrelationIdFilter for Quarkus Services (2026-05-27)
+
+- **Centralized Filter**: Upgraded `CorrelationIdFilter` in `quarkus-api-commons` to support 32-character hex UUID correlation IDs, SLF4J logging, and both camelCase and snake_case MDC properties for compatibility.
+- **Microservices Deduplication**: Deleted duplicated local `CorrelationIdFilter.java` files from `gateway-service`, `api-portal-service`, and `notification-service`, which now inherit it automatically via the shared module.
+- **Bean Archive Auto-indexing**: Created `META-INF/beans.xml` in `quarkus-api-commons` to enable automatic bean discovery of shared filters and components in downstream Quarkus services.
+
 ### SEC-BACKEND-002 — Extract Keycloak JWT Converter to security-starter (2026-05-27)
 
 - **Centralized Keycloak JWT Converter**: Created `KeycloakJwtAuthoritiesConverter` in `security-starter` to extract realm roles, resource roles, scope, and configurable derived fine-grained authorities from Keycloak JWT.
