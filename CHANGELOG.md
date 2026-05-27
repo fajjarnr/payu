@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-015 — Remove Deprecated RateLimitV2Filter (2026-05-27)
+
+- **Removed Dead Code**: Deleted the completely deprecated, disabled, and in-memory `RateLimitV2Filter.java` file from `gateway-service`.
+- **Deduplication**: Cleaned up the codebase to rely solely on the active `RateLimitFilter.java` which implements the distributed Redis-backed sliding window rate limiter, eliminating the `synchronized` performance bottleneck.
+
 ### ARCH-014 — Centralize CorrelationIdFilter for Quarkus Services (2026-05-27)
 
 - **Centralized Filter**: Upgraded `CorrelationIdFilter` in `quarkus-api-commons` to support 32-character hex UUID correlation IDs, SLF4J logging, and both camelCase and snake_case MDC properties for compatibility.
