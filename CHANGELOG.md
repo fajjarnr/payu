@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### DEP-001 — Centralize Shared Library Dependency Version Management (2026-05-27)
+
+- **Centralized Dependency Management**: Added missing `logging-starter` and `archunit-starter` modules into `<dependencyManagement>` of the root parent `pom.xml` so all PayU shared starters are managed centrally.
+- **Microservices Refactoring**: Refactored `account-service`'s `pom.xml` to completely omit `<version>` tags for all PayU shared libraries, resolving the mixed usage of hardcoded version strings and project properties.
+
 ### ARCH-016 — Align Spring Service Annotations with Hexagonal Architecture (2026-05-27)
 
 - **Hexagonal Architecture Alignment**: Replaced `@Service` with `@Component` for classes in the adapter layer (infrastructure concerns) across `auth-service` and `partner-service` to strictly adhere to Hexagonal Architecture layering rules.
