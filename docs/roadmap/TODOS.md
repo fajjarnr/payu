@@ -81,7 +81,6 @@
 | CFG-001 | Backend | 21 services hardcode `localhost` as fallback. | ⏳ Open |
 | ARCH-012 | Backend | `BaseController` duplicated across 11 services. | ⏳ Open |
 | ARCH-013 | Backend | `SecurityConfig` size range 32–244 lines. | ⏳ Open |
-| ARCH-016 | Backend | `@Service` in adapter layer (3 services). | ⏳ Open |
 | DEP-001 | Backend | Mixed `${project.version}` vs hardcoded `1.0.0-SNAPSHOT`. | ⏳ Open |
 
 ---

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-016 — Align Spring Service Annotations with Hexagonal Architecture (2026-05-27)
+
+- **Hexagonal Architecture Alignment**: Replaced `@Service` with `@Component` for classes in the adapter layer (infrastructure concerns) across `auth-service` and `partner-service` to strictly adhere to Hexagonal Architecture layering rules.
+- **Affected Classes**:
+  - `auth-service`: `id.payu.auth.adapter.persistence.RefreshTokenService`
+  - `auth-service`: `id.payu.auth.adapter.security.KeycloakService`
+  - `partner-service`: `id.payu.partner.adapter.webhook.PaymentNotificationService`
+
 ### ARCH-015 — Remove Deprecated RateLimitV2Filter (2026-05-27)
 
 - **Removed Dead Code**: Deleted the completely deprecated, disabled, and in-memory `RateLimitV2Filter.java` file from `gateway-service`.
