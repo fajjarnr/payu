@@ -31,7 +31,6 @@
 
 ## 🔍 Spikes (Research / Architecture Decision)
 
-> ✅ ARCH-001 through ARCH-004 resolved May 7, 2026 — decisions archived to [`docs/adr/`](../../docs/adr/) and [`CHANGELOG.md`](../../CHANGELOG.md).
 
 | Key | Type | Question | Impact | Status |
 |:---|:---|:---|:---|:---|
@@ -72,28 +71,7 @@
 
 ---
 
-## 🔐 Auth & Health Endpoint Stabilization (May 9–14, 2026)
-
-| Key | Priority | Summary | Status |
-|:---|:---:|:---|:---|
-| AUTH-033 | P1 | All 18 HealthControllers return hardcoded `{"status": "UP"}` without checking DB/Redis/Kafka — false positive health checks in production. Follow L-018 pattern with `@Readiness` (DB ping + Redis PING + Kafka cluster metadata). | ✅ Done (May 15) — All 18 services + api-commons updated: DB `SELECT 1`, Redis `PING` (if available), Kafka listener status (if available). Graceful fallback with `@Autowired(required = false)`. Structured JSON response with latency metrics. |
-
----
-
 ## 🏭 Production Readiness Audit (May 14, 2026)
-
-### 🔴 P0 — Critical
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| ARCH-008 | Backend | **13 services put `@Entity` in domain layer**. | ✅ Done (May 15) — All 46 @Entity classes moved to `adapter/persistence/entity/` with `Entity` suffix. 13 services refactored: account, cms, compliance, integration, notification, statement, auth, backoffice, billing, support, promotion, transaction, partner. Hexagonal Architecture compliant: zero JPA annotations in domain layer. |
-
-### 🟠 P1 — High
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| ARCH-009 | Backend | **~70+ inner-class enums** across all services. | ✅ Done (May 15) — 144 inner-class enums extracted to top-level `.java` files. 250+ reference files updated. 15/18 services compile. 3 services fixed (wallet, investment, transaction: FQN type conflicts resolved). |
-| ARCH-010 | Backend | **Quarkus services missing all shared starters**. | ✅ Done (May 27) — Created `quarkus-api-commons` shared module with JAX-RS `GlobalExceptionMapper`, `ApiResponse` envelope, `Money` value object, validation annotations (`@ValidNIK/@ValidEmail/@ValidAmount/@ValidIndonesianPhoneNumber/@ValidAccountNumber`), `CorrelationIdFilter`, `SecurityHeadersFilter`, `ApiConstants`. Added dependency to all 3 Quarkus services (notification, gateway, api-portal). Added `quarkus-cache` to notification-service and api-portal-service. Gateway already had `quarkus-redis-client`. |
 
 ### 🟡 P2 — Medium
 
@@ -113,14 +91,12 @@
 ## 🏗️ DevSecOps Architecture (Suspended — OCP Destroyed)
 
 > Lihat [`infrastructure/DEVSECOPS_ARCHITECTURE.md`](../../infrastructure/DEVSECOPS_ARCHITECTURE.md) v1.3.1
-> Phase 1: ✅ COMPLETE (except 3 DR items). Phase 2–4: 📋 Suspended.
+> Phase 1: COMPLETE (except DR items below). Phase 2–4: 📋 Suspended.
 
 ### Phase 1 — Remaining DR Tasks
 
 | Key | Priority | Summary |
 |:---|:---:|:---|
-| INFRA-005 | P0 | Configure Vault Raft auto-snapshot to encrypted S3 | ✅ Done (May 15) — Production Vault StatefulSet (3 replicas, Raft, AWS KMS auto-unseal) + CronJob snapshot to S3 every 6h created at `infrastructure/platform/security/vault/vault-production.yaml` |
-| INFRA-006 | P0 | Configure Vault auto-unseal (Transit or KMS) | ✅ Done (May 15) — Combined with INFRA-005 above |
 | INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⏳ Open |
 
 ### Phase 2 — Hardening (Paused)
@@ -128,12 +104,6 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⏳ Open — Trivy task exists in build-pipeline, blocked by registry.redhat.io pull secret for pilot image. gate is RHACS (step 6), trivy is warn-only |
-| INFRA-008 | P0 | Integrate OWASP ZAP + Schemathesis into Tekton pipeline | ✅ Done (May 15) — ZAP & Schemathesis tasks wired in deploy-pipeline.yaml for DEV→SIT→UAT stages |
-| INFRA-009 | P0 | Implement OSSM Istio PeerAuthentication STRICT | ✅ Done (May 15) — Istio control plane (Sail operator v3.3.3) running: istiod + IstioCNI Healthy. PeerAuthentication mesh-wide STRICT + per-namespace (payu-dev PERMISSIVE, prod STRICT). AuthorizationPolicy, RequestAuthentication, DestinationRules deployed. Security headers EnvoyFilter (HSTS, CSP, XFO) deployed. Ingress gateway deployed via manual Deployment (pending tuning). |
-| INFRA-012 | P0 | Complete ArgoCD Image Updater setup | ✅ Done (May 15) — Image Updater deployed (deployment + RBAC + ConfigMap), ApplicationSets created (5 envs), auto-rollback CronJob active, drift detection configured, 22 applications synced |
-| INFRA-016 | P0 | Configure rate limiting (global 1000 req/s per IP) | ✅ Done (May 15) — Rate limit service (envoyproxy/ratelimit) deployed with Redis backend, ConfigMap with per-IP/per-API-key rules, EnvoyFilter wiring at ingress gateway |
-| INFRA-017 | P0 | Enforce API security headers (HSTS, CSP, X-Frame-Options) | ✅ Done (May 15) — EnvoyFilter deployed: HSTS (max-age=1y), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy, CSP, Cache-Control |
-| INFRA-021 | P0 | Configure ArgoCD auto-rollback on health check failure | ✅ Done (May 15) — CronJob every 2 min + auto-rollback-policy.yaml with retry (3x, exponential backoff), Slack notifications |
 | INFRA-010 | P1 | Configure ComplianceOperator CIS scan | ⏳ Open |
 | INFRA-011 | P1 | Deploy Wazuh manager + agent for SIEM | ⏳ Open |
 | INFRA-013 | P1 | Enable Tekton Chains for SLSA provenance | ⏳ Open |
@@ -147,14 +117,6 @@
 ---
 
 ## 🔬 Comprehensive Production Readiness Audit (May 15, 2026)
-
-### 🟠 P1 — High
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| TEST-001 | Backend | **cms-service has only 2 test files** (1 ArchUnit, 1 unit test, 0 integration tests). Critical content management service with near-zero coverage. | ✅ Done (May 15) — 71 tests: ContentServiceTest(40), ContentControllerTest(18), ContentRepositoryIntegrationTest(20), ContentSchedulerTest(6). Fixed inner enum extraction. BUILD SUCCESS. |
-| TEST-002 | Backend | **api-portal-service has only 4 test files** (2 controller, 2 service, 0 integration tests). Partner-facing API portal with minimal coverage. | ✅ Done (May 15) — 76 tests: ApiPortalIntegrationTest(15), ApiPortalResourceTest(15), SandboxResourceTest(14), ApiPortalServiceTest(10), SandboxServiceTest(7), ArchitectureTest(8), CorrelationIdFilterTest(7). BUILD SUCCESS. |
-| TEST-003 | Backend | **product-catalog-service has only 4 test files** (1 integration test). Core catalog service undercovered. | ✅ Done (May 15) — 60 tests: PublicProductControllerTest(10), ProductCatalogPersistenceAdapterTest(9), AdminProductControllerTest(4), HealthControllerTest(3), GlobalExceptionHandlerTest(4), ProductDefinitionEntityTest(4) + existing. Fixed pre-existing compilation bug in AdminProductController. BUILD SUCCESS. |
 
 ### 🟡 P2 — Medium
 
@@ -179,7 +141,6 @@
 | K8S-012 | Infra | **No `preStop` lifecycle hook** — services with graceful shutdown need `preStop: sleep 5` to allow load balancer deregistration before SIGTERM. Prevents connection drops during rolling updates. | ⏳ Open |
 | CONTAINER-003 | Backend | **No multi-stage build for Java services** — Containerfiles expect pre-built JARs (`COPY target/*.jar`). Multi-stage builds would make CI simpler and ensure reproducible builds. Only Python services (analytics, kyc) use multi-stage. | ⏳ Open |
 | CONTAINER-004 | Backend | **Containerfile image version labels are stale** — e.g., account-service label says `1.5.0` but deployment uses `1.8.1`. Labels should use build-time ARG or be removed. | ⏳ Open |
-| SEC-BACKEND-002 | Backend | **`keycloakGrantedAuthoritiesConverter()` duplicated across 15+ services** — identical 80-line method copy-pasted in every SecurityConfig. Should be extracted to `security-starter` shared library. Maintenance nightmare and inconsistency risk. | ⏳ Open |
 | SEC-BACKEND-003 | Backend | **CORS configuration inconsistent across services** — account-service uses env-var-driven origins, partner-service hardcodes production domains, wallet/transaction have no CORS config. Gateway handles CORS centrally but services should have consistent fallback. | ⏳ Open |
 | CFG-PROD-002 | Backend | **`spring.jpa.show-sql` not explicitly disabled in container profiles** — some services rely on default `false` but don't explicitly set it. Risk of SQL logging in production if default changes. | ⏳ Open |
 | CFG-PROD-003 | Backend | **Tracing probability `0.1` (10%) may be insufficient** — for debugging production issues, 10% sampling means 90% of traces are lost. Consider 100% for errors, 10% for success (head-based sampling with tail-based for errors). | ⏳ Open |
@@ -188,24 +149,5 @@
 
 ---
 
-### 📊 Infrastructure Readiness Matrix (May 15, 2026)
-
-| Area | Status | Detail |
-|:-----|:------:|:-------|
-| Security Context | ✅ | Non-root + readOnlyFS + drop ALL + seccompProfile RuntimeDefault |
-| Secrets Management | ✅ | Prod overlay patches all passwords to secretKeyRef |
-| Startup Probes | ✅ | All 24 deployments have startupProbe |
-| Topology Spread | ✅ | All deployments have topologySpreadConstraints |
-| Service Accounts | ✅ | All 24 services have dedicated SA with automountServiceAccountToken: false |
-| HPA/VPA/PDB | ✅ | HPA + PDB referenced in kustomization, VPA set to Off (recommendation-only) |
-| Graceful Shutdown | ✅ | terminationGracePeriodSeconds set (60s Java, 30s Python/Node) |
-| Network Policies | ⚠️ | Default-deny exists at namespace level, intra-namespace allow exists, but no per-service segmentation |
-| Prod Resource Limits | ✅ | Prod overlay patches to 512Mi-1536Mi via labelSelector |
-| Containerfile Best Practices | ✅ | Non-root, UBI9, HEALTHCHECK, explicit app.jar, finalName in pom.xml |
-| Flyway Validation | ✅ | validate-on-migrate: true in all container profiles |
-| Health Endpoint Exposure | ✅ | show-details: when-authorized across all services |
-
----
-
-_Last Updated: May 15, 2026 — Cleaned up: all ✅ Fixed items archived. Only open/deferred items remain._
+_Last Updated: May 27, 2026 — Cleaned up: all completed items archived to CHANGELOG.md. Only open/deferred items remain._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

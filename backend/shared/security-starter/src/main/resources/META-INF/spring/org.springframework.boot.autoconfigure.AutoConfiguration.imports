@@ -1,2 +1,3 @@
 id.payu.security.config.SecurityAutoConfiguration
 id.payu.security.multitenancy.TenantConfiguration
+id.payu.security.keycloak.KeycloakJwtAutoConfiguration

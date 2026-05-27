@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### SEC-BACKEND-002 — Extract Keycloak JWT Converter to security-starter (2026-05-27)
+
+- **Centralized Keycloak JWT Converter**: Created `KeycloakJwtAuthoritiesConverter` in `security-starter` to extract realm roles, resource roles, scope, and configurable derived fine-grained authorities from Keycloak JWT.
+- **Auto-configuration**: Created `KeycloakJwtAutoConfiguration` to automatically publish `JwtAuthenticationConverter` bean with keycloak role mapping. Registered it in Spring Boot AutoConfiguration imports.
+- **Service Refactoring**: Cleaned up duplicated custom converters across 7 services (`account-service`, `wallet-service`, `transaction-service`, `cms-service`, `partner-service`, `statement-service`, `product-catalog-service`), removing more than 500 lines of redundant code and utilizing the auto-configured bean.
+
 ### ARCH-010 — Quarkus Shared Starters (2026-05-27)
 
 - **quarkus-api-commons Module**: Created `backend/shared/quarkus-api-commons` — shared API components for Quarkus services. Includes JAX-RS `GlobalExceptionMapper` (RFC 9457), `ApiResponse` envelope, `Money` value object (BigDecimal, HALF_EVEN rounding), 5 Indonesian validation annotations (`@ValidNIK`, `@ValidEmail`, `@ValidAmount`, `@ValidIndonesianPhoneNumber`, `@ValidAccountNumber`), `CorrelationIdFilter` (MDC propagation), `SecurityHeadersFilter` (HSTS, CSP, XFO, Permissions-Policy), `ApiConstants`.

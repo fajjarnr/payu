@@ -78,6 +78,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Security OAuth2 JWT (optional - for Keycloak JWT converter) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-resource-server</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Kafka for audit event publishing (optional) -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>

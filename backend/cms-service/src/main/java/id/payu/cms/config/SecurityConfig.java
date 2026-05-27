@@ -2,29 +2,22 @@ package id.payu.cms.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 /**
- * Security configuration for CMS Service
- * Configures OAuth2/Keycloak JWT authentication
+ * Security configuration for CMS Service.
+ * Configures OAuth2/Keycloak JWT authentication.
+ *
+ * <p>The {@code jwtAuthenticationConverter} is auto-configured by
+ * {@code security-starter} via {@code KeycloakJwtAutoConfiguration}.</p>
  */
 @Configuration
 @EnableWebSecurity
@@ -37,7 +30,8 @@ public class SecurityConfig {
     private static final String PUBLIC_API_PATH = "/api/v1/public/**";
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
@@ -60,45 +54,11 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter)
                 )
             );
 
         return http.build();
-    }
-
-    /**
-     * Configure JWT authentication converter
-     * Extracts roles from JWT token
-     */
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(keycloakRealmRolesConverter());
-        return converter;
-    }
-
-    /**
-     * Extract roles from Keycloak's nested realm_access.roles claim.
-     */
-    private Converter<Jwt, Collection<GrantedAuthority>> keycloakRealmRolesConverter() {
-        return jwt -> {
-            Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-            if (realmAccess != null && realmAccess.containsKey("roles")) {
-                @SuppressWarnings("unchecked")
-                List<String> roles = (List<String>) realmAccess.get("roles");
-                return roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .collect(Collectors.toList());
-            }
-            List<String> roles = jwt.getClaimAsStringList("roles");
-            if (roles != null) {
-                return roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .collect(Collectors.toList());
-            }
-            return Collections.emptyList();
-        };
     }
 
     @Bean
