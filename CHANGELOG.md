@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-010 — Quarkus Shared Starters (2026-05-27)
+
+- **quarkus-api-commons Module**: Created `backend/shared/quarkus-api-commons` — shared API components for Quarkus services. Includes JAX-RS `GlobalExceptionMapper` (RFC 9457), `ApiResponse` envelope, `Money` value object (BigDecimal, HALF_EVEN rounding), 5 Indonesian validation annotations (`@ValidNIK`, `@ValidEmail`, `@ValidAmount`, `@ValidIndonesianPhoneNumber`, `@ValidAccountNumber`), `CorrelationIdFilter` (MDC propagation), `SecurityHeadersFilter` (HSTS, CSP, XFO, Permissions-Policy), `ApiConstants`.
+- **Quarkus Service Integration**: Added `quarkus-api-commons` dependency to notification-service, gateway-service, api-portal-service.
+- **Cache Coverage**: Added `quarkus-cache` to notification-service and api-portal-service. Gateway already had `quarkus-redis-client`.
+
 ### Backend Architecture & Quality Sprint 2 (2026-05-15)
 
 - **ARCH-008 — Hexagonal Entity Layer Refactoring**: Moved all 46 `@Entity` classes from `domain/` to `adapter/persistence/entity/` across 13 services (account, cms, compliance, integration, notification, statement, auth, backoffice, billing, support, promotion, transaction, partner). All entities suffixed with `Entity`. Zero JPA annotations remaining in domain layer. 300+ files updated with correct imports.

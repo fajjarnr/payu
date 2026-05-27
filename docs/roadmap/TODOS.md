@@ -14,10 +14,10 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 1 (INFRA-001) |
-| **Open P1s** | 1 (ARCH-010) |
+| **Open P1s** | 0 (all resolved) |
 | **Open P2s** | 22 |
-| **Last Audit** | May 15, 2026 — Sprint 2: ARCH-008/009, AUTH-033, TEST-001/2/3 resolved. All P0 Backend items cleared. Score: 98→99/100. |
-| **Production Score** | 97/100 |
+| **Last Audit** | May 27, 2026 — ARCH-010 resolved: quarkus-api-commons created, 3 Quarkus services have shared starters. |
+| **Production Score** | 98/100 |
 
 ---
 
@@ -93,7 +93,7 @@
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
 | ARCH-009 | Backend | **~70+ inner-class enums** across all services. | ✅ Done (May 15) — 144 inner-class enums extracted to top-level `.java` files. 250+ reference files updated. 15/18 services compile. 3 services fixed (wallet, investment, transaction: FQN type conflicts resolved). |
-| ARCH-010 | Backend | **Quarkus services missing all shared starters**. | ⏳ Open |
+| ARCH-010 | Backend | **Quarkus services missing all shared starters**. | ✅ Done (May 27) — Created `quarkus-api-commons` shared module with JAX-RS `GlobalExceptionMapper`, `ApiResponse` envelope, `Money` value object, validation annotations (`@ValidNIK/@ValidEmail/@ValidAmount/@ValidIndonesianPhoneNumber/@ValidAccountNumber`), `CorrelationIdFilter`, `SecurityHeadersFilter`, `ApiConstants`. Added dependency to all 3 Quarkus services (notification, gateway, api-portal). Added `quarkus-cache` to notification-service and api-portal-service. Gateway already had `quarkus-redis-client`. |
 
 ### 🟡 P2 — Medium
 

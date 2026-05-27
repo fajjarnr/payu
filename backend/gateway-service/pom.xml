@@ -26,6 +26,13 @@
 
 
     <dependencies>
+        <!-- PayU Quarkus API Commons -->
+        <dependency>
+            <groupId>id.payu.shared</groupId>
+            <artifactId>quarkus-api-commons</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Reactive Routes (API Gateway core) -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -54,6 +61,12 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-redis-client</artifactId>
+        </dependency>
+
+        <!-- Cache annotations -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-cache</artifactId>
         </dependency>
 
         <!-- JWT/OIDC - kept on classpath for Vert.x WebClient transitive dep.

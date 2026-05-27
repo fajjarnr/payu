@@ -60,6 +60,7 @@
         <module>shared/mapper-starter</module>
         <module>shared/grpc-starter</module>
         <module>shared/rest-client-starter</module>
+        <module>shared/quarkus-api-commons</module>
 
         <!-- Simulators -->
         <module>simulators/bi-fast-simulator</module>
@@ -98,6 +99,11 @@
             <dependency>
                 <groupId>id.payu.shared</groupId>
                 <artifactId>api-commons</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu.shared</groupId>
+                <artifactId>quarkus-api-commons</artifactId>
                 <version>${payu.shared.version}</version>
             </dependency>
             <dependency>
