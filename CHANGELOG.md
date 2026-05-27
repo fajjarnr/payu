@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CFG-PROD-002 — Explicitly Disable show-sql in Container Profiles (2026-05-27)
+
+- **SQL Log Leak Prevention**: Explicitly disabled SQL logging (`spring.jpa.show-sql: false`) inside the container configuration profile (`application-container.yml`) for the remaining 8 microservices utilizing Spring Data JPA:
+  - `auth-service`, `investment-service`, `lending-service`, `partner-service`, `statement-service`, `support-service`, `transaction-service`, and `wallet-service`.
+  This guarantees that Hibernate/JPA query parameters and SQL statements are never accidentally dumped into standard output or container logs in production, even if framework/Spring defaults change in the future.
+- **Backlog Alignment**: Removed `CFG-PROD-002` from the central project backlog in `docs/roadmap/TODOS.md`.
+
 ### ARCH-013 — SecurityConfig Size Standardization & Cleanups (2026-05-27)
 
 - **Boilerplate and Redundancy Reduction**: Standardized the size of `SecurityConfig.java` across the Spring-based microservices, removing custom redundant configurations and dead code:
