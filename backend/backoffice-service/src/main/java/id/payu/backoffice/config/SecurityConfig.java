@@ -13,6 +13,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -43,11 +44,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "https://backoffice.payu.fajjjar.my.id",
-                "https://backoffice.payu.co.id",
-                "https://admin.payu.fajjjar.my.id"
-        ));
+        // Standardize env-driven origins with backoffice-specific fallback
+        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", 
+                "https://backoffice.payu.fajjjar.my.id,https://backoffice.payu.co.id,https://admin.payu.fajjjar.my.id");
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Admin-User", "X-Correlation-Id"));
         configuration.setAllowCredentials(true);

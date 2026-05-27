@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### SEC-BACKEND-003 — CORS Configuration Standardization & Fallbacks (2026-05-27)
+
+- **CORS Fallback Standardization**: Eliminated hardcoded allowed origin domains and added missing CORS protections across Spring-based microservices:
+  - In **`partner-service`** and **`backoffice-service`**, replaced hardcoded domains in `SecurityConfig.java` with dynamic environment-variable lookup (`CORS_ALLOWED_ORIGINS`), retaining their specific production domains as secure fallback values.
+  - In **`wallet-service`** and **`transaction-service`**, added the standard `.cors(...)` configuration mapping to a unified, environment-variable-driven `CorsConfigurationSource` bean.
+  This provides a consistent defense-in-depth posture, allowing secure CORS custom mappings across environments while ensuring default local runs remain secure.
+- **Backlog Alignment**: Removed `SEC-BACKEND-003` from the central project backlog in `docs/roadmap/TODOS.md`.
+
 ### CFG-PROD-002 — Explicitly Disable show-sql in Container Profiles (2026-05-27)
 
 - **SQL Log Leak Prevention**: Explicitly disabled SQL logging (`spring.jpa.show-sql: false`) inside the container configuration profile (`application-container.yml`) for the remaining 8 microservices utilizing Spring Data JPA:

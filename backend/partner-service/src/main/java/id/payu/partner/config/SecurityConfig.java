@@ -13,6 +13,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -57,8 +58,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // BUG-BE-163: Hardcode allowed origins instead of wildcard for the payment gateway.
-        configuration.setAllowedOrigins(List.of("https://payu.co.id", "https://partner.payu.co.id"));
+        // Standardize env-driven origins with partner-specific fallback
+        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "https://payu.co.id,https://partner.payu.co.id");
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         
