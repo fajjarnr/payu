@@ -77,7 +77,6 @@
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| ARCH-012 | Backend | `BaseController` duplicated across 11 services. | ⏳ Open |
 | ARCH-013 | Backend | `SecurityConfig` size range 32–244 lines. | ⏳ Open |
 
 ---

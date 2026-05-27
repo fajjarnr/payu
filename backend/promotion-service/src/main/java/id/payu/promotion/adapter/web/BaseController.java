@@ -16,14 +16,7 @@ import java.util.UUID;
  * Base controller for PromotionEntity Service providing common API response functionality.
  * Spring Boot-specific implementation using Spring MVC.
  */
-public abstract class BaseController {
-
-    /**
-     * Creates a successful API response with data.
-     */
-    protected <T> ResponseEntity<ApiResponse<T>> ok(T data) {
-        return ResponseEntity.ok(ApiResponse.success(data));
-    }
+public abstract class BaseController extends id.payu.api.common.controller.BaseController {
 
     /**
      * Creates a successful API response with data and pagination.
@@ -64,12 +57,6 @@ public abstract class BaseController {
         return ResponseEntity.status(HttpStatus.CREATED).location(location).body(response);
     }
 
-    /**
-     * Creates a 204 No Content response.
-     */
-    protected ResponseEntity<Void> noContent() {
-        return ResponseEntity.noContent().build();
-    }
 
     /**
      * Creates a 202 Accepted response.

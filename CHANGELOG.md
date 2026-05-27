@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ARCH-012 — Deduplicate BaseController Across Backend Services (2026-05-27)
+
+- **Centralized Base Controller**: Standardized the core controller layer across Spring Boot microservices by inheriting from the central `id.payu.api.common.controller.BaseController` class from the `api-commons` library.
+- **Boilerplate Reduction**: Refactored `BaseController` classes inside `promotion-service`, `wallet-service`, `support-service`, and `investment-service` to inherit common `ok(T data)`, `created(T data, String location)`, and `noContent()` response methods directly from the parent, removing duplicated helper code.
+- **Retained Domain-Specific Extensions**: Preserved domain-specific extensions, non-enveloped controller endpoints, and local DTO mappings (e.g., custom async helpers in `investment-service`, fields mapping in `partner-service`, and raw entity responses in `product-catalog-service`) to maintain 100% backward compatibility and prevent breaking changes for existing external clients.
+- **Backlog Alignment**: Updated the central project backlog by removing `ARCH-012` from `docs/roadmap/TODOS.md`.
+
 ### CFG-001 — Standardize Container Configuration Fallbacks (2026-05-27)
 
 - **Resilient Container Fallbacks**: Refactored the container configuration profile (`application-container.yml`) for all 18 Spring Boot microservices to replace hardcoded `localhost` and generic defaults with resilient internal Kubernetes/OpenShift service DNS hostnames.

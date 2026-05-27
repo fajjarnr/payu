@@ -13,32 +13,9 @@ import java.util.List;
 public abstract class BaseController extends id.payu.api.common.controller.BaseController {
 
     /**
-     * Creates a successful API response with data.
-     */
-    protected <T> ResponseEntity<ApiResponse<T>> ok(T data) {
-        return ResponseEntity.ok(ApiResponse.success(data));
-    }
-
-    /**
-     * Creates a 201 Created response with location header.
-     */
-    protected <T> ResponseEntity<ApiResponse<T>> created(T data, String location) {
-        return ResponseEntity
-                .created(URI.create(location))
-                .body(ApiResponse.success(data));
-    }
-
-    /**
-     * Creates a 204 No Content response.
-     */
-    protected ResponseEntity<Void> noContent() {
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
      * Creates a successful API response for list data.
      */
     protected <T> ResponseEntity<ApiResponse<List<T>>> okList(List<T> data) {
-        return ResponseEntity.ok(ApiResponse.success(data));
+        return ok(data);
     }
 }
