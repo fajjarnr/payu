@@ -151,6 +151,16 @@
                 <artifactId>rest-client-starter</artifactId>
                 <version>${payu.shared.version}</version>
             </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>logging-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>archunit-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
 
             <!-- Spring Cloud Dependencies -->
             <dependency>
