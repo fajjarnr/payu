@@ -8,37 +8,36 @@ import dynamic from 'next/dynamic';
 import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useCashFlow, useInvestmentAccount } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
-import {
-  BalanceCard,
-  QuickActions,
-} from '@/components/dashboard';
+import BalanceCard from '@/components/dashboard/BalanceCard';
+import QuickActions from '@/components/dashboard/QuickActions';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { Skeleton, SkeletonCard, SkeletonStatsGrid } from '@/components/ui/skeleton';
-import { BannerCarousel, PromoPopup } from '@/components/cms';
+import BannerCarousel from '@/components/cms/BannerCarousel';
+import PromoPopup from '@/components/cms/PromoPopup';
 import { SkipLink } from '@/lib/a11y';
 
 // Lazy load below-the-fold components
-const StatsCharts = dynamic(() => import('@/components/dashboard').then(mod => mod.StatsCharts), {
+const StatsCharts = dynamic(() => import('@/components/dashboard/StatsCharts'), {
   loading: () => <Skeleton className="h-[300px] w-full rounded-2xl" />,
   ssr: false
 });
-const TransferActivity = dynamic(() => import('@/components/dashboard').then(mod => mod.TransferActivity), {
+const TransferActivity = dynamic(() => import('@/components/dashboard/TransferActivity'), {
   loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
-const FinancialHealthScore = dynamic(() => import('@/components/dashboard').then(mod => mod.FinancialHealthScore), {
+const FinancialHealthScore = dynamic(() => import('@/components/dashboard/FinancialHealthScore'), {
   loading: () => <Skeleton className="h-[150px] w-full rounded-2xl" />
 });
-const SpendingInsights = dynamic(() => import('@/components/dashboard').then(mod => mod.SpendingInsights), {
+const SpendingInsights = dynamic(() => import('@/components/dashboard/SpendingInsights'), {
   loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
-const BudgetTracking = dynamic(() => import('@/components/dashboard').then(mod => mod.BudgetTracking), {
+const BudgetTracking = dynamic(() => import('@/components/dashboard/BudgetTracking'), {
   loading: () => <Skeleton className="h-[150px] w-full rounded-2xl" />
 });
-const InvestmentPerformance = dynamic(() => import('@/components/dashboard').then(mod => mod.InvestmentPerformance), {
+const InvestmentPerformance = dynamic(() => import('@/components/dashboard/InvestmentPerformance'), {
   loading: () => <Skeleton className="h-[250px] w-full rounded-2xl" />,
   ssr: false
 });
-const SegmentedOffers = dynamic(() => import('@/components/personalization').then(mod => mod.SegmentedOffers), {
+const SegmentedOffers = dynamic(() => import('@/components/personalization/SegmentedOffers'), {
   loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
 

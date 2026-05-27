@@ -11,8 +11,8 @@
 
 import React, { useState } from 'react';
 import { useExperiment } from '@/hooks/useExperiment';
-import { ExperimentVariant } from '@/components/experiments';
-import { FeatureFlag } from '@/components/experiments';
+import { ExperimentVariant } from '@/components/experiments/ExperimentVariant';
+import { FeatureFlag } from '@/components/experiments/FeatureFlag';
 import { toast } from 'sonner';
 
 declare global {

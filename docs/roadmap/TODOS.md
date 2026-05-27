@@ -77,7 +77,6 @@
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| DX-001 | Web-App | 4 barrel export `index.ts` files bypass tree-shaking. | ⏳ Open |
 | CFG-001 | Backend | 21 services hardcode `localhost` as fallback. | ⏳ Open |
 | ARCH-012 | Backend | `BaseController` duplicated across 11 services. | ⏳ Open |
 | ARCH-013 | Backend | `SecurityConfig` size range 32–244 lines. | ⏳ Open |

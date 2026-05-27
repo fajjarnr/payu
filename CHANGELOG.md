@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### DX-001 — Frontend Tree-Shaking Optimization via Barrel Bypass (2026-05-27)
+
+- **Flagged Side Effects**: Configured `"sideEffects": ["**/*.css"]` in the frontend `package.json` to explicitly notify modern bundlers (Webpack/Turbopack) that TSX/TS files in the project are side-effect-free, enabling aggressive tree-shaking of unused modules.
+- **Deduplicated Component Imports**: Refactored static and dynamic imports across multiple core layout and page views in the frontend web-app to reference specific component files rather than loading whole directories through barrel files:
+  - **Dashboard (`page.tsx`)**: Replaced barrel-level imports for static components (`BalanceCard`, `QuickActions`) and dynamically-loaded components (`StatsCharts`, `TransferActivity`, `FinancialHealthScore`, `SpendingInsights`, `BudgetTracking`, `InvestmentPerformance`, `SegmentedOffers`) with direct component file paths.
+  - **Locale Layout (`layout.tsx`)**: Replaced the static barrel import of `EmergencyAlert` from `@/components/cms` with a direct path import.
+  - **Balance Card Component (`BalanceCard.tsx`)**: Replaced the static barrel import of `VIPBadge` from `@/components/personalization` with a direct path import.
+  - **A/B Testing Example Component (`CheckoutFlowExample.tsx`)**: Replaced barrel imports of `ExperimentVariant` and `FeatureFlag` from `@/components/experiments` with their direct file imports.
+- **Backlog Alignment**: Updated the central project backlog by removing `DX-001` from `docs/roadmap/TODOS.md`.
+
 ### DEP-001 — Centralize Shared Library Dependency Version Management (2026-05-27)
 
 - **Centralized Dependency Management**: Added missing `logging-starter` and `archunit-starter` modules into `<dependencyManagement>` of the root parent `pom.xml` so all PayU shared starters are managed centrally.

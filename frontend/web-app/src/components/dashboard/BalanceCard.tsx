@@ -3,7 +3,7 @@
 import React from 'react';
 import { useLocale } from 'next-intl';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { VIPBadge } from '@/components/personalization';
+import VIPBadge from '@/components/personalization/VIPBadge';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 

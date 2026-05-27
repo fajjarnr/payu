@@ -6,7 +6,7 @@ import { Inter, Outfit } from 'next/font/google';
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { EmergencyAlert } from "@/components/cms";
+import EmergencyAlert from "@/components/cms/EmergencyAlert";
 
 const inter = Inter({
   subsets: ['latin'],
