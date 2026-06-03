@@ -1,0 +1,20 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: web-app
+  labels:
+    app.kubernetes.io/name: web-app
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/version: 1.8.1
+    team: frontend
+spec:
+  host: web-app.apps.payu.ocp.fajjjar.my.id
+  to:
+    kind: Service
+    name: web-app
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
