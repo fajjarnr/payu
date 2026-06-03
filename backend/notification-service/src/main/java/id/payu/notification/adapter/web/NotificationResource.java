@@ -1,5 +1,6 @@
 package id.payu.notification.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.dto.NotificationResponse;
 import id.payu.notification.dto.SendNotificationRequest;
@@ -56,6 +57,7 @@ public class NotificationResource {
      * @return the created notification with tracking ID
      */
     @POST
+    @Idempotent(required = false)
     @Operation(
         summary = "Send notification",
         description = """
