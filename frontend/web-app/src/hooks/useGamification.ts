@@ -9,6 +9,8 @@ export function useGamificationSummary(userId: string) {
     queryKey: ['gamification-summary', userId],
     queryFn: () => PromotionService.getGamificationSummary(userId),
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -17,6 +19,8 @@ export function useGamificationLevel(userId: string) {
     queryKey: ['gamification-level', userId],
     queryFn: () => PromotionService.getGamificationLevel(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -25,6 +29,8 @@ export function useGamificationBadges(userId: string) {
     queryKey: ['gamification-badges', userId],
     queryFn: () => PromotionService.getBadges(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -33,6 +39,8 @@ export function useGamificationBadgeProgress(userId: string) {
     queryKey: ['gamification-badge-progress', userId],
     queryFn: () => PromotionService.getBadgeProgress(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -41,6 +49,8 @@ export function useGamificationStreak(userId: string) {
     queryKey: ['gamification-streak', userId],
     queryFn: () => PromotionService.getStreak(userId),
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -49,6 +59,8 @@ export function useTodayCheckin(userId: string) {
     queryKey: ['gamification-today', userId],
     queryFn: () => PromotionService.getTodayCheckin(userId),
     enabled: !!userId,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 

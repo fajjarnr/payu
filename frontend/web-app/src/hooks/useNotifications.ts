@@ -9,6 +9,8 @@ export function useNotifications(userId: string, size = 20) {
     queryKey: ['notifications', userId, size],
     queryFn: () => NotificationService.getUserNotifications(userId, size),
     enabled: !!userId,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 
@@ -17,6 +19,8 @@ export function useNotification(id: string) {
     queryKey: ['notification', id],
     queryFn: () => NotificationService.getNotification(id),
     enabled: !!id,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 

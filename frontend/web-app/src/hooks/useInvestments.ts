@@ -10,6 +10,8 @@ export function useInvestmentAccount() {
   return useQuery({
     queryKey: ['investment-account'],
     queryFn: () => InvestmentService.getAccount(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -17,6 +19,8 @@ export function useGoldHoldings() {
   return useQuery({
     queryKey: ['gold-holdings'],
     queryFn: () => InvestmentService.getGoldHoldings(),
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

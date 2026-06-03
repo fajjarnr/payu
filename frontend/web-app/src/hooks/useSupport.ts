@@ -10,6 +10,27 @@ export function useTrainingStatus() {
   return useQuery({
     queryKey: ['support-training-status'],
     queryFn: () => SupportService.getTrainingStatus(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+export function useSupportAgents() {
+  return useQuery({
+    queryKey: ['support-agents'],
+    queryFn: () => SupportService.listAgents(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+export function useSupportAgent(id: string) {
+  return useQuery({
+    queryKey: ['support-agent', id],
+    queryFn: () => SupportService.getAgent(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -53,6 +74,8 @@ export function useTrainingModules() {
   return useQuery({
     queryKey: ['training-modules'],
     queryFn: () => SupportService.listModules(),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
@@ -60,6 +83,8 @@ export function useMandatoryModules() {
   return useQuery({
     queryKey: ['training-modules', 'mandatory'],
     queryFn: () => SupportService.getMandatoryModules(),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 

@@ -10,6 +10,8 @@ export function usePartners() {
   return useQuery({
     queryKey: ['partners'],
     queryFn: () => PartnerService.listPartners(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -18,6 +20,8 @@ export function usePartner(id: number) {
     queryKey: ['partner', id],
     queryFn: () => PartnerService.getProfile(id),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -68,6 +72,8 @@ export function usePartnerCertificates(partnerId: number) {
     queryKey: ['partner-certificates', partnerId],
     queryFn: () => PartnerService.getCertificates(partnerId),
     enabled: !!partnerId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -76,6 +82,8 @@ export function useExpiringCertificates(partnerId: number) {
     queryKey: ['partner-certificates', partnerId, 'expiring'],
     queryFn: () => PartnerService.getExpiringCertificates(partnerId),
     enabled: !!partnerId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

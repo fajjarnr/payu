@@ -10,6 +10,8 @@ export function useCreditScore(userId: string) {
     queryKey: ['credit-score', userId],
     queryFn: () => LendingService.getCreditScore(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -18,6 +20,8 @@ export function useLoan(loanId: string) {
     queryKey: ['loan', loanId],
     queryFn: () => LendingService.getLoan(loanId),
     enabled: !!loanId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -26,6 +30,8 @@ export function useRepaymentSchedule(loanId: string) {
     queryKey: ['repayment-schedule', loanId],
     queryFn: () => LendingService.getRepaymentSchedule(loanId),
     enabled: !!loanId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -34,6 +40,8 @@ export function usePayLater(userId: string) {
     queryKey: ['paylater', userId],
     queryFn: () => LendingService.getPayLater(userId),
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -42,6 +50,8 @@ export function usePayLaterTransactions(userId: string) {
     queryKey: ['paylater-transactions', userId],
     queryFn: () => LendingService.getTransactionHistory(userId),
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -50,6 +60,8 @@ export function useActivePreApprovals(userId: string) {
     queryKey: ['pre-approvals', userId],
     queryFn: () => LendingService.getActivePreApprovals(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

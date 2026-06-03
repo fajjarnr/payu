@@ -9,6 +9,8 @@ export function useActivePromotions() {
   return useQuery({
     queryKey: ['promotions'],
     queryFn: () => PromotionService.getActivePromotions(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -17,6 +19,8 @@ export function useLoyaltyBalance(accountId: string) {
     queryKey: ['loyalty-balance', accountId],
     queryFn: () => PromotionService.getLoyaltyBalance(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -25,6 +29,8 @@ export function useLoyaltyPoints(accountId: string) {
     queryKey: ['loyalty-points', accountId],
     queryFn: () => PromotionService.getLoyaltyPoints(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -33,6 +39,8 @@ export function useCashbacks(accountId: string) {
     queryKey: ['cashbacks', accountId],
     queryFn: () => PromotionService.getCashbacks(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -41,6 +49,8 @@ export function useCashbackSummary(accountId: string) {
     queryKey: ['cashback-summary', accountId],
     queryFn: () => PromotionService.getCashback(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -49,6 +59,8 @@ export function useReferrals(accountId: string) {
     queryKey: ['referrals', accountId],
     queryFn: () => PromotionService.getReferrals(accountId),
     enabled: !!accountId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -57,6 +69,8 @@ export function useReferralSummary(accountId: string) {
     queryKey: ['referral-summary', accountId],
     queryFn: () => PromotionService.getReferralSummary(accountId),
     enabled: !!accountId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -65,6 +79,8 @@ export function useAccountRewards(accountId: string) {
     queryKey: ['rewards', accountId],
     queryFn: () => PromotionService.getAccountRewards(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -73,6 +89,8 @@ export function useRewardsSummary(accountId: string) {
     queryKey: ['rewards-summary', accountId],
     queryFn: () => PromotionService.getRewardsSummary(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

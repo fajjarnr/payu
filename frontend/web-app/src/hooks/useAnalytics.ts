@@ -13,6 +13,46 @@ export function useUserMetrics(userId: string | undefined) {
     queryKey: ['user-metrics', userId],
     queryFn: () => AnalyticsService.getUserMetrics(userId!),
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+export function useSpendingTrends(userId: string | undefined) {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const endDate = now.toISOString().split('T')[0];
+
+  return useQuery<SpendingAnalytics>({
+    queryKey: ['spending-trends', userId, startOfMonth, endDate],
+    queryFn: () =>
+      AnalyticsService.getSpendingTrends({
+        userId: userId!,
+        startDate: startOfMonth,
+        endDate,
+        granularity: 'MONTHLY',
+      }),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+export function useCashFlow(userId: string | undefined) {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const endDate = now.toISOString().split('T')[0];
+
+  return useQuery<CashFlowAnalysis>({
+    queryKey: ['cash-flow', userId, startOfMonth, endDate],
+    queryFn: () =>
+      AnalyticsService.getCashFlowAnalysis({
+        userId: userId!,
+        startDate: startOfMonth,
+      }),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

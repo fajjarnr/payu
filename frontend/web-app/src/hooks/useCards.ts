@@ -10,6 +10,8 @@ export function useCards(accountId?: string) {
     queryKey: ['cards', accountId],
     queryFn: () => WalletService.listCards(accountId!),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -18,6 +20,8 @@ export function useCard(cardId: string) {
     queryKey: ['card', cardId],
     queryFn: () => WalletService.getCard(cardId),
     enabled: !!cardId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

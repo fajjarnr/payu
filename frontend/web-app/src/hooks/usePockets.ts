@@ -9,6 +9,8 @@ export function usePockets() {
   return useQuery({
     queryKey: ['pockets'],
     queryFn: () => WalletService.listPockets(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -17,6 +19,8 @@ export function usePocket(pocketId: string) {
     queryKey: ['pocket', pocketId],
     queryFn: () => WalletService.getPocket(pocketId),
     enabled: !!pocketId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -25,6 +29,8 @@ export function usePocketsByCurrency(currency: string) {
     queryKey: ['pockets', 'currency', currency],
     queryFn: () => WalletService.getPocketByCurrency(currency),
     enabled: !!currency,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
@@ -32,6 +38,8 @@ export function usePocketsTotalBalance(currency: string = 'IDR') {
   return useQuery({
     queryKey: ['pockets', 'total-balance', currency],
     queryFn: () => WalletService.getTotalPocketBalance(currency),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
