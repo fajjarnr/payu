@@ -151,6 +151,11 @@ patches:
     kind: Deployment
     name: web-app
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 3}]'
+# Production PDB for web-app (minAvailable: 2 for 3 replicas)
+- target:
+    kind: PodDisruptionBudget
+    name: web-app-pdb
+  patch: '[{"op": "replace", "path": "/spec/minAvailable", "value": 2}]'
 # Production resource limits (higher than dev)
 - target:
     kind: Deployment
