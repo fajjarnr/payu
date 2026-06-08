@@ -13,11 +13,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 1 (INFRA-001) |
+| **Open P0s** | 0 (all resolved) |
 | **Open P1s** | 0 (all resolved) |
 | **Open P2s** | 22 |
-| **Last Audit** | May 27, 2026 — ARCH-010 resolved: quarkus-api-commons created, 3 Quarkus services have shared starters. |
-| **Production Score** | 98/100 |
+| **Last Audit** | June 8, 2026 — Sandbox cluster deployment complete, all YAML aligned |
+| **Production Score** | 99/100 |
 
 ---
 

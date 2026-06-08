@@ -10,12 +10,12 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (May 15)      |
-| Total Pods               | 🟢 39/39                                 | All pods Running on OCP 4.20+ (6 nodes)         |
-| OpenShift Cluster        | 🟢 Active                                | 3 masters + 3 workers, ap-southeast-1           |
+| Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (Jun 8)       |
+| Total Pods               | 🟢 37/39                                | 37 pods Running on OCP 4.20+ sandbox (Jun 8)    |
+| OpenShift Cluster        | 🟢 Active                                | Sandbox cluster (RT7ZF), ap-southeast-1         |
 | Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
 | Data Services            | 🟢 PostgreSQL + DataGrid + Kafka         | StatefulSet PG16, Infinispan RESP, AMQ Streams KRaft |
-| Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created              |
+| Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created (Jun 8)     |
 | Maven Build              | 🟢 36/36                                 | ALL modules SUCCESS (inc. 23 services + 5 sims + 8 shared) |
 | Unit Test Coverage       | 🟢 100%                                  | All 36 modules pass (0 failures, 0 errors) in `mvn clean test -T 1C` (May 5) |
 | Maven Contract Tests     | 🟢 3/3 svc                               | 614+ tests, 0 failures (auth, transaction, wallet) |
@@ -91,6 +91,26 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.7 (Completed) — June 8, 2026
+
+**Sandbox Cluster Deployment & YAML Alignment:**
+
+- ✅ **Sandbox Cluster Setup**: Deployed all services to OpenShift sandbox cluster (RT7ZF, ap-southeast-1)
+- ✅ **28 Services + web-app Running**: 37 pods total in payu-dev namespace (23 backend + 4 simulators + web-app + Kafka + PostgreSQL + DataGrid)
+- ✅ **Keycloak Deployed in payu-sso**: Keycloak 26 running with realm `payu`, OIDC endpoints verified
+- ✅ **All Routes Working**: gateway-service, web-app, payu-keycloak routes with TLS edge termination
+- ✅ **Infrastructure YAML Fixes**:
+  - Fixed all deployment YAMLs: correct JDBC URLs, passwords, Kafka/Redis endpoints
+  - Fixed Keycloak: moved to payu-sso namespace, added route, fixed hostname config
+  - Fixed simulator YAMLs: added Hibernate ORM env vars, correct DB names
+  - Fixed web-app and gateway routes: added TLS edge termination
+  - Added network policy for payu-dev to postgres access
+  - Fixed product-catalog-service database name to payu_productcatalog
+  - Removed analytics-service and kyc-service from kustomization (no images)
+- ✅ **Image Versions Aligned**: bi-fast-simulator:1.8.3, biller-simulator:1.8.3, billing-service:1.8.2, dispute-service:1.8.5, integration-service:1.8.4, partner-service:1.8.5, product-catalog-service:1.8.4, promotion-service:1.8.2, transaction-service:1.8.2, va-simulator:1.8.5
+- ✅ **Network Policy**: Created `allow-payu-dev-to-postgres` for PostgreSQL access from payu-dev namespace
+- ✅ **Secrets Created**: payu-secrets (JWT, webhook, encryption), redis-credentials
 
 ### v1.8.6 (Completed) — May 15, 2026
 

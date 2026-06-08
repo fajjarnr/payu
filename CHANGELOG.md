@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sandbox Cluster Deployment & YAML Alignment (2026-06-08)
+
+- **Infrastructure YAML Fixes**: Fixed all deployment YAMLs to match actual running state on sandbox cluster:
+  - Corrected JDBC URLs from `payu-postgres:5432` to `payu-postgres-primary.payu-dev.svc.cluster.local:5432`
+  - Updated database passwords to match actual credentials
+  - Fixed Kafka bootstrap servers to `kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092`
+  - Fixed Redis/DataGrid endpoints to `payu-datagrid.payu-dev.svc.cluster.local:11222`
+  - Added Hibernate ORM environment variables for Quarkus simulators
+  - Fixed product-catalog-service database name from `payu_products` to `payu_productcatalog`
+- **Keycloak Namespace Migration**: Moved Keycloak from `rhbk-operator` to `payu-sso` namespace:
+  - Updated OperatorGroup and Subscription to target `payu-sso`
+  - Created route with TLS edge termination
+  - Fixed hostname configuration (strict: false, backchannelDynamic: false)
+  - Created secrets: payu-keycloak-admin, payu-keycloak-db
+  - Created `keycloak` database user and granted permissions
+- **Route Configuration**: Added TLS edge termination for sandbox cluster compatibility:
+  - web-app route: `web-app-payu-dev.apps.cluster-rt7zf.rt7zf.sandbox2356.opentlc.com`
+  - gateway-service route: `gateway-service-payu-dev.apps.cluster-rt7zf.rt7zf.sandbox2356.opentlc.com`
+  - payu-keycloak route: `payu-keycloak-payu-sso.apps.cluster-rt7zf.rt7zf.sandbox2356.opentlc.com`
+- **Network Policy**: Created `allow-payu-dev-to-postgres` to enable PostgreSQL access from payu-dev namespace
+- **Image Version Alignment**: Updated YAML files to use correct image versions from imagestream
+- **Secrets Management**: Created payu-secrets and redis-credentials secrets in payu-dev namespace
+
 ### CFG-PROD-003 — Configurable Tracing Sampling Probability (2026-05-27)
 
 - **Configurable Tracing Standard**: Replaced hardcoded tracing sampling probabilities across all 11 Spring Boot microservices with dynamic, environment-driven configurations using `TRACING_SAMPLING_PROBABILITY`.
