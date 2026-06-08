@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### HCP Cluster Deployment — `payu-dev` (2026-06-08)
+
+- **Hosted Control Plane (HCP)**: Deployed `payu-dev` hosted cluster on AWS ap-southeast-1 using HyperShift (OCP 4.18.43, MCE 2.8.7).
+  - **Infrastructure**: HCP CLI auto-provisioned VPC (`vpc-0a17e396dc91f3a02`), subnets, IAM roles (7 roles), OIDC provider, Route53 zones.
+  - **Networking**: OVN-Kubernetes, clusterNetwork `10.136.0.0/14`, serviceNetwork `172.32.0.0/16` (non-overlapping with `development` cluster).
+  - **Control Plane**: SingleReplica (dev), etcd 8Gi gp3-csi, AES-CBC encryption, 43 pods running.
+  - **Worker Node**: `m5.large` (2vCPU/8GB), 120Gi gp3 root, single AZ (ap-southeast-1a).
+  - **Ingress**: NLB (Network Load Balancer) configured via `configuration.ingress.loadBalancer.platform.aws.type: NLB`.
+  - **VPC Endpoints**: STS, EC2, ELB, EBS, KMS (Interface) + S3 (Gateway) for private AWS service access.
+  - **Resource Tags**: `kubernetes.io/cluster`, `app.kubernetes.io/part-of`, `environment`, `cost-center`, `owner`.
+  - **Console**: `https://console-openshift-console.apps.payu-dev.sandbox2356.opentlc.com`
+  - **Access**: kubeconfig via `oc get secret payu-dev-admin-kubeconfig -n clusters`
+- **Documentation**: Created comprehensive deployment guide at `infrastructure/foundation/hostedcluster/DEPLOYMENT.md` with:
+  - Activity log tables (Account | Region | Activity | Details | Validation | Duration | Status | Remarks)
+  - 7 deployment steps per Red Hat HCP docs
+  - Best practices from ROSA (security, identity, observability, cost)
+  - Troubleshooting guide
+  - Destroy procedures
+- **Files**: Reorganized `infrastructure/foundation/hostedcluster/` into `manifests/`, `iam/`, `scripts/` subdirectories.
+
 ### Sandbox Cluster Deployment & YAML Alignment (2026-06-08)
 
 - **Infrastructure YAML Fixes**: Fixed all deployment YAMLs to match actual running state on sandbox cluster:

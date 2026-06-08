@@ -16,7 +16,7 @@
 | **Open P0s** | 0 (all resolved) |
 | **Open P1s** | 0 (all resolved) |
 | **Open P2s** | 22 |
-| **Last Audit** | June 8, 2026 — Sandbox cluster deployment complete, all YAML aligned |
+| **Last Audit** | June 8, 2026 — HCP cluster payu-dev deployed, sandbox cluster YAML aligned |
 | **Production Score** | 99/100 |
 
 ---
@@ -25,6 +25,19 @@
 
 | Key | Priority | Category | Summary | Status |
 |:---|:---:|:---|:---|:---|
+| HCP-001 | P1 | Security | Apply NetworkPolicy default-deny to all app namespaces on payu-dev | ⏳ Open |
+| HCP-002 | P1 | Security | Enforce `restricted` SCC on all app deployments | ⏳ Open |
+| HCP-003 | P1 | Ops | Enable User Workload Monitoring on payu-dev | ⏳ Open |
+| HCP-004 | P2 | Ops | Install cert-manager Operator for auto-renew TLS | ⏳ Open |
+| HCP-005 | P2 | Ops | Install External DNS Operator (sync Route → Route53) | ⏳ Open |
+| HCP-006 | P2 | Security | Configure external IdP (OIDC/LDAP) and remove kubeadmin | ⏳ Open |
+| HCP-007 | P2 | Resilience | Add PDB (PodDisruptionBudget) for all PayU services | ⏳ Open |
+| HCP-008 | P2 | Security | Install External Secrets Operator for AWS Secrets Manager | ⏳ Open |
+| HCP-009 | P2 | Ops | Install OpenShift GitOps (ArgoCD) operator on payu-dev | ⏳ Open |
+| HCP-010 | P3 | Cost | Configure cluster autoscaler for production NodePool | ⏳ Open |
+| HCP-011 | P3 | Cost | Add spot instance NodePool for non-critical workloads | ⏳ Open |
+| HCP-012 | P3 | Security | Configure KMS for etcd encryption (`--kms-key-arn`) | ⏳ Open |
+| HCP-013 | P3 | Security | Enable image signing (Cosign) in CI/CD pipeline | ⏳ Open |
 | UPGRADE-012 | P2 | Mobile | Modernize Mobile App: Upgrade to Expo SDK 55 and React Native 0.85 | ⏸️ Skipped |
 
 ---

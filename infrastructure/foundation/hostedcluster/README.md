@@ -1,161 +1,181 @@
 # PayU — Hosted Control Plane (HCP) Provisioning
 
 > **Hosted Cluster**: PayU (`payu-dev`)
-> **Management Cluster**: `local-cluster` (OCP 4.18.42, ap-southeast-1)
-> **Provisioning Tool**: OpenShift Hypershift + AWS
+> **Management Cluster**: `local-cluster` (OCP 4.18.42, MCE 2.8.7)
+> **Namespace**: `clusters` (HCP CLI default)
+> **Control Plane Namespace**: `clusters-payu-dev`
+> **Provisioning Tool**: HCP CLI + OpenShift Hypershift
 
 ---
 
-## 🏗️ Architecture
+## Quick Start
+
+```bash
+# 1. Create S3 bucket for OIDC
+aws s3api create-bucket --bucket oidc-storage-payu-dev \
+  --create-bucket-configuration LocationConstraint=ap-southeast-1
+
+# 2. Create OIDC S3 credentials secret
+oc create secret generic hypershift-operator-oidc-provider-s3-credentials \
+  --from-literal=bucket=oidc-storage-payu-dev \
+  --from-literal=region=ap-southeast-1 \
+  --from-file=credentials=${HOME}/.aws/credentials \
+  -n local-cluster
+
+# 3. Create IAM role for HCP CLI
+aws iam create-role --role-name payu-dev-hcp-cli-role \
+  --assume-role-policy-document file://trust.json
+aws iam put-role-policy --role-name payu-dev-hcp-cli-role \
+  --policy-name payu-dev-policy \
+  --policy-document file://policy.json
+
+# 4. Get STS credentials
+aws sts get-session-token --duration-seconds 86400 --output json > /tmp/sts-creds.json
+
+# 5. Generate YAML
+hcp create cluster aws \
+  --name payu-dev --infra-id payu-dev \
+  --base-domain sandbox2356.opentlc.com \
+  --sts-creds /tmp/sts-creds.json \
+  --pull-secret /tmp/pull-secret.json \
+  --region ap-southeast-1 \
+  --role-arn arn:aws:iam::579147609200:role/payu-dev-hcp-cli-role \
+  --node-pool-replicas 1 \
+  --render > /tmp/payu-dev.yaml
+
+# 6. Fix CIDR, HA, version, and NLB
+sed -i 's/controllerAvailabilityPolicy: HighlyAvailable/controllerAvailabilityPolicy: SingleReplica/' /tmp/payu-dev.yaml
+sed -i 's/cidr: 10.132.0.0\/14/cidr: 10.136.0.0\/14/' /tmp/payu-dev.yaml
+sed -i 's/cidr: 172.31.0.0\/16/cidr: 172.32.0.0\/16/' /tmp/payu-dev.yaml
+sed -i 's/4.22.0-multi/4.18.43-multi/' /tmp/payu-dev.yaml
+# Add NLB ingress config (like install-config.yaml lbType: NLB)
+# Already in manifests/hostedcluster-payu.yaml: configuration.ingress.loadBalancer.platform.aws.type: NLB
+sed -i 's/4.22.0-multi/4.18.43-multi/' /tmp/payu-dev.yaml
+
+# 7. Create secrets and apply
+oc create secret generic payu-dev-pull-secret -n clusters \
+  --from-file=.dockerconfigjson=/tmp/pull-secret.json --type=kubernetes.io/dockerconfigjson
+openssl rand 32 | oc create secret generic payu-dev-etcd-encryption-key -n clusters \
+  --from-file=key=/dev/stdin
+oc apply -f /tmp/payu-dev.yaml
+
+# 8. Verify
+oc get hostedcluster payu-dev -n clusters -w
+```
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Management Cluster (local-cluster)                  │
 │  ┌───────────────────────────────────────────────┐  │
-│  │  hosted-control-planes namespace              │  │
+│  │  clusters namespace                           │  │
+│  │  ┌─────────────────┐                          │  │
+│  │  │ HostedCluster    │  payu-dev               │  │
+│  │  │ NodePool         │  payu-dev-ap-southeast-1a│  │
+│  │  └─────────────────┘                          │  │
+│  └───────────────────────────────────────────────┘  │
+│                                                     │
+│  ┌───────────────────────────────────────────────┐  │
+│  │  clusters-payu-dev namespace                  │  │
 │  │  ┌─────────────────┐  ┌──────────────────┐   │  │
-│  │  │ Control Plane    │  │ Control Plane     │   │  │
-│  │  │ (dev-rt7zf)      │  │ (payu-rt7zf)      │   │  │
-│  │  │ API, etcd, OAuth │  │ API, etcd, OAuth  │   │  │
+│  │  │ Control Plane    │  │ kube-apiserver   │   │  │
+│  │  │ (CPO, etcd, CAPI)│  │ etcd, ingress    │   │  │
 │  │  └─────────────────┘  └──────────────────┘   │  │
 │  └───────────────────────────────────────────────┘  │
 │                                                     │
 │  ┌───────────────────────────────────────────────┐  │
-│  │  Worker Nodes (AWS EC2)                       │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │  │
-│  │  │ dev      │  │ payu     │  │ payu     │    │  │
-│  │  │ m6a.2xl  │  │ m6a.2xl  │  │ m6a.2xl  │    │  │
-│  │  └──────────┘  └──────────┘  └──────────┘    │  │
+│  │  Worker Node (AWS EC2)                        │  │
+│  │  ┌──────────┐                                │  │
+│  │  │ payu-dev │  m5.large, 120Gi gp3           │  │
+│  │  └──────────┘                                │  │
 │  └───────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────┘
 ```
 
-## 📋 Prerequisites
+---
 
-### 1. AWS IAM Roles (dibuat manual atau via Terraform)
-
-Roles yang diperlukan untuk PayU HCP (prefix: `payu-rt7zf`):
-
-| Role | ARN Pattern | Purpose |
-|:-----|:------------|:--------|
-| `payu-rt7zf-control-plane-operator` | `arn:aws:iam::579147609200:role/payu-rt7zf-control-plane-operator` | Control plane operator |
-| `payu-rt7zf-openshift-image-registry` | `arn:aws:iam::579147609200:role/payu-rt7zf-openshift-image-registry` | Image registry S3 |
-| `payu-rt7zf-openshift-ingress` | `arn:aws:iam::579147609200:role/payu-rt7zf-openshift-ingress` | Ingress (NLB/ALB) |
-| `payu-rt7zf-cloud-controller` | `arn:aws:iam::579147609200:role/payu-rt7zf-cloud-controller` | Cloud controller |
-| `payu-rt7zf-cloud-network-config-controller` | `arn:aws:iam::579147609200:role/payu-rt7zf-cloud-network-config-controller` | Network config |
-| `payu-rt7zf-node-pool` | `arn:aws:iam::579147609200:role/payu-rt7zf-node-pool` | Node pool management |
-| `payu-rt7zf-aws-ebs-csi-driver-controller` | `arn:aws:iam::579147609200:role/payu-rt7zf-aws-ebs-csi-driver-controller` | EBS CSI storage |
-
-> **Buat dengan AWS CLI** (gunakan `create-iam-roles.sh`) atau lihat Terraform module di `infrastructure/foundation/terraform/aws/`.
-
-### 2. Secrets pada Management Cluster
-
-```bash
-# Pull secret (dari cloud.openshift.com atau existing)
-oc create secret generic payu-pull-secret \
-  -n local-cluster \
-  --from-file=.dockerconfigjson=<(oc get secret development-pull-secret -n local-cluster -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d) \
-  --type=kubernetes.io/dockerconfigjson
-
-# Etcd encryption key
-openssl rand -base64 32 | oc create secret generic payu-etcd-encryption-key \
-  -n local-cluster \
-  --from-file=key=/dev/stdin
-
-# SSH key (opsional)
-ssh-keygen -t ed25519 -f /tmp/payu-ssh -N "" -q
-oc create secret generic payu-ssh-key \
-  -n local-cluster \
-  --from-file=id_ed25519.pub=/tmp/payu-ssh.pub
-```
-
-## 🚀 Provisioning
-
-### Step 1: Apply HostedCluster
-
-```bash
-oc apply -f hostedcluster-payu.yaml
-```
-
-Verify:
-```bash
-oc get hostedcluster payu-dev -n local-cluster -w
-# Tunggu sampai: PROGRESS=Completed, AVAILABLE=True
-```
-
-### Step 2: Apply NodePools (with autoscaling)
-
-```bash
-oc apply -f nodepools-payu.yaml
-```
-
-Verify:
-```bash
-oc get nodepool -n local-cluster -l hypershift.openshift.io/cluster=payu-dev -w
-# Tunggu sampai semua node READY
-```
-
-### Step 3: Get kubeconfig
-
-```bash
-oc get secret -n local-cluster payu-dev-admin-kubeconfig \
-  -o jsonpath='{.data.kubeconfig}' | base64 -d > /tmp/payu-kubeconfig
-
-export KUBECONFIG=/tmp/payu-kubeconfig
-oc get nodes
-```
-
-### Step 4: Get kubeadmin password
-
-```bash
-oc get secret -n local-cluster payu-dev-kubeadmin-password \
-  -o jsonpath='{.data.password}' | base64 -d
-echo
-```
-
-## ⚙️ Autoscaling Configuration
-
-| Parameter | Value | Keterangan |
-|:----------|:------|:-----------|
-| **Min replicas** | 3 | Minimum untuk HA |
-| **Max replicas** | 6 | Auto-scale berdasarkan load |
-| **Instance type** | m6a.2xlarge | 8 vCPU, 32 GiB RAM |
-| **Root volume** | 120 GiB gp3 | Encrypted by default |
-| **Zones** | ap-southeast-1a, 1b, 1c | Multi-AZ untuk resilience |
-
-**NodePool sizing rationale untuk 23 services + 5 simulators:**
-
-| Komponen | vCPU | Memory |
-|:---------|:-----|:-------|
-| 23 backend services (JVM) | ~12 CPU | ~24 GB |
-| 5 simulators (Quarkus) | ~2 CPU | ~4 GB |
-| PostgreSQL (Crunchy PGO) | ~1 CPU | ~2 GB |
-| Keycloak (RHBK) | ~1 CPU | ~2 GB |
-| Kafka (AMQ Streams) | ~2 CPU | ~4 GB |
-| DataGrid caching | ~1 CPU | ~2 GB |
-| Monitoring (Prometheus/Grafana) | ~1 CPU | ~2 GB |
-| Overhead + buffer | ~4 CPU | ~8 GB |
-| **Total minimum** | **~24 CPU** | **~48 GB** |
-
-Dengan autoscaling 3-6 node × m6a.2xlarge (8vCPU/32GB):
-- 3 node = 24vCPU / 96GB (cukup untuk baseline)
-- 6 node = 48vCPU / 192GB (cukup untuk peak load)
-
-## 🔄 Reference: Cluster `development` (Existing)
+## Configuration Summary
 
 | Parameter | Value |
 |:----------|:------|
-| InfraID | `dev-rt7zf` |
-| OCP Version | 4.18.43 |
-| Region | ap-southeast-1 |
-| Base domain | sandbox2356.opentlc.com |
-| Subnet | subnet-0067a49544aa0bb1b |
-| Worker | 1× m6a.2xlarge, 120Gi gp3 |
-| OIDC | S3 (`oidc-storage-rt7zf`) |
+| Cluster Name | `payu-dev` |
+| Namespace | `clusters` |
+| InfraID | `payu-dev` |
+| OCP Version | `4.18.43-multi` |
+| Region | `ap-southeast-1` |
+| Base Domain | `sandbox2356.opentlc.com` |
+| VPC | `vpc-0a17e396dc91f3a02` (auto-created by HCP CLI) |
+| Subnet | `subnet-02398ff0ca4a471ef` (auto-created) |
+| Network Type | `OVNKubernetes` |
+| Cluster Network | `10.136.0.0/14` |
+| Service Network | `172.32.0.0/16` |
+| Endpoint Access | `Public` |
+| Controller Availability | `SingleReplica` |
+| Etcd Storage | `8Gi gp3-csi` |
+| Node Instance Type | `m5.large` |
+| Node Root Volume | `120 GiB gp3` |
+| Node Replicas | `1` |
 
-## 📁 Related Files
+---
 
-- `hostedcluster-payu.yaml` — HostedCluster CR
-- `nodepools-payu.yaml` — NodePool CRs dengan autoscaling
-- `create-iam-roles.sh` — Script untuk membuat AWS IAM roles
-- `infrastructure/foundation/terraform/aws/` — Terraform infrastructure modules
+## CIDR Allocation
+
+| Network | `development` Cluster | `payu-dev` Cluster | Overlap |
+|:--------|:----------------------|:-------------------|:--------|
+| clusterNetwork | `10.132.0.0/14` | `10.136.0.0/14` | NO |
+| serviceNetwork | `172.31.0.0/16` | `172.32.0.0/16` | NO |
+| machineNetwork | `10.0.0.0/16` | `10.0.0.0/16` | Shared VPC |
+
+---
+
+## Access Commands
+
+```bash
+# Get kubeconfig
+oc get secret payu-dev-admin-kubeconfig -n clusters \
+  -o jsonpath='{.data.kubeconfig}' | base64 -d > /tmp/payu-dev-kubeconfig
+
+# Access hosted cluster
+export KUBECONFIG=/tmp/payu-dev-kubeconfig
+oc get nodes
+oc get co
+
+# Get kubeadmin password
+oc get secret payu-dev-kubeadmin-password -n clusters \
+  -o jsonpath='{.data.password}' | base64 -d && echo
+```
+
+**Console**: https://console-openshift-console.apps.payu-dev.sandbox2356.opentlc.com
+**kubeadmin**: `vzcte-nX5SW-42HqT-8zaM7`
+
+---
+
+## Files
+
+```
+hostedcluster/
+├── README.md                          # Quick start & overview
+├── DEPLOYMENT.md                      # Full deployment log + best practices
+├── manifests/
+│   ├── hostedcluster-payu.yaml        # HostedCluster CR
+│   └── nodepools-payu.yaml            # NodePool CR
+├── iam/
+│   ├── policy.json                    # IAM permissions for HCP CLI
+│   └── trust.json                     # IAM trust policy for HCP CLI role
+└── scripts/
+    ├── create-iam-roles.sh            # Create IAM roles
+    ├── create-oidc-bucket.sh          # Create S3 OIDC bucket
+    └── setup-prerequisites.sh         # One-shot prerequisites setup
+```
+
+---
+
+## References
+
+| Document | URL |
+|:---------|:----|
+| OCP 4.18 HCP Docs | https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hosted_control_planes/ |
+| HCP CLI Download | https://hcp-cli-download-multicluster-engine.apps.cluster-rt7zf.rt7zf.sandbox2356.opentlc.com/linux/amd64/hcp.tar.gz |

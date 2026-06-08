@@ -13,6 +13,7 @@
 | Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (Jun 8)       |
 | Total Pods               | 🟢 37/39                                | 37 pods Running on OCP 4.20+ sandbox (Jun 8)    |
 | OpenShift Cluster        | 🟢 Active                                | Sandbox cluster (RT7ZF), ap-southeast-1         |
+| HCP Cluster (payu-dev)   | 🟢 Running                               | Hosted Control Plane on OCP 4.18.43, NLB ingress, 1 worker node (Jun 8) |
 | Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
 | Data Services            | 🟢 PostgreSQL + DataGrid + Kafka         | StatefulSet PG16, Infinispan RESP, AMQ Streams KRaft |
 | Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created (Jun 8)     |
