@@ -182,7 +182,15 @@ payu/
 13. **Port 8080 Standard**: Semua backend service WAJIB listen di port 8080 internal. External port mapping via compose/K8s.
 14. **Container Base**: Gunakan UBI9 (Red Hat Universal Base Image). Run as non-root (UID 1001), drop ALL capabilities, read-only root filesystem.
 15. **Conventional Commits**: Format `type(scope): message` wajib. Branch naming: `feature/*`, `fix/*`, `chore/*`. No force push ke protected branches.
-16. **Financial Calculations**: `BigDecimal` ONLY (NEVER `float`/`double`). Rounding mode: `HALF_EVEN`. Double-entry ledger wajib (setiap transaksi = debit + credit entry).
+16. **Semantic Versioning**: Format `MAJOR.MINOR.PATCH` (e.g., `1.8.7`). Rules:
+  - **MAJOR**: Breaking changes (API contract, database schema, event format)
+  - **MINOR**: New features, new services, non-breaking additions
+  - **PATCH**: Bug fixes, config changes, infrastructure tweaks, YAML fixes
+  - **Pre-release**: `-alpha.N`, `-beta.N`, `-rc.N` untuk staging
+  - **Image tags**: Selalu match dengan git tag (e.g., `1.8.7` = commit `v1.8.7`)
+  - **No duplicates**: Setiap version hanya boleh ada 1x di CHANGELOG.md
+  - **Date format**: ISO 8601 (`YYYY-MM-DD`) untuk semua version entries
+17. **Financial Calculations**: `BigDecimal` ONLY (NEVER `float`/`double`). Rounding mode: `HALF_EVEN`. Double-entry ledger wajib (setiap transaksi = debit + credit entry).
 
 ### Testing Guidelines (TDD)
 
