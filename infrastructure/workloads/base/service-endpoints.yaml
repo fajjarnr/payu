@@ -24,4 +24,4 @@ data:
   POSTGRES_PORT: "5432"
   REDIS_HOST: "payu-datagrid"
   REDIS_PORT: "11222"
-  KAFKA_URL: "payu-kafka-kafka-bootstrap:9092"
+  KAFKA_URL: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"

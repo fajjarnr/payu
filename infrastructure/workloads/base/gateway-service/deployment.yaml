@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.8.2
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.8.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -82,38 +82,18 @@ spec:
             cpu: 500m
             memory: 512Mi
         env:
-        - name: SERVER_PORT
-          value: '8080'
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://payu-postgres:5432/payu_gateway"
-        - name: SPRING_DATASOURCE_USERNAME
-          value: "payu"
-        - name: SPRING_DATASOURCE_PASSWORD
-          value: "payu-dev-password"
-        - name: QUARKUS_REDIS_HOSTS
-          value: "redis://developer:payu-cache-dev-password@payu-datagrid:11222"
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_gateway"
         - name: REDIS_HOST
-          value: "payu-datagrid"
+          value: "payu-datagrid.payu-dev.svc.cluster.local"
         - name: REDIS_PORT
           value: "11222"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
+        - name: QUARKUS_REDIS_HOSTS
+          value: "redis://developer:payu-cache-dev-password@payu-datagrid.payu-dev.svc.cluster.local:11222"
         - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: REDIS_PASSWORD
-        - name: SPRING_DATA_REDIS_HOST
-          value: "payu-datagrid"
-        - name: SPRING_DATA_REDIS_PORT
-          value: "11222"
-        - name: SPRING_DATA_REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: SPRING_DATA_REDIS_PASSWORD
-        - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
-          value: "3"
-        - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
-          value: "1"
+          value: "payu-cache-dev-password"
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: QUARKUS_OIDC_TOKEN_ISSUER
@@ -123,12 +103,6 @@ spec:
         - name: GATEWAY_RATE_LIMIT_TEST_MODE
           value: "false"
         - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: payu-secrets
-              key: JWT_SECRET
+          value: "payu-dev-jwt-secret-key-2026"
         - name: WEBHOOK_PARTNER_1_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: payu-secrets
-              key: WEBHOOK_PARTNER_1_SECRET
+          value: "webhook-dev-secret-partner-1"

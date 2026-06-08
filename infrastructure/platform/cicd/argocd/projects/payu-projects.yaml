@@ -233,7 +233,7 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: payu-security
       server: https://kubernetes.default.svc
-    - namespace: rhbk-operator
+    - namespace: payu-sso
       server: https://kubernetes.default.svc
     - namespace: payu-dev
       server: https://kubernetes.default.svc

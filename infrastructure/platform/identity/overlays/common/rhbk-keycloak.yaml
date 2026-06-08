@@ -4,7 +4,7 @@
 # API Reference: https://www.keycloak.org/operator/basic-deployment
 #
 # IMPORTANT:
-# 1. Install the rhbk-operator in rhbk-operator namespace.
+# 1. Install the rhbk-operator in payu-sso namespace.
 # 2. Apply this Keycloak CR via an environment overlay so it lands in payu-dev,
 #    payu-sit, payu-uat, payu-preprod, or payu.
 # 3. payu-keycloak-db secret MUST exist in the target environment namespace.
@@ -48,9 +48,8 @@ spec:
 
   # --- Hostname Configuration ---
   hostname:
-    hostname: https://sso.payu.fajjjar.my.id
     strict: false
-    backchannelDynamic: true
+    backchannelDynamic: false
 
   # --- Ingress (OpenShift Route) ---
   ingress:

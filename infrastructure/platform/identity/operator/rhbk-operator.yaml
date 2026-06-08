@@ -2,22 +2,17 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: rhbk-operator-group
-  namespace: rhbk-operator
+  namespace: payu-sso
 spec:
   targetNamespaces:
-    - rhbk-operator
-    - payu-dev
-    - payu-sit
-    - payu-uat
-    - payu-preprod
-    - payu
+    - payu-sso
   upgradeStrategy: Default
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: rhbk-operator
-  namespace: rhbk-operator
+  namespace: payu-sso
 spec:
   channel: stable-v26
   name: rhbk-operator

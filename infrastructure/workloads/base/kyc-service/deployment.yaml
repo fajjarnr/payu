@@ -82,9 +82,9 @@ spec:
             memory: 2Gi
         env:
         - name: DATABASE_URL
-          value: "postgresql+asyncpg://payu:payu-dev-password@payu-postgres:5432/payu_kyc"
+          value: "postgresql+asyncpg://payu:>3Se{I@_4JVvvo[-z:uOO2jh@payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_kyc"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "payu-kafka-kafka-bootstrap:9092"
+          value: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
         - name: DUKCAPIL_URL
           value: "http://dukcapil-simulator:8091/api/v1"
         - name: SECRET_KEY

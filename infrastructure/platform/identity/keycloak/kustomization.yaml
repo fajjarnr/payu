@@ -9,3 +9,4 @@ resources:
 - keycloak-service.yaml
 - keycloak-realm-import.yaml
 - network-policy.yaml
+- route.yaml

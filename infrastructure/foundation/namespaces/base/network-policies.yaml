@@ -16,8 +16,7 @@ spec:
     - Egress
 ---
 # Allow Keycloak to reach PostgreSQL in payu-dev.
-# Keep the rhbk-operator namespace source during migration and allow the
-# operator-managed Keycloak pod labels once the CR lives in payu-dev.
+# Keycloak runs in payu-sso namespace via operator.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -33,7 +32,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: rhbk-operator
+              kubernetes.io/metadata.name: payu-sso
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: payu-keycloak

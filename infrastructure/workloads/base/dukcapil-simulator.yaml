@@ -32,11 +32,11 @@ spec:
               protocol: TCP
           env:
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres:5432/payu_dukcapil"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_dukcapil"
             - name: QUARKUS_DATASOURCE_USERNAME
               value: "payu"
             - name: QUARKUS_DATASOURCE_PASSWORD
-              value: "payu-dev-password"
+              value: ">3Se{I@_4JVvvo[-z:uOO2jh"
           envFrom:
             - configMapRef:
                 name: dukcapil-simulator-config
