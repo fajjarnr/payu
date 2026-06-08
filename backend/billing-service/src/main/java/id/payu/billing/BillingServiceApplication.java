@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * Handles bill payments for PLN, PDAM, Pulsa, and E-wallet top-ups.
  */
 @EnableJpaRepositories(basePackages = "id.payu.billing.adapter.persistence.repository")
-@EntityScan(basePackages = "id.payu.billing.domain.model")
+@EntityScan(basePackages = {"id.payu.billing.domain.model", "id.payu.billing.adapter.persistence.entity"})
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableKafka

@@ -22,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author PayU Backend Team
  */
 @EnableJpaRepositories(basePackages = "id.payu.partner.adapter.persistence.repository")
-@EntityScan(basePackages = "id.payu.partner.domain")
+@EntityScan(basePackages = {"id.payu.partner.domain", "id.payu.partner.adapter.persistence.entity"})
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling

@@ -20,7 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - Customer segmentation
  */
 @EnableJpaRepositories(basePackages = "id.payu.promotion.adapter.persistence.repository")
-@EntityScan(basePackages = {"id.payu.promotion.domain", "id.payu.saga.entity"})
+@EntityScan(basePackages = {"id.payu.promotion.domain", "id.payu.promotion.adapter.persistence.entity", "id.payu.saga.entity"})
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableKafka

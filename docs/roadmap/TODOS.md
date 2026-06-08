@@ -66,7 +66,7 @@
 | OPS-2026-04-08-04 | Re-run k6 crud-data-consistency-test.js after stress revalidation | Use TestRun CRD |
 | OPS-2026-04-08-05 | Decide GATEWAY_RATE_LIMIT_TEST_MODE on/off after validation | Test mode currently enabled |
 | OPS-2026-04-09-01 | Re-run k6 with in-cluster service URLs | k6 Operator lifecycle verified |
-| OPS-2026-04-09-06 | Fix transaction-service Redis/DataGrid RESP connection (port 11222) | Affects Split Bill list (HTTP 500) |
+| ~~OPS-2026-04-09-06~~ | ✅ Fix transaction-service Redis/DataGrid RESP connection (port 11222) | Resolved — RateLimitAspect & RateLimitInterceptor now catch DataAccessException, gracefully allow requests when Redis/DataGrid unreachable |
 | OPS-2026-04-09-07 | Create admin Keycloak user for admin-only endpoints | Smart Routing returns 404 |
 
 ---

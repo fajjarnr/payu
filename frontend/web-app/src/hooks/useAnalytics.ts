@@ -49,6 +49,7 @@ export function useCashFlow(userId: string | undefined) {
       AnalyticsService.getCashFlowAnalysis({
         userId: userId!,
         startDate: startOfMonth,
+        endDate,
       }),
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,
@@ -56,42 +57,7 @@ export function useCashFlow(userId: string | undefined) {
   });
 }
 
-/** REST hook: fetch spending trends for a date range */
-export function useSpendingTrends(userId: string | undefined) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const endDate = now.toISOString().split('T')[0];
 
-  return useQuery<SpendingAnalytics>({
-    queryKey: ['spending-trends', userId, startOfMonth, endDate],
-    queryFn: () =>
-      AnalyticsService.getSpendingTrends({
-        userId: userId!,
-        startDate: startOfMonth,
-        endDate,
-        granularity: 'MONTHLY',
-      }),
-    enabled: !!userId,
-  });
-}
-
-/** REST hook: fetch cash flow analysis for current month */
-export function useCashFlow(userId: string | undefined) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const endDate = now.toISOString().split('T')[0];
-
-  return useQuery<CashFlowAnalysis>({
-    queryKey: ['cash-flow', userId, startOfMonth, endDate],
-    queryFn: () =>
-      AnalyticsService.getCashFlowAnalysis({
-        userId: userId!,
-        startDate: startOfMonth,
-        endDate,
-      }),
-    enabled: !!userId,
-  });
-}
 
 export function useAnalyticsWebSocket(accountId: string | undefined) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);

@@ -34,22 +34,6 @@ export function useSupportAgent(id: string) {
   });
 }
 
-// ── Agents ──
-export function useSupportAgents() {
-  return useQuery({
-    queryKey: ['support-agents'],
-    queryFn: () => SupportService.listAgents(),
-  });
-}
-
-export function useSupportAgent(id: string) {
-  return useQuery({
-    queryKey: ['support-agent', id],
-    queryFn: () => SupportService.getAgent(id),
-    enabled: !!id,
-  });
-}
-
 export function useCreateAgent() {
   const qc = useQueryClient();
   return useMutation({

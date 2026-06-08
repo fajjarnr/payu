@@ -93,7 +93,7 @@ class SagaMonitorServiceTest {
 
             SagaMonitorService.SagaHealth health = monitorService.health();
 
-            assertThat(health.getStatus()).isEqualTo(SagaMonitorService.SagaHealth.SagaHealthStatus.UP);
+            assertThat(health.getStatus()).isEqualTo(SagaHealthStatus.UP);
             assertThat(health.getIncompleteSagas()).isZero();
             assertThat(health.getStalledSagas()).isZero();
         }
@@ -111,7 +111,7 @@ class SagaMonitorServiceTest {
 
             SagaMonitorService.SagaHealth health = monitorService.health();
 
-            assertThat(health.getStatus()).isEqualTo(SagaMonitorService.SagaHealth.SagaHealthStatus.DEGRADED);
+            assertThat(health.getStatus()).isEqualTo(SagaHealthStatus.DEGRADED);
             assertThat(health.getStalledSagas()).isEqualTo(15);
         }
 
@@ -128,7 +128,7 @@ class SagaMonitorServiceTest {
 
             SagaMonitorService.SagaHealth health = monitorService.health();
 
-            assertThat(health.getStatus()).isEqualTo(SagaMonitorService.SagaHealth.SagaHealthStatus.DOWN);
+            assertThat(health.getStatus()).isEqualTo(SagaHealthStatus.DOWN);
         }
 
         @Test

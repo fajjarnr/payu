@@ -15,7 +15,7 @@ public class MoneyDeserializer extends JsonDeserializer<Money> {
         JsonNode node = p.getCodec().readTree(p);
 
         if (node.isTextual()) {
-            return Money.of(node.asText());
+            return Money.of(node.asText(), Money.DEFAULT_CURRENCY_CODE);
         }
 
         if (node.isNumber()) {

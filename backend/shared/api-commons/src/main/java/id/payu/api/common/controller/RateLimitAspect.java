@@ -5,6 +5,9 @@ import id.payu.api.common.constant.ApiConstants;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -12,7 +15,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 @Aspect
 @Component
 public class RateLimitAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -53,6 +57,8 @@ public class RateLimitAspect {
 
     /**
      * Applies rate limiting to methods annotated with @RateLimit.
+     * OPS-2026-04-09-06: Wraps Redis calls with DataAccessException handling
+     * to gracefully degrade when Redis/DataGrid is unreachable (prevents HTTP 500).
      */
     @Around("@annotation(rateLimit)")
     public Object applyRateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -65,22 +71,29 @@ public class RateLimitAspect {
         int limit = rateLimit.value();
         long windowSeconds = rateLimit.windowSeconds();
 
-        // BUG-BE-090 Fix: Use atomic Lua script to prevent race condition
-        // between INCR and EXPIRE operations
-        Long currentCount = redisTemplate.execute(
-                rateLimitScript,
-                Collections.singletonList(key),
-                String.valueOf(windowSeconds)
-        );
+        try {
+            Long currentCount = redisTemplate.execute(
+                    rateLimitScript,
+                    Collections.singletonList(key),
+                    String.valueOf(windowSeconds)
+            );
 
-        if (currentCount == null) {
-            // Redis execution failed, allow request but log warning
-            return joinPoint.proceed();
-        }
+            if (currentCount == null) {
+                return joinPoint.proceed();
+            }
 
-        if (currentCount > limit) {
-            long retryAfter = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-            throw new RateLimitExceededException(retryAfter);
+            if (currentCount > limit) {
+                long retryAfter;
+                try {
+                    retryAfter = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+                } catch (DataAccessException e) {
+                    log.warn("Redis unavailable while checking TTL, allowing request: {}", e.getMessage());
+                    return joinPoint.proceed();
+                }
+                throw new RateLimitExceededException(retryAfter);
+            }
+        } catch (DataAccessException e) {
+            log.warn("Redis/DataGrid unavailable for rate limiting, allowing request: {}", e.getMessage());
         }
 
         return joinPoint.proceed();

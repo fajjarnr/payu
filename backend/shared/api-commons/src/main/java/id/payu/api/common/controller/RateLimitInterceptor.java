@@ -4,6 +4,7 @@ import id.payu.api.common.constant.ApiConstants;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -45,7 +46,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // BUG-SHARED-023: Graceful fallback when redisTemplate is null (no-arg constructor path)
         if (redisTemplate == null) {
             log.warn("RateLimitInterceptor: redisTemplate is null, allowing request without rate limiting");
             return true;
@@ -53,27 +53,26 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         String key = buildKey(request);
 
-        // BUG-SHARED-024: Atomic increment + expire using increment with Duration overload.
-        // This avoids the race between increment() and expire() where the key could
-        // be incremented but the expire never set if the process crashes in between.
-        Long currentCount = redisTemplate.opsForValue().increment(key);
+        try {
+            Long currentCount = redisTemplate.opsForValue().increment(key);
 
-        if (currentCount != null && currentCount == 1) {
-            // First request in this window — set TTL atomically
-            redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
-        }
+            if (currentCount != null && currentCount == 1) {
+                redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
+            }
 
-        // Defensive null check
-        long count = (currentCount != null) ? currentCount : 1;
+            long count = (currentCount != null) ? currentCount : 1;
 
-        response.setHeader(ApiConstants.RATE_LIMIT_LIMIT_HEADER, String.valueOf(defaultLimit));
-        response.setHeader(ApiConstants.RATE_LIMIT_REMAINING_HEADER, String.valueOf(Math.max(0, defaultLimit - count)));
+            response.setHeader(ApiConstants.RATE_LIMIT_LIMIT_HEADER, String.valueOf(defaultLimit));
+            response.setHeader(ApiConstants.RATE_LIMIT_REMAINING_HEADER, String.valueOf(Math.max(0, defaultLimit - count)));
 
-        if (count > defaultLimit) {
-            long retryAfter = redisTemplate.getExpire(key, java.util.concurrent.TimeUnit.SECONDS);
-            response.setHeader(ApiConstants.RETRY_AFTER_HEADER, String.valueOf(retryAfter));
-            response.setStatus(429); // HTTP 429 Too Many Requests
-            return false;
+            if (count > defaultLimit) {
+                long retryAfter = redisTemplate.getExpire(key, java.util.concurrent.TimeUnit.SECONDS);
+                response.setHeader(ApiConstants.RETRY_AFTER_HEADER, String.valueOf(retryAfter));
+                response.setStatus(429);
+                return false;
+            }
+        } catch (DataAccessException e) {
+            log.warn("Redis/DataGrid unavailable for rate limiting, allowing request: {}", e.getMessage());
         }
 
         return true;
