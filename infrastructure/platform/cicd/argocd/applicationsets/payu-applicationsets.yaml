@@ -157,8 +157,8 @@ spec:
             path: infrastructure/platform/security/compliance-operator
             namespace: openshift-compliance
           - name: keycloak
-            path: infrastructure/platform/identity/operator
-            namespace: rhbk-operator
+            path: infrastructure/platform/identity/keycloak
+            namespace: payu-sso
           - name: datagrid
             path: infrastructure/platform/data
             namespace: payu-dev

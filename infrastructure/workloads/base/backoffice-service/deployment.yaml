@@ -86,13 +86,13 @@ spec:
         - name: SERVER_PORT
           value: '8080'
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://payu-postgres:5432/payu_backoffice"
+          value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_backoffice"
         - name: SPRING_DATASOURCE_USERNAME
           value: "payu"
         - name: SPRING_DATASOURCE_PASSWORD
-          value: "payu-dev-password"
+          value: ">3Se{I@_4JVvvo[-z:uOO2jh"
         - name: PAYU_CACHE_REDIS_HOST
-          value: payu-datagrid
+          value: payu-datagrid.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT
           value: "11222"
         - name: PAYU_CACHE_REDIS_PASSWORD
@@ -100,29 +100,21 @@ spec:
         - name: PAYU_CACHE_REDIS_USERNAME
           value: developer
         - name: REDIS_HOST
-          value: payu-datagrid
+          value: payu-datagrid.payu-dev.svc.cluster.local
         - name: REDIS_PORT
           value: "11222"
         - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: REDIS_PASSWORD
         - name: SPRING_DATA_REDIS_HOST
-          value: payu-datagrid
+          value: payu-datagrid.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
           value: "11222"
         - name: SPRING_DATA_REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: SPRING_DATA_REDIS_PASSWORD
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
           value: "3"
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
           value: "1"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "payu-kafka-kafka-bootstrap:9092"
+          value: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
         - name: OIDC_ISSUER
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
         - name: OIDC_JWK_SET_URI

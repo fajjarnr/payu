@@ -14,9 +14,9 @@ spec:
       port: 8080
       targetPort: 8080
       protocol: TCP
-    - name: https
-      port: 8443
-      targetPort: 8443
+    - name: management
+      port: 9000
+      targetPort: 9000
       protocol: TCP
   selector:
     app: keycloak

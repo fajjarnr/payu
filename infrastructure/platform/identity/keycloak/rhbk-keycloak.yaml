@@ -50,10 +50,8 @@ spec:
   # --- Hostname Configuration ---
   # Override per environment via overlay patch
   hostname:
-    hostname: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
-    admin: https://sso.payu.fajjjar.my.id
     strict: false
-    backchannelDynamic: true
+    backchannelDynamic: false
 
   # --- Ingress (OpenShift Route) ---
   ingress:

@@ -1,20 +1,18 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: web-app
+  name: payu-keycloak
   labels:
-    app.kubernetes.io/name: web-app
+    app.kubernetes.io/name: payu-keycloak
+    app.kubernetes.io/component: sso
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/version: 1.8.1
-    team: frontend
 spec:
   to:
     kind: Service
-    name: web-app
+    name: payu-keycloak-service
     weight: 100
   port:
-    targetPort: 3000
+    targetPort: 8080
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Allow
