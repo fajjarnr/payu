@@ -3,22 +3,32 @@ kind: MachineSet
 metadata:
   labels:
     machine.openshift.io/cluster-api-cluster: payu-hxftx
-  name: payu-hxftx-worker-us-east-2c
+  name: payu-hxftx-infra-us-east-2a
   namespace: openshift-machine-api
 spec:
   replicas: 1
   selector:
     matchLabels:
       machine.openshift.io/cluster-api-cluster: payu-hxftx
-      machine.openshift.io/cluster-api-machineset: payu-hxftx-worker-us-east-2c
+      machine.openshift.io/cluster-api-machineset: payu-hxftx-infra-us-east-2a
   template:
     metadata:
       labels:
         machine.openshift.io/cluster-api-cluster: payu-hxftx
         machine.openshift.io/cluster-api-machine-role: worker
         machine.openshift.io/cluster-api-machine-type: worker
-        machine.openshift.io/cluster-api-machineset: payu-hxftx-worker-us-east-2c
+        machine.openshift.io/cluster-api-machineset: payu-hxftx-infra-us-east-2a
     spec:
+      taints:
+        - key: node
+          value: infra
+          effect: NoSchedule
+        - key: node
+          value: infra
+          effect: NoExecute
+      metadata:
+        labels:
+          node-role.kubernetes.io/infra: ""
       providerSpec:
         value:
           ami:
@@ -40,7 +50,7 @@ spec:
           metadataServiceOptions:
             authentication: Required
           placement:
-            availabilityZone: us-east-2c
+            availabilityZone: us-east-2a
             region: us-east-2
           securityGroups:
             - filters:
