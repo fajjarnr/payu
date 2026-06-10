@@ -7,24 +7,23 @@ metadata:
     app.kubernetes.io/part-of: payu
     environment: dev
 spec:
+  channel: stable-4.21
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.18.43-multi
-
+    image: quay.io/openshift-release-dev/ocp-release:4.21.0-multi
   dns:
     baseDomain: sandbox2356.opentlc.com
-    privateZoneID: Z05065831WFTQJ2C8S6VJ
+    privateZoneID: Z01264821HUT3TZSZKLAU
     publicZoneID: Z02597472Z6C8KKS12MZJ
-
   platform:
     aws:
-      region: ap-southeast-1
+      region: us-east-1
       endpointAccess: Public
       multiArch: false
       cloudProviderConfig:
         subnet:
-          id: subnet-02398ff0ca4a471ef
-        vpc: vpc-0a17e396dc91f3a02
-        zone: ap-southeast-1a
+          id: subnet-086607bb7577c1092
+        vpc: vpc-0d02f6e0681e55e2b
+        zone: us-east-1a
       rolesRef:
         controlPlaneOperatorARN: arn:aws:iam::579147609200:role/payu-dev-control-plane-operator
         imageRegistryARN: arn:aws:iam::579147609200:role/payu-dev-openshift-image-registry
@@ -45,19 +44,17 @@ spec:
         - key: owner
           value: payu-team
     type: AWS
-
   networking:
     clusterNetwork:
       - cidr: 10.136.0.0/14
     machineNetwork:
       - cidr: 10.0.0.0/16
-    networkType: OVNKubernetes
+    networkType: Other
     serviceNetwork:
       - cidr: 172.32.0.0/16
-
   infraID: payu-dev
   fips: false
-  issuerURL: https://oidc-storage-payu-dev.s3.ap-southeast-1.amazonaws.com/payu-dev
+  issuerURL: https://oidc-storage-payu-dev-579147609200.s3.us-east-1.amazonaws.com/payu-dev
   configuration:
     ingress:
       loadBalancer:
@@ -66,7 +63,6 @@ spec:
             type: NLB
   capabilities: {}
   olmCatalogPlacement: management
-
   services:
     - service: APIServer
       servicePublishingStrategy:
@@ -80,13 +76,10 @@ spec:
     - service: Ignition
       servicePublishingStrategy:
         type: Route
-
   controllerAvailabilityPolicy: SingleReplica
   infrastructureAvailabilityPolicy: SingleReplica
-
   autoscaling:
     scaling: ScaleUpAndScaleDown
-
   etcd:
     managed:
       storage:
@@ -95,12 +88,10 @@ spec:
           storageClassName: gp3-csi
         type: PersistentVolume
     managementType: Managed
-
   secretEncryption:
     aescbc:
       activeKey:
         name: payu-dev-etcd-encryption-key
     type: aescbc
-
   pullSecret:
     name: payu-dev-pull-secret

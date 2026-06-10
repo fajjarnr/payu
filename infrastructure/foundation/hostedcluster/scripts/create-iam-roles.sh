@@ -19,12 +19,12 @@ cat > "${TRUST_POLICY_FILE}" <<EOF
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/oidc-storage-${INFRA_ID}.s3.${AWS_REGION:-ap-southeast-1}.amazonaws.com"
+        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/oidc-storage-${INFRA_ID}-${ACCOUNT_ID}.s3.${AWS_REGION:-us-east-1}.amazonaws.com/${INFRA_ID}"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
-        "StringEquals": {
-          "oidc-storage-${INFRA_ID}.s3.${AWS_REGION:-ap-southeast-1}.amazonaws.com/${INFRA_ID}:sub": "system:serviceaccount:openshift-cluster-api:capa-controller-manager"
+        "StringLike": {
+          "oidc-storage-${INFRA_ID}-${ACCOUNT_ID}.s3.${AWS_REGION:-us-east-1}.amazonaws.com/${INFRA_ID}:sub": "system:serviceaccount:*:*"
         }
       }
     }
@@ -43,12 +43,15 @@ ROLES=(
 )
 
 for ROLE in "${ROLES[@]}"; do
-  echo "Creating role: ${ROLE}"
+  echo "Reconciling role: ${ROLE}"
   aws iam create-role \
     --role-name "${ROLE}" \
     --assume-role-policy-document "file://${TRUST_POLICY_FILE}" \
     --tags "Key=app.kubernetes.io/part-of,Value=payu" "Key=environment,Value=dev" \
-    2>/dev/null || echo "  Role ${ROLE} already exists or failed to create"
+    2>/dev/null || true
+  aws iam update-assume-role-policy \
+    --role-name "${ROLE}" \
+    --policy-document "file://${TRUST_POLICY_FILE}"
 done
 
 # Attach policies for specific roles
@@ -77,6 +80,18 @@ aws iam attach-role-policy \
 aws iam attach-role-policy \
   --role-name "${INFRA_ID}-aws-ebs-csi-driver-controller" \
   --policy-arn "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 2>/dev/null || true
+
+# Control Plane Operator needs EC2, Route53, and S3 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonEC2FullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonRoute53FullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonS3FullAccess" 2>/dev/null || true
+
+# Ingress needs ELB and Route53 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-openshift-ingress" --policy-arn "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-openshift-ingress" --policy-arn "arn:aws:iam::aws:policy/AmazonRoute53FullAccess" 2>/dev/null || true
+
+# Cloud Network Config Controller needs EC2 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-cloud-network-config-controller" --policy-arn "arn:aws:iam::aws:policy/AmazonEC2FullAccess" 2>/dev/null || true
 
 echo ""
 echo "Done. Verify with:"

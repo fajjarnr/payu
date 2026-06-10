@@ -6,9 +6,9 @@ set -euo pipefail
 # Run this BEFORE applying hostedcluster-payu.yaml
 
 INFRA_ID="${1:-payu-dev}"
-REGION="${2:-ap-southeast-1}"
+REGION="${2:-us-east-1}"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-BUCKET="oidc-storage-${INFRA_ID}"
+BUCKET="oidc-storage-${INFRA_ID}-${ACCOUNT_ID}"
 
 echo "============================================"
 echo "PayU HCP Prerequisites Setup"
@@ -73,12 +73,12 @@ cat > "${TRUST_POLICY_FILE}" <<EOF
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${BUCKET}.s3.${REGION}.amazonaws.com"
+        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${BUCKET}.s3.${REGION}.amazonaws.com/${INFRA_ID}"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
-        "StringEquals": {
-          "${BUCKET}.s3.${REGION}.amazonaws.com/${INFRA_ID}:sub": "system:serviceaccount:openshift-cluster-api:capa-controller-manager"
+        "StringLike": {
+          "${BUCKET}.s3.${REGION}.amazonaws.com/${INFRA_ID}:sub": "system:serviceaccount:*:*"
         }
       }
     }
@@ -111,19 +111,31 @@ aws iam attach-role-policy --role-name "${INFRA_ID}-cloud-controller" --policy-a
 aws iam attach-role-policy --role-name "${INFRA_ID}-cloud-controller" --policy-arn "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess" 2>/dev/null || true
 aws iam attach-role-policy --role-name "${INFRA_ID}-aws-ebs-csi-driver-controller" --policy-arn "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 2>/dev/null || true
 
+# Control Plane Operator needs EC2, Route53, and S3 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonEC2FullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonRoute53FullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-control-plane-operator" --policy-arn "arn:aws:iam::aws:policy/AmazonS3FullAccess" 2>/dev/null || true
+
+# Ingress needs ELB and Route53 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-openshift-ingress" --policy-arn "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess" 2>/dev/null || true
+aws iam attach-role-policy --role-name "${INFRA_ID}-openshift-ingress" --policy-arn "arn:aws:iam::aws:policy/AmazonRoute53FullAccess" 2>/dev/null || true
+
+# Cloud Network Config Controller needs EC2 permissions
+aws iam attach-role-policy --role-name "${INFRA_ID}-cloud-network-config-controller" --policy-arn "arn:aws:iam::aws:policy/AmazonEC2FullAccess" 2>/dev/null || true
+
 rm -f "${TRUST_POLICY_FILE}"
 echo "  Done."
 
 # ── Step 4: Create Secrets ────────────────────────────
 echo ""
-echo "[4/4] Creating secrets in local-cluster namespace"
+echo "[4/4] Creating secrets in clusters namespace"
 
 # Pull secret
-oc get secret development-pull-secret -n local-cluster -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d | \
-  oc create secret generic ${INFRA_ID}-pull-secret -n local-cluster --from-file=.dockerconfigjson=/dev/stdin --type=kubernetes.io/dockerconfigjson 2>/dev/null || echo "  Pull secret already exists"
+oc get secret pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d | \
+  oc create secret generic ${INFRA_ID}-pull-secret -n clusters --from-file=.dockerconfigjson=/dev/stdin --type=kubernetes.io/dockerconfigjson 2>/dev/null || echo "  Pull secret already exists"
 
 # Etcd encryption key (32 raw bytes for AES-256)
-openssl rand 32 | oc create secret generic ${INFRA_ID}-etcd-encryption-key -n local-cluster --from-file=key=/dev/stdin 2>/dev/null || echo "  Etcd key already exists"
+openssl rand 32 | oc create secret generic ${INFRA_ID}-etcd-encryption-key -n clusters --from-file=key=/dev/stdin 2>/dev/null || echo "  Etcd key already exists"
 
 echo "  Done."
 

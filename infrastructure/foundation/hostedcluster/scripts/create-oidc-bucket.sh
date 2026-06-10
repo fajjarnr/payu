@@ -5,7 +5,7 @@ set -euo pipefail
 # Usage: ./create-oidc-bucket.sh [INFRA_ID] [REGION]
 
 INFRA_ID="${1:-payu-dev}"
-REGION="${2:-ap-southeast-1}"
+REGION="${2:-us-east-1}"
 BUCKET="oidc-storage-${INFRA_ID}"
 
 echo "Creating S3 OIDC bucket: ${BUCKET} in ${REGION}"
