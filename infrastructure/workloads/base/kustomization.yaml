@@ -27,6 +27,7 @@ resources:
 - ./web-app
 - ./hpa.yaml
 - ./pdb.yaml
+- ./resource-budget.yaml
 - ./bi-fast-simulator.yaml
 - ./biller-simulator.yaml
 - ./dukcapil-simulator.yaml

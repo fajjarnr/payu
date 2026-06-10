@@ -121,13 +121,15 @@
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| K8S-010 | Infra | **web-app missing Ingress/Route resource** — only has deployment.yaml + service.yaml. No Route (OpenShift) or Ingress defined in base. External traffic cannot reach the frontend. | ⏳ Open |
-| K8S-011 | Infra | **Duplicate HPA definitions** — `hpa.yaml` and `hpa-enhanced.yaml` both define HPAs for the same services (gateway, account, transaction, wallet) with conflicting minReplicas/maxReplicas. Only one should be active. | ⏳ Open |
-| K8S-012 | Infra | **No `preStop` lifecycle hook** — services with graceful shutdown need `preStop: sleep 5` to allow load balancer deregistration before SIGTERM. Prevents connection drops during rolling updates. | ⏳ Open |
-| CONTAINER-003 | Backend | **No multi-stage build for Java services** — Containerfiles expect pre-built JARs (`COPY target/*.jar`). Multi-stage builds would make CI simpler and ensure reproducible builds. Only Python services (analytics, kyc) use multi-stage. | ⏳ Open |
-| CONTAINER-004 | Backend | **Containerfile image version labels are stale** — e.g., account-service label says `1.5.0` but deployment uses `1.8.1`. Labels should use build-time ARG or be removed. | ⏳ Open |
-| K8S-013 | Infra | **No `podDisruptionBudget` for web-app in prod** — PDB exists in base but prod overlay sets 3 replicas. With `minAvailable: 1`, 2 pods can be evicted simultaneously leaving only 1 serving traffic. Should be `minAvailable: 2` for prod. | ⏳ Open |
-| K8S-014 | Infra | **No resource quotas referenced in workload overlays** — namespace-level ResourceQuotas exist in `foundation/namespaces/` but workload deployments don't account for them. Risk of deployment failures if quotas are tight. | ⏳ Open |
+| ~~K8S-010~~ | Infra | **web-app missing Ingress/Route resource** — only has deployment.yaml + service.yaml. No Route (OpenShift) or Ingress defined in base. External traffic cannot reach the frontend. | ✅ Resolved — Route exists at `infrastructure/workloads/base/web-app/route.yaml` (edge TLS, port 3000, inherited by all overlays). |
+| ~~K8S-011~~ | Infra | **Duplicate HPA definitions** — `hpa.yaml` and `hpa-enhanced.yaml` both define HPAs for the same services (gateway, account, transaction, wallet) with conflicting minReplicas/maxReplicas. Only one should be active. | ✅ Resolved — False positive. Single `base/hpa.yaml`, no `hpa-enhanced.yaml` exists. All 5 services use identical params (min:2, max:5, 70% CPU). |
+| K8S-012 | Infra | **No `preStop` lifecycle hook** — services with graceful shutdown need `preStop: sleep 5` to allow load balancer deregistration before SIGTERM. Prevents connection drops during rolling updates. | ✅ Resolved — Added `preStop: sleep 5` lifecycle hooks to gateway, account, transaction, wallet deployments. |
+| CONTAINER-003 | Backend | **No multi-stage build for Java services** — Containerfiles expect pre-built JARs (`COPY target/*.jar`). Multi-stage builds would make CI simpler and ensure reproducible builds. Only Python services (analytics, kyc) use multi-stage. | ✅ Resolved — All 20 Java services now use multi-stage builds (builder + runtime), including Quarkus services (gateway, notification) with fast-jar COPY. |
+| CONTAINER-004 | Backend | **Containerfile image version labels are stale** — e.g., account-service label says `1.5.0` but deployment uses `1.8.1`. Labels should use build-time ARG or be removed. | ✅ Resolved — All Containerfiles now use `ARG APP_VERSION` with `${APP_VERSION}` substitution (1.8.1 or 1.8.2 per deployment). |
+| ~~K8S-013~~ | Infra | **No `podDisruptionBudget` for web-app in prod** — PDB exists in base but prod overlay sets 3 replicas. With `minAvailable: 1`, 2 pods can be evicted simultaneously leaving only 1 serving traffic. Should be `minAvailable: 2` for prod. | ✅ Resolved — Prod overlay already patches `minAvailable: 2` for 3-replica web-app PDB. |
+| K8S-014 | Infra | **No resource quotas referenced in workload overlays** — namespace-level ResourceQuotas exist in `foundation/namespaces/` but workload deployments don't account for them. Risk of deployment failures if quotas are tight. | ✅ Resolved — Created `resource-budget.yaml` with per-tier allocation, quota linkage annotations, and utilization thresholds. Included as kustomize resource in base. |
+|  |  | | |
+| **New** — Board Summary Update | | | |
 
 ---
 

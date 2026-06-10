@@ -1,26 +1,45 @@
-####
-# PayU notification-service - Quarkus Runtime Container
-# Expects pre-built fast-jar: mvn -f backend/pom.xml clean package -DskipTests -pl notification-service
-####
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24-2
+# =============================================================================
+# PayU notification-service - Multi-stage Quarkus Container Build
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS builder
+
+WORKDIR /build
+COPY pom.xml .
+COPY notification-service/pom.xml notification-service/
+COPY shared/ shared/
+
+RUN mvn -f pom.xml dependency:go-offline -pl notification-service -am -B
+
+COPY notification-service/src notification-service/src
+RUN mvn -f pom.xml clean package -DskipTests -pl notification-service -am -B
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
+
+ARG APP_VERSION=1.8.1
 
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-notification-service"
 LABEL org.opencontainers.image.description="PayU notification-service"
-LABEL org.opencontainers.image.version="1.7.2"
+LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/notification-service"
 LABEL id.payu.service.tier="core"
 
 USER root
 RUN microdnf update -y && microdnf clean all
+
 USER 185
 WORKDIR /deployments
 
-COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
-COPY --chown=185 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
-COPY --chown=185 target/quarkus-app/app/ /deployments/app/
-COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=builder --chown=185 /build/notification-service/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=builder --chown=185 /build/notification-service/target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --from=builder --chown=185 /build/notification-service/target/quarkus-app/app/ /deployments/app/
+COPY --from=builder --chown=185 /build/notification-service/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 EXPOSE 8080
 
