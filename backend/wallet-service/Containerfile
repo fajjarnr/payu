@@ -8,7 +8,7 @@ FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS builder
 WORKDIR /build
 COPY pom.xml .
 # Strip <modules> so Maven only discovers what is actually copied
-RUN sed '/<modules>/,/<\/modules>/d' pom.xml > /tmp/pom.xml pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xmlpom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml mv /tmp/pom.xml pom.xml
+RUN sed '/<\(modules\)>/,/<\/\(modules\)>/d' pom.xml > /tmp/pom.xml && mv /tmp/pom.xml pom.xml
 COPY wallet-service/pom.xml wallet-service/
 COPY shared/ shared/
 
