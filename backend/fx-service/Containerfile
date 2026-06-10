@@ -7,6 +7,8 @@ FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS builder
 
 WORKDIR /build
 COPY pom.xml .
+# Strip <modules> so Maven only discovers what is actually copied
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
 COPY fx-service/pom.xml fx-service/
 COPY shared/ shared/
 

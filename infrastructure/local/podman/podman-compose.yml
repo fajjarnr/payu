@@ -170,8 +170,8 @@ services:
       start_period: 120s
   account-service:
     build:
-      context: ../../../backend/account-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: account-service/Containerfile
     container_name: payu-account-service
     podman_networks:
       - name: payu-network
@@ -228,8 +228,8 @@ services:
     image: localhost/payu-account-service:1.8.1
   auth-service:
     build:
-      context: ../../../backend/auth-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: auth-service/Containerfile
     container_name: payu-auth-service
     podman_networks:
       - name: payu-network
@@ -292,8 +292,8 @@ services:
     image: localhost/payu-auth-service:1.8.1
   transaction-service:
     build:
-      context: ../../../backend/transaction-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: transaction-service/Containerfile
     container_name: payu-transaction-service
     podman_networks:
       - name: payu-network
@@ -349,8 +349,8 @@ services:
     image: localhost/payu-transaction-service:1.8.1
   wallet-service:
     build:
-      context: ../../../backend/wallet-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: wallet-service/Containerfile
     container_name: payu-wallet-service
     podman_networks:
       - name: payu-network
@@ -403,8 +403,8 @@ services:
     image: localhost/payu-wallet-service:1.8.1
   compliance-service:
     build:
-      context: ../../../backend/compliance-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: compliance-service/Containerfile
     container_name: payu-compliance-service
     podman_networks:
       - name: payu-network
@@ -458,8 +458,8 @@ services:
     image: localhost/payu-compliance-service:1.8.1
   investment-service:
     build:
-      context: ../../../backend/investment-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: investment-service/Containerfile
     container_name: payu-investment-service
     podman_networks:
       - name: payu-network
@@ -514,8 +514,8 @@ services:
     image: localhost/payu-investment-service:1.8.1
   lending-service:
     build:
-      context: ../../../backend/lending-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: lending-service/Containerfile
     container_name: payu-lending-service
     podman_networks:
       - name: payu-network
@@ -726,8 +726,8 @@ services:
     image: localhost/payu-qris-simulator:1.8.1
   billing-service:
     build:
-      context: ../../../backend/billing-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: billing-service/Containerfile
     container_name: payu-billing-service
     podman_networks:
       - name: payu-network
@@ -781,8 +781,8 @@ services:
     image: localhost/payu-billing-service:1.8.1
   notification-service:
     build:
-      context: ../../../backend/notification-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: notification-service/Containerfile
     container_name: payu-notification-service
     podman_networks:
       - name: payu-network
@@ -828,8 +828,8 @@ services:
   gateway-service:
     image: localhost/payu-gateway-service:1.8.1
     build:
-      context: ../../../backend/gateway-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: gateway-service/Containerfile
     container_name: payu-gateway-service
     podman_networks:
       - name: payu-network
@@ -926,8 +926,8 @@ services:
       start_period: 120s
   backoffice-service:
     build:
-      context: ../../../backend/backoffice-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: backoffice-service/Containerfile
     container_name: payu-backoffice-service
     podman_networks:
       - name: payu-network
@@ -982,8 +982,8 @@ services:
     image: localhost/payu-backoffice-service:1.8.1
   partner-service:
     build:
-      context: ../../../backend/partner-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: partner-service/Containerfile
     container_name: payu-partner-service
     podman_networks:
       - name: payu-network
@@ -1037,8 +1037,8 @@ services:
     image: localhost/payu-partner-service:1.8.1
   promotion-service:
     build:
-      context: ../../../backend/promotion-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: promotion-service/Containerfile
     container_name: payu-promotion-service
     podman_networks:
       - name: payu-network
@@ -1091,8 +1091,8 @@ services:
     image: localhost/payu-promotion-service:1.8.1
   support-service:
     build:
-      context: ../../../backend/support-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: support-service/Containerfile
     container_name: payu-support-service
     podman_networks:
       - name: payu-network
@@ -1145,8 +1145,8 @@ services:
     image: localhost/payu-support-service:1.8.1
   api-portal-service:
     build:
-      context: ../../../backend/api-portal-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: api-portal-service/Containerfile
     container_name: payu-api-portal-service
     podman_networks:
       - name: payu-network
@@ -1218,8 +1218,8 @@ services:
   statement-service:
     image: localhost/payu-statement-service:1.8.1
     build:
-      context: ../../../backend/statement-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: statement-service/Containerfile
     container_name: payu-statement-service
     podman_networks:
       - name: payu-network
@@ -1347,8 +1347,8 @@ services:
     image: localhost/payu-analytics-service:1.8.1
   cms-service:
     build:
-      context: ../../../backend/cms-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: cms-service/Containerfile
     container_name: payu-cms-service
     podman_networks:
       - name: payu-network
@@ -1405,8 +1405,8 @@ services:
   fx-service:
     image: localhost/payu-fx-service:1.8.1
     build:
-      context: ../../../backend/fx-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: fx-service/Containerfile
     container_name: payu-fx-service
     podman_networks:
       - name: payu-network
@@ -1455,8 +1455,8 @@ services:
       start_period: 120s
   dispute-service:
     build:
-      context: ../../../backend/dispute-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: dispute-service/Containerfile
     container_name: payu-dispute-service
     podman_networks:
       - name: payu-network
@@ -1511,8 +1511,8 @@ services:
     image: localhost/payu-dispute-service:1.8.1
   integration-service:
     build:
-      context: ../../../backend/integration-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: integration-service/Containerfile
     container_name: payu-integration-service
     podman_networks:
       - name: payu-network
@@ -1566,8 +1566,8 @@ services:
     image: localhost/payu-integration-service:1.8.1
   product-catalog-service:
     build:
-      context: ../../../backend/product-catalog-service
-      dockerfile: Containerfile
+      context: ../../../backend
+      dockerfile: product-catalog-service/Containerfile
     container_name: payu-product-catalog-service
     podman_networks:
       - name: payu-network
