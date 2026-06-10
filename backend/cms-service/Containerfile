@@ -1,55 +1,17 @@
-# =============================================================================
-# PayU cms-service - Multi-stage Container Build
-# =============================================================================
-# Stage 1: Build
-# =============================================================================
-FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS builder
-
-WORKDIR /build
-COPY pom.xml .
-# Strip <modules> so Maven only discovers what is actually copied
-RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>cms-service</module></modules>' pom.xml > /tmp/pom.xml && cp /tmp/pom.xml pom.xml
-COPY cms-service/pom.xml cms-service/
-COPY shared/ shared/
-
-RUN mvn -f pom.xml install -DskipTests -pl cms-service -am -B
-
-COPY cms-service/src cms-service/src
-RUN mvn -f pom.xml clean package -DskipTests -pl cms-service -am -B
-
-# =============================================================================
-# Stage 2: Runtime
-# =============================================================================
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
 ARG APP_VERSION=1.8.1
-
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-cms-service"
-LABEL org.opencontainers.image.description="PayU cms-service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/cms-service"
-LABEL id.payu.service.tier="core"
 
 USER 185
 WORKDIR /deployments
-
-COPY --from=builder --chown=185 /build/cms-service/target/*.jar /deployments/app.jar
-
+COPY --chown=185 target/app.jar /deployments/app.jar
 EXPOSE 8080
 
-ENV SPRING_APPLICATION_NAME=cms-service
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/deployments/heapdump.hprof \
-    -Djava.security.egd=file:/dev/./urandom"
-
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
 HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
     CMD curl -sf http://localhost:8080/actuator/health/liveness || exit 1
-
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

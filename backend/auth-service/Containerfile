@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.vendor="PayU Indonesia"
 
 USER 185
 WORKDIR /deployments
-COPY --chown=185 target/*.jar /deployments/app.jar
+COPY --chown=185 target/app.jar /deployments/app.jar
 EXPOSE 8080
 
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
