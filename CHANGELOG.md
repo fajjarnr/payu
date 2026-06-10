@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Infrastructure & Backend Deep Audit — Resolved 7 Items (2026-06-10)
+
+- **K8S-010 — web-app Route**: Verified Route resource exists at `infrastructure/workloads/base/web-app/route.yaml` (edge TLS, port 3000, inherited by all overlays). False alarm.
+- **K8S-011 — Duplicate HPA**: False positive. Only single `base/hpa.yaml`, no `hpa-enhanced.yaml`. All 5 services use identical params.
+- **K8S-012 — preStop lifecycle hooks**: Added `preStop: sleep 5` lifecycle hooks to gateway, account, transaction, wallet deployments.
+- **K8S-013 — web-app PDB**: Prod overlay already patches `minAvailable: 2` for 3-replica PDB. False alarm.
+- **CONTAINER-003 — Multi-stage builds**: Converted all 20 Java Containerfiles from single-stage (`COPY target/*.jar`) to multi-stage (builder + runtime), including Quarkus services (gateway, notification) with fast-jar COPY.
+- **CONTAINER-004 — Version labels**: All Containerfiles now use `ARG APP_VERSION` with `${APP_VERSION}` substitution, matching deployment versions (1.8.1/1.8.2).
+- **K8S-014 — Resource budget alignment**: Created `resource-budget.yaml` ConfigMap with per-tier allocation tracking, quota linkage annotations, and 80% utilization warning threshold. Included in base kustomization.
+
 ### Production Readiness Audit — Resolved 5 Items (2026-06-09)
 
 - **TEST-004 — support-service test expansion**: Added 3 test classes (26 tests):

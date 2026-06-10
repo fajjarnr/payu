@@ -15,8 +15,8 @@
 |:---|:---|
 | **Open P0s** | 0 (all resolved) |
 | **Open P1s** | 0 (all resolved) |
-| **Open P2s** | 7 |
-| **Last Audit** | June 9, 2026 — Resolved TEST-004, TEST-005, TEST-006, CACHE-002, IDEM-003 |
+| **Open P2s** | 1 |
+| **Last Audit** | June 10, 2026 — All 12 production readiness audit items resolved (2 batches) |
 | **Production Score** | 99/100 |
 
 ---
@@ -101,35 +101,7 @@
 
 ---
 
-## 🔬 Comprehensive Production Readiness Audit (May 15, 2026)
 
-### 🟡 P2 — Medium
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| ~~TEST-004~~ | Backend | **support-service has only 5 test files** (1 integration test). Customer support flows undercovered. | ✅ Resolved — Added TrainingModuleServiceTest (7 tests), AgentTrainingServiceTest (10 tests), SupportServiceExceptionHandlerTest (3 tests), expanded ArchitectureTest (4→6 rules). Compiling clean. |
-| ~~TEST-005~~ | Backend | **integration-service has 6 test files but 0 integration tests**. Ironic — the integration service has no integration tests. | ✅ Resolved — Created TestSecurityConfig (fix broken import), added WireMockIntegrationTest (4 tests with Camel HTTP routes), added RestAssured dependency. Compiling clean. |
-| ~~TEST-006~~ | Backend | **investment-service has only 6 test files** (2 integration tests). Financial operations need higher coverage. | ✅ Resolved — Added saga compensation tests (3), deposit interest rate tests (2), gold sell test, WalletServiceAdapterTest (7), InvestmentSecurityServiceTest (6). Fixed enum imports. Compiling clean. |
-| ~~CACHE-002~~ | Web-App | **No explicit `revalidate` or `unstable_cache` usage** — no data freshness strategy for server-fetched data. Risk of stale data in production. | ✅ Resolved — Added Cache-Control to BFF proxy, reduced global staleTime 5min→1min, added refetchInterval:30s to useBalance, added staleTime to useUser/useScheduledTransfers/useTickets. TS compiles clean. |
-| ~~IDEM-003~~ | Backend | **notification-service (Quarkus) has no idempotency** — duplicate notifications possible on retry. Not critical but poor UX. | ✅ Resolved — Added Flyway V2 (idempotency_key column + unique index), updated NotificationEntity, SendNotificationRequest, NotificationService.send() with dedup lookup, EventConsumer uses event_id as key. Compiling clean. |
-
----
-
-## 🔒 Infrastructure & Backend Deep Audit (May 15, 2026 — Batch 2)
-
-### 🟡 P2 — Medium (Backlog)
-
-| Key | Domain | Summary | Status |
-|:---|:-------|:--------|:------:|
-| ~~K8S-010~~ | Infra | **web-app missing Ingress/Route resource** — only has deployment.yaml + service.yaml. No Route (OpenShift) or Ingress defined in base. External traffic cannot reach the frontend. | ✅ Resolved — Route exists at `infrastructure/workloads/base/web-app/route.yaml` (edge TLS, port 3000, inherited by all overlays). |
-| ~~K8S-011~~ | Infra | **Duplicate HPA definitions** — `hpa.yaml` and `hpa-enhanced.yaml` both define HPAs for the same services (gateway, account, transaction, wallet) with conflicting minReplicas/maxReplicas. Only one should be active. | ✅ Resolved — False positive. Single `base/hpa.yaml`, no `hpa-enhanced.yaml` exists. All 5 services use identical params (min:2, max:5, 70% CPU). |
-| K8S-012 | Infra | **No `preStop` lifecycle hook** — services with graceful shutdown need `preStop: sleep 5` to allow load balancer deregistration before SIGTERM. Prevents connection drops during rolling updates. | ✅ Resolved — Added `preStop: sleep 5` lifecycle hooks to gateway, account, transaction, wallet deployments. |
-| CONTAINER-003 | Backend | **No multi-stage build for Java services** — Containerfiles expect pre-built JARs (`COPY target/*.jar`). Multi-stage builds would make CI simpler and ensure reproducible builds. Only Python services (analytics, kyc) use multi-stage. | ✅ Resolved — All 20 Java services now use multi-stage builds (builder + runtime), including Quarkus services (gateway, notification) with fast-jar COPY. |
-| CONTAINER-004 | Backend | **Containerfile image version labels are stale** — e.g., account-service label says `1.5.0` but deployment uses `1.8.1`. Labels should use build-time ARG or be removed. | ✅ Resolved — All Containerfiles now use `ARG APP_VERSION` with `${APP_VERSION}` substitution (1.8.1 or 1.8.2 per deployment). |
-| ~~K8S-013~~ | Infra | **No `podDisruptionBudget` for web-app in prod** — PDB exists in base but prod overlay sets 3 replicas. With `minAvailable: 1`, 2 pods can be evicted simultaneously leaving only 1 serving traffic. Should be `minAvailable: 2` for prod. | ✅ Resolved — Prod overlay already patches `minAvailable: 2` for 3-replica web-app PDB. |
-| K8S-014 | Infra | **No resource quotas referenced in workload overlays** — namespace-level ResourceQuotas exist in `foundation/namespaces/` but workload deployments don't account for them. Risk of deployment failures if quotas are tight. | ✅ Resolved — Created `resource-budget.yaml` with per-tier allocation, quota linkage annotations, and utilization thresholds. Included as kustomize resource in base. |
-|  |  | | |
-| **New** — Board Summary Update | | | |
 
 ---
 
