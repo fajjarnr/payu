@@ -1,11 +1,9 @@
-package id.payu.support.config;
+package id.payu.investment.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,11 +21,5 @@ public class TestSecurityConfig {
                 .anyRequest().permitAll()
             );
         return http.build();
-    }
-
-    @Bean
-    @Primary
-    public WebSecurityCustomizer testWebSecurityCustomizer() {
-        return (web) -> {};
     }
 }

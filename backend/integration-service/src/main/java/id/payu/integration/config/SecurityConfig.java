@@ -10,6 +10,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.context.annotation.Profile;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

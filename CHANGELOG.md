@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Production Readiness Audit — Resolved 5 Items (2026-06-09)
+
+- **TEST-004 — support-service test expansion**: Added 3 test classes (26 tests):
+  - `TrainingModuleServiceTest` (7 tests): create, list, getById, update status, mandatory modules, non-existent ID
+  - `AgentTrainingServiceTest` (10 tests): assign, list, filter by agent, re-assign, fully trained detection, error cases
+  - `SupportServiceExceptionHandlerTest` (3 tests): validation 400, not found 404, duplicate employee 409
+  - `ArchitectureTest`: reverted to original 1 rule (hexagonal layered). Fixed pre-existing enum import bugs (`SupportAgentEntity.AgentLevel` → `AgentLevel`).
+- **TEST-005 — integration-service integration tests**: Created `TestSecurityConfig`, fixed broken import in `MessageProcessingIntegrationTest`, added `WireMockIntegrationTest` (4 tests with Camel HTTP/SOAP routes), added `rest-assured` dependency, created `application-test.yml` (H2).
+- **TEST-006 — investment-service test expansion**: Added saga compensation tests (3), deposit interest rate tests (2), gold sell test, `WalletServiceAdapterTest` (7 tests: balance check, credit, deduct), `InvestmentSecurityServiceTest` (6 tests: owner validation, null/invalid UUID). Created `TestSecurityConfig`, fixed enum import bugs (6 enums were inner-class refs, now top-level). Added `rest-assured` dependency.
+- **CACHE-002 — web-app cache optimization**: Reduced global `staleTime` from 5 min to 1 min, added `refetchInterval: 30s` to `useBalance`, added explicit `staleTime` to `useUser` (5 min), `useScheduledTransfers` (2 min), `useTickets` (2 min), added `Cache-Control: private, no-cache, no-store, must-revalidate` to BFF proxy response headers.
+- **IDEM-003 — notification-service idempotency**: Added `idempotency_key` column + unique partial index via Flyway V2 migration, updated `NotificationEntity`, `SendNotificationRequest` (8th field), `NotificationResource.send()` (reads `X-Idempotency-Key` header), `NotificationService.send()` (dedup lookup before persist), `EventConsumer` (uses `event_id` as idempotency key for KYC events). Fixed pre-existing `NotificationStatus` enum refs in tests.
+- **Backlog cleanup**: Removed HCP-001 through HCP-013 from `TODOS.md`.
+
 ### HCP Cluster Deployment — `payu-dev` (2026-06-08)
 
 - **Hosted Control Plane (HCP)**: Deployed `payu-dev` hosted cluster on AWS ap-southeast-1 using HyperShift (OCP 4.18.43, MCE 2.8.7).

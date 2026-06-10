@@ -3,6 +3,7 @@ package id.payu.support.application.service;
 import id.payu.support.adapter.persistence.repository.AgentTrainingRepository;
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
+import id.payu.support.domain.AgentLevel;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ class AgentServiceTest {
                 "Test Agent",
                 "test@payu.fajjjar.my.id",
                 "Customer Support",
-                SupportAgentEntity.AgentLevel.JUNIOR
+                AgentLevel.JUNIOR
         );
 
         AgentResponse response = agentService.createAgent(request);
@@ -48,7 +49,7 @@ class AgentServiceTest {
         assertEquals("EMP999", response.employeeId());
         assertEquals("Test Agent", response.name());
         assertEquals("test@payu.fajjjar.my.id", response.email());
-        assertEquals(SupportAgentEntity.AgentLevel.JUNIOR, response.level());
+        assertEquals(AgentLevel.JUNIOR, response.level());
         assertTrue(response.active());
     }
 
@@ -59,7 +60,7 @@ class AgentServiceTest {
                 "Test Agent 2",
                 "test2@payu.fajjjar.my.id",
                 "Customer Support",
-                SupportAgentEntity.AgentLevel.SENIOR
+                AgentLevel.SENIOR
         );
 
         agentService.createAgent(request);
@@ -77,7 +78,7 @@ class AgentServiceTest {
                 "Test Agent 3",
                 "test3@payu.fajjjar.my.id",
                 "Customer Support",
-                SupportAgentEntity.AgentLevel.JUNIOR
+                AgentLevel.JUNIOR
         );
 
         AgentResponse created = agentService.createAgent(request);
@@ -95,7 +96,7 @@ class AgentServiceTest {
                 "Active Agent",
                 "active@payu.fajjjar.my.id",
                 "Customer Support",
-                SupportAgentEntity.AgentLevel.JUNIOR
+                AgentLevel.JUNIOR
         );
 
         CreateAgentRequest request2 = new CreateAgentRequest(
@@ -103,7 +104,7 @@ class AgentServiceTest {
                 "Inactive Agent",
                 "inactive@payu.fajjjar.my.id",
                 "Customer Support",
-                SupportAgentEntity.AgentLevel.JUNIOR
+                AgentLevel.JUNIOR
         );
 
         agentService.createAgent(request1);

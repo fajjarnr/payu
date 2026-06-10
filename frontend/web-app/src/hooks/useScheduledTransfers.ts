@@ -10,6 +10,8 @@ export function useScheduledTransfers(accountId: string) {
     queryKey: ['scheduled-transfers', accountId],
     queryFn: () => TransactionService.getAccountScheduledTransfers(accountId),
     enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

@@ -1,6 +1,17 @@
 package id.payu.investment.application.service;
 
-import id.payu.investment.domain.model.*;
+import id.payu.investment.domain.model.AccountStatus;
+import id.payu.investment.domain.model.Deposit;
+import id.payu.investment.domain.model.DepositStatus;
+import id.payu.investment.domain.model.FundStatus;
+import id.payu.investment.domain.model.FundType;
+import id.payu.investment.domain.model.Gold;
+import id.payu.investment.domain.model.InvestmentAccount;
+import id.payu.investment.domain.model.InvestmentTransaction;
+import id.payu.investment.domain.model.InvestmentType;
+import id.payu.investment.domain.model.MutualFund;
+import id.payu.investment.domain.model.TransactionStatus;
+import id.payu.investment.domain.model.TransactionType;
 import id.payu.investment.domain.port.out.InvestmentEventPublisherPort;
 import id.payu.investment.domain.port.out.InvestmentPersistencePort;
 import id.payu.investment.domain.port.out.WalletServicePort;
@@ -66,7 +77,7 @@ class InvestmentApplicationServiceTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.existsAccountByUserId(testUserId)).willReturn(false);
@@ -140,7 +151,7 @@ class InvestmentApplicationServiceTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
@@ -149,12 +160,12 @@ class InvestmentApplicationServiceTest {
                     .id(UUID.randomUUID())
                     .code(fundCode)
                     .name("PayU Money Market Fund")
-                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .type(FundType.MONEY_MARKET)
                     .navPerUnit(new BigDecimal("1500.0000"))
                     .minimumInvestment(new BigDecimal("10000.0000"))
                     .managementFee(new BigDecimal("0.0050"))
                     .redemptionFee(new BigDecimal("0.0020"))
-                    .status(MutualFund.FundStatus.ACTIVE)
+                    .status(FundStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
@@ -163,14 +174,14 @@ class InvestmentApplicationServiceTest {
             InvestmentTransaction transaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(testAmount)
                     .price(new BigDecimal("1500.0000"))
                     .units(new BigDecimal("666.6666"))
                     .fee(new BigDecimal("2000.0000"))
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class))).willReturn(transaction);
@@ -197,7 +208,7 @@ class InvestmentApplicationServiceTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
@@ -206,12 +217,12 @@ class InvestmentApplicationServiceTest {
                     .id(UUID.randomUUID())
                     .code(fundCode)
                     .name("PayU Money Market Fund")
-                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .type(FundType.MONEY_MARKET)
                     .navPerUnit(new BigDecimal("1500.0000"))
                     .minimumInvestment(new BigDecimal("10000.0000"))
                     .managementFee(new BigDecimal("0.0050"))
                     .redemptionFee(new BigDecimal("0.0020"))
-                    .status(MutualFund.FundStatus.ACTIVE)
+                    .status(FundStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
@@ -238,14 +249,14 @@ class InvestmentApplicationServiceTest {
             InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
                     .id(transactionId)
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(testAmount)
                     .price(new BigDecimal("1500.0000"))
                     .units(new BigDecimal("666.6666"))
                     .fee(new BigDecimal("2000.0000"))
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.of(existingTransaction));
@@ -254,12 +265,12 @@ class InvestmentApplicationServiceTest {
                     .id(UUID.randomUUID())
                     .code(fundCode)
                     .name("PayU Money Market Fund")
-                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .type(FundType.MONEY_MARKET)
                     .navPerUnit(new BigDecimal("1600.0000"))
                     .minimumInvestment(new BigDecimal("10000.0000"))
                     .managementFee(new BigDecimal("0.0050"))
                     .redemptionFee(new BigDecimal("0.0020"))
-                    .status(MutualFund.FundStatus.ACTIVE)
+                    .status(FundStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
@@ -269,7 +280,7 @@ class InvestmentApplicationServiceTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
@@ -277,14 +288,14 @@ class InvestmentApplicationServiceTest {
             InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.SELL)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.SELL)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(new BigDecimal("800000.00"))
                     .price(new BigDecimal("1600.0000"))
                     .units(new BigDecimal("500.0000"))
                     .fee(new BigDecimal("4000.0000"))
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class))).willReturn(sellTransaction);
@@ -294,7 +305,7 @@ class InvestmentApplicationServiceTest {
             InvestmentTransaction soldTransaction = result.get();
 
             assertThat(soldTransaction).isNotNull();
-            assertThat(soldTransaction.getType()).isEqualTo(InvestmentTransaction.TransactionType.SELL);
+            assertThat(soldTransaction.getType()).isEqualTo(TransactionType.SELL);
             verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class));
             verify(investmentPersistencePort).saveTransaction(any(InvestmentTransaction.class));
             verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
@@ -308,11 +319,11 @@ class InvestmentApplicationServiceTest {
             InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
                     .id(transactionId)
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.DEPOSIT)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.DEPOSIT)
                     .investmentId(UUID.randomUUID().toString())
                     .amount(testAmount)
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.of(existingTransaction));
@@ -355,7 +366,7 @@ class InvestmentApplicationServiceTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
@@ -368,7 +379,7 @@ class InvestmentApplicationServiceTest {
                     .tenure(tenure)
                     .interestRate(new BigDecimal("0.0550"))
                     .maturityAmount(new BigDecimal("1027500.00"))
-                    .status(Deposit.DepositStatus.ACTIVE)
+                    .status(DepositStatus.ACTIVE)
                     .currency("IDR")
                     .build();
 
@@ -427,7 +438,7 @@ class InvestmentApplicationServiceTest {
                     .id(UUID.randomUUID())
                     .userId(testUserId)
                     .totalBalance(new BigDecimal("5000000"))
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentPersistencePort.findAccountByUserId(testUserId)).willReturn(Optional.of(account));
@@ -553,5 +564,213 @@ class InvestmentApplicationServiceTest {
             verify(walletServicePort).deductBalance(testUserId, testAmount);
             verify(investmentPersistencePort).saveGold(any(Gold.class));
         }
+    }
+
+    @Nested
+    @DisplayName("calculateDepositInterestRate")
+    class CalculateDepositInterestRate {
+
+        @Test
+        @DisplayName("should use correct rate for 1 month tenure")
+        void shouldUseCorrectRateFor1Month() throws ExecutionException, InterruptedException {
+            InvestmentAccount account = buildAccount();
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(account));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            Deposit deposit = Deposit.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .amount(testAmount)
+                    .tenure(1)
+                    .interestRate(new BigDecimal("0.045"))
+                    .maturityAmount(new BigDecimal("1003750.00"))
+                    .status(DepositStatus.ACTIVE)
+                    .currency("IDR")
+                    .build();
+
+            given(investmentPersistencePort.saveDeposit(any(Deposit.class))).willReturn(deposit);
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class)))
+                    .willReturn(InvestmentTransaction.builder().id(UUID.randomUUID()).build());
+
+            CompletableFuture<Deposit> result = investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, 1);
+            Deposit boughtDeposit = result.get();
+
+            assertThat(boughtDeposit.getInterestRate()).isEqualTo("0.045");
+            assertThat(boughtDeposit.getTenure()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("should use correct rate for 12 month tenure")
+        void shouldUseCorrectRateFor12Months() throws ExecutionException, InterruptedException {
+            InvestmentAccount account = buildAccount();
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(account));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            Deposit deposit = Deposit.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .amount(testAmount)
+                    .tenure(12)
+                    .interestRate(new BigDecimal("0.060"))
+                    .maturityAmount(new BigDecimal("1060000.00"))
+                    .status(DepositStatus.ACTIVE)
+                    .currency("IDR")
+                    .build();
+
+            given(investmentPersistencePort.saveDeposit(any(Deposit.class))).willReturn(deposit);
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class)))
+                    .willReturn(InvestmentTransaction.builder().id(UUID.randomUUID()).build());
+
+            CompletableFuture<Deposit> result = investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, 12);
+            Deposit boughtDeposit = result.get();
+
+            assertThat(boughtDeposit.getInterestRate()).isEqualTo("0.060");
+            assertThat(boughtDeposit.getTenure()).isEqualTo(12);
+        }
+    }
+
+    @Nested
+    @DisplayName("sagaCompensation")
+    class SagaCompensation {
+
+        @Test
+        @DisplayName("should rollback wallet debit when deposit save fails")
+        void shouldRollbackWalletOnDepositSaveFailure() {
+            InvestmentAccount account = buildAccount();
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(account));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            given(investmentPersistencePort.saveDeposit(any(Deposit.class)))
+                    .willThrow(new RuntimeException("DB connection lost"));
+
+            assertThatThrownBy(() -> investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, 6))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Deposit purchase failed, wallet refunded");
+
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(walletServicePort).creditBalance(testUserId, testAmount);
+        }
+
+        @Test
+        @DisplayName("should rollback wallet debit when mutual fund save fails")
+        void shouldRollbackWalletOnMutualFundSaveFailure() {
+            InvestmentAccount account = buildAccount();
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(account));
+
+            MutualFund fund = MutualFund.builder()
+                    .id(UUID.randomUUID())
+                    .code("FUND001")
+                    .name("Test Fund")
+                    .navPerUnit(new BigDecimal("1500.0000"))
+                    .minimumInvestment(new BigDecimal("10000.0000"))
+                    .managementFee(new BigDecimal("0.0050"))
+                    .status(FundStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.getLatestFundPrice("FUND001")).willReturn(fund);
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class)))
+                    .willThrow(new RuntimeException("DB failure"));
+
+            assertThatThrownBy(() -> investmentApplicationService.buyMutualFund(
+                    testAccountId, testUserId, "FUND001", testAmount))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Mutual fund purchase failed, wallet refunded");
+
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(walletServicePort).creditBalance(testUserId, testAmount);
+        }
+
+        @Test
+        @DisplayName("should rollback wallet debit when gold save fails")
+        void shouldRollbackWalletOnGoldSaveFailure() {
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(new BigDecimal("1250000.00"));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+            given(investmentPersistencePort.findGoldByUserId(testUserId)).willReturn(Optional.empty());
+
+            given(investmentPersistencePort.saveGold(any(Gold.class)))
+                    .willThrow(new RuntimeException("Save failed"));
+
+            assertThatThrownBy(() -> investmentApplicationService.buyGold(testUserId, testAmount))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Gold purchase failed, wallet refunded");
+
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(walletServicePort).creditBalance(testUserId, testAmount);
+        }
+    }
+
+    @Nested
+    @DisplayName("sellGold")
+    class SellGold {
+
+        @Test
+        @DisplayName("should sell gold successfully")
+        void shouldSellGoldSuccessfully() throws ExecutionException, InterruptedException {
+            UUID transactionId = UUID.randomUUID();
+            BigDecimal goldPrice = new BigDecimal("1300000.00");
+
+            InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
+                    .id(transactionId)
+                    .accountId(testAccountId)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.GOLD)
+                    .investmentId("XAU")
+                    .amount(testAmount)
+                    .price(new BigDecimal("1250000.00"))
+                    .units(new BigDecimal("0.8000"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.findTransactionById(transactionId))
+                    .willReturn(Optional.of(existingTransaction));
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(goldPrice);
+
+            InvestmentAccount account = buildAccount();
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(account));
+
+            InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .type(TransactionType.SELL)
+                    .investmentType(InvestmentType.GOLD)
+                    .investmentId("XAU")
+                    .amount(testAmount)
+                    .price(goldPrice)
+                    .units(new BigDecimal("0.7692"))
+                    .fee(new BigDecimal("5000.00"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class)))
+                    .willReturn(sellTransaction);
+
+            CompletableFuture<InvestmentTransaction> result = investmentApplicationService.sellInvestment(
+                    testAccountId, transactionId, testAmount);
+            InvestmentTransaction sold = result.get();
+
+            assertThat(sold.getType()).isEqualTo(TransactionType.SELL);
+            assertThat(sold.getInvestmentType()).isEqualTo(InvestmentType.GOLD);
+            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class));
+        }
+    }
+
+    private InvestmentAccount buildAccount() {
+        return InvestmentAccount.builder()
+                .id(UUID.fromString(testAccountId))
+                .userId(testUserId)
+                .totalBalance(BigDecimal.ZERO)
+                .availableBalance(BigDecimal.ZERO)
+                .status(AccountStatus.ACTIVE)
+                .build();
     }
 }

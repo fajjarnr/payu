@@ -125,6 +125,8 @@ export function useTickets() {
   return useQuery({
     queryKey: ['support-tickets'],
     queryFn: () => SupportService.getTickets(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

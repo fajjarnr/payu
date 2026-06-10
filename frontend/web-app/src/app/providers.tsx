@@ -7,7 +7,7 @@ import { ExperimentProvider } from '@/contexts/ExperimentContext';
 const createQueryClient = () => new QueryClient({
  defaultOptions: {
   queries: {
-   staleTime: 1000 * 60 * 5,
+   staleTime: 1000 * 60 * 1,
    gcTime: 1000 * 60 * 10,
    // BUG-FE-026: Enable auto-refresh on reconnect/focus so balance stays fresh
    refetchOnWindowFocus: true,

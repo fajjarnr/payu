@@ -126,11 +126,12 @@ public class NotificationResource {
         ),
         required = true
     )
-    public Response send(@Valid SendNotificationRequest request) {
+    public Response send(@Valid SendNotificationRequest request,
+                         @HeaderParam("X-Idempotency-Key") String idempotencyKey) {
         LOG.infof("Received notification request: channel=%s, recipient=%s",
                 request.channel(), request.recipient());
 
-        NotificationEntity notification = notificationService.send(request);
+        NotificationEntity notification = notificationService.send(request, idempotencyKey);
         return Response.status(Response.Status.CREATED)
                 .entity(NotificationResponse.from(notification))
                 .build();

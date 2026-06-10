@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Security configuration for Investment Service.
  */
+import org.springframework.context.annotation.Profile;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)

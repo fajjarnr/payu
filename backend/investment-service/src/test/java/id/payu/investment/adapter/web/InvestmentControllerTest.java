@@ -2,10 +2,15 @@ package id.payu.investment.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.investment.application.service.InvestmentApplicationService;
+import id.payu.investment.domain.model.AccountStatus;
 import id.payu.investment.domain.model.Deposit;
+import id.payu.investment.domain.model.DepositStatus;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
+import id.payu.investment.domain.model.InvestmentType;
+import id.payu.investment.domain.model.TransactionStatus;
+import id.payu.investment.domain.model.TransactionType;
 import id.payu.investment.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +73,7 @@ class InvestmentControllerTest {
                     .userId(testUserId)
                     .totalBalance(BigDecimal.ZERO)
                     .availableBalance(BigDecimal.ZERO)
-                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .build();
 
             given(investmentApplicationService.createAccount(testUserId))
@@ -96,7 +101,7 @@ class InvestmentControllerTest {
                     .accountId(testAccountId)
                     .amount(testAmount)
                     .tenure(6)
-                    .status(Deposit.DepositStatus.ACTIVE)
+                    .status(DepositStatus.ACTIVE)
                     .build();
 
             BuyDepositRequest request = new BuyDepositRequest(testAccountId, testAmount, 6);
@@ -125,11 +130,11 @@ class InvestmentControllerTest {
             InvestmentTransaction transaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.BUY)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(testAmount)
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             BuyMutualFundRequest request = new BuyMutualFundRequest(testAccountId, fundCode, testAmount);
@@ -187,10 +192,10 @@ class InvestmentControllerTest {
             InvestmentTransaction transaction = InvestmentTransaction.builder()
                     .id(UUID.randomUUID())
                     .accountId(testAccountId)
-                    .type(InvestmentTransaction.TransactionType.SELL)
-                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .type(TransactionType.SELL)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
                     .amount(testAmount)
-                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .status(TransactionStatus.COMPLETED)
                     .build();
 
             SellInvestmentRequest request = new SellInvestmentRequest(testAccountId, testTransactionId, testAmount);

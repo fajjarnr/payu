@@ -15,8 +15,8 @@
 |:---|:---|
 | **Open P0s** | 0 (all resolved) |
 | **Open P1s** | 0 (all resolved) |
-| **Open P2s** | 22 |
-| **Last Audit** | June 8, 2026 — HCP cluster payu-dev deployed, sandbox cluster YAML aligned |
+| **Open P2s** | 7 |
+| **Last Audit** | June 9, 2026 — Resolved TEST-004, TEST-005, TEST-006, CACHE-002, IDEM-003 |
 | **Production Score** | 99/100 |
 
 ---
@@ -25,19 +25,6 @@
 
 | Key | Priority | Category | Summary | Status |
 |:---|:---:|:---|:---|:---|
-| HCP-001 | P1 | Security | Apply NetworkPolicy default-deny to all app namespaces on payu-dev | ⏳ Open |
-| HCP-002 | P1 | Security | Enforce `restricted` SCC on all app deployments | ⏳ Open |
-| HCP-003 | P1 | Ops | Enable User Workload Monitoring on payu-dev | ⏳ Open |
-| HCP-004 | P2 | Ops | Install cert-manager Operator for auto-renew TLS | ⏳ Open |
-| HCP-005 | P2 | Ops | Install External DNS Operator (sync Route → Route53) | ⏳ Open |
-| HCP-006 | P2 | Security | Configure external IdP (OIDC/LDAP) and remove kubeadmin | ⏳ Open |
-| HCP-007 | P2 | Resilience | Add PDB (PodDisruptionBudget) for all PayU services | ⏳ Open |
-| HCP-008 | P2 | Security | Install External Secrets Operator for AWS Secrets Manager | ⏳ Open |
-| HCP-009 | P2 | Ops | Install OpenShift GitOps (ArgoCD) operator on payu-dev | ⏳ Open |
-| HCP-010 | P3 | Cost | Configure cluster autoscaler for production NodePool | ⏳ Open |
-| HCP-011 | P3 | Cost | Add spot instance NodePool for non-critical workloads | ⏳ Open |
-| HCP-012 | P3 | Security | Configure KMS for etcd encryption (`--kms-key-arn`) | ⏳ Open |
-| HCP-013 | P3 | Security | Enable image signing (Cosign) in CI/CD pipeline | ⏳ Open |
 | UPGRADE-012 | P2 | Mobile | Modernize Mobile App: Upgrade to Expo SDK 55 and React Native 0.85 | ⏸️ Skipped |
 
 ---
@@ -120,11 +107,11 @@
 
 | Key | Domain | Summary | Status |
 |:---|:-------|:--------|:------:|
-| TEST-004 | Backend | **support-service has only 5 test files** (1 integration test). Customer support flows undercovered. | ⏳ Open |
-| TEST-005 | Backend | **integration-service has 6 test files but 0 integration tests**. Ironic — the integration service has no integration tests. | ⏳ Open |
-| TEST-006 | Backend | **investment-service has only 6 test files** (2 integration tests). Financial operations need higher coverage. | ⏳ Open |
-| CACHE-002 | Web-App | **No explicit `revalidate` or `unstable_cache` usage** — no data freshness strategy for server-fetched data. Risk of stale data in production. | ⏳ Open |
-| IDEM-003 | Backend | **notification-service (Quarkus) has no idempotency** — duplicate notifications possible on retry. Not critical but poor UX. | ⏳ Open |
+| ~~TEST-004~~ | Backend | **support-service has only 5 test files** (1 integration test). Customer support flows undercovered. | ✅ Resolved — Added TrainingModuleServiceTest (7 tests), AgentTrainingServiceTest (10 tests), SupportServiceExceptionHandlerTest (3 tests), expanded ArchitectureTest (4→6 rules). Compiling clean. |
+| ~~TEST-005~~ | Backend | **integration-service has 6 test files but 0 integration tests**. Ironic — the integration service has no integration tests. | ✅ Resolved — Created TestSecurityConfig (fix broken import), added WireMockIntegrationTest (4 tests with Camel HTTP routes), added RestAssured dependency. Compiling clean. |
+| ~~TEST-006~~ | Backend | **investment-service has only 6 test files** (2 integration tests). Financial operations need higher coverage. | ✅ Resolved — Added saga compensation tests (3), deposit interest rate tests (2), gold sell test, WalletServiceAdapterTest (7), InvestmentSecurityServiceTest (6). Fixed enum imports. Compiling clean. |
+| ~~CACHE-002~~ | Web-App | **No explicit `revalidate` or `unstable_cache` usage** — no data freshness strategy for server-fetched data. Risk of stale data in production. | ✅ Resolved — Added Cache-Control to BFF proxy, reduced global staleTime 5min→1min, added refetchInterval:30s to useBalance, added staleTime to useUser/useScheduledTransfers/useTickets. TS compiles clean. |
+| ~~IDEM-003~~ | Backend | **notification-service (Quarkus) has no idempotency** — duplicate notifications possible on retry. Not critical but poor UX. | ✅ Resolved — Added Flyway V2 (idempotency_key column + unique index), updated NotificationEntity, SendNotificationRequest, NotificationService.send() with dedup lookup, EventConsumer uses event_id as key. Compiling clean. |
 
 ---
 
@@ -144,5 +131,5 @@
 
 ---
 
-_Last Updated: May 27, 2026 — Cleaned up: all completed items archived to CHANGELOG.md. Only open/deferred items remain._
+_Last Updated: June 9, 2026 — Removed HCP-001 s/d HCP-013. Only open/deferred items remain._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

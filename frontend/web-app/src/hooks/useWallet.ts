@@ -11,7 +11,8 @@ export const useBalance = (accountId: string | undefined) => {
     queryFn: () => WalletService.getBalance(accountId!),
     enabled: !!accountId,
     staleTime: 30000,
-    gcTime: 300000
+    gcTime: 300000,
+    refetchInterval: 30000,
   });
 };
 

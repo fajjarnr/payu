@@ -1,6 +1,7 @@
 package id.payu.notification;
 
 import id.payu.notification.domain.NotificationChannel;
+import id.payu.notification.domain.NotificationStatus;
 import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.dto.SendNotificationRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -58,15 +59,15 @@ class SimpleTest {
         @Test
         @DisplayName("should have all expected status values")
         void shouldHaveAllExpectedStatuses() {
-            NotificationEntity.NotificationStatus[] statuses = NotificationEntity.NotificationStatus.values();
+            NotificationStatus[] statuses = NotificationStatus.values();
             assertThat(statuses).hasSize(6);
             assertThat(statuses).containsExactlyInAnyOrder(
-                    NotificationEntity.NotificationStatus.PENDING,
-                    NotificationEntity.NotificationStatus.SENDING,
-                    NotificationEntity.NotificationStatus.SENT,
-                    NotificationEntity.NotificationStatus.DELIVERED,
-                    NotificationEntity.NotificationStatus.READ,
-                    NotificationEntity.NotificationStatus.FAILED
+                    NotificationStatus.PENDING,
+                    NotificationStatus.SENDING,
+                    NotificationStatus.SENT,
+                    NotificationStatus.DELIVERED,
+                    NotificationStatus.READ,
+                    NotificationStatus.FAILED
             );
         }
 
@@ -103,6 +104,7 @@ class SimpleTest {
                     "+6281234567890",
                     "Transfer Successful",
                     "Your transfer was successful.",
+                    null,
                     null,
                     null
             );

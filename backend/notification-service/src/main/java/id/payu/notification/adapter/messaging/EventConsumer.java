@@ -75,14 +75,17 @@ public class EventConsumer {
         LOG.infof("Received KYC verified event: %s", payload);
         try {
             String userId = extractValue(payload, "user_id");
+            String eventId = extractValue(payload, "event_id");
             LOG.infof("KYC verified for user: %s — sending in-app notification", userId);
             SendNotificationRequest notification = new SendNotificationRequest(
                 null, NotificationChannel.IN_APP,
                 userId, "KYC Verification Approved",
                 "Your identity verification has been approved. Welcome to PayU!",
-                null, null
+                null, null,
+                eventId != null && !eventId.isEmpty() ? "kyc-verified-" + eventId : null
             );
-            notificationService.send(notification);
+            notificationService.send(notification,
+                eventId != null && !eventId.isEmpty() ? "kyc-verified-" + eventId : null);
         } catch (Exception e) {
             LOG.errorf(e, "Failed to process KYC verified event: %s", e.getMessage());
             throw new RuntimeException("Failed to process KYC verified event", e);
@@ -95,14 +98,17 @@ public class EventConsumer {
         try {
             String userId = extractValue(payload, "user_id");
             String reason = extractValue(payload, "reason");
+            String eventId = extractValue(payload, "event_id");
             LOG.infof("KYC failed for user: %s reason: %s", userId, reason);
             SendNotificationRequest notification = new SendNotificationRequest(
                 null, NotificationChannel.IN_APP,
                 userId, "KYC Verification Failed",
                 "Your identity verification was not approved. Reason: " + reason,
-                null, null
+                null, null,
+                eventId != null && !eventId.isEmpty() ? "kyc-failed-" + eventId : null
             );
-            notificationService.send(notification);
+            notificationService.send(notification,
+                eventId != null && !eventId.isEmpty() ? "kyc-failed-" + eventId : null);
         } catch (Exception e) {
             LOG.errorf(e, "Failed to process KYC failed event: %s", e.getMessage());
             throw new RuntimeException("Failed to process KYC failed event", e);

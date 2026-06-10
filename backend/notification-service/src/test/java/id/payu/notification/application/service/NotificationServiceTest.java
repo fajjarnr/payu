@@ -6,6 +6,7 @@ import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.adapter.sender.EmailSender;
 import id.payu.notification.adapter.sender.PushSender;
 import id.payu.notification.adapter.sender.SmsSender;
+import id.payu.notification.domain.NotificationStatus;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -53,13 +54,14 @@ class NotificationServiceTest {
                 "Test Subject",
                 "Test body content",
                 null,
+                null,
                 null
             );
 
             when(emailSender.send(any())).thenReturn(true);
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
@@ -68,7 +70,7 @@ class NotificationServiceTest {
             assertEquals("user@example.com", notification.recipient);
             assertEquals("Test Subject", notification.title);
             assertEquals("Test body content", notification.body);
-            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationStatus.SENT, notification.status);
             assertNotNull(notification.sentAt);
 
             verify(emailSender).send(any());
@@ -87,19 +89,20 @@ class NotificationServiceTest {
                 "OTP",
                 "Your OTP is 123456",
                 null,
+                null,
                 null
             );
 
             when(smsSender.send(any())).thenReturn(true);
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.SMS, notification.channel);
             assertEquals("+6281234567890", notification.recipient);
-            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationStatus.SENT, notification.status);
 
             verify(smsSender).send(any());
             verifyNoInteractions(emailSender);
@@ -117,19 +120,20 @@ class NotificationServiceTest {
                 "New Transaction",
                 "You received Rp 100.000",
                 null,
+                null,
                 null
             );
 
             when(pushSender.send(any())).thenReturn(true);
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.PUSH, notification.channel);
             assertEquals("device-token-xyz", notification.recipient);
-            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationStatus.SENT, notification.status);
 
             verify(pushSender).send(any());
             verifyNoInteractions(emailSender);
@@ -147,17 +151,18 @@ class NotificationServiceTest {
                 "Test Subject",
                 "Test body",
                 null,
+                null,
                 null
             );
 
             when(emailSender.send(any())).thenReturn(false);
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
-            assertEquals(NotificationEntity.NotificationStatus.FAILED, notification.status);
+            assertEquals(NotificationStatus.FAILED, notification.status);
             assertEquals("Send failed", notification.failureReason);
             assertNull(notification.sentAt);
         }
@@ -173,17 +178,18 @@ class NotificationServiceTest {
                 "Test Subject",
                 "Test body",
                 null,
+                null,
                 null
             );
 
             when(emailSender.send(any())).thenThrow(new RuntimeException("SMTP connection failed"));
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
-            assertEquals(NotificationEntity.NotificationStatus.FAILED, notification.status);
+            assertEquals(NotificationStatus.FAILED, notification.status);
             assertEquals("SMTP connection failed", notification.failureReason);
             assertEquals(1, notification.retryCount);
         }
@@ -199,18 +205,19 @@ class NotificationServiceTest {
                 "Promo Alert",
                 "Get 50% cashback!",
                 null,
+                null,
                 null
             );
 
             when(pushSender.send(any())).thenReturn(true);
 
             // When
-            NotificationEntity notification = notificationService.send(request);
+            NotificationEntity notification = notificationService.send(request, null);
 
             // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.IN_APP, notification.channel);
-            assertEquals(NotificationEntity.NotificationStatus.SENT, notification.status);
+            assertEquals(NotificationStatus.SENT, notification.status);
 
             verify(pushSender).send(any());
         }

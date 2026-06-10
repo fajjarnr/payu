@@ -238,6 +238,7 @@ async function proxyRequest(
             
             const responseHeaders = new Headers();
             responseHeaders.set('Content-Type', retryRes.headers.get('Content-Type') || 'application/json');
+            responseHeaders.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
             for (const cookie of setCookieHeaders) {
               responseHeaders.append('Set-Cookie', cookie);
             }
@@ -262,6 +263,7 @@ async function proxyRequest(
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('Content-Type') || 'application/json',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       },
     });
   } catch (error) {

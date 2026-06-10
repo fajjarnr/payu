@@ -226,6 +226,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- RestAssured for REST integration testing -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- ArchUnit -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>

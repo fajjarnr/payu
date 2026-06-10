@@ -14,6 +14,7 @@ export const useUser = (userId: string | undefined) => {
       return UserService.getUser(userId);
     },
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
   });
 };
 

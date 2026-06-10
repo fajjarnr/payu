@@ -61,6 +61,10 @@ public class NotificationEntity extends PanacheEntityBase {
     /** BUG-BE-025: Scheduled retry time for failed notifications */
     public LocalDateTime scheduledAt;
 
+    /** IDEM-003: Client-supplied idempotency key to prevent duplicate sends */
+    @Column(length = 255)
+    public String idempotencyKey;
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

@@ -36,9 +36,20 @@ public class NotificationService {
     SmsSender smsSender;
 
     @Transactional
-    public NotificationEntity send(SendNotificationRequest request) {
+    public NotificationEntity send(SendNotificationRequest request, String idempotencyKey) {
         LOG.infof("Sending notification: channel=%s, recipient=%s",
                 request.channel(), request.recipient());
+
+        // IDEM-003: Check for existing notification with same idempotency key
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            Optional<NotificationEntity> existing = NotificationEntity.find(
+                    "idempotencyKey = ?1", idempotencyKey).firstResultOptional();
+            if (existing.isPresent()) {
+                LOG.infof("Idempotent request detected: key=%s, returning existing notification id=%s",
+                        idempotencyKey, existing.get().id);
+                return existing.get();
+            }
+        }
 
         NotificationEntity notification = new NotificationEntity();
         notification.userId = request.userId();
@@ -49,6 +60,7 @@ public class NotificationService {
         notification.templateId = request.templateId();
         notification.data = request.data();
         notification.status = NotificationStatus.PENDING;
+        notification.idempotencyKey = idempotencyKey;
 
         notification.persist();
 
@@ -166,7 +178,8 @@ public class NotificationService {
                 title,
                 body,
                 "transaction",
+                null,
                 null);
-        send(request);
+        send(request, null);
     }
 }

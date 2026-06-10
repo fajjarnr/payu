@@ -61,6 +61,12 @@ public record SendNotificationRequest(
             example = "{\"transactionId\": \"tx-456\", \"amount\": 100000, \"currency\": \"IDR\"}",
             format = "json"
         )
-        String data // JSON
+        String data, // JSON
+
+        @Schema(
+            description = "Client-supplied idempotency key to prevent duplicate notification sends. The same key with the same payload will return the original notification without re-sending.",
+            example = "550e8400-e29b-41d4-a716-446655440000"
+        )
+        String idempotencyKey
 ) {
 }
