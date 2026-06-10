@@ -1,61 +1,18 @@
-# =============================================================================
-# PayU gateway-service - Multi-stage Quarkus Container Build
-# =============================================================================
-# Stage 1: Build
-# =============================================================================
-FROM registry.access.redhat.com/ubi9/openjdk-25:1.24 AS builder
-
-WORKDIR /build
-COPY pom.xml .
-# Strip <modules> so Maven only discovers what is actually copied
-RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>gateway-service</module></modules>' pom.xml > /tmp/pom.xml && cp /tmp/pom.xml pom.xml
-COPY gateway-service/pom.xml gateway-service/
-COPY shared/ shared/
-
-RUN mvn -f pom.xml install -DskipTests -pl gateway-service -am -B
-
-COPY gateway-service/src gateway-service/src
-RUN mvn -f pom.xml clean package -DskipTests -pl gateway-service -am -B
-
-# =============================================================================
-# Stage 2: Runtime
-# =============================================================================
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
-
 ARG APP_VERSION=1.8.2
-
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-gateway-service"
-LABEL org.opencontainers.image.description="PayU gateway-service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/gateway-service"
-LABEL id.payu.service.tier="core"
-
 USER root
 RUN microdnf update -y && microdnf clean all
-
 USER 185
 WORKDIR /deployments
-
-COPY --from=builder --chown=185 /build/gateway-service/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=builder --chown=185 /build/gateway-service/target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
-COPY --from=builder --chown=185 /build/gateway-service/target/quarkus-app/app/ /deployments/app/
-COPY --from=builder --chown=185 /build/gateway-service/target/quarkus-app/quarkus/ /deployments/quarkus/
-
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
 EXPOSE 8080
-
-ENV SPRING_APPLICATION_NAME=gateway-service
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/deployments/heapdump.hprof \
-    -Dquarkus.http.host=0.0.0.0 \
-    -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -sf http://localhost:8080/q/health/live || exit 1
-
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 CMD curl -sf http://localhost:8080/q/health/live || exit 1
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
