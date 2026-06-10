@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>fx-service</module>
 COPY fx-service/pom.xml fx-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl fx-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl fx-service -am -B
 
 COPY fx-service/src fx-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl fx-service -am -B

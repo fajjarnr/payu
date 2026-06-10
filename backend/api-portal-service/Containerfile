@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>api-portal-service<
 COPY api-portal-service/pom.xml api-portal-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl api-portal-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl api-portal-service -am -B
 
 COPY api-portal-service/src api-portal-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl api-portal-service -am -B

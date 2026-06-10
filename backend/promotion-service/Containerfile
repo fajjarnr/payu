@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>promotion-service</
 COPY promotion-service/pom.xml promotion-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl promotion-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl promotion-service -am -B
 
 COPY promotion-service/src promotion-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl promotion-service -am -B

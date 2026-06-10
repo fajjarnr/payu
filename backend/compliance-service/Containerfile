@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>compliance-service<
 COPY compliance-service/pom.xml compliance-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl compliance-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl compliance-service -am -B
 
 COPY compliance-service/src compliance-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl compliance-service -am -B

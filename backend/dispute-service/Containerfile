@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>dispute-service</mo
 COPY dispute-service/pom.xml dispute-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl dispute-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl dispute-service -am -B
 
 COPY dispute-service/src dispute-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl dispute-service -am -B

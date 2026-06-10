@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>investment-service<
 COPY investment-service/pom.xml investment-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl investment-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl investment-service -am -B
 
 COPY investment-service/src investment-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl investment-service -am -B

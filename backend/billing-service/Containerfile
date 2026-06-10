@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>billing-service</mo
 COPY billing-service/pom.xml billing-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl billing-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl billing-service -am -B
 
 COPY billing-service/src billing-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl billing-service -am -B

@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>wallet-service</mod
 COPY wallet-service/pom.xml wallet-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl wallet-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl wallet-service -am -B
 
 COPY wallet-service/src wallet-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl wallet-service -am -B

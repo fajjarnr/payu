@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>notification-servic
 COPY notification-service/pom.xml notification-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl notification-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl notification-service -am -B
 
 COPY notification-service/src notification-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl notification-service -am -B

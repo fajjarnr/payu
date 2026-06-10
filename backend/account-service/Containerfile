@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>account-service</mo
 COPY account-service/pom.xml account-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl account-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl account-service -am -B
 
 COPY account-service/src account-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl account-service -am -B

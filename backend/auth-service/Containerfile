@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>auth-service</modul
 COPY auth-service/pom.xml auth-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl auth-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl auth-service -am -B
 
 COPY auth-service/src auth-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl auth-service -am -B

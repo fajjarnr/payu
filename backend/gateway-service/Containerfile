@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>gateway-service</mo
 COPY gateway-service/pom.xml gateway-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl gateway-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl gateway-service -am -B
 
 COPY gateway-service/src gateway-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl gateway-service -am -B

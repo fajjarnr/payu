@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>integration-service
 COPY integration-service/pom.xml integration-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl integration-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl integration-service -am -B
 
 COPY integration-service/src integration-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl integration-service -am -B

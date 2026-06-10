@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>transaction-service
 COPY transaction-service/pom.xml transaction-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl transaction-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl transaction-service -am -B
 
 COPY transaction-service/src transaction-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl transaction-service -am -B

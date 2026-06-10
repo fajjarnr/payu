@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>cms-service</module
 COPY cms-service/pom.xml cms-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl cms-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl cms-service -am -B
 
 COPY cms-service/src cms-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl cms-service -am -B

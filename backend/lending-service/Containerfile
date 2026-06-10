@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>lending-service</mo
 COPY lending-service/pom.xml lending-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl lending-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl lending-service -am -B
 
 COPY lending-service/src lending-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl lending-service -am -B

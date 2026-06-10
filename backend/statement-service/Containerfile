@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>statement-service</
 COPY statement-service/pom.xml statement-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl statement-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl statement-service -am -B
 
 COPY statement-service/src statement-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl statement-service -am -B

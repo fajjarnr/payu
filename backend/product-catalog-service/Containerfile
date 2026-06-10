@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>product-catalog-ser
 COPY product-catalog-service/pom.xml product-catalog-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl product-catalog-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl product-catalog-service -am -B
 
 COPY product-catalog-service/src product-catalog-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl product-catalog-service -am -B

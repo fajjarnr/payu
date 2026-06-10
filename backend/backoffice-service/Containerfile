@@ -12,7 +12,7 @@ RUN sed '/<\(modules\)>/,/<\/\(modules\)>/c\<modules><module>backoffice-service<
 COPY backoffice-service/pom.xml backoffice-service/
 COPY shared/ shared/
 
-RUN mvn -f pom.xml dependency:go-offline -pl backoffice-service -am -B
+RUN mvn -f pom.xml install -DskipTests -pl backoffice-service -am -B
 
 COPY backoffice-service/src backoffice-service/src
 RUN mvn -f pom.xml clean package -DskipTests -pl backoffice-service -am -B
