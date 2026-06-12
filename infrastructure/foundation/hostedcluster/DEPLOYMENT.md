@@ -344,6 +344,10 @@ spec:
 | `clusterNetwork` overlap | `10.133.0.0/14` == `10.132.0.0/14` | Use `10.136.0.0/14` |
 | `WebIdentityErr` | OIDC docs missing in S3 | Re-upload JWKS with correct kid |
 | Node not joining | SG missing inbound rules | Add `IpProtocol=-1, CidrIp=<VPC_CIDR>` |
+| `InvalidIdentityToken` (assumed-role not authorized) | Missing `sts.amazonaws.com` audience in IAM OIDC provider. | Add `sts.amazonaws.com` client ID to OIDC provider: `aws iam add-client-id-to-open-id-connect-provider --open-id-connect-provider-arn <ARN> --client-id sts.amazonaws.com` |
+| EC2 instance profile / role cannot be assumed | IAM NodePool management role trust relationship is missing `ec2.amazonaws.com`. | Add `ec2.amazonaws.com` service principal to role trust policy: `{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}` |
+| `SyncLoadBalancerFailed` (could not find suitable subnets) | Shared VPC subnets lack cluster discovery tag for the guest cluster `infraID`. | Add tags to all subnets: `Key=kubernetes.io/cluster/<infra-id>,Value=shared`. Then restart cloud-controller-manager pods to re-evaluate. |
+| Console operator degraded with `no such host` | AWS VPC resolver (`10.0.0.2`) cached negative lookup (NXDOMAIN) of routes. | Patch guest DNS operator to use external upstream resolver (e.g. `8.8.8.8`) and delete CoreDNS pods to clear memory cache. |
 
 ### 5.2 Cilium CNI Issues
 

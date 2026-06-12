@@ -1,0 +1,38 @@
+apiVersion: hypershift.openshift.io/v1beta1
+kind: NodePool
+metadata:
+  name: payu-prod
+  namespace: clusters
+  labels:
+    hypershift.openshift.io/cluster: payu-prod
+    app.kubernetes.io/part-of: payu
+spec:
+  clusterName: payu-prod
+  arch: amd64
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.20.24-multi
+  replicas: 2
+  management:
+    autoRepair: false
+    upgradeType: Replace
+  platform:
+    aws:
+      instanceType: m6a.2xlarge
+      instanceProfile: payu-prod-worker
+      rootVolume:
+        size: 120
+        type: gp3
+      subnet:
+        id: subnet-051d2bd82699c249e
+      resourceTags:
+        - key: kubernetes.io/cluster/payu-prod
+          value: owned
+        - key: app.kubernetes.io/part-of
+          value: payu
+        - key: environment
+          value: prod
+        - key: cost-center
+          value: platform-engineering
+        - key: owner
+          value: payu-team
+    type: AWS

@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### HCP Cluster Deployments — `payu-onprem` & `payu-prod` (2026-06-12)
+
+- **Hosted Control Plane (HCP) Multi-Cluster Setup**: Provisioned two hosted OpenShift clusters (`payu-onprem` and `payu-prod`) under the `clusters` namespace using HyperShift in the `us-east-1` region sharing the existing AWS VPC infrastructure (`vpc-0852b7bcdc4d81022`).
+  - **payu-onprem**: OpenShift version `4.18.43` (channel `stable-4.18`), clusterNetwork `10.132.0.0/14`, serviceNetwork `172.31.0.0/16`, located in private subnet `subnet-0be591f0726ed759c` (`us-east-1a`).
+  - **payu-prod**: OpenShift version `4.20.24` (channel `stable-4.20`), clusterNetwork `10.136.0.0/14`, serviceNetwork `172.32.0.0/16`, located in private subnet `subnet-051d2bd82699c249e` (`us-east-1b`).
+  - **Subnet Tagging**: Tagged all 6 VPC subnets with `kubernetes.io/cluster/payu-onprem=shared` and `kubernetes.io/cluster/payu-prod=shared` to enable guest cloud provider LoadBalancer auto-discovery.
+  - **OIDC STS Authentication**: Configured IAM OIDC providers with `sts.amazonaws.com` audience and updated node pool roles to support both STS WebIdentity trust and `ec2.amazonaws.com` trust relationships.
+  - **Security Hardening**: Configured security group ingress rules to allow all internal traffic (`-1` protocol) from the VPC CIDR `10.0.0.0/16` for worker nodes.
+  - **DNS Upstream Resolver Bypass**: Configured CoreDNS in both guest clusters to bypass AWS VPC DNS resolver negative cache using public upstream resolver `8.8.8.8`.
+
 ### Infrastructure & Backend Deep Audit — Resolved 7 Items (2026-06-10)
 
 - **K8S-010 — web-app Route**: Verified Route resource exists at `infrastructure/workloads/base/web-app/route.yaml` (edge TLS, port 3000, inherited by all overlays). False alarm.

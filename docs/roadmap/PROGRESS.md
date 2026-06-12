@@ -13,7 +13,7 @@
 | Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (Jun 8)       |
 | Total Pods               | 🟢 37/39                                | 37 pods Running on OCP 4.20+ sandbox (Jun 8)    |
 | OpenShift Cluster        | 🟢 Active                                | Sandbox cluster (RT7ZF), ap-southeast-1         |
-| HCP Cluster (payu-dev)   | 🟢 Running                               | Hosted Control Plane on OCP 4.18.43, NLB ingress, 1 worker node (Jun 8) |
+| HCP Clusters (Multi-Env) | 🟢 Running                               | Deployed payu-onprem (OCP 4.18.43) and payu-prod (OCP 4.20.24) sharing VPC with NLB ingress (Jun 12) |
 | Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
 | Data Services            | 🟢 PostgreSQL + DataGrid + Kafka         | StatefulSet PG16, Infinispan RESP, AMQ Streams KRaft |
 | Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created (Jun 8)     |
@@ -34,7 +34,7 @@
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟢 1 P0, 1 P1                             | INFRA-001 (trivy auth). ARCH-010 (Quarkus starters). All other P0/P1 resolved. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-05-15                               | v1.8.7 — Sprint 2: ARCH-008 (46 entities moved), ARCH-009 (144 enums extracted), AUTH-033 (18 health), TEST-001/2/3 (207 tests added). Score: 99/100. |
+| Last Status Update       | 2026-06-12                               | v1.8.8 — HCP Multi-Cluster Setup: Deployed payu-onprem (OCP 4.18) and payu-prod (OCP 4.20) in shared VPC. |
 | OpenShift Tag            | `v1.8.1`                                 | Latest stable deployment                        |
 | Local Podman Tag         | `v1.8.0`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
@@ -92,6 +92,17 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.8 (Completed) — June 12, 2026
+
+**HCP Multi-Cluster Environments Setup (payu-onprem & payu-prod):**
+
+- ✅ **payu-onprem Deployment**: Deployed hosted control plane (OpenShift v4.18.43) using HyperShift in private subnet `subnet-0be591f0726ed759c` (`us-east-1a`). Worker nodes registered and transitioned to `Ready` status.
+- ✅ **payu-prod Deployment**: Deployed hosted control plane (OpenShift v4.20.24) using HyperShift in private subnet `subnet-051d2bd82699c249e` (`us-east-1b`). Worker nodes registered and transitioned to `Ready` status.
+- ✅ **VPC Shared Subnet Discovery**: Tagged all 6 subnets with `kubernetes.io/cluster/payu-onprem=shared` and `kubernetes.io/cluster/payu-prod=shared` to enable guest cloud-controller-manager auto-discovery for AWS ELB/NLBs.
+- ✅ **OIDC STS Authentication**: Added `sts.amazonaws.com` client ID / audience to both IAM OIDC providers. Patched assume role policy document of `node-pool` roles to trust both OIDC federation and `ec2.amazonaws.com`.
+- ✅ **Security Hardening**: Allowed inbound traffic from the VPC CIDR `10.0.0.0/16` for worker node security groups.
+- ✅ **Upstream DNS Resolver Bypass**: Patched guest CoreDNS configurations to use upstream resolver `8.8.8.8` to bypass AWS VPC DNS negative cache and restore route accessibility.
 
 ### v1.8.7 (Completed) — June 8, 2026
 

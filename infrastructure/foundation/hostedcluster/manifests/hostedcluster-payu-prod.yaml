@@ -1,0 +1,97 @@
+apiVersion: hypershift.openshift.io/v1beta1
+kind: HostedCluster
+metadata:
+  name: payu-prod
+  namespace: clusters
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: prod
+spec:
+  channel: stable-4.20
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.20.24-multi
+  dns:
+    baseDomain: payu.ocp.fajjjar.my.id
+    privateZoneID: Z09828521FFEI7SGZU1YL
+    publicZoneID: Z042274529ORPBTAC16V
+  platform:
+    aws:
+      region: us-east-1
+      endpointAccess: Public
+      multiArch: false
+      cloudProviderConfig:
+        subnet:
+          id: subnet-051d2bd82699c249e
+        vpc: vpc-0852b7bcdc4d81022
+        zone: us-east-1b
+      rolesRef:
+        controlPlaneOperatorARN: arn:aws:iam::787842753050:role/payu-prod-control-plane-operator
+        imageRegistryARN: arn:aws:iam::787842753050:role/payu-prod-openshift-image-registry
+        ingressARN: arn:aws:iam::787842753050:role/payu-prod-openshift-ingress
+        kubeCloudControllerARN: arn:aws:iam::787842753050:role/payu-prod-cloud-controller
+        networkARN: arn:aws:iam::787842753050:role/payu-prod-cloud-network-config-controller
+        nodePoolManagementARN: arn:aws:iam::787842753050:role/payu-prod-node-pool
+        storageARN: arn:aws:iam::787842753050:role/payu-prod-aws-ebs-csi-driver-controller
+      resourceTags:
+        - key: kubernetes.io/cluster/payu-prod
+          value: owned
+        - key: app.kubernetes.io/part-of
+          value: payu
+        - key: environment
+          value: prod
+        - key: cost-center
+          value: platform-engineering
+        - key: owner
+          value: payu-team
+    type: AWS
+  networking:
+    clusterNetwork:
+      - cidr: 10.136.0.0/14
+    machineNetwork:
+      - cidr: 10.0.0.0/16
+    networkType: OVNKubernetes
+    serviceNetwork:
+      - cidr: 172.32.0.0/16
+  infraID: payu-prod
+  fips: false
+  issuerURL: https://oidc-storage-payu-prod-787842753050.s3.us-east-1.amazonaws.com/payu-prod
+  configuration:
+    ingress:
+      loadBalancer:
+        platform:
+          aws:
+            type: NLB
+  capabilities: {}
+  olmCatalogPlacement: management
+  services:
+    - service: APIServer
+      servicePublishingStrategy:
+        type: LoadBalancer
+    - service: OAuthServer
+      servicePublishingStrategy:
+        type: Route
+    - service: Konnectivity
+      servicePublishingStrategy:
+        type: Route
+    - service: Ignition
+      servicePublishingStrategy:
+        type: Route
+  controllerAvailabilityPolicy: SingleReplica
+  infrastructureAvailabilityPolicy: SingleReplica
+  autoscaling:
+    scaling: ScaleUpAndScaleDown
+  etcd:
+    managed:
+      storage:
+        persistentVolume:
+          size: 8Gi
+          storageClassName: gp3-csi
+        type: PersistentVolume
+    managementType: Managed
+  secretEncryption:
+    aescbc:
+      activeKey:
+        name: payu-prod-etcd-encryption-key
+    type: aescbc
+  pullSecret:
+    name: payu-prod-pull-secret

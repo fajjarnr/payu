@@ -7,9 +7,9 @@ module "bastion" {
   source = "./modules/ec2"
 
   instance_name               = local.names.bastion
-  instance_type               = "t3.medium"
+  instance_type               = "m6a.large"
   os_name                     = "ubuntu"
-  root_volume_size            = 30
+  root_volume_size            = 50
   root_volume_type            = "gp3"
   key_name                    = aws_key_pair.bastion_key.key_name
   subnet_id                   = module.vpc.public_subnet_ids[0]
