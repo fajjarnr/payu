@@ -2,6 +2,13 @@
 
 This document outlines the detailed step-by-step checklist for migrating **Red Hat 3scale API Management (v2.15)** from `payu-onprem` to `payu-prod`. All steps must be executed manually.
 
+## 🎯 Migration Strategy & Architect Reference
+> [!NOTE]
+> **Red Hat Recommendation**: Per Red Hat Architect advice, the recommended migration strategy for 3scale is a logical backup-and-restore mechanism:
+> *"For Red Hat 3Scale, we can do a simple Backup and Restore mechanism. Where we backup all the persistent data from the on-premise environment and restore it into the cloud infrastructure."*
+> 
+> *Reference*: [Red Hat 3scale 2.15 Operating Guide](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/2.15/pdf/operating_red_hat_3scale_api_management/Red_Hat_3scale_API_Management-2.15-Operating_Red_Hat_3scale_API_Management-en-US.pdf)
+
 ---
 
 ## 📋 3scale Migration Checklist
