@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import id.payu.jms.publisher.JmsMessagePublisher;
+
 /**
  * Application service for subscription and recurring billing.
  * <p>
@@ -42,6 +44,7 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     private final SubscriptionPersistencePort persistencePort;
     private final SubscriptionEventPort eventPort;
+    private final JmsMessagePublisher jmsMessagePublisher;
 
     // ═══════════════════════════════════════════════════════
     //  Plan Management
@@ -136,6 +139,9 @@ public class SubscriptionService implements SubscriptionUseCase {
 
         SubscriptionEntity saved = persistencePort.saveSubscription(sub);
         log.info("SubscriptionEntity created: id={}, status={}", saved.getId(), saved.getStatus());
+
+        // Schedule next charge via Artemis delayed delivery
+        scheduleArtemisCharge(saved);
 
         // Publish webhook event asynchronously
         try {
@@ -339,6 +345,9 @@ public class SubscriptionService implements SubscriptionUseCase {
             log.info("Charge succeeded: subscription={}, amount={} {}", sub.getId(),
                     charge.getAmount(), charge.getCurrency());
 
+            // Schedule next recurring charge via Artemis
+            scheduleArtemisCharge(sub);
+
             // Publish webhook event for successful charge
             try {
                 eventPort.publishChargeSucceeded(sub, charge);
@@ -352,7 +361,20 @@ public class SubscriptionService implements SubscriptionUseCase {
             persistencePort.saveCharge(charge);
 
             sub.markPastDue();
-            persistencePort.saveSubscription(sub);
+            if (sub.isDunningExhausted()) {
+                sub.suspend();
+                persistencePort.saveSubscription(sub);
+                log.warn("Subscription suspended after dunning exhaustion: {}", sub.getId());
+            } else {
+                persistencePort.saveSubscription(sub);
+                // Schedule next dunning retry via Artemis (delay 5 mins for dunning retry)
+                log.info("Scheduling dunning retry for subscription {} (dunning attempt {})", sub.getId(), sub.getDunningAttempts());
+                try {
+                    jmsMessagePublisher.sendWithDelay("payu.billing.scheduled", sub.getId().toString(), 300000L);
+                } catch (Exception ex) {
+                    log.error("Failed to schedule Artemis dunning retry: {}", ex.getMessage());
+                }
+            }
 
             // Publish webhook event for failed charge (dunning)
             try {
@@ -361,6 +383,54 @@ public class SubscriptionService implements SubscriptionUseCase {
                 log.warn("Failed to publish charge.failed event: {}", ex.getMessage());
             }
         }
+    }
+
+    /**
+     * Helper to schedule subscription billing command to Artemis with delay.
+     */
+    private void scheduleArtemisCharge(SubscriptionEntity sub) {
+        if (sub.getStatus() == SubscriptionStatus.CANCELLED || sub.getStatus() == SubscriptionStatus.SUSPENDED) {
+            return;
+        }
+        LocalDateTime nextBilling = sub.getNextBillingAt();
+        if (nextBilling != null) {
+            long delayMs = java.time.Duration.between(LocalDateTime.now(), nextBilling).toMillis();
+            if (delayMs < 0) {
+                delayMs = 0;
+            }
+            log.info("Scheduling charge for subscription {} at {} (delay: {}ms)", sub.getId(), nextBilling, delayMs);
+            try {
+                jmsMessagePublisher.sendWithDelay("payu.billing.scheduled", sub.getId().toString(), delayMs);
+            } catch (Exception e) {
+                log.error("Failed to schedule Artemis charge for subscription: {}", sub.getId(), e);
+            }
+        }
+    }
+
+    /**
+     * Entry point to charge a subscription from an Artemis scheduled event.
+     */
+    @Transactional
+    public void processScheduledCharge(UUID subscriptionId) {
+        log.info("Processing scheduled charge from Artemis for subscription: {}", subscriptionId);
+        persistencePort.findSubscriptionById(subscriptionId).ifPresentOrElse(
+            sub -> {
+                if (sub.getStatus() == SubscriptionStatus.ACTIVE || sub.getStatus() == SubscriptionStatus.TRIAL) {
+                    processCharge(sub);
+                } else if (sub.getStatus() == SubscriptionStatus.PAST_DUE) {
+                    if (sub.isDunningExhausted()) {
+                        sub.suspend();
+                        persistencePort.saveSubscription(sub);
+                        log.warn("Subscription suspended after dunning exhaustion: {}", sub.getId());
+                    } else {
+                        processCharge(sub);
+                    }
+                } else {
+                    log.info("Subscription {} is in status {}, skipping charge", sub.getId(), sub.getStatus());
+                }
+            },
+            () -> log.warn("Subscription not found for scheduled charge: {}", subscriptionId)
+        );
     }
 
     private LocalDateTime advanceByInterval(LocalDateTime from, BillingInterval interval) {

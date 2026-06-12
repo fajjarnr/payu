@@ -8,7 +8,7 @@ import id.payu.promotion.adapter.persistence.repository.RewardRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,19 +30,19 @@ public class PromotionService {
 
     private final PromotionRepository promotionRepository;
     private final RewardRepository rewardRepository;
-    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final OutboxService outboxService;
     private final String promotionEventsTopic;
     private final jakarta.persistence.EntityManager entityManager;
 
     public PromotionService(
             PromotionRepository promotionRepository,
             RewardRepository rewardRepository,
-            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            OutboxService outboxService,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.promotion-event.v1}") String promotionEventsTopic,
             jakarta.persistence.EntityManager entityManager) {
         this.promotionRepository = promotionRepository;
         this.rewardRepository = rewardRepository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
         this.entityManager = entityManager;
     }
@@ -216,33 +216,37 @@ public class PromotionService {
     }
 
     private void publishPromotionEvent(PromotionEntity promotion, String eventType) {
-        try {
-            Map<String, Object> event = Map.of(
-                "promotionId", promotion.getId().toString(),
-                "code", promotion.getCode(),
-                "type", promotion.getPromotionType().name(),
-                "status", promotion.getStatus().name(),
-                "eventType", eventType,
-                "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send(promotionEventsTopic, promotion.getCode(), event);
-        } catch (Exception e) {
-            LOG.warn("Failed to publish promotion event: {}", e.getMessage());
-        }
+        outboxService.createEvent(
+                "Promotion",
+                promotion.getId().toString(),
+                eventType,
+                Map.of(
+                        "promotionId", promotion.getId().toString(),
+                        "code", promotion.getCode(),
+                        "type", promotion.getPromotionType().name(),
+                        "status", promotion.getStatus().name(),
+                        "eventType", eventType,
+                        "timestamp", LocalDateTime.now().toString()
+                ),
+                null,
+                promotionEventsTopic
+        );
     }
 
     private void publishRewardEvent(RewardEntity reward) {
-        try {
-            Map<String, Object> event = Map.of(
-                "rewardId", reward.getId().toString(),
-                "accountId", reward.getAccountId(),
-                "amount", reward.getAmount().toString(),
-                "status", reward.getStatus().name(),
-                "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send(promotionEventsTopic, reward.getAccountId(), event);
-        } catch (Exception e) {
-            LOG.warn("Failed to publish reward event: {}", e.getMessage());
-        }
+        outboxService.createEvent(
+                "Reward",
+                reward.getId().toString(),
+                "RewardAwarded",
+                Map.of(
+                        "rewardId", reward.getId().toString(),
+                        "accountId", reward.getAccountId(),
+                        "amount", reward.getAmount().toString(),
+                        "status", reward.getStatus().name(),
+                        "timestamp", LocalDateTime.now().toString()
+                ),
+                null,
+                promotionEventsTopic
+        );
     }
 }

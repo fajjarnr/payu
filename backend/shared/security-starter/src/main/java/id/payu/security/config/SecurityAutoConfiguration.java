@@ -113,9 +113,15 @@ public class SecurityAutoConfiguration {
     @ConditionalOnBean(name = "kafkaTemplate")
     public AuditLogPublisher auditLogPublisher(
             org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate,
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
-        log.info("Initializing Audit Log Publisher");
-        return new AuditLogPublisher(properties, kafkaTemplate, objectMapper);
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+            org.springframework.beans.factory.ObjectProvider<id.payu.outbox.service.OutboxService> outboxServiceProvider) {
+        log.info("Initializing Audit Log Publisher with optional OutboxService");
+        return new AuditLogPublisher(
+                properties,
+                kafkaTemplate,
+                objectMapper,
+                outboxServiceProvider.getIfAvailable()
+        );
     }
 
     /**

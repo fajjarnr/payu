@@ -4,8 +4,8 @@ import id.payu.transaction.adapter.persistence.repository.TransactionJpaReposito
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
+import id.payu.outbox.service.OutboxService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,21 +31,19 @@ import id.payu.transaction.domain.model.TransactionStatus;
 public class PaymentExpiryScheduler {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaymentExpiryScheduler.class);
 
-
-
     private final TransactionJpaRepository transactionRepository;
     private final VirtualAccountRepository virtualAccountRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxService outboxService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
     public PaymentExpiryScheduler(TransactionJpaRepository transactionRepository,
                                    VirtualAccountRepository virtualAccountRepository,
-                                   KafkaTemplate<String, String> kafkaTemplate,
+                                   OutboxService outboxService,
                                    ObjectMapper objectMapper) {
         this.transactionRepository = transactionRepository;
         this.virtualAccountRepository = virtualAccountRepository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.objectMapper = objectMapper;
         // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -55,7 +53,7 @@ public class PaymentExpiryScheduler {
     }
 
     private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
-    private static final String PAYMENT_EXPIRED_TOPIC = "payment.expired";
+    private static final String PAYMENT_EXPIRED_TOPIC = "payu.transaction.payment-expired.v1";
 
     /**
      * Expire pending transactions that have passed their expiresAt timestamp.
@@ -137,8 +135,14 @@ public class PaymentExpiryScheduler {
             event.put("expiredAt", Instant.now().toString());
             event.put("reason", "Payment timeout");
 
-            String message = mapToJson(event);
-            kafkaTemplate.send(PAYMENT_EXPIRED_TOPIC, tx.getId().toString(), message);
+            outboxService.createEvent(
+                "Transaction",
+                tx.getId().toString(),
+                "PaymentExpired",
+                event,
+                null,
+                PAYMENT_EXPIRED_TOPIC
+            );
 
             log.info("Published payment.expired event for transaction {}", tx.getId());
         } catch (Exception e) {
@@ -161,22 +165,18 @@ public class PaymentExpiryScheduler {
             event.put("externalId", va.getExternalId());
             event.put("expiredAt", Instant.now().toString());
 
-            String message = mapToJson(event);
-            kafkaTemplate.send(PAYMENT_EXPIRED_TOPIC, va.getId().toString(), message);
+            outboxService.createEvent(
+                "VirtualAccount",
+                va.getId().toString(),
+                "VirtualAccountExpired",
+                event,
+                null,
+                PAYMENT_EXPIRED_TOPIC
+            );
 
             log.info("Published va.expired event for VA {}", va.getVaNumber());
         } catch (Exception e) {
             log.error("Failed to publish va.expired event for VA {}", va.getVaNumber(), e);
-        }
-    }
-
-    private String mapToJson(Map<String, Object> map) {
-        // BUG-LOGIC-004 FIX: Use Jackson ObjectMapper instead of manual StringBuilder
-        try {
-            return objectMapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize event to JSON", e);
-            return "{}";
         }
     }
 }

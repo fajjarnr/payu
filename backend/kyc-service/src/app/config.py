@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     kafka_topic_kyc_verified: str = "payu.kyc.verified"
     kafka_topic_kyc_failed: str = "payu.kyc.failed"
 
+    # Artemis / STOMP
+    artemis_host: str = os.getenv("ARTEMIS_HOST", "localhost")
+    artemis_stomp_port: int = int(os.getenv("ARTEMIS_STOMP_PORT", "61613"))
+    artemis_username: str = os.getenv("ARTEMIS_USERNAME", "admin")
+    artemis_password: str = os.getenv("ARTEMIS_PASSWORD", "admin")
+    artemis_kyc_queue: str = "payu.kyc.commands"
+
     # Dukcapil Simulator
     dukcapil_url: str = os.getenv("DUKCAPIL_URL", "http://localhost:8091/api/v1")
 

@@ -8,7 +8,7 @@ import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +26,17 @@ public class LoyaltyPointsService {
     private static final Logger LOG = LoggerFactory.getLogger(LoyaltyPointsService.class);
 
     private final LoyaltyPointsRepository loyaltyPointsRepository;
-    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final OutboxService outboxService;
     private final String promotionEventsTopic;
     private final jakarta.persistence.EntityManager entityManager;
 
     public LoyaltyPointsService(
             LoyaltyPointsRepository loyaltyPointsRepository,
-            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            OutboxService outboxService,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.loyalty-event.v1}") String promotionEventsTopic,
             jakarta.persistence.EntityManager entityManager) {
         this.loyaltyPointsRepository = loyaltyPointsRepository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
         this.entityManager = entityManager;
     }
@@ -211,18 +211,20 @@ public class LoyaltyPointsService {
     }
 
     private void publishLoyaltyEvent(LoyaltyPointsEntity loyaltyPoints) {
-        try {
-            Map<String, Object> event = Map.of(
-                "pointsId", loyaltyPoints.getId().toString(),
-                "accountId", loyaltyPoints.getAccountId(),
-                "points", loyaltyPoints.getPoints(),
-                "balanceAfter", loyaltyPoints.getBalanceAfter(),
-                "transactionType", loyaltyPoints.getTransactionType().name(),
-                "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send(promotionEventsTopic, loyaltyPoints.getAccountId(), event);
-        } catch (Exception e) {
-            LOG.warn("Failed to publish loyalty event: {}", e.getMessage());
-        }
+        outboxService.createEvent(
+                "LoyaltyPoints",
+                loyaltyPoints.getId().toString(),
+                loyaltyPoints.getTransactionType().name(),
+                Map.of(
+                        "pointsId", loyaltyPoints.getId().toString(),
+                        "accountId", loyaltyPoints.getAccountId(),
+                        "points", loyaltyPoints.getPoints(),
+                        "balanceAfter", loyaltyPoints.getBalanceAfter(),
+                        "transactionType", loyaltyPoints.getTransactionType().name(),
+                        "timestamp", LocalDateTime.now().toString()
+                ),
+                null,
+                promotionEventsTopic
+        );
     }
 }

@@ -35,6 +35,10 @@ quarkus:
         - service.version=1.0.0
   banner:
     path: banner.txt
+  artemis:
+    url: ${ARTEMIS_URL:tcp://localhost:61616}
+    username: ${ARTEMIS_USERNAME:admin}
+    password: ${ARTEMIS_PASSWORD:admin}
   datasource:
     db-kind: postgresql
     username: ${DB_USERNAME:postgres}
@@ -99,32 +103,32 @@ mp:
     incoming:
       wallet-events:
         connector: smallrye-kafka
-        topic: wallet.balance.changed
+        topic: payu.wallet.balance-changed.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: wallet.balance.changed.dlq
+        dead-letter-queue.topic: payu.wallet.balance-changed.v1.dlq
       transaction-events:
         connector: smallrye-kafka
-        topic: transaction.completed
+        topic: payu.transaction.completed.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: transaction.completed.dlq
+        dead-letter-queue.topic: payu.transaction.completed.v1.dlq
       payment-events:
         connector: smallrye-kafka
-        topic: payment-events
+        topic: payu.transaction.payment-expired.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: payment-events.dlq
+        dead-letter-queue.topic: payu.transaction.payment-expired.v1.dlq
       split-bill-events:
         connector: smallrye-kafka
-        topic: split-bill.events
+        topic: payu.wallet.split-bill-event.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: split-bill.events.dlq
+        dead-letter-queue.topic: payu.wallet.split-bill-event.v1.dlq
       kyc-verified-events:
         connector: smallrye-kafka
         topic: payu.kyc.verified

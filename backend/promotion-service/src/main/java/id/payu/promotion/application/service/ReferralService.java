@@ -12,7 +12,7 @@ import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,19 +36,19 @@ public class ReferralService {
     private final ReferralRepository referralRepository;
     private final RewardRepository rewardRepository;
     private final LoyaltyPointsRepository loyaltyPointsRepository;
-    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final OutboxService outboxService;
     private final String promotionEventsTopic;
 
     public ReferralService(
             ReferralRepository referralRepository,
             RewardRepository rewardRepository,
             LoyaltyPointsRepository loyaltyPointsRepository,
-            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+            OutboxService outboxService,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.referral-event.v1}") String promotionEventsTopic) {
         this.referralRepository = referralRepository;
         this.rewardRepository = rewardRepository;
         this.loyaltyPointsRepository = loyaltyPointsRepository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
     }
 
@@ -199,17 +199,19 @@ public class ReferralService {
     }
 
     private void publishReferralEvent(ReferralEntity referral, String eventType) {
-        try {
-            Map<String, Object> event = Map.of(
-                "referralId", referral.getId().toString(),
-                "referralCode", referral.getReferralCode(),
-                "status", referral.getStatus().name(),
-                "eventType", eventType,
-                "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send(promotionEventsTopic, referral.getReferralCode(), event);
-        } catch (Exception e) {
-            LOG.warn("Failed to publish referral event: {}", e.getMessage());
-        }
+        outboxService.createEvent(
+                "Referral",
+                referral.getId().toString(),
+                eventType,
+                Map.of(
+                        "referralId", referral.getId().toString(),
+                        "referralCode", referral.getReferralCode(),
+                        "status", referral.getStatus().name(),
+                        "eventType", eventType,
+                        "timestamp", LocalDateTime.now().toString()
+                ),
+                null,
+                promotionEventsTopic
+        );
     }
 }

@@ -43,6 +43,9 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionEventPort eventPort;
 
+    @Mock
+    id.payu.jms.publisher.JmsMessagePublisher jmsMessagePublisher;
+
     private SubscriptionPlanEntity samplePlan;
     private UUID planId;
     private UUID subscriptionId;

@@ -58,6 +58,13 @@
             <artifactId>quarkus-messaging-kafka</artifactId>
         </dependency>
 
+        <!-- ActiveMQ Artemis JMS -->
+        <dependency>
+            <groupId>io.quarkiverse.artemis</groupId>
+            <artifactId>quarkus-artemis-jms</artifactId>
+            <version>3.14.1</version>
+        </dependency>
+
         <!-- Hibernate with Panache (PostgreSQL) -->
         <dependency>
             <groupId>io.quarkus</groupId>

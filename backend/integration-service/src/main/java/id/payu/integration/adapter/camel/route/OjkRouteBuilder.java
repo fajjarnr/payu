@@ -223,6 +223,6 @@ public class OjkRouteBuilder extends RouteBuilder {
                 ));
             })
             .marshal().json()
-            .to("kafka:ojk-reporting-errors");
+            .to("kafka:payu.integration.ojk-errors.v1");
     }
 }

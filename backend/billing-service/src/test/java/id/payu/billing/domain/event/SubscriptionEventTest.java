@@ -2,6 +2,8 @@ package id.payu.billing.domain.event;
 
 import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
 import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.SubscriptionStatus;
+import id.payu.billing.domain.model.ChargeStatus;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -147,7 +149,7 @@ class SubscriptionEventTest {
         sub.setAccountId("acc-123456");
         sub.setPlanId(UUID.randomUUID());
         sub.setPartnerId("partner-nobar");
-        sub.setStatus(SubscriptionEntity.SubscriptionStatus.ACTIVE);
+        sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setCurrentPrice(new BigDecimal("99000"));
         sub.setCurrency("IDR");
         sub.setExternalReferenceId("ext-ref-001");
@@ -169,7 +171,7 @@ class SubscriptionEventTest {
         if (succeeded) {
             charge.markSucceeded();
         } else {
-            charge.setStatus(SubscriptionChargeEntity.ChargeStatus.FAILED);
+            charge.setStatus(ChargeStatus.FAILED);
         }
 
         return charge;

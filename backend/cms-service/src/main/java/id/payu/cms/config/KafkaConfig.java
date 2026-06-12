@@ -78,13 +78,4 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
-    @Bean
-    public ContentEventPublisher contentEventPublisher(KafkaTemplate<String, String> kafkaTemplate) {
-        return new ContentEventPublisher(
-            kafkaTemplate,
-            contentPublishedTopic,
-            contentUpdatedTopic,
-            contentArchivedTopic
-        );
-    }
 }

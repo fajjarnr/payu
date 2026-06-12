@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +46,7 @@ public class MerchantService {
     private final MerchantQrPaymentRepository qrPaymentRepository;
     private final PartnerRepository partnerRepository;
     private final WebhookDispatcherService webhookDispatcher;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
@@ -56,13 +56,13 @@ public class MerchantService {
                            MerchantQrPaymentRepository qrPaymentRepository,
                            PartnerRepository partnerRepository,
                            WebhookDispatcherService webhookDispatcher,
-                           KafkaTemplate<String, String> kafkaTemplate,
+                           OutboxService outboxService,
                            ObjectMapper objectMapper) {
         this.merchantRepository = merchantRepository;
         this.qrPaymentRepository = qrPaymentRepository;
         this.partnerRepository = partnerRepository;
         this.webhookDispatcher = webhookDispatcher;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.objectMapper = objectMapper;
         // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -323,8 +323,15 @@ public class MerchantService {
             event.put("status", status);
             event.put("settledAt", LocalDateTime.now().toString());
 
-            String message = mapToJson(event);
-            kafkaTemplate.send("merchant.settlements", qrPayment.getReferenceId(), message);
+            // MSG-009: Publish via outbox for transactional atomicity
+            outboxService.createEvent(
+                    "MerchantSettlement",
+                    qrPayment.getReferenceId(),
+                    "MerchantSettlement",
+                    event,
+                    null,
+                    "payu.partner.merchant-settlement.v1"
+            );
 
             log.info("Published merchant.settlement event for {}", qrPayment.getReferenceId());
         } catch (Exception e) {

@@ -12,6 +12,9 @@ alembic==1.14.0
 # Kafka
 aiokafka==0.11.0
 
+# Artemis / STOMP
+stomp.py==8.1.0
+
 # OCR
 paddlepaddle==3.0.0
 paddleocr==2.9.0

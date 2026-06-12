@@ -110,6 +110,12 @@
             <artifactId>security-starter</artifactId>
         </dependency>
 
+        <!-- PayU Outbox Starter — Transactional Outbox Pattern (MSG-007) -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>outbox-starter</artifactId>
+        </dependency>
+
         <!-- PayU API Commons -->
         <dependency>
             <groupId>id.payu.shared</groupId>

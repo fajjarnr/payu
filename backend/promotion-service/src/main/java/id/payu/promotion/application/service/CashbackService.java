@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,19 +36,19 @@ public class CashbackService {
 
     private final CashbackRepository cashbackRepository;
     private final CashbackSagaOrchestrator sagaOrchestrator;
-    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final OutboxService outboxService;
     private final String promotionEventsTopic;
     private final MeterRegistry meterRegistry;
 
     public CashbackService(
             CashbackRepository cashbackRepository,
             CashbackSagaOrchestrator sagaOrchestrator,
-            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            OutboxService outboxService,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.cashback-event.v1}") String promotionEventsTopic,
             @Autowired(required = false) MeterRegistry meterRegistry) {
         this.cashbackRepository = cashbackRepository;
         this.sagaOrchestrator = sagaOrchestrator;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
         this.meterRegistry = meterRegistry;
     }
@@ -135,26 +135,22 @@ public class CashbackService {
         );
     }
 
-    // BUG-BE-073: Added metric counter for Kafka publish failures to enable alerting
+    // MSG-008: Migrated to OutboxService for transactional atomicity
     private void publishCashbackEvent(CashbackEntity cashback) {
-        try {
-            Map<String, Object> event = Map.of(
-                "cashbackId", cashback.getId().toString(),
-                "accountId", cashback.getAccountId(),
-                "amount", cashback.getCashbackAmount().toString(),
-                "status", cashback.getStatus().name(),
-                "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send(promotionEventsTopic, cashback.getAccountId(), event);
-        } catch (Exception e) {
-            LOG.error("Failed to publish cashback event for cashback={}: {}",
-                    cashback.getId(), e.getMessage(), e);
-            if (meterRegistry != null) {
-                meterRegistry.counter("promotion.kafka.publish.failure",
-                        "eventType", "cashback",
-                        "status", cashback.getStatus().name()).increment();
-            }
-        }
+        outboxService.createEvent(
+                "Cashback",
+                cashback.getId().toString(),
+                "CashbackCreated",
+                Map.of(
+                        "cashbackId", cashback.getId().toString(),
+                        "accountId", cashback.getAccountId(),
+                        "amount", cashback.getCashbackAmount().toString(),
+                        "status", cashback.getStatus().name(),
+                        "timestamp", LocalDateTime.now().toString()
+                ),
+                null,
+                promotionEventsTopic
+        );
     }
 
     /**

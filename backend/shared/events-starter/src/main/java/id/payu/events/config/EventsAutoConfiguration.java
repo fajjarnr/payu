@@ -81,16 +81,44 @@ public class EventsAutoConfiguration {
     }
 
     /**
-     * Configuration for Kafka-based CloudEvent publishing.
-     * Only active when Kafka is on the classpath and enabled.
+     * Configuration for Kafka-based CloudEvent publishing and consuming.
+     * Only active when Kafka is on the classpath.
      */
     @Configuration
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
-    @ConditionalOnProperty(prefix = "payu.events.kafka", name = "enabled", havingValue = "true")
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(org.springframework.kafka.core.KafkaTemplate.class)
     static class KafkaCloudEventsConfiguration {
 
         public KafkaCloudEventsConfiguration() {
             log.info("Kafka CloudEvents support enabled");
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public org.springframework.kafka.listener.CommonErrorHandler kafkaErrorHandler(
+                org.springframework.kafka.core.KafkaTemplate<Object, Object> kafkaTemplate) {
+            
+            log.info("Configuring DefaultErrorHandler with DeadLetterPublishingRecoverer (DLQ)");
+            
+            // Send failed records to <topic>.dlq
+            org.springframework.kafka.listener.DeadLetterPublishingRecoverer recoverer =
+                    new org.springframework.kafka.listener.DeadLetterPublishingRecoverer(kafkaTemplate,
+                            (dbRecord, ex) -> {
+                                String dlqTopic = dbRecord.topic() + ".dlq";
+                                log.warn("Forwarding failed record to DLQ: topic={}, partition={}, offset={}, exception={}",
+                                        dlqTopic, dbRecord.partition(), dbRecord.offset(), ex.getMessage());
+                                return new org.apache.kafka.common.TopicPartition(dlqTopic, -1);
+                            });
+            
+            // 3 retries (4 total attempts), 1s fixed delay
+            org.springframework.util.backoff.FixedBackOff backOff =
+                    new org.springframework.util.backoff.FixedBackOff(1000L, 3L);
+            
+            org.springframework.kafka.listener.DefaultErrorHandler errorHandler =
+                    new org.springframework.kafka.listener.DefaultErrorHandler(recoverer, backOff);
+            
+            errorHandler.setCommitRecovered(true);
+            return errorHandler;
         }
     }
 

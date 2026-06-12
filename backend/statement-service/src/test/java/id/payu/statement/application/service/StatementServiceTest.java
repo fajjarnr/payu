@@ -18,7 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ class StatementServiceTest {
     private StatementRepository statementRepository;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private OutboxService outboxService;
 
     @Mock
     private WalletServiceClient walletServiceClient;

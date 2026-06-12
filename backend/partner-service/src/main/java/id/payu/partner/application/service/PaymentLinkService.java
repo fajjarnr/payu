@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,16 +35,16 @@ public class PaymentLinkService {
     private final PaymentLinkRepository paymentLinkRepository;
     private final PartnerRepository partnerRepository;
     private final WebhookDispatcherService webhookDispatcher;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxService outboxService;
 
     public PaymentLinkService(PaymentLinkRepository paymentLinkRepository,
                               PartnerRepository partnerRepository,
                               WebhookDispatcherService webhookDispatcher,
-                              KafkaTemplate<String, String> kafkaTemplate) {
+                              OutboxService outboxService) {
         this.paymentLinkRepository = paymentLinkRepository;
         this.partnerRepository = partnerRepository;
         this.webhookDispatcher = webhookDispatcher;
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxService = outboxService;
     }
 
     /**
@@ -207,10 +207,15 @@ public class PaymentLinkService {
 
             webhookDispatcher.dispatch("payment_link.paid", payload);
 
-            // Also publish to Kafka for other services
-            kafkaTemplate.send("payment.link.events",
-                paymentLink.getSlug(),
-                "{\"type\":\"payment_link.paid\",\"slug\":\"" + paymentLink.getSlug() + "\"}");
+            // MSG-009: Publish to Kafka via outbox for transactional atomicity
+            outboxService.createEvent(
+                    "PaymentLink",
+                    paymentLink.getSlug(),
+                    "PaymentLinkPaid",
+                    payload,
+                    null,
+                    "payu.partner.payment-link-event.v1"
+            );
 
             log.info("Dispatched payment_link.paid event for link {}", paymentLink.getId());
         } catch (Exception e) {
@@ -236,10 +241,15 @@ public class PaymentLinkService {
 
             webhookDispatcher.dispatch("payment_link.expired", payload);
 
-            // Also publish to Kafka for other services
-            kafkaTemplate.send("payment.link.events",
-                paymentLink.getSlug(),
-                "{\"type\":\"payment_link.expired\",\"slug\":\"" + paymentLink.getSlug() + "\"}");
+            // MSG-009: Publish to Kafka via outbox for transactional atomicity
+            outboxService.createEvent(
+                    "PaymentLink",
+                    paymentLink.getSlug(),
+                    "PaymentLinkExpired",
+                    payload,
+                    null,
+                    "payu.partner.payment-link-event.v1"
+            );
 
             log.info("Dispatched payment_link.expired event for link {}", paymentLink.getId());
         } catch (Exception e) {

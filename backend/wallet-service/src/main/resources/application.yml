@@ -80,9 +80,11 @@ spring:
     consumer:
       group-id: wallet-service-group
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"
         spring.json.type.mapping: "id.payu.fx.adapter.messaging.FxRatesUpdatedEvent:id.payu.wallet.adapter.messaging.fx.FxRatesUpdatedEvent"

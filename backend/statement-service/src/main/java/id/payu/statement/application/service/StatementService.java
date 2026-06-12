@@ -18,8 +18,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +50,7 @@ import id.payu.statement.domain.entity.StatementStatus;
 public class StatementService {
 
     private final StatementRepository statementRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxService outboxService;
     private final WalletServiceClient walletServiceClient;
     private final TransactionServiceClient transactionServiceClient;
     private final id.payu.statement.adapter.storage.S3StorageAdapter s3StorageAdapter;
@@ -625,7 +625,14 @@ public class StatementService {
             .createdAt(LocalDateTime.now())
             .build();
 
-        kafkaTemplate.send("payu.statements.generated", event);
+        outboxService.createEventFromObject(
+            "Statement",
+            statement.getId().toString(),
+            "StatementGenerated",
+            event,
+            null,
+            "payu.statement.generated.v1"
+        );
     }
 
     private StatementResponse mapToResponse(StatementEntity statement) {

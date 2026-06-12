@@ -338,8 +338,48 @@ public class OutboxPublisher {
         String topic = Optional.ofNullable(event.getDestinationTopic()).orElse(defaultTopic);
 
         try {
-            // Serialize payload to JSON
-            String payload = serializePayload(event.getPayload());
+            Map<String, Object> payloadMap = event.getPayload();
+            String payloadJson;
+            String specVersion = "1.0";
+            String eventId = event.getId().toString();
+            String source = "/services/" + event.getAggregateType().toLowerCase() + "-service";
+            String eventType = event.getEventType();
+            String timeStr = java.time.OffsetDateTime.now().toString();
+
+            if (payloadMap != null && (payloadMap.containsKey("specversion") || payloadMap.containsKey("specVersion"))) {
+                // Already wrapped in CloudEvent
+                payloadJson = serializePayload(payloadMap);
+                if (payloadMap.containsKey("specversion")) {
+                    specVersion = String.valueOf(payloadMap.get("specversion"));
+                } else if (payloadMap.containsKey("specVersion")) {
+                    specVersion = String.valueOf(payloadMap.get("specVersion"));
+                }
+                if (payloadMap.get("id") != null) {
+                    eventId = String.valueOf(payloadMap.get("id"));
+                }
+                if (payloadMap.get("source") != null) {
+                    source = String.valueOf(payloadMap.get("source"));
+                }
+                if (payloadMap.get("type") != null) {
+                    eventType = String.valueOf(payloadMap.get("type"));
+                }
+                if (payloadMap.get("time") != null) {
+                    timeStr = String.valueOf(payloadMap.get("time"));
+                }
+            } else {
+                // Wrap in CloudEventEnvelope
+                id.payu.events.cloudevents.CloudEventEnvelope<Map<String, Object>> envelope =
+                        id.payu.events.cloudevents.CloudEventEnvelope.<Map<String, Object>>builder()
+                                .id(event.getId())
+                                .source(java.net.URI.create(source))
+                                .type(eventType)
+                                .subject(event.getAggregateId())
+                                .data(payloadMap)
+                                .time(java.time.OffsetDateTime.now())
+                                .build();
+                
+                payloadJson = OUTBOX_MAPPER.writeValueAsString(envelope);
+            }
 
             // Create Kafka record with event ID as key for ordering
             ProducerRecord<String, String> record = new ProducerRecord<>(
@@ -347,14 +387,21 @@ public class OutboxPublisher {
                     null, // partition (null for default partitioning)
                     event.getCreatedAt().toEpochMilli(),
                     event.getAggregateId(), // Use aggregate ID as key for ordering within aggregate
-                    payload
+                    payloadJson
             );
 
-            // Add headers
+            // Add standard outbox headers
             record.headers().add(new RecordHeader("eventId", event.getId().toString().getBytes(StandardCharsets.UTF_8)));
             record.headers().add(new RecordHeader("eventType", event.getEventType().getBytes(StandardCharsets.UTF_8)));
             record.headers().add(new RecordHeader("aggregateType", event.getAggregateType().getBytes(StandardCharsets.UTF_8)));
             record.headers().add(new RecordHeader("sequenceNum", event.getSequenceNum().toString().getBytes(StandardCharsets.UTF_8)));
+
+            // Add CloudEvents headers
+            record.headers().add(new RecordHeader("ce-specversion", specVersion.getBytes(StandardCharsets.UTF_8)));
+            record.headers().add(new RecordHeader("ce-id", eventId.getBytes(StandardCharsets.UTF_8)));
+            record.headers().add(new RecordHeader("ce-source", source.getBytes(StandardCharsets.UTF_8)));
+            record.headers().add(new RecordHeader("ce-type", eventType.getBytes(StandardCharsets.UTF_8)));
+            record.headers().add(new RecordHeader("ce-time", timeStr.getBytes(StandardCharsets.UTF_8)));
 
             // Add custom headers if present
             if (event.getHeaders() != null) {

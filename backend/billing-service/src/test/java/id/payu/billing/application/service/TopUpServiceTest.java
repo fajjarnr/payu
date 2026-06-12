@@ -2,6 +2,7 @@ package id.payu.billing.application.service;
 
 import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 import id.payu.billing.domain.model.BillerType;
+import id.payu.billing.domain.model.PaymentStatus;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
 import id.payu.billing.domain.port.out.BillerPort;
 import id.payu.billing.domain.port.out.PaymentEventPort;
@@ -84,7 +85,7 @@ class TopUpServiceTest {
             assertEquals(BillerType.GOPAY, payment.getBillerType());
             assertEquals("08123456789", payment.getCustomerId());
             assertEquals(new BigDecimal("100000"), payment.getAmount());
-            assertEquals(BillPaymentEntity.PaymentStatus.COMPLETED, payment.getStatus());
+            assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
             assertNotNull(payment.getReferenceNumber());
             assertTrue(payment.getReferenceNumber().startsWith("BILL"));
             
@@ -108,7 +109,7 @@ class TopUpServiceTest {
 
             assertNotNull(payment);
             assertEquals(BillerType.OVO, payment.getBillerType());
-            assertEquals(BillPaymentEntity.PaymentStatus.COMPLETED, payment.getStatus());
+            assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -128,7 +129,7 @@ class TopUpServiceTest {
 
             assertNotNull(payment);
             assertEquals(BillerType.DANA, payment.getBillerType());
-            assertEquals(BillPaymentEntity.PaymentStatus.COMPLETED, payment.getStatus());
+            assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -148,7 +149,7 @@ class TopUpServiceTest {
 
             assertNotNull(payment);
             assertEquals(BillerType.LINKAJA, payment.getBillerType());
-            assertEquals(BillPaymentEntity.PaymentStatus.COMPLETED, payment.getStatus());
+            assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -167,7 +168,7 @@ class TopUpServiceTest {
             BillPaymentEntity payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillPaymentEntity.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals(PaymentStatus.FAILED, payment.getStatus());
             assertEquals("Failed to reserve balance", payment.getFailureReason());
         }
 
@@ -187,7 +188,7 @@ class TopUpServiceTest {
             BillPaymentEntity payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillPaymentEntity.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals(PaymentStatus.FAILED, payment.getStatus());
             assertEquals("Top-up processing failed: Connection refused", payment.getFailureReason());
         }
 

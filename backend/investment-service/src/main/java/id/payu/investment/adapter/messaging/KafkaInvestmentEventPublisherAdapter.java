@@ -2,46 +2,67 @@ package id.payu.investment.adapter.messaging;
 
 import id.payu.investment.domain.port.out.InvestmentEventPublisherPort;
 import id.payu.investment.dto.InvestmentEvent;
+import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
+/**
+ * Outbox-based adapter for publishing investment events.
+ * <p>
+ * MSG-011: Migrated from KafkaTemplate to OutboxService
+ * for transactional atomicity between investment state changes and event publishing.
+ *
+ * @author PayU Digital Banking Platform
+ * @since 1.8.8
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaInvestmentEventPublisherAdapter implements InvestmentEventPublisherPort {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String TOPIC = "investment-events";
+    private final OutboxService outboxService;
+    private static final String TOPIC = "payu.investment.event.v1";
+    private static final String AGGREGATE_TYPE = "Investment";
 
     @Override
     public void publishInvestmentCreated(InvestmentEvent event) {
-        try {
-            kafkaTemplate.send(TOPIC, event);
-            log.info("Published investment created event: {}", event.id());
-        } catch (Exception e) {
-            log.error("Failed to publish investment created event", e);
-        }
+        log.info("Creating outbox event for investment created: {}", event.id());
+        outboxService.createEventFromObject(
+                AGGREGATE_TYPE,
+                event.id().toString(),
+                "InvestmentCreated",
+                event,
+                null,
+                TOPIC
+        );
     }
 
     @Override
     public void publishInvestmentCompleted(InvestmentEvent event) {
-        try {
-            kafkaTemplate.send(TOPIC, event);
-            log.info("Published investment completed event: {}", event.id());
-        } catch (Exception e) {
-            log.error("Failed to publish investment completed event", e);
-        }
+        log.info("Creating outbox event for investment completed: {}", event.id());
+        outboxService.createEventFromObject(
+                AGGREGATE_TYPE,
+                event.id().toString(),
+                "InvestmentCompleted",
+                event,
+                null,
+                TOPIC
+        );
     }
 
     @Override
     public void publishInvestmentFailed(InvestmentEvent event) {
-        try {
-            kafkaTemplate.send(TOPIC, event);
-            log.info("Published investment failed event: {}", event.id());
-        } catch (Exception e) {
-            log.error("Failed to publish investment failed event", e);
-        }
+        log.info("Creating outbox event for investment failed: {}", event.id());
+        outboxService.createEventFromObject(
+                AGGREGATE_TYPE,
+                event.id().toString(),
+                "InvestmentFailed",
+                event,
+                null,
+                TOPIC
+        );
     }
 }

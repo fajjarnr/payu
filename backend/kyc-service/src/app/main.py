@@ -20,6 +20,7 @@ from app.config import get_settings
 from app.api.v1 import kyc_router
 from app.api.responses import ApiResponse
 from app.database import init_db, close_db
+from app.messaging.artemis_consumer import ArtemisConsumerService
 
 configure_logging()
 logger = get_logger(__name__)
@@ -45,8 +46,13 @@ async def lifespan(app: FastAPI):
     await init_db()
     startup_logger.info("Database initialized")
 
+    artemis_consumer = ArtemisConsumerService()
+    artemis_consumer.start()
+    startup_logger.info("Artemis command consumer started")
+
     yield
 
+    artemis_consumer.stop()
     await close_db()
     startup_logger.info("Shutting down KYC Service")
 

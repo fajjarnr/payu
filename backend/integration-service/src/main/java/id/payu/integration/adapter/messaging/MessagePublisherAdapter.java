@@ -2,11 +2,14 @@ package id.payu.integration.adapter.messaging;
 
 import id.payu.integration.application.port.out.MessagePublisherPort;
 import id.payu.integration.domain.model.IntegrationMessage;
+import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Adapter for publishing messages to external systems.
@@ -17,25 +20,31 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class MessagePublisherAdapter implements MessagePublisherPort {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxService outboxService;
     private final RestTemplate restTemplate;
 
     @Override
     public void publishToKafka(String topic, IntegrationMessage message) {
-        log.debug("Publishing message {} to Kafka topic: {}", message.getMessageId(), topic);
+        log.debug("Publishing message {} to Kafka topic via Outbox: {}", message.getMessageId(), topic);
         try {
-            String payload = convertToJson(message);
-            kafkaTemplate.send(topic, message.getMessageId(), payload)
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            log.error("Failed to publish to Kafka: {}", ex.getMessage());
-                        } else {
-                            log.debug("Published to Kafka: {}", result.getRecordMetadata().topic());
-                        }
-                    });
+            Map<String, Object> payloadMap = new HashMap<>();
+            payloadMap.put("messageId", message.getMessageId());
+            payloadMap.put("type", message.getType());
+            payloadMap.put("status", message.getStatus());
+            payloadMap.put("payload", message.getTransformedPayload() != null ? message.getTransformedPayload() : message.getRawPayload());
+
+            outboxService.createEvent(
+                "IntegrationMessage",
+                message.getMessageId(),
+                message.getType() != null ? message.getType().name() : "IntegrationMessagePublished",
+                payloadMap,
+                null,
+                topic
+            );
+            log.info("Created outbox event for integration message: {}", message.getMessageId());
         } catch (Exception e) {
-            log.error("Error publishing to Kafka", e);
-            throw new MessagePublishException("Kafka publish failed", e);
+            log.error("Error publishing integration message to outbox", e);
+            throw new MessagePublishException("Outbox publish failed", e);
         }
     }
 
@@ -56,26 +65,6 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
             log.error("HTTP request failed", e);
             throw new MessagePublishException("HTTP request failed", e);
         }
-    }
-
-    private String convertToJson(IntegrationMessage message) {
-        // Simple JSON conversion - in production use Jackson
-        return String.format(
-            "{\"messageId\":\"%s\",\"type\":\"%s\",\"status\":\"%s\",\"payload\":\"%s\"}",
-            message.getMessageId(),
-            message.getType(),
-            message.getStatus(),
-            escapeJson(message.getTransformedPayload() != null ? message.getTransformedPayload() : message.getRawPayload())
-        );
-    }
-
-    private String escapeJson(String value) {
-        if (value == null) return "";
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 
     /**

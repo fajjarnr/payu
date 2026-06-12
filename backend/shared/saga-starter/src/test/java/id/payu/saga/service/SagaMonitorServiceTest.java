@@ -143,7 +143,7 @@ class SagaMonitorServiceTest {
 
             SagaMonitorService.SagaHealth health = monitorService.health();
 
-            assertThat(health.getStatus()).isEqualTo(SagaMonitorService.SagaHealth.SagaHealthStatus.DEGRADED);
+            assertThat(health.getStatus()).isEqualTo(SagaHealthStatus.DEGRADED);
         }
     }
 

@@ -40,10 +40,10 @@ public class SwiftRouteBuilder extends RouteBuilder {
             .to("direct:swift-error-handler")
             .handled(true);
 
-        // Route: SWIFT inbound from Kafka
-        from("kafka:swift-inbound?groupId=integration-service&autoOffsetReset=earliest")
-            .routeId("swift-inbound-kafka-route")
-            .log(LoggingLevel.INFO, "Received SWIFT message from Kafka")
+        // Route: SWIFT inbound from Artemis
+        from("jms:queue:payu.integration.commands")
+            .routeId("swift-inbound-jms-route")
+            .log(LoggingLevel.INFO, "Received SWIFT message from Artemis")
             .process(exchange -> {
                 String payload = exchange.getIn().getBody(String.class);
                 String messageType = swiftValidator.detectMessageType(payload);
@@ -96,7 +96,7 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 exchange.getIn().setBody(message);
             })
             .marshal().json(JsonLibrary.Jackson)
-            .to("kafka:swift-processed")
+            .to("kafka:payu.integration.swift-processed.v1")
             .process(exchange -> {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 messageProcessingService.markSent(message.getMessageId());
@@ -128,7 +128,7 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 }
                 log.error("SWIFT processing error for message {}: {}", messageId, exception.getMessage());
             })
-            .to("kafka:swift-errors");
+            .to("kafka:payu.integration.swift-errors.v1");
     }
 
     private MessageType parseMessageType(String messageTypeStr) {

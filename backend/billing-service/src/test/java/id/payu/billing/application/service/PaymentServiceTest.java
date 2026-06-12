@@ -2,6 +2,7 @@ package id.payu.billing.application.service;
 
 import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
 import id.payu.billing.domain.model.BillerType;
+import id.payu.billing.domain.model.PaymentStatus;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
 import id.payu.billing.domain.port.out.BillerPort;
 import id.payu.billing.domain.port.out.PaymentEventPort;
@@ -87,7 +88,7 @@ class PaymentServiceTest {
             assertEquals(BillerType.PLN, payment.getBillerType());
             assertEquals("12345678901234", payment.getCustomerId());
             assertEquals(new BigDecimal("100000"), payment.getAmount());
-            assertEquals(BillPaymentEntity.PaymentStatus.COMPLETED, payment.getStatus());
+            assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
             assertNotNull(payment.getReferenceNumber());
             
             verify(walletPort).reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class));
@@ -112,7 +113,7 @@ class PaymentServiceTest {
 
             // Then
             assertNotNull(payment);
-            assertEquals(BillPaymentEntity.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals(PaymentStatus.FAILED, payment.getStatus());
             assertEquals("Failed to reserve balance", payment.getFailureReason());
         }
 
@@ -135,7 +136,7 @@ class PaymentServiceTest {
 
             // Then
             assertNotNull(payment);
-            assertEquals(BillPaymentEntity.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals(PaymentStatus.FAILED, payment.getStatus());
             assertEquals("Payment processing failed: Connection refused", payment.getFailureReason());
         }
 

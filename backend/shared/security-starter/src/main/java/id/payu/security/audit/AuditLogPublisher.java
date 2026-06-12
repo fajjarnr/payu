@@ -2,13 +2,14 @@ package id.payu.security.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.security.config.SecurityProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
+import id.payu.outbox.service.OutboxService;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Map;
 
 /**
  * Publisher for audit events.
@@ -16,12 +17,28 @@ import java.util.UUID;
  * Bean creation managed by SecurityAutoConfiguration — do NOT add @Component.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class AuditLogPublisher {
 
     private final SecurityProperties properties;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final OutboxService outboxService;
+
+    public AuditLogPublisher(SecurityProperties properties,
+                             KafkaTemplate<String, String> kafkaTemplate,
+                             ObjectMapper objectMapper) {
+        this(properties, kafkaTemplate, objectMapper, null);
+    }
+
+    public AuditLogPublisher(SecurityProperties properties,
+                             KafkaTemplate<String, String> kafkaTemplate,
+                             ObjectMapper objectMapper,
+                             OutboxService outboxService) {
+        this.properties = properties;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+        this.outboxService = outboxService;
+    }
 
     @Async
     public void publish(AuditEvent event) {
@@ -46,21 +63,42 @@ public class AuditLogPublisher {
                 event.setTimestamp(Instant.now());
             }
 
-            // Serialize to JSON
-            String json = objectMapper.writeValueAsString(event);
+            // Standardize topic name to: payu.security.audit-log.v1
+            String topic = "payu.security.audit-log.v1";
 
-            // Send to Kafka
-            kafkaTemplate.send("audit-logs", event.getEventId(), json)
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            log.error("Failed to publish audit event: {}", event.getEventId(), ex);
-                        } else {
-                            log.debug("Published audit event: {}", event.getEventId());
-                        }
-                    });
+            if (outboxService != null) {
+                // Publish using outbox for transactional safety
+                @SuppressWarnings("unchecked")
+                Map<String, Object> payload = objectMapper.convertValue(event, Map.class);
+                
+                outboxService.createEvent(
+                    "AuditLog",
+                    event.getEventId(),
+                    event.getEventType(),
+                    payload,
+                    null,
+                    topic
+                );
+                log.debug("Created outbox event for audit: {}", event.getEventId());
+            } else if (kafkaTemplate != null) {
+                // Serialize to JSON
+                String json = objectMapper.writeValueAsString(event);
+
+                // Send to Kafka directly
+                kafkaTemplate.send(topic, event.getEventId(), json)
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Failed to publish audit event to Kafka: {}", event.getEventId(), ex);
+                            } else {
+                                log.debug("Published audit event directly to Kafka: {}", event.getEventId());
+                            }
+                        });
+            } else {
+                log.warn("No publisher available (both OutboxService and KafkaTemplate are null) for audit event: {}", event.getEventId());
+            }
 
         } catch (Exception e) {
-            log.error("Failed to serialize audit event", e);
+            log.error("Failed to publish/serialize audit event", e);
         }
     }
 

@@ -110,6 +110,26 @@ services:
       JAVA_OPTS: -Xmx512M -Xms256M
     depends_on:
       - kafka
+  artemis:
+    image: quay.io/artemiscloud/activemq-artemis-broker:artemis.2.37.0
+    container_name: payu-artemis
+    podman_networks:
+      - name: payu-network
+    environment:
+      AMQ_USER: admin
+      AMQ_PASSWORD: admin
+      AMQ_QUEUES: payu.notification.commands,payu.integration.commands,payu.billing.scheduled,payu.kyc.commands
+    ports:
+      - 61616:61616    # CORE
+      - 5672:5672      # AMQP
+      - 61613:61613    # STOMP
+      - 8161:8161      # Web Console
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8161 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   vault:
     image: docker.io/hashicorp/vault:2.0.0
     container_name: payu-vault

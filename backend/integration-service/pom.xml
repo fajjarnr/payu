@@ -100,6 +100,21 @@
             <artifactId>security-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>outbox-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>jms-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-jms-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>resilience-starter</artifactId>
