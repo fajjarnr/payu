@@ -1,0 +1,77 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: payu-onprem-sso
+  namespace: payu
+  labels:
+    app: payu-onprem-sso
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: payu-onprem-sso
+        app: payu-onprem-sso
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+            bootOrder: 2
+          - disk:
+              bus: virtio
+            name: oemdrv-disk
+          - cdrom:
+              bus: sata
+            name: installer-cd
+            bootOrder: 1
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - masquerade: {}
+            name: default
+        resources:
+          requests:
+            memory: 4Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: payu-onprem-sso-disk
+        name: rootdisk
+      - persistentVolumeClaim:
+          claimName: rhel-8-10
+        name: installer-cd
+      - persistentVolumeClaim:
+          claimName: payu-onprem-sso-kickstart
+        name: oemdrv-disk
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: cloud-user
+            ssh_authorized_keys:
+              - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB/AdE9d3+IZhtysBTVZc10rkcgP4oJwTy0kkCuJ7LZM zfajart@gmail.com
+            chpasswd:
+              list: |
+                cloud-user:password
+              expire: False
+            runcmd:
+              - echo "VM launched successfully"
+        name: cloudinitdisk
+  dataVolumeTemplates:
+  - metadata:
+      name: payu-onprem-sso-disk
+    spec:
+      source:
+        blank: {}
+      storage:
+        resources:
+          requests:
+            storage: 20Gi
+        storageClassName: ocs-storagecluster-ceph-rbd-virtualization

@@ -1,0 +1,16 @@
+# Example configuration for Hosted Cluster Infrastructure
+# Copy this file to terraform.tfvars and customize before running terraform apply
+
+# The identifier of the hosted cluster infrastructure
+infra_id = "payu-dev"
+
+# The AWS region where the OIDC bucket and IAM roles are managed
+aws_region = "us-east-1"
+
+# Resource tags applied to all generated resources
+tags = {
+  "app.kubernetes.io/part-of" = "payu"
+  "environment"               = "dev"
+  "cost-center"               = "platform-engineering"
+  "owner"                     = "payu-team"
+}

@@ -32,7 +32,16 @@
 | VPC CIDR | `10.0.0.0/16` | `10.0.0.0/16` (shared) | OK |
 | clusterNetwork | `10.132.0.0/14` | `10.136.0.0/14` | **NO** |
 | serviceNetwork | `172.31.0.0/16` | `172.32.0.0/16` | **NO** |
-| machineNetwork | `10.0.0.0/16` | `10.0.0.0/16` | Shared VPC |
+| machineNetwork | `10.0.0.0/16` | `10.0.0.0/16` | Shared VPC (NOT Recommended) |
+
+> [!WARNING]
+> **Shared VPC Co-existence for Multiple Hosted Clusters is NOT Recommended**:
+> Running multiple hosted clusters (e.g. `payu-onprem`, `payu-prod`, `payu-dev`) inside the exact same shared VPC subnets is strongly discouraged for production.
+> * **AWS API Throttling**: Constant status checks by multiple cluster controllers (AWS Cloud Provider, VPC CNI, EBS CSI) trigger AWS API rate limits, causing administrative command hangs and reconciliation timeouts.
+> * **Subnet Tagging Collisions**: Cloud providers auto-discover and override tags (`kubernetes.io/cluster/<cluster-id> = shared`) on the shared subnets, causing route and load balancer conflicts.
+> * **DNS Cache Contention**: DNS query overload on the VPC resolver (`10.0.0.2`) leads to negative-cache lookup failures.
+> 
+> *Best Practice*: Deploy each hosted cluster in its own dedicated VPC to isolate API calls, subnet tags, and security boundaries.
 
 > **Critical**: `10.133.0.0/14` == `10.132.0.0/14` (same CIDR). Always verify with bitwise AND.
 
@@ -48,7 +57,7 @@
 | Best Practice | Status | Remarks |
 |:--------------|:-------|:--------|
 | CNI selected | DONE | Cilium 1.19+ (`networkType: Other`) |
-| Non-overlapping CIDRs | DONE | Verified |
+| Non-overlapping CIDRs | DONE | Verified (Shared VPC is NOT recommended for multi-cluster) |
 | Min `/25` for single-AZ machine CIDR | DONE | `10.0.0.0/16` |
 | DNS hostnames + support enabled | DONE | HCP CLI auto-enables |
 | Separate public/private subnets | DONE | HCP CLI creates both |
