@@ -1,0 +1,33 @@
+apiVersion: ocs.openshift.io/v1
+kind: StorageCluster
+metadata:
+  name: ocs-storagecluster
+  namespace: openshift-storage
+spec:
+  manageNodes: false
+  nodeSelector:
+    node-role.kubernetes.io/odf: ""
+  storageDeviceSets:
+  - name: ocs-deviceset-gp3
+    count: 1
+    replica: 1 # Set to 1 for lab environments with limited nodes, or 3 for standard HA
+    resources:
+      limits:
+        cpu: "2"
+        memory: "5Gi"
+      requests:
+        cpu: "1"
+        memory: "5Gi"
+    dataPVCTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: gp3-csi
+        volumeMode: Block
+  multiCloudGateway:
+    reclaimPolicy: Delete
+  # Enables single-node or flexible replica layout for labs
+  flexibleReplica: true

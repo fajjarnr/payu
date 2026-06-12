@@ -1,0 +1,10 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: payu-onprem-backup
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - payu-onprem
+  storageLocation: default
+  ttl: 720h0m0s

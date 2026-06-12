@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::787842753050:oidc-provider/oidc-storage-payu-onprem-787842753050.s3.us-east-1.amazonaws.com/payu-onprem"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringLike": {
+          "oidc-storage-payu-onprem-787842753050.s3.us-east-1.amazonaws.com/payu-onprem:sub": "system:serviceaccount:*:*"
+        }
+      }
+    }
+  ]
+}

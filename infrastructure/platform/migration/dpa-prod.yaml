@@ -1,0 +1,28 @@
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: payu-dpa
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+      - aws
+      - openshift
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+  backupImages: true
+  backupLocations:
+  - velero:
+      config:
+        profile: default
+        region: us-east-1
+      credential:
+        key: credentials
+        name: cloud-credentials
+      default: true
+      objectStorage:
+        bucket: payu-migration-backup-787842753050
+        prefix: backups
+      provider: aws

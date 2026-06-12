@@ -1,0 +1,12 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: payu-prod-restore
+  namespace: openshift-adp
+spec:
+  backupName: payu-onprem-backup
+  includedNamespaces:
+  - payu-onprem
+  namespaceMapping:
+    payu-onprem: payu-prod
+  restorePVs: true
