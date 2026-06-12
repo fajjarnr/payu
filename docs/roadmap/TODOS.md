@@ -14,8 +14,8 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 (all resolved) |
-| **Open P1s** | 0 (all resolved) |
-| **Open P2s** | 1 |
+| **Open P1s** | 11 |
+| **Open P2s** | 12 |
 | **Last Audit** | June 10, 2026 — All 12 production readiness audit items resolved (2 batches) |
 | **Production Score** | 99/100 |
 
@@ -63,6 +63,50 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
   * **`integration-service`**: Integrasi dengan Core Banking luar via SWIFT/ISO 20022 atau ESB perbankan tradisional.
   * **Point-to-Point Command Queue**: Pengiriman perintah eksekusi tunggal seperti trigger email/SMS di `notification-service` atau trigger verifikasi KYC di `kyc-service`.
   * **Scheduled/Delayed Transactions**: Penjadwalan transaksi terjadwal atau delayed billing yang membutuhkan pengiriman tertunda secara native.
+
+---
+
+## ✉️ Messaging Infrastructure — Task Tracker
+
+### Category B: Outbox Migrations (P1 - Security/Atomicity)
+- [ ] MSG-007: Update `account-service` `KafkaUserEventPublisherAdapter`
+- [ ] MSG-008: Update `promotion-service` notification adapter + 4 services
+- [ ] MSG-009: Update `partner-service` `PaymentLinkService` & `MerchantService`
+- [ ] MSG-010: Update `cms-service` `ContentEventPublisher`
+- [ ] MSG-011: Update `investment-service` `KafkaInvestmentEventPublisherAdapter`
+- [ ] MSG-012: Update `fx-service` `FxRateEventPublisher`
+- [ ] MSG-013: Update `statement-service` `StatementEventPublisher`
+- [ ] MSG-014: Update `billing-service` `BillingEventPublisher`
+- [ ] MSG-015: Update `transaction-service` `PaymentExpiryScheduler`
+- [ ] MSG-016: Update `integration-service` `BIFastTransferService` & `SnapTransferService` and `security-starter` `AuditLogPublisher` → `outbox-starter`
+- [ ] MSG-017: `integration-service` `MessagePublisherAdapter` → `outbox-starter`
+
+### Category A: Artemis Infrastructure (P2)
+- [ ] MSG-001: Create `shared/jms-starter`
+- [ ] MSG-002: Setup Artemis in Podman Compose
+- [ ] MSG-003: Migrate `integration-service` → Artemis
+- [ ] MSG-004: Implement Artemis in `notification-service`
+- [ ] MSG-005: Implement Artemis delayed delivery in `billing-service`
+- [ ] MSG-006: Implement Artemis command queue in `kyc-service`
+
+### Category C: Topic Naming (P2)
+- [ ] MSG-018: Standardize all topic names
+
+### Category D: DLQ Strategy (P2)
+- [ ] MSG-019: Implement DLQ in `events-starter`/`outbox-starter`
+- [ ] MSG-020: Configure DLQ per service consumer
+
+### Category E: CloudEvents Format (P2)
+- [ ] MSG-021: Enforce CloudEvents in `outbox-starter`
+- [ ] MSG-022: Migrate consumers to CloudEvents
+
+### Category F: Consumer Hardening (P3)
+- [ ] MSG-023: Refactor `notification-service` `EventConsumer`
+
+### Build & Test
+- [ ] Build all shared starters
+- [ ] Build all affected services
+- [ ] Run tests
 
 ---
 
