@@ -39,6 +39,33 @@
 
 ---
 
+## 📡 Messaging Infrastructure Division (AMQ Streams vs AMQ Broker)
+
+Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemilihan messaging service antara AMQ Streams (Kafka) dan AMQ Broker (ActiveMQ Artemis):
+
+### 🎯 Karakteristik & Pemilihan Service
+
+| Aspek | AMQ Streams (Kafka) | AMQ Broker (Artemis) |
+|:---|:---|:---|
+| **Pola Komunikasi** | Event Streaming / Log Terdistribusi (Pub-Sub) | Message Queue Tradisional (Point-to-Point / Pub-Sub) |
+| **Siklus Hidup Data** | Durable & Immutable (Pesan tetap tersimpan setelah dibaca) | Transient (Pesan langsung dihapus setelah ACK sukses) |
+| **Urutan Pesan** | Dijamin urut per partition key (misal per `account_id`) | Urutan global per queue (bisa terganggu jika ada concurrent consumers) |
+| **Fitur Lanjutan** | Stream Processing, CDC Integration, MirrorMaker sync | Scheduled/Delayed delivery, Transaksi XA, temporary queues |
+
+### 🛠️ Pembagian Penggunaan Service di PayU
+
+* **AMQ Streams (Kafka) — Digunakan untuk Event-Driven State:**
+  * **`wallet-service` & `transaction-service`**: Publikasi event finansial (seperti `transfer-initiated`, `balance-updated`) untuk di-consume secara paralel oleh service notification, analytics, dan audit.
+  * **Outbox Pattern Synchronization**: Pengiriman data log transaksi secara asinkron dari basis data microservices ke database pelaporan.
+  * **Real-time Analytics**: Aliran log audit platform dan analisis aktivitas kecurangan transaksi (Fraud Detection).
+
+* **AMQ Broker (Artemis) — Digunakan untuk Command & Integration:**
+  * **`integration-service`**: Integrasi dengan Core Banking luar via SWIFT/ISO 20022 atau ESB perbankan tradisional.
+  * **Point-to-Point Command Queue**: Pengiriman perintah eksekusi tunggal seperti trigger email/SMS di `notification-service` atau trigger verifikasi KYC di `kyc-service`.
+  * **Scheduled/Delayed Transactions**: Penjadwalan transaksi terjadwal atau delayed billing yang membutuhkan pengiriman tertunda secara native.
+
+---
+
 ## 🔮 Deferred (Icebox)
 
 | Key | Type | Summary | Notes |
