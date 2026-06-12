@@ -220,11 +220,14 @@ Run the installer script inside the guest VM:
 > 
 > *Reference*: [Red Hat 3scale 2.15 Operating Guide](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/2.15/pdf/operating_red_hat_3scale_api_management/Red_Hat_3scale_API_Management-2.15-Operating_Red_Hat_3scale_API_Management-en-US.pdf)
 
-To migrate the persistent datasets reliably, the backup and restore operations must follow this sequence:
+To migrate the persistent datasets and application components reliably, the backup and restore operations must follow this sequence:
 1. **`system-mysql`**: Back up the primary relational database holding users, accounts, and plans from on-premise, and restore it on the cloud instance.
 2. **`system-storage`**: Back up the persistent file storage (CMS content, custom styles, assets) and restore it to the target PV.
-3. **OpenShift Secrets & ConfigMaps**: Backup configurations, API keys, and app tokens (`system-database`, `system-seed`, `system-app`, `backend-internal-api`, `zync`, `zync-database`) and apply them to prepare the target Operator namespace.
-4. **`zync-database`**: Back up the Zync PostgreSQL database storing route sync states, and restore it on the cloud instance.
+3. **`backend-redis`**: Back up keys validation cache, rate-limits, and session tokens, and restore it to the cloud.
+4. **`system-redis`**: Back up background queues, message bus, and caching state, and restore it to the cloud.
+5. **OpenShift Secrets & ConfigMaps**: Backup configurations, API keys, and app tokens (`system-database`, `system-seed`, `system-app`, `backend-internal-api`, `zync`, `zync-database`) and apply them to prepare the target Operator namespace.
+6. **`zync-database`**: Back up the Zync PostgreSQL database storing route sync states, and restore it on the cloud instance.
+7. **Application Components Scale-Up**: Re-enable and restore the application components sequentially, starting with the backend dependencies and worker processes (`backend-worker`), search service (`system-searchd`), main developer portal web application (`system-app`), and background queues (`system-sidekiq`).
 
 The detailed Method of Procedure (MOP) step-by-step checklist for migrating Red Hat 3scale API Management (v2.15) can be found in the service-specific MOP file:
 * **[MOP_3SCALE.md](file:///home/ubuntu/payu/docs/operations/MOP_3SCALE.md)**: Manual pre-requisite, migration, and post-migration checklists in standard spreadsheet format.
