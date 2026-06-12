@@ -10,7 +10,7 @@ The migration covers 6 primary middleware and streaming workloads categorized by
 
 | Workload | Source Type | Target Type | Migration Strategy |
 | :--- | :--- | :--- | :--- |
-| **Red Hat 3scale** | OpenShift Operator | OpenShift Operator | Fresh Deploy (Operator) + DB Backup/Restore |
+| **Red Hat 3scale** | OpenShift Operator | OpenShift Operator | Logical Backup/Restore (system-mysql, storage, secrets, zync) |
 | **RH Streams (Kafka)** | OpenShift Operator | OpenShift Operator | Fresh Deploy (Operator) + MirrorMaker 2 Sync |
 | **RH AMQ Broker** | KubeVirt VM | AWS EC2 | AWS MGN (Lift-and-Shift) OR Fresh Install + Sync |
 | **RH Process Automation** | KubeVirt VM | AWS EC2 | Git Repository Sync + DB Backup/Restore |
@@ -219,6 +219,12 @@ Run the installer script inside the guest VM:
 > *"For Red Hat 3Scale, we can do a simple Backup and Restore mechanism. Where we backup all the persistent data from the on-premise environment and restore it into the cloud infrastructure."*
 > 
 > *Reference*: [Red Hat 3scale 2.15 Operating Guide](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/2.15/pdf/operating_red_hat_3scale_api_management/Red_Hat_3scale_API_Management-2.15-Operating_Red_Hat_3scale_API_Management-en-US.pdf)
+
+To migrate the persistent datasets reliably, the backup and restore operations must follow this sequence:
+1. **`system-mysql`**: Back up the primary relational database holding users, accounts, and plans from on-premise, and restore it on the cloud instance.
+2. **`system-storage`**: Back up the persistent file storage (CMS content, custom styles, assets) and restore it to the target PV.
+3. **OpenShift Secrets & ConfigMaps**: Backup configurations, API keys, and app tokens (`system-database`, `system-seed`, `system-app`, `backend-internal-api`, `zync`, `zync-database`) and apply them to prepare the target Operator namespace.
+4. **`zync-database`**: Back up the Zync PostgreSQL database storing route sync states, and restore it on the cloud instance.
 
 The detailed Method of Procedure (MOP) step-by-step checklist for migrating Red Hat 3scale API Management (v2.15) can be found in the service-specific MOP file:
 * **[MOP_3SCALE.md](file:///home/ubuntu/payu/docs/operations/MOP_3SCALE.md)**: Manual pre-requisite, migration, and post-migration checklists in standard spreadsheet format.
