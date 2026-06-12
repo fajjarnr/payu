@@ -36,7 +36,7 @@
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
 | Last Status Update       | 2026-06-12                               | v1.8.8 — HCP Multi-Cluster Setup: Deployed payu-onprem (OCP 4.18) and payu-prod (OCP 4.20) in shared VPC. |
 | OpenShift Tag            | `v1.8.8`                                 | Latest stable deployment                        |
-| Local Podman Tag         | `v1.8.1`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
+| Local Podman Tag         | `v1.8.8`                                 | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
 > ✅ **v1.8.0 — Full Backend Test Suite Green (May 5, 2026)**: Fixed all unit test failures across 36 backend modules (23 services + 5 simulators + 8 shared libraries) for JDK 25 / Spring Boot 3.5.14 / Quarkus 3.33.1. `mvn clean test -T 1C` → **BUILD SUCCESS** (0 failures, 0 errors). Key fixes: ArchUnit Java 25 compatibility, Jackson conflict resolution, mock bean provisioning, H2 test configs, auth/security test setup.
