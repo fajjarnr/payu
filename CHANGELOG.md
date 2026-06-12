@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Migration Design Restructuring (2026-06-12)
+
+- **Master Design Document Renaming**: Renamed the master migration document from `MIGRATION_MOP.md` to [MIGRATION_DESIGN.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_DESIGN.md) to serve as the master architecture, prerequisites, and strategy reference.
+- **Modular 3scale MOP Checklist**: Created a dedicated service-specific Method of Procedure [MOP_3SCALE.md](file:///home/ubuntu/payu/docs/operations/MOP_3SCALE.md) using the spreadsheet-like markdown table layout containing detailed steps for `PRE-REQUISITES`, `DEPLOYMENT/MIGRATION`, and `POST-DEPLOYMENT/POST-MIGRATION` phases.
+
 ### HCP Cluster Decommissioning — `payu-onprem` & `payu-prod` (2026-06-12)
 
 - **Cluster Deprovisioning**: Destroyed the `payu-onprem` and `payu-prod` HyperShift hosted clusters and their NodePools (`odf`, `ove`, `payu-onprem`, `payu-prod`) from the management cluster.
@@ -23,8 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### HCP Cluster Deployments — `payu-onprem` & `payu-prod` (2026-06-12)
 
-- **Red Hat 3scale v2.15 Migration MOP**: Updated the Method of Procedure (MOP) at [MIGRATION_MOP.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_MOP.md) with comprehensive manual migration steps for the Operator-managed 3scale v2.15 platform. Includes database/Redis backup-restore procedures, OIDC configuration switch to trust Keycloak on AWS, Route 53 DNS domain updates, and validation steps for Inbound, Internal, and Outbound traffic types.
-- **Red Hat SSO v7.6.8 GA Migration MOP**: Updated the Method of Procedure (MOP) at [MIGRATION_MOP.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_MOP.md) with comprehensive manual redeployment steps for the 2-instance active-active clustered RH-SSO v7.6.8 GA. Includes custom SPI migration (Prospek, Warung App, and Kafka Eventing), JGroups networking adaptation from UDP multicast to TCP/`JDBC_PING` for AWS VPC compatibility, and database/ALB routing procedures. Deployed automated RHEL 8 installer labs on `payu-onprem` via custom Kickstart disks.
+- **Red Hat 3scale v2.15 Migration MOP**: Updated the Method of Procedure (MOP) at [MIGRATION_DESIGN.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_DESIGN.md) with comprehensive manual migration steps for the Operator-managed 3scale v2.15 platform. Includes database/Redis backup-restore procedures, OIDC configuration switch to trust Keycloak on AWS, Route 53 DNS domain updates, and validation steps for Inbound, Internal, and Outbound traffic types.
+- **Red Hat SSO v7.6.8 GA Migration MOP**: Updated the Method of Procedure (MOP) at [MIGRATION_DESIGN.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_DESIGN.md) with comprehensive manual redeployment steps for the 2-instance active-active clustered RH-SSO v7.6.8 GA. Includes custom SPI migration (Prospek, Warung App, and Kafka Eventing), JGroups networking adaptation from UDP multicast to TCP/`JDBC_PING` for AWS VPC compatibility, and database/ALB routing procedures. Deployed automated RHEL 8 installer labs on `payu-onprem` via custom Kickstart disks.
 - **Hosted Control Plane (HCP) Multi-Cluster Setup**: Provisioned two hosted OpenShift clusters (`payu-onprem` and `payu-prod`) under the `clusters` namespace using HyperShift in the `us-east-1` region sharing the existing AWS VPC infrastructure (`vpc-0852b7bcdc4d81022`).
   - **payu-onprem**: OpenShift version `4.18.43` (channel `stable-4.18`), clusterNetwork `10.132.0.0/14`, serviceNetwork `172.31.0.0/16`, located in private subnet `subnet-0be591f0726ed759c` (`us-east-1a`).
   - **payu-prod**: OpenShift version `4.20.24` (channel `stable-4.20`), clusterNetwork `10.136.0.0/14`, serviceNetwork `172.32.0.0/16`, located in private subnet `subnet-051d2bd82699c249e` (`us-east-1b`).
