@@ -30,5 +30,31 @@ Selamat berkontribusi di PayU Digital Banking Platform! Untuk menjaga kualitas d
 - **Integration Tests**: Wajib untuk aliran data antar-service.
 - **E2E Tests**: Pastikan tidak ada regresi pada aliran transaksi utama.
 
+## 🔐 E2E Test Auth: Keycloak URL Selection (READY-072)
+
+**Rule**: Untuk SEMUA E2E scripts (cards-crud.sh, verify-nik-cache.sh, web-app BFF, dll.) yang memerlukan JWT token, **WAJIB** menggunakan **INTERNAL Keycloak URL** untuk issuance, BUKAN public HTTPS route.
+
+| Endpoint | URL | Use case |
+|----------|-----|----------|
+| ✅ INTERNAL (correct) | `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu` | E2E scripts, service-to-service JWT |
+| ❌ PUBLIC (wrong) | `https://payu-keycloak.apps.payu.ocp.fajjjar.my.id/realms/payu` | Browser login UI only |
+
+```bash
+# ✅ CORRECT — INTERNAL URL, issues JWT with iss=http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
+JWT=$(oc exec -n payu-dev gateway-service-... -- curl -s -X POST \
+  "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/token" \
+  -d "client_id=payu-backend" \
+  -d "client_secret=payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c" \
+  -d "grant_type=password" -d "username=customer1" -d "password=customer1-test-pass" \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['access_token'])")
+
+# ❌ WRONG — public URL, JWT has different issuer claim → gateway rejects with 401 INVALID_TOKEN
+```
+
+**Why**: Gateway `QUARKUS_OIDC_TOKEN_ISSUER` env var is set to the INTERNAL Keycloak URL. JWTs from the public route have a different `iss` claim → token validation fails → 401.
+
+**Background**: See `E2E-2026-06-13-10` in `docs/roadmap/TODOS.md` for the full investigation.
+
 ---
-_Last Updated: March 22, 2026_
+
+_Last Updated: June 13, 2026_

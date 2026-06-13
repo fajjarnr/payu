@@ -16,7 +16,7 @@
 | **Open P0s** | 3 (READY-001/002/003) |
 | **Open P1s** | 28 |
 | **Open P2s** | 12 |
-| **Open P3s** | 7 (3 new: READY-070/071/072) |
+| **Open P3s** | 7 (3 new: ~~READY-070~~, ~~READY-071~~, ~~READY-072~~ — all closed) |
 | **Production Score** | ~50% (↑ from 45% after 3scale + cache + Kafka + AMQ + web-app T1-T3 proven) |
 | **Last Audit** | June 13, 2026 — Full E2E proven: 3scale T1-T7 green, web-app T1-T3 green, DataGrid + Kafka + AMQ infra all functional |
 | **Last Release** | 1.8.11 — PatternParseException fix + E2E CRUD verified |
@@ -259,9 +259,9 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | READY-061 | Mobile | Expo SDK 55 + RN 0.85 upgrade | 0% | 100% |
 | READY-062 | ML | ONNX fraud detection model in `fraud-service` | 0% | 100% |
 | READY-063 | Frontend | Premium Emerald design system pass (web-app) | 0% | 100% |
-| **READY-070** | **Frontend** | **🐛 Fix web-app BFF body-less POST 415 bug** (E2E-2026-06-13-12) — `frontend/web-app/src/app/api/v1/[...path]/route.ts` only forward `Content-Type` when body is non-empty. Affects freeze/unfreeze/cancel/archive etc. | 0% | 100% |
-| **READY-071** | **Frontend** | **Fix web-app root 500 error** (E2E-2026-06-13-13) — Next.js page render crash at `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/`. API proxy works, only UI render broken. Investigate missing env var or OIDC client config. | 0% | 100% |
-| **READY-072** | **Frontend** | **Use INTERNAL Keycloak URL for service-to-service JWT** (E2E-2026-06-13-10) — All E2E scripts (cards-crud.sh, web-app BFF) MUST use `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu` for JWT issuance, NOT public HTTPS route. Mismatch causes 401. Document in CONTRIBUTING.md. | 50% | 100% |
+| **READY-070** | **Frontend** | **🐛 Fix web-app BFF body-less POST 415 bug** (E2E-2026-06-13-12) — `frontend/web-app/src/app/api/v1/[...path]/route.ts` only forward `Content-Type` when body is non-empty. Affects freeze/unfreeze/cancel/archive etc. | ~~0%~~ **100% ✅ FIXED in `web-app:1.5.1`** | 100% |
+| **READY-071** | **Frontend** | **Fix web-app root 500 error** (E2E-2026-06-13-13) — Next.js page render crash at `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/`. API proxy works, only UI render broken. Investigate missing env var or OIDC client config. | ~~0%~~ **100% ✅ FIXED in `web-app:1.5.1`** (HTTP 200 with full HTML, proper title + i18n rendered). Side-effect of Node 24 rebuild + current source. | 100% |
+| **READY-072** | **Frontend** | **Use INTERNAL Keycloak URL for service-to-service JWT** (E2E-2026-06-13-10) — All E2E scripts (cards-crud.sh, web-app BFF) MUST use `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu` for JWT issuance, NOT public HTTPS route. Mismatch causes 401. Document in CONTRIBUTING.md. | ~~50%~~ **100% ✅ Documented in `docs/guides/CONTRIBUTING.md`** ("E2E Test Auth: Keycloak URL Selection" section) | 100% |
 
 ---
 
@@ -331,14 +331,14 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | READY-003 | 🟡 **Partially closed** in 1.8.12 | cms-service `Content`→`ContentEntity` rename done. **8+ other services with similar enum/POJO rename gaps suspected** — needs service-by-service audit (no automated check yet) |
 | READY-013 | 60% | NEW-001 + NEW-003 = the platform-wide fix. **Promote TypedJsonRedisSerializer to cache-starter and switch all `@Cacheable` consumers to it.** |
 | READY-014 | 50% | Cache metrics only on `DistributedCacheService`, not on Spring's `RedisCacheManager` (the `@Cacheable` path). Spring's CacheManager exposes `cache.gets/puts` via `cache.gets` JMX — need to wire to Prometheus. |
-| READY-070 | 0% | web-app BFF body-less POST 415 bug still open |
-| READY-071 | 0% | web-app root 500 error still open |
-| READY-072 | 50% | web-app BFF must use INTERNAL Keycloak URL — needs CONTRIBUTING.md update |
+| READY-070 | ~~0%~~ 100% | web-app BFF body-less POST 415 bug — ✅ fixed in `web-app:1.5.1` |
+| READY-071 | ~~0%~~ 100% | web-app root 500 error — ✅ fixed in `web-app:1.5.1` (HTTP 200) |
+| READY-072 | ~~50%~~ 100% | web-app BFF must use INTERNAL Keycloak URL — ✅ documented in `CONTRIBUTING.md` |
 | E2E-2026-06-13-06 | ✅ **CLOSED in 1.8.12** | cms-service cache deser |
 | E2E-2026-06-13-10 | ✅ | 3scale T1-T7 green |
-| E2E-2026-06-13-11 | 🟡 | web-app BFF T1-T3 green, T4-T6 fail with 415 (READY-070) |
-| E2E-2026-06-13-12 | 🟡 | web-app BFF body-less POST 415 — root cause of -11 (READY-070) |
-| E2E-2026-06-13-13 | 🔴 | web-app root 500 — Next.js render crash (READY-071) |
+| E2E-2026-06-13-11 | ✅ | web-app BFF T1-T3 + T4-T6 (freeze/unfreeze) green (READY-070 + NEW-003 closed) |
+| E2E-2026-06-13-12 | ✅ | web-app BFF body-less POST 415 — root cause fixed (READY-070) |
+| E2E-2026-06-13-13 | ✅ | web-app root 200 (READY-071 closed) |
 
 ### Recommended Fix Order (1 engineer, ~1 week)
 
@@ -364,5 +364,5 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-_Last Updated: June 13, 2026 — READY-002 ✅ closed via `IdempotencyStressTest` (172/172 api-commons pass). E2E-2026-06-13-01 fully fixed (7 services in 1.8.11 + ts/ws in 1.8.14/1.8.15). 2 production code bugs flagged for RCA (BUG-TXN-SPLITBILL-001, BUG-TXN-ACCOUNT-001). 32 production readiness gaps (3 P0 closed, 16 P1 open incl. 2 NEW flagged, 13 P2)._
+_Last Updated: June 13, 2026 — READY-070/071/072 all closed via `web-app:1.5.1` rebuild (Node 24) + BFF body-less-POST fix + CONTRIBUTING.md INTERNAL Keycloak URL doc. 2 production code bugs still flagged (BUG-TXN-SPLITBILL-001, BUG-TXN-ACCOUNT-001). 32 production readiness gaps (3 P0 closed, 16 P1 open incl. 2 NEW flagged, 13 P2, 4 P3 open)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

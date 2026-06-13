@@ -374,4 +374,47 @@ describe('BFF Proxy SSRF Prevention', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
   });
+
+  describe('READY-070 Body-less POST Content-Type handling', () => {
+    it('should NOT forward Content-Type when POST body is empty (E2E-2026-06-13-12)', async () => {
+      // Simulates POST /api/v1/cards/{id}/freeze from the browser:
+      // Content-Type: application/json is set, but the body is empty.
+      // The previous code forwarded both, causing gateway 415.
+      const request = createMockRequest('/api/v1/cards/abc-123/freeze');
+      request.method = 'POST';
+      request.headers = new Headers({ 'content-type': 'application/json' });
+      (request as unknown as { text: () => Promise<string> }).text =
+        vi.fn().mockResolvedValue('');
+      const params = createParams(['cards', 'abc-123', 'freeze']);
+
+      const response = await POST(request, { params });
+
+      expect(response.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const calledArgs = mockFetch.mock.calls[0];
+      const calledInit = calledArgs[1] as RequestInit;
+      const sentHeaders = calledInit.headers as Record<string, string>;
+      expect(sentHeaders['Content-Type']).toBeUndefined();
+      expect(calledInit.body).toBeUndefined();
+    });
+
+    it('SHOULD forward Content-Type when POST body is non-empty', async () => {
+      const request = createMockRequest('/api/v1/cards');
+      request.method = 'POST';
+      request.headers = new Headers({ 'content-type': 'application/json' });
+      (request as unknown as { text: () => Promise<string> }).text =
+        vi.fn().mockResolvedValue('{"accountId":"abc","cardHolderName":"E2E"}');
+      const params = createParams(['cards']);
+
+      const response = await POST(request, { params });
+
+      expect(response.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const calledArgs = mockFetch.mock.calls[0];
+      const calledInit = calledArgs[1] as RequestInit;
+      const sentHeaders = calledInit.headers as Record<string, string>;
+      expect(sentHeaders['Content-Type']).toBe('application/json');
+      expect(calledInit.body).toBe('{"accountId":"abc","cardHolderName":"E2E"}');
+    });
+  });
 });

@@ -169,8 +169,21 @@ async function proxyRequest(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // BUG-READY-070 (was E2E-2026-06-13-12): For a body-less POST (e.g.
+    // POST /cards/{id}/freeze, /cards/{id}/unfreeze, /cancel, /archive)
+    // the browser still sends `Content-Type: application/json` with an
+    // empty body. Forwarding that Content-Type verbatim causes the
+    // gateway to return 415 Unsupported Media Type. We now read the
+    // body FIRST, then forward Content-Type only when the body is
+    // non-empty.
+    const rawBody =
+      request.method === 'GET' || request.method === 'HEAD'
+        ? undefined
+        : await request.text();
+    const body = rawBody && rawBody.length > 0 ? rawBody : undefined;
+
     const contentType = request.headers.get('content-type');
-    if (contentType) {
+    if (contentType && body !== undefined) {
       headers['Content-Type'] = contentType;
     }
 
@@ -199,11 +212,6 @@ async function proxyRequest(
         }
       }
     });
-
-    const body =
-      request.method === 'GET' || request.method === 'HEAD'
-        ? undefined
-        : await request.text();
 
     const res = await fetch(url.toString(), {
       method: request.method,
