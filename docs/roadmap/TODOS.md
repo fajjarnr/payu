@@ -40,33 +40,6 @@
 
 ---
 
-## 📡 Messaging Infrastructure Division (AMQ Streams vs AMQ Broker)
-
-Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemilihan messaging service antara AMQ Streams (Kafka) dan AMQ Broker (ActiveMQ Artemis):
-
-### 🎯 Karakteristik & Pemilihan Service
-
-| Aspek | AMQ Streams (Kafka) | AMQ Broker (Artemis) |
-|:---|:---|:---|
-| **Pola Komunikasi** | Event Streaming / Log Terdistribusi (Pub-Sub) | Message Queue Tradisional (Point-to-Point / Pub-Sub) |
-| **Siklus Hidup Data** | Durable & Immutable (Pesan tetap tersimpan setelah dibaca) | Transient (Pesan langsung dihapus setelah ACK sukses) |
-| **Urutan Pesan** | Dijamin urut per partition key (misal per `account_id`) | Urutan global per queue (bisa terganggu jika ada concurrent consumers) |
-| **Fitur Lanjutan** | Stream Processing, CDC Integration, MirrorMaker sync | Scheduled/Delayed delivery, Transaksi XA, temporary queues |
-
-### 🛠️ Pembagian Penggunaan Service di PayU
-
-* **AMQ Streams (Kafka) — Digunakan untuk Event-Driven State:**
-  * **`wallet-service` & `transaction-service`**: Publikasi event finansial (seperti `transfer-initiated`, `balance-updated`) untuk di-consume secara paralel oleh service notification, analytics, dan audit.
-  * **Outbox Pattern Synchronization**: Pengiriman data log transaksi secara asinkron dari basis data microservices ke database pelaporan.
-  * **Real-time Analytics**: Aliran log audit platform dan analisis aktivitas kecurangan transaksi (Fraud Detection).
-
-* **AMQ Broker (Artemis) — Digunakan untuk Command & Integration:**
-  * **`integration-service`**: Integrasi dengan Core Banking luar via SWIFT/ISO 20022 atau ESB perbankan tradisional.
-  * **Point-to-Point Command Queue**: Pengiriman perintah eksekusi tunggal seperti trigger email/SMS di `notification-service` atau trigger verifikasi KYC di `kyc-service`.
-  * **Scheduled/Delayed Transactions**: Penjadwalan transaksi terjadwal atau delayed billing yang membutuhkan pengiriman tertunda secara native.
-
----
-
 ## 🔮 Deferred (Icebox)
 
 | Key | Type | Summary | Notes |
@@ -212,6 +185,65 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 |:---|:---:|:---|:---|:---|
 | **BUG-TXN-SPLITBILL-001** | **P1** | `transaction-service` | **`SplitBillService.createSplitBill` throws `ObjectOptimisticLockingFailureException` (500)** on the FIRST request. The flow: `persistencePort.save(splitBill)` → `splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBill.getId()))`. The `setParticipants` triggers a cascading save that re-merges the already-persisted (version=0→1) detached entity as version=1→2, which Hibernate then sees as stale. Either `setParticipants` should not be called after save (read-only hydration from a separate query), or the cascade should be `PERSIST` not `MERGE`, or the entity should be re-fetched after the participants are set. Discovered via `POST /api/v1/split-bills` with valid `participants` list (returned 500 with this stacktrace). **Attempted 2026-06-13**: tried (a) re-fetch after save, (b) `Persistable<UUID>` to force isNew()=true, (c) removing `CascadeType.ALL` and saving children via `saveParticipant`. All three approaches hit Hibernate 6's `entityIsTransient` returning false on `@GeneratedValue(GenerationType.UUID)` entities without `@Version`. **Blocked**: needs a deeper investigation into the cascade+unsaved-value interaction with Spring Data 3.5 + Hibernate 6. Recommend either (a) add `@Version Long version` to both entities (cleanest), or (b) use `@org.hibernate.annotations.UuidGenerator` (Hibernate-specific, bypasses JPA spec quirks), or (c) call `EntityManager.persist()` directly in a custom adapter method. | `POST /api/v1/split-bills` with `participants` array non-empty |
 | **BUG-TXN-ACCOUNT-001** | **P2** | `transaction-service` | **`DisbursementController.getCurrentAccountId()` requires `account_id` JWT claim** (throws `IllegalStateException("No valid JWT authentication found")` → 409). The `extractUserId()` helper has a `sub` fallback (BUG-AUTH-013), but `getCurrentAccountId()` does NOT — it throws on missing `account_id`. Customer1 JWT has `sub=7a51ced3-...` but no `account_id` claim. Inconsistent with the sibling helper, breaks `POST /api/v1/disbursements` E2E for customer1. Fix: add `sub` fallback to `getCurrentAccountId()`. | `POST /api/v1/disbursements` with JWT lacking `account_id` claim |
+
+---
+
+## 📝 Implementation Plan & Task Tracker: ARCH-005 (Phase 1)
+
+### `rules-starter` (New Shared Library)
+- [ ] Scaffold `rules-starter` module
+- [ ] Configure `pom.xml` with Drools dependencies (`drools-engine`, `drools-model-compiler`, `drools-decisiontables`)
+- [ ] Implement `RulesEngineService` and `AutoConfiguration`
+- [ ] Build and test `rules-starter` module locally
+
+### `lending-service` (Credit Scoring)
+- [ ] Add `rules-starter` dependency to `lending-service/pom.xml`
+- [ ] Extract rules from `EnhancedCreditScoringService.java` to `credit_scoring.drl`
+- [ ] Update `CreditScoreFact` or DTO
+- [ ] Update `EnhancedCreditScoringService.java` to use `RulesEngineService`
+- [ ] Run unit tests for `lending-service`
+
+### `analytics-service` (Fraud Detection)
+- [ ] Add `rules-starter` dependency to `analytics-service/pom.xml`
+- [ ] Extract rules (velocity checks, geo-anomaly) to `fraud_detection.drl`
+- [ ] Update `FraudDetectionService` to use `RulesEngineService`
+- [ ] Run unit tests for `analytics-service`
+
+### Verification
+- [ ] Verify rules engine is working as expected
+- [ ] Build backend
+
+## 📝 Future Implementation Plan: ARCH-005 (Phase 2 & 3 Kogito)
+
+### Phase 2: DMN Decision Tables (Q2 2026)
+- [ ] Implement `gateway-service` Payment Routing rules using DMN Decision Tables
+- [ ] Implement `promotion-service` Campaign rules using Drools DMN
+
+### Phase 3: Kogito BPMN Cloud-Native Workflows (Q3 2026)
+- [ ] Design Kogito `KogitoBuild` and `KogitoRuntime` deployment for standalone workflow services
+- [ ] Implement KYC/AML multi-step verification via Kogito BPMN
+- [ ] Deploy Kogito Data Index via `KogitoSupportingService` CRD
+- [ ] Deploy Kogito Management Console via `KogitoSupportingService` CRD
+- [ ] Configure `KogitoInfra` to link Kogito services with Strimzi Kafka cluster
+
+## 📝 Implementation Plan & Task Tracker: ARCH-006 (Spring Boot 4.1.0 & Jakarta EE 11)
+
+### Phase 1: Audit & Preparation (Current)
+- [ ] Maintain baseline on **Java 25** (already active) and ensure Virtual Threads are utilized correctly.
+- [ ] Audit dependencies for Jakarta EE 11 compatibility (Servlet 6.1, JPA 3.2).
+- [ ] Audit Jackson usage (Spring Boot 4.1.0 defaults to Jackson 3).
+- [ ] Check if all `javax.*` imports have been fully removed and replaced with `jakarta.*`.
+
+### Phase 2: Migration Execution
+- [ ] Use **OpenRewrite** to run the Jakarta EE 11 / Spring Boot 4.1.0 automated migration recipes.
+- [ ] Update `payu-backend-parent` pom.xml to use Spring Boot 4.1.0 and Spring Cloud 2025.1 (Oakwood).
+- [ ] Add `spring-boot-properties-migrator` dependency to help analyze deprecated properties at startup.
+- [ ] Enable Virtual Threads by setting `spring.threads.virtual.enabled=true` across all microservices.
+
+### Phase 3: Validation & Resolution
+- [ ] Resolve deprecated APIs (e.g. `ApplicationContextAssertProvider.assertThat()` → AssertJ `assertThat`, custom API versioning → Spring 7 Native API Versioning).
+- [ ] Run full E2E & unit test suite to verify behavior changes (especially around concurrency and validation).
+- [ ] Remove `spring-boot-properties-migrator` before production deployment.
 
 ---
 
