@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Workloads Configuration Refactoring & Operator Setup (2026-06-13)
+
+- **Database & Kafka Connection Extraction**: Extracted all database JDBC connections and Kafka URLs into `service-endpoints` ConfigMap (`infrastructure/workloads/base/service-endpoints.yaml`).
+- **Database Credentials Protection**: Integrated database credentials (`DB_USERNAME` and `DB_PASSWORD`) into `db-secrets.yaml` and refactored deployment files to use `valueFrom` references.
+- **Manifest Updates**: Updated all 23+ microservices, simulators, and workloads deployments under `infrastructure/workloads/base` to use dynamic references instead of hardcoded connection parameters.
+- **AMQ Broker Setup**: Deployed AMQ Broker Operator subscription and deployed a standard ActiveMQ Artemis broker (`artemis.yaml`) inside the `payu-dev` namespace.
+- **Artemis Integration**: Connected `notification-service` dynamically to Artemis using `ARTEMIS_URL` retrieved from the `service-endpoints` ConfigMap, achieving full pod readiness (`1/1`).
+
 ### Migration Design Restructuring (2026-06-12)
 
 - **Master Design Document Renaming**: Renamed the master migration document from `MIGRATION_MOP.md` to [MIGRATION_DESIGN.md](file:///home/ubuntu/payu/docs/operations/MIGRATION_DESIGN.md) to serve as the master architecture, prerequisites, and strategy reference.

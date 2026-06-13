@@ -11,7 +11,7 @@
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
 | Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (Jun 8)       |
-| Total Pods               | 🟢 37/39                                | 37 pods Running on OCP 4.20+ sandbox (Jun 8)    |
+| Total Pods               | 🟢 39/39                                | 39 pods Running on OCP 4.20+ sandbox (Jun 13)   |
 | OpenShift Cluster        | 🟢 Active                                | Sandbox cluster (RT7ZF), ap-southeast-1         |
 | HCP Clusters (Multi-Env) | 🟢 Running                               | Deployed payu-onprem (OCP 4.18.43) and payu-prod (OCP 4.20.24) sharing VPC with NLB ingress (Jun 12) |
 | Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
@@ -34,8 +34,8 @@
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟢 1 P0, 1 P1                             | INFRA-001 (trivy auth). ARCH-010 (Quarkus starters). All other P0/P1 resolved. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-12                               | v1.8.8 — HCP Multi-Cluster Setup: Deployed payu-onprem (OCP 4.18) and payu-prod (OCP 4.20) in shared VPC. |
-| OpenShift Tag            | `v1.8.8`                                 | Latest stable deployment                        |
+| Last Status Update       | 2026-06-13                               | v1.8.9 — Refactored workloads configurations and AMQ Broker setup. |
+| OpenShift Tag            | `v1.8.9`                                 | Latest stable deployment                        |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
@@ -92,6 +92,17 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.9 (Completed) — June 13, 2026
+
+**Workloads Configuration Refactoring & AMQ Broker Setup:**
+
+- ✅ **JDBC & Kafka URLs Extraction**: Centralized database JDBC connection strings and Kafka URLs into `service-endpoints` ConfigMap.
+- ✅ **Database Credentials Protection**: Integrated database credentials (`DB_USERNAME` and `DB_PASSWORD`) into `db-secrets.yaml` so they do not exist as plaintext in deployments.
+- ✅ **Deployment Manifest Refactoring**: Refactored all 23+ Java, Quarkus, and Python deployment manifests to reference connection endpoints and credentials dynamically using `valueFrom` ConfigMaps and Secrets.
+- ✅ **Artemis AMQ Broker Deployment**: Deployed AMQ Broker Operator subscription and ActiveMQ Artemis Broker instance inside the `payu-dev` namespace.
+- ✅ **Artemis Integration**: Integrated `notification-service` to connect dynamically using `ARTEMIS_URL` config, bringing its Artemis JMS health check green and transitioning to `1/1` Running/Ready.
+- ✅ **Full Pod Readiness**: Verified all 39 pods in the `payu-dev` namespace (including `analytics-service`, `kyc-service`, and `notification-service`) are `1/1` Running/Ready.
 
 ### v1.8.8 (Completed) — June 12, 2026
 
