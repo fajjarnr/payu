@@ -28,6 +28,8 @@ spec:
     podSecurityContext:
       seccompProfile:
         type: RuntimeDefault
+  console:
+    expose: true
   acceptors:
   - name: core
     port: 61616
