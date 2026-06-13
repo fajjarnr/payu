@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.10] - 2026-06-13
+
+### Platform AMQ Broker Console Ingress & Network Policies Fix
+
+- **Route TLS Strategic Merge Patch**: Fixed unencrypted Hawtio console route exposure. Enabled `tls` configuration on the operator-generated `payu-broker-wconsj-0-svc-rte` Route via the CR's `spec.resourceTemplates` with `kind: Route` and `apiVersion: route.openshift.io/v1` strategic merge patch (`edge` TLS termination and `Redirect` policy).
+- **Ingress Network Policy Integration**: Added `allow-openshift-router.yaml` to the foundation namespace overlays (`infrastructure/foundation/namespaces/overlays/shared/kustomization.yaml`) to allow external ingress traffic from the `openshift-ingress` namespace, resolving the `503 Service Unavailable` error for all exposed routes in `payu-dev` (including the `web-app` and the `payu-broker` console).
+
 ### Workloads Configuration Refactoring & Operator Setup (2026-06-13)
 
 - **Database & Kafka Connection Extraction**: Extracted all database JDBC connections and Kafka URLs into `service-endpoints` ConfigMap (`infrastructure/workloads/base/service-endpoints.yaml`).

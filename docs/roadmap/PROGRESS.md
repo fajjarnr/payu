@@ -34,8 +34,8 @@
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟢 1 P0, 1 P1                             | INFRA-001 (trivy auth). ARCH-010 (Quarkus starters). All other P0/P1 resolved. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-13                               | v1.8.9 — Refactored workloads configurations and AMQ Broker setup. |
-| OpenShift Tag            | `v1.8.9`                                 | Latest stable deployment                        |
+| Last Status Update       | 2026-06-13                               | v1.8.10 — Fixed AMQ Broker Route TLS and Ingress Network Policies. |
+| OpenShift Tag            | `v1.8.10`                                | Latest stable deployment                        |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
@@ -92,6 +92,13 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.10 (Completed) — June 13, 2026
+
+**Platform AMQ Broker Console Ingress & Network Policies Fix:**
+
+- ✅ **Route TLS Strategic Merge Patch**: Enabled `tls` configuration on the operator-generated `payu-broker-wconsj-0-svc-rte` Route via the CR's `spec.resourceTemplates` with `kind: Route` and `apiVersion: route.openshift.io/v1` strategic merge patch (`edge` TLS termination and `Redirect` policy), securing console exposure.
+- ✅ **Ingress Network Policy Integration**: Added `allow-openshift-router.yaml` to the foundation namespace overlays (`infrastructure/foundation/namespaces/overlays/shared/kustomization.yaml`) to allow external ingress traffic from the `openshift-ingress` namespace, resolving the `503 Service Unavailable` error for all exposed routes in `payu-dev` (including `web-app` and the `payu-broker` console).
 
 ### v1.8.9 (Completed) — June 13, 2026
 

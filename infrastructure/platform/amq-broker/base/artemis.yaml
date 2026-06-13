@@ -30,6 +30,16 @@ spec:
         type: RuntimeDefault
   console:
     expose: true
+  resourceTemplates:
+  - selector:
+      kind: Route
+    patch:
+      kind: Route
+      apiVersion: route.openshift.io/v1
+      spec:
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect
   acceptors:
   - name: core
     port: 61616
