@@ -29,6 +29,17 @@ spec:
   replicas: 1
   # OCP auto-generates route host: <svc>-<ns>.apps.<cluster-domain>
   hostname: payu-kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id
+  # OIDC auth via Keycloak payu realm. Reuses the existing payu-backend client
+  # for now (its redirect-uris may need to be widened to include this console
+  # URL via a KeycloakClient CRD or admin API — TODO: create dedicated
+  # payu-kafka-console client).
+  security:
+    oidc:
+      issuer: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
+      authServerUrl: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
+      clientId: payu-backend
+      clientSecret: payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c
+      scopes: [openid, profile, email]
   kafkaClusters:
     - name: payu-kafka
       namespace: payu-dev
