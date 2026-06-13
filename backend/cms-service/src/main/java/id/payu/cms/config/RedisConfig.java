@@ -1,7 +1,5 @@
 package id.payu.cms.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +9,6 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -71,9 +68,25 @@ public class RedisConfig {
             .build();
     }
 
-    GenericJackson2JsonRedisSerializer buildValueSerializer() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return new GenericJackson2JsonRedisSerializer(objectMapper);
+    /**
+     * READY-001: Build a value serializer that preserves the runtime type of cached values,
+     * including top-level {@link java.util.List} payloads.
+     *
+     * <p>{@code @Cacheable} hits are served via Spring's
+     * {@link org.springframework.cache.interceptor.CacheInterceptor}, which calls
+     * {@code serializer.deserialize(byte[])} without a target type hint. The
+     * default {@code GenericJackson2JsonRedisSerializer} + plain {@code ObjectMapper}
+     * produced {@code LinkedHashMap} payloads and caused
+     * {@code ClassCastException: LinkedHashMap cannot be cast to ContentResponse}
+     * on every cache hit (E2E-2026-06-13-06).</p>
+     *
+     * <p>The {@link TypedJsonRedisSerializer} writes the fully qualified type name
+     * as a prefix on the serialized JSON ({@code <type>|<json>}), so the
+     * original concrete class — including a top-level {@code List<ContentResponse>}
+     * returned by {@code getActiveContentByType} — can be reconstructed on every
+     * cache hit without relying on Jackson polymorphic typing.</p>
+     */
+    org.springframework.data.redis.serializer.RedisSerializer<Object> buildValueSerializer() {
+        return new TypedJsonRedisSerializer();
     }
 }

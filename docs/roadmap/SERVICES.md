@@ -49,7 +49,7 @@
 | `saga-starter` | 🔴 ZERO | 🔴 ZERO | P0 |
 | `lending-service` | ⚠️ Unit only | 🔴 ZERO | P0 |
 | `fx-service` | ⚠️ Unit only | 🔴 ZERO | P0 |
-| `cms-service` | ⚠️ Minimal | 🔴 ZERO | P1 |
+| `cms-service` | ✅ Full (3 new) | 🔴 ZERO | P1 ✅ (READY-001 closed) |
 | `ab-testing-service` | ⚠️ Minimal | 🔴 ZERO | P1 |
 | `statement-service` | 🔴 Minimal | 🔴 ZERO | P1 |
 
@@ -230,6 +230,7 @@
 - ✅ Dynamic Banners and Promos
 - ✅ In-app notification content
 - ✅ Spring Boot 3.4.1
+- ✅ `cms-service:1.8.12` — `@Cacheable` round-trip fixed (TypedJsonRedisSerializer, 3 characterization tests green, E2E proven in `payu-dev`)
 
 #### 16. api-portal-service (Port 8021)
 

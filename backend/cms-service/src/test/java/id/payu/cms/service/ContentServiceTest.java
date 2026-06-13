@@ -44,7 +44,7 @@ class ContentServiceTest {
     private ContentService contentService;
 
     private ContentRequest contentRequest;
-    private Content content;
+    private ContentEntity content;
 
     @BeforeEach
     void setUp() {
@@ -62,7 +62,7 @@ class ContentServiceTest {
             .metadata(new HashMap<>())
             .build();
 
-        content = Content.builder()
+        content = ContentEntity.builder()
             .id(UUID.randomUUID())
             .contentType("BANNER")
             .title("Test Banner")
@@ -86,7 +86,7 @@ class ContentServiceTest {
     void shouldCreateContentSuccessfully() {
         // Given
         when(contentRepository.existsByTitleIgnoreCase("Test Banner")).thenReturn(false);
-        when(contentRepository.save(any(Content.class))).thenReturn(content);
+        when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
         // When
         var response = contentService.createContent(contentRequest, "admin");
@@ -95,7 +95,7 @@ class ContentServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getTitle()).isEqualTo("Test Banner");
         assertThat(response.getContentType()).isEqualTo("BANNER");
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -109,7 +109,7 @@ class ContentServiceTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("already exists");
 
-        verify(contentRepository, never()).save(any(Content.class));
+        verify(contentRepository, never()).save(any(ContentEntity.class));
     }
 
     @Test
@@ -162,7 +162,7 @@ class ContentServiceTest {
         // Given
         UUID contentId = content.getId();
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-        when(contentRepository.save(any(Content.class))).thenReturn(content);
+        when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
         // When
         var response = contentService.updateContentStatus(contentId, "ACTIVE", "admin");
@@ -170,7 +170,7 @@ class ContentServiceTest {
         // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo("ACTIVE");
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -266,14 +266,14 @@ class ContentServiceTest {
 
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
         when(contentRepository.existsByTitleIgnoreCase("Updated Banner")).thenReturn(false);
-        when(contentRepository.save(any(Content.class))).thenReturn(content);
+        when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
         // When
         var response = contentService.updateContent(contentId, updateRequest, "admin");
 
         // Then
         assertThat(response).isNotNull();
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -355,7 +355,7 @@ class ContentServiceTest {
 
         // Then
         assertThat(content.getStatus()).isEqualTo(ContentStatus.ACTIVE);
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -371,7 +371,7 @@ class ContentServiceTest {
 
         // Then
         assertThat(content.getStatus()).isEqualTo(ContentStatus.ARCHIVED);
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -393,7 +393,7 @@ class ContentServiceTest {
     @DisplayName("Should get all content with pagination")
     void shouldGetAllContentWithPagination() {
         // Given
-        Page<Content> contentPage = new PageImpl<>(
+        Page<ContentEntity> contentPage = new PageImpl<>(
             List.of(content),
             PageRequest.of(0, 20),
             1
@@ -418,7 +418,7 @@ class ContentServiceTest {
     @DisplayName("Should get all content with ascending sort")
     void shouldGetAllContentWithAscendingSort() {
         // Given
-        Page<Content> contentPage = new PageImpl<>(List.of(content));
+        Page<ContentEntity> contentPage = new PageImpl<>(List.of(content));
         when(contentRepository.findAll(any(PageRequest.class))).thenReturn(contentPage);
 
         // When
@@ -433,7 +433,7 @@ class ContentServiceTest {
     void shouldHandleDataIntegrityViolationExceptionOnConcurrentCreate() {
         // Given
         when(contentRepository.existsByTitleIgnoreCase("Test Banner")).thenReturn(false);
-        when(contentRepository.save(any(Content.class)))
+        when(contentRepository.save(any(ContentEntity.class)))
             .thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
 
         // When/Then
@@ -457,7 +457,7 @@ class ContentServiceTest {
             .build();
 
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-        when(contentRepository.save(any(Content.class))).thenReturn(content);
+        when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
         // When
         contentService.updateContent(contentId, updateRequest, "admin");
@@ -478,8 +478,8 @@ class ContentServiceTest {
             .build();
 
         when(contentRepository.existsByTitleIgnoreCase("No Priority Banner")).thenReturn(false);
-        when(contentRepository.save(any(Content.class))).thenAnswer(inv -> {
-            Content c = inv.getArgument(0);
+        when(contentRepository.save(any(ContentEntity.class))).thenAnswer(inv -> {
+            ContentEntity c = inv.getArgument(0);
             assertThat(c.getPriority()).isEqualTo(0); // Default to 0
             return c;
         });
@@ -489,7 +489,7 @@ class ContentServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(any(ContentEntity.class));
     }
 
     @Test
@@ -602,7 +602,7 @@ class ContentServiceTest {
 
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
         // Should NOT call existsByTitleIgnoreCase when title is unchanged
-        when(contentRepository.save(any(Content.class))).thenReturn(content);
+        when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
         // When
         var response = contentService.updateContent(contentId, sameTitleRequest, "admin");

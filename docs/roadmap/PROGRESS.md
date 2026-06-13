@@ -34,8 +34,8 @@
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟢 1 P0, 1 P1                             | INFRA-001 (trivy auth). ARCH-010 (Quarkus starters). All other P0/P1 resolved. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-13                               | v1.8.10 — Fixed AMQ Broker Route TLS and Ingress Network Policies. |
-| OpenShift Tag            | `v1.8.10`                                | Latest stable deployment                        |
+| Last Status Update       | 2026-06-13                               | v1.8.12 — CMS cache deser fix (READY-001 closed). |
+| OpenShift Tag            | `v1.8.12`                                | `cms-service:1.8.12` cache round-trip E2E green |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
@@ -92,6 +92,16 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.8.12 (Completed) — June 13, 2026
+
+**CMS Cache Deser Bug Fix (READY-001 / E2E-2026-06-13-06):**
+
+- ✅ **Root cause identified via Spring Data Redis 3.5.11 source decompile + context7 docs**: `cms-service/RedisConfig.java` configured `GenericJackson2JsonRedisSerializer` with a plain `ObjectMapper` (no polymorphic typing). Spring's `CacheInterceptor` calls `serializer.deserialize(byte[])` for `@Cacheable` hits without a target type hint, so cached payloads deserialized to `LinkedHashMap` and the proxy threw `ClassCastException: LinkedHashMap cannot be cast to ContentResponse` on every cache hit. Spring's built-in `TypeResolver.resolveType` only reads the `@class` JSON property, which works for single POJOs but fails on top-level JSON arrays (collections).
+- ✅ **Fix shipped**: New `TypedJsonRedisSerializer` in `cms-service/config/` with a `<outerTypeName>[<elementType>]|<json>` wire format. Serialization: introspects first non-null element of `Collection` payloads to discover the element type. Deserialization: `TypeFactory#constructCollectionType(outer, element)` for collections, `mapper.convertValue` fallback for POJOs. Plain `ObjectMapper` (no `setDefaultTyping` needed) — inner POJOs round-trip naturally without nested wrappers.
+- ✅ **E2E verified in `payu-dev`**: 2 consecutive `GET /api/v1/public/contents/type/BANNER` calls both return HTTP 200 with full `List<ContentResponse>` JSON, no `ClassCastException` in pod logs. Same for `type/PROMO`. Build: `cms-service:1.8.12` pushed to `image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.12`; rollout completed in 44s; pod `cms-service-6b5c54d69c-9kxwn` ready.
+- ✅ **Tests green**: `RedisConfigTest` extended with 2 new characterization tests (3 total). 75 cms-service unit tests pass after mechanical `Content`→`ContentEntity` rename (24 references across 3 pre-existing test files) — partial READY-003 progress. `ContentRepositoryIntegrationTest` still errors on Testcontainers Docker unavailability (infra issue, not code).
+- ⏳ **Platform-wide follow-up** (READY-013): this fix is local to `cms-service`. Other services with `@Cacheable` collections still need the same treatment, or a cross-service migration to a typed format. Spring Data Redis 4.x's `GenericJacksonJsonRedisSerializer` (Jackson 3) should resolve this properly — but requires Spring Boot 4 migration, currently deferred to "Oakwood Release Train" (ARCH-006).
 
 ### v1.8.10 (Completed) — June 13, 2026
 

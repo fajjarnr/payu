@@ -48,12 +48,12 @@ class ContentRepositoryIntegrationTest {
     @Autowired
     private ContentRepository contentRepository;
 
-    private Content banner1;
-    private Content banner2;
-    private Content promo1;
-    private Content scheduledContent;
-    private Content expiredContent;
-    private Content alertContent;
+    private ContentEntity banner1;
+    private ContentEntity banner2;
+    private ContentEntity promo1;
+    private ContentEntity scheduledContent;
+    private ContentEntity expiredContent;
+    private ContentEntity alertContent;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -88,7 +88,7 @@ class ContentRepositoryIntegrationTest {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("campaign", "TEST_2026");
 
-        banner1 = Content.builder()
+        banner1 = ContentEntity.builder()
                 .contentType("BANNER")
                 .title("Welcome Banner")
                 .description("Welcome to PayU")
@@ -106,7 +106,7 @@ class ContentRepositoryIntegrationTest {
                 .updatedBy("admin")
                 .build();
 
-        banner2 = Content.builder()
+        banner2 = ContentEntity.builder()
                 .contentType("BANNER")
                 .title("Promo Banner")
                 .description("Special promo")
@@ -124,7 +124,7 @@ class ContentRepositoryIntegrationTest {
                 .updatedBy("editor")
                 .build();
 
-        promo1 = Content.builder()
+        promo1 = ContentEntity.builder()
                 .contentType("PROMO")
                 .title("Weekend Cashback")
                 .description("20% cashback on weekends")
@@ -142,7 +142,7 @@ class ContentRepositoryIntegrationTest {
                 .updatedBy("admin")
                 .build();
 
-        scheduledContent = Content.builder()
+        scheduledContent = ContentEntity.builder()
                 .contentType("ALERT")
                 .title("Scheduled Maintenance")
                 .description("System maintenance notice")
@@ -158,7 +158,7 @@ class ContentRepositoryIntegrationTest {
                 .updatedBy("admin")
                 .build();
 
-        expiredContent = Content.builder()
+        expiredContent = ContentEntity.builder()
                 .contentType("BANNER")
                 .title("Old Banner")
                 .description("This banner has expired")
@@ -175,7 +175,7 @@ class ContentRepositoryIntegrationTest {
                 .updatedBy("admin")
                 .build();
 
-        alertContent = Content.builder()
+        alertContent = ContentEntity.builder()
                 .contentType("ALERT")
                 .title("System Alert")
                 .description("Important system alert")
@@ -199,7 +199,7 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should persist and retrieve content by ID")
     void shouldPersistAndRetrieveContentById() {
-        Optional<Content> found = contentRepository.findById(banner1.getId());
+        Optional<ContentEntity> found = contentRepository.findById(banner1.getId());
         assertThat(found).isPresent();
         assertThat(found.get().getTitle()).isEqualTo("Welcome Banner");
         assertThat(found.get().getContentType()).isEqualTo("BANNER");
@@ -210,20 +210,20 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should return empty Optional for non-existent ID")
     void shouldReturnEmptyForNonExistentId() {
-        Optional<Content> found = contentRepository.findById(UUID.randomUUID());
+        Optional<ContentEntity> found = contentRepository.findById(UUID.randomUUID());
         assertThat(found).isEmpty();
     }
 
     @Test
     @DisplayName("Should update content and persist changes")
     void shouldUpdateContentAndPersistChanges() {
-        Content content = contentRepository.findById(banner1.getId()).orElseThrow();
+        ContentEntity content = contentRepository.findById(banner1.getId()).orElseThrow();
         content.setTitle("Updated Banner Title");
         content.setPriority(200);
         content.setVersion(2);
         contentRepository.saveAndFlush(content);
 
-        Content updated = contentRepository.findById(banner1.getId()).orElseThrow();
+        ContentEntity updated = contentRepository.findById(banner1.getId()).orElseThrow();
         assertThat(updated.getTitle()).isEqualTo("Updated Banner Title");
         assertThat(updated.getPriority()).isEqualTo(200);
         assertThat(updated.getVersion()).isEqualTo(2);
@@ -247,9 +247,9 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should find active content by type with current date")
     void shouldFindActiveContentByType() {
-        List<Content> activeBanners = contentRepository.findActiveByContentType("BANNER", LocalDate.now());
+        List<ContentEntity> activeBanners = contentRepository.findActiveByContentType("BANNER", LocalDate.now());
         assertThat(activeBanners).hasSize(2);
-        assertThat(activeBanners).extracting(Content::getStatus)
+        assertThat(activeBanners).extracting(ContentEntity::getStatus)
                 .allMatch(s -> s == ContentStatus.ACTIVE);
         assertThat(activeBanners.get(0).getPriority()).isGreaterThanOrEqualTo(
                 activeBanners.get(1).getPriority());
@@ -258,48 +258,48 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should exclude expired content from active results")
     void shouldExcludeExpiredContentFromActive() {
-        List<Content> activeBanners = contentRepository.findActiveByContentType("BANNER", LocalDate.now());
-        assertThat(activeBanners).extracting(Content::getTitle)
+        List<ContentEntity> activeBanners = contentRepository.findActiveByContentType("BANNER", LocalDate.now());
+        assertThat(activeBanners).extracting(ContentEntity::getTitle)
                 .doesNotContain("Old Banner");
     }
 
     @Test
     @DisplayName("Should find content by status")
     void shouldFindContentByStatus() {
-        List<Content> drafts = contentRepository.findByStatus(ContentStatus.DRAFT);
+        List<ContentEntity> drafts = contentRepository.findByStatus(ContentStatus.DRAFT);
         assertThat(drafts).hasSize(1);
         assertThat(drafts.get(0).getTitle()).isEqualTo("System Alert");
 
-        List<Content> active = contentRepository.findByStatus(ContentStatus.ACTIVE);
+        List<ContentEntity> active = contentRepository.findByStatus(ContentStatus.ACTIVE);
         assertThat(active).hasSize(4);
 
-        List<Content> scheduled = contentRepository.findByStatus(ContentStatus.SCHEDULED);
+        List<ContentEntity> scheduled = contentRepository.findByStatus(ContentStatus.SCHEDULED);
         assertThat(scheduled).hasSize(1);
     }
 
     @Test
     @DisplayName("Should find content by type")
     void shouldFindContentByType() {
-        List<Content> banners = contentRepository.findByContentType("BANNER");
+        List<ContentEntity> banners = contentRepository.findByContentType("BANNER");
         assertThat(banners).hasSize(3);
-        assertThat(banners).extracting(Content::getContentType).allMatch(t -> t.equals("BANNER"));
+        assertThat(banners).extracting(ContentEntity::getContentType).allMatch(t -> t.equals("BANNER"));
 
-        List<Content> promos = contentRepository.findByContentType("PROMO");
+        List<ContentEntity> promos = contentRepository.findByContentType("PROMO");
         assertThat(promos).hasSize(1);
 
-        List<Content> alerts = contentRepository.findByContentType("ALERT");
+        List<ContentEntity> alerts = contentRepository.findByContentType("ALERT");
         assertThat(alerts).hasSize(2);
     }
 
     @Test
     @DisplayName("Should find content by type with pagination")
     void shouldFindContentByTypeWithPagination() {
-        Page<Content> page1 = contentRepository.findByContentType("BANNER", PageRequest.of(0, 2));
+        Page<ContentEntity> page1 = contentRepository.findByContentType("BANNER", PageRequest.of(0, 2));
         assertThat(page1.getContent()).hasSize(2);
         assertThat(page1.getTotalElements()).isEqualTo(3);
         assertThat(page1.getTotalPages()).isEqualTo(2);
 
-        Page<Content> page2 = contentRepository.findByContentType("BANNER", PageRequest.of(1, 2));
+        Page<ContentEntity> page2 = contentRepository.findByContentType("BANNER", PageRequest.of(1, 2));
         assertThat(page2.getContent()).hasSize(1);
         assertThat(page2.isLast()).isTrue();
     }
@@ -307,11 +307,11 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should find content by title (case-insensitive)")
     void shouldFindContentByTitleIgnoreCase() {
-        Optional<Content> found = contentRepository.findByTitleIgnoreCase("welcome banner");
+        Optional<ContentEntity> found = contentRepository.findByTitleIgnoreCase("welcome banner");
         assertThat(found).isPresent();
         assertThat(found.get().getTitle()).isEqualTo("Welcome Banner");
 
-        Optional<Content> notFound = contentRepository.findByTitleIgnoreCase("nonexistent");
+        Optional<ContentEntity> notFound = contentRepository.findByTitleIgnoreCase("nonexistent");
         assertThat(notFound).isEmpty();
     }
 
@@ -326,14 +326,14 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should find scheduled content to activate")
     void shouldFindScheduledContentToActivate() {
-        List<Content> toActivate = contentRepository.findScheduledToActivate(LocalDate.now().plusDays(6));
+        List<ContentEntity> toActivate = contentRepository.findScheduledToActivate(LocalDate.now().plusDays(6));
         assertThat(toActivate).hasSize(1);
     }
 
     @Test
     @DisplayName("Should find expired active content to archive")
     void shouldFindExpiredActiveContent() {
-        List<Content> toArchive = contentRepository.findActiveToArchive(LocalDate.now());
+        List<ContentEntity> toArchive = contentRepository.findActiveToArchive(LocalDate.now());
         assertThat(toArchive).hasSize(1);
         assertThat(toArchive.get(0).getTitle()).isEqualTo("Old Banner");
     }
@@ -341,9 +341,9 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should find content by creator")
     void shouldFindContentByCreator() {
-        List<Content> byAdmin = contentRepository.findByCreatedBy("admin");
+        List<ContentEntity> byAdmin = contentRepository.findByCreatedBy("admin");
         assertThat(byAdmin).hasSize(5);
-        List<Content> byEditor = contentRepository.findByCreatedBy("editor");
+        List<ContentEntity> byEditor = contentRepository.findByCreatedBy("editor");
         assertThat(byEditor).hasSize(1);
     }
 
@@ -358,7 +358,7 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should paginate all content")
     void shouldPaginateAllContent() {
-        Page<Content> page1 = contentRepository.findAll(PageRequest.of(0, 3));
+        Page<ContentEntity> page1 = contentRepository.findAll(PageRequest.of(0, 3));
         assertThat(page1.getContent()).hasSize(3);
         assertThat(page1.getTotalElements()).isEqualTo(6);
     }
@@ -366,7 +366,7 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should persist and retrieve JSONB targeting rules")
     void shouldPersistJsonbTargetingRules() {
-        Content found = contentRepository.findById(banner2.getId()).orElseThrow();
+        ContentEntity found = contentRepository.findById(banner2.getId()).orElseThrow();
         assertThat(found.getTargetingRules()).isNotNull();
         assertThat(found.getTargetingRules()).containsEntry("segment", "PREMIUM");
         assertThat(found.getTargetingRules()).containsEntry("location", "JAKARTA");
@@ -375,7 +375,7 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should persist and retrieve JSONB metadata")
     void shouldPersistJsonbMetadata() {
-        Content found = contentRepository.findById(banner1.getId()).orElseThrow();
+        ContentEntity found = contentRepository.findById(banner1.getId()).orElseThrow();
         assertThat(found.getMetadata()).isNotNull();
         assertThat(found.getMetadata()).containsEntry("campaign", "TEST_2026");
     }
@@ -383,17 +383,17 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should handle null JSONB fields")
     void shouldHandleNullJsonbFields() {
-        Content content = Content.builder()
+        ContentEntity content = ContentEntity.builder()
                 .contentType("POPUP")
-                .title("Minimal Content")
+                .title("Minimal ContentEntity")
                 .description("No targeting or metadata")
                 .actionType("DISMISS")
                 .priority(0)
                 .status(ContentStatus.DRAFT)
                 .version(1)
                 .build();
-        Content saved = contentRepository.saveAndFlush(content);
-        Content found = contentRepository.findById(saved.getId()).orElseThrow();
+        ContentEntity saved = contentRepository.saveAndFlush(content);
+        ContentEntity found = contentRepository.findById(saved.getId()).orElseThrow();
         assertThat(found.getTargetingRules()).isNull();
         assertThat(found.getMetadata()).isNull();
     }
@@ -401,7 +401,7 @@ class ContentRepositoryIntegrationTest {
     @Test
     @DisplayName("Should auto-populate timestamps on save")
     void shouldAutoPopulateTimestampsOnSave() {
-        Content content = Content.builder()
+        ContentEntity content = ContentEntity.builder()
                 .contentType("POPUP")
                 .title("Timestamp Test")
                 .actionType("DISMISS")
@@ -411,7 +411,7 @@ class ContentRepositoryIntegrationTest {
                 .createdBy("test")
                 .updatedBy("test")
                 .build();
-        Content saved = contentRepository.saveAndFlush(content);
+        ContentEntity saved = contentRepository.saveAndFlush(content);
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
     }

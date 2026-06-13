@@ -40,8 +40,8 @@ class ContentSchedulerTest {
     @InjectMocks
     private ContentScheduler scheduler;
 
-    private Content scheduledContent;
-    private Content expiredContent;
+    private ContentEntity scheduledContent;
+    private ContentEntity expiredContent;
     private UUID scheduledId;
     private UUID expiredId;
 
@@ -53,7 +53,7 @@ class ContentSchedulerTest {
         Map<String, Object> targeting = new HashMap<>();
         targeting.put("segment", "ALL");
 
-        scheduledContent = Content.builder()
+        scheduledContent = ContentEntity.builder()
                 .id(scheduledId)
                 .contentType("BANNER")
                 .title("Scheduled Banner")
@@ -70,7 +70,7 @@ class ContentSchedulerTest {
                 .updatedBy("admin")
                 .build();
 
-        expiredContent = Content.builder()
+        expiredContent = ContentEntity.builder()
                 .id(expiredId)
                 .contentType("PROMO")
                 .title("Expired Promo")
@@ -89,7 +89,7 @@ class ContentSchedulerTest {
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // Activate Scheduled Content Tests
+    // Activate Scheduled ContentEntity Tests
     // ═════════════════════════════════════════════════════════════════════
 
     @Test
@@ -106,7 +106,7 @@ class ContentSchedulerTest {
         // Then
         verify(contentService).getScheduledContentToActivate();
         verify(contentService).activateScheduledContent(List.of(scheduledId));
-        verify(eventPublisher).publishContentPublished(any(Content.class));
+        verify(eventPublisher).publishContentPublished(any(ContentEntity.class));
     }
 
     @Test
@@ -122,7 +122,7 @@ class ContentSchedulerTest {
         // Then
         verify(contentService).getScheduledContentToActivate();
         verify(contentService, never()).activateScheduledContent(anyList());
-        verify(eventPublisher, never()).publishContentPublished(any(Content.class));
+        verify(eventPublisher, never()).publishContentPublished(any(ContentEntity.class));
     }
 
     @Test
@@ -130,7 +130,7 @@ class ContentSchedulerTest {
     void shouldActivateMultipleScheduledItems() {
         // Given
         UUID secondId = UUID.randomUUID();
-        Content secondScheduled = Content.builder()
+        ContentEntity secondScheduled = ContentEntity.builder()
                 .id(secondId)
                 .contentType("BANNER")
                 .title("Second Scheduled Banner")
@@ -150,11 +150,11 @@ class ContentSchedulerTest {
 
         // Then
         verify(contentService).activateScheduledContent(List.of(scheduledId, secondId));
-        verify(eventPublisher, times(2)).publishContentPublished(any(Content.class));
+        verify(eventPublisher, times(2)).publishContentPublished(any(ContentEntity.class));
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // Archive Expired Content Tests
+    // Archive Expired ContentEntity Tests
     // ═════════════════════════════════════════════════════════════════════
 
     @Test
@@ -171,7 +171,7 @@ class ContentSchedulerTest {
         // Then
         verify(contentService).getExpiredActiveContent();
         verify(contentService).archiveExpiredContent(List.of(expiredId));
-        verify(eventPublisher).publishContentArchived(any(Content.class));
+        verify(eventPublisher).publishContentArchived(any(ContentEntity.class));
     }
 
     @Test
@@ -187,7 +187,7 @@ class ContentSchedulerTest {
         // Then
         verify(contentService).getExpiredActiveContent();
         verify(contentService, never()).archiveExpiredContent(anyList());
-        verify(eventPublisher, never()).publishContentArchived(any(Content.class));
+        verify(eventPublisher, never()).publishContentArchived(any(ContentEntity.class));
     }
 
     @Test
@@ -195,7 +195,7 @@ class ContentSchedulerTest {
     void shouldArchiveMultipleExpiredItems() {
         // Given
         UUID secondId = UUID.randomUUID();
-        Content secondExpired = Content.builder()
+        ContentEntity secondExpired = ContentEntity.builder()
                 .id(secondId)
                 .contentType("ALERT")
                 .title("Second Expired Alert")
@@ -215,6 +215,6 @@ class ContentSchedulerTest {
 
         // Then
         verify(contentService).archiveExpiredContent(List.of(expiredId, secondId));
-        verify(eventPublisher, times(2)).publishContentArchived(any(Content.class));
+        verify(eventPublisher, times(2)).publishContentArchived(any(ContentEntity.class));
     }
 }
