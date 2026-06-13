@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AMQ Broker Setup**: Deployed AMQ Broker Operator subscription and configured the renamed `payu-broker` ActiveMQArtemis CR using `spec.brokerProperties` for defining target queues cleanly without deprecated CRDs.
 - **Port Conflict & Probe Fixes**: Removed conflicting custom `web` acceptor on port `8161` to resolve the jetty web console `BindException`, allowing the certified Red Hat image's default readiness probe to succeed.
 - **Artemis Integration**: Connected `notification-service` dynamically to the broker using `ARTEMIS_URL` retrieved from the `service-endpoints` ConfigMap, achieving full pod readiness (`1/1`).
+- **Console Route Exposure**: Configured `spec.console.expose: true` in the `ActiveMQArtemis` CR to automatically provision an OpenShift Route (`payu-broker-wconsj-0-svc-rte`) for external access to the Hawtio console.
 
 ### Migration Design Restructuring (2026-06-12)
 

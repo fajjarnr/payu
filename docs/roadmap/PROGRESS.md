@@ -105,6 +105,7 @@
 - ✅ **Port Conflict & Probe Fix**: Removed the conflicting custom Netty `web` acceptor on port `8161` (resolving the web console `BindException`), allowing the default readiness probe to succeed.
 - ✅ **Artemis Integration**: Integrated `notification-service` to connect dynamically using `ARTEMIS_URL` config, bringing its Artemis JMS health check green and transitioning to `1/1` Running/Ready.
 - ✅ **Full Pod Readiness**: Verified all 39 pods in the `payu-dev` namespace (including the renamed `payu-broker-ss-0` and restarted `notification-service`) are `1/1` Running/Ready.
+- ✅ **Console Route Exposure**: Configured `spec.console.expose: true` to automatically provision an OpenShift Route (`payu-broker-wconsj-0-svc-rte`) mapping port 8161 for external access to the Hawtio console.
 
 ### v1.8.8 (Completed) — June 12, 2026
 
