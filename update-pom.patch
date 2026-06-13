@@ -1,0 +1,21 @@
+--- backend/statement-service/pom.xml
++++ backend/statement-service/pom.xml
+@@ -21,6 +21,18 @@
+         <java.version>25</java.version>
+         <apache.pdfbox.version>3.0.3</apache.pdfbox.version>
+     </properties>
++
++    <dependencyManagement>
++        <dependencies>
++            <dependency>
++                <groupId>org.springframework.boot</groupId>
++                <artifactId>spring-boot-dependencies</artifactId>
++                <version>4.1.0</version>
++                <type>pom</type>
++                <scope>import</scope>
++            </dependency>
++        </dependencies>
++    </dependencyManagement>
+ 
+     <dependencies>
+         <!-- Spring Boot Starters -->
