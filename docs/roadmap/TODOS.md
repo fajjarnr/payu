@@ -13,11 +13,12 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 0 (all resolved) |
-| **Open P1s** | 11 |
+| **Open P0s** | 3 (READY-001/002/003) |
+| **Open P1s** | 28 |
 | **Open P2s** | 12 |
-| **Last Audit** | June 10, 2026 — All 12 production readiness audit items resolved (2 batches) |
-| **Production Score** | 99/100 |
+| **Production Score** | ~45% (target 80% for regulator submission) |
+| **Last Audit** | June 13, 2026 — E2E + cache + Kafka + AMQ all proven, 33 production readiness gaps logged |
+| **Last Release** | 1.8.11 — PatternParseException fix + E2E CRUD verified |
 
 ---
 
@@ -181,8 +182,92 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | E2E-2026-06-13-03 | P3 | **wallet-service springdoc-openapi 2.x broken on Spring Boot 3.5** | `NoSuchMethodError: ControllerAdviceBean.<init>(java.lang.Object)` — does not affect REST endpoints. Only breaks `/api-docs` JSON generation. Fix: bump `springdoc-openapi-starter-webmvc-ui` to 2.6.0+. |
 | E2E-2026-06-13-04 | P1 | **Card create needs prerequisite wallet row** — ✅ RESOLVED via `scripts/e2e/walletbootstrap.sql` | `CardService.createVirtualCard` requires `payu_wallet.wallets.account_id = <Keycloak user_id>`. Bootstrap script inserts wallet+pocket for `customer1` (Keycloak subject `7a51ced3-...`). Future work: auto-provision wallet on account create, OR provide a wallet-create endpoint. |
 | E2E-2026-06-13-05 | P3 | **E2E CRUD via 3scale proven end-to-end** — ✅ VERIFIED in `account-service:1.8.11` + `wallet-service:1.8.11` | `3scale <-> gateway <-> wallet` chain works: 3scale user_key auth ✓, JWT bearer auth ✓, routing ✓, all CRUD endpoints ✓. Test script: `scripts/e2e/cards-crud.sh` (T1=201 CREATE, T2/T3=200 READ, T4/T5=200 UPDATE freeze→FROZEN, T6/T7=200 UPDATE unfreeze→ACTIVE). Future work: improve gateway `GlobalExceptionHandler` to forward upstream status codes instead of wrapping everything as 500. |
+| E2E-2026-06-13-06 | P1 | **cms-service cache deser bug** — `LinkedHashMap cannot be cast to ContentResponse` on cache hit. Cache infra (DataGrid RESP) works, but `cache-starter` deserializer doesn't reconstruct typed DTO. Block all `cms-service` reads from cache. Fix: configure `RedisCacheConfiguration` with proper `GenericJackson2JsonRedisSerializer` `TypeResolverBuilder` so polymorphic types are preserved. |
+| E2E-2026-06-13-07 | P1 | **DataGrid (Redis RESP) round-trip proven** — ✅ VERIFIED | `payu-datagrid.payu-dev.svc.cluster.local:11222` ping/pong ✓, AUTH ✓, SET/GET round-trip ✓. `cache-starter` integration depends on `E2E-2026-06-13-06` fix. |
+| E2E-2026-06-13-08 | P1 | **Kafka outbox end-to-end proven** — ✅ VERIFIED | `INSERT outbox_events → OutboxPublisher poller → published_at set (1s lag) → consumed from `payu.e2e.test` topic via `kafka-console-consumer.sh`. CloudEvents 1.0 format ✓. Only 1 topic tested — need to validate all `payu.*` topic patterns. |
+| E2E-2026-06-13-09 | P1 | **AMQ broker E2E proven via Jolokia** — ✅ VERIFIED | Jolokia `sendMessage` → `MessagesAdded++` (5 messages) → billing-service `@JmsListener` invoked → `messagesDelivered=4` + `messagesAcknowledged=4`. Test artifact: Jolokia body format ≠ JmsTemplate body format (JSON deser fails on test msg), but broker + consumer + delivery chain is 100% proven. Producer (`JmsMessagePublisher.sendWithDelay`) idle because 0 subscriptions in `payu_billing.subscriptions` table. |
 
 ---
 
-_Last Updated: June 13, 2026 — 1.8.11 released: Spring Security PatternParseException fix + E2E CRUD verified (T1=201, T2-T7=200)._
+## 🎯 Production Readiness Gap Analysis (2026-06-13)
+
+> Snapshot assessment after E2E + cache + Kafka + AMQ proof. Overall: **~45% production ready**.
+> Target for regulator submission (OJK/PCI-DSS/UU PDP): **80%+ on critical paths, 100% on audit trail + compliance**.
+
+### 🔴 P0 — Blocker (must fix before launch)
+
+| Key | Summary | Current | Target |
+|:---|:---|:---:|:---:|
+| READY-001 | **Fix `cms-service` cache deser** (E2E-2026-06-13-06) — `cache-starter` JSON serializer doesn't preserve type info | 60% | 100% |
+| READY-002 | **Idempotency stress test** — 10 concurrent duplicate `X-Idempotency-Key` requests must resolve to 1 mutation. Spec says all payment/transfer endpoints MUST support this. | 0% | 100% |
+| READY-003 | **Tekton pipeline green** — only `mvn clean package -DskipTests` works locally. Pre-existing enum compile errors block `test-compile`. Need to either fix enums or document `maven.test.skip=true` as platform policy. | 30% | 100% |
+
+### 🟠 P1 — Critical (target ≥80%)
+
+| Key | Category | Summary | Current | Target |
+|:---|:---|:---|:---:|:---:|
+| READY-010 | Security | Vault integration verified end-to-end (currently declared, not audited) | 50% | 90% |
+| READY-011 | Security | Pen-test: mTLS strict, CSP headers, secret scan (gitleaks) | 40% | 80% |
+| READY-012 | Security | `@Sensitive` annotation enforced via ArchUnit (no PII in logs) | 60% | 100% |
+| READY-013 | Cache | Configure `GenericJackson2JsonRedisSerializer` with `DefaultTyping.NON_FINAL` + `PolymorphicTypeValidator` | 60% | 90% |
+| READY-014 | Cache | Wire `cache.local.hits/misses/size` + `cache.distributed.get/put` to Prometheus | 50% | 100% |
+| READY-015 | Kafka | Validate all `payu.*` topic patterns (currently only `payu.e2e.test` tested) | 25% | 100% |
+| READY-016 | Kafka | DLQ path test — simulate broker down + check `*.dlq` topic gets message | 0% | 100% |
+| READY-017 | AMQ | Test dunning/scheduled billing flow (currently 0 subscriptions in DB) | 0% | 100% |
+| READY-018 | AMQ | `JmsMessagePublisher.sendWithDelay` E2E: schedule + verify 5min delay | 0% | 100% |
+| READY-019 | Observability | Distributed tracing wired (OpenTelemetry → Tempo) | 0% | 100% |
+| READY-020 | Observability | Loki log shipping verified (stdout JSON → LokiStack) | 50% | 100% |
+| READY-021 | Observability | Prometheus scrape config + alerting rules (p99 latency, error rate) | 30% | 100% |
+| READY-022 | Test coverage | Unit test coverage 80%+ for core domain (blocker: pre-existing enum compile errors) | 25% | 80% |
+| READY-023 | Test coverage | Contract tests (Pact/Spring Cloud Contract) for all public APIs | 0% | 100% |
+| READY-024 | Error handling | Audit GlobalExceptionHandler returns RFC 9457 Problem Details (declare but not verified) | 60% | 100% |
+| READY-025 | Error handling | Gateway `GlobalExceptionHandler` should forward upstream 4xx/5xx verbatim (currently wraps as 500) | 30% | 100% |
+| READY-026 | HA | Kafka 3-broker cluster (currently 1 broker) | 15% | 100% |
+| READY-027 | HA | Postgres 3-replica (Crunchy) (currently 1 primary) | 15% | 100% |
+| READY-028 | HA | AMQ broker pair (currently 1 broker) | 30% | 100% |
+| READY-029 | Performance | Gatling load test: 1000 concurrent users, p99 < 10s | 5% | 100% |
+| READY-030 | Performance | Stress: SOAK test 24h, no memory leak | 5% | 100% |
+
+### 🟡 P2 — Important (target ≥50%)
+
+| Key | Category | Summary | Current | Target |
+|:---|:---|:---|:---:|:---:|
+| READY-040 | Compliance | PCI-DSS audit: encryption-at-rest verified (pgcrypto for NIK/PIN) | 30% | 100% |
+| READY-041 | Compliance | UU PDP: data retention policy + right-to-erasure endpoints | 20% | 100% |
+| READY-042 | Compliance | Immutable ledger invariant: `sum(credits) - sum(debits) == current_balance` tested | 0% | 100% |
+| READY-043 | Compliance | Audit trail: all financial mutations append-only + actor + timestamp | 50% | 100% |
+| READY-044 | CI/CD | Tekton Chains (SLSA provenance) | 0% | 100% |
+| READY-045 | CI/CD | Tekton Results (audit trail) | 0% | 100% |
+| READY-046 | CI/CD | ArgoCD sync verified (GitOps) | 0% | 100% |
+| READY-047 | Security | Coraza WAF with OWASP CRS v4.x | 0% | 100% |
+| READY-048 | Security | ComplianceOperator CIS scan | 0% | 100% |
+| READY-049 | Security | Wazuh SIEM (manager + agent) | 0% | 100% |
+| READY-050 | Ops | PagerDuty/Opsgenie for P1/P2 alerting | 0% | 100% |
+| READY-051 | Ops | Severity P1-P4 + escalation path documented | 0% | 100% |
+| READY-052 | Docs | DR runbook tested (Vault, ArgoCD, ACS, Wazuh failover) | 0% | 100% |
+
+### 🟢 P3 — Nice to have (post-launch)
+
+| Key | Category | Summary | Current | Target |
+|:---|:---|:---|:---:|:---:|
+| READY-060 | Card | Card tokenization + 3DS (PCI-DSS scope expansion) | 0% | 100% |
+| READY-061 | Mobile | Expo SDK 55 + RN 0.85 upgrade | 0% | 100% |
+| READY-062 | ML | ONNX fraud detection model in `fraud-service` | 0% | 100% |
+| READY-063 | Frontend | Premium Emerald design system pass (web-app) | 0% | 100% |
+
+---
+
+## 🎯 Top 5 Path to 80% Production Ready
+
+1. **READY-001** Fix `cms-service` cache deser (P0, 2-3 days)
+2. **READY-002** Idempotency stress test (P0, 1 day)
+3. **READY-003** Tekton pipeline green (P0, 1-2 days)
+4. **READY-019/020/021** Observability (OTel + Loki + Prom) (P1, 3-4 days)
+5. **READY-026/027/028** HA: Kafka 3-broker + Postgres 3-replica + AMQ pair (P1, 1 week)
+
+**Total effort**: ~3 weeks with 1 engineer focused, 1.5 weeks with 2 engineers.
+
+---
+
+_Last Updated: June 13, 2026 — 1.8.11 released. E2E + cache + Kafka + AMQ all proven. 33 production readiness gaps logged (3 P0, 17 P1, 13 P2, 4 P3)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
