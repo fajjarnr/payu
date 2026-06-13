@@ -51,8 +51,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                 .requestMatchers("/account-service/actuator/health", "/account-service/actuator/health/**", "/account-service/actuator/info").permitAll()
                 .requestMatchers("/actuator/**", "/account-service/actuator/**").authenticated()
-                // Swagger/OpenAPI docs
-                .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v1/public/**", "/api/v1/v1/public/**").permitAll()
+                // Swagger/OpenAPI docs (collapsed to 3 /** catch-alls, no typo)
+                .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

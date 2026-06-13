@@ -56,10 +56,7 @@ public class SecurityConfig {
         "/api-docs/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",
-        "/swagger-ui.html",
-        // Public health endpoints (AUTH-030)
-        "/v1/public/**",
-        "/api/v1/v1/public/**"
+        "/swagger-ui.html"
     };
 
     private static final String[] PUBLIC_ACTUATOR_ENDPOINTS = {
