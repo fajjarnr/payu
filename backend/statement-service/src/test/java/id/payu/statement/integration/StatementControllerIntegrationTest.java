@@ -4,6 +4,7 @@ import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
+import id.payu.statement.domain.entity.StatementStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -185,7 +186,7 @@ class StatementControllerIntegrationTest {
                     .totalCredits(new BigDecimal("500000.00"))
                     .totalDebits(new BigDecimal("300000.00"))
                     .transactionCount(25)
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
 
             statement = statementRepository.save(statement);
@@ -243,7 +244,7 @@ class StatementControllerIntegrationTest {
                         .storagePath("s3://bucket/statement-" + i + ".pdf")
                         .openingBalance(new BigDecimal("1000000.00"))
                         .closingBalance(new BigDecimal("1100000.00"))
-                        .status(StatementEntity.StatementStatus.COMPLETED)
+                        .status(StatementStatus.COMPLETED)
                         .build();
                 statementRepository.save(statement);
             }
@@ -294,7 +295,7 @@ class StatementControllerIntegrationTest {
                         .storagePath("s3://bucket/statement-" + i + ".pdf")
                         .openingBalance(new BigDecimal("1000000.00"))
                         .closingBalance(new BigDecimal("1100000.00"))
-                        .status(StatementEntity.StatementStatus.COMPLETED)
+                        .status(StatementStatus.COMPLETED)
                         .build();
                 statementRepository.save(statement);
             }
@@ -333,7 +334,7 @@ class StatementControllerIntegrationTest {
                     .storagePath("s3://bucket/statement-jan.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1100000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(oldStatement);
 
@@ -344,7 +345,7 @@ class StatementControllerIntegrationTest {
                     .storagePath("s3://bucket/statement-feb.pdf")
                     .openingBalance(new BigDecimal("1100000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(latestStatement);
 
@@ -387,7 +388,7 @@ class StatementControllerIntegrationTest {
                     .fileSizeBytes(1024L)
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 
@@ -431,7 +432,7 @@ class StatementControllerIntegrationTest {
                     .storagePath("s3://bucket/statement.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 
@@ -455,7 +456,7 @@ class StatementControllerIntegrationTest {
                     .storagePath("s3://bucket/statement.pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1200000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statement = statementRepository.save(statement);
 

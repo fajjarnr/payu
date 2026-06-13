@@ -2,6 +2,7 @@ package id.payu.statement.integration;
 
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
+import id.payu.statement.domain.entity.StatementStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -58,7 +59,7 @@ class StatementRepositoryIntegrationTest {
                 .totalCredits(new BigDecimal("500000.00"))
                 .totalDebits(new BigDecimal("300000.00"))
                 .transactionCount(25)
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
 
         StatementEntity saved = statementRepository.save(statement);
@@ -66,7 +67,7 @@ class StatementRepositoryIntegrationTest {
 
         assertThat(found).isPresent();
         assertThat(found.get().getCustomerId()).isEqualTo(CUSTOMER_ID_1);
-        assertThat(found.get().getStatus()).isEqualTo(StatementEntity.StatementStatus.COMPLETED);
+        assertThat(found.get().getStatus()).isEqualTo(StatementStatus.COMPLETED);
     }
 
     @Test
@@ -81,7 +82,7 @@ class StatementRepositoryIntegrationTest {
                     .storagePath("s3://bucket/statement-" + i + ".pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1100000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(statement);
         }
@@ -94,14 +95,14 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement-other.pdf")
                 .openingBalance(new BigDecimal("2000000.00"))
                 .closingBalance(new BigDecimal("2200000.00"))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
         statementRepository.save(statement2);
 
-        List<StatementEntity> completedStatements = statementRepository.findByStatus(StatementEntity.StatementStatus.COMPLETED);
+        List<StatementEntity> completedStatements = statementRepository.findByStatus(StatementStatus.COMPLETED);
 
         assertThat(completedStatements).hasSize(4);
-        assertThat(completedStatements).allMatch(s -> s.getStatus().equals(StatementEntity.StatementStatus.COMPLETED));
+        assertThat(completedStatements).allMatch(s -> s.getStatus().equals(StatementStatus.COMPLETED));
     }
 
     @Test
@@ -116,7 +117,7 @@ class StatementRepositoryIntegrationTest {
                     .storagePath("s3://bucket/statement-" + i + ".pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1100000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(statement);
         }
@@ -140,7 +141,7 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement-jan.pdf")
                 .openingBalance(new BigDecimal("1000000.00"))
                 .closingBalance(new BigDecimal("1100000.00"))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
         statementRepository.save(oldStatement);
 
@@ -152,7 +153,7 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement-mar.pdf")
                 .openingBalance(new BigDecimal("1200000.00"))
                 .closingBalance(new BigDecimal("1300000.00"))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
         statementRepository.save(latestStatement);
 
@@ -176,7 +177,7 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement-feb.pdf")
                 .openingBalance(new BigDecimal("1000000.00"))
                 .closingBalance(new BigDecimal("1200000.00"))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
         statementRepository.save(statement);
 
@@ -199,7 +200,7 @@ class StatementRepositoryIntegrationTest {
                     .storagePath("s3://bucket/statement-" + i + ".pdf")
                     .openingBalance(new BigDecimal("1000000.00"))
                     .closingBalance(new BigDecimal("1100000.00"))
-                    .status(StatementEntity.StatementStatus.COMPLETED)
+                    .status(StatementStatus.COMPLETED)
                     .build();
             statementRepository.save(statement);
         }
@@ -219,17 +220,17 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement.pdf")
                 .openingBalance(new BigDecimal("1000000.00"))
                 .closingBalance(new BigDecimal("1200000.00"))
-                .status(StatementEntity.StatementStatus.GENERATING)
+                .status(StatementStatus.GENERATING)
                 .build();
         statement = statementRepository.save(statement);
 
         // Update status
-        statement.setStatus(StatementEntity.StatementStatus.COMPLETED);
+        statement.setStatus(StatementStatus.COMPLETED);
         statementRepository.save(statement);
 
         Optional<StatementEntity> updated = statementRepository.findById(statement.getId());
         assertThat(updated).isPresent();
-        assertThat(updated.get().getStatus()).isEqualTo(StatementEntity.StatementStatus.COMPLETED);
+        assertThat(updated.get().getStatus()).isEqualTo(StatementStatus.COMPLETED);
     }
 
     @Test
@@ -242,7 +243,7 @@ class StatementRepositoryIntegrationTest {
                 .storagePath("s3://bucket/statement.pdf")
                 .openingBalance(new BigDecimal("1000000.00"))
                 .closingBalance(new BigDecimal("1200000.00"))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .build();
         statement = statementRepository.save(statement);
 

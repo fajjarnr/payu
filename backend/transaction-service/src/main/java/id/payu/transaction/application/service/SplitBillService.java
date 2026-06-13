@@ -43,8 +43,21 @@ public class SplitBillService implements SplitBillUseCase {
         String referenceNumber = generateReferenceNumber();
         Instant now = Instant.now();
 
+        // BUG-TXN-SPLITBILL-001: do NOT pre-assign the id. SplitBillEntity has
+        // @Version Long version (added in V16 migration), so Spring Data's
+        // isNew() checks version==null → true → calls em.persist() (not merge).
+        // Letting Hibernate generate the UUID on persist ensures the entity
+        // is treated as transient by both Spring Data AND Hibernate's
+        // entityIsTransient check during cascade.
+        //
+        // Participants are saved EXPLICITLY (not via cascade) because the
+        // unidirectional @JoinColumn OneToMany mapping doesn't reliably
+        // set the split_bill_id FK on cascade insert with @GeneratedValue(UUID)
+        // — Hibernate's batching flushes the participants before the parent's
+        // generated UUID is propagated to the children's FK column.
+        // See SplitBillParticipantEntity.splitBillId setter below.
+        List<SplitBillParticipantEntity> participants = buildParticipants(request, now);
         SplitBillEntity splitBill = SplitBillEntity.builder()
-                .id(UUID.randomUUID())
                 .referenceNumber(referenceNumber)
                 .creatorAccountId(request.getCreatorAccountId())
                 .totalAmount(request.getTotalAmount())
@@ -56,11 +69,15 @@ public class SplitBillService implements SplitBillUseCase {
                 .dueDate(request.getDueDate())
                 .createdAt(now)
                 .updatedAt(now)
-                .participants(buildParticipants(request, now))
                 .build();
 
         splitBill = persistencePort.save(splitBill);
-        splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBill.getId()));
+        final UUID parentId = splitBill.getId();
+        for (SplitBillParticipantEntity p : participants) {
+            p.setSplitBillId(parentId);
+            persistencePort.saveParticipant(p);
+        }
+        splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(parentId));
 
         log.info("Split bill created, id: {}, reference: {}", splitBill.getId(), referenceNumber);
         eventPublisher.publishSplitBillCreated(splitBill);
@@ -158,7 +175,6 @@ public class SplitBillService implements SplitBillUseCase {
         }
 
         SplitBillParticipantEntity participant = SplitBillParticipantEntity.builder()
-                .id(UUID.randomUUID())
                 .splitBillId(splitBillId)
                 .accountId(request.getAccountId())
                 .accountNumber(request.getAccountNumber())
@@ -348,7 +364,6 @@ public class SplitBillService implements SplitBillUseCase {
             }
 
             return SplitBillParticipantEntity.builder()
-                    .id(UUID.randomUUID())
                     .splitBillId(null)
                     .accountId(p.getAccountId())
                     .accountNumber(p.getAccountNumber())

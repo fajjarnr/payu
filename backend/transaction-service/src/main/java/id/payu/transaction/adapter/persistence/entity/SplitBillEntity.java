@@ -119,6 +119,7 @@ public class SplitBillEntity {
         private Instant createdAt;
         private Instant updatedAt;
         private Instant completedAt;
+        private Long version;
 
         public SplitBillBuilder id(UUID id) {
             this.id = id;

@@ -155,6 +155,11 @@ public class SplitBillParticipantEntity {
             return this;
         }
 
+        public SplitBillParticipantBuilder version(Long version) {
+            this.version = version;
+            return this;
+        }
+
         public SplitBillParticipantEntity build() {
             return new SplitBillParticipantEntity(id, splitBillId, accountId, accountNumber, accountName,
                     amountOwed, amountPaid, status, settledAt, createdAt, updatedAt, version);

@@ -71,7 +71,7 @@ images:
   newTag: "1.8.8"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newTag: "1.8.16"
+  newTag: "1.8.18"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.15"
