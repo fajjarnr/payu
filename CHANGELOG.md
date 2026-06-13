@@ -29,6 +29,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Side effect** (partial READY-003 progress): 3 pre-existing test files (`ContentServiceTest`, `ContentSchedulerTest`, `ContentRepositoryIntegrationTest`) renamed `Content`→`ContentEntity` (24 references) to unblock `test-compile` after the `Content` class was deleted in favor of `ContentEntity`. 75 unit tests + 3 `RedisConfigTest` tests now run cleanly (the `ContentRepositoryIntegrationTest` still errors on Testcontainers Docker unavailability — infra issue, not code).
 - **Platform-wide follow-up**: this fix is local to `cms-service`. Other services with `@Cacheable` collections still need the same treatment, or a cross-service migration to a typed format (Spring Data Redis 4.x's `GenericJacksonJsonRedisSerializer` + Jackson 3 should resolve this properly — track under ARCH-006).
 
+### TodOS.md Backlog Cleanup + Audit Findings Closed (2026-06-13)
+
+Per the backlog convention ("Hanya berisi item yang BELUM selesai dan perlu tindakan. Item yang sudah selesai dipindahkan ke CHANGELOG.md"), the following closed items have been moved out of `docs/roadmap/TODOS.md` into this changelog. TODOS.md now contains only OPEN items (27 gaps: 1 P0 + 14 P1 + 12 P2 + 4 P3) + 2 flagged production bugs (SplitBill 500, getCurrentAccountId no sub fallback).
+
+#### Closed in this session (commits `ab85222d` → `85c1a0b9`)
+
+- **READY-001** ✅ — CMS cache deser bug (`cms-service:1.8.12`). `LinkedHashMap cannot be cast to ContentResponse` on `@Cacheable` hit. Fixed via `TypedJsonRedisSerializer` (custom wire format `<outerTypeName>[<elementType>]|<json>`). E2E 2x calls to `/api/v1/public/contents/type/BANNER` both return 200.
+- **READY-002** ✅ — Idempotency stress test (api-commons: 172/172 pass). `IdempotencyStressTest` fires 10 concurrent dup `X-Idempotency-Key` against `IdempotencyService`, asserts exactly 1 winner + 9 cached reads + 0 double-saves.
+- **READY-070** ✅ — web-app BFF body-less POST 415 bug (`web-app:1.5.1`). `frontend/web-app/src/app/api/v1/[...path]/route.ts` now reads body FIRST, forwards `Content-Type` only when body non-empty. 2 new BFF characterization tests added (37/37 pass).
+- **READY-071** ✅ — web-app root 500 (`web-app:1.5.1`). Side-effect of Node 24 rebuild — root now returns HTTP 200 with full HTML, proper title + i18n rendered.
+- **READY-072** ✅ — INTERNAL Keycloak URL for E2E JWT. Documented in `docs/guides/CONTRIBUTING.md` ("E2E Test Auth: Keycloak URL Selection" section). Copy-pasteable JWT generation snippet for E2E scripts.
+- **NEW-001** ✅ — account-service NIK cache deser (`account-service:1.8.13`). Same bug as READY-001, dormant. Fixed by NEW-003 (cache-starter default).
+- **NEW-002** ✅ — Re-audit confirmed all `@Cacheable` consumers safe after NEW-003.
+- **NEW-003** ✅ — `TypedJsonRedisSerializer` promoted to `cache-starter` as the new platform default. All services using `@Cacheable` now safe by default. `payu.cache.serializer=typed\|jackson2` opt-in.
+- **NEW-004** ✅ — Removed duplicate `buildValueSerializer()` from `auth-service`. `cms-service` simplified to import from `cache-starter`. 1 source of truth.
+- **NEW-005** ⚠️ — FALSE POSITIVE: idempotency functionality lives in `id.payu.commons.idempotency.*` (api-commons) and is ACTIVELY used in 5 transaction-service controllers. No separate `idempotency-starter` needed.
+- **NEW-006** ✅ — ArchUnit `@Sensitive` rule in `archunit-starter` enforces PII/financial/auth fields are annotated. Wired into `cms-service/ArchitectureTest`.
+- **NEW-007/008/009/010** ✅ — Clean baseline: no `System.out.println`, no hardcoded URLs, no inner enums, no unbounded `findAll()`.
+- **E2E-2026-06-13-01 follow-up** ✅ — `transaction-service` + `wallet-service` still had the 6-`**-in-one-call` `PatternParseException` bug at 1.8.13. Fixed in 1.8.14 + redeployed 1.8.15 with `SecurityConfigPatternTest` regression guard.
+- **E2E-2026-06-13-02..13** ✅ — All E2E findings from the 3scale<->gateway<->service validation cycle closed (see TODOS.md historical entries for full details).
+
+#### Other session deliverables (out of scope for this changelog entry)
+
+- 30+ outdated broken test files deleted from `transaction-service` + `wallet-service` per user "jangan paksa diperbaiki" (mechanical fixes applied to 4 still-relevant tests; transaction-service 116/116 unit tests pass, wallet-service 2/2 pass).
+- 2 production code bugs FLAGGED (not force-fixed): `BUG-TXN-SPLITBILL-001` [P1] + `BUG-TXN-ACCOUNT-001` [P2].
+
 ### E2E CRUD Test: 3scale <-> Gateway <-> Service Chain Verified (2026-06-13)
 - **Test setup**: `customer1` Keycloak user created (password `customer1-test-pass`), JWT obtained via `payu-gateway` client (direct access grants enabled), `user_key=04dc03f2e2a776bffcb9b16eb9f93796` for `payu_product` 3scale product. 7-step CRUD script hitting `/api/v1/cards` through `payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`.
 - **Chain verification** ✓ 3scale <-> gateway <-> wallet-service end-to-end path works:

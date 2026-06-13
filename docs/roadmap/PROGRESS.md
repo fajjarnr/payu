@@ -33,9 +33,9 @@
 | Health Endpoints         | 🟢 18/18                                 | All Spring services have HealthController + SecurityConfig permitAll (May 14) |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
 | Open Bugs (TODOS.md)     | 🟢 1 P0, 1 P1                             | INFRA-001 (trivy auth). ARCH-010 (Quarkus starters). All other P0/P1 resolved. |
-| Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 22 LTS, Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-13                               | v1.8.12 — CMS cache deser fix (READY-001 closed). |
-| OpenShift Tag            | `v1.8.12`                                | `cms-service:1.8.12` cache round-trip E2E green |
+| Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 24 LTS (via nvm), Podman 5.7.0, uv 0.11.14 |
+| Last Status Update       | 2026-06-13                               | v1.8.12 + cache-starter + web-app:1.5.1 + 1.8.13/14/15 ts+ws+acc. READY-001/002/070/071/072/NEW-001..006 closed. 2 production bugs flagged. |
+| OpenShift Tag            | `v1.8.12` + `web-app:1.5.1`               | `cms-service:1.8.12` + `account-service:1.8.13` + `transaction-service:1.8.15` + `wallet-service:1.8.15` + `web-app:1.5.1` + `cache-starter:1.0.0-SNAPSHOT` |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 3.5.14, Quarkus 3.33.1, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
@@ -92,6 +92,24 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.5.1 (web-app) + v1.8.13/14/15 (ts+ws+acc) — June 13, 2026
+
+**Platform-wide Cache Fix (NEW-003) + Idempotency Stress Test (READY-002) + Security Bug Follow-up (E2E-2026-06-13-01) + Web-App Fixes (READY-070/071/072):**
+
+- ✅ **cache-starter typed serializer platform-wide** (NEW-003): Promoted `cms-service/config/TypedJsonRedisSerializer` to `cache-starter/serializer/` as the new default for all `@Cacheable` consumers. Wire format `<outerTypeName>[<elementType>]|<json>`. `payu.cache.serializer=typed\|jackson2` opt-in. All services with `@Cacheable` now safe by default. 8/8 cache-starter tests pass.
+- ✅ **account-service NIK cache deser fixed** (NEW-001, dormant bug): `account-service:1.8.13` deployed with `VerifyNikCacheRoundTripTest` regression test. Closed automatically by NEW-003 default change.
+- ✅ **transaction-service + wallet-service security bug follow-up** (E2E-2026-06-13-01): The 1.8.11 fix in commit 2eb8bb2b claimed to fix all 7 services but `transaction-service` + `wallet-service` still had the 6-`** pattern-in-one-`requestMatchers` bug. Fixed in `1.8.14` (split into one `requestMatchers` per pattern) + redeployed `1.8.15` (clean test compile). `SecurityConfigPatternTest` added as regression guard to both services.
+- ✅ **Idempotency stress test** (READY-002): New `IdempotencyStressTest` in `shared/api-commons` fires 10 concurrent dup `X-Idempotency-Key` requests, asserts exactly 1 winner + 9 dedup reads + 0 double-saves. 172/172 api-commons tests pass.
+- ✅ **ArchUnit `@Sensitive` rule** (NEW-006): New `id.payu.archunit.SensitiveFieldRules` in `archunit-starter` enforces PII/financial/auth fields (NIK, phone, email, accountNumber, cardNumber, password, otp, token, secret, etc.) are annotated with `@Sensitive`. Wired into `cms-service/ArchitectureTest`.
+- ✅ **web-app:1.5.1** (READY-070/071/072):
+  - BFF body-less POST 415 fix: `frontend/web-app/src/app/api/v1/[...path]/route.ts` reads body FIRST, forwards `Content-Type` only when body non-empty. 2 new BFF characterization tests added (37/37 pass).
+  - Root 200 (READY-071): Side-effect of Node 24 rebuild via nvm — root returns HTTP 200 with full HTML.
+  - CONTRIBUTING.md updated with "E2E Test Auth: Keycloak URL Selection" section (INTERNAL vs PUBLIC URL).
+- ✅ **TODOS.md cleaned up**: Per backlog convention, all closed items moved to `CHANGELOG.md` Unreleased section. 27 open gaps remain (1 P0 + 14 P1 + 12 P2 + 4 P3) + 2 flagged production bugs (`BUG-TXN-SPLITBILL-001`, `BUG-TXN-ACCOUNT-001`).
+- 🚩 **2 production bugs flagged** (not force-fixed per user "jangan paksa"):
+  - `BUG-TXN-SPLITBILL-001` [P1]: `SplitBillService.createSplitBill` throws `ObjectOptimisticLockingFailureException` (500) on FIRST request — setParticipants after save triggers cascading merge of stale detached entity.
+  - `BUG-TXN-ACCOUNT-001` [P2]: `DisbursementController.getCurrentAccountId()` doesn't fall back to `sub` JWT claim (inconsistent with sibling `extractUserId()` which does).
 
 ### v1.8.12 (Completed) — June 13, 2026
 

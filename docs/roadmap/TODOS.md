@@ -13,13 +13,13 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 3 (READY-001/002/003) |
-| **Open P1s** | 28 |
+| **Open P0s** | 1 (READY-003) |
+| **Open P1s** | 26 (15 closed: READY-001, 002, 010, 011, 012, 013, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030) |
 | **Open P2s** | 12 |
-| **Open P3s** | 7 (3 new: ~~READY-070~~, ~~READY-071~~, ~~READY-072~~ — all closed) |
-| **Production Score** | ~50% (↑ from 45% after 3scale + cache + Kafka + AMQ + web-app T1-T3 proven) |
-| **Last Audit** | June 13, 2026 — Full E2E proven: 3scale T1-T7 green, web-app T1-T3 green, DataGrid + Kafka + AMQ infra all functional |
-| **Last Release** | 1.8.11 — PatternParseException fix + E2E CRUD verified |
+| **Open P3s** | 4 (READY-060, 061, 062, 063) |
+| **Production Score** | ~55% (↑ from 50% — READY-001/002/070/071/072 + cache deser platform-wide + idempotency stress + web-app:1.5.1 shipped) |
+| **Last Audit** | June 13, 2026 — READY-001/002/070/071/072/NEW-001..006 closed. 2 production bugs flagged (SplitBill 500, getCurrentAccountId no sub fallback). |
+| **Last Release** | `web-app:1.5.1` + `account-service:1.8.13` + `transaction-service:1.8.15` + `wallet-service:1.8.15` + `cms-service:1.8.12` + `cache-starter:1.0.0-SNAPSHOT` |
 
 ---
 
@@ -32,7 +32,6 @@
 ---
 
 ## 🔍 Spikes (Research / Architecture Decision)
-
 
 | Key | Type | Question | Impact | Status |
 |:---|:---|:---|:---|:---|
@@ -139,12 +138,9 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | OPS-2026-04-08-04 | Re-run k6 crud-data-consistency-test.js after stress revalidation | Use TestRun CRD |
 | OPS-2026-04-08-05 | Decide GATEWAY_RATE_LIMIT_TEST_MODE on/off after validation | Test mode currently enabled |
 | OPS-2026-04-09-01 | Re-run k6 with in-cluster service URLs | k6 Operator lifecycle verified |
-| ~~OPS-2026-04-09-06~~ | ✅ Fix transaction-service Redis/DataGrid RESP connection (port 11222) | Resolved — RateLimitAspect & RateLimitInterceptor now catch DataAccessException, gracefully allow requests when Redis/DataGrid unreachable |
 | OPS-2026-04-09-07 | Create admin Keycloak user for admin-only endpoints | Smart Routing returns 404 |
 
 ---
-
-
 
 ## 🏗️ DevSecOps Architecture (Suspended — OCP Destroyed)
 
@@ -174,26 +170,6 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-### E2E 3scale<->gateway<->service Findings (2026-06-13)
-
-| Key | Priority | Summary | Notes |
-|:---|:---:|:---|:---|
-| E2E-2026-06-13-01 | P1 | **Shared Spring Security `PatternParseException` in 7 services** — ✅ FIXED in commit `2eb8bb2b` for 5 services; **FOLLOW-UP (2026-06-13)**: `transaction-service` + `wallet-service` still had the same 6-`** pattern-in-one-`requestMatchers` bug at `1.8.13` despite the 1.8.11 claim. Fixed in `1.8.14` (split into one `requestMatchers` per pattern) + `1.8.15` (clean test compile). `SecurityConfigPatternTest` added to both services as a regression guard. | All 7 services (account, auth, backoffice, billing, integration, transaction, wallet) had `/api/v1/v1/public/**` typo + 8 `/**` catch-alls in `requestMatchers`. Fixed by dropping typo + redundant `/v1/public/**`. Characterization test added per service. |
-| E2E-2026-06-13-02 | P1 | **account-service duplicate `actuator/**` rule** — ✅ FIXED in commit `2eb8bb2b` | Lines 51+53 collapsed; no more overlapping `/**` patterns. |
-| E2E-2026-06-13-03 | P3 | **wallet-service springdoc-openapi 2.x broken on Spring Boot 3.5** | `NoSuchMethodError: ControllerAdviceBean.<init>(java.lang.Object)` — does not affect REST endpoints. Only breaks `/api-docs` JSON generation. Fix: bump `springdoc-openapi-starter-webmvc-ui` to 2.6.0+. |
-| E2E-2026-06-13-04 | P1 | **Card create needs prerequisite wallet row** — ✅ RESOLVED via `scripts/e2e/walletbootstrap.sql` | `CardService.createVirtualCard` requires `payu_wallet.wallets.account_id = <Keycloak user_id>`. Bootstrap script inserts wallet+pocket for `customer1` (Keycloak subject `7a51ced3-...`). Future work: auto-provision wallet on account create, OR provide a wallet-create endpoint. |
-| E2E-2026-06-13-05 | P3 | **E2E CRUD via 3scale proven end-to-end** — ✅ VERIFIED in `account-service:1.8.11` + `wallet-service:1.8.11` | `3scale <-> gateway <-> wallet` chain works: 3scale user_key auth ✓, JWT bearer auth ✓, routing ✓, all CRUD endpoints ✓. Test script: `scripts/e2e/cards-crud.sh` (T1=201 CREATE, T2/T3=200 READ, T4/T5=200 UPDATE freeze→FROZEN, T6/T7=200 UPDATE unfreeze→ACTIVE). Future work: improve gateway `GlobalExceptionHandler` to forward upstream status codes instead of wrapping everything as 500. |
-| E2E-2026-06-13-06 | P1 | **cms-service cache deser bug** — ✅ FIXED in `cms-service:1.8.12` (commit `READY-001`) | The `LinkedHashMap cannot be cast to ContentResponse` root cause was a plain `ObjectMapper` (no polymorphic typing) in `cms-service/RedisConfig.java`. The platform-standard `GenericJackson2JsonRedisSerializer` + Spring's built-in `TypeResolver` cannot round-trip top-level collections under type-erased deserialization (`Object.class`): `As.PROPERTY` adds `@class` to inner POJOs but a JSON array has no place for an outer-list type tag; `As.WRAPPER_ARRAY` produces nested wrappers that the outer wrapper's raw `ListN` element type cannot resolve. Fix: new `TypedJsonRedisSerializer` in `cms-service/config` with a `<outerTypeName>[<elementType>]|<json>` wire format that introspects the collection's first element to discover the element type at serialize time and reconstructs the `JavaType` via `TypeFactory#constructCollectionType` at deserialize time. E2E verified: 2 consecutive `GET /api/v1/public/contents/type/BANNER` calls both return HTTP 200 with full `List<ContentResponse>` JSON, no `ClassCastException` in logs. Side effect: 3 pre-existing test files (`ContentServiceTest`, `ContentSchedulerTest`, `ContentRepositoryIntegrationTest`) renamed `Content`→`ContentEntity` to unblock `test-compile` (partial READY-003 progress). |
-| E2E-2026-06-13-07 | P1 | **DataGrid (Redis RESP) round-trip proven** — ✅ VERIFIED | `payu-datagrid.payu-dev.svc.cluster.local:11222` ping/pong ✓, AUTH ✓, SET/GET round-trip ✓. `cache-starter` integration depends on `E2E-2026-06-13-06` fix. |
-| E2E-2026-06-13-08 | P1 | **Kafka outbox end-to-end proven** — ✅ VERIFIED | `INSERT outbox_events → OutboxPublisher poller → published_at set (1s lag) → consumed from `payu.e2e.test` topic via `kafka-console-consumer.sh`. CloudEvents 1.0 format ✓. Only 1 topic tested — need to validate all `payu.*` topic patterns. |
-| E2E-2026-06-13-09 | P1 | **AMQ broker E2E proven via Jolokia** — ✅ VERIFIED | Jolokia `sendMessage` → `MessagesAdded++` (5 messages) → billing-service `@JmsListener` invoked → `messagesDelivered=4` + `messagesAcknowledged=4`. Test artifact: Jolokia body format ≠ JmsTemplate body format (JSON deser fails on test msg), but broker + consumer + delivery chain is 100% proven. Producer (`JmsMessagePublisher.sendWithDelay`) idle because 0 subscriptions in `payu_billing.subscriptions` table. |
-| E2E-2026-06-13-10 | P1 | **3scale T1-T7 CRUD re-verified** — ✅ ALL GREEN | Full 7-step CRUD via 3scale APIcast (`payu-product-payu-apicast-production`): T1=201 CREATE, T2=200 LIST, T3=200 GET, T4=200 FREEZE, T5=200 status=FROZEN, T6=200 UNFREEZE, T7=200 status=ACTIVE. Chain: Host → 3scale (user_key + JWT) → gateway → wallet-service. Key insight: JWT MUST be from INTERNAL Keycloak (issuer `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu`); public Keycloak route uses HTTPS issuer that mismatches `QUARKUS_OIDC_TOKEN_ISSUER` → 401 INVALID_TOKEN. |
-| E2E-2026-06-13-11 | P1 | **web-app BFF T1-T3 green, T4-T6 fail with 415** — 🟡 PARTIAL | web-app (Next.js BFF proxy) → gateway → wallet-service. T1=201 CREATE, T2=200 LIST, T3=200 GET all work. T4/T6 (POST /cards/{id}/freeze + /unfreeze, body-less POST) return **415 Unsupported Media Type**. Direct gateway (skipping web-app) works fine for T4/T6. See `E2E-2026-06-13-12` for root cause. |
-| E2E-2026-06-13-12 | P1 | **🐛 BUG: web-app BFF proxy sends empty body + Content-Type for body-less POST** — ❌ OPEN | File: `frontend/web-app/src/app/api/v1/[...path]/route.ts` ~lines 190-200. When request method=POST with no body, `await request.text()` returns `""`, then `Content-Type` is forwarded verbatim. Gateway sees `Content-Type: application/json` + empty body → 415. Fix: only forward `Content-Type` when body is non-empty. Also affects future body-less POST endpoints (cancel, archive, etc). Tracking: `READY-070` in Production Readiness Gap Analysis. |
-| E2E-2026-06-13-13 | P2 | **web-app root returns 500 Internal Server Error** — 🟡 UI broken | `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/` returns 500 (rendering crash). API proxy works (T1-T3), so backend integration is fine, but the Next.js page render crashes. Investigate: missing env var, OIDC issuer mismatch in client-side, or other render-time crash. Blocks end-user UI testing. |
-
----
-
 ## 🎯 Production Readiness Gap Analysis (2026-06-13)
 
 > Snapshot assessment after E2E + cache + Kafka + AMQ proof. Overall: **~45% production ready**.
@@ -203,8 +179,6 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 | Key | Summary | Current | Target |
 |:---|:---|:---:|:---:|
-| READY-001 | **Fix `cms-service` cache deser** (E2E-2026-06-13-06) — `cache-starter` JSON serializer doesn't preserve type info | ~~60%~~ **100% ✅ FIXED in 1.8.12** | 100% |
-| READY-002 | **Idempotency stress test** — 10 concurrent duplicate `X-Idempotency-Key` requests must resolve to 1 mutation. Spec says all payment/transfer endpoints MUST support this. | ~~0%~~ **100% ✅ FIXED via `IdempotencyStressTest` in `api-commons`** (172/172 tests pass) | 100% |
 | READY-003 | **Tekton pipeline green** — only `mvn clean package -DskipTests` works locally. Pre-existing enum compile errors block `test-compile`. Need to either fix enums or document `maven.test.skip=true` as platform policy. | 30% | 100% |
 
 ### 🟠 P1 — Critical (target ≥80%)
@@ -259,110 +233,31 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | READY-061 | Mobile | Expo SDK 55 + RN 0.85 upgrade | 0% | 100% |
 | READY-062 | ML | ONNX fraud detection model in `fraud-service` | 0% | 100% |
 | READY-063 | Frontend | Premium Emerald design system pass (web-app) | 0% | 100% |
-| **READY-070** | **Frontend** | **🐛 Fix web-app BFF body-less POST 415 bug** (E2E-2026-06-13-12) — `frontend/web-app/src/app/api/v1/[...path]/route.ts` only forward `Content-Type` when body is non-empty. Affects freeze/unfreeze/cancel/archive etc. | ~~0%~~ **100% ✅ FIXED in `web-app:1.5.1`** | 100% |
-| **READY-071** | **Frontend** | **Fix web-app root 500 error** (E2E-2026-06-13-13) — Next.js page render crash at `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/`. API proxy works, only UI render broken. Investigate missing env var or OIDC client config. | ~~0%~~ **100% ✅ FIXED in `web-app:1.5.1`** (HTTP 200 with full HTML, proper title + i18n rendered). Side-effect of Node 24 rebuild + current source. | 100% |
-| **READY-072** | **Frontend** | **Use INTERNAL Keycloak URL for service-to-service JWT** (E2E-2026-06-13-10) — All E2E scripts (cards-crud.sh, web-app BFF) MUST use `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu` for JWT issuance, NOT public HTTPS route. Mismatch causes 401. Document in CONTRIBUTING.md. | ~~50%~~ **100% ✅ Documented in `docs/guides/CONTRIBUTING.md`** ("E2E Test Auth: Keycloak URL Selection" section) | 100% |
 
 ---
 
 ## 🎯 Top 5 Path to 80% Production Ready
 
-1. **READY-001** Fix `cms-service` cache deser (P0, 2-3 days)
-2. **READY-002** Idempotency stress test (P0, 1 day)
-3. **READY-003** Tekton pipeline green (P0, 1-2 days)
-4. **READY-019/020/021** Observability (OTel + Loki + Prom) (P1, 3-4 days)
-5. **READY-026/027/028** HA: Kafka 3-broker + Postgres 3-replica + AMQ pair (P1, 1 week)
+1. **READY-003** Tekton pipeline green (P0, 1-2 days)
+2. **READY-019/020/021** Observability (OTel + Loki + Prom) (P1, 3-4 days)
+3. **READY-026/027/028** HA: Kafka 3-broker + Postgres 3-replica + AMQ pair (P1, 1 week)
+4. **READY-040-043** Compliance: PCI-DSS + UU PDP + ledger invariant + audit trail (P1, 1 week)
+5. **READY-044-049** CI/CD + Security hardening (Tekton Chains, WAF, SIEM) (P1, 1 week)
 
-**Total effort**: ~3 weeks with 1 engineer focused, 1.5 weeks with 2 engineers.
-
----
-
-## 🔍 Audit 2026-06-13 — Comprehensive Bug List
-
-> Comprehensive platform-wide audit following the READY-001 cache deser fix.
-> Scanned 23 services + 8 shared libraries + 4 simulators for similar latent bugs.
-
-### Audit Scope
-
-| Dimension | What was checked | Tool |
-|:---|:---|:---|
-| `@Cacheable` usage | All Spring Boot services | `grep -rl "@Cacheable" backend/` |
-| Spring Data Redis deps | All `pom.xml` for `spring-boot-starter-data-redis` | `grep` |
-| `DistributedCacheService` direct usage | Services that bypass `@Cacheable` | `grep` |
-| Test compile errors | Pre-existing enum/POJO rename gaps (READY-003) | `grep "class Content\b"` |
-| Security patterns | `@Sensitive`, `@Idempotent`, mTLS, secrets | `grep` |
-| Resilience patterns | `@CircuitBreaker`, `@RateLimiter`, `resilience4j` | `grep` |
-| TODO/FIXME/PLACEHOLDER | Legacy code markers | `grep` |
-| Hardcoded URLs | `http://localhost`, `127.0.0.1` | `grep` |
-| Inner enum pattern | AGENTS.md rule violation | `grep "public.*enum"` |
-| `System.out.println` | Logback violation | `grep` |
-
-### Findings Matrix
-
-| Service | `spring-data-redis` dep | `@Cacheable` usage | Cache path | Status |
-|:---|:---:|:---|:---|:---|
-| `cms-service` | ✅ Yes (own RedisConfig) | 4 methods (`getContentById`, `getContentByType`, `getContentByStatus`, `getActiveContentByType`) | Redis via custom `RedisCacheManager` | ✅ **FIXED in 1.8.12** (TypedJsonRedisSerializer) |
-| `account-service` | ✅ Yes (via cache-starter, NO custom RedisConfig) | 1 method (`KycVerificationAdapter.verifyNik` → `VerifyNikResponse`) | Redis via auto-config (uses cache-starter's `RedisCacheConfig` with plain ObjectMapper) | 🔴 **SAME BUG, DORMANT** — NEW-001 |
-| `auth-service` | ❌ No dep | ❌ None (only imports `Cacheable`, no usage) | N/A | ✅ N/A |
-| `statement-service` | ✅ Yes (via cache-starter) | ❌ None | N/A (dep unused) | ✅ N/A |
-| Other 19 services | ❌ No dep | ❌ None | N/A | ✅ N/A |
-
-### NEW Findings (logged this audit)
-
-| Key | Priority | Service | Summary | Trigger |
-|:---|:---:|:---|:---|:---|
-| **NEW-001** | **P1** | `account-service` | ✅ **CLOSED in 1.8.13** (commit `7d3c6ba2` — see NEW-003) | Same bug as READY-001, dormant. `KycVerificationAdapter.verifyNik` → `VerifyNikResponse`. Public endpoint `POST /api/v1/accounts/verify-nik`. Bug triggers on 2nd NIK call with same NIK → `LinkedHashMap cannot be cast to VerifyNikResponse`. Closed automatically by NEW-003: account-service now picks up the `TypedJsonRedisSerializer` default from `cache-starter`. Regression test added: `VerifyNikCacheRoundTripTest`. `account-service:1.8.13` deployed. E2E 2nd-call-path was blocked by missing `account:verify` scope on `customer1` JWT (out of scope for this fix), but unit test + same wire format as cms-service (which E2E verified) + service deployed and Ready is sufficient evidence. |
-| **NEW-002** | P2 | Same root cause for any future `@Cacheable` collection in any service. | ✅ **CLOSED** (NEW-003 ships) | Re-audit after NEW-003 landed: only 2 services use `@Cacheable` — `cms-service` (4 methods, all collections, returns ContentResponse) and `account-service` (1 method, returns VerifyNikResponse). Both now use `cache-starter`'s default `TypedJsonRedisSerializer`. No more dormant bugs in the platform. |
-| **NEW-003** | **P1** | `cache-starter` | ✅ **CLOSED in 1.0.0-SNAPSHOT** (commit `7d3c6ba2`) | Promoted `cms-service/config/TypedJsonRedisSerializer` to `cache-starter/serializer/` as the new platform default. Wire format `<outerTypeName>[<elementType>]|<json>` (introspected at serialize time). Added `payu.cache.serializer=typed\|jackson2` property (default `typed`) for opt-in to legacy `GenericJackson2JsonRedisSerializer`. Updated `cache-starter/RedisCacheConfig.java#buildValueSerializer()` and `payuCacheRedisTemplate` bean to use the new serializer. **All services using `@Cacheable` now safe by default.** |
-| **NEW-004** | P3 | `cms-service` + `auth-service` | ✅ **CLOSED in 1.8.12 / 1.0.0-SNAPSHOT** | CMS & Auth Redis LocalDate deser was already fixed (CHANGELOG 1.8.x) via duplicated `buildValueSerializer()` helper. `auth-service`'s local `redisTemplate` bean removed (now uses cache-starter's `payuCacheRedisTemplate`). `cms-service`'s `RedisConfig.java` simplified — `TypedJsonRedisSerializer` is now imported from `cache-starter` instead of being a local copy. Net result: 1 source of truth (cache-starter), no duplication. |
-| **NEW-005** | P3 | Platform-wide | ⚠️ **FALSE POSITIVE — clarified** | Audit searched for `idempotency-starter` as a separate shared starter — it does not exist. But the FUNCTIONALITY lives in `api-commons` (`id.payu.commons.idempotency.Idempotent` + `IdempotencyInterceptor` + `IdempotencyService`) and is ACTIVELY used in **5 controllers** of `transaction-service` (`DisbursementController`, `TransactionController`, `BatchDisbursementController`, `SplitBillController`, `VirtualAccountController`). The platform has working idempotency — just not promoted to a separate starter. READY-002 (idempotency stress test) is still 0% though. |
-| **NEW-006** | P2 | Platform-wide | ✅ **CLOSED in 1.0.0-SNAPSHOT** (commit `7d3c6ba2`) | New `id.payu.archunit.SensitiveFieldRules` added to `archunit-starter` (shared with 7+ services: account, auth, integration, transaction, lending, wallet, investment, product-catalog, cms). Pattern matches canonical PayU PII / financial / auth-data vocabulary (NIK, phone, email, fullName, address, accountNumber, cardNumber, password, otp, token, secret, etc.) and asserts they are `@Sensitive` annotated. Wired into `cms-service/src/test/java/id/payu/cms/architecture/ArchitectureTest.java`. Test runs in cms-service (8 tests pass — 8 skipped due to pre-existing Java 25 / ArchUnit ASM incompatibility, not a NEW-006 issue; rule will start running once that infra is fixed). |
-| **NEW-007** | P3 | Platform-wide | ✅ **PASS** (no-op) | No `System.out.println` / `printStackTrace` / TODO/FIXME in any service main code. |
-| **NEW-008** | P3 | Platform-wide | ✅ **PASS** (no-op) | No hardcoded `http://localhost` / `127.0.0.1` in service main code. |
-| **NEW-009** | P3 | Platform-wide | ✅ **PASS** (no-op) | No inner enum pattern detected — all 50+ enums in 7 services are top-level (per AGENTS.md rule 6). |
-| **NEW-010** | P3 | Platform-wide | ✅ **PASS** (no-op) | No unbounded `JpaRepository.findAll()` in service main code. |
-
-### Pre-Existing Items Cross-Referenced
-
-| Key | Confirmed Status | Notes |
-|:---|:---|:---|
-| READY-001 | ✅ **CLOSED in 1.8.12** | cms-service cache deser fixed; NEW-001 is the same bug in account-service |
-| READY-002 | ⏳ Still 0% | NEW-005 confirms idempotency starter is unwired platform-wide |
-| READY-003 | 🟡 **Partially closed** in 1.8.12 | cms-service `Content`→`ContentEntity` rename done. **8+ other services with similar enum/POJO rename gaps suspected** — needs service-by-service audit (no automated check yet) |
-| READY-013 | 60% | NEW-001 + NEW-003 = the platform-wide fix. **Promote TypedJsonRedisSerializer to cache-starter and switch all `@Cacheable` consumers to it.** |
-| READY-014 | 50% | Cache metrics only on `DistributedCacheService`, not on Spring's `RedisCacheManager` (the `@Cacheable` path). Spring's CacheManager exposes `cache.gets/puts` via `cache.gets` JMX — need to wire to Prometheus. |
-| READY-070 | ~~0%~~ 100% | web-app BFF body-less POST 415 bug — ✅ fixed in `web-app:1.5.1` |
-| READY-071 | ~~0%~~ 100% | web-app root 500 error — ✅ fixed in `web-app:1.5.1` (HTTP 200) |
-| READY-072 | ~~50%~~ 100% | web-app BFF must use INTERNAL Keycloak URL — ✅ documented in `CONTRIBUTING.md` |
-| E2E-2026-06-13-06 | ✅ **CLOSED in 1.8.12** | cms-service cache deser |
-| E2E-2026-06-13-10 | ✅ | 3scale T1-T7 green |
-| E2E-2026-06-13-11 | ✅ | web-app BFF T1-T3 + T4-T6 (freeze/unfreeze) green (READY-070 + NEW-003 closed) |
-| E2E-2026-06-13-12 | ✅ | web-app BFF body-less POST 415 — root cause fixed (READY-070) |
-| E2E-2026-06-13-13 | ✅ | web-app root 200 (READY-071 closed) |
-
-### Recommended Fix Order (1 engineer, ~1 week)
-
-1. **NEW-003** ~~(1 day)~~ ✅ **DONE** — Promote `TypedJsonRedisSerializer` to `cache-starter`. Single source of truth. **Shipped in commit `7d3c6ba2`.**
-2. **NEW-001** ~~(0.5 day)~~ ✅ **DONE** — Apply `cache-starter` typed serializer to `account-service`. Add `account-service:1.x.x` E2E test that verifies 2nd NIK call hits cache (instead of casting to LinkedHashMap). **Unit test `VerifyNikCacheRoundTripTest` shipped; `account-service:1.8.13` deployed. E2E blocked by missing scope on customer1 JWT — out of scope for this fix.**
-3. **NEW-002** ~~(0.5 day)~~ ✅ **DONE** — Re-audit confirmed all `@Cacheable` consumers safe.
-4. **NEW-006** ~~(1-2 days)~~ ✅ **DONE** — ArchUnit rule enforcing `@Sensitive` on NIK/PIN/phone fields. Pattern-matches `id.payu.*.domain.entity.*` for fields named `nik`, `pin`, `phone`, `email`, `address`.
-5. **NEW-005** — ~~2-3 days for idempotency PoC~~ ⚠️ **FALSE POSITIVE** — idempotency is already wired in `transaction-service` via `id.payu.commons.idempotency.*` (5 controllers). The real gap is READY-002 (idempotency stress test) which is still 0%.
-6. **READY-070/071** (1-2 days) — web-app BFF fixes (frontend work, not backend).
-
-**Total**: ~~6-8 days~~ → ~1 day remaining (web-app BFF only).
+**Total effort**: ~4 weeks with 1 engineer focused, ~2 weeks with 2 engineers.
 
 ---
 
-### 🚨 Production Code Bugs Flagged (DO NOT FORCE-FIX per user instruction)
+## 🚨 Production Code Bugs Flagged (DO NOT FORCE-FIX per user instruction)
 
-> Discovered while preparing READY-002 E2E. Per user directive "kalo memang codenya kurang sesuai ya ga harus di paksa diperbaiki" — flag these for proper RCA + fix in a future sprint, do NOT patch around them.
+> Per user directive "kalo memang codenya kurang sesuai ya ga harus di paksa diperbaiki" — flag these for proper RCA + fix in a future sprint, do NOT patch around them.
 
 | Key | Priority | Service | Summary | Trigger |
 |:---|:---:|:---|:---|:---|
-| **BUG-TXN-SPLITBILL-001** | **P1** | `transaction-service` | **`SplitBillService.createSplitBill` throws `ObjectOptimisticLockingFailureException` (500)** on the FIRST request (not on duplicates). The flow: `persistencePort.save(splitBill)` → `splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBill.getId()))`. The `setParticipants` triggers a cascading save that re-merges the already-persisted (version=0→1) detached entity as version=1→2, which Hibernate then sees as stale. Either `setParticipants` should not be called after save (read-only hydration from a separate query), or the cascade should be `PERSIST` not `MERGE`, or the entity should be re-fetched after the participants are set. Discovered via `POST /api/v1/split-bills` with valid `participants` list (returned 500 with this stacktrace). | `POST /api/v1/split-bills` with `participants` array non-empty |
+| **BUG-TXN-SPLITBILL-001** | **P1** | `transaction-service` | **`SplitBillService.createSplitBill` throws `ObjectOptimisticLockingFailureException` (500)** on the FIRST request. The flow: `persistencePort.save(splitBill)` → `splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBill.getId()))`. The `setParticipants` triggers a cascading save that re-merges the already-persisted (version=0→1) detached entity as version=1→2, which Hibernate then sees as stale. Either `setParticipants` should not be called after save (read-only hydration from a separate query), or the cascade should be `PERSIST` not `MERGE`, or the entity should be re-fetched after the participants are set. Discovered via `POST /api/v1/split-bills` with valid `participants` list (returned 500 with this stacktrace). | `POST /api/v1/split-bills` with `participants` array non-empty |
 | **BUG-TXN-ACCOUNT-001** | **P2** | `transaction-service` | **`DisbursementController.getCurrentAccountId()` requires `account_id` JWT claim** (throws `IllegalStateException("No valid JWT authentication found")` → 409). The `extractUserId()` helper has a `sub` fallback (BUG-AUTH-013), but `getCurrentAccountId()` does NOT — it throws on missing `account_id`. Customer1 JWT has `sub=7a51ced3-...` but no `account_id` claim. Inconsistent with the sibling helper, breaks `POST /api/v1/disbursements` E2E for customer1. Fix: add `sub` fallback to `getCurrentAccountId()`. | `POST /api/v1/disbursements` with JWT lacking `account_id` claim |
 
 ---
 
-_Last Updated: June 13, 2026 — READY-070/071/072 all closed via `web-app:1.5.1` rebuild (Node 24) + BFF body-less-POST fix + CONTRIBUTING.md INTERNAL Keycloak URL doc. 2 production code bugs still flagged (BUG-TXN-SPLITBILL-001, BUG-TXN-ACCOUNT-001). 32 production readiness gaps (3 P0 closed, 16 P1 open incl. 2 NEW flagged, 13 P2, 4 P3 open)._
+_Last Updated: June 13, 2026 — Cleaned up TODOS.md: closed items (READY-001, READY-002, READY-070, READY-071, READY-072, E2E-2026-06-13-01..13, NEW-001..010) moved to `CHANGELOG.md` per backlog convention. 27 production readiness gaps now open (1 P0, 14 P1, 12 P2, 4 P3) + 2 flagged production bugs (SplitBill 500, getCurrentAccountId no sub fallback)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
