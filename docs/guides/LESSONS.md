@@ -99,5 +99,19 @@ Reuse one helper method (e.g. package-private `buildValueSerializer()`) across `
 2. `scripts/check_pod_connections.py` flags any exception in pod logs as `Redis: 🔴 Failed/Unreachable`. Serialization errors in `RedisCache.put` are categorized as Redis failures, leading operators to chase env-var and credential bugs that don't exist. When investigating "Redis failed" reports, grep for `InvalidDefinitionException` and `jsr310` to distinguish serializer bugs from connectivity issues.
 3. The original "fix plan" proposed editing 20 base deployment YAML files to change `PAYU_CACHE_REDIS_USERNAME` and add `REDIS_PASSWORD` env vars. Cluster-state inspection proved all env vars were already correct — the root cause was a Java code defect, not a misconfigured environment. **Always verify the runtime cluster state with `oc get deployment ... -o jsonpath` before proposing manifest changes.** The Iron Law: NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
 
+## L-032: Spring Boot 4.1.0 / Jakarta EE 11 Migration (ARCH-006 Pilot)
+
+**Date**: 2026-06-13  
+**Domain**: Java / Framework  
+**Context**: Successfully migrated `statement-service` to Spring Boot 4.1.0 as a pilot. The migration involves transitioning from `javax.*` to `jakarta.*` (Jakarta EE 11), utilizing Java 25, and enabling Virtual Threads natively.
+
+**Pattern / Discoveries**:
+1. **OpenRewrite works flawlessly**: Using `JavaxMigrationToJakarta` and `SpringBoot3BestPractices` automatically resolves 90% of the `javax` to `jakarta` import swaps and `application.yml` property deprecations (e.g., prometheus export paths).
+2. **gRPC Generated Code Compatbility**: The `protoc-gen-grpc-java` (v1.61.0) emits `@javax.annotation.Generated`. Because the Jakarta EE migration removes `javax.annotation-api` entirely, the gRPC Java generated stub compilation will fail. **Always manually re-add `javax.annotation-api:1.3.2`** to the dependencies of any gRPC-consuming service during the Jakarta EE 11 migration.
+3. **Properties Migrator**: Keep `spring-boot-properties-migrator` in the POM during development to catch any overlooked application properties that were renamed between Spring Boot 3.4 and 4.1.
+4. **Virtual Threads**: Enabled out-of-the-box via `spring.threads.virtual.enabled: true`.
+
+**Lesson**: The jump from Spring Boot 3.4 to 4.1.0 is relatively smooth using OpenRewrite, but code-generation plugins (like gRPC) that haven't fully switched to Jakarta EE require backward-compatibility hacks (`javax.annotation-api`). Ensure all unit tests compile *before* running OpenRewrite, as syntax errors will block the AST parser.
+
 ---
 *Last Updated: June 13, 2026*

@@ -93,6 +93,13 @@
 
 ## 📦 Deployment Log
 
+### v1.8.16 (transaction-service) & ARCH-006 Pilot — June 13, 2026
+
+**Transaction Service Fix & Spring Boot 4.1.0 PoC:**
+
+- ✅ **BUG-TXN-ACCOUNT-001 Fixed** (`transaction-service:1.8.16`): `DisbursementController.getCurrentAccountId()` updated with `sub` JWT claim fallback. Resolves 409 errors on disbursement with sub-only JWT for `customer1`.
+- ✅ **ARCH-006 Spring Boot 4.1.0 Pilot**: Successfully migrated `statement-service` to Spring Boot 4.1.0, Java 25, and Jakarta EE 11 in an isolated `git worktree`. Applied `JavaxMigrationToJakarta` via OpenRewrite, enabled Virtual Threads natively, and resolved `javax.annotation-api` legacy dependencies for gRPC. 51/51 tests pass cleanly (including Testcontainers). Proves viability of the platform-wide Oakwood release train upgrade.
+
 ### v1.5.1 (web-app) + v1.8.13/14/15 (ts+ws+acc) — June 13, 2026
 
 **Platform-wide Cache Fix (NEW-003) + Idempotency Stress Test (READY-002) + Security Bug Follow-up (E2E-2026-06-13-01) + Web-App Fixes (READY-070/071/072):**

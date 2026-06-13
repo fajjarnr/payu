@@ -19,6 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### transaction-service `BUG-TXN-ACCOUNT-001` Fix — `transaction-service:1.8.16` (2026-06-13)
+
+- **Bug**: `DisbursementController.getCurrentAccountId()` required an explicit `account_id` JWT claim and threw `IllegalStateException` on missing claims, blocking Keycloak users (like `customer1`) that only have a `sub` claim.
+- **Fix**: Added `sub` fallback to `getCurrentAccountId()` mirroring the `extractUserId()` pattern. E2E verified: no more 409 on disbursement with sub-only JWT.
+
+### Spring Boot 4.1.0 Migration Pilot (ARCH-006) — `statement-service` (2026-06-13)
+
+- **Feature**: Successfully migrated `statement-service` to Spring Boot 4.1.0, Java 25, and Jakarta EE 11 in a `git worktree`.
+- **Details**:
+  - Overrode `spring-boot-dependencies` to `4.1.0`.
+  - Ran OpenRewrite `JavaxMigrationToJakarta` and `SpringBoot3BestPractices` to automate properties migration and `javax.*` to `jakarta.*` package swaps.
+  - Enabled native Java 25 Virtual Threads via `spring.threads.virtual.enabled: true`.
+  - Re-added `javax.annotation-api` manually to satisfy `protoc-gen-grpc-java` backward compatibility (prevents `cannot find symbol: class Generated` errors).
+  - Passed 51/51 unit and Testcontainer integration tests, proving the stability of the platform-wide upgrade path.
+
 ### CMS Cache Deser Fix — `cms-service:1.8.12` (2026-06-13)
 
 - **Bug** (READY-001, E2E-2026-06-13-06): `cms-service/RedisConfig.java` configured `GenericJackson2JsonRedisSerializer` with a plain `ObjectMapper` (no polymorphic typing). Spring's `CacheInterceptor` calls `serializer.deserialize(byte[])` for `@Cacheable` hits without a target type hint, so cached payloads deserialized to `LinkedHashMap` and the proxy threw `ClassCastException: LinkedHashMap cannot be cast to ContentResponse` on every cache hit.

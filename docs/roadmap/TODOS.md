@@ -36,7 +36,7 @@
 | Key | Type | Question | Impact | Status |
 |:---|:---|:---|:---|:---|
 | ARCH-005 | Spike | RHPAM/Kogito/Drools PoC: evaluate rules engine untuk credit scoring & fraud detection | ADR-0015, `rules-starter` shared lib | ❄️ Deferred — Planned for future, Java logic sufficient for MVP. Will use Drools 9.x embedded. |
-| ARCH-006 | Spike | Spring Boot 4.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility before platform-wide rollout | Oakwood Release Train | ❄️ Deferred — Boot 3.5.14 + Java 25 stable, no urgency |
+| ARCH-006 | Spike | Spring Boot 4.1.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility before platform-wide rollout | Oakwood Release Train | ✅ Pilot completed on `statement-service` (successful, 51/51 tests pass, Java 25 + VT). Platform rollout pending. |
 
 ---
 
@@ -228,8 +228,16 @@
 
 ## 📝 Implementation Plan & Task Tracker: ARCH-006 (Spring Boot 4.1.0 & Jakarta EE 11)
 
+### Pilot: `statement-service` (Completed 2026-06-13)
+- [x] Create git worktree `feature/arch-006-statement-service`
+- [x] Run OpenRewrite (`JavaxMigrationToJakarta`, `SpringBoot3BestPractices`)
+- [x] Enable virtual threads (`spring.threads.virtual.enabled: true`)
+- [x] Fix legacy enum import compilation errors blocking OpenRewrite
+- [x] Re-add `javax.annotation-api` for `protoc-gen-grpc-java` compatibility
+- [x] Verify with Testcontainers (51/51 tests pass)
+
 ### Phase 1: Audit & Preparation (Current)
-- [ ] Maintain baseline on **Java 25** (already active) and ensure Virtual Threads are utilized correctly.
+- [x] Maintain baseline on **Java 25** (already active) and ensure Virtual Threads are utilized correctly.
 - [ ] Audit dependencies for Jakarta EE 11 compatibility (Servlet 6.1, JPA 3.2).
 - [ ] Audit Jackson usage (Spring Boot 4.1.0 defaults to Jackson 3).
 - [ ] Check if all `javax.*` imports have been fully removed and replaced with `jakarta.*`.
