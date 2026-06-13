@@ -172,9 +172,17 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
+### E2E 3scale<->gateway<->service Findings (2026-06-13)
 
+| Key | Priority | Summary | Notes |
+|:---|:---:|:---|:---|
+| E2E-2026-06-13-01 | P1 | **Shared Spring Security `PatternParseException` in 7 services** — breaks all `/api/v1/*` requests | `requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v1/public/**", "/api/v1/v1/public/**")` — Spring 3.5 PathPatternParser refuses patterns with multiple `**` elements and the `v1/v1` typo triggers parse. Affects account-service, wallet-service, auth-service, backoffice-service, billing-service, integration-service, transaction-service. Symptom: `GET/POST /api/v1/cards` → HTML 500 (not JSON) from `DispatcherServlet` error dispatch. Fix: collapse to `.requestMatchers("/actuator/**", "/wallet-service/actuator/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()` and drop the `v1/v1` typo + the `/v1/public/**` redundancy. See CHANGELOG [Unreleased] for full analysis. |
+| E2E-2026-06-13-02 | P2 | **account-service has duplicated `actuator/**` rule (line 51+53)** | Lines 51 (`/actuator/health/**`) and 53 (`/actuator/**`) overlap; with the bug above, the combined pattern set confuses the parser. After fixing the v1/v1 typo, consider collapsing both into one rule. |
+| E2E-2026-06-13-03 | P3 | **wallet-service springdoc-openapi 2.x broken on Spring Boot 3.5** | `NoSuchMethodError: ControllerAdviceBean.<init>(java.lang.Object)` — does not affect REST endpoints (cards/wallets/savings-goals CRUD all work once E2E-2026-06-13-01 is fixed). Only breaks `/api-docs` and `/v3/api-docs` JSON generation. Fix: bump `springdoc-openapi-starter-webmvc-ui` to 2.6.0+ (tested compatible with Spring Boot 3.5.x). |
+| E2E-2026-06-13-04 | P1 | **card create needs prerequisite wallet** | `CardService.createVirtualCard` calls `walletPersistencePort.findByAccountId(accountId).orElseThrow(WalletNotFoundException)`. The Keycloak `customer1` test user has no `payu_wallet.pockets` row, so create card 500s even after E2E-2026-06-13-01 is fixed. Fix: either (a) auto-provision wallet on account create, (b) add a wallet-create endpoint, or (c) bootstrap fixture wallets for E2E tests. |
+| E2E-2026-06-13-05 | P3 | **E2E CRUD via 3scale proven end-to-end** — chain validated | `3scale <-> gateway <-> wallet` chain works: 3scale user_key auth ✓, JWT bearer auth ✓ (401→500 confirms JWT was accepted, request reached controller), routing ✓, error responses ✓. Only the 500 INTERNAL_ERROR wrapping by gateway-service masks underlying service errors. Future work: improve gateway `GlobalExceptionHandler` to forward upstream status codes. |
 
 ---
 
-_Last Updated: June 9, 2026 — Removed HCP-001 s/d HCP-013. Only open/deferred items remain._
+_Last Updated: June 13, 2026 — Added E2E findings (3scale<->gateway<->service CRUD regression)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
