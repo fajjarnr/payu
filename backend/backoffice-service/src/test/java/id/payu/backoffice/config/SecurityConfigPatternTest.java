@@ -1,4 +1,4 @@
-package id.payu.backoffice/config;
+package id.payu.backoffice.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SecurityConfigPatternTest {
 
     private static final Path SOURCE = Paths.get(
-            "src/main/java/id/payu/backoffice/config/SecurityConfig.java");
+            "src/main/java/id/payu/backoffice.config/SecurityConfig.java");
 
     @Test
     @DisplayName("SecurityConfig should not contain the /api/v1/v1/public/** typo")

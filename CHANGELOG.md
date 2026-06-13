@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.11] - 2026-06-13
+
+### Spring Security `PatternParseException` Fix & E2E CRUD Verified
+
+- **Bug**: `requestMatchers("/api-docs/**", ..., "/v1/public/**", "/api/v1/v1/public/**")` in 7 services caused Spring 6 PathPatternParser to throw `PatternParseException: Multiple {*...} or ** pattern elements are not allowed` at first-match-time, rendering every `/api/v1/*` request as an HTML 500 from the DispatcherServlet error dispatch. Same bug in account, wallet, auth, backoffice, billing, integration, transaction services (all generated from a shared scaffold).
+- **Fix**: Drop the `/api/v1/v1/public/**` typo + redundant `/v1/public/**` pattern in all 7 services. Characterization test added per service (`SecurityConfigPatternTest`) asserting the source has no typo and no `requestMatchers` line carries >4 `/**` catch-alls.
+- **E2E CRUD verified end-to-end via 3scale**: `account-service:1.8.11` + `wallet-service:1.8.11` built + rolled out. Full CRUD on `/api/v1/cards` (T1=201 CREATE, T2/T3=200 READ, T4/T5=200 UPDATE freeze→FROZEN, T6/T7=200 UPDATE unfreeze→ACTIVE) against `payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`. Reproducible via `scripts/e2e/cards-crud.sh` after running `scripts/e2e/walletbootstrap.sql` once.
+
 ## [Unreleased]
 
 ### E2E CRUD Test: 3scale <-> Gateway <-> Service Chain Verified (2026-06-13)
