@@ -5,7 +5,6 @@ kind: Kustomization
 # Dev-specific patches for data infrastructure
 # Apply with: oc apply -k infrastructure/platform/data/overlays/dev/
 
+namespace: payu-dev
 resources:
   - ../../base
-
-namespace: payu-dev

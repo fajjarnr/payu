@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/component: messaging
     strimzi.io/cluster: payu-kafka
 spec:
-  replicas: 1
+  replicas: 3
   roles:
     - controller
   storage:
@@ -30,7 +30,7 @@ spec:
       cpu: "500m"
 
 ---
-# KafkaNodePool - Broker nodes (data handling)
+# KafkaNodePool - Broker nodes (data handling) — READY-026 HA: 3 brokers
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
@@ -41,7 +41,7 @@ metadata:
     app.kubernetes.io/component: messaging
     strimzi.io/cluster: payu-kafka
 spec:
-  replicas: 1
+  replicas: 3
   roles:
     - broker
   storage:
@@ -57,7 +57,7 @@ spec:
       cpu: "1000m"
 
 ---
-# Main Kafka cluster (KRaft mode)
+# Main Kafka cluster (KRaft mode) — READY-026 HA: replication factor 3
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
@@ -82,11 +82,11 @@ spec:
         type: internal
         tls: true
     config:
-      offsets.topic.replication.factor: 1
-      transaction.state.log.replication.factor: 1
-      transaction.state.log.min.isr: 1
-      default.replication.factor: 1
-      min.insync.replicas: 1
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
       auto.create.topics.enable: "true"
   entityOperator:
     topicOperator: {}
@@ -105,7 +105,7 @@ metadata:
     strimzi.io/cluster: payu-kafka
 spec:
   partitions: 3
-  replicas: 1
+  replicas: 3
   config:
     retention.ms: 604800000
     cleanup.policy: delete
@@ -123,7 +123,7 @@ metadata:
     strimzi.io/cluster: payu-kafka
 spec:
   partitions: 6
-  replicas: 1
+  replicas: 3
   config:
     retention.ms: 2592000000
     cleanup.policy: delete
@@ -141,7 +141,7 @@ metadata:
     strimzi.io/cluster: payu-kafka
 spec:
   partitions: 3
-  replicas: 1
+  replicas: 3
   config:
     retention.ms: 604800000
     cleanup.policy: delete
@@ -159,7 +159,7 @@ metadata:
     strimzi.io/cluster: payu-kafka
 spec:
   partitions: 3
-  replicas: 1
+  replicas: 3
   config:
     retention.ms: 604800000
     cleanup.policy: delete

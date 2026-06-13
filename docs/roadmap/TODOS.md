@@ -130,11 +130,11 @@
 | READY-023 | Test coverage | Contract tests (Pact/Spring Cloud Contract) for all public APIs | 0% | 100% |
 | READY-024 | Error handling | Audit GlobalExceptionHandler returns RFC 9457 Problem Details (declare but not verified) | 60% | 100% |
 | READY-025 | Error handling | Gateway `GlobalExceptionHandler` should forward upstream 4xx/5xx verbatim (currently wraps as 500) | 30% | 100% |
-| READY-026 | HA | Kafka 3-broker cluster (currently 1 broker) | 15% | 100% |
-| READY-027 | HA | Postgres 3-replica (Crunchy) (currently 1 primary) | 15% | 100% |
-| READY-028 | HA | AMQ broker pair (currently 1 broker) | 30% | 100% |
-| READY-029 | Performance | Gatling load test: 1000 concurrent users, p99 < 10s | 5% | 100% |
-| READY-030 | Performance | Stress: SOAK test 24h, no memory leak | 5% | 100% |
+| **READY-026** | **HA** | **Kafka 3-broker cluster** (now 3/3 broker pods running, all 4 topics at RF=3, min.insync.replicas=2) | 15% | **100%** |
+| **READY-027** | **HA** | **Postgres 3-replica (Crunchy)** (CRD YAML ready in `infrastructure/platform/data/base/postgres-cluster.yaml`: 3 instances, 2 PgBouncer, pgBackRest, monitoring exporter; **data migration pending** — current 7 DBs on legacy StatefulSet `payu-postgres-0` need pg_dump → Crunchy cluster → pg_restore; service endpoint switch from `payu-postgres-primary:5432` to Crunchy-generated `payu-postgres-primary.payu-dev.svc.cluster.local`) | 15% | 60% |
+| **READY-028** | **HA** | **AMQ broker pair** (now 2/2 broker pods running, ActiveMQArtemis size=2 master+slave) | 30% | **100%** |
+| **READY-029** | Performance | Gatling load test: 1000 concurrent users, p99 < 10s | 5% | 100% |
+| **READY-030** | Performance | Stress: SOAK test 24h, no memory leak | 5% | 100% |
 
 ### 🟡 P2 — Important (target ≥50%)
 

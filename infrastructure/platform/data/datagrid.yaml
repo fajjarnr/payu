@@ -40,7 +40,8 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: cache
 spec:
-  replicas: 1
+  # HA pair for active/active distributed caching with embedded RESP endpoint
+  replicas: 2
 
   service:
     type: DataGrid

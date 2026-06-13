@@ -63,7 +63,9 @@ metadata:
     app.kubernetes.io/version: "7"
     team: platform
 spec:
-  replicas: 1
+  # HA pair for active/passive Redis. For full Sentinel-based HA, migrate
+  # to Infinispan/DataGrid (infrastructure/platform/data/datagrid.yaml).
+  replicas: 2
   serviceName: payu-cache
   selector:
     matchLabels:

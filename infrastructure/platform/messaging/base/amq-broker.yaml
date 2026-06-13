@@ -1,0 +1,64 @@
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  labels:
+    app.kubernetes.io/component: message-queue
+    app.kubernetes.io/name: payu-broker
+    app.kubernetes.io/part-of: payu
+    team: platform
+  name: payu-broker
+  namespace: payu-dev
+spec:
+  acceptors:
+    - name: core
+      port: 61616
+      protocols: CORE,AMQP
+    - name: amqp
+      port: 5672
+      protocols: AMQP
+  adminPassword: admin
+  adminUser: admin
+  brokerProperties:
+    - 'addressConfigurations."payu.notification.commands".routingTypes=ANYCAST'
+    - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".address="payu.notification.commands"'
+    - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".routingType=ANYCAST'
+    - 'addressConfigurations."payu.integration.commands".routingTypes=ANYCAST'
+    - 'addressConfigurations."payu.integration.commands".queueConfigs."payu.integration.commands".address="payu.integration.commands"'
+    - 'addressConfigurations."payu.integration.commands".queueConfigs."payu.integration.commands".routingType=ANYCAST'
+    - 'addressConfigurations."payu.billing.scheduled".routingTypes=ANYCAST'
+    - 'addressConfigurations."payu.billing.scheduled".queueConfigs."payu.billing.scheduled".address="payu.billing.scheduled"'
+    - 'addressConfigurations."payu.billing.scheduled".queueConfigs."payu.billing.scheduled".routingType=ANYCAST'
+    - 'addressConfigurations."payu.kyc.commands".routingTypes=ANYCAST'
+    - 'addressConfigurations."payu.kyc.commands".queueConfigs."payu.kyc.commands".address="payu.kyc.commands"'
+    - 'addressConfigurations."payu.kyc.commands".queueConfigs."payu.kyc.commands".routingType=ANYCAST'
+  console:
+    expose: true
+  deploymentPlan:
+    # READY-028 HA: 2 brokers (master + slave) for active/passive failover
+    size: 2
+    persistenceEnabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    podSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+  resourceTemplates:
+    - patch:
+        apiVersion: route.openshift.io/v1
+        kind: Route
+        spec:
+          tls:
+            insecureEdgeTerminationPolicy: Redirect
+            termination: edge
+      selector:
+        kind: Route
