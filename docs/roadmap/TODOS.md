@@ -16,8 +16,9 @@
 | **Open P0s** | 3 (READY-001/002/003) |
 | **Open P1s** | 28 |
 | **Open P2s** | 12 |
-| **Production Score** | ~45% (target 80% for regulator submission) |
-| **Last Audit** | June 13, 2026 — E2E + cache + Kafka + AMQ all proven, 33 production readiness gaps logged |
+| **Open P3s** | 7 (3 new: READY-070/071/072) |
+| **Production Score** | ~50% (↑ from 45% after 3scale + cache + Kafka + AMQ + web-app T1-T3 proven) |
+| **Last Audit** | June 13, 2026 — Full E2E proven: 3scale T1-T7 green, web-app T1-T3 green, DataGrid + Kafka + AMQ infra all functional |
 | **Last Release** | 1.8.11 — PatternParseException fix + E2E CRUD verified |
 
 ---
@@ -186,6 +187,10 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | E2E-2026-06-13-07 | P1 | **DataGrid (Redis RESP) round-trip proven** — ✅ VERIFIED | `payu-datagrid.payu-dev.svc.cluster.local:11222` ping/pong ✓, AUTH ✓, SET/GET round-trip ✓. `cache-starter` integration depends on `E2E-2026-06-13-06` fix. |
 | E2E-2026-06-13-08 | P1 | **Kafka outbox end-to-end proven** — ✅ VERIFIED | `INSERT outbox_events → OutboxPublisher poller → published_at set (1s lag) → consumed from `payu.e2e.test` topic via `kafka-console-consumer.sh`. CloudEvents 1.0 format ✓. Only 1 topic tested — need to validate all `payu.*` topic patterns. |
 | E2E-2026-06-13-09 | P1 | **AMQ broker E2E proven via Jolokia** — ✅ VERIFIED | Jolokia `sendMessage` → `MessagesAdded++` (5 messages) → billing-service `@JmsListener` invoked → `messagesDelivered=4` + `messagesAcknowledged=4`. Test artifact: Jolokia body format ≠ JmsTemplate body format (JSON deser fails on test msg), but broker + consumer + delivery chain is 100% proven. Producer (`JmsMessagePublisher.sendWithDelay`) idle because 0 subscriptions in `payu_billing.subscriptions` table. |
+| E2E-2026-06-13-10 | P1 | **3scale T1-T7 CRUD re-verified** — ✅ ALL GREEN | Full 7-step CRUD via 3scale APIcast (`payu-product-payu-apicast-production`): T1=201 CREATE, T2=200 LIST, T3=200 GET, T4=200 FREEZE, T5=200 status=FROZEN, T6=200 UNFREEZE, T7=200 status=ACTIVE. Chain: Host → 3scale (user_key + JWT) → gateway → wallet-service. Key insight: JWT MUST be from INTERNAL Keycloak (issuer `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu`); public Keycloak route uses HTTPS issuer that mismatches `QUARKUS_OIDC_TOKEN_ISSUER` → 401 INVALID_TOKEN. |
+| E2E-2026-06-13-11 | P1 | **web-app BFF T1-T3 green, T4-T6 fail with 415** — 🟡 PARTIAL | web-app (Next.js BFF proxy) → gateway → wallet-service. T1=201 CREATE, T2=200 LIST, T3=200 GET all work. T4/T6 (POST /cards/{id}/freeze + /unfreeze, body-less POST) return **415 Unsupported Media Type**. Direct gateway (skipping web-app) works fine for T4/T6. See `E2E-2026-06-13-12` for root cause. |
+| E2E-2026-06-13-12 | P1 | **🐛 BUG: web-app BFF proxy sends empty body + Content-Type for body-less POST** — ❌ OPEN | File: `frontend/web-app/src/app/api/v1/[...path]/route.ts` ~lines 190-200. When request method=POST with no body, `await request.text()` returns `""`, then `Content-Type` is forwarded verbatim. Gateway sees `Content-Type: application/json` + empty body → 415. Fix: only forward `Content-Type` when body is non-empty. Also affects future body-less POST endpoints (cancel, archive, etc). Tracking: `READY-070` in Production Readiness Gap Analysis. |
+| E2E-2026-06-13-13 | P2 | **web-app root returns 500 Internal Server Error** — 🟡 UI broken | `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/` returns 500 (rendering crash). API proxy works (T1-T3), so backend integration is fine, but the Next.js page render crashes. Investigate: missing env var, OIDC issuer mismatch in client-side, or other render-time crash. Blocks end-user UI testing. |
 
 ---
 
@@ -254,6 +259,9 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | READY-061 | Mobile | Expo SDK 55 + RN 0.85 upgrade | 0% | 100% |
 | READY-062 | ML | ONNX fraud detection model in `fraud-service` | 0% | 100% |
 | READY-063 | Frontend | Premium Emerald design system pass (web-app) | 0% | 100% |
+| **READY-070** | **Frontend** | **🐛 Fix web-app BFF body-less POST 415 bug** (E2E-2026-06-13-12) — `frontend/web-app/src/app/api/v1/[...path]/route.ts` only forward `Content-Type` when body is non-empty. Affects freeze/unfreeze/cancel/archive etc. | 0% | 100% |
+| **READY-071** | **Frontend** | **Fix web-app root 500 error** (E2E-2026-06-13-13) — Next.js page render crash at `https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id/`. API proxy works, only UI render broken. Investigate missing env var or OIDC client config. | 0% | 100% |
+| **READY-072** | **Frontend** | **Use INTERNAL Keycloak URL for service-to-service JWT** (E2E-2026-06-13-10) — All E2E scripts (cards-crud.sh, web-app BFF) MUST use `http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu` for JWT issuance, NOT public HTTPS route. Mismatch causes 401. Document in CONTRIBUTING.md. | 50% | 100% |
 
 ---
 
@@ -269,5 +277,5 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-_Last Updated: June 13, 2026 — 1.8.11 released. E2E + cache + Kafka + AMQ all proven. 33 production readiness gaps logged (3 P0, 17 P1, 13 P2, 4 P3)._
+_Last Updated: June 13, 2026 — 1.8.11 released. E2E + cache + Kafka + AMQ + 3scale T1-T7 all proven. web-app BFF partial (T1-T3 green, T4-T6 blocked by 415 bug). 36 production readiness gaps logged (3 P0, 17 P1, 13 P2, 7 P3)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
