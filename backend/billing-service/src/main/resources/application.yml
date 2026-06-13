@@ -155,7 +155,7 @@ payu:
       retention-days: 30
       cron: "0 0 2 * * *"
   jms:
-    broker-url: tcp://${ARTEMIS_HOST:localhost}:${ARTEMIS_PORT:61616}
+    broker-url: ${ARTEMIS_URL:tcp://artemis:61616}
     username: ${ARTEMIS_USERNAME:admin}
     password: ${ARTEMIS_PASSWORD:admin}
 

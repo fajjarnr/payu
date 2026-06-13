@@ -81,3 +81,49 @@ spec:
       pattern: "/api/"
       increment: 1
       metricMethodRef: "hits"
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: payu-api
+  namespace: payu-api-management
+spec:
+  name: "PayU API"
+  systemName: "api"
+  description: "PayU API gateway services"
+  providerAccountRef:
+    name: threescale-provider-account
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          authUserKey: "user_key"
+          credentials: "query"
+  backendUsages:
+    payu_backend:
+      path: "/"
+  policies:
+    - name: apicast
+      version: builtin
+      enabled: true
+      configuration: {}
+  applicationPlans:
+    basic:
+      name: "Basic"
+      published: true
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/"
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/"
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/"
+      increment: 1
+    - httpMethod: PUT
+      pattern: "/api/"
+      increment: 1
+    - httpMethod: DELETE
+      pattern: "/api/"
+      increment: 1

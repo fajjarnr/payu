@@ -129,6 +129,11 @@ spec:
             configMapKeyRef:
               name: service-endpoints
               key: KAFKA_URL
+        - name: ARTEMIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: ARTEMIS_URL
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Billing/Integration Service JMS Port=-1 Fix & 3scale ProxyConfig Promotion (2026-06-13)
+
+- **JMS port=-1 root cause**: `application.yml` for `billing-service` and `integration-service` used `tcp://${ARTEMIS_HOST:localhost}:${ARTEMIS_PORT:61616}`. The deployment YAMLs did not set `ARTEMIS_HOST`, and k8s auto-injected `ARTEMIS_PORT` from the `artemis` service as the full URL `tcp://172.30.245.91:61616` — so the broker URL became `tcp://localhost:tcp://172.30.245.91:61616` which the ActiveMQ client parsed as `host=localhost, port=-1`. Health endpoint returned `503 DOWN` with `IllegalArgumentException: port out of range:-1`.
+- **Fix**: Aligned with `notification-service` pattern that already worked. Both Spring Boot app yml files now read a single `ARTEMIS_URL` env var: `broker-url: ${ARTEMIS_URL:tcp://artemis:61616}`. Deployment manifests inject `ARTEMIS_URL` from the existing `service-endpoints` ConfigMap key (which already held `tcp://artemis:61616`). No ConfigMap changes needed.
+- **3scale `proxy_config` deploy gap**: Calling `POST /admin/api/services/{id}/proxy/deploy.json` returned success but never persisted a `production` proxy_config for the apicast user (`{"proxy_configs":[]}` from master API). Cause: services created via the admin portal were in `state: incomplete` with no plan-bound app. The operator-managed workflow is the `ProxyConfigPromote` CRD (`capabilities.3scale.net/v1beta1`) which writes a complete `proxy_config` row.
+- **Fix**: Promoted both products via `ProxyConfigPromote` (one-shot, `deleteCR: true`) and added the `payu-api` Product CR to `infrastructure/platform/api-management/3scale/payu-capabilities.yaml` so future deploys are reproducible from Git. E2E `3scale <-> gateway` now passes on all 4 routes (api + payu-product × production + staging, HTTP 200 with sub-100ms latency).
+- **Statement/Account/Lending slow startup**: ~60s to start (gRPC + Spring Security + Outbox + Audit + Rate Limiter + Resilience4j + DataGrid + Flyway). Original `startupProbe` had `failureThreshold: 30` but `period: 5s` and `timeout: 1s` was borderline. Pods did recover after the first 60s once `Started *ServiceApplication` logged. No change required; documented for awareness.
+
 ### CMS & Auth Redis Serializer Bug — `LocalDate` Serialization Failure (2026-06-13)
 
 - **Root Cause**: `cms-service` `RedisConfig.java` and `auth-service` `AuthServiceApplication.java` instantiated `new GenericJackson2JsonRedisSerializer()` with the default constructor. The default ctor builds an `ObjectMapper` that does NOT register the `JavaTimeModule`, so any cached value containing `java.time.LocalDate` or `java.time.LocalDateTime` (e.g. `ContentResponse.startDate`, `ContentResponse.createdAt`) threw `SerializationException` at cache write time, surfacing as HTTP 500 on `GET /api/v1/public/cms/contents/active`.

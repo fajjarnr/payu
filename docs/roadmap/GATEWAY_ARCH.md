@@ -136,8 +136,8 @@ Yang sudah ada dan relevan untuk payment gateway:
                     SNAP-BI / REST API
                            ▼
               ┌─────────────────────────────┐
-              │  [future] 3scale / Kong     │  ← API Management (saat 5+ partner)
-              │  developer portal, analytics │     (IMP-019/020)
+              │  ✅ 3scale (APIcast)       │  ← API Management (5+ partner)
+              │  developer portal, analytics │     (IMP-019/020) — see §3scale below
               │  rate plans, API lifecycle   │
               └──────────┬──────────────────┘
                          ▼
@@ -232,3 +232,68 @@ Yang sudah ada dan relevan untuk payment gateway:
 - [x] ~~Implement IMP-017 — Rate plan per partner~~ ✅ Feb 28 — Per-endpoint overrides in gateway
 - [x] ~~Implement IMP-002 — Chart of Accounts~~ ✅ Feb 26 — 18 PSAK-based categories, 22 seed accounts
 - [x] ~~Implement IMP-012 — GL engine ringan~~ ✅ Feb 26 — Balance sheet, income statement, daily settlement endpoints
+
+---
+
+## 🚀 3scale API Management — Deployment Workflow
+
+The 3scale stack lives in the `payu-api-management` namespace and fronts the `gateway-service` in `payu-dev`. From outside the cluster, every API call hits APIcast (Nginx + Lua) which then proxies to `gateway-service.payu-dev.svc.cluster.local:8080` over plain HTTP inside the cluster.
+
+### Components
+
+| Component | Type | Role |
+|:---|:---|:---|
+| `system-app` (3 containers) | Deployment | `system-master` (port 3002), `system-provider` (port 3000), `system-developer` — all share one pod, services `system-master` / `system-provider` / `system-developer` point to the right container port via named port `master` |
+| `apicast-production` / `apicast-staging` | Deployment | APIcast v2.16, `APICAST_CONFIGURATION_LOADER=boot`, fetches JSON config from `system-master:3000/master/api/proxy/configs/{env}.json` at startup |
+| `backend-listener` / `backend-worker` / `backend-cron` | Deployment | Apisonator — handles rate-limit counters, auth lookups, async jobs |
+| `system-sidekiq` | Deployment | ActiveJob worker (Sphinx reindex, etc) — 3scale is a Rails app |
+| `system-memcache` / `system-searchd` | Deployment | Memcached (counters) + Sphinx (search) |
+| `zync` / `zync-que` | Deployment | Notifies 3scale of OpenShift route changes |
+
+### The ProxyConfig Boot-Loader Trap
+
+APIcast runs with `APICAST_CONFIGURATION_LOADER=boot`, which means **the JSON config is fetched exactly once at container start** and cached in Nginx worker Lua state. A `ProxyConfigPromote` that writes a new `proxy_config` row into the system-master DB does **nothing** until you restart the APIcast pod. This is by design (low-latency routing decisions) but easy to miss.
+
+### Promoting a Product to Production (the only reliable path)
+
+**Do NOT** use `POST /admin/api/services/{id}/proxy/deploy.json` — it returns 200 but does not write a `proxy_config` row when the service is in `state: incomplete` (typical for products created via the admin portal). Always go through the operator-managed `ProxyConfigPromote` CRD.
+
+```bash
+# 1. Ensure Product CR exists in source: infrastructure/platform/api-management/3scale/payu-capabilities.yaml
+oc apply -f infrastructure/platform/api-management/3scale/payu-capabilities.yaml
+
+# 2. Promote (one-shot, deleteCR: true cleans up after success)
+cat <<'EOF' | oc apply -f -
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ProxyConfigPromote
+metadata:
+  name: payu-product-production
+  namespace: payu-api-management
+spec:
+  productCRName: payu-product
+  production: true
+  deleteCR: true
+EOF
+
+# 3. Verify the proxy_config row exists in master API
+oc exec -n payu-api-management apicast-production-... -c apicast-production -- \
+  curl -sS -u "fcBnx0Oo:fcBnx0Oo" \
+  "http://system-master:3000/master/api/proxy/configs/production.json" | jq
+
+# 4. Restart APIcast so the boot-loader picks up the new config
+oc delete pod -n payu-api-management -l threescale_component=apicast,threescale_component_element=production
+
+# 5. E2E sanity
+curl -skS "https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id/api/v1/products?user_key=04dc03f2e2a776bffcb9b16eb9f93796"
+```
+
+### E2E Test Matrix (validated 2026-06-13)
+
+| Route | user_key | Result |
+|:---|:---|:---|
+| `api-payu-apicast-production` | `f0a4fe95cc59a7e279896f241263b02f` | 200 (public endpoints) / 401 (JWT-protected) |
+| `payu-product-payu-apicast-production` | `04dc03f2e2a776bffcb9b16eb9f93796` | 200 / 401 |
+| `api-payu-apicast-staging` | same | 200 |
+| `payu-product-payu-apicast-staging` | same | 200 |
+
+Invalid `user_key` returns 403 (`Authentication parameters missing` or `Authentication failed`). Valid `user_key` + missing JWT on protected paths returns 401 with `{"error":"MISSING_TOKEN","message":"Valid JWT token required"}` from the gateway, proving the auth chain works end-to-end.
