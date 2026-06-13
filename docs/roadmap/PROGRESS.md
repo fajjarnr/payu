@@ -95,14 +95,16 @@
 
 ### v1.8.9 (Completed) — June 13, 2026
 
-**Workloads Configuration Refactoring & AMQ Broker Setup:**
+**Workloads Configuration Refactoring & Operator-Managed AMQ Broker:**
 
 - ✅ **JDBC & Kafka URLs Extraction**: Centralized database JDBC connection strings and Kafka URLs into `service-endpoints` ConfigMap.
 - ✅ **Database Credentials Protection**: Integrated database credentials (`DB_USERNAME` and `DB_PASSWORD`) into `db-secrets.yaml` so they do not exist as plaintext in deployments.
 - ✅ **Deployment Manifest Refactoring**: Refactored all 23+ Java, Quarkus, and Python deployment manifests to reference connection endpoints and credentials dynamically using `valueFrom` ConfigMaps and Secrets.
-- ✅ **Artemis AMQ Broker Deployment**: Deployed AMQ Broker Operator subscription and ActiveMQ Artemis Broker instance inside the `payu-dev` namespace.
+- ✅ **Platform AMQ Broker Migration**: Moved ActiveMQ Artemis configuration from the workloads layer to a dedicated platform directory `infrastructure/platform/amq-broker/` and registered it in the GitOps `payu-devsecops-platform` ApplicationSet.
+- ✅ **Operator-Managed Broker Deployment**: Configured and deployed the ActiveMQArtemis CR named `payu-broker` using the certified Red Hat AMQ Broker image, using `spec.brokerProperties` for clean queue definition.
+- ✅ **Port Conflict & Probe Fix**: Removed the conflicting custom Netty `web` acceptor on port `8161` (resolving the web console `BindException`), allowing the default readiness probe to succeed.
 - ✅ **Artemis Integration**: Integrated `notification-service` to connect dynamically using `ARTEMIS_URL` config, bringing its Artemis JMS health check green and transitioning to `1/1` Running/Ready.
-- ✅ **Full Pod Readiness**: Verified all 39 pods in the `payu-dev` namespace (including `analytics-service`, `kyc-service`, and `notification-service`) are `1/1` Running/Ready.
+- ✅ **Full Pod Readiness**: Verified all 39 pods in the `payu-dev` namespace (including the renamed `payu-broker-ss-0` and restarted `notification-service`) are `1/1` Running/Ready.
 
 ### v1.8.8 (Completed) — June 12, 2026
 

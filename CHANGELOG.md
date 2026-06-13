@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Database & Kafka Connection Extraction**: Extracted all database JDBC connections and Kafka URLs into `service-endpoints` ConfigMap (`infrastructure/workloads/base/service-endpoints.yaml`).
 - **Database Credentials Protection**: Integrated database credentials (`DB_USERNAME` and `DB_PASSWORD`) into `db-secrets.yaml` and refactored deployment files to use `valueFrom` references.
 - **Manifest Updates**: Updated all 23+ microservices, simulators, and workloads deployments under `infrastructure/workloads/base` to use dynamic references instead of hardcoded connection parameters.
-- **AMQ Broker Setup**: Deployed AMQ Broker Operator subscription and deployed a standard ActiveMQ Artemis broker (`artemis.yaml`) inside the `payu-dev` namespace.
-- **Artemis Integration**: Connected `notification-service` dynamically to Artemis using `ARTEMIS_URL` retrieved from the `service-endpoints` ConfigMap, achieving full pod readiness (`1/1`).
+- **Platform AMQ Broker Migration**: Migrated the ActiveMQ Artemis CRD configuration from the workloads layer to a new platform directory `infrastructure/platform/amq-broker/` and registered it in the GitOps `payu-devsecops-platform` ApplicationSet.
+- **AMQ Broker Setup**: Deployed AMQ Broker Operator subscription and configured the renamed `payu-broker` ActiveMQArtemis CR using `spec.brokerProperties` for defining target queues cleanly without deprecated CRDs.
+- **Port Conflict & Probe Fixes**: Removed conflicting custom `web` acceptor on port `8161` to resolve the jetty web console `BindException`, allowing the certified Red Hat image's default readiness probe to succeed.
+- **Artemis Integration**: Connected `notification-service` dynamically to the broker using `ARTEMIS_URL` retrieved from the `service-endpoints` ConfigMap, achieving full pod readiness (`1/1`).
 
 ### Migration Design Restructuring (2026-06-12)
 
