@@ -66,7 +66,7 @@ metadata:
   name: 3scale-operator
   namespace: payu-api-management
 spec:
-  channel: threescale-2.14
+  channel: threescale-2.16
   installPlanApproval: Automatic
   name: 3scale-operator
   source: redhat-operators
@@ -104,16 +104,12 @@ oc create secret generic system-redis \
   -n payu-api-management
 ```
 
-### 3. Deploy APIManager
+### 3. Deploy 3scale Platform via Kustomize
+
+Instead of applying files individually, deploy all platform resources (secrets, PVC, network policy, custom policy, and the APIManager CR) using Kustomize:
 
 ```bash
-oc apply -f apimanager.yaml -n payu-api-management
-```
-
-### 4. Deploy Custom Policy
-
-```bash
-oc apply -f apicast-policy.yaml -n payu-api-management
+oc apply -k .
 ```
 
 ### 5. Configure PayU Gateway as Backend

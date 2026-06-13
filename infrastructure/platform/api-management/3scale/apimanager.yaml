@@ -22,21 +22,26 @@ metadata:
     app.kubernetes.io/part-of: payu-api-management
     app.kubernetes.io/managed-by: 3scale-operator
 spec:
-  wildcardDomain: api.payu.example.com
+  wildcardDomain: apps.payu.ocp.fajjjar.my.id
   appLabel: payu-3scale
   tenantName: payu
   resourceRequirementsEnabled: true
+
+  externalComponents:
+    system:
+      database: true
+      redis: true
+    backend:
+      redis: true
+    zync:
+      database: true
 
   system:
     fileStorage:
       persistentVolumeClaim:
         storageClassName: gp3-csi  # Adjust to your cluster's StorageClass
         resources:
-          requests:
-            storage: 5Gi
-    database:
-      postgresql:
-        image: "registry.redhat.io/rhel9/postgresql-16"
+          requests: 5Gi
     appSpec:
       # PRODUCTION: Increase to 2+ replicas for HA
       replicas: 2
@@ -106,7 +111,7 @@ spec:
         - name: payu-header-forwarding
           version: "1.0.0"
           secretRef:
-            name: apicast-policy-payu-header-forwarding
+            name: payu-policy
     stagingSpec:
       replicas: 1
       resources:
@@ -116,6 +121,16 @@ spec:
         limits:
           cpu: 500m
           memory: 256Mi
+      # Custom environment variables for PayU integration
+      customEnvironments:
+        - secretRef:
+            name: apicast-payu-env
+      # Enable custom policy for PayU header forwarding
+      customPolicies:
+        - name: payu-header-forwarding
+          version: "1.0.0"
+          secretRef:
+            name: payu-policy
 
   zync:
     appSpec:

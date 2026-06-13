@@ -4,7 +4,7 @@
 # from 3scale APIcast (Tier 1) to PayU gateway-service (Tier 2).
 #
 # Headers injected:
-#   X-PayU-Partner-Id   — 3scale application/account identifier
+#   X-Partner-Id        — 3scale application/account identifier
 #   X-PayU-Plan-Id      — 3scale application plan (Basic/Premium/Enterprise)
 #   X-PayU-Request-Id   — Unique request ID for tracing across tiers
 #   X-PayU-Rate-Limit-Remaining — Remaining quota for the current window
@@ -27,15 +27,17 @@
 #   2. Create as Secret: oc create secret generic apicast-policy-payu-header-forwarding --from-file=...
 # For dev, ConfigMap is acceptable. For production, use Secret.
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
-  name: apicast-policy-payu-header-forwarding
+  name: payu-policy
   namespace: payu-api-management
   labels:
     app.kubernetes.io/name: 3scale-policy
     app.kubernetes.io/part-of: payu-api-management
     threescale_component: apicast
-data:
+    apimanager.apps.3scale.net/watched-by: "apimanager"
+type: Opaque
+stringData:
   apicast-policy.json: |
     {
       "name": "payu-header-forwarding",
@@ -52,7 +54,7 @@ data:
         "properties": {
           "partner_id_header": {
             "type": "string",
-            "default": "X-PayU-Partner-Id",
+            "default": "X-Partner-Id",
             "description": "Header name for the partner identifier"
           },
           "plan_id_header": {
@@ -81,7 +83,7 @@ data:
 
     function _M.new(config)
       local self = new(config)
-      self.partner_id_header = config.partner_id_header or 'X-PayU-Partner-Id'
+      self.partner_id_header = config.partner_id_header or 'X-Partner-Id'
       self.plan_id_header = config.plan_id_header or 'X-PayU-Plan-Id'
       self.request_id_header = config.request_id_header or 'X-PayU-Request-Id'
       self.include_rate_limit_info = config.include_rate_limit_info ~= false

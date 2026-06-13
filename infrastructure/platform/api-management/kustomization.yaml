@@ -5,6 +5,8 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/api-management/
 
 resources:
-  - 3scale/3scale.yaml
+  - 3scale/secrets-3scale.yaml
+  - 3scale/system-storage-pvc.yaml
+  - 3scale/3scale-network-policy.yaml
   - 3scale/apicast-policy.yaml
   - 3scale/apimanager.yaml
