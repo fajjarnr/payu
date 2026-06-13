@@ -79,4 +79,25 @@ podman compose -f infrastructure/local/podman/podman-compose.yml --profile devse
 **Lesson**: `podman compose` without `-f` looks for `compose.yaml`/`docker-compose.yml` in the current directory only. The PayU compose file is at `infrastructure/local/podman/podman-compose.yml` — always pass `-f`.
 
 ---
-*Last Updated: May 5, 2026*
+
+## L-031: `new GenericJackson2JsonRedisSerializer()` Is a Footgun — Always Register `JavaTimeModule`
+
+**Date**: 2026-06-13  
+**Domain**: Java / Spring Data Redis  
+**Context**: The no-arg constructor `new GenericJackson2JsonRedisSerializer()` builds an internal `ObjectMapper` that does **not** register the `JavaTimeModule`. Any cached value containing `java.time.LocalDate`, `LocalDateTime`, `Instant`, `OffsetDateTime`, `ZonedDateTime`, or `Duration` throws `InvalidDefinitionException` at write time, surfacing as HTTP 500. The cache-starter's `RedisCacheConfig` registers `JavaTimeModule` correctly — but any service with a local `@Configuration` (e.g. `cms-service/.../config/RedisConfig.java`) or a hand-rolled `RedisTemplate` bean (e.g. `auth-service/AuthServiceApplication.java#redisTemplate`) silently bypasses the starter and reinvents the bug.
+
+**Pattern**: Always construct the serializer with an `ObjectMapper` that has `JavaTimeModule` registered:
+```java
+ObjectMapper om = new ObjectMapper();
+om.registerModule(new JavaTimeModule());
+GenericJackson2JsonRedisSerializer ser = new GenericJackson2JsonRedisSerializer(om);
+```
+Reuse one helper method (e.g. package-private `buildValueSerializer()`) across `RedisCacheConfiguration` and `RedisTemplate` beans so the configuration lives in one place.
+
+**Lesson**: 
+1. The default ctor is a **silent footgun** — it compiles, runs, and only fails when a value containing a `java.time` type is actually cached. Tests that only PUT/GET `String` or `Map<String, String>` will not catch it.
+2. `scripts/check_pod_connections.py` flags any exception in pod logs as `Redis: 🔴 Failed/Unreachable`. Serialization errors in `RedisCache.put` are categorized as Redis failures, leading operators to chase env-var and credential bugs that don't exist. When investigating "Redis failed" reports, grep for `InvalidDefinitionException` and `jsr310` to distinguish serializer bugs from connectivity issues.
+3. The original "fix plan" proposed editing 20 base deployment YAML files to change `PAYU_CACHE_REDIS_USERNAME` and add `REDIS_PASSWORD` env vars. Cluster-state inspection proved all env vars were already correct — the root cause was a Java code defect, not a misconfigured environment. **Always verify the runtime cluster state with `oc get deployment ... -o jsonpath` before proposing manifest changes.** The Iron Law: NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
+
+---
+*Last Updated: June 13, 2026*

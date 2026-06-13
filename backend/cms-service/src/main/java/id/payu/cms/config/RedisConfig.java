@@ -1,5 +1,7 @@
 package id.payu.cms.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -61,11 +63,17 @@ public class RedisConfig {
             .serializeKeysWith(RedisSerializationContext.SerializationPair
                 .fromSerializer(new StringRedisSerializer()))
             .serializeValuesWith(RedisSerializationContext.SerializationPair
-                .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .fromSerializer(buildValueSerializer()))
             .disableCachingNullValues();
 
         return RedisCacheManager.builder(connectionFactory)
             .cacheDefaults(config)
             .build();
+    }
+
+    GenericJackson2JsonRedisSerializer buildValueSerializer() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 }

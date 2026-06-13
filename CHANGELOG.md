@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CMS & Auth Redis Serializer Bug — `LocalDate` Serialization Failure (2026-06-13)
+
+- **Root Cause**: `cms-service` `RedisConfig.java` and `auth-service` `AuthServiceApplication.java` instantiated `new GenericJackson2JsonRedisSerializer()` with the default constructor. The default ctor builds an `ObjectMapper` that does NOT register the `JavaTimeModule`, so any cached value containing `java.time.LocalDate` or `java.time.LocalDateTime` (e.g. `ContentResponse.startDate`, `ContentResponse.createdAt`) threw `SerializationException` at cache write time, surfacing as HTTP 500 on `GET /api/v1/public/cms/contents/active`.
+- **Fix**: Extracted a package-private `buildValueSerializer()` helper in both services that registers `JavaTimeModule` on the `ObjectMapper` before constructing the serializer. `cms-service` `RedisConfig#cacheManager` and `auth-service` `AuthServiceApplication#redisTemplate` now use this helper for both value and hash-value serializers.
+- **TDD Coverage**:
+  - `cms-service/src/test/java/id/payu/cms/config/RedisConfigTest.java` — red/green against the production stack trace (round-trips `ContentResponse` with `LocalDate` + `LocalDateTime`).
+  - `auth-service/src/test/java/id/payu/auth/AuthServiceApplicationRedisTest.java` — red/green verifying the `RedisTemplate` value serializer accepts POJOs with `LocalDate` fields.
+- **Misdiagnosis Avoided**: The original plan proposed editing 20 deployment YAMLs to change `PAYU_CACHE_REDIS_USERNAME` and add `REDIS_PASSWORD` env vars. Cluster state inspection proved all env vars were already correct (`PAYU_CACHE_REDIS_USERNAME=default`, all three password env vars set to `payu-cache-dev-password`); the actual root cause was a Jackson configuration defect in Java code, not a misconfigured environment. The `scripts/check_pod_connections.py` script also produces false-positive "Redis: Failed/Unreachable" reports whenever any exception — including serialization errors — appears in pod logs.
+- **No YAML changes**: The 20 base deployment files were not modified.
+
 ## [1.8.10] - 2026-06-13
 
 ### Platform AMQ Broker Console Ingress & Network Policies Fix
