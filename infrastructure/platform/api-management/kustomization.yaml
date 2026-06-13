@@ -10,3 +10,4 @@ resources:
   - 3scale/3scale-network-policy.yaml
   - 3scale/apicast-policy.yaml
   - 3scale/apimanager.yaml
+  - 3scale/payu-capabilities.yaml

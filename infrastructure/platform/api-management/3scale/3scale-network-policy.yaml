@@ -71,3 +71,23 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-3scale-operator-ingress
+  namespace: payu-api-management
+spec:
+  podSelector:
+    matchLabels:
+      threescale_component: system
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-operators
+      ports:
+        - protocol: TCP
+          port: 3000

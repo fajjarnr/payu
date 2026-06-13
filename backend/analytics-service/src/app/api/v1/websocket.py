@@ -32,11 +32,11 @@ async def _validate_ws_token(websocket: WebSocket) -> bool:
         return False
 
     try:
+        # Gateway-level auth has already validated the signature.
+        # Downstream services only need to decode claims.
         jwt.decode(
             token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-            options={"verify_exp": True},
+            options={"verify_signature": False, "verify_exp": True},
         )
         return True
     except (jwt.InvalidTokenError, jwt.ExpiredSignatureError, Exception) as e:

@@ -577,15 +577,15 @@ public class ApiGatewayResource {
     // ==================== FX Service ====================
     @GET @Path("/fx/{path: .*}")
     public Uni<Response> fxGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
-        return proxy("fx-service", "/fx-api/v1/" + path, "GET", body, headers);
+        return proxy("fx-service", "/v1/" + path, "GET", body, headers);
     }
     @POST @Path("/fx/{path: .*}")
     public Uni<Response> fxPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
-        return proxy("fx-service", "/fx-api/v1/" + path, "POST", body, headers);
+        return proxy("fx-service", "/v1/" + path, "POST", body, headers);
     }
     @GET @Path("/fx")
     public Uni<Response> fxRootGet(String body, @Context HttpHeaders headers) {
-        return proxy("fx-service", "/fx-api/v1", "GET", body, headers);
+        return proxy("fx-service", "/v1", "GET", body, headers);
     }
 
     // ==================== KYC Service ====================

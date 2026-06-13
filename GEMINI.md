@@ -191,6 +191,13 @@ payu/
   - **No duplicates**: Setiap version hanya boleh ada 1x di CHANGELOG.md
   - **Date format**: ISO 8601 (`YYYY-MM-DD`) untuk semua version entries
 17. **Financial Calculations**: `BigDecimal` ONLY (NEVER `float`/`double`). Rounding mode: `HALF_EVEN`. Double-entry ledger wajib (setiap transaksi = debit + credit entry).
+18. **Development Loop (Error-Fix-Test-Tag-Deploy-Repeat)**: Setiap troubleshooting dan resolusi platform wajib mengikuti siklus sekuensial:
+  - **Error**: Analisis log, trace, atau test failure secara mendalam untuk mencari akar masalah (root cause) sebelum menyentuh kode.
+  - **Fix**: Terapkan perbaikan kode seminimal mungkin untuk menyelesaikan akar masalah tersebut.
+  - **Test**: Jalankan unit test lokal atau E2E integration test untuk memastikan perbaikan bekerja secara lokal.
+  - **Build New Tag**: Build container image baru dengan tag versi target (minimal `1.8.8` atau tag increment terbaru dari `docs/roadmap`).
+  - **Deploy**: Push image ke registry dan jalankan deployment/rollout di target cluster.
+  - **Repeat**: Verifikasi dengan E2E test di cluster. Jika gagal, ulangi siklus dari awal.
 
 ### Testing Guidelines (TDD)
 
@@ -430,6 +437,13 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 
 - **Rule of Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
 - **Don’t fight errors!**: Whenever you encounter the same error twice, research the web or check context7 and find 3-5 possible ways to fix it. Then choose the most efficient solution and implement it.
+- **Error, Fix, Test, Build New Tag, Deploy, Repeat (Development Loop)**: Standard sequential loop for platform resolution:
+  1. **Error**: Capture and analyze the error log, trace, or test failure to identify the root cause.
+  2. **Fix**: Implement the minimum correct code modification to address the root cause.
+  3. **Test**: Run the local test suite (unit tests or E2E integration test files) to verify the fix works locally.
+  4. **Build New Tag**: Build the new container image tagged with the target deployment tag (e.g. `1.8.8` or next incremental version as defined in `docs/roadmap`).
+  5. **Deploy**: Push the image to the OpenShift registry and apply/rollout the updated deployment config.
+  6. **Repeat**: Monitor logs and run E2E/integration tests against the deployed cluster environment. If any issues persist, repeat the loop from Step 1.
 
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.

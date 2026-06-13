@@ -32,9 +32,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**/public/**", "/api/v1/**/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/fx-api/v1/rates/**").permitAll()
-                .requestMatchers("/fx-api/v1/conversions/estimate").permitAll()
+                .requestMatchers("/v1/public/**", "/api/v1/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/v1/rates/**").permitAll()
+                .requestMatchers("/v1/conversions/estimate").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));

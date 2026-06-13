@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: threescale-provider-account
+  namespace: payu-api-management
+type: Opaque
+stringData:
+  adminURL: https://payu-admin.apps.payu.ocp.fajjjar.my.id
+  token: adminaccesstoken12345
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: payu-backend
+  namespace: payu-api-management
+spec:
+  name: "PayU Backend API"
+  systemName: "payu_backend"
+  privateBaseURL: "http://gateway-service.payu-dev.svc.cluster.local:8080"
+  providerAccountRef:
+    name: threescale-provider-account
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: payu-product
+  namespace: payu-api-management
+spec:
+  name: "PayU Product API"
+  systemName: "payu_product"
+  description: "Declarative Product for PayU Gateway Services"
+  providerAccountRef:
+    name: threescale-provider-account
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          authUserKey: "user_key"
+          credentials: "query"
+  backendUsages:
+    payu_backend:
+      path: "/"
+  policies:
+    - name: apicast
+      version: builtin
+      enabled: true
+      configuration: {}
+    - name: payu-header-forwarding
+      version: "1.0.0"
+      enabled: true
+      configuration:
+        partner_id_header: "X-Partner-Id"
+        plan_id_header: "X-PayU-Plan-Id"
+        request_id_header: "X-PayU-Request-Id"
+        include_rate_limit_info: true
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      published: true
+    unlimited:
+      name: "Unlimited Plan"
+      published: true
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/api/"
+      increment: 1
+      metricMethodRef: "hits"
+    - httpMethod: POST
+      pattern: "/api/"
+      increment: 1
+      metricMethodRef: "hits"
+    - httpMethod: PUT
+      pattern: "/api/"
+      increment: 1
+      metricMethodRef: "hits"
+    - httpMethod: DELETE
+      pattern: "/api/"
+      increment: 1
+      metricMethodRef: "hits"
+    - httpMethod: PATCH
+      pattern: "/api/"
+      increment: 1
+      metricMethodRef: "hits"

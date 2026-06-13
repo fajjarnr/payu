@@ -73,6 +73,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/bi-fast/callback",
         "/api/v1/qris/callback",
         "/api/v1/public/contents",      // Only public CMS content endpoint (BUG-AUTH-023)
+        "/api/v1/products",             // Public product catalog endpoints
         "/api/v1/accounts/public/health",
         "/api/v1/wallets/public/health",
         "/api/v1/transactions/public/health",

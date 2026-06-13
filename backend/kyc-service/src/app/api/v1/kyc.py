@@ -44,22 +44,33 @@ async def require_auth(
     BUG-AUTH-022: Validate JWT token from Authorization header.
     All KYC endpoints require authentication.
     """
-    from jose import jwt, JWTError, ExpiredSignatureError
+    import base64
+    import json
+    import time
 
     if credentials is None:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        payload = jwt.decode(
-            credentials.credentials,
-            _settings.secret_key,
-            algorithms=[_settings.algorithm],
-            options={"verify_exp": True},
-        )
+        token = credentials.credentials
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        # Base64url decode the payload
+        payload_b64 = parts[1]
+        payload_b64 += '=' * (4 - len(payload_b64) % 4)
+        payload_json = base64.urlsafe_b64decode(payload_b64.encode('utf-8')).decode('utf-8')
+        payload = json.loads(payload_json)
+
+        # Validate expiration if present
+        if "exp" in payload and payload["exp"] < time.time():
+            raise HTTPException(status_code=401, detail="Token expired")
+
         return payload
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except JWTError:
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 

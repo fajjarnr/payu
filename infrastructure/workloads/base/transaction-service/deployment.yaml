@@ -122,11 +122,13 @@ spec:
         - name: REDIS_PORT
           value: '11222'
         - name: REDIS_PASSWORD
+          value: payu-cache-dev-password
         - name: SPRING_DATA_REDIS_HOST
           value: payu-datagrid.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
           value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD
+          value: payu-cache-dev-password
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
           value: '3'
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE

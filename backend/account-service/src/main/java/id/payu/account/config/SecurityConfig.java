@@ -52,7 +52,7 @@ public class SecurityConfig {
                 .requestMatchers("/account-service/actuator/health", "/account-service/actuator/health/**", "/account-service/actuator/info").permitAll()
                 .requestMatchers("/actuator/**", "/account-service/actuator/**").authenticated()
                 // Swagger/OpenAPI docs
-                .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/**/public/**", "/api/v1/**/public/**").permitAll()
+                .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v1/public/**", "/api/v1/v1/public/**").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

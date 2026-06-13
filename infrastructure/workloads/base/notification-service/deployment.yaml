@@ -110,17 +110,19 @@ spec:
         - name: PAYU_CACHE_REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: developer
+          value: default
         - name: REDIS_HOST
           value: payu-datagrid.payu-dev.svc.cluster.local
         - name: REDIS_PORT
           value: '11222'
         - name: REDIS_PASSWORD
+          value: payu-cache-dev-password
         - name: SPRING_DATA_REDIS_HOST
           value: payu-datagrid.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
           value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD
+          value: payu-cache-dev-password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
