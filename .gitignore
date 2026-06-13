@@ -149,3 +149,6 @@ replay_pid*
 java_pid*.hprof
 *.dump
 .commandcode/
+
+# --- Worktrees ---
+.worktrees/

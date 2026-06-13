@@ -153,15 +153,24 @@ public class DisbursementController {
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }
 
+    // BUG-TXN-ACCOUNT-001: Standardized to use 'account_id' claim with 'sub'
+    // fallback (matches extractUserId() sibling helper, BUG-AUTH-013).
+    // Customer1 JWT has sub=7a51ced3-... but no account_id claim → was throwing
+    // 409 on POST /api/v1/disbursements. Now falls back to sub claim.
     private UUID getCurrentAccountId() {
-        // Extract account ID from JWT claims
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt) {
-            Jwt jwt = (Jwt) authentication.getPrincipal();
-            String accountId = jwt.getClaim("account_id");
-            if (accountId != null) {
-                return UUID.fromString(accountId);
-            }
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String accountId = jwt.getClaimAsString("account_id");
+        if (accountId != null) {
+            return UUID.fromString(accountId);
+        }
+        // Fallback to sub claim (matches extractUserId behavior)
+        String sub = jwt.getSubject();
+        if (sub != null) {
+            return UUID.fromString(sub);
         }
         throw new IllegalStateException("No valid JWT authentication found");
     }
