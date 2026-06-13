@@ -53,6 +53,12 @@ public class SplitBillParticipantEntity {
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
+    // BUG-TXN-SPLITBILL-001: @Version on child for consistent isNew() check
+    // (see SplitBillEntity for full rationale).
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     // Default constructor
     public SplitBillParticipantEntity() {
     }
@@ -60,7 +66,7 @@ public class SplitBillParticipantEntity {
     // All-args constructor
     public SplitBillParticipantEntity(UUID id, UUID splitBillId, UUID accountId, String accountNumber,
                                 String accountName, BigDecimal amountOwed, BigDecimal amountPaid,
-                                ParticipantStatus status, Instant settledAt, Instant createdAt, Instant updatedAt) {
+                                ParticipantStatus status, Instant settledAt, Instant createdAt, Instant updatedAt, Long version) {
         this.id = id;
         this.splitBillId = splitBillId;
         this.accountId = accountId;
@@ -72,6 +78,7 @@ public class SplitBillParticipantEntity {
         this.settledAt = settledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.version = version;
     }
 
     // Builder
@@ -91,6 +98,7 @@ public class SplitBillParticipantEntity {
         private Instant settledAt;
         private Instant createdAt;
         private Instant updatedAt;
+        private Long version;
 
         public SplitBillParticipantBuilder id(UUID id) {
             this.id = id;
@@ -149,7 +157,7 @@ public class SplitBillParticipantEntity {
 
         public SplitBillParticipantEntity build() {
             return new SplitBillParticipantEntity(id, splitBillId, accountId, accountNumber, accountName,
-                    amountOwed, amountPaid, status, settledAt, createdAt, updatedAt);
+                    amountOwed, amountPaid, status, settledAt, createdAt, updatedAt, version);
         }
     }
 

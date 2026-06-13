@@ -64,6 +64,15 @@ public class SplitBillEntity {
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
+    // BUG-TXN-SPLITBILL-001: @Version makes Spring Data's isNew() check this
+    // field instead of @Id. With @GeneratedValue(UUID) + no @Version, the
+    // JPA spec's "is the entity new" check was unreliable across
+    // Spring Data 3.5 + Hibernate 6, causing StaleObjectStateException on
+    // first save. Hibernate manages the value automatically.
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     // Default constructor
     public SplitBillEntity() {
     }
@@ -72,7 +81,7 @@ public class SplitBillEntity {
     public SplitBillEntity(UUID id, String referenceNumber, UUID creatorAccountId, BigDecimal totalAmount,
                      String currency, String title, String description, SplitType splitType,
                      SplitStatus status, Instant dueDate, List<SplitBillParticipantEntity> participants,
-                     Instant createdAt, Instant updatedAt, Instant completedAt) {
+                     Instant createdAt, Instant updatedAt, Instant completedAt, Long version) {
         this.id = id;
         this.referenceNumber = referenceNumber;
         this.creatorAccountId = creatorAccountId;
@@ -87,6 +96,7 @@ public class SplitBillEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.completedAt = completedAt;
+        this.version = version;
     }
 
     // Builder
@@ -180,10 +190,15 @@ public class SplitBillEntity {
             return this;
         }
 
+        public SplitBillBuilder version(Long version) {
+            this.version = version;
+            return this;
+        }
+
         public SplitBillEntity build() {
             return new SplitBillEntity(id, referenceNumber, creatorAccountId, totalAmount, currency,
                     title, description, splitType, status, dueDate, participants,
-                    createdAt, updatedAt, completedAt);
+                    createdAt, updatedAt, completedAt, version);
         }
     }
 
