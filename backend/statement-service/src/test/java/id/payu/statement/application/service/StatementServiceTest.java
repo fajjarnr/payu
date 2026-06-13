@@ -5,6 +5,7 @@ import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.application.service.exception.StatementException;
+import id.payu.statement.domain.entity.StatementStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -68,7 +69,7 @@ class StatementServiceTest {
                 .customerId(testUserId.toString())
                 .accountNumber(testAccountNumber)
                 .statementPeriod(LocalDate.of(2024, 1, 1))
-                .status(StatementEntity.StatementStatus.COMPLETED)
+                .status(StatementStatus.COMPLETED)
                 .openingBalance(new BigDecimal("10000000"))
                 .closingBalance(new BigDecimal("15000000"))
                 .totalCredits(new BigDecimal("10000000"))
@@ -98,7 +99,7 @@ class StatementServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(testStatementId);
             assertThat(result.getCustomerId()).isEqualTo(testUserId.toString());
-            assertThat(result.getStatus()).isEqualTo(StatementEntity.StatementStatus.COMPLETED);
+            assertThat(result.getStatus()).isEqualTo(StatementStatus.COMPLETED);
             verify(statementRepository).save(any(StatementEntity.class));
         }
 
@@ -208,7 +209,7 @@ class StatementServiceTest {
         @Test
         @DisplayName("should throw exception when statement not completed")
         void shouldThrowExceptionWhenStatementNotCompleted() {
-            testStatement.setStatus(StatementEntity.StatementStatus.GENERATING);
+            testStatement.setStatus(StatementStatus.GENERATING);
             when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
@@ -250,7 +251,7 @@ class StatementServiceTest {
 
             // One of the saved statements should have GENERATING status
             List<StatementEntity> savedStatements = captor.getAllValues();
-            assertThat(savedStatements).anyMatch(s -> s.getStatus() == StatementEntity.StatementStatus.GENERATING);
+            assertThat(savedStatements).anyMatch(s -> s.getStatus() == StatementStatus.GENERATING);
         }
     }
 }

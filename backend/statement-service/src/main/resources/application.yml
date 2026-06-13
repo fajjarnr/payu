@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: statement-service
   profiles:
@@ -108,13 +111,10 @@ management:
       probes:
         enabled: true
       show-details: when-authorized
-  metrics:
-    export:
-      prometheus:
-        enabled: true
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  prometheus.metrics.export.enabled: true
 
 # Logging
 logging:
