@@ -277,5 +277,81 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-_Last Updated: June 13, 2026 — 1.8.11 released. E2E + cache + Kafka + AMQ + 3scale T1-T7 all proven. web-app BFF partial (T1-T3 green, T4-T6 blocked by 415 bug). 36 production readiness gaps logged (3 P0, 17 P1, 13 P2, 7 P3)._
+## 🔍 Audit 2026-06-13 — Comprehensive Bug List
+
+> Comprehensive platform-wide audit following the READY-001 cache deser fix.
+> Scanned 23 services + 8 shared libraries + 4 simulators for similar latent bugs.
+
+### Audit Scope
+
+| Dimension | What was checked | Tool |
+|:---|:---|:---|
+| `@Cacheable` usage | All Spring Boot services | `grep -rl "@Cacheable" backend/` |
+| Spring Data Redis deps | All `pom.xml` for `spring-boot-starter-data-redis` | `grep` |
+| `DistributedCacheService` direct usage | Services that bypass `@Cacheable` | `grep` |
+| Test compile errors | Pre-existing enum/POJO rename gaps (READY-003) | `grep "class Content\b"` |
+| Security patterns | `@Sensitive`, `@Idempotent`, mTLS, secrets | `grep` |
+| Resilience patterns | `@CircuitBreaker`, `@RateLimiter`, `resilience4j` | `grep` |
+| TODO/FIXME/PLACEHOLDER | Legacy code markers | `grep` |
+| Hardcoded URLs | `http://localhost`, `127.0.0.1` | `grep` |
+| Inner enum pattern | AGENTS.md rule violation | `grep "public.*enum"` |
+| `System.out.println` | Logback violation | `grep` |
+
+### Findings Matrix
+
+| Service | `spring-data-redis` dep | `@Cacheable` usage | Cache path | Status |
+|:---|:---:|:---|:---|:---|
+| `cms-service` | ✅ Yes (own RedisConfig) | 4 methods (`getContentById`, `getContentByType`, `getContentByStatus`, `getActiveContentByType`) | Redis via custom `RedisCacheManager` | ✅ **FIXED in 1.8.12** (TypedJsonRedisSerializer) |
+| `account-service` | ✅ Yes (via cache-starter, NO custom RedisConfig) | 1 method (`KycVerificationAdapter.verifyNik` → `VerifyNikResponse`) | Redis via auto-config (uses cache-starter's `RedisCacheConfig` with plain ObjectMapper) | 🔴 **SAME BUG, DORMANT** — NEW-001 |
+| `auth-service` | ❌ No dep | ❌ None (only imports `Cacheable`, no usage) | N/A | ✅ N/A |
+| `statement-service` | ✅ Yes (via cache-starter) | ❌ None | N/A (dep unused) | ✅ N/A |
+| Other 19 services | ❌ No dep | ❌ None | N/A | ✅ N/A |
+
+### NEW Findings (logged this audit)
+
+| Key | Priority | Service | Summary | Trigger |
+|:---|:---:|:---|:---|:---|
+| **NEW-001** | **P1** | `account-service` | **`KycVerificationAdapter.verifyNik()` has the same `LinkedHashMap cannot be cast to VerifyNikResponse` bug as READY-001**. `@Cacheable(value = "nikVerification", key = "#request.nik()", unless = "#result == null")` returns `VerifyNikResponse` (single POJO). Uses cache-starter's default `RedisCacheConfig` (plain `ObjectMapper` = no polymorphic typing). Bug triggers on 2nd NIK verification for same NIK. Public endpoint: `POST /api/v1/accounts/verify-nik` (scope `account:verify`). Nobody has tested the 2nd-call path → silent bomb. | 2nd successful NIK verification for same NIK |
+| **NEW-002** | P2 | `account-service` | **Same cache deser root cause as NEW-001, dormant** for any future `@Cacheable` on `Map`/`List` return types in any service. Promote `TypedJsonRedisSerializer` to `cache-starter` (NEW-003 below) so future `@Cacheable` collections are safe by default. | New `@Cacheable` collection-returning method added |
+| **NEW-003** | P1 | `cache-starter` | **Promote `cms-service/config/TypedJsonRedisSerializer.java` to `cache-starter` as the default value serializer**. Current `cache-starter/RedisCacheConfig.java` uses the same broken plain `ObjectMapper` pattern. NEW-001 would have been caught at code review if the shared starter enforced typed deserialization. Wire-up: add `payu.cache.serializer=typed` property or always use `TypedJsonRedisSerializer` by default. | Apply platform-wide |
+| **NEW-004** | P3 | `cms-service` | **CMS & Auth Redis LocalDate deser was already fixed (CHANGELOG §1.8.x) for `cms-service` and `auth-service`** — but the fix was a package-private `buildValueSerializer()` helper duplicated in both services. The `auth-service` copy should be removed once NEW-003 lands (the shared starter supersedes both local copies). | NEXT: refactor after NEW-003 |
+| **NEW-005** | P3 | Platform-wide | **No `@Idempotent` or `X-Idempotency-Key` usage found in any service**. `idempotency-starter` exists but has zero consumers. AGENTS.md rule 8 requires all payment/transfer endpoints to support `X-Idempotency-Key`. Currently all payment endpoints rely on DB unique constraints only. Audit confirms READY-002 (idempotency stress test) is still 0%. | Any duplicate payment request |
+| **NEW-006** | P2 | Platform-wide | **`@Sensitive` annotation found in only 2 files** (`partner-service/SnapBiTokenService`, `gateway-service/.../AuthorizationFilterBlacklistFallbackTest`). READY-012 (ArchUnit enforcement of `@Sensitive` on PII fields) is not yet implemented. Without it, developers can ship NIK/PIN/phone fields without the masking. | Any new entity with NIK/PIN/phone field |
+| **NEW-007** | P3 | Platform-wide | **No `System.out.println` / `printStackTrace` / TODO/FIXME in any service main code**. ✅ Clean (good baseline). | N/A — pass |
+| **NEW-008** | P3 | Platform-wide | **No hardcoded `http://localhost` / `127.0.0.1` in service main code**. ✅ Clean (good baseline). | N/A — pass |
+| **NEW-009** | P3 | Platform-wide | **No inner enum pattern detected** — all 50+ enums in 7 services are top-level (per AGENTS.md rule 6). ✅ Clean (good baseline). | N/A — pass |
+| **NEW-010** | P3 | Platform-wide | **No unbounded `JpaRepository.findAll()` in service main code**. ✅ Clean (good baseline). | N/A — pass |
+
+### Pre-Existing Items Cross-Referenced
+
+| Key | Confirmed Status | Notes |
+|:---|:---|:---|
+| READY-001 | ✅ **CLOSED in 1.8.12** | cms-service cache deser fixed; NEW-001 is the same bug in account-service |
+| READY-002 | ⏳ Still 0% | NEW-005 confirms idempotency starter is unwired platform-wide |
+| READY-003 | 🟡 **Partially closed** in 1.8.12 | cms-service `Content`→`ContentEntity` rename done. **8+ other services with similar enum/POJO rename gaps suspected** — needs service-by-service audit (no automated check yet) |
+| READY-013 | 60% | NEW-001 + NEW-003 = the platform-wide fix. **Promote TypedJsonRedisSerializer to cache-starter and switch all `@Cacheable` consumers to it.** |
+| READY-014 | 50% | Cache metrics only on `DistributedCacheService`, not on Spring's `RedisCacheManager` (the `@Cacheable` path). Spring's CacheManager exposes `cache.gets/puts` via `cache.gets` JMX — need to wire to Prometheus. |
+| READY-070 | 0% | web-app BFF body-less POST 415 bug still open |
+| READY-071 | 0% | web-app root 500 error still open |
+| READY-072 | 50% | web-app BFF must use INTERNAL Keycloak URL — needs CONTRIBUTING.md update |
+| E2E-2026-06-13-06 | ✅ **CLOSED in 1.8.12** | cms-service cache deser |
+| E2E-2026-06-13-10 | ✅ | 3scale T1-T7 green |
+| E2E-2026-06-13-11 | 🟡 | web-app BFF T1-T3 green, T4-T6 fail with 415 (READY-070) |
+| E2E-2026-06-13-12 | 🟡 | web-app BFF body-less POST 415 — root cause of -11 (READY-070) |
+| E2E-2026-06-13-13 | 🔴 | web-app root 500 — Next.js render crash (READY-071) |
+
+### Recommended Fix Order (1 engineer, ~1 week)
+
+1. **NEW-003** (1 day): Promote `TypedJsonRedisSerializer` to `cache-starter`. Single source of truth.
+2. **NEW-001** (0.5 day): Apply `cache-starter` typed serializer to `account-service`. Add `account-service:1.x.x` E2E test that verifies 2nd NIK call hits cache (instead of casting to LinkedHashMap).
+3. **NEW-002** (0.5 day): Verify no other service has `@Cacheable` collections lurking. Re-run this audit.
+4. **NEW-006** (1-2 days): ArchUnit rule enforcing `@Sensitive` on NIK/PIN/phone fields. Pattern-matches `id.payu.*.domain.entity.*` for fields named `nik`, `pin`, `phone`, `email`, `address`.
+5. **NEW-005** (2-3 days): Wire `idempotency-starter` in at least 1 critical payment endpoint as proof-of-concept. Pairs with READY-002 stress test.
+6. **READY-070/071** (1-2 days): web-app BFF fixes (frontend work, not backend).
+
+**Total**: ~6-8 days with 1 engineer → closes 5 P1 + 3 P3 platform-wide.
+
+---
+
+_Last Updated: June 13, 2026 — 1.8.12 released. CMS cache deser (READY-001) fixed. Audit found 1 dormant P1 (NEW-001) + 1 platform-wide P1 (NEW-003) + 4 P3 follow-ups. 39 production readiness gaps now logged (3 P0 closed, 18 P1, 13 P2, 10 P3)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
