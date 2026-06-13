@@ -162,6 +162,9 @@ spec:
           - name: datagrid
             path: infrastructure/platform/data
             namespace: payu-dev
+          - name: amq-broker
+            path: infrastructure/platform/amq-broker/overlays/dev
+            namespace: payu-dev
 
   template:
     metadata:

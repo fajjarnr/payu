@@ -1,0 +1,76 @@
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: payu-broker
+  labels:
+    app.kubernetes.io/name: payu-broker
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: message-queue
+    team: platform
+spec:
+  adminUser: admin
+  adminPassword: admin
+  deploymentPlan:
+    size: 1
+    persistenceEnabled: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    podSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+  acceptors:
+  - name: core
+    port: 61616
+    protocols: CORE,AMQP
+  - name: amqp
+    port: 5672
+    protocols: AMQP
+  brokerProperties:
+  # payu.notification.commands Queue
+  - 'addressConfigurations."payu.notification.commands".routingTypes=ANYCAST'
+  - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".address="payu.notification.commands"'
+  - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".routingType=ANYCAST'
+  # payu.integration.commands Queue
+  - 'addressConfigurations."payu.integration.commands".routingTypes=ANYCAST'
+  - 'addressConfigurations."payu.integration.commands".queueConfigs."payu.integration.commands".address="payu.integration.commands"'
+  - 'addressConfigurations."payu.integration.commands".queueConfigs."payu.integration.commands".routingType=ANYCAST'
+  # payu.billing.scheduled Queue
+  - 'addressConfigurations."payu.billing.scheduled".routingTypes=ANYCAST'
+  - 'addressConfigurations."payu.billing.scheduled".queueConfigs."payu.billing.scheduled".address="payu.billing.scheduled"'
+  - 'addressConfigurations."payu.billing.scheduled".queueConfigs."payu.billing.scheduled".routingType=ANYCAST'
+  # payu.kyc.commands Queue
+  - 'addressConfigurations."payu.kyc.commands".routingTypes=ANYCAST'
+  - 'addressConfigurations."payu.kyc.commands".queueConfigs."payu.kyc.commands".address="payu.kyc.commands"'
+  - 'addressConfigurations."payu.kyc.commands".queueConfigs."payu.kyc.commands".routingType=ANYCAST'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: artemis
+  labels:
+    app.kubernetes.io/name: artemis
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: message-queue
+spec:
+  selector:
+    ActiveMQArtemis: payu-broker
+  ports:
+  - name: core
+    port: 61616
+    targetPort: 61616
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: web
+    port: 8161
+    targetPort: 8161
