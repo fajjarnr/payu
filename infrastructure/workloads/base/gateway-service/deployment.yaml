@@ -77,7 +77,10 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["sh", "-c", "sleep 5"]
+              command:
+              - sh
+              - -c
+              - sleep 5
         resources:
           requests:
             cpu: 100m
@@ -87,26 +90,32 @@ spec:
             memory: 512Mi
         env:
         - name: QUARKUS_DATASOURCE_JDBC_URL
-          value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_gateway"
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: GATEWAY_DB_URL
         - name: REDIS_HOST
-          value: "payu-datagrid.payu-dev.svc.cluster.local"
+          value: payu-datagrid.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: "11222"
+          value: '11222'
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: KAFKA_URL
         - name: QUARKUS_REDIS_HOSTS
-          value: "redis://developer:payu-cache-dev-password@payu-datagrid.payu-dev.svc.cluster.local:11222"
+          value: redis://default:payu-cache-dev-password@payu-datagrid.payu-dev.svc.cluster.local:11222
         - name: REDIS_PASSWORD
-          value: "payu-cache-dev-password"
+          value: payu-cache-dev-password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
-          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
+          value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: QUARKUS_OIDC_TOKEN_ISSUER
-          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
+          value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: QUARKUS_TLS_TRUST_ALL
-          value: "false"
+          value: 'false'
         - name: GATEWAY_RATE_LIMIT_TEST_MODE
-          value: "false"
+          value: 'false'
         - name: JWT_SECRET
-          value: "payu-dev-jwt-secret-key-2026"
+          value: payu-dev-jwt-secret-key-2026
         - name: WEBHOOK_PARTNER_1_SECRET
-          value: "webhook-dev-secret-partner-1"
+          value: webhook-dev-secret-partner-1

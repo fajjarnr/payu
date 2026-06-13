@@ -17,66 +17,76 @@ spec:
       labels:
         app: bi-fast-simulator
         app.kubernetes.io/name: bi-fast-simulator
+        app.kubernetes.io/part-of: payu
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/q/metrics"
-        prometheus.io/port: "8080"
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /q/metrics
+        prometheus.io/port: '8080'
     spec:
       containers:
-        - name: bi-fast-simulator
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.3
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-          env:
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_bifast"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: "payu"
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: ">3Se{I@_4JVvvo[-z:uOO2jh"
-            - name: QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION
-              value: "drop-and-create"
-            - name: QUARKUS_HIBERNATE_ORM_ENABLED
-              value: "true"
-            - name: QUARKUS_HIBERNATE_ORM_ACTIVE
-              value: "true"
-            - name: QUARKUS_DATASOURCE_DB_KIND
-              value: "postgresql"
-          envFrom:
-            - configMapRef:
-                name: bi-fast-simulator-config
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 30
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /q/health/ready
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 3
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-                - ALL
+      - name: bi-fast-simulator
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: BIFAST_DB_URL
+        - name: QUARKUS_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_USERNAME
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_PASSWORD
+        - name: QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION
+          value: drop-and-create
+        - name: QUARKUS_HIBERNATE_ORM_ENABLED
+          value: 'true'
+        - name: QUARKUS_HIBERNATE_ORM_ACTIVE
+          value: 'true'
+        - name: QUARKUS_DATASOURCE_DB_KIND
+          value: postgresql
+        envFrom:
+        - configMapRef:
+            name: bi-fast-simulator-config
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 500m
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
 ---
 apiVersion: v1
 kind: Service
@@ -88,9 +98,9 @@ spec:
   selector:
     app: bi-fast-simulator
   ports:
-    - port: 8080
-      targetPort: 8080
-      name: http
+  - port: 8080
+    targetPort: 8080
+    name: http
   type: ClusterIP
 ---
 apiVersion: v1
@@ -98,8 +108,8 @@ kind: ConfigMap
 metadata:
   name: bi-fast-simulator-config
 data:
-  SIMULATOR_LATENCY_MIN: "50"
-  SIMULATOR_LATENCY_MAX: "500"
-  SIMULATOR_FAILURE_RATE: "5"
-  SIMULATOR_WEBHOOK_ENABLED: "true"
-  SIMULATOR_WEBHOOK_DELAY_MS: "2000"
+  SIMULATOR_LATENCY_MIN: '50'
+  SIMULATOR_LATENCY_MAX: '500'
+  SIMULATOR_FAILURE_RATE: '5'
+  SIMULATOR_WEBHOOK_ENABLED: 'true'
+  SIMULATOR_WEBHOOK_DELAY_MS: '2000'

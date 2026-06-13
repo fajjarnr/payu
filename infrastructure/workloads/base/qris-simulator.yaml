@@ -17,58 +17,68 @@ spec:
       labels:
         app: qris-simulator
         app.kubernetes.io/name: qris-simulator
+        app.kubernetes.io/part-of: payu
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/q/metrics"
-        prometheus.io/port: "8080"
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /q/metrics
+        prometheus.io/port: '8080'
     spec:
       containers:
-        - name: qris-simulator
-          image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.1
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-          env:
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_qris"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: "payu"
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: ">3Se{I@_4JVvvo[-z:uOO2jh"
-          envFrom:
-            - configMapRef:
-                name: qris-simulator-config
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 30
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /q/health/ready
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 3
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-                - ALL
+      - name: qris-simulator
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: QRIS_DB_URL
+        - name: QUARKUS_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_USERNAME
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DB_PASSWORD
+        envFrom:
+        - configMapRef:
+            name: qris-simulator-config
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 500m
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
 ---
 apiVersion: v1
 kind: Service
@@ -80,9 +90,9 @@ spec:
   selector:
     app: qris-simulator
   ports:
-    - port: 8080
-      targetPort: 8080
-      name: http
+  - port: 8080
+    targetPort: 8080
+    name: http
   type: ClusterIP
 ---
 apiVersion: v1
@@ -90,9 +100,9 @@ kind: ConfigMap
 metadata:
   name: qris-simulator-config
 data:
-  SIMULATOR_LATENCY_MIN: "50"
-  SIMULATOR_LATENCY_MAX: "300"
-  SIMULATOR_FAILURE_RATE: "2"
-  SIMULATOR_QR_EXPIRY_SECONDS: "300"
-  SIMULATOR_QR_IMAGE_SIZE: "300"
-  SIMULATOR_WEBHOOK_ENABLED: "true"
+  SIMULATOR_LATENCY_MIN: '50'
+  SIMULATOR_LATENCY_MAX: '300'
+  SIMULATOR_FAILURE_RATE: '2'
+  SIMULATOR_QR_EXPIRY_SECONDS: '300'
+  SIMULATOR_QR_IMAGE_SIZE: '300'
+  SIMULATOR_WEBHOOK_ENABLED: 'true'

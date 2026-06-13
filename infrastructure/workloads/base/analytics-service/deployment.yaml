@@ -82,9 +82,15 @@ spec:
             memory: 512Mi
         env:
         - name: DATABASE_URL
-          value: "postgresql+asyncpg://payu:>3Se{I@_4JVvvo[-z:uOO2jh@payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_analytics"
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: ANALYTICS_DATABASE_URL
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: KAFKA_URL
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
