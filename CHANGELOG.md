@@ -55,6 +55,43 @@ Per the backlog convention ("Hanya berisi item yang BELUM selesai dan perlu tind
 - 30+ outdated broken test files deleted from `transaction-service` + `wallet-service` per user "jangan paksa diperbaiki" (mechanical fixes applied to 4 still-relevant tests; transaction-service 116/116 unit tests pass, wallet-service 2/2 pass).
 - 2 production code bugs FLAGGED (not force-fixed): `BUG-TXN-SPLITBILL-001` [P1] + `BUG-TXN-ACCOUNT-001` [P2].
 
+#### Messaging Infrastructure Task Tracker (MSG-001..023) — all completed; moved from TODOS.md
+
+Per backlog convention, the completed MSG-* items are consolidated here. All 23 tasks across 6 categories (Artemis infra, Outbox migrations, Topic naming, DLQ strategy, CloudEvents format, Consumer hardening) were marked [x] in TODOS.md and removed in this cleanup commit.
+
+**Category A — Artemis Infrastructure (P2)** — `shared/jms-starter` created, Artemis setup in podman-compose, integrated into integration/notification/billing/kyc services.
+- [x] MSG-001 Create `shared/jms-starter`
+- [x] MSG-002 Setup Artemis in Podman Compose
+- [x] MSG-003 Migrate `integration-service` → Artemis
+- [x] MSG-004 Implement Artemis in `notification-service`
+- [x] MSG-005 Implement Artemis delayed delivery in `billing-service`
+- [x] MSG-006 Implement Artemis command queue in `kyc-service`
+
+**Category B — Outbox Migrations (P1, security/atomicity)** — all event publishers migrated from direct `KafkaTemplate.send()` to `outbox-starter`'s transactional outbox pattern across 8 services (account, promotion, partner, cms, investment, fx, statement, billing, transaction, integration, security-starter).
+- [x] MSG-007 `account-service` `KafkaUserEventPublisherAdapter`
+- [x] MSG-008 `promotion-service` notification adapter + 4 services
+- [x] MSG-009 `partner-service` `PaymentLinkService` & `MerchantService`
+- [x] MSG-010 `cms-service` `ContentEventPublisher`
+- [x] MSG-011 `investment-service` `KafkaInvestmentEventPublisherAdapter`
+- [x] MSG-012 `fx-service` `FxRateEventPublisher`
+- [x] MSG-013 `statement-service` `StatementEventPublisher`
+- [x] MSG-014 `billing-service` `BillingEventPublisher`
+- [x] MSG-015 `transaction-service` `PaymentExpiryScheduler`
+- [x] MSG-016 `integration-service` `BIFastTransferService` & `SnapTransferService` and `security-starter` `AuditLogPublisher` → `outbox-starter`
+- [x] MSG-017 `integration-service` `MessagePublisherAdapter` → `outbox-starter`
+
+**Category C — Topic Naming (P2)** — [x] MSG-018 Standardize all topic names (format `payu.<domain>.<event-type>.<version>`, DLQ suffix `.dlq`).
+
+**Category D — DLQ Strategy (P2)** — [x] MSG-019 Implement DLQ in `events-starter`/`outbox-starter` + [x] MSG-020 Configure DLQ per service consumer.
+
+**Category E — CloudEvents Format (P2)** — [x] MSG-021 Enforce CloudEvents 1.0.2 in `outbox-starter` + [x] MSG-022 Migrate consumers to CloudEvents.
+
+**Category F — Consumer Hardening (P3)** — [x] MSG-023 Refactor `notification-service` `EventConsumer`.
+
+**Build & Test** — all [x] (shared starters + affected services built + tests run).
+
+Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODOS entries: Kafka outbox E2E proven (`INSERT outbox_events → OutboxPublisher poller → published_at set → consumed from `payu.e2e.test` topic`). AMQ broker E2E proven via Jolokia (5 messages, 4 delivered, 4 acknowledged).
+
 ### E2E CRUD Test: 3scale <-> Gateway <-> Service Chain Verified (2026-06-13)
 - **Test setup**: `customer1` Keycloak user created (password `customer1-test-pass`), JWT obtained via `payu-gateway` client (direct access grants enabled), `user_key=04dc03f2e2a776bffcb9b16eb9f93796` for `payu_product` 3scale product. 7-step CRUD script hitting `/api/v1/cards` through `payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`.
 - **Chain verification** ✓ 3scale <-> gateway <-> wallet-service end-to-end path works:

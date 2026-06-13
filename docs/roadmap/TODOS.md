@@ -67,50 +67,6 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-## ✉️ Messaging Infrastructure — Task Tracker
-
-### Category B: Outbox Migrations (P1 - Security/Atomicity)
-- [x] MSG-007: Update `account-service` `KafkaUserEventPublisherAdapter`
-- [x] MSG-008: Update `promotion-service` notification adapter + 4 services
-- [x] MSG-009: Update `partner-service` `PaymentLinkService` & `MerchantService`
-- [x] MSG-010: Update `cms-service` `ContentEventPublisher`
-- [x] MSG-011: Update `investment-service` `KafkaInvestmentEventPublisherAdapter`
-- [x] MSG-012: Update `fx-service` `FxRateEventPublisher`
-- [x] MSG-013: Update `statement-service` `StatementEventPublisher`
-- [x] MSG-014: Update `billing-service` `BillingEventPublisher`
-- [x] MSG-015: Update `transaction-service` `PaymentExpiryScheduler`
-- [x] MSG-016: Update `integration-service` `BIFastTransferService` & `SnapTransferService` and `security-starter` `AuditLogPublisher` → `outbox-starter`
-- [x] MSG-017: `integration-service` `MessagePublisherAdapter` → `outbox-starter`
-
-### Category A: Artemis Infrastructure (P2)
-- [x] MSG-001: Create `shared/jms-starter`
-- [x] MSG-002: Setup Artemis in Podman Compose
-- [x] MSG-003: Migrate `integration-service` → Artemis
-- [x] MSG-004: Implement Artemis in `notification-service`
-- [x] MSG-005: Implement Artemis delayed delivery in `billing-service`
-- [x] MSG-006: Implement Artemis command queue in `kyc-service`
-
-### Category C: Topic Naming (P2)
-- [x] MSG-018: Standardize all topic names
-
-### Category D: DLQ Strategy (P2)
-- [x] MSG-019: Implement DLQ in `events-starter`/`outbox-starter`
-- [x] MSG-020: Configure DLQ per service consumer
-
-### Category E: CloudEvents Format (P2)
-- [x] MSG-021: Enforce CloudEvents in `outbox-starter`
-- [x] MSG-022: Migrate consumers to CloudEvents
-
-### Category F: Consumer Hardening (P3)
-- [x] MSG-023: Refactor `notification-service` `EventConsumer`
-
-### Build & Test
-- [x] Build all shared starters
-- [x] Build all affected services
-- [x] Run tests
-
----
-
 ## 🔮 Deferred (Icebox)
 
 | Key | Type | Summary | Notes |
@@ -259,5 +215,5 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-_Last Updated: June 13, 2026 — Cleaned up TODOS.md: closed items (READY-001, READY-002, READY-070, READY-071, READY-072, E2E-2026-06-13-01..13, NEW-001..010) moved to `CHANGELOG.md` per backlog convention. 27 production readiness gaps now open (1 P0, 14 P1, 12 P2, 4 P3) + 2 flagged production bugs (SplitBill 500, getCurrentAccountId no sub fallback)._
+_Last Updated: June 13, 2026 — Removed completed "Messaging Infrastructure — Task Tracker" section (MSG-001..023 all [x]) to CHANGELOG.md. TODOS.md now 27 open gaps (1 P0, 14 P1, 12 P2, 4 P3) + 2 flagged production bugs._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
