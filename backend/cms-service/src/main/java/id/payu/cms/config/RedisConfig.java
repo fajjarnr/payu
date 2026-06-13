@@ -1,5 +1,6 @@
 package id.payu.cms.config;
 
+import id.payu.cache.serializer.TypedJsonRedisSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,14 @@ import java.time.Duration;
 /**
  * Redis configuration for caching
  * Supports Red Hat Data Grid in RESP mode
+ *
+ * <p>Only exposes a few beans that need explicit shape (the
+ * {@link RedisConnectionFactory} for {@code spring.data.redis.*} property
+ * resolution and the {@link RedisCacheManager} with the cms-service TTL);
+ * the value serializer is delegated to
+ * {@link id.payu.cache.serializer.TypedJsonRedisSerializer} which the
+ * shared {@code cache-starter} promotes to the platform default
+ * (see NEW-003 in {@code docs/roadmap/TODOS.md}).</p>
  */
 @Configuration
 @EnableCaching
@@ -60,33 +69,12 @@ public class RedisConfig {
             .serializeKeysWith(RedisSerializationContext.SerializationPair
                 .fromSerializer(new StringRedisSerializer()))
             .serializeValuesWith(RedisSerializationContext.SerializationPair
-                .fromSerializer(buildValueSerializer()))
+                .fromSerializer(new TypedJsonRedisSerializer()))
             .disableCachingNullValues();
 
         return RedisCacheManager.builder(connectionFactory)
             .cacheDefaults(config)
             .build();
     }
-
-    /**
-     * READY-001: Build a value serializer that preserves the runtime type of cached values,
-     * including top-level {@link java.util.List} payloads.
-     *
-     * <p>{@code @Cacheable} hits are served via Spring's
-     * {@link org.springframework.cache.interceptor.CacheInterceptor}, which calls
-     * {@code serializer.deserialize(byte[])} without a target type hint. The
-     * default {@code GenericJackson2JsonRedisSerializer} + plain {@code ObjectMapper}
-     * produced {@code LinkedHashMap} payloads and caused
-     * {@code ClassCastException: LinkedHashMap cannot be cast to ContentResponse}
-     * on every cache hit (E2E-2026-06-13-06).</p>
-     *
-     * <p>The {@link TypedJsonRedisSerializer} writes the fully qualified type name
-     * as a prefix on the serialized JSON ({@code <type>|<json>}), so the
-     * original concrete class — including a top-level {@code List<ContentResponse>}
-     * returned by {@code getActiveContentByType} — can be reconstructed on every
-     * cache hit without relying on Jackson polymorphic typing.</p>
-     */
-    org.springframework.data.redis.serializer.RedisSerializer<Object> buildValueSerializer() {
-        return new TypedJsonRedisSerializer();
-    }
 }
+

@@ -1,5 +1,6 @@
 package id.payu.cms.config;
 
+import id.payu.cache.serializer.TypedJsonRedisSerializer;
 import id.payu.cms.domain.dto.ContentResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ class RedisConfigTest {
     @Test
     @DisplayName("value serializer must round-trip ContentResponse with LocalDate/LocalDateTime")
     void buildValueSerializer_handlesJavaTimeTypes() {
-        RedisSerializer<Object> serializer = new RedisConfig().buildValueSerializer();
+        RedisSerializer<Object> serializer = new TypedJsonRedisSerializer();
 
         ContentResponse source = ContentResponse.builder()
             .id(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))
@@ -34,9 +35,8 @@ class RedisConfigTest {
 
         byte[] payload = assertDoesNotThrow(() -> serializer.serialize(source));
         assertNotNull(payload);
-        assertEquals(0, payload.length == 0 ? 1 : 0, "serialized payload should not be empty");
 
-        Object restored = serializer.deserialize(payload);
+        Object restored = assertDoesNotThrow(() -> serializer.deserialize(payload));
         assertNotNull(restored);
         ContentResponse typed = assertInstanceOf(ContentResponse.class, restored);
         assertEquals(LocalDate.of(2026, 1, 25), typed.getStartDate());
@@ -48,7 +48,7 @@ class RedisConfigTest {
     @Test
     @DisplayName("READY-001: type-erased deserialize must return ContentResponse, not LinkedHashMap")
     void buildValueSerializer_preservesTypeOnTypeErasedDeserialize() {
-        RedisSerializer<Object> serializer = new RedisConfig().buildValueSerializer();
+        RedisSerializer<Object> serializer = new TypedJsonRedisSerializer();
 
         ContentResponse source = ContentResponse.builder()
             .id(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))
@@ -77,7 +77,7 @@ class RedisConfigTest {
     @Test
     @DisplayName("READY-001: type-erased deserialize must preserve List<ContentResponse>")
     void buildValueSerializer_preservesTypeForListOfContentResponse() {
-        RedisSerializer<Object> serializer = new RedisConfig().buildValueSerializer();
+        RedisSerializer<Object> serializer = new TypedJsonRedisSerializer();
 
         ContentResponse a = ContentResponse.builder()
             .id(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))
@@ -104,3 +104,4 @@ class RedisConfigTest {
         assertEquals("B", second.getTitle());
     }
 }
+

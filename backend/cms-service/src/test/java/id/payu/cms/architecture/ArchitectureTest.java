@@ -3,6 +3,7 @@ package id.payu.cms.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import id.payu.archunit.SensitiveFieldRules;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,6 +111,14 @@ class ArchitectureTest {
                 .whereLayer("Application").mayOnlyAccessLayers("Domain")
                 .whereLayer("Adapter").mayOnlyAccessLayers("Domain", "Application")
                 .because("Hexagonal architecture dependencies must flow inward")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("NEW-006: PII / financial / auth fields must be @Sensitive (READY-012)")
+    void sensitiveFieldsMustBeAnnotated() {
+        SensitiveFieldRules.fieldsMatchingMustBeAnnotated()
+                .allowEmptyShould(true)
                 .check(classes);
     }
 }

@@ -1,4 +1,4 @@
-package id.payu.cms.config;
+package id.payu.cache.serializer;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
- * READY-001: Custom {@link RedisSerializer} that preserves the runtime type of cached values,
+ * Custom {@link RedisSerializer} that preserves the runtime type of cached values,
  * including top-level {@link java.util.List} payloads.
  *
  * <p>The default {@code GenericJackson2JsonRedisSerializer} cannot round-trip
@@ -46,7 +46,7 @@ import java.util.Collection;
  * standard ({@code GenericJackson2JsonRedisSerializer}) remains in use elsewhere;
  * a cross-service migration is tracked under the READY-001 follow-up.</p>
  */
-class TypedJsonRedisSerializer implements RedisSerializer<Object> {
+public class TypedJsonRedisSerializer implements RedisSerializer<Object> {
 
     private static final char DELIMITER = '|';
     private static final char ELEMENT_OPEN = '<';
@@ -54,7 +54,7 @@ class TypedJsonRedisSerializer implements RedisSerializer<Object> {
 
     private final ObjectMapper mapper;
 
-    TypedJsonRedisSerializer() {
+    public TypedJsonRedisSerializer() {
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new JavaTimeModule());
     }

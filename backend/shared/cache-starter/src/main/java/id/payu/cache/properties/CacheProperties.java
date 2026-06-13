@@ -69,6 +69,20 @@ public class CacheProperties {
     private boolean enabled = true;
 
     /**
+     * NEW-003: Value serializer selector for the {@code CacheManager} bean
+     * (and therefore every {@code @Cacheable} hit in the service).
+     *
+     * <p>Default ({@code null} or {@code typed}) uses
+     * {@link id.payu.cache.serializer.TypedJsonRedisSerializer} which preserves
+     * the runtime class on the wire, including for top-level
+     * {@link java.util.List} payloads. Set to {@code jackson2} to fall back to
+     * {@code GenericJackson2JsonRedisSerializer} with a plain
+     * {@link com.fasterxml.jackson.databind.ObjectMapper} (no polymorphic typing
+     * — flat JSON, type-erased deserialization).</p>
+     */
+    private String serializer;
+
+    /**
      * Redis / Red Hat Data Grid connection configuration.
      * Uses Lettuce client which communicates via RESP protocol — compatible with both
      * Redis and Data Grid. Point host/port to either Redis or Data Grid RESP endpoint.

@@ -3,6 +3,7 @@ package id.payu.cache.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.cache.properties.CacheProperties;
+import id.payu.cache.serializer.TypedJsonRedisSerializer;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
@@ -31,6 +32,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
@@ -174,19 +176,15 @@ public class RedisCacheConfig {
     @Bean
     @ConditionalOnMissingBean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // Create ObjectMapper for JSON serialization
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModules(new JavaTimeModule());
-
-        GenericJackson2JsonRedisSerializer serializer =
-                new GenericJackson2JsonRedisSerializer(objectMapper);
+        RedisSerializer<Object> valueSerializer = buildValueSerializer(properties);
+        log.info("Using {} as cache value serializer", valueSerializer.getClass().getSimpleName());
 
         // Default cache configuration
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(serializer))
+                        .fromSerializer(valueSerializer))
                 .entryTtl(properties.getDefaultTtl())
                 .disableCachingNullValues();
 
@@ -217,6 +215,29 @@ public class RedisCacheConfig {
                 .build();
     }
 
+    /**
+     * NEW-003: Select the value serializer used by {@link CacheManager} (and therefore
+     * every {@code @Cacheable} hit in the service).
+     *
+     * <p>Default is the typed serializer introduced for READY-001 / E2E-2026-06-13-06
+     * which preserves the runtime class on the wire, including for top-level
+     * {@link java.util.List} payloads. The legacy {@code GenericJackson2JsonRedisSerializer}
+     * with a plain {@link ObjectMapper} (no polymorphic typing) is still selectable
+     * by setting {@code payu.cache.serializer=jackson2} — useful for services
+     * that intentionally want a flat, non-typed JSON payload.</p>
+     */
+    static RedisSerializer<Object> buildValueSerializer(CacheProperties properties) {
+        String mode = properties.getSerializer() == null
+            ? TypedJsonRedisSerializer.class.getSimpleName()
+            : properties.getSerializer();
+        if ("jackson2".equalsIgnoreCase(mode) || "GenericJackson2JsonRedisSerializer".equals(mode)) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModules(new JavaTimeModule());
+            return new GenericJackson2JsonRedisSerializer(objectMapper);
+        }
+        return new TypedJsonRedisSerializer();
+    }
+
     @Bean
     @ConditionalOnMissingBean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
@@ -232,14 +253,12 @@ public class RedisCacheConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
 
-        // Use JSON serializer for values
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModules(new JavaTimeModule());
-        GenericJackson2JsonRedisSerializer serializer =
-                new GenericJackson2JsonRedisSerializer(objectMapper);
-
-        template.setValueSerializer(serializer);
-        template.setHashValueSerializer(serializer);
+        // NEW-003: Use the same typed serializer as CacheManager so the wire
+        // format is consistent across both @Cacheable and direct RedisTemplate
+        // usage (DistributedCacheService, CacheWarmingService, etc).
+        RedisSerializer<Object> valueSerializer = buildValueSerializer(properties);
+        template.setValueSerializer(valueSerializer);
+        template.setHashValueSerializer(valueSerializer);
 
         template.afterPropertiesSet();
         return template;
