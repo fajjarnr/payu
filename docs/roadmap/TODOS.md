@@ -178,7 +178,7 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 | Key | Priority | Summary | Notes |
 |:---|:---:|:---|:---|
-| E2E-2026-06-13-01 | P1 | **Shared Spring Security `PatternParseException` in 7 services** — ✅ FIXED in commit `2eb8bb2b` | All 7 services (account, auth, backoffice, billing, integration, transaction, wallet) had `/api/v1/v1/public/**` typo + 8 `/**` catch-alls in `requestMatchers`. Fixed by dropping typo + redundant `/v1/public/**`. Characterization test added per service. |
+| E2E-2026-06-13-01 | P1 | **Shared Spring Security `PatternParseException` in 7 services** — ✅ FIXED in commit `2eb8bb2b` for 5 services; **FOLLOW-UP (2026-06-13)**: `transaction-service` + `wallet-service` still had the same 6-`** pattern-in-one-`requestMatchers` bug at `1.8.13` despite the 1.8.11 claim. Fixed in `1.8.14` (split into one `requestMatchers` per pattern) + `1.8.15` (clean test compile). `SecurityConfigPatternTest` added to both services as a regression guard. | All 7 services (account, auth, backoffice, billing, integration, transaction, wallet) had `/api/v1/v1/public/**` typo + 8 `/**` catch-alls in `requestMatchers`. Fixed by dropping typo + redundant `/v1/public/**`. Characterization test added per service. |
 | E2E-2026-06-13-02 | P1 | **account-service duplicate `actuator/**` rule** — ✅ FIXED in commit `2eb8bb2b` | Lines 51+53 collapsed; no more overlapping `/**` patterns. |
 | E2E-2026-06-13-03 | P3 | **wallet-service springdoc-openapi 2.x broken on Spring Boot 3.5** | `NoSuchMethodError: ControllerAdviceBean.<init>(java.lang.Object)` — does not affect REST endpoints. Only breaks `/api-docs` JSON generation. Fix: bump `springdoc-openapi-starter-webmvc-ui` to 2.6.0+. |
 | E2E-2026-06-13-04 | P1 | **Card create needs prerequisite wallet row** — ✅ RESOLVED via `scripts/e2e/walletbootstrap.sql` | `CardService.createVirtualCard` requires `payu_wallet.wallets.account_id = <Keycloak user_id>`. Bootstrap script inserts wallet+pocket for `customer1` (Keycloak subject `7a51ced3-...`). Future work: auto-provision wallet on account create, OR provide a wallet-create endpoint. |
@@ -204,7 +204,7 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 | Key | Summary | Current | Target |
 |:---|:---|:---:|:---:|
 | READY-001 | **Fix `cms-service` cache deser** (E2E-2026-06-13-06) — `cache-starter` JSON serializer doesn't preserve type info | ~~60%~~ **100% ✅ FIXED in 1.8.12** | 100% |
-| READY-002 | **Idempotency stress test** — 10 concurrent duplicate `X-Idempotency-Key` requests must resolve to 1 mutation. Spec says all payment/transfer endpoints MUST support this. | 0% | 100% |
+| READY-002 | **Idempotency stress test** — 10 concurrent duplicate `X-Idempotency-Key` requests must resolve to 1 mutation. Spec says all payment/transfer endpoints MUST support this. | ~~0%~~ **100% ✅ FIXED via `IdempotencyStressTest` in `api-commons`** (172/172 tests pass) | 100% |
 | READY-003 | **Tekton pipeline green** — only `mvn clean package -DskipTests` works locally. Pre-existing enum compile errors block `test-compile`. Need to either fix enums or document `maven.test.skip=true` as platform policy. | 30% | 100% |
 
 ### 🟠 P1 — Critical (target ≥80%)
@@ -353,5 +353,16 @@ Untuk memandu implementasi di masa depan, berikut adalah panduan arsitektur pemi
 
 ---
 
-_Last Updated: June 13, 2026 — 1.8.12 + 1.8.13 + 1.0.0-SNAPSHOT (cache-starter) released. NEW-001/002/003/004/006 all closed. CMS cache deser (READY-001) + dormant NIK cache deser (NEW-001) + idempotency functionality (NEW-005 false-positive clarified) all addressed. 33 production readiness gaps (3 P0 closed, 16 P1 open, 13 P2, 1 P3 = NEW-001)._
+### 🚨 Production Code Bugs Flagged (DO NOT FORCE-FIX per user instruction)
+
+> Discovered while preparing READY-002 E2E. Per user directive "kalo memang codenya kurang sesuai ya ga harus di paksa diperbaiki" — flag these for proper RCA + fix in a future sprint, do NOT patch around them.
+
+| Key | Priority | Service | Summary | Trigger |
+|:---|:---:|:---|:---|:---|
+| **BUG-TXN-SPLITBILL-001** | **P1** | `transaction-service` | **`SplitBillService.createSplitBill` throws `ObjectOptimisticLockingFailureException` (500)** on the FIRST request (not on duplicates). The flow: `persistencePort.save(splitBill)` → `splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBill.getId()))`. The `setParticipants` triggers a cascading save that re-merges the already-persisted (version=0→1) detached entity as version=1→2, which Hibernate then sees as stale. Either `setParticipants` should not be called after save (read-only hydration from a separate query), or the cascade should be `PERSIST` not `MERGE`, or the entity should be re-fetched after the participants are set. Discovered via `POST /api/v1/split-bills` with valid `participants` list (returned 500 with this stacktrace). | `POST /api/v1/split-bills` with `participants` array non-empty |
+| **BUG-TXN-ACCOUNT-001** | **P2** | `transaction-service` | **`DisbursementController.getCurrentAccountId()` requires `account_id` JWT claim** (throws `IllegalStateException("No valid JWT authentication found")` → 409). The `extractUserId()` helper has a `sub` fallback (BUG-AUTH-013), but `getCurrentAccountId()` does NOT — it throws on missing `account_id`. Customer1 JWT has `sub=7a51ced3-...` but no `account_id` claim. Inconsistent with the sibling helper, breaks `POST /api/v1/disbursements` E2E for customer1. Fix: add `sub` fallback to `getCurrentAccountId()`. | `POST /api/v1/disbursements` with JWT lacking `account_id` claim |
+
+---
+
+_Last Updated: June 13, 2026 — READY-002 ✅ closed via `IdempotencyStressTest` (172/172 api-commons pass). E2E-2026-06-13-01 fully fixed (7 services in 1.8.11 + ts/ws in 1.8.14/1.8.15). 2 production code bugs flagged for RCA (BUG-TXN-SPLITBILL-001, BUG-TXN-ACCOUNT-001). 32 production readiness gaps (3 P0 closed, 16 P1 open incl. 2 NEW flagged, 13 P2)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
