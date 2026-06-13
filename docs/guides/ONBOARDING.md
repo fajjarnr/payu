@@ -129,7 +129,7 @@ payu/
 ├── docs/                       # Dokumentasi (C4, PRD, Guides)
 ├── infrastructure/             # Manifest OpenShift & K8s
 ├── scripts/                    # Script automasi (setup, test, deploy)
-└── .agent/                     # AI Skills & Agent Ecosystem
+└── .agents/                     # AI Skills & Agent Ecosystem
 ```
 
 ---

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REGISTRY_FILE="$ROOT_DIR/.agent/skills/REGISTRY.yaml"
+REGISTRY_FILE="$ROOT_DIR/.agents/skills/REGISTRY.yaml"
 
 if [[ ! -f "$REGISTRY_FILE" ]]; then
   echo "Missing registry: $REGISTRY_FILE"
@@ -25,7 +25,7 @@ declare -A registry_map
 
 for skill in $skill_names; do
   registry_map["$skill"]=1
-  skill_dir="$ROOT_DIR/.agent/skills/$skill"
+  skill_dir="$ROOT_DIR/.agents/skills/$skill"
   skill_file="$skill_dir/SKILL.md"
 
   if [[ ! -d "$skill_dir" ]]; then
@@ -60,7 +60,7 @@ for skill in $skill_names; do
   fi
 done
 
-for dir in "$ROOT_DIR/.agent/skills"/*; do
+for dir in "$ROOT_DIR/.agents/skills"/*; do
   [[ -d "$dir" ]] || continue
   base="$(basename "$dir")"
   if [[ -z "${registry_map[$base]+x}" ]]; then

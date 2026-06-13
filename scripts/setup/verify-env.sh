@@ -457,7 +457,7 @@ check_configuration() {
     # Check AI skills symlink
     if [ -L .claude/skills ]; then
         print_pass "AI skills symlink configured"
-    elif [ -d .agent/skills ]; then
+    elif [ -d .agents/skills ]; then
         print_warn "AI skills symlink not configured"
     fi
 }

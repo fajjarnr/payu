@@ -251,4 +251,4 @@ DEBUG=pw:api npx playwright test
 For questions or issues with the E2E tests, please refer to:
 - Playwright Documentation: https://playwright.dev
 - Project Guidelines: `/home/ubuntu/payu/CLAUDE.md`
-- Test Standards: `.agent/skills/quality-engineer/SKILL.md`
+- Test Standards: `.agents/skills/quality-engineer/SKILL.md`

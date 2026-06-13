@@ -11,5 +11,5 @@ resources:
   # kafka-config is managed by workload overlays per environment
   # - kafka-config.yaml
   - network-policy-egress.yaml
-  - kyverno-exception-kafka.yaml
-  - kyverno-exception-kafka-deployments.yaml
+  # - kyverno-exception-kafka.yaml
+  # - kyverno-exception-kafka-deployments.yaml

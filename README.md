@@ -78,7 +78,7 @@
 
 ```
 payu/
-├── .agent/             # AI Agent skills & workflows
+├── .agents/            # AI Agent skills & workflows
 ├── docs/               # Architecture, PRD, & Operations guides
 ├── backend/            # Microservices implementation
 │   ├── shared/         # Shared libraries (Security, Resilience, Cache)

@@ -245,7 +245,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-account-service:1.8.8
+    image: localhost/payu-account-service:1.8.1
   auth-service:
     build:
       context: ../../../backend/auth-service
@@ -309,7 +309,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service:1.8.8
+    image: localhost/payu-auth-service:1.8.1
   transaction-service:
     build:
       context: ../../../backend/transaction-service
@@ -366,7 +366,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-transaction-service:1.8.8
+    image: localhost/payu-transaction-service:1.8.2
   wallet-service:
     build:
       context: ../../../backend/wallet-service
@@ -420,7 +420,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-wallet-service:1.8.8
+    image: localhost/payu-wallet-service:1.8.1
   compliance-service:
     build:
       context: ../../../backend/compliance-service
@@ -464,7 +464,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -475,7 +474,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-compliance-service:1.8.8
+    image: localhost/payu-compliance-service:1.8.1
   investment-service:
     build:
       context: ../../../backend/investment-service
@@ -520,7 +519,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -531,7 +529,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-investment-service:1.8.8
+    image: localhost/payu-investment-service:1.8.1
   lending-service:
     build:
       context: ../../../backend/lending-service
@@ -574,7 +572,6 @@ services:
       - postgres
       - kafka
       - keycloak
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -585,7 +582,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-lending-service:1.8.8
+    image: localhost/payu-lending-service:1.8.1
   bi-fast-simulator:
     build:
       context: ../../../backend/simulators/bi-fast-simulator
@@ -638,7 +635,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-bi-fast-simulator:1.8.8
+    image: localhost/payu-bi-fast-simulator:1.8.3
   dukcapil-simulator:
     build:
       context: ../../../backend/simulators/dukcapil-simulator
@@ -690,7 +687,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-dukcapil-simulator:1.8.8
+    image: localhost/payu-dukcapil-simulator:1.8.1
   qris-simulator:
     build:
       context: ../../../backend/simulators/qris-simulator
@@ -743,7 +740,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-qris-simulator:1.8.8
+    image: localhost/payu-qris-simulator:1.8.1
   billing-service:
     build:
       context: ../../../backend/billing-service
@@ -787,7 +784,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -798,7 +794,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-billing-service:1.8.8
+    image: localhost/payu-billing-service:1.8.2
   notification-service:
     build:
       context: ../../../backend/notification-service
@@ -812,6 +808,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      ARTEMIS_URL: tcp://artemis:61616
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_notification
       QUARKUS_DATASOURCE_USERNAME: payu
@@ -833,7 +830,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -844,9 +840,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-notification-service:1.8.8
+    image: localhost/payu-notification-service:1.8.1
   gateway-service:
-    image: localhost/payu-gateway-service:1.8.8
+    image: localhost/payu-gateway-service:1.8.1
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -988,7 +984,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -999,7 +994,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-backoffice-service:1.8.8
+    image: localhost/payu-backoffice-service:1.8.1
   partner-service:
     build:
       context: ../../../backend/partner-service
@@ -1043,7 +1038,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -1054,7 +1048,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 240s
-    image: localhost/payu-partner-service:1.8.8
+    image: localhost/payu-partner-service:1.8.5
   promotion-service:
     build:
       context: ../../../backend/promotion-service
@@ -1097,7 +1091,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -1108,7 +1101,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-promotion-service:1.8.8
+    image: localhost/payu-promotion-service:1.8.2
   support-service:
     build:
       context: ../../../backend/support-service
@@ -1151,7 +1144,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -1162,7 +1154,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-support-service:1.8.8
+    image: localhost/payu-support-service:1.8.1
   api-portal-service:
     build:
       context: ../../../backend/api-portal-service
@@ -1234,9 +1226,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-api-portal-service:1.8.8
+    image: localhost/payu-api-portal-service:1.8.1
   statement-service:
-    image: localhost/payu-statement-service:1.8.8
+    image: localhost/payu-statement-service:1.8.1
     build:
       context: ../../../backend/statement-service
       dockerfile: Containerfile
@@ -1288,7 +1280,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
       - rustfs
     healthcheck:
       test:
@@ -1323,7 +1314,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD-SHELL
@@ -1332,7 +1322,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-kyc-service:1.8.8
+    image: localhost/payu-kyc-service:1.8.1
   analytics-service:
     build:
       context: ../../../backend/analytics-service
@@ -1355,7 +1345,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD-SHELL
@@ -1364,7 +1353,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-analytics-service:1.8.8
+    image: localhost/payu-analytics-service:1.8.1
   cms-service:
     build:
       context: ../../../backend/cms-service
@@ -1423,7 +1412,7 @@ services:
       retries: 3
       start_period: 120s
   fx-service:
-    image: localhost/payu-fx-service:1.8.8
+    image: localhost/payu-fx-service:1.8.1
     build:
       context: ../../../backend/fx-service
       dockerfile: Containerfile
@@ -1528,7 +1517,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-dispute-service:1.8.8
+    image: localhost/payu-dispute-service:1.8.5
   integration-service:
     build:
       context: ../../../backend/integration-service
@@ -1583,7 +1572,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-integration-service:1.8.8
+    image: localhost/payu-integration-service:1.8.4
   product-catalog-service:
     build:
       context: ../../../backend/product-catalog-service
@@ -1639,7 +1628,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-product-catalog-service:1.8.8
+    image: localhost/payu-product-catalog-service:1.8.4
   web-app:
     build:
       context: ../../../frontend/web-app
@@ -1667,158 +1656,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app:1.8.8
-  jaeger:
-    image: docker.io/jaegertracing/all-in-one:1.76.0
-    container_name: payu-jaeger
-    podman_networks:
-      - name: payu-network
-    ports:
-      - 5775:5775/udp
-      - 6831:6831/udp
-      - 6832:6832/udp
-      - 5778:5778
-      - 16686:16686
-      - 14268:14268
-      - 14250:14250
-      - 4317:4317
-      - 4318:4318
-      - 9411:9411
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    command:
-      - --collector.otlp.enabled=true
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:16686/api/services
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-  prometheus:
-    image: docker.io/prom/prometheus:v3.11.0
-    container_name: payu-prometheus
-    podman_networks:
-      - name: payu-network
-    ports:
-      - 9090:9090
-    volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./config/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-      - --storage.tsdb.retention.time=15d
-      - --web.enable-lifecycle
-      - --web.console.libraries=/etc/prometheus/console_libraries
-      - --web.console.templates=/etc/prometheus/consoles
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:9090/-/healthy
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-  loki:
-    image: docker.io/grafana/loki:3.5.12
-    container_name: payu-loki
-    podman_networks:
-      - name: payu-network
-    ports:
-      - 3100:3100
-    volumes:
-      - ./config/loki-config.yml:/etc/loki/local-config.yaml:ro
-      - loki_data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:3100/ready
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-  promtail:
-    image: docker.io/grafana/promtail:3.5.12
-    container_name: payu-promtail
-    podman_networks:
-      - name: payu-network
-    volumes:
-      - ./config/promtail-config.yml:/etc/promtail/config.yml:ro
-      - /var/log:/var/log:ro
-      - /var/lib/containers:/var/lib/containers:ro
-    command: -config.file=/etc/promtail/config.yml
-    depends_on:
-      - loki
-  grafana:
-    image: docker.io/grafana/grafana:13.1.0-25295570271-ubuntu
-    container_name: payu-grafana
-    podman_networks:
-      - name: payu-network
-    ports:
-      - 3000:3000
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
-      GF_SERVER_ROOT_URL: http://localhost:3000
-      GF_ANALYTICS_REPORTING_ENABLED: "false"
-    volumes:
-      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-      - loki
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-  alertmanager:
-    image: docker.io/prom/alertmanager:v0.31.1
-    container_name: payu-alertmanager
-    podman_networks:
-      - name: payu-network
-    ports:
-      - 9093:9093
-    volumes:
-      - ./config/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager_data:/alertmanager
-    command:
-      - --config.file=/etc/alertmanager/alertmanager.yml
-      - --storage.path=/alertmanager
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:9093/-/healthy
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
+    image: localhost/payu-web-app:1.8.1
+
   rustfs:
     image: docker.io/rustfs/rustfs@sha256:3c2d55977829620284ece8593901bf776bcfc0fc9972784352de4dcffdb92416
     container_name: payu-rustfs
@@ -2014,14 +1853,6 @@ volumes:
   redis_data:
     driver: local
   vault_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  loki_data:
-    driver: local
-  grafana_data:
-    driver: local
-  alertmanager_data:
     driver: local
   rustfs_data:
     driver: local

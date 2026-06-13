@@ -135,7 +135,7 @@ ios/build/
 !.claude/skills
 !.claude/agents
 !.claude/workflows
-!.agent/
+!.agents/
 *.tar
 
 # --- Spring Boot & JVM Crash Logs ---

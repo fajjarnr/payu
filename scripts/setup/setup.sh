@@ -513,29 +513,12 @@ setup_project() {
         print_success "Pre-commit hooks installed"
     fi
 
-    # Create soft link for AI skills and agent configuration
-    if [ -d ".agent" ]; then
+    # Create symlink .claude -> .agents
+    if [ -d ".agents" ]; then
         echo "Setting up AI agent configuration..."
-        mkdir -p .claude
-        # Link skills directory
-        rm -f .claude/skills
-        ln -s ../.agent/skills .claude/skills
-        # Link agents directory
-        rm -f .claude/agents
-        ln -s ../.agent/agents .claude/agents
-        # Link workflows directory
-        rm -f .claude/workflows
-        ln -s ../.agent/workflows .claude/workflows
-        # Link context directory
-        rm -f .claude/context
-        ln -s ../.agent/context .claude/context
-        print_success "AI agent configuration linked (.claude/ -> .agent/)"
-    elif [ -d ".agent/skills" ]; then
-        echo "Creating soft link for AI skills..."
-        mkdir -p .claude
-        rm -f .claude/skills
-        ln -s ../.agent/skills .claude/skills
-        print_success "Soft link for AI skills created (.claude/skills -> .agent/skills)"
+        rm -f .claude
+        ln -sfn .agents .claude
+        print_success "AI agent configuration linked (.claude/ -> .agents/)"
     fi
 
     print_success "Project setup complete"

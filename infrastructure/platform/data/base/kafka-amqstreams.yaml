@@ -19,7 +19,7 @@ spec:
     - controller
   storage:
     type: persistent-claim
-    size: 20Gi
+    size: 10Gi
     class: gp3-csi
   resources:
     requests:
@@ -46,7 +46,7 @@ spec:
     - broker
   storage:
     type: persistent-claim
-    size: 20Gi
+    size: 10Gi
     class: gp3-csi
   resources:
     requests:

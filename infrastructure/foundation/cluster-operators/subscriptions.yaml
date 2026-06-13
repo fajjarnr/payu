@@ -290,3 +290,18 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
+
+---
+# 21. Red Hat AMQ Broker Operator (ActiveMQ Artemis)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq-broker-operator
+  namespace: openshift-operators
+spec:
+  channel: 7.14.x
+  name: amq-broker-rhel9
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+

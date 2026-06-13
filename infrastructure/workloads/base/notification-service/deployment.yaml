@@ -81,7 +81,14 @@ spec:
             cpu: 500m
             memory: 512Mi
         env:
+        - name: ARTEMIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: ARTEMIS_URL
+
         - name: QUARKUS_DATASOURCE_JDBC_URL
+
           valueFrom:
             configMapKeyRef:
               name: service-endpoints

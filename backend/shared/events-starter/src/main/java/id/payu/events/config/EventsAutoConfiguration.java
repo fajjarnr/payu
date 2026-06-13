@@ -23,7 +23,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  * Automatically configures CloudEvents infrastructure when the starter is added.
  */
 @Slf4j
-@AutoConfiguration
+@AutoConfiguration(after = org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class)
 @EnableConfigurationProperties(EventsAutoConfiguration.EventsProperties.class)
 @ComponentScan(basePackages = "id.payu.events")
 @ConditionalOnProperty(
@@ -95,8 +95,9 @@ public class EventsAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(org.springframework.kafka.core.KafkaTemplate.class)
         public org.springframework.kafka.listener.CommonErrorHandler kafkaErrorHandler(
-                org.springframework.kafka.core.KafkaTemplate<Object, Object> kafkaTemplate) {
+                org.springframework.kafka.core.KafkaTemplate<?, ?> kafkaTemplate) {
             
             log.info("Configuring DefaultErrorHandler with DeadLetterPublishingRecoverer (DLQ)");
             

@@ -16,32 +16,32 @@ Ekosistem AI PayU dibagi menjadi tiga komponen utama:
 
 ### 🧩 Peta Komponen (Source of Truth)
 
-Semua konfigurasi AI dipusatkan di direktori `.agent/` dan diakses oleh Claude Code melalui symbolic links di `.claude/`.
+Semua konfigurasi AI dipusatkan di direktori `.agents/` dan diakses oleh Claude Code melalui symbolic links di `.claude/`.
 
 ```
 payu/
-├── .agent/               # Master Configuration (Source of Truth)
+├── .agents/              # Master Configuration (Source of Truth)
 │   ├── skills/           # 17 High-level AI Skills (Consolidated)
 │   ├── agents/           # 11 Specialized Execution Agents
 │   ├── workflows/        # SDLC & Coordination Workflows
 │   ├── commands/         # Custom Slash Commands
 │   ├── resources/        # Shared assets (shadcn components)
 │   └── settings.json     # Global AI Access
-└── .claude/              # Entry Point (Symlinks to .agent/)
-    ├── skills -> ../.agent/skills
-    ├── agents -> ../.agent/agents
-    ├── workflows -> ../.agent/workflows
-    ├── commands -> ../.agent/commands
-    └── settings.json -> ../.agent/settings.json
+└── .claude/              # Entry Point (Symlinks to .agents/)
+    ├── skills -> ../.agents/skills
+    ├── agents -> ../.agents
+    ├── workflows -> ../.agents/workflows
+    ├── commands -> ../.agents/commands
+    └── settings.json -> ../.agents/settings.json
 ```
 
 ### 🧠 Semantic Skill Registry (v3.0.0)
 
-PayU uses a **Self-Aware Skill System** defined in `.agent/skills/REGISTRY.yaml`.
+PayU uses a **Self-Aware Skill System** defined in `.agents/skills/REGISTRY.yaml`.
 Each skill now declares its dependencies and maturity level:
 
 ```yaml
-# .agent/skills/REGISTRY.yaml
+# .agents/skills/REGISTRY.yaml
 version: 2.0.0
 consolidation_notes: |
   Reduced from 21 to 17 skills.
@@ -192,8 +192,8 @@ Platform PayU memanfaatkan kapabilitas native dari **Claude Code** untuk menjala
 
 ## 📜 Golden Rules
 
-1. **Source of Truth**: Selalu edit konfigurasi di folder `.agent/`.
-2. **Agent Focus**: Gunakan agen spesifik untuk tugas yang sesuai (lihat [AGENTS-MAP.md](../../.agent/agents/AGENTS-MAP.md)).
+1. **Source of Truth**: Selalu edit konfigurasi di folder `.agents/`.
+2. **Agent Focus**: Gunakan agen spesifik untuk tugas yang sesuai (lihat [AGENTS-MAP.md](../.agents/AGENTS-MAP.md)).
 3. **Audit Before Release**: Jangan pernah merge kode tanpa laporan sukses dari `@auditor` dan `@tester`.
 4. **Use Debugging Skill**: Sebelum fix bug, jalankan `@debugging-methodology` untuk root cause analysis.
 

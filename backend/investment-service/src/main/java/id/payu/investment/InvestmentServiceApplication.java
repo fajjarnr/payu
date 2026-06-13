@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories(basePackages = "id.payu.investment.adapter.persistence.repository")
+@org.springframework.boot.autoconfigure.domain.EntityScan(basePackages = "id.payu.investment.adapter.persistence")
 @SpringBootApplication
 @EnableAsync
 public class InvestmentServiceApplication {

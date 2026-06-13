@@ -128,7 +128,7 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 
 ```
 payu/
-├── .agent/               # AI Agent Ecosystem (Symlinked to .claude/ & .opencode/)
+├── .agents/              # AI Agent Ecosystem (Symlinked to .claude/ & .opencode/)
 │   ├── skills/           # AI Skills (Logic, Stack, Standards)
 │   ├── agents/           # Specialized Sub-agents (System-level prompts)
 │   ├── workflows/        # SOP for complex tasks (MUST READ BEFORE EXECUTION)
@@ -325,7 +325,7 @@ AI Assistant harus mematuhi aturan keamanan berikut:
 
 Untuk efisiensi eksekusi dan meminimalkan duplikasi instruksi, AI Agent wajib memetakan tugasnya ke spesialisasi skill berikut sebelum mengeksekusi perubahan:
 
-| Domain Tugas | Skill Utama (.agent/skills/) | Deskripsi & Kegunaan |
+| Domain Tugas | Skill Utama (.agents/skills/) | Deskripsi & Kegunaan |
 |:---|:---|:---|
 | API Contract & REST Design | `api-architect` | Desain endpoint SNAP-BI, error response, OpenAPI & Spectral linting |
 | Database & Schema Migration | `data-architect` | Desain DDL PostgreSQL, setup index, Flyway scripts, pgcrypto, TimescaleDB |
@@ -433,7 +433,7 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
-> For detailed patterns and case studies, use the **`debugging-methodology` skill** ([SKILL.md](../../.agent/skills/debugging-methodology/SKILL.md)).
+> For detailed patterns and case studies, use the **`debugging-methodology` skill** ([SKILL.md](../.agents/skills/debugging-methodology/SKILL.md)).
 
 When encountering ANY technical issue (test failure, bug, performance issue):
 
@@ -484,7 +484,7 @@ To align with the user's intent, adopt one of these modes when requested:
 
 ## 🔄 Workflows & Procedures
 
-AI Assistants SHOULD follow established workflows in `.agent/workflows/` for complex operations. **URGENT**: Karena AI tidak selalu auto-discover folder `workflows`, asisten wajib melakukan `ls .agent/workflows/` atau membaca file di dalamnya secara proaktif sebelum memulai tugas arsitektural.
+AI Assistants SHOULD follow established workflows in `.agents/workflows/` for complex operations. **URGENT**: Karena AI tidak selalu auto-discover folder `workflows`, asisten wajib melakukan `ls .agents/workflows/` atau membaca file di dalamnya secara proaktif sebelum memulai tugas arsitektural.
 
 - **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Observe -> Plan -> Execute -> Verify).
 - **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
@@ -544,7 +544,7 @@ This section defines the high-performance operational protocol for all AI Agents
 
 ### 7. Skill Usage Protocol (Superpowers)
 
-- **Mandatory Invocation**: If there is even a 1% chance a skill in `.agent/skills/` applies to your task, you **ABSOLUTELY MUST** read and use it before any response or action. This is not optional.
+- **Mandatory Invocation**: If there is even a 1% chance a skill in `.agents/skills/` applies to your task, you **ABSOLUTELY MUST** read and use it before any response or action. This is not optional.
 - **Anti-Rationalization**: Do not skip skills with thoughts like "This is just a simple question," "I can do this quickly," or "I know this already." Unstructured action wastes time.
 - **Priority Hierarchy**: 1) User's explicit instructions (this file), 2) Skill instructions, 3) Default system prompt.
 

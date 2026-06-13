@@ -25,6 +25,8 @@ data:
   REDIS_HOST: "payu-datagrid"
   REDIS_PORT: "11222"
   KAFKA_URL: "kafka-kafka-bootstrap.payu-dev.svc.cluster.local:9092"
+  ARTEMIS_URL: "tcp://artemis:61616"
+
   ACCOUNT_DB_URL: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_account"
   API_PORTAL_DB_URL: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_gateway"
   AUTH_DB_URL: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc.cluster.local:5432/payu_auth"

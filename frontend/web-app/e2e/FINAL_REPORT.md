@@ -225,7 +225,7 @@ The test infrastructure is now more robust with:
 For questions about the E2E tests or to report issues:
 - Project: PayU Digital Banking Platform
 - Documentation: `/home/ubuntu/payu/CLAUDE.md`
-- Test Standards: `.agent/skills/quality-engineer/SKILL.md`
+- Test Standards: `.agents/skills/quality-engineer/SKILL.md`
 - E2E Tests: `/home/ubuntu/payu/frontend/web-app/e2e/`
 
 ---

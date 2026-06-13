@@ -16,7 +16,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      postgres-operator.crunchydata.com/cluster: payu-postgres
+      app.kubernetes.io/name: payu-postgres
   policyTypes:
     - Ingress
   ingress:
