@@ -1,6 +1,8 @@
 package id.payu.account.application.service;
 
+import id.payu.account.domain.model.KycStatus;
 import id.payu.account.domain.model.User;
+import id.payu.account.domain.model.UserStatus;
 import id.payu.account.domain.port.out.IdentityProviderPort;
 import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserEventPublisherPort;
@@ -97,8 +99,8 @@ class UserApplicationServiceTest {
                     .phoneNumber(validRequest.phoneNumber())
                     .fullName(validRequest.fullName())
                     .nik(validRequest.nik())
-                    .status(User.UserStatus.ACTIVE)
-                    .kycStatus(User.KycStatus.APPROVED)
+                    .status(UserStatus.ACTIVE)
+                    .kycStatus(KycStatus.APPROVED)
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
@@ -110,7 +112,7 @@ class UserApplicationServiceTest {
             assertThat(registeredUser).isNotNull();
             assertThat(registeredUser.getEmail()).isEqualTo(validRequest.email());
             assertThat(registeredUser.getFullName()).isEqualTo(validRequest.fullName());
-            assertThat(registeredUser.getKycStatus()).isEqualTo(User.KycStatus.APPROVED);
+            assertThat(registeredUser.getKycStatus()).isEqualTo(KycStatus.APPROVED);
             assertThat(registeredUser.getExternalId()).isEqualTo(iamUserId);
 
             verify(userPersistencePort).existsByEmail(validRequest.email());
@@ -177,8 +179,8 @@ class UserApplicationServiceTest {
 
             User savedUser = User.builder()
                     .username(validRequest.username())
-                    .status(User.UserStatus.ACTIVE)
-                    .kycStatus(User.KycStatus.REJECTED)
+                    .status(UserStatus.ACTIVE)
+                    .kycStatus(KycStatus.REJECTED)
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
@@ -187,7 +189,7 @@ class UserApplicationServiceTest {
             User registeredUser = result.get();
 
             // Then
-            assertThat(registeredUser.getKycStatus()).isEqualTo(User.KycStatus.REJECTED);
+            assertThat(registeredUser.getKycStatus()).isEqualTo(KycStatus.REJECTED);
             verify(userPersistencePort).save(any(User.class));
         }
 
@@ -235,10 +237,10 @@ class UserApplicationServiceTest {
                 User savedUser = User.builder()
                         .id(UUID.randomUUID())
                         .phoneNumber(request.phoneNumber())
-                        .status(User.UserStatus.ACTIVE)
-                        .kycStatus(User.KycStatus.APPROVED)
-                        .build();
-                given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
+                    .status(UserStatus.ACTIVE)
+                    .kycStatus(KycStatus.APPROVED)
+                    .build();
+            given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
                 // When/Then - Should not throw exception for valid format
                 assertThat(userApplicationService.registerUser(request)).isNotNull();
@@ -258,8 +260,8 @@ class UserApplicationServiceTest {
                     .id(UUID.randomUUID())
                     .email(validRequest.email())
                     .username(validRequest.username())
-                    .status(User.UserStatus.ACTIVE)
-                    .kycStatus(User.KycStatus.APPROVED)
+                    .status(UserStatus.ACTIVE)
+                    .kycStatus(KycStatus.APPROVED)
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 

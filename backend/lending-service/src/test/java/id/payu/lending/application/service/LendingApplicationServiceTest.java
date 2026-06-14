@@ -2,7 +2,10 @@ package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.CreditScore;
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.domain.model.PayLater;
+import id.payu.lending.domain.model.PayLaterStatus;
 import id.payu.lending.domain.port.in.ApplyLoanUseCase;
 import id.payu.lending.adapter.persistence.LoanPersistenceAdapter;
 import id.payu.lending.adapter.persistence.PayLaterPersistenceAdapter;
@@ -67,7 +70,7 @@ class LendingApplicationServiceTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 "EXT-001",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Emergency"
@@ -83,7 +86,7 @@ class LendingApplicationServiceTest {
         CompletableFuture<Loan> result = lendingApplicationService.applyLoan(request);
 
         assertNotNull(result.join());
-        assertEquals(Loan.LoanStatus.APPROVED, result.join().getStatus());
+        assertEquals(LoanStatus.APPROVED, result.join().getStatus());
         verify(loanPersistenceAdapter, times(1)).save(any(Loan.class));
         verify(loanEventPublisherPort, times(1)).publishLoanApproved(any());
     }
@@ -97,7 +100,7 @@ class LendingApplicationServiceTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 "EXT-002",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Emergency"
@@ -113,7 +116,7 @@ class LendingApplicationServiceTest {
         CompletableFuture<Loan> result = lendingApplicationService.applyLoan(request);
 
         assertNotNull(result.join());
-        assertEquals(Loan.LoanStatus.REJECTED, result.join().getStatus());
+        assertEquals(LoanStatus.REJECTED, result.join().getStatus());
         verify(loanPersistenceAdapter, times(1)).save(any(Loan.class));
         verify(loanEventPublisherPort, times(1)).publishLoanRejected(any());
     }
@@ -124,7 +127,7 @@ class LendingApplicationServiceTest {
         Loan loan = new Loan();
         loan.setId(loanId);
         loan.setExternalId("EXT-001");
-        loan.setStatus(Loan.LoanStatus.APPROVED);
+        loan.setStatus(LoanStatus.APPROVED);
 
         when(loanPersistenceAdapter.findById(loanId)).thenReturn(Optional.of(loan));
 
@@ -152,7 +155,7 @@ class LendingApplicationServiceTest {
         PayLater result = lendingApplicationService.activatePayLater(userId, request);
 
         assertNotNull(result.getId());
-        assertEquals(PayLater.PayLaterStatus.ACTIVE, result.getStatus());
+        assertEquals(PayLaterStatus.ACTIVE, result.getStatus());
         verify(payLaterPersistenceAdapter, times(1)).save(any(PayLater.class));
     }
 

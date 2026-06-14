@@ -3,6 +3,9 @@ package id.payu.lending.application.service;
 import id.payu.lending.domain.model.CreditScore;
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.LoanPreApproval;
+import id.payu.lending.domain.model.LoanType;
+import id.payu.lending.domain.model.PreApprovalStatus;
+import id.payu.lending.domain.model.RiskCategory;
 import id.payu.lending.domain.port.out.CreditScorePersistencePort;
 import id.payu.lending.domain.port.out.LoanPreApprovalPersistencePort;
 import id.payu.lending.dto.LoanPreApprovalRequest;
@@ -53,12 +56,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("800"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.EXCELLENT);
+        creditScore.setRiskCategory(RiskCategory.EXCELLENT);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("20000000"),
                 24,
                 "Home renovation"
@@ -76,12 +79,12 @@ class LoanPreApprovalServiceTest {
         LoanPreApprovalResponse result = loanPreApprovalService.checkPreApproval(request);
 
         assertNotNull(result);
-        assertEquals(LoanPreApprovalResponse.PreApprovalStatus.APPROVED, result.status());
+        assertEquals(PreApprovalStatus.APPROVED, result.status());
         assertEquals(userId, result.userId());
-        assertEquals(Loan.LoanType.PERSONAL_LOAN, result.loanType());
+        assertEquals(LoanType.PERSONAL_LOAN, result.loanType());
         assertTrue(result.maxApprovedAmount().compareTo(request.principalAmount()) >= 0);
         assertEquals(new BigDecimal("0.12"), result.minInterestRate());
-        assertEquals(CreditScore.RiskCategory.EXCELLENT, result.riskCategory());
+        assertEquals(RiskCategory.EXCELLENT, result.riskCategory());
         assertNotNull(result.validUntil());
         verify(preApprovalPersistencePort, times(1)).save(any(LoanPreApproval.class));
     }
@@ -93,12 +96,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("700"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.GOOD);
+        creditScore.setRiskCategory(RiskCategory.GOOD);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("50000000"),
                 36,
                 "Education"
@@ -116,9 +119,9 @@ class LoanPreApprovalServiceTest {
         LoanPreApprovalResponse result = loanPreApprovalService.checkPreApproval(request);
 
         assertNotNull(result);
-        assertEquals(LoanPreApprovalResponse.PreApprovalStatus.APPROVED, result.status());
+        assertEquals(PreApprovalStatus.APPROVED, result.status());
         assertEquals(userId, result.userId());
-        assertEquals(CreditScore.RiskCategory.GOOD, result.riskCategory());
+        assertEquals(RiskCategory.GOOD, result.riskCategory());
         verify(preApprovalPersistencePort, times(1)).save(any(LoanPreApproval.class));
     }
 
@@ -129,12 +132,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("650"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.FAIR);
+        creditScore.setRiskCategory(RiskCategory.FAIR);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("40000000"),
                 24,
                 "Car repair"
@@ -152,9 +155,9 @@ class LoanPreApprovalServiceTest {
         LoanPreApprovalResponse result = loanPreApprovalService.checkPreApproval(request);
 
         assertNotNull(result);
-        assertEquals(LoanPreApprovalResponse.PreApprovalStatus.APPROVED, result.status());
+        assertEquals(PreApprovalStatus.APPROVED, result.status());
         assertEquals(userId, result.userId());
-        assertEquals(CreditScore.RiskCategory.FAIR, result.riskCategory());
+        assertEquals(RiskCategory.FAIR, result.riskCategory());
         verify(preApprovalPersistencePort, times(1)).save(any(LoanPreApproval.class));
     }
 
@@ -165,12 +168,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("550"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.POOR);
+        creditScore.setRiskCategory(RiskCategory.POOR);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Emergency"
@@ -188,7 +191,7 @@ class LoanPreApprovalServiceTest {
         LoanPreApprovalResponse result = loanPreApprovalService.checkPreApproval(request);
 
         assertNotNull(result);
-        assertEquals(LoanPreApprovalResponse.PreApprovalStatus.REJECTED, result.status());
+        assertEquals(PreApprovalStatus.REJECTED, result.status());
         assertEquals(userId, result.userId());
         assertNotNull(result.reason());
         verify(preApprovalPersistencePort, times(1)).save(any(LoanPreApproval.class));
@@ -201,12 +204,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("450"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.VERY_POOR);
+        creditScore.setRiskCategory(RiskCategory.VERY_POOR);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("5000000"),
                 6,
                 "Emergency"
@@ -224,7 +227,7 @@ class LoanPreApprovalServiceTest {
         LoanPreApprovalResponse result = loanPreApprovalService.checkPreApproval(request);
 
         assertNotNull(result);
-        assertEquals(LoanPreApprovalResponse.PreApprovalStatus.REJECTED, result.status());
+        assertEquals(PreApprovalStatus.REJECTED, result.status());
         verify(preApprovalPersistencePort, times(1)).save(any(LoanPreApproval.class));
     }
 
@@ -233,7 +236,7 @@ class LoanPreApprovalServiceTest {
         UUID userId = UUID.randomUUID();
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("15000000"),
                 18,
                 "Car purchase"
@@ -263,12 +266,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("750"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.GOOD);
+        creditScore.setRiskCategory(RiskCategory.GOOD);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Vacation"
@@ -297,7 +300,7 @@ class LoanPreApprovalServiceTest {
         LoanPreApproval preApproval = new LoanPreApproval();
         preApproval.setId(preApprovalId);
         preApproval.setUserId(UUID.randomUUID());
-        preApproval.setStatus(LoanPreApproval.PreApprovalStatus.APPROVED);
+        preApproval.setStatus(PreApprovalStatus.APPROVED);
 
         when(preApprovalPersistencePort.findById(preApprovalId)).thenReturn(Optional.of(preApproval));
 
@@ -313,7 +316,7 @@ class LoanPreApprovalServiceTest {
         LoanPreApproval preApproval = new LoanPreApproval();
         preApproval.setId(UUID.randomUUID());
         preApproval.setUserId(userId);
-        preApproval.setStatus(LoanPreApproval.PreApprovalStatus.APPROVED);
+        preApproval.setStatus(PreApprovalStatus.APPROVED);
         preApproval.setValidUntil(LocalDate.now().plusDays(15));
 
         when(preApprovalPersistencePort.findActiveByUserId(userId)).thenReturn(Optional.of(preApproval));
@@ -331,7 +334,7 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("780"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.EXCELLENT);
+        creditScore.setRiskCategory(RiskCategory.EXCELLENT);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         BigDecimal principalAmount = new BigDecimal("12000000");
@@ -339,7 +342,7 @@ class LoanPreApprovalServiceTest {
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 principalAmount,
                 tenureMonths,
                 "Business"
@@ -368,12 +371,12 @@ class LoanPreApprovalServiceTest {
         creditScore.setId(UUID.randomUUID());
         creditScore.setUserId(userId);
         creditScore.setScore(new BigDecimal("800"));
-        creditScore.setRiskCategory(CreditScore.RiskCategory.EXCELLENT);
+        creditScore.setRiskCategory(RiskCategory.EXCELLENT);
         creditScore.setLastCalculatedAt(LocalDateTime.now());
 
         LoanPreApprovalRequest request = new LoanPreApprovalRequest(
                 userId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("30000000"),
                 36,
                 "Home improvement"

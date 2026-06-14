@@ -1,4 +1,4 @@
-package id.payu.auth.domain.model;
+package id.payu.auth.adapter.persistence.entity;
 
 import org.junit.jupiter.api.Test;
 

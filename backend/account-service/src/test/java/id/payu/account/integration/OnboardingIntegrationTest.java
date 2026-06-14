@@ -4,6 +4,7 @@ import id.payu.account.adapter.client.GatewayClient;
 import id.payu.account.adapter.client.IdentityProviderAdapter;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.application.service.UserApplicationService;
+import id.payu.account.domain.model.KycStatus;
 import id.payu.account.domain.model.User;
 import id.payu.account.dto.RegisterUserRequest;
 import id.payu.account.dto.VerifyNikResponse;
@@ -101,7 +102,7 @@ class OnboardingIntegrationTest {
         id.payu.account.entity.User userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
         assertThat(userFromDb.getUsername()).isEqualTo("integration-user");
         assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.fajjjar.my.id");
-        assertThat(userFromDb.getKycStatus().name()).isEqualTo(User.KycStatus.APPROVED.name());
+        assertThat(userFromDb.getKycStatus().name()).isEqualTo(KycStatus.APPROVED.name());
     }
 
     @DynamicPropertySource

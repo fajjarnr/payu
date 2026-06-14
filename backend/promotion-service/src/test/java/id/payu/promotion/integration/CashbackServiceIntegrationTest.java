@@ -1,6 +1,7 @@
 package id.payu.promotion.integration;
 
 import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
+import id.payu.promotion.domain.CashbackStatus;
 import id.payu.promotion.dto.CashbackSummaryResponse;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.application.service.CashbackService;
@@ -66,7 +67,7 @@ class CashbackServiceIntegrationTest {
         Assertions.assertEquals("MERCHANT-DINING", cashback.getMerchantCode());
         Assertions.assertEquals("DINING", cashback.getCategoryCode());
         Assertions.assertEquals("CASHBACK-DINING-001", cashback.getCashbackCode());
-        Assertions.assertEquals(CashbackEntity.Status.CREDITED, cashback.getStatus());
+        Assertions.assertEquals(CashbackStatus.CREDITED, cashback.getStatus());
         Assertions.assertNotNull(cashback.getCreditedAt());
         Assertions.assertNotNull(cashback.getCreatedAt());
 

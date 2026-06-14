@@ -21,7 +21,7 @@ class FxConversionTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2025, 6, 15, 14, 30, 0);
 
-    private FxConversion buildConversion(FxConversion.ConversionStatus status, BigDecimal fee) {
+    private FxConversion buildConversion(ConversionStatus status, BigDecimal fee) {
         return FxConversion.builder()
                 .id(UUID.randomUUID())
                 .accountId("ACC-001")
@@ -46,46 +46,46 @@ class FxConversionTest {
         @Test
         @DisplayName("markCompleted sets status to COMPLETED")
         void markCompleted() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.PENDING, BigDecimal.ZERO);
+            FxConversion conv = buildConversion(ConversionStatus.PENDING, BigDecimal.ZERO);
             conv.markCompleted();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
         }
 
         @Test
         @DisplayName("markFailed sets status to FAILED")
         void markFailed() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.PENDING, BigDecimal.ZERO);
+            FxConversion conv = buildConversion(ConversionStatus.PENDING, BigDecimal.ZERO);
             conv.markFailed();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.FAILED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.FAILED);
         }
 
         @Test
         @DisplayName("markReversed sets status to REVERSED")
         void markReversed() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.COMPLETED, BigDecimal.ZERO);
+            FxConversion conv = buildConversion(ConversionStatus.COMPLETED, BigDecimal.ZERO);
             conv.markReversed();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.REVERSED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.REVERSED);
         }
 
         @Test
         @DisplayName("PENDING → COMPLETED → REVERSED lifecycle")
         void fullLifecycle() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.PENDING, BigDecimal.ZERO);
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.PENDING);
+            FxConversion conv = buildConversion(ConversionStatus.PENDING, BigDecimal.ZERO);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.PENDING);
 
             conv.markCompleted();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
 
             conv.markReversed();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.REVERSED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.REVERSED);
         }
 
         @Test
         @DisplayName("PENDING → FAILED transition")
         void pendingToFailed() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.PENDING, BigDecimal.ZERO);
+            FxConversion conv = buildConversion(ConversionStatus.PENDING, BigDecimal.ZERO);
             conv.markFailed();
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.FAILED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.FAILED);
         }
     }
 
@@ -100,7 +100,7 @@ class FxConversionTest {
         @DisplayName("returns toAmount - fee when fee is present")
         void withFee() {
             FxConversion conv = buildConversion(
-                    FxConversion.ConversionStatus.COMPLETED,
+                    ConversionStatus.COMPLETED,
                     new BigDecimal("5000")
             );
             // toAmount = 1,580,000, fee = 5,000 → effective = 1,575,000
@@ -110,14 +110,14 @@ class FxConversionTest {
         @Test
         @DisplayName("returns toAmount when fee is null")
         void withNullFee() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.COMPLETED, null);
+            FxConversion conv = buildConversion(ConversionStatus.COMPLETED, null);
             assertThat(conv.getEffectiveAmount()).isEqualByComparingTo(new BigDecimal("1580000"));
         }
 
         @Test
         @DisplayName("returns toAmount when fee is zero")
         void withZeroFee() {
-            FxConversion conv = buildConversion(FxConversion.ConversionStatus.COMPLETED, BigDecimal.ZERO);
+            FxConversion conv = buildConversion(ConversionStatus.COMPLETED, BigDecimal.ZERO);
             assertThat(conv.getEffectiveAmount()).isEqualByComparingTo(new BigDecimal("1580000"));
         }
 
@@ -143,13 +143,13 @@ class FxConversionTest {
         @Test
         @DisplayName("has exactly 4 values")
         void fourValues() {
-            assertThat(FxConversion.ConversionStatus.values()).hasSize(4);
+            assertThat(ConversionStatus.values()).hasSize(4);
         }
 
         @ParameterizedTest
-        @EnumSource(FxConversion.ConversionStatus.class)
+        @EnumSource(ConversionStatus.class)
         @DisplayName("all enum values have correct names")
-        void allValuesExist(FxConversion.ConversionStatus status) {
+        void allValuesExist(ConversionStatus status) {
             assertThat(status.name()).isIn("PENDING", "COMPLETED", "FAILED", "REVERSED");
         }
     }
@@ -175,7 +175,7 @@ class FxConversionTest {
                     .exchangeRate(new BigDecimal("17500"))
                     .fee(new BigDecimal("10000"))
                     .conversionDate(NOW)
-                    .status(FxConversion.ConversionStatus.PENDING)
+                    .status(ConversionStatus.PENDING)
                     .build();
 
             assertThat(conv.getId()).isEqualTo(id);
@@ -187,7 +187,7 @@ class FxConversionTest {
             assertThat(conv.getExchangeRate()).isEqualByComparingTo(new BigDecimal("17500"));
             assertThat(conv.getFee()).isEqualByComparingTo(new BigDecimal("10000"));
             assertThat(conv.getConversionDate()).isEqualTo(NOW);
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.PENDING);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.PENDING);
         }
 
         @Test
@@ -221,7 +221,7 @@ class FxConversionTest {
             conv.setExchangeRate(new BigDecimal("11500"));
             conv.setFee(new BigDecimal("1000"));
             conv.setConversionDate(NOW);
-            conv.setStatus(FxConversion.ConversionStatus.COMPLETED);
+            conv.setStatus(ConversionStatus.COMPLETED);
 
             assertThat(conv.getId()).isEqualTo(id);
             assertThat(conv.getAccountId()).isEqualTo("ACC-123");
@@ -232,7 +232,7 @@ class FxConversionTest {
             assertThat(conv.getExchangeRate()).isEqualByComparingTo(new BigDecimal("11500"));
             assertThat(conv.getFee()).isEqualByComparingTo(new BigDecimal("1000"));
             assertThat(conv.getConversionDate()).isEqualTo(NOW);
-            assertThat(conv.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+            assertThat(conv.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
         }
     }
 }

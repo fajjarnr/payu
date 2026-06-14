@@ -1,7 +1,9 @@
 package id.payu.account.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.account.domain.model.KycStatus;
 import id.payu.account.domain.model.User;
+import id.payu.account.domain.model.UserStatus;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +69,8 @@ class OnboardingControllerTest {
                 .phoneNumber(validRequest.phoneNumber())
                 .fullName(validRequest.fullName())
                 .nik(validRequest.nik())
-                .status(User.UserStatus.ACTIVE)
-                .kycStatus(User.KycStatus.APPROVED)
+                .status(UserStatus.ACTIVE)
+                .kycStatus(KycStatus.APPROVED)
                 .build();
     }
 

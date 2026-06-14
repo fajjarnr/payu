@@ -5,6 +5,7 @@ import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionReposit
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
 import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
+import id.payu.partner.domain.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -143,7 +144,7 @@ class WebhookDispatcherServiceTest {
             List<WebhookDeliveryEntity> saved = captor.getAllValues();
             // First save = PENDING, second = DELIVERING, third = DELIVERED
             WebhookDeliveryEntity finalState = saved.get(saved.size() - 1);
-            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, finalState.getStatus());
+            assertEquals(Status.DELIVERED, finalState.getStatus());
             assertEquals(200, finalState.getResponseCode());
         }
 
@@ -169,7 +170,7 @@ class WebhookDispatcherServiceTest {
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
             WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDeliveryEntity.Status.FAILED, finalState.getStatus());
+            assertEquals(Status.FAILED, finalState.getStatus());
             assertEquals(500, finalState.getResponseCode());
             assertNotNull(finalState.getNextRetryAt(), "Should schedule retry");
         }
@@ -192,7 +193,7 @@ class WebhookDispatcherServiceTest {
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
             WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDeliveryEntity.Status.FAILED, finalState.getStatus());
+            assertEquals(Status.FAILED, finalState.getStatus());
             assertNotNull(finalState.getErrorMessage());
             assertTrue(finalState.getErrorMessage().contains("Connection refused"));
         }
@@ -251,7 +252,7 @@ class WebhookDispatcherServiceTest {
             WebhookDeliveryEntity failedDelivery = new WebhookDeliveryEntity(
                     subscription, "evt_retry001", "payment.completed", "{\"retry\":true}");
             failedDelivery.setId(500L);
-            failedDelivery.setStatus(WebhookDeliveryEntity.Status.FAILED);
+            failedDelivery.setStatus(Status.FAILED);
             failedDelivery.setAttemptCount(1);
             failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
 
@@ -273,7 +274,7 @@ class WebhookDispatcherServiceTest {
             verify(deliveryRepository, atLeast(2)).save(captor.capture());
 
             WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
-            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, finalState.getStatus());
+            assertEquals(Status.DELIVERED, finalState.getStatus());
         }
 
         @Test
@@ -284,7 +285,7 @@ class WebhookDispatcherServiceTest {
             WebhookDeliveryEntity failedDelivery = new WebhookDeliveryEntity(
                     subscription, "evt_deact001", "payment.completed", "{\"test\":true}");
             failedDelivery.setId(600L);
-            failedDelivery.setStatus(WebhookDeliveryEntity.Status.FAILED);
+            failedDelivery.setStatus(Status.FAILED);
             failedDelivery.setAttemptCount(1);
             failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
 
@@ -298,7 +299,7 @@ class WebhookDispatcherServiceTest {
             ArgumentCaptor<WebhookDeliveryEntity> captor =
                     ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository).save(captor.capture());
-            assertEquals(WebhookDeliveryEntity.Status.EXHAUSTED, captor.getValue().getStatus());
+            assertEquals(Status.EXHAUSTED, captor.getValue().getStatus());
         }
 
         @Test
@@ -338,14 +339,14 @@ class WebhookDispatcherServiceTest {
             WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, "evt_lc001", "payment.completed", "{\"test\":true}");
 
-            assertEquals(WebhookDeliveryEntity.Status.PENDING, delivery.getStatus());
+            assertEquals(Status.PENDING, delivery.getStatus());
             assertEquals(0, delivery.getAttemptCount());
 
             delivery.markDelivering();
-            assertEquals(WebhookDeliveryEntity.Status.DELIVERING, delivery.getStatus());
+            assertEquals(Status.DELIVERING, delivery.getStatus());
 
             delivery.markDelivered(200, "OK");
-            assertEquals(WebhookDeliveryEntity.Status.DELIVERED, delivery.getStatus());
+            assertEquals(Status.DELIVERED, delivery.getStatus());
             assertEquals(200, delivery.getResponseCode());
             assertNotNull(delivery.getDeliveredAt());
             assertEquals(1, delivery.getAttemptCount());
@@ -359,7 +360,7 @@ class WebhookDispatcherServiceTest {
 
             // First failure: 30s backoff
             delivery.markFailed(500, "Error", "Server Error");
-            assertEquals(WebhookDeliveryEntity.Status.FAILED, delivery.getStatus());
+            assertEquals(Status.FAILED, delivery.getStatus());
             assertEquals(1, delivery.getAttemptCount());
             assertNotNull(delivery.getNextRetryAt());
             assertTrue(delivery.canRetry());
@@ -373,11 +374,11 @@ class WebhookDispatcherServiceTest {
             delivery.setMaxAttempts(2);
 
             delivery.markFailed(500, "Error 1", "Server Error");
-            assertEquals(WebhookDeliveryEntity.Status.FAILED, delivery.getStatus());
+            assertEquals(Status.FAILED, delivery.getStatus());
             assertTrue(delivery.canRetry());
 
             delivery.markFailed(500, "Error 2", "Server Error");
-            assertEquals(WebhookDeliveryEntity.Status.EXHAUSTED, delivery.getStatus());
+            assertEquals(Status.EXHAUSTED, delivery.getStatus());
             assertFalse(delivery.canRetry());
             assertNull(delivery.getNextRetryAt());
         }

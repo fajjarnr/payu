@@ -1,6 +1,9 @@
 package id.payu.backoffice.application.service;
 
 import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.CustomerCaseStatus;
+import id.payu.backoffice.domain.Priority;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,8 +42,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-001",
-                CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE,
-                CustomerCaseEntity.Priority.HIGH,
+                CaseType.TRANSACTION_DISPUTE,
+                Priority.HIGH,
                 "Unauthorized transaction",
                 "I did not make this transaction",
                 "Please investigate"
@@ -52,12 +55,12 @@ class CustomerCaseServiceTest {
         assertNotNull(result.getId());
         assertEquals(testUserId, result.getUserId());
         assertEquals("ACC-001", result.getAccountNumber());
-        assertEquals(CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE, result.getCaseType());
-        assertEquals(CustomerCaseEntity.Priority.HIGH, result.getPriority());
+        assertEquals(CaseType.TRANSACTION_DISPUTE, result.getCaseType());
+        assertEquals(Priority.HIGH, result.getPriority());
         assertEquals("Unauthorized transaction", result.getSubject());
         assertEquals("I did not make this transaction", result.getDescription());
         assertEquals("Please investigate", result.getNotes());
-        assertEquals(CustomerCaseEntity.CaseStatus.OPEN, result.getStatus());
+        assertEquals(CustomerCaseStatus.OPEN, result.getStatus());
         assertNotNull(result.getCaseNumber());
         assertNotNull(result.getCreatedAt());
     }
@@ -68,7 +71,7 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-002",
-                CustomerCaseEntity.CaseType.GENERAL_INQUIRY,
+                CaseType.GENERAL_INQUIRY,
                 null,
                 "General question",
                 "How do I change my password?",
@@ -78,7 +81,7 @@ class CustomerCaseServiceTest {
         CustomerCaseEntity result = customerCaseService.create(request);
 
         assertNotNull(result);
-        assertEquals(CustomerCaseEntity.Priority.MEDIUM, result.getPriority());
+        assertEquals(Priority.MEDIUM, result.getPriority());
     }
 
     @Test
@@ -87,8 +90,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request1 = new CustomerCaseRequest(
                 testUserId,
                 "ACC-003",
-                CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.ACCOUNT_ISSUE,
+                Priority.LOW,
                 "Subject 1",
                 "Description 1",
                 null
@@ -97,8 +100,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request2 = new CustomerCaseRequest(
                 testUserId,
                 "ACC-004",
-                CustomerCaseEntity.CaseType.TECHNICAL_ISSUE,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.TECHNICAL_ISSUE,
+                Priority.LOW,
                 "Subject 2",
                 "Description 2",
                 null
@@ -125,8 +128,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-QUERY",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -153,8 +156,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-CASENUM",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -181,8 +184,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-USER",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -203,8 +206,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-STATUS",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -212,10 +215,10 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.listByStatus(CustomerCaseEntity.CaseStatus.OPEN, 0, 10);
+        List<CustomerCaseEntity> results = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(cc -> cc.getStatus() == CustomerCaseEntity.CaseStatus.OPEN));
+        assertTrue(results.stream().allMatch(cc -> cc.getStatus() == CustomerCaseStatus.OPEN));
     }
 
     @Test
@@ -224,8 +227,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-PRIORITY",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -233,10 +236,10 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.listByPriority(CustomerCaseEntity.Priority.URGENT, 0, 10);
+        List<CustomerCaseEntity> results = customerCaseService.listByPriority(Priority.URGENT, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(cc -> cc.getPriority() == CustomerCaseEntity.Priority.URGENT));
+        assertTrue(results.stream().allMatch(cc -> cc.getPriority() == Priority.URGENT));
     }
 
     @Test
@@ -245,8 +248,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-ALL",
-                CustomerCaseEntity.CaseType.BILLING_ISSUE,
-                CustomerCaseEntity.Priority.URGENT,
+                CaseType.BILLING_ISSUE,
+                Priority.URGENT,
                 "Billing inquiry",
                 "Wrong amount charged",
                 "Urgent attention needed"
@@ -268,8 +271,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-ASSIGN",
-                CustomerCaseEntity.CaseType.TECHNICAL_ISSUE,
-                CustomerCaseEntity.Priority.MEDIUM,
+                CaseType.TECHNICAL_ISSUE,
+                Priority.MEDIUM,
                 "App not working",
                 "Cannot login to mobile app",
                 null
@@ -281,7 +284,7 @@ class CustomerCaseServiceTest {
 
         assertNotNull(result);
         assertEquals("agent1", result.getAssignedTo());
-        assertEquals(CustomerCaseEntity.CaseStatus.IN_PROGRESS, result.getStatus());
+        assertEquals(CustomerCaseStatus.IN_PROGRESS, result.getStatus());
     }
 
     @Test
@@ -300,8 +303,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-UPDATE-1",
-                CustomerCaseEntity.CaseType.OTHER,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.OTHER,
+                Priority.LOW,
                 "Other issue",
                 "Some other problem",
                 null
@@ -310,14 +313,14 @@ class CustomerCaseServiceTest {
         CustomerCaseEntity customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.RESOLVED,
+                CustomerCaseStatus.RESOLVED,
                 "Issue resolved successfully"
         );
 
         CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent2");
 
         assertNotNull(result);
-        assertEquals(CustomerCaseEntity.CaseStatus.RESOLVED, result.getStatus());
+        assertEquals(CustomerCaseStatus.RESOLVED, result.getStatus());
         assertEquals("Issue resolved successfully", result.getNotes());
         assertEquals("agent2", result.getResolvedBy());
         assertNotNull(result.getResolvedAt());
@@ -329,8 +332,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-UPDATE-2",
-                CustomerCaseEntity.CaseType.OTHER,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.OTHER,
+                Priority.LOW,
                 "Other issue",
                 "Some other problem",
                 null
@@ -339,13 +342,13 @@ class CustomerCaseServiceTest {
         CustomerCaseEntity customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.CLOSED,
+                CustomerCaseStatus.CLOSED,
                 "Case closed - customer satisfied"
         );
 
         CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent3");
 
-        assertEquals(CustomerCaseEntity.CaseStatus.CLOSED, result.getStatus());
+        assertEquals(CustomerCaseStatus.CLOSED, result.getStatus());
         assertEquals("Case closed - customer satisfied", result.getNotes());
         assertEquals("agent3", result.getResolvedBy());
         assertNotNull(result.getResolvedAt());
@@ -357,8 +360,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-UPDATE-3",
-                CustomerCaseEntity.CaseType.OTHER,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.OTHER,
+                Priority.LOW,
                 "Other issue",
                 "Some other problem",
                 null
@@ -367,13 +370,13 @@ class CustomerCaseServiceTest {
         CustomerCaseEntity customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.IN_PROGRESS,
+                CustomerCaseStatus.IN_PROGRESS,
                 "Working on this issue"
         );
 
         CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent4");
 
-        assertEquals(CustomerCaseEntity.CaseStatus.IN_PROGRESS, result.getStatus());
+        assertEquals(CustomerCaseStatus.IN_PROGRESS, result.getStatus());
         assertEquals("Working on this issue", result.getNotes());
         assertNull(result.getResolvedBy());
         assertNull(result.getResolvedAt());
@@ -383,7 +386,7 @@ class CustomerCaseServiceTest {
     @Transactional
     void testUpdate_NotFound() {
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.RESOLVED,
+                CustomerCaseStatus.RESOLVED,
                 "Test"
         );
 
@@ -400,8 +403,8 @@ class CustomerCaseServiceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 testUserId,
                 "ACC-DELETE",
-                CustomerCaseEntity.CaseType.GENERAL_INQUIRY,
-                CustomerCaseEntity.Priority.LOW,
+                CaseType.GENERAL_INQUIRY,
+                Priority.LOW,
                 "Delete test",
                 "Testing deletion",
                 null
@@ -428,8 +431,8 @@ class CustomerCaseServiceTest {
             CustomerCaseRequest request = new CustomerCaseRequest(
                     uniqueUser,
                     "ACC-PAG-" + i,
-                    CustomerCaseEntity.CaseType.OTHER,
-                    CustomerCaseEntity.Priority.LOW,
+                    CaseType.OTHER,
+                    Priority.LOW,
                     "Subject " + i,
                     "Description " + i,
                     null
@@ -455,8 +458,8 @@ class CustomerCaseServiceTest {
             CustomerCaseRequest request = new CustomerCaseRequest(
                     uniqueUser,
                     "ACC-STATUS-" + i,
-                    CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
-                    CustomerCaseEntity.Priority.MEDIUM,
+                    CaseType.ACCOUNT_ISSUE,
+                    Priority.MEDIUM,
                     "Status test " + i,
                     "Description " + i,
                     null
@@ -464,10 +467,10 @@ class CustomerCaseServiceTest {
             customerCaseService.create(request);
         }
 
-        List<CustomerCaseEntity> page1 = customerCaseService.listByStatus(CustomerCaseEntity.CaseStatus.OPEN, 0, 2);
+        List<CustomerCaseEntity> page1 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 2);
         assertTrue(page1.size() <= 2);
 
-        List<CustomerCaseEntity> page2 = customerCaseService.listByStatus(CustomerCaseEntity.CaseStatus.OPEN, 1, 2);
+        List<CustomerCaseEntity> page2 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 1, 2);
         assertTrue(page2.size() <= 2);
     }
 }

@@ -6,6 +6,9 @@ import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.adapter.persistence.entity.MerchantEntity;
 import id.payu.partner.adapter.persistence.entity.MerchantQrPaymentEntity;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.domain.MerchantCategory;
+import id.payu.partner.domain.MerchantStatus;
+import id.payu.partner.domain.QrPaymentStatus;
 import id.payu.partner.dto.CreateMerchantRequest;
 import id.payu.partner.dto.CreateQrPaymentRequest;
 import id.payu.partner.dto.MerchantResponse;
@@ -18,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,7 +48,7 @@ class MerchantServiceTest {
     private WebhookDispatcherService webhookDispatcher;
 
     @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private OutboxService outboxService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -57,16 +60,16 @@ class MerchantServiceTest {
 
     @BeforeEach
     void setUp() {
-        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, kafkaTemplate, objectMapper);
+        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, outboxService, objectMapper);
 
         activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
         activePartner.setActive(true);
 
         activeMerchant = new MerchantEntity(activePartner, "MCH001TEST", "Warung Kopi",
-                MerchantEntity.MerchantCategory.FOOD_BEVERAGE, "Jl. Test 1");
+                MerchantCategory.FOOD_BEVERAGE, "Jl. Test 1");
         activeMerchant.setId(10L);
-        activeMerchant.setStatus(MerchantEntity.MerchantStatus.ACTIVE);
+        activeMerchant.setStatus(MerchantStatus.ACTIVE);
     }
 
     @Nested
@@ -142,7 +145,7 @@ class MerchantServiceTest {
         @DisplayName("should activate pending merchant")
         void shouldActivatePendingMerchant() {
             MerchantEntity pending = new MerchantEntity(activePartner, "MCH002", "Test Store",
-                    MerchantEntity.MerchantCategory.RETAIL, "Addr");
+                    MerchantCategory.RETAIL, "Addr");
             pending.setId(20L);
 
             when(merchantRepository.findById(20L)).thenReturn(Optional.of(pending));
@@ -198,9 +201,9 @@ class MerchantServiceTest {
         @DisplayName("should fail for inactive merchant")
         void shouldFailForInactiveMerchant() {
             MerchantEntity suspended = new MerchantEntity(activePartner, "MCH003", "Suspended",
-                    MerchantEntity.MerchantCategory.RETAIL, "Addr");
+                    MerchantCategory.RETAIL, "Addr");
             suspended.setId(30L);
-            suspended.setStatus(MerchantEntity.MerchantStatus.SUSPENDED);
+            suspended.setStatus(MerchantStatus.SUSPENDED);
 
             when(merchantRepository.findById(30L)).thenReturn(Optional.of(suspended));
 
@@ -272,7 +275,7 @@ class MerchantServiceTest {
 
             merchantService.expireQrPayments();
 
-            assertEquals(MerchantQrPaymentEntity.QrPaymentStatus.EXPIRED, qr.getStatus());
+            assertEquals(QrPaymentStatus.EXPIRED, qr.getStatus());
             verify(qrPaymentRepository).saveAll(anyList());
         }
     }

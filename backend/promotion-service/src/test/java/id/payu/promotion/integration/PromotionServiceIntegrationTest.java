@@ -2,6 +2,11 @@ package id.payu.promotion.integration;
 
 import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.PromotionRewardType;
+import id.payu.promotion.domain.PromotionStatus;
+import id.payu.promotion.domain.PromotionType;
+import id.payu.promotion.domain.RewardStatus;
+import id.payu.promotion.domain.RewardType;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.application.service.PromotionService;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,8 +60,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CASHBACK-001",
             "Test CashbackEntity PromotionEntity",
             "10% cashback on all transactions",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.CASHBACK,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("50000"),
@@ -69,12 +74,12 @@ class PromotionServiceIntegrationTest {
         Assertions.assertNotNull(promotion.getId());
         Assertions.assertEquals("TEST-CASHBACK-001", promotion.getCode());
         Assertions.assertEquals("Test CashbackEntity PromotionEntity", promotion.getName());
-        Assertions.assertEquals(PromotionEntity.PromotionType.CASHBACK, promotion.getPromotionType());
-        Assertions.assertEquals(PromotionEntity.RewardType.PERCENTAGE, promotion.getRewardType());
+        Assertions.assertEquals(PromotionType.CASHBACK, promotion.getPromotionType());
+        Assertions.assertEquals(PromotionRewardType.PERCENTAGE, promotion.getRewardType());
         Assertions.assertEquals(new BigDecimal("10"), promotion.getRewardValue());
         Assertions.assertEquals(1000, promotion.getMaxRedemptions());
         Assertions.assertEquals(new BigDecimal("50000"), promotion.getMinTransactionAmount());
-        Assertions.assertEquals(PromotionEntity.Status.DRAFT, promotion.getStatus());
+        Assertions.assertEquals(PromotionStatus.DRAFT, promotion.getStatus());
         Assertions.assertEquals(0, promotion.getRedemptionCount());
         Assertions.assertNotNull(promotion.getCreatedAt());
         Assertions.assertNotNull(promotion.getUpdatedAt());
@@ -92,8 +97,8 @@ class PromotionServiceIntegrationTest {
             "TEST-INVALID-001",
             "Invalid PromotionEntity",
             "End date before start date",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("5000"),
             100,
             new BigDecimal("10000"),
@@ -112,8 +117,8 @@ class PromotionServiceIntegrationTest {
             "TEST-NODATE-001",
             "No Date PromotionEntity",
             "Missing dates",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("5000"),
             100,
             new BigDecimal("10000"),
@@ -136,8 +141,8 @@ class PromotionServiceIntegrationTest {
             "TEST-UPDATE-001",
             "Original Name",
             "Original description",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("15"),
             500,
             new BigDecimal("30000"),
@@ -151,7 +156,7 @@ class PromotionServiceIntegrationTest {
         UpdatePromotionRequest updateRequest = new UpdatePromotionRequest(
             "Updated Name",
             "Updated description",
-            PromotionEntity.Status.ACTIVE,
+            PromotionStatus.ACTIVE,
             null,
             null
         );
@@ -160,13 +165,13 @@ class PromotionServiceIntegrationTest {
 
         Assertions.assertEquals("Updated Name", updated.getName());
         Assertions.assertEquals("Updated description", updated.getDescription());
-        Assertions.assertEquals(PromotionEntity.Status.ACTIVE, updated.getStatus());
+        Assertions.assertEquals(PromotionStatus.ACTIVE, updated.getStatus());
 
         // Verify persistence
         Optional<PromotionEntity> fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("Updated Name", fetched.get().getName());
-        Assertions.assertEquals(PromotionEntity.Status.ACTIVE, fetched.get().getStatus());
+        Assertions.assertEquals(PromotionStatus.ACTIVE, fetched.get().getStatus());
     }
 
     @Test
@@ -174,7 +179,7 @@ class PromotionServiceIntegrationTest {
         UpdatePromotionRequest updateRequest = new UpdatePromotionRequest(
             "New Name",
             "New description",
-            PromotionEntity.Status.ACTIVE,
+            PromotionStatus.ACTIVE,
             null,
             null
         );
@@ -193,8 +198,8 @@ class PromotionServiceIntegrationTest {
             "TEST-UPDATE-DATE-001",
             "Date Test",
             "Test date validation",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             100,
             new BigDecimal("10000"),
@@ -227,8 +232,8 @@ class PromotionServiceIntegrationTest {
             "TEST-ACTIVATE-001",
             "Test Activation",
             "Test promotion activation",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("2000"),
             1000,
             new BigDecimal("25000"),
@@ -237,16 +242,16 @@ class PromotionServiceIntegrationTest {
         );
 
         PromotionEntity created = promotionService.createPromotion(request);
-        Assertions.assertEquals(PromotionEntity.Status.DRAFT, created.getStatus());
+        Assertions.assertEquals(PromotionStatus.DRAFT, created.getStatus());
 
         PromotionEntity activated = promotionService.activatePromotion(created.getId());
 
-        Assertions.assertEquals(PromotionEntity.Status.ACTIVE, activated.getStatus());
+        Assertions.assertEquals(PromotionStatus.ACTIVE, activated.getStatus());
 
         // Verify persistence
         Optional<PromotionEntity> fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals(PromotionEntity.Status.ACTIVE, fetched.get().getStatus());
+        Assertions.assertEquals(PromotionStatus.ACTIVE, fetched.get().getStatus());
     }
 
     @Test
@@ -256,8 +261,8 @@ class PromotionServiceIntegrationTest {
             "TEST-ACTIVATE-INVALID-001",
             "Future PromotionEntity",
             "PromotionEntity that starts in the future",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("20"),
             500,
             new BigDecimal("10000"),
@@ -290,8 +295,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-PCT-001",
             "Percentage Test",
             "10% discount",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("10000"),
@@ -316,10 +321,10 @@ class PromotionServiceIntegrationTest {
         Assertions.assertEquals("acc-test-claim-1", reward.getAccountId());
         Assertions.assertEquals("txn-claim-001", reward.getTransactionId());
         Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.getPromotionCode());
-        Assertions.assertEquals(RewardEntity.RewardType.PROMOTION_REWARD, reward.getType());
+        Assertions.assertEquals(RewardType.PROMOTION_REWARD, reward.getType());
         Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.getAmount())); // 10% of 50000
         Assertions.assertEquals(0, new BigDecimal("50000").compareTo(reward.getTransactionAmount()));
-        Assertions.assertEquals(RewardEntity.Status.AWARDED, reward.getStatus());
+        Assertions.assertEquals(RewardStatus.AWARDED, reward.getStatus());
 
         // Verify redemption count incremented
         Optional<PromotionEntity> updatedPromo = promotionService.getPromotion(promotion.getId());
@@ -334,8 +339,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-FIX-001",
             "Fixed Amount Test",
             "Fixed 5000 reward",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("5000"),
             1000,
             new BigDecimal("10000"),
@@ -367,8 +372,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-PTS-001",
             "Points Test",
             "Award 100 points",
-            PromotionEntity.PromotionType.REWARD_POINTS,
-            PromotionEntity.RewardType.POINTS,
+            PromotionType.REWARD_POINTS,
+            PromotionRewardType.POINTS,
             new BigDecimal("100"),
             1000,
             new BigDecimal("10000"),
@@ -400,8 +405,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-INACTIVE-001",
             "Inactive Test",
             "Draft promotion",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("10000"),
@@ -431,8 +436,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-EXP-001",
             "Expired Test",
             "Expired promotion",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("10000"),
@@ -441,7 +446,7 @@ class PromotionServiceIntegrationTest {
         );
 
         PromotionEntity promotion = promotionService.createPromotion(request);
-        promotion.setStatus(PromotionEntity.Status.ACTIVE);
+        promotion.setStatus(PromotionStatus.ACTIVE);
         promotionRepository.save(promotion);
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -464,8 +469,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-MAX-001",
             "Max Redemptions Test",
             "Limited redemptions",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("1000"),
             2, // Only 2 redemptions allowed
             new BigDecimal("10000"),
@@ -517,8 +522,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CLAIM-MIN-001",
             "Min Amount Test",
             "Minimum transaction required",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("100000"), // Minimum 100,000
@@ -566,8 +571,8 @@ class PromotionServiceIntegrationTest {
             "TEST-GET-001",
             "Get Test",
             "Test get by ID",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("10000"),
@@ -597,8 +602,8 @@ class PromotionServiceIntegrationTest {
             "TEST-GET-CODE-001",
             "Get By Code Test",
             "Test get by code",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             1000,
             new BigDecimal("10000"),
@@ -632,8 +637,8 @@ class PromotionServiceIntegrationTest {
             "TEST-CAMPAIGN-001",
             "Test Campaign",
             "Full campaign lifecycle",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("1000"),
             100,
             new BigDecimal("10000"),
@@ -642,11 +647,11 @@ class PromotionServiceIntegrationTest {
         );
 
         PromotionEntity campaign = promotionService.createPromotion(request);
-        Assertions.assertEquals(PromotionEntity.Status.DRAFT, campaign.getStatus());
+        Assertions.assertEquals(PromotionStatus.DRAFT, campaign.getStatus());
 
         // Activate
         campaign = promotionService.activatePromotion(campaign.getId());
-        Assertions.assertEquals(PromotionEntity.Status.ACTIVE, campaign.getStatus());
+        Assertions.assertEquals(PromotionStatus.ACTIVE, campaign.getStatus());
 
         // Simulate claims
         for (int i = 0; i < 3; i++) {
@@ -675,8 +680,8 @@ class PromotionServiceIntegrationTest {
             "TEST-MULTI-001",
             "First PromotionEntity",
             "First test",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"),
             100,
             new BigDecimal("10000"),
@@ -689,8 +694,8 @@ class PromotionServiceIntegrationTest {
             "TEST-MULTI-002",
             "Second PromotionEntity",
             "Second test",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("2000"),
             100,
             new BigDecimal("10000"),

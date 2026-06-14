@@ -113,5 +113,23 @@ Reuse one helper method (e.g. package-private `buildValueSerializer()`) across `
 
 **Lesson**: The jump from Spring Boot 3.4 to 4.1.0 is relatively smooth using OpenRewrite, but code-generation plugins (like gRPC) that haven't fully switched to Jakarta EE require backward-compatibility hacks (`javax.annotation-api`). Ensure all unit tests compile *before* running OpenRewrite, as syntax errors will block the AST parser.
 
+## L-033: Inner-Enum Extraction in Tests — Production Code Moves First, Tests Get Forgotten (2026-06-13)
+
+**Date**: 2026-06-13  
+**Domain**: Java / Hexagonal Architecture / Test Maintenance  
+**Context**: Closed READY-003 (P0 blocker for ARCH-006 platform-wide Jakarta EE 11 migration). 49 test files in 8 backend services still referenced inner-class enums (`X.InnerEnum.VALUE`) after the May 2026 ARCH-009 extraction moved them to top-level files. Production code compiled because the extraction was atomic + tests were partially updated, but `mvn test-compile` failed in 8 of 20 services with 250+ `cannot find symbol` errors.
+
+**Pattern**: When extracting inner enums to top-level (SOP #6), the test file sweep is the **last** and **most error-prone** step. Production refactors have IDE/compiler assist; test file sweeps are done by hand or by `replaceAll` and are easy to miss. Same pattern applies to:
+- ARCH-008 entity layer move (`domain/` → `adapter/persistence/entity/`) — 2 test files still imported `id.payu.partner.domain.ApiKeyEntity`.
+- ARCH-009 inner-enum extraction — 41 test files still referenced `X.InnerEnum.VALUE`.
+- MSG-009 outbox migration — 2 test files still mocked `KafkaTemplate` instead of `OutboxService`.
+
+**Lesson**:
+1. **Refactor + test sweep in same commit, not same sprint**. The inner-enum extraction touched 144 enums (per L-032) but the test file sweep was deferred. Result: 6 weeks of "tests don't compile" left as technical debt.
+2. **Always run `mvn test-compile` immediately after a refactor**, not just `mvn compile`. Production code can be green while tests are red.
+3. **The fix is mechanical, not creative**: `replaceAll X.InnerEnum.` → `InnerEnum.` + add import. Subagents can do this in parallel — 8 services × ~30 references per service = 250 fixes in <5 minutes total wall time.
+4. **Bonus test bug surfaced**: `SecurityConfigPatternTest` (added in 1.8.11 as regression guard) used a wrong source path `account.config/SecurityConfig.java` (dot, not slash). The test always failed with `NoSuchFileException`. **Lesson for characterization tests**: write them after the production fix, but verify they actually run + pass before merging. A "regression test" that always fails is worse than no test — it normalizes failure in CI.
+5. **OpenRewrite dependency**: per the user's pre-task analysis, `JavaxMigrationToJakarta` and `SpringBoot3BestPractices` require the codebase to AST-parse cleanly. Test-compile failures break OpenRewrite silently — there's no error, just no migration. **Always clean test-compile before scheduling an OpenRewrite run**.
+
 ---
 *Last Updated: June 13, 2026*

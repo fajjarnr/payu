@@ -16,7 +16,7 @@ class HeaderOperationTest {
     void shouldCreateAddOperation() {
         HeaderOperation op = HeaderOperation.add("X-Custom-Header", "value");
 
-        assertEquals(HeaderOperation.Type.ADD, op.type());
+        assertEquals(Type.ADD, op.type());
         assertEquals("X-Custom-Header", op.headerName());
         assertEquals("value", op.value());
     }
@@ -25,7 +25,7 @@ class HeaderOperationTest {
     void shouldCreateAddIfMissingOperation() {
         HeaderOperation op = HeaderOperation.addIfMissing("X-Custom-Header", "value");
 
-        assertEquals(HeaderOperation.Type.ADD_IF_MISSING, op.type());
+        assertEquals(Type.ADD_IF_MISSING, op.type());
         assertEquals("X-Custom-Header", op.headerName());
         assertEquals("value", op.value());
     }
@@ -34,7 +34,7 @@ class HeaderOperationTest {
     void shouldCreateRemoveOperation() {
         HeaderOperation op = HeaderOperation.remove("X-Remove-Header");
 
-        assertEquals(HeaderOperation.Type.REMOVE, op.type());
+        assertEquals(Type.REMOVE, op.type());
         assertEquals("X-Remove-Header", op.headerName());
         assertNull(op.value());
     }
@@ -43,7 +43,7 @@ class HeaderOperationTest {
     void shouldCreateRewriteOperation() {
         HeaderOperation op = HeaderOperation.rewrite("X-Rewrite-Header", "new-value");
 
-        assertEquals(HeaderOperation.Type.REWRITE, op.type());
+        assertEquals(Type.REWRITE, op.type());
         assertEquals("X-Rewrite-Header", op.headerName());
         assertEquals("new-value", op.value());
     }
@@ -57,7 +57,7 @@ class HeaderOperationTest {
     @Test
     void shouldThrowExceptionForNullHeaderName() {
         assertThrows(NullPointerException.class, () ->
-            new HeaderOperation(HeaderOperation.Type.ADD, null, "value", null));
+            new HeaderOperation(Type.ADD, null, "value", null));
     }
 
     @Test

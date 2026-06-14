@@ -428,7 +428,7 @@ class AccountFinancialIntegrityTest {
                     .userId(userId)
                     .accountNumber(accountNumber)
                     .accountType("SAVINGS")
-                    .status(Account.AccountStatus.PENDING_VERIFICATION)
+                    .status(AccountStatus.PENDING_VERIFICATION)
                     .balance(new BigDecimal("100000"))
                     .currency("IDR")
                     .createdAt(LocalDateTime.now())
@@ -472,7 +472,7 @@ class AccountFinancialIntegrityTest {
                     .userId(null)
                     .accountNumber(accountNumber)
                     .accountType("SAVINGS")
-                    .status(Account.AccountStatus.ACTIVE)
+                    .status(AccountStatus.ACTIVE)
                     .balance(new BigDecimal("100000"))
                     .currency("IDR")
                     .createdAt(LocalDateTime.now())
@@ -553,7 +553,7 @@ class AccountFinancialIntegrityTest {
 
             account.freeze();
 
-            assertThat(account.getStatus()).isEqualTo(Account.AccountStatus.FROZEN);
+            assertThat(account.getStatus()).isEqualTo(AccountStatus.FROZEN);
         }
 
         @Test
@@ -574,7 +574,7 @@ class AccountFinancialIntegrityTest {
 
             account.unfreeze();
 
-            assertThat(account.getStatus()).isEqualTo(Account.AccountStatus.ACTIVE);
+            assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         }
 
         @Test
@@ -593,7 +593,7 @@ class AccountFinancialIntegrityTest {
 
             account.close();
 
-            assertThat(account.getStatus()).isEqualTo(Account.AccountStatus.CLOSED);
+            assertThat(account.getStatus()).isEqualTo(AccountStatus.CLOSED);
         }
 
         @Test
@@ -614,7 +614,7 @@ class AccountFinancialIntegrityTest {
                     .userId(userId)
                     .accountNumber(accountNumber)
                     .accountType("SAVINGS")
-                    .status(Account.AccountStatus.PENDING_VERIFICATION)
+                    .status(AccountStatus.PENDING_VERIFICATION)
                     .balance(new BigDecimal("0"))
                     .currency("IDR")
                     .createdAt(LocalDateTime.now())
@@ -623,7 +623,7 @@ class AccountFinancialIntegrityTest {
 
             account.activate();
 
-            assertThat(account.getStatus()).isEqualTo(Account.AccountStatus.ACTIVE);
+            assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         }
     }
 
@@ -635,7 +635,7 @@ class AccountFinancialIntegrityTest {
                 .userId(userId)
                 .accountNumber(accountNumber)
                 .accountType("SAVINGS")
-                .status(Account.AccountStatus.ACTIVE)
+                .status(AccountStatus.ACTIVE)
                 .balance(balance)
                 .currency("IDR")
                 .createdAt(LocalDateTime.now())
@@ -649,7 +649,7 @@ class AccountFinancialIntegrityTest {
                 .userId(userId)
                 .accountNumber(accountNumber)
                 .accountType("CHECKING")
-                .status(Account.AccountStatus.ACTIVE)
+                .status(AccountStatus.ACTIVE)
                 .balance(balance)
                 .currency("IDR")
                 .createdAt(LocalDateTime.now())
@@ -663,7 +663,7 @@ class AccountFinancialIntegrityTest {
                 .userId(userId)
                 .accountNumber(accountNumber)
                 .accountType("POCKET")
-                .status(Account.AccountStatus.ACTIVE)
+                .status(AccountStatus.ACTIVE)
                 .balance(balance)
                 .currency("IDR")
                 .createdAt(LocalDateTime.now())
@@ -677,7 +677,7 @@ class AccountFinancialIntegrityTest {
                 .userId(userId)
                 .accountNumber(accountNumber)
                 .accountType("SAVINGS")
-                .status(Account.AccountStatus.ACTIVE)
+                .status(AccountStatus.ACTIVE)
                 .balance(new BigDecimal("100000"))
                 .currency("IDR")
                 .createdAt(LocalDateTime.now())

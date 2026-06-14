@@ -2,6 +2,8 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.ReferralRewardType;
+import id.payu.promotion.domain.ReferralStatus;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,7 +62,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -71,8 +73,8 @@ class ReferralServiceTest {
         assertNotNull(result.getReferralCode());
         assertEquals(new BigDecimal("50.00"), result.getReferrerReward());
         assertEquals(new BigDecimal("25.00"), result.getRefereeReward());
-        assertEquals(ReferralEntity.RewardType.CASHBACK, result.getRewardType());
-        assertEquals(ReferralEntity.Status.PENDING, result.getStatus());
+        assertEquals(ReferralRewardType.CASHBACK, result.getRewardType());
+        assertEquals(ReferralStatus.PENDING, result.getStatus());
         assertNotNull(result.getCreatedAt());
         assertEquals(8, result.getReferralCode().length());
     }
@@ -83,13 +85,13 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("1000.00"),
             new BigDecimal("500.00"),
-            ReferralEntity.RewardType.POINTS,
+            ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(3)
         );
 
         ReferralEntity result = referralService.createReferral(request);
 
-        assertEquals(ReferralEntity.RewardType.POINTS, result.getRewardType());
+        assertEquals(ReferralRewardType.POINTS, result.getRewardType());
         assertNotNull(result.getReferralCode());
     }
 
@@ -99,7 +101,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -114,7 +116,7 @@ class ReferralServiceTest {
 
         assertEquals(created.getId(), result.getId());
         assertEquals(REFEREE_ACCOUNT_ID, result.getRefereeAccountId());
-        assertEquals(ReferralEntity.Status.COMPLETED, result.getStatus());
+        assertEquals(ReferralStatus.COMPLETED, result.getStatus());
         assertNotNull(result.getCompletedAt());
     }
 
@@ -124,7 +126,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("1000.00"),
             new BigDecimal("500.00"),
-            ReferralEntity.RewardType.POINTS,
+            ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -137,7 +139,7 @@ class ReferralServiceTest {
 
         ReferralEntity result = referralService.completeReferral(completeRequest);
 
-        assertEquals(ReferralEntity.Status.COMPLETED, result.getStatus());
+        assertEquals(ReferralStatus.COMPLETED, result.getStatus());
 
         var referrerPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(REFERRER_ACCOUNT_ID);
         var refereePoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(REFEREE_ACCOUNT_ID);
@@ -167,7 +169,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -194,7 +196,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().minusDays(1)
         );
 
@@ -214,7 +216,7 @@ class ReferralServiceTest {
 
         var expiredReferral = referralService.getReferral(created.getId());
         assertTrue(expiredReferral.isPresent());
-        assertEquals(ReferralEntity.Status.EXPIRED, expiredReferral.get().getStatus());
+        assertEquals(ReferralStatus.EXPIRED, expiredReferral.get().getStatus());
     }
 
     @Test
@@ -223,7 +225,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -251,7 +253,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -277,7 +279,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -285,7 +287,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -304,7 +306,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -312,7 +314,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -340,7 +342,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -348,7 +350,7 @@ class ReferralServiceTest {
             REFERRER_ACCOUNT_ID,
             new BigDecimal("50.00"),
             new BigDecimal("25.00"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 

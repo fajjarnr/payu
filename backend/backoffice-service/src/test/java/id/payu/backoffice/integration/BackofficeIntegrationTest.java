@@ -3,6 +3,12 @@ package id.payu.backoffice.integration;
 import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.CustomerCaseStatus;
+import id.payu.backoffice.domain.FraudCaseStatus;
+import id.payu.backoffice.domain.KycStatus;
+import id.payu.backoffice.domain.Priority;
+import id.payu.backoffice.domain.RiskLevel;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.FraudCaseDecisionRequest;
 import id.payu.backoffice.dto.KycReviewDecisionRequest;
@@ -92,7 +98,7 @@ class BackofficeIntegrationTest {
         assertEquals(testUserId, retrievedReview.get().getUserId());
         assertEquals(testAccountNumber, retrievedReview.get().getAccountNumber());
         assertEquals("PASSPORT", retrievedReview.get().getDocumentType());
-        assertEquals(KycReviewEntity.KycStatus.PENDING, retrievedReview.get().getStatus());
+        assertEquals(KycStatus.PENDING, retrievedReview.get().getStatus());
         assertNotNull(retrievedReview.get().getCreatedAt());
 
         // Cleanup
@@ -121,7 +127,7 @@ class BackofficeIntegrationTest {
 
         KycReviewEntity review = kycReviewService.create(request);
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
             "Documents verified, identity confirmed"
         );
 
@@ -129,7 +135,7 @@ class BackofficeIntegrationTest {
         KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
 
         // Then
-        assertEquals(KycReviewEntity.KycStatus.APPROVED, result.getStatus());
+        assertEquals(KycStatus.APPROVED, result.getStatus());
         assertEquals("Documents verified, identity confirmed", result.getNotes());
         assertEquals("admin1", result.getReviewedBy());
         assertNotNull(result.getReviewedAt());
@@ -161,7 +167,7 @@ class BackofficeIntegrationTest {
 
         KycReviewEntity review = kycReviewService.create(request);
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.REJECTED,
+            id.payu.backoffice.dto.KycReviewStatus.REJECTED,
             "Document expired, please submit valid ID"
         );
 
@@ -169,7 +175,7 @@ class BackofficeIntegrationTest {
         KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
 
         // Then
-        assertEquals(KycReviewEntity.KycStatus.REJECTED, result.getStatus());
+        assertEquals(KycStatus.REJECTED, result.getStatus());
         assertTrue(result.getNotes().contains("expired"));
         assertEquals("admin2", result.getReviewedBy());
 
@@ -193,12 +199,12 @@ class BackofficeIntegrationTest {
         ));
 
         // When
-        List<KycReviewEntity> pendingReviews = kycReviewService.listByStatus(KycReviewEntity.KycStatus.PENDING, 0, 10);
+        List<KycReviewEntity> pendingReviews = kycReviewService.listByStatus(KycStatus.PENDING, 0, 10);
 
         // Then
         assertNotNull(pendingReviews);
         assertTrue(pendingReviews.stream().anyMatch(r -> r.getUserId().startsWith(testUserId)));
-        assertTrue(pendingReviews.stream().allMatch(r -> r.getStatus() == KycReviewEntity.KycStatus.PENDING));
+        assertTrue(pendingReviews.stream().allMatch(r -> r.getStatus() == KycStatus.PENDING));
 
         // Cleanup
         pendingReviews.stream()
@@ -226,7 +232,7 @@ class BackofficeIntegrationTest {
             "TRANSFER",
             amount,
             "ACCOUNT_TAKEOVER",
-            FraudCaseEntity.RiskLevel.HIGH,
+            RiskLevel.HIGH,
             "Unusual login pattern followed by large transfer",
             "{\"ip\": \"192.168.1.100\", \"device\": \"unknown\"}"
         );
@@ -240,8 +246,8 @@ class BackofficeIntegrationTest {
         assertEquals(transactionId, retrievedCase.get().getTransactionId());
         assertEquals("TRANSFER", retrievedCase.get().getTransactionType());
         assertEquals(amount, retrievedCase.get().getAmount());
-        assertEquals(FraudCaseEntity.RiskLevel.HIGH, retrievedCase.get().getRiskLevel());
-        assertEquals(FraudCaseEntity.CaseStatus.OPEN, retrievedCase.get().getStatus());
+        assertEquals(RiskLevel.HIGH, retrievedCase.get().getRiskLevel());
+        assertEquals(FraudCaseStatus.OPEN, retrievedCase.get().getStatus());
 
         // Cleanup
         fraudCaseService.delete(createdCase.getId());
@@ -262,7 +268,7 @@ class BackofficeIntegrationTest {
             "PAYMENT",
             new BigDecimal("5000000"),
             "CARD_FRAUD",
-            FraudCaseEntity.RiskLevel.MEDIUM,
+            RiskLevel.MEDIUM,
             "Multiple failed card attempts",
             null
         );
@@ -272,7 +278,7 @@ class BackofficeIntegrationTest {
 
         // Then
         assertEquals("investigator1", assignedCase.getAssignedTo());
-        assertEquals(FraudCaseEntity.CaseStatus.UNDER_INVESTIGATION, assignedCase.getStatus());
+        assertEquals(FraudCaseStatus.UNDER_INVESTIGATION, assignedCase.getStatus());
 
         // Cleanup
         fraudCaseService.delete(fraudCase.getId());
@@ -293,7 +299,7 @@ class BackofficeIntegrationTest {
             "TRANSFER",
             new BigDecimal("10000000"),
             "PHISHING",
-            FraudCaseEntity.RiskLevel.CRITICAL,
+            RiskLevel.CRITICAL,
             "Customer reports phishing attack",
             "{\"email\": \"scam@fake.com\"}"
         );
@@ -301,7 +307,7 @@ class BackofficeIntegrationTest {
         fraudCaseService.assign(fraudCase.getId(), "investigator2");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
-            FraudCaseDecisionRequest.FraudCaseStatus.RESOLVED,
+            id.payu.backoffice.dto.FraudCaseStatus.RESOLVED,
             "Confirmed phishing attack. Account credentials compromised. Action taken."
         );
 
@@ -309,7 +315,7 @@ class BackofficeIntegrationTest {
         FraudCaseEntity resolvedCase = fraudCaseService.resolve(fraudCase.getId(), decisionRequest, "investigator2");
 
         // Then
-        assertEquals(FraudCaseEntity.CaseStatus.RESOLVED, resolvedCase.getStatus());
+        assertEquals(FraudCaseStatus.RESOLVED, resolvedCase.getStatus());
         assertEquals("investigator2", resolvedCase.getResolvedBy());
         assertNotNull(resolvedCase.getResolvedAt());
 
@@ -327,24 +333,24 @@ class BackofficeIntegrationTest {
 
         fraudCaseService.create(
             testUserId + "-1", testAccountNumber + "-1", UUID.randomUUID(), "TRANSFER",
-            new BigDecimal("5000000"), "FRAUD_A", FraudCaseEntity.RiskLevel.HIGH,
+            new BigDecimal("5000000"), "FRAUD_A", RiskLevel.HIGH,
             "High risk case", null
         );
 
         fraudCaseService.create(
             testUserId + "-2", testAccountNumber + "-2", UUID.randomUUID(), "PAYMENT",
-            new BigDecimal("3000000"), "FRAUD_B", FraudCaseEntity.RiskLevel.HIGH,
+            new BigDecimal("3000000"), "FRAUD_B", RiskLevel.HIGH,
             "Another high risk case", null
         );
 
         // When
-        List<FraudCaseEntity> highRiskCases = fraudCaseService.listByRiskLevel(FraudCaseEntity.RiskLevel.HIGH, 0, 10);
+        List<FraudCaseEntity> highRiskCases = fraudCaseService.listByRiskLevel(RiskLevel.HIGH, 0, 10);
 
         // Then
         assertNotNull(highRiskCases);
         assertTrue(highRiskCases.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
         assertTrue(highRiskCases.stream().filter(c -> c.getUserId().startsWith(testUserId))
-            .allMatch(c -> c.getRiskLevel() == FraudCaseEntity.RiskLevel.HIGH));
+            .allMatch(c -> c.getRiskLevel() == RiskLevel.HIGH));
 
         // Cleanup
         highRiskCases.stream()
@@ -365,8 +371,8 @@ class BackofficeIntegrationTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
             testUserId,
             testAccountNumber,
-            CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE,
-            CustomerCaseEntity.Priority.HIGH,
+            CaseType.TRANSACTION_DISPUTE,
+            Priority.HIGH,
             "Unauthorized transaction on my account",
             "I see a transaction I didn't make",
             "Customer called support"
@@ -380,9 +386,9 @@ class BackofficeIntegrationTest {
         assertTrue(retrievedCase.isPresent());
         assertEquals(createdCase.getId(), retrievedCase.get().getId());
         assertEquals(testUserId, retrievedCase.get().getUserId());
-        assertEquals(CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE, retrievedCase.get().getCaseType());
-        assertEquals(CustomerCaseEntity.Priority.HIGH, retrievedCase.get().getPriority());
-        assertEquals(CustomerCaseEntity.CaseStatus.OPEN, retrievedCase.get().getStatus());
+        assertEquals(CaseType.TRANSACTION_DISPUTE, retrievedCase.get().getCaseType());
+        assertEquals(Priority.HIGH, retrievedCase.get().getPriority());
+        assertEquals(CustomerCaseStatus.OPEN, retrievedCase.get().getStatus());
         assertNotNull(retrievedCase.get().getCaseNumber());
 
         // Cleanup
@@ -400,8 +406,8 @@ class BackofficeIntegrationTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
             testUserId,
             testAccountNumber,
-            CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
-            CustomerCaseEntity.Priority.MEDIUM,
+            CaseType.ACCOUNT_ISSUE,
+            Priority.MEDIUM,
             "Cannot access account",
             "Login fails with correct credentials",
             null
@@ -414,7 +420,7 @@ class BackofficeIntegrationTest {
 
         // Then
         assertEquals("agent1", assignedCase.getAssignedTo());
-        assertEquals(CustomerCaseEntity.CaseStatus.IN_PROGRESS, assignedCase.getStatus());
+        assertEquals(CustomerCaseStatus.IN_PROGRESS, assignedCase.getStatus());
 
         // Cleanup
         customerCaseService.delete(customerCase.getId());
@@ -431,8 +437,8 @@ class BackofficeIntegrationTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
             testUserId,
             testAccountNumber,
-            CustomerCaseEntity.CaseType.TECHNICAL_ISSUE,
-            CustomerCaseEntity.Priority.LOW,
+            CaseType.TECHNICAL_ISSUE,
+            Priority.LOW,
             "App not loading",
             "Mobile app crashes on startup",
             null
@@ -445,14 +451,14 @@ class BackofficeIntegrationTest {
         CustomerCaseEntity updatedCase = customerCaseService.update(
             customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.RESOLVED,
+                CustomerCaseStatus.RESOLVED,
                 "Fixed in version 2.1. Please update app"
             ),
             "support1"
         );
 
         // Then
-        assertEquals(CustomerCaseEntity.CaseStatus.RESOLVED, updatedCase.getStatus());
+        assertEquals(CustomerCaseStatus.RESOLVED, updatedCase.getStatus());
         assertEquals("support1", updatedCase.getResolvedBy());
         assertNotNull(updatedCase.getResolvedAt());
         assertTrue(updatedCase.getNotes().contains("version 2.1"));
@@ -471,24 +477,24 @@ class BackofficeIntegrationTest {
 
         customerCaseService.create(new CustomerCaseRequest(
             testUserId + "-1", testAccountNumber + "-1",
-            CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE, CustomerCaseEntity.Priority.URGENT,
+            CaseType.TRANSACTION_DISPUTE, Priority.URGENT,
             "Urgent case 1", "Description 1", null
         ));
 
         customerCaseService.create(new CustomerCaseRequest(
             testUserId + "-2", testAccountNumber + "-2",
-            CustomerCaseEntity.CaseType.ACCOUNT_ISSUE, CustomerCaseEntity.Priority.URGENT,
+            CaseType.ACCOUNT_ISSUE, Priority.URGENT,
             "Urgent case 2", "Description 2", null
         ));
 
         // When
-        List<CustomerCaseEntity> urgentCases = customerCaseService.listByPriority(CustomerCaseEntity.Priority.URGENT, 0, 10);
+        List<CustomerCaseEntity> urgentCases = customerCaseService.listByPriority(Priority.URGENT, 0, 10);
 
         // Then
         assertNotNull(urgentCases);
         assertTrue(urgentCases.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
         assertTrue(urgentCases.stream().filter(c -> c.getUserId().startsWith(testUserId))
-            .allMatch(c -> c.getPriority() == CustomerCaseEntity.Priority.URGENT));
+            .allMatch(c -> c.getPriority() == Priority.URGENT));
 
         // Cleanup
         urgentCases.stream()
@@ -514,7 +520,7 @@ class BackofficeIntegrationTest {
 
         // When
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
             "Approved after verification"
         );
         KycReviewEntity updatedReview = kycReviewService.review(review.getId(), decisionRequest, "admin_audit");
@@ -538,7 +544,7 @@ class BackofficeIntegrationTest {
 
         FraudCaseEntity fraudCase = fraudCaseService.create(
             testUserId, testAccountNumber, UUID.randomUUID(), "TRANSFER",
-            new BigDecimal("5000000"), "FRAUD", FraudCaseEntity.RiskLevel.HIGH,
+            new BigDecimal("5000000"), "FRAUD", RiskLevel.HIGH,
             "Audit test", null
         );
 
@@ -546,7 +552,7 @@ class BackofficeIntegrationTest {
         fraudCaseService.assign(fraudCase.getId(), "investigator_audit");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
-            FraudCaseDecisionRequest.FraudCaseStatus.CLOSED,
+            id.payu.backoffice.dto.FraudCaseStatus.CLOSED,
             "Case closed after investigation"
         );
         FraudCaseEntity resolvedCase = fraudCaseService.resolve(fraudCase.getId(), decisionRequest, "investigator_audit");
@@ -570,8 +576,8 @@ class BackofficeIntegrationTest {
         String testAccountNumber = "ACC-" + System.currentTimeMillis();
 
         CustomerCaseRequest request = new CustomerCaseRequest(
-            testUserId, testAccountNumber, CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
-            CustomerCaseEntity.Priority.HIGH, "Audit test", "Audit description", null
+            testUserId, testAccountNumber, CaseType.ACCOUNT_ISSUE,
+            Priority.HIGH, "Audit test", "Audit description", null
         );
 
         CustomerCaseEntity customerCase = customerCaseService.create(request);
@@ -581,7 +587,7 @@ class BackofficeIntegrationTest {
         CustomerCaseEntity updatedCase = customerCaseService.update(
             customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.RESOLVED,
+                CustomerCaseStatus.RESOLVED,
                 "Issue resolved"
             ),
             "agent_audit"
@@ -604,7 +610,7 @@ class BackofficeIntegrationTest {
     void shouldThrowExceptionWhenReviewingNonExistentKyc() {
         // Given
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
             "Test"
         );
 
@@ -629,7 +635,7 @@ class BackofficeIntegrationTest {
         // Given
         id.payu.backoffice.dto.CustomerCaseUpdateRequest updateRequest =
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.IN_PROGRESS,
+                CustomerCaseStatus.IN_PROGRESS,
                 "Test update"
             );
 
@@ -657,25 +663,25 @@ class BackofficeIntegrationTest {
 
         // When - Create review
         KycReviewEntity review = kycReviewService.create(request);
-        assertEquals(KycReviewEntity.KycStatus.PENDING, review.getStatus());
+        assertEquals(KycStatus.PENDING, review.getStatus());
 
         // When - Request additional info
         KycReviewDecisionRequest infoRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
+            id.payu.backoffice.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
             "Please provide proof of address"
         );
         review = kycReviewService.review(review.getId(), infoRequest, "admin1");
-        assertEquals(KycReviewEntity.KycStatus.REQUIRES_ADDITIONAL_INFO, review.getStatus());
+        assertEquals(KycStatus.REQUIRES_ADDITIONAL_INFO, review.getStatus());
 
         // When - Final approval
         KycReviewDecisionRequest approvalRequest = new KycReviewDecisionRequest(
-            KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
             "All documents verified and approved"
         );
         review = kycReviewService.review(review.getId(), approvalRequest, "admin2");
 
         // Then - Verify final state
-        assertEquals(KycReviewEntity.KycStatus.APPROVED, review.getStatus());
+        assertEquals(KycStatus.APPROVED, review.getStatus());
         assertEquals("admin2", review.getReviewedBy());
         assertNotNull(review.getReviewedAt());
 
@@ -694,34 +700,34 @@ class BackofficeIntegrationTest {
         FraudCaseEntity fraudCase = fraudCaseService.create(
             testUserId, testAccountNumber, UUID.randomUUID(), "TRANSFER",
             new BigDecimal("25000000"), "MONEY_LAUNDERING",
-            FraudCaseEntity.RiskLevel.CRITICAL,
+            RiskLevel.CRITICAL,
             "Suspicious large transaction pattern detected",
             "{\"pattern\": \"layering\", \"alerts\": 5}"
         );
 
-        assertEquals(FraudCaseEntity.CaseStatus.OPEN, fraudCase.getStatus());
+        assertEquals(FraudCaseStatus.OPEN, fraudCase.getStatus());
 
         // When - Assign to investigator
         fraudCase = fraudCaseService.assign(fraudCase.getId(), "senior_investigator");
-        assertEquals(FraudCaseEntity.CaseStatus.UNDER_INVESTIGATION, fraudCase.getStatus());
+        assertEquals(FraudCaseStatus.UNDER_INVESTIGATION, fraudCase.getStatus());
 
         // When - Escalate for further review
         FraudCaseDecisionRequest escalateRequest = new FraudCaseDecisionRequest(
-            FraudCaseDecisionRequest.FraudCaseStatus.ESCALATED,
+            id.payu.backoffice.dto.FraudCaseStatus.ESCALATED,
             "Complex case requiring compliance team review"
         );
         fraudCase = fraudCaseService.resolve(fraudCase.getId(), escalateRequest, "senior_investigator");
-        assertEquals(FraudCaseEntity.CaseStatus.ESCALATED, fraudCase.getStatus());
+        assertEquals(FraudCaseStatus.ESCALATED, fraudCase.getStatus());
 
         // When - Final resolution
         FraudCaseDecisionRequest resolveRequest = new FraudCaseDecisionRequest(
-            FraudCaseDecisionRequest.FraudCaseStatus.CLOSED,
+            id.payu.backoffice.dto.FraudCaseStatus.CLOSED,
             "Case reviewed and closed. SAR filed."
         );
         fraudCase = fraudCaseService.resolve(fraudCase.getId(), resolveRequest, "compliance_officer");
 
         // Then - Verify final state
-        assertEquals(FraudCaseEntity.CaseStatus.CLOSED, fraudCase.getStatus());
+        assertEquals(FraudCaseStatus.CLOSED, fraudCase.getStatus());
         assertEquals("compliance_officer", fraudCase.getResolvedBy());
         assertNotNull(fraudCase.getResolvedAt());
 
@@ -738,26 +744,26 @@ class BackofficeIntegrationTest {
         String testAccountNumber = "ACC-" + System.currentTimeMillis();
 
         CustomerCaseRequest request = new CustomerCaseRequest(
-            testUserId, testAccountNumber, CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE,
-            CustomerCaseEntity.Priority.URGENT,
+            testUserId, testAccountNumber, CaseType.TRANSACTION_DISPUTE,
+            Priority.URGENT,
             "Unauthorized transaction of IDR 10.000.000",
             "I never made this transaction",
             "Customer called hotline, very distressed"
         );
 
         CustomerCaseEntity customerCase = customerCaseService.create(request);
-        assertEquals(CustomerCaseEntity.CaseStatus.OPEN, customerCase.getStatus());
-        assertEquals(CustomerCaseEntity.Priority.URGENT, customerCase.getPriority());
+        assertEquals(CustomerCaseStatus.OPEN, customerCase.getStatus());
+        assertEquals(Priority.URGENT, customerCase.getPriority());
 
         // When - Assign to agent
         customerCase = customerCaseService.assign(customerCase.getId(), "senior_agent");
-        assertEquals(CustomerCaseEntity.CaseStatus.IN_PROGRESS, customerCase.getStatus());
+        assertEquals(CustomerCaseStatus.IN_PROGRESS, customerCase.getStatus());
 
         // When - Update with findings
         customerCase = customerCaseService.update(
             customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.IN_PROGRESS,
+                CustomerCaseStatus.IN_PROGRESS,
                 "Investigating with payment processor. Evidence gathered."
             ),
             "senior_agent"
@@ -767,14 +773,14 @@ class BackofficeIntegrationTest {
         customerCase = customerCaseService.update(
             customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
-                CustomerCaseEntity.CaseStatus.RESOLVED,
+                CustomerCaseStatus.RESOLVED,
                 "Confirmed unauthorized. Refund processed. Case closed."
             ),
             "senior_agent"
         );
 
         // Then - Verify final state
-        assertEquals(CustomerCaseEntity.CaseStatus.RESOLVED, customerCase.getStatus());
+        assertEquals(CustomerCaseStatus.RESOLVED, customerCase.getStatus());
         assertEquals("senior_agent", customerCase.getResolvedBy());
         assertNotNull(customerCase.getResolvedAt());
 
@@ -829,7 +835,7 @@ class BackofficeIntegrationTest {
                 "TRANSFER",
                 new BigDecimal(1000000 * (i + 1)),
                 "FRAUD_TYPE_" + i,
-                FraudCaseEntity.RiskLevel.MEDIUM,
+                RiskLevel.MEDIUM,
                 "Dashboard fraud test " + i,
                 null
             );
@@ -860,8 +866,8 @@ class BackofficeIntegrationTest {
             customerCaseService.create(new CustomerCaseRequest(
                 testUserId + "-dash-" + i,
                 testAccountNumber + "-dash-" + i,
-                CustomerCaseEntity.CaseType.GENERAL_INQUIRY,
-                CustomerCaseEntity.Priority.MEDIUM,
+                CaseType.GENERAL_INQUIRY,
+                Priority.MEDIUM,
                 "Dashboard subject " + i,
                 "Dashboard description " + i,
                 null

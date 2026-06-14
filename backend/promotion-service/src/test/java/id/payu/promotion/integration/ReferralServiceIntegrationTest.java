@@ -3,6 +3,10 @@ package id.payu.promotion.integration;
 import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.ReferralRewardType;
+import id.payu.promotion.domain.ReferralStatus;
+import id.payu.promotion.domain.RewardType;
+import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
 import id.payu.promotion.dto.ReferralSummaryResponse;
@@ -61,7 +65,7 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-001",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -73,8 +77,8 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(8, referral.getReferralCode().length()); // 8-character code
         Assertions.assertEquals(new BigDecimal("50000"), referral.getReferrerReward());
         Assertions.assertEquals(new BigDecimal("25000"), referral.getRefereeReward());
-        Assertions.assertEquals(ReferralEntity.RewardType.CASHBACK, referral.getRewardType());
-        Assertions.assertEquals(ReferralEntity.Status.PENDING, referral.getStatus());
+        Assertions.assertEquals(ReferralRewardType.CASHBACK, referral.getRewardType());
+        Assertions.assertEquals(ReferralStatus.PENDING, referral.getStatus());
         Assertions.assertNull(referral.getRefereeAccountId());
         Assertions.assertNull(referral.getCompletedAt());
         Assertions.assertNotNull(referral.getCreatedAt());
@@ -91,13 +95,13 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-002",
             new BigDecimal("100"), // 100 points
             new BigDecimal("50"),  // 50 points
-            ReferralEntity.RewardType.POINTS,
+            ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(6)
         );
 
         ReferralEntity referral = referralService.createReferral(request);
 
-        Assertions.assertEquals(ReferralEntity.RewardType.POINTS, referral.getRewardType());
+        Assertions.assertEquals(ReferralRewardType.POINTS, referral.getRewardType());
         Assertions.assertEquals(new BigDecimal("100"), referral.getReferrerReward());
         Assertions.assertEquals(new BigDecimal("50"), referral.getRefereeReward());
     }
@@ -108,7 +112,7 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-003",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             null // No expiry date
         );
 
@@ -125,7 +129,7 @@ class ReferralServiceIntegrationTest {
             referrerId,
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -133,7 +137,7 @@ class ReferralServiceIntegrationTest {
             referrerId,
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -154,7 +158,7 @@ class ReferralServiceIntegrationTest {
             "acc-cashback-referrer",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -168,7 +172,7 @@ class ReferralServiceIntegrationTest {
 
         ReferralEntity completed = referralService.completeReferral(completeRequest);
 
-        Assertions.assertEquals(ReferralEntity.Status.COMPLETED, completed.getStatus());
+        Assertions.assertEquals(ReferralStatus.COMPLETED, completed.getStatus());
         Assertions.assertEquals("acc-cashback-referee", completed.getRefereeAccountId());
         Assertions.assertNotNull(completed.getCompletedAt());
 
@@ -176,14 +180,14 @@ class ReferralServiceIntegrationTest {
         List<RewardEntity> referrerRewards = rewardRepository.findByAccountId("acc-cashback-referrer");
         Assertions.assertFalse(referrerRewards.isEmpty());
         Assertions.assertTrue(referrerRewards.stream()
-            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("50000")) == 0));
 
         // Verify referee reward
         List<RewardEntity> refereeRewards = rewardRepository.findByAccountId("acc-cashback-referee");
         Assertions.assertFalse(refereeRewards.isEmpty());
         Assertions.assertTrue(refereeRewards.stream()
-            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("25000")) == 0));
     }
 
@@ -194,7 +198,7 @@ class ReferralServiceIntegrationTest {
             "acc-points-referrer",
             new BigDecimal("100"),
             new BigDecimal("50"),
-            ReferralEntity.RewardType.POINTS,
+            ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(6)
         );
 
@@ -208,20 +212,20 @@ class ReferralServiceIntegrationTest {
 
         ReferralEntity completed = referralService.completeReferral(completeRequest);
 
-        Assertions.assertEquals(ReferralEntity.Status.COMPLETED, completed.getStatus());
+        Assertions.assertEquals(ReferralStatus.COMPLETED, completed.getStatus());
 
         // Verify referrer points
         List<LoyaltyPointsEntity> referrerPoints = loyaltyPointsRepository.findByAccountId("acc-points-referrer");
         Assertions.assertFalse(referrerPoints.isEmpty());
         Assertions.assertTrue(referrerPoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 100));
 
         // Verify referee points
         List<LoyaltyPointsEntity> refereePoints = loyaltyPointsRepository.findByAccountId("acc-points-referee");
         Assertions.assertFalse(refereePoints.isEmpty());
         Assertions.assertTrue(refereePoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 50));
     }
 
@@ -244,7 +248,7 @@ class ReferralServiceIntegrationTest {
             "acc-already-completed",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -275,7 +279,7 @@ class ReferralServiceIntegrationTest {
             "acc-expired-referrer",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().minusDays(1) // Expired yesterday
         );
 
@@ -293,7 +297,7 @@ class ReferralServiceIntegrationTest {
         // Verify status was updated to EXPIRED
         Optional<ReferralEntity> fetched = referralService.getReferral(referral.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals(ReferralEntity.Status.EXPIRED, fetched.get().getStatus());
+        Assertions.assertEquals(ReferralStatus.EXPIRED, fetched.get().getStatus());
     }
 
     // ==================== GET REFERRAL TESTS ====================
@@ -304,7 +308,7 @@ class ReferralServiceIntegrationTest {
             "acc-get-referral",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -329,7 +333,7 @@ class ReferralServiceIntegrationTest {
             "acc-by-code",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -357,15 +361,15 @@ class ReferralServiceIntegrationTest {
         // Create multiple referrals
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         List<ReferralEntity> referrals = referralService.getReferralsByReferrer(referrerId);
@@ -388,7 +392,7 @@ class ReferralServiceIntegrationTest {
         // Create first referral and complete it
         ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.completeReferral(new CompleteReferralRequest(
             referral1.getReferralCode(), "acc-referee-1"
@@ -397,14 +401,14 @@ class ReferralServiceIntegrationTest {
         // Create second referral (still pending)
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         List<ReferralEntity> referrals = referralService.getReferralsByReferrer(referrerId);
 
         Assertions.assertEquals(2, referrals.size());
-        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralEntity.Status.COMPLETED));
-        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralEntity.Status.PENDING));
+        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralStatus.COMPLETED));
+        Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralStatus.PENDING));
     }
 
     // ==================== REFERRAL SUMMARY TESTS ====================
@@ -416,7 +420,7 @@ class ReferralServiceIntegrationTest {
         // Create 3 referrals
         ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         // Complete first referral
@@ -427,11 +431,11 @@ class ReferralServiceIntegrationTest {
         // Create 2 more pending referrals
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
         referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary = referralService.getReferralSummary(referrerId);
@@ -458,7 +462,7 @@ class ReferralServiceIntegrationTest {
 
         ReferralEntity referral1 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary1 = referralService.getReferralSummary(referrerId);
@@ -467,7 +471,7 @@ class ReferralServiceIntegrationTest {
         // Create another referral
         ReferralEntity referral2 = referralService.createReferral(new CreateReferralRequest(
             referrerId, new BigDecimal("10000"), new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
+            ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         ));
 
         ReferralSummaryResponse summary2 = referralService.getReferralSummary(referrerId);
@@ -486,7 +490,7 @@ class ReferralServiceIntegrationTest {
                 "acc-unique-" + i,
                 new BigDecimal("10000"),
                 new BigDecimal("5000"),
-                ReferralEntity.RewardType.CASHBACK,
+                ReferralRewardType.CASHBACK,
                 LocalDateTime.now().plusMonths(3)
             ));
             codes.add(referral.getReferralCode());
@@ -503,7 +507,7 @@ class ReferralServiceIntegrationTest {
             "acc-code-format",
             new BigDecimal("10000"),
             new BigDecimal("5000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -520,7 +524,7 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-A",
             new BigDecimal("50000"),
             new BigDecimal("25000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 
@@ -528,7 +532,7 @@ class ReferralServiceIntegrationTest {
             "acc-referrer-B",
             new BigDecimal("30000"),
             new BigDecimal("15000"),
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         ));
 

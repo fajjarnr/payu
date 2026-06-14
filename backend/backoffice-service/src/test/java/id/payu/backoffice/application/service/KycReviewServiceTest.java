@@ -1,6 +1,7 @@
 package id.payu.backoffice.application.service;
 
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.backoffice.domain.KycStatus;
 import id.payu.backoffice.dto.KycReviewDecisionRequest;
 import id.payu.backoffice.dto.KycReviewRequest;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,7 @@ class KycReviewServiceTest {
         assertEquals("123 Main St, Jakarta", result.getAddress());
         assertEquals("+628123456789", result.getPhoneNumber());
         assertEquals("Initial KYC submission", result.getNotes());
-        assertEquals(KycReviewEntity.KycStatus.PENDING, result.getStatus());
+        assertEquals(KycStatus.PENDING, result.getStatus());
         assertNotNull(result.getCreatedAt());
     }
 
@@ -167,10 +168,10 @@ class KycReviewServiceTest {
 
         kycReviewService.create(request);
 
-        List<KycReviewEntity> results = kycReviewService.listByStatus(KycReviewEntity.KycStatus.PENDING, 0, 10);
+        List<KycReviewEntity> results = kycReviewService.listByStatus(KycStatus.PENDING, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(r -> r.getStatus() == KycReviewEntity.KycStatus.PENDING));
+        assertTrue(results.stream().allMatch(r -> r.getStatus() == KycStatus.PENDING));
     }
 
     @Test
@@ -216,14 +217,14 @@ class KycReviewServiceTest {
         KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+                id.payu.backoffice.dto.KycReviewStatus.APPROVED,
                 "Documents verified, KYC approved"
         );
 
         KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
 
         assertNotNull(result);
-        assertEquals(KycReviewEntity.KycStatus.APPROVED, result.getStatus());
+        assertEquals(KycStatus.APPROVED, result.getStatus());
         assertEquals("Documents verified, KYC approved", result.getNotes());
         assertEquals("admin1", result.getReviewedBy());
         assertNotNull(result.getReviewedAt());
@@ -247,13 +248,13 @@ class KycReviewServiceTest {
         KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                KycReviewDecisionRequest.KycReviewStatus.REJECTED,
+                id.payu.backoffice.dto.KycReviewStatus.REJECTED,
                 "Document blurry, please resubmit"
         );
 
         KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
 
-        assertEquals(KycReviewEntity.KycStatus.REJECTED, result.getStatus());
+        assertEquals(KycStatus.REJECTED, result.getStatus());
         assertEquals("Document blurry, please resubmit", result.getNotes());
         assertEquals("admin2", result.getReviewedBy());
     }
@@ -276,13 +277,13 @@ class KycReviewServiceTest {
         KycReviewEntity review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                KycReviewDecisionRequest.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
+                id.payu.backoffice.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
                 "Please provide proof of address"
         );
 
         KycReviewEntity result = kycReviewService.review(review.getId(), decisionRequest, "admin3");
 
-        assertEquals(KycReviewEntity.KycStatus.REQUIRES_ADDITIONAL_INFO, result.getStatus());
+        assertEquals(KycStatus.REQUIRES_ADDITIONAL_INFO, result.getStatus());
         assertEquals("Please provide proof of address", result.getNotes());
     }
 
@@ -290,7 +291,7 @@ class KycReviewServiceTest {
     @Transactional
     void testReview_NotFound() {
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+                id.payu.backoffice.dto.KycReviewStatus.APPROVED,
                 "Test"
         );
 

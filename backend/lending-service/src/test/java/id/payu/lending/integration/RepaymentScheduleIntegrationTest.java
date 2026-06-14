@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.lending.adapter.external.AccountClient;
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.dto.LoanApplicationRequest;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
@@ -239,7 +240,7 @@ class RepaymentScheduleIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 "EXT-RS-" + UUID.randomUUID(),
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("3000000.00"),
                 tenureMonths,
                 "Repayment test"

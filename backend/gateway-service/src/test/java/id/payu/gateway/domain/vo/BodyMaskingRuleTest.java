@@ -99,7 +99,7 @@ class BodyMaskingRuleTest {
     @Test
     void shouldReturnOriginalWhenNoFieldsToMask() {
         BodyMaskingRule rule = new BodyMaskingRule(Set.of(),
-            BodyMaskingRule.MaskingStrategy.FULL, "***");
+            MaskingStrategy.FULL, "***");
 
         String json = "{\"password\":\"secret\"}";
         String result = rule.applyMasking(json, objectMapper);
@@ -110,7 +110,7 @@ class BodyMaskingRuleTest {
     @Test
     void shouldApplyFullMaskingStrategy() {
         BodyMaskingRule rule = new BodyMaskingRule(Set.of("secret"),
-            BodyMaskingRule.MaskingStrategy.FULL, "[REDACTED]");
+            MaskingStrategy.FULL, "[REDACTED]");
 
         String json = "{\"secret\":\"my-secret-value\"}";
         String masked = rule.applyMasking(json, objectMapper);
@@ -121,7 +121,7 @@ class BodyMaskingRuleTest {
     @Test
     void shouldApplyPartialMaskingStrategy() {
         BodyMaskingRule rule = new BodyMaskingRule(Set.of("cardNumber"),
-            BodyMaskingRule.MaskingStrategy.PARTIAL, null);
+            MaskingStrategy.PARTIAL, null);
 
         String json = "{\"cardNumber\":\"1234567890123456\"}";
         String masked = rule.applyMasking(json, objectMapper);
@@ -132,7 +132,7 @@ class BodyMaskingRuleTest {
     @Test
     void shouldApplyLast4MaskingStrategy() {
         BodyMaskingRule rule = new BodyMaskingRule(Set.of("cardNumber"),
-            BodyMaskingRule.MaskingStrategy.LAST_4, null);
+            MaskingStrategy.LAST_4, null);
 
         String json = "{\"cardNumber\":\"1234567890123456\"}";
         String masked = rule.applyMasking(json, objectMapper);
@@ -143,7 +143,7 @@ class BodyMaskingRuleTest {
     @Test
     void shouldApplyHashMaskingStrategy() {
         BodyMaskingRule rule = new BodyMaskingRule(Set.of("secret"),
-            BodyMaskingRule.MaskingStrategy.HASH, null);
+            MaskingStrategy.HASH, null);
 
         String json = "{\"secret\":\"my-secret\"}";
         String masked = rule.applyMasking(json, objectMapper);

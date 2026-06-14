@@ -5,6 +5,11 @@ import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
 import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.PromotionRewardType;
+import id.payu.promotion.domain.PromotionType;
+import id.payu.promotion.domain.ReferralRewardType;
+import id.payu.promotion.domain.RewardType;
+import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.dto.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -84,7 +89,7 @@ class PromotionIntegrationTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-earn-001",
-            LoyaltyPointsEntity.TransactionType.EARNED,
+            TransactionType.EARNED,
             100,
             LocalDateTime.now().plusMonths(6)
         );
@@ -120,7 +125,7 @@ class PromotionIntegrationTest {
         CreateLoyaltyPointsRequest earnRequest2 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-earn-002",
-            LoyaltyPointsEntity.TransactionType.EARNED,
+            TransactionType.EARNED,
             50,
             LocalDateTime.now().plusMonths(6)
         );
@@ -148,7 +153,7 @@ class PromotionIntegrationTest {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
             "txn-earn-redeem",
-            LoyaltyPointsEntity.TransactionType.EARNED,
+            TransactionType.EARNED,
             200,
             LocalDateTime.now().plusMonths(6)
         );
@@ -281,7 +286,7 @@ class PromotionIntegrationTest {
             TEST_REFERRER_ID,
             new BigDecimal("50000"), // Referrer reward
             new BigDecimal("25000"), // Referee reward
-            ReferralEntity.RewardType.CASHBACK,
+            ReferralRewardType.CASHBACK,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -316,13 +321,13 @@ class PromotionIntegrationTest {
         // 3. Verify referrer reward was granted
         List<RewardEntity> referrerRewards = rewardRepository.findByAccountId(TEST_REFERRER_ID);
         Assertions.assertTrue(referrerRewards.stream()
-            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("50000")) == 0));
 
         // 4. Verify referee reward was granted
         List<RewardEntity> refereeRewards = rewardRepository.findByAccountId(TEST_REFEREE_ID);
         Assertions.assertTrue(refereeRewards.stream()
-            .anyMatch(r -> r.getType() == RewardEntity.RewardType.REFERRAL_BONUS
+            .anyMatch(r -> r.getType() == RewardType.REFERRAL_BONUS
                 && r.getAmount().compareTo(new BigDecimal("25000")) == 0));
 
         // 5. Verify referral summary
@@ -341,7 +346,7 @@ class PromotionIntegrationTest {
             TEST_REFERRER_ID + "-points",
             new BigDecimal("100"), // 100 points for referrer
             new BigDecimal("50"),  // 50 points for referee
-            ReferralEntity.RewardType.POINTS,
+            ReferralRewardType.POINTS,
             LocalDateTime.now().plusMonths(3)
         );
 
@@ -372,13 +377,13 @@ class PromotionIntegrationTest {
         // Verify points were awarded to referrer
         List<LoyaltyPointsEntity> referrerPoints = loyaltyPointsRepository.findByAccountId(TEST_REFERRER_ID + "-points");
         Assertions.assertTrue(referrerPoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 100));
 
         // Verify points were awarded to referee
         List<LoyaltyPointsEntity> refereePoints = loyaltyPointsRepository.findByAccountId(TEST_REFEREE_ID + "-points");
         Assertions.assertTrue(refereePoints.stream()
-            .anyMatch(p -> p.getTransactionType() == LoyaltyPointsEntity.TransactionType.REFERRAL_BONUS
+            .anyMatch(p -> p.getTransactionType() == TransactionType.REFERRAL_BONUS
                 && p.getPoints() == 50));
     }
 
@@ -393,8 +398,8 @@ class PromotionIntegrationTest {
             "PROMO-ONCE-001",
             "One-time Use Promo",
             "Can only be used once per customer",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("10"), // 10% discount
             1, // Max 1 redemption
             new BigDecimal("10000"), // Min transaction
@@ -467,8 +472,8 @@ class PromotionIntegrationTest {
             "PROMO-LIMITED-001",
             "Limited Promo",
             "Only 3 redemptions total",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("5000"),
             3, // Max 3 redemptions total
             new BigDecimal("10000"),
@@ -575,8 +580,8 @@ class PromotionIntegrationTest {
             "PROMO-EXPIRED-001",
             "Expired Promo",
             "This promo has expired",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("20"),
             100,
             new BigDecimal("10000"),
@@ -624,8 +629,8 @@ class PromotionIntegrationTest {
             "PROMO-FUTURE-001",
             "Future Promo",
             "This promo hasn't started yet",
-            PromotionEntity.PromotionType.DISCOUNT,
-            PromotionEntity.RewardType.PERCENTAGE,
+            PromotionType.DISCOUNT,
+            PromotionRewardType.PERCENTAGE,
             new BigDecimal("15"),
             100,
             new BigDecimal("10000"),
@@ -670,8 +675,8 @@ class PromotionIntegrationTest {
             "PROMO-CONCURRENT-001",
             "Concurrent Test Promo",
             "Test concurrent redemption",
-            PromotionEntity.PromotionType.CASHBACK,
-            PromotionEntity.RewardType.FIXED_AMOUNT,
+            PromotionType.CASHBACK,
+            PromotionRewardType.FIXED_AMOUNT,
             new BigDecimal("1000"),
             5, // Only 5 redemptions allowed
             new BigDecimal("10000"),
@@ -767,7 +772,7 @@ class PromotionIntegrationTest {
                     CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
                         accountId,
                         "txn-concurrent-" + index,
-                        LoyaltyPointsEntity.TransactionType.EARNED,
+                        TransactionType.EARNED,
                         pointsPerThread,
                         LocalDateTime.now().plusMonths(6)
                     );

@@ -4,6 +4,7 @@ import id.payu.partner.adapter.persistence.repository.PaymentLinkRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.entity.PaymentLinkEntity;
+import id.payu.partner.domain.PaymentLinkStatus;
 import id.payu.partner.dto.CreatePaymentLinkRequest;
 import id.payu.partner.dto.PaymentLinkResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
@@ -41,7 +42,7 @@ class PaymentLinkServiceTest {
     private WebhookDispatcherService webhookDispatcher;
 
     @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private OutboxService outboxService;
 
     private PaymentLinkService paymentLinkService;
 
@@ -49,7 +50,7 @@ class PaymentLinkServiceTest {
 
     @BeforeEach
     void setUp() {
-        paymentLinkService = new PaymentLinkService(paymentLinkRepository, partnerRepository, webhookDispatcher, kafkaTemplate);
+        paymentLinkService = new PaymentLinkService(paymentLinkRepository, partnerRepository, webhookDispatcher, outboxService);
 
         activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
@@ -93,7 +94,7 @@ class PaymentLinkServiceTest {
             ArgumentCaptor<PaymentLinkEntity> captor = ArgumentCaptor.forClass(PaymentLinkEntity.class);
             verify(paymentLinkRepository).save(captor.capture());
             PaymentLinkEntity saved = captor.getValue();
-            assertEquals(PaymentLinkEntity.PaymentLinkStatus.ACTIVE, saved.getStatus());
+            assertEquals(PaymentLinkStatus.ACTIVE, saved.getStatus());
             assertNotNull(saved.getExpiresAt());
         }
 
@@ -298,7 +299,7 @@ class PaymentLinkServiceTest {
 
             paymentLinkService.expirePaymentLinks();
 
-            assertEquals(PaymentLinkEntity.PaymentLinkStatus.EXPIRED, link.getStatus());
+            assertEquals(PaymentLinkStatus.EXPIRED, link.getStatus());
             verify(paymentLinkRepository).saveAll(anyList());
         }
 

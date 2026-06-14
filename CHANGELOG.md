@@ -19,6 +19,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### READY-003 — Test-Compile Green Platform-Wide (2026-06-13)
+
+- **Bug**: `mvn test-compile` failed in 8 backend services (account, auth, backoffice, fx, gateway, lending, partner, promotion) due to pre-existing inner-enum references in test files. Production code was already migrated to top-level enums per ARCH-009 (LESSONS L-032), but test files still referenced `X.InnerEnum.VALUE` after `git mv`. Also `SecurityConfigPatternTest` (added in 1.8.11) used a wrong source path (`account.config` dot-separated instead of `account/config` slash-separated) in 5 services, causing `NoSuchFileException` on every run.
+- **Root cause**: Two separate refactors in 2026-05-15 (ARCH-008 entity layer move, ARCH-009 inner-enum extraction) updated production code and most tests, but ~46 test files in 8 services still held stale inner-class / old-package references. Per L-032, OpenRewrite requires the codebase to parse cleanly before the Jakarta EE 11 migration; this was the blocker for ARCH-006 platform-wide rollout.
+- **Fix** (test-only, zero production code touched, 49 files / 596 insertions / 526 deletions):
+  - **account-service** (5 files): added `KycStatus`/`UserStatus`/`AccountStatus`/`BeneficiaryStatus` imports + replaced `User.KycStatus.X` → `KycStatus.X` patterns. 16 inner-enum references resolved.
+  - **auth-service** (2 files): `UserRiskProfileEntityTest` moved from `domain/model/` to `adapter/persistence/entity/` (entity layer relocation, ARCH-008). `AuthServiceApplicationRedisTest` deleted (regression test for `redisTemplate()` method removed in NEW-004 cache-starter migration).
+  - **backoffice-service** (6 files): 130 inner-enum references across 4 test files (FraudCase, KycReview, UniversalSearch, BackofficeIntegration, plus BackofficeResource + CustomerCaseService). 7 enums imported from top-level.
+  - **fx-service** (3 files): 29 `FxConversion.ConversionStatus` references → top-level `ConversionStatus`.
+  - **gateway-service** (3 files): 16 inner-enum references (`State`, `MaskingStrategy`, `Type`).
+  - **lending-service** (7 files): 43 references across LoanType, LoanStatus, PayLaterStatus, CheckoutStatus, RiskCategory, PreApprovalStatus.
+  - **partner-service** (5 files): 21 enum references + 2 `KafkaTemplate` → `OutboxService` constructor mock swaps (production migrated to outbox-starter per MSG-009, but tests still mocked the old bean type).
+  - **promotion-service** (8 files): 177 enum references across 12+ status/type enums.
+  - **5 services** (account, auth, backoffice, billing, integration): fixed `SecurityConfigPatternTest` source path `account.config` → `account/config` (5 files; transaction + wallet already had correct path from 1.8.14+).
+- **Verification**:
+  - All 8 services: `mvn test-compile` = `BUILD SUCCESS`, zero `cannot find symbol` errors.
+  - `SecurityConfigPatternTest`: 14/14 tests pass across 7 services (2 tests × 7 services).
+  - `mvn test` reveals 3 pre-existing infrastructure test failures (NOT enum regressions, NOT in scope of READY-003):
+    - `account-service/VaultConfigurationTest` (2 errors): Spring context fails to load — outbox-starter JPA dependencies leak into test that excludes JPA autoconfig.
+    - `account-service/MonitoringConfigurationTest` (8 errors): same context-load issue.
+    - `account-service/TracingConfigurationTest` (4 errors): same context-load issue.
+    - ArchUnit warnings on Java 25 (class file major version 69): pre-existing, not in scope.
+- **Impact**: OpenRewrite can now safely parse the entire repository. ARCH-006 platform-wide Jakarta EE 11 migration is unblocked. Zero production code changes → no image rebuild/deploy required.
+- **Follow-up tickets** (new P1, separate from READY-003):
+  - **READY-031**: `account-service` Spring test context excludes JPA but `outbox-starter` `OutboxAutoConfiguration` requires JPA — `VaultConfigurationTest`, `MonitoringConfigurationTest`, `TracingConfigurationTest` fail with `UnsatisfiedDependencyException` on `outboxRepository` → `jpaMappingContext`. Fix: either add test-specific `@MockBean` for outbox repos or move outbox config behind a profile guard.
+  - **READY-032**: ArchUnit version pinned in `archunit-starter` doesn't support Java 25 (class file major version 69). Warnings flood every ArchitectureTest run. Bump to ArchUnit 1.4.x+ which adds Java 25 support.
+
 ### transaction-service `BUG-TXN-ACCOUNT-001` Fix — `transaction-service:1.8.16` (2026-06-13)
 
 - **Bug**: `DisbursementController.getCurrentAccountId()` required an explicit `account_id` JWT claim and threw `IllegalStateException` on missing claims, blocking Keycloak users (like `customer1`) that only have a `sub` claim.

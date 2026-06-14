@@ -23,7 +23,7 @@ class BeneficiaryTest {
                 .accountNumber(accountNumber)
                 .accountName(accountName)
                 .nickname(nickname)
-                .status(Beneficiary.BeneficiaryStatus.ACTIVE)
+                .status(BeneficiaryStatus.ACTIVE)
                 .build();
 
         assertEquals(id, beneficiary.getId());
@@ -31,7 +31,7 @@ class BeneficiaryTest {
         assertEquals(accountNumber, beneficiary.getAccountNumber());
         assertEquals(accountName, beneficiary.getAccountName());
         assertEquals(nickname, beneficiary.getNickname());
-        assertEquals(Beneficiary.BeneficiaryStatus.ACTIVE, beneficiary.getStatus());
+        assertEquals(BeneficiaryStatus.ACTIVE, beneficiary.getStatus());
     }
 
     @Test
@@ -62,8 +62,8 @@ class BeneficiaryTest {
 
     @Test
     void shouldHaveAllStatuses() {
-        assertNotNull(Beneficiary.BeneficiaryStatus.ACTIVE);
-        assertNotNull(Beneficiary.BeneficiaryStatus.INACTIVE);
-        assertNotNull(Beneficiary.BeneficiaryStatus.DELETED);
+        assertNotNull(BeneficiaryStatus.ACTIVE);
+        assertNotNull(BeneficiaryStatus.INACTIVE);
+        assertNotNull(BeneficiaryStatus.DELETED);
     }
 }

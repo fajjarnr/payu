@@ -7,6 +7,8 @@ import id.payu.lending.application.service.LoanManagementService;
 import id.payu.lending.application.service.LoanPreApprovalService;
 import id.payu.lending.application.service.PayLaterTransactionService;
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.dto.LoanApplicationCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +77,7 @@ class LendingControllerSecurityTest {
 
         LoanApplicationCommand command = new LoanApplicationCommand(
                 "EXT-001",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Emergency"
@@ -84,7 +86,7 @@ class LendingControllerSecurityTest {
         Loan expectedLoan = new Loan();
         expectedLoan.setId(UUID.randomUUID());
         expectedLoan.setUserId(authenticatedUserId);
-        expectedLoan.setStatus(Loan.LoanStatus.APPROVED);
+        expectedLoan.setStatus(LoanStatus.APPROVED);
 
         when(lendingApplicationService.applyLoan(any()))
                 .thenReturn(CompletableFuture.completedFuture(expectedLoan));
@@ -115,7 +117,7 @@ class LendingControllerSecurityTest {
         // Command doesn't contain userId - it's extracted from Principal
         LoanApplicationCommand command = new LoanApplicationCommand(
                 "EXT-002",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("5000000"),
                 6,
                 "Business"
@@ -124,7 +126,7 @@ class LendingControllerSecurityTest {
         Loan expectedLoan = new Loan();
         expectedLoan.setId(UUID.randomUUID());
         expectedLoan.setUserId(authenticatedUserId);
-        expectedLoan.setStatus(Loan.LoanStatus.APPROVED);
+        expectedLoan.setStatus(LoanStatus.APPROVED);
 
         when(lendingApplicationService.applyLoan(any()))
                 .thenReturn(CompletableFuture.completedFuture(expectedLoan));
@@ -146,7 +148,7 @@ class LendingControllerSecurityTest {
         // Given: No principal (unauthenticated)
         LoanApplicationCommand command = new LoanApplicationCommand(
                 "EXT-003",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Test"
@@ -167,7 +169,7 @@ class LendingControllerSecurityTest {
 
         LoanApplicationCommand command = new LoanApplicationCommand(
                 "EXT-004",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("10000000"),
                 12,
                 "Test"

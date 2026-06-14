@@ -6,6 +6,8 @@ import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.domain.*;
 import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.domain.KeyEnvironment;
+import id.payu.partner.domain.PartnerStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +72,7 @@ class SandboxIntegrationTest {
                 "payu_test_",
                 hashApiKey("payu_test_sandbox_key_12345"),
                 "2345",
-                ApiKeyEntity.KeyEnvironment.SANDBOX,
+                KeyEnvironment.SANDBOX,
                 true
         );
         sandboxKey.setName("Sandbox Key");
@@ -83,7 +85,7 @@ class SandboxIntegrationTest {
                 "payu_live_",
                 hashApiKey("payu_live_production_key_67890"),
                 "7890",
-                ApiKeyEntity.KeyEnvironment.LIVE,
+                KeyEnvironment.LIVE,
                 false
         );
         productionKey.setName("Production Key");

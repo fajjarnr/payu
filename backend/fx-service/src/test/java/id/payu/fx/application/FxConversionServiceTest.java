@@ -1,5 +1,6 @@
 package id.payu.fx.application;
 
+import id.payu.fx.domain.model.ConversionStatus;
 import id.payu.fx.domain.model.FxConversion;
 import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxConversionUseCase;
@@ -76,7 +77,7 @@ class FxConversionServiceTest {
 
         assertThat(result.getToAmount()).isEqualByComparingTo("65.00");
         assertThat(result.getExchangeRate()).isEqualByComparingTo("0.000065");
-        assertThat(result.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+        assertThat(result.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
         verify(fxRateUseCase).getCurrentRate("IDR", "USD");
         verify(conversionRepository, times(2)).save(any(FxConversion.class));
     }
@@ -92,7 +93,7 @@ class FxConversionServiceTest {
                 .fromAmount(new BigDecimal("1000000"))
                 .toAmount(new BigDecimal("65.00"))
                 .exchangeRate(new BigDecimal("0.000065"))
-                .status(FxConversion.ConversionStatus.COMPLETED)
+                .status(ConversionStatus.COMPLETED)
                 .build();
 
         when(conversionRepository.findById(conversionId)).thenReturn(Optional.of(conversion));
@@ -141,7 +142,7 @@ class FxConversionServiceTest {
                 .accountId("account-123")
                 .fromCurrency("IDR")
                 .toCurrency("USD")
-                .status(FxConversion.ConversionStatus.COMPLETED)
+                .status(ConversionStatus.COMPLETED)
                 .build();
 
         when(conversionRepository.findById(conversionId)).thenReturn(Optional.of(conversion));
@@ -151,7 +152,7 @@ class FxConversionServiceTest {
 
         fxConversionService.reverseConversion(conversionId);
 
-        assertThat(conversion.getStatus()).isEqualTo(FxConversion.ConversionStatus.REVERSED);
+        assertThat(conversion.getStatus()).isEqualTo(ConversionStatus.REVERSED);
         verify(conversionRepository).save(conversion);
     }
 
@@ -161,7 +162,7 @@ class FxConversionServiceTest {
         FxConversion conversion = FxConversion.builder()
                 .id(conversionId)
                 .accountId("account-123")
-                .status(FxConversion.ConversionStatus.PENDING)
+                .status(ConversionStatus.PENDING)
                 .build();
 
         when(conversionRepository.findById(conversionId)).thenReturn(Optional.of(conversion));

@@ -1,6 +1,8 @@
 package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
@@ -50,13 +52,13 @@ class LoanManagementServiceTest {
         testLoan.setId(loanId);
         testLoan.setExternalId("EXT-001");
         testLoan.setUserId(UUID.randomUUID());
-        testLoan.setType(Loan.LoanType.PERSONAL_LOAN);
+        testLoan.setType(LoanType.PERSONAL_LOAN);
         testLoan.setPrincipalAmount(new BigDecimal("12000000"));
         testLoan.setInterestRate(new BigDecimal("0.14"));
         testLoan.setTenureMonths(12);
         testLoan.setMonthlyInstallment(new BigDecimal("1078000"));
         testLoan.setOutstandingBalance(new BigDecimal("12000000"));
-        testLoan.setStatus(Loan.LoanStatus.APPROVED);
+        testLoan.setStatus(LoanStatus.APPROVED);
         testLoan.setPurpose("Home renovation");
         testLoan.setDisbursementDate(LocalDate.now());
         testLoan.setMaturityDate(LocalDate.now().plusMonths(12));

@@ -1,6 +1,8 @@
 package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanStatus;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
@@ -59,13 +61,13 @@ class LoanAmortizationCalculationTest {
         loan.setId(loanId);
         loan.setExternalId("CALC-TEST");
         loan.setUserId(UUID.randomUUID());
-        loan.setType(Loan.LoanType.PERSONAL_LOAN);
+        loan.setType(LoanType.PERSONAL_LOAN);
         loan.setPrincipalAmount(principal);
         loan.setInterestRate(interestRate);
         loan.setTenureMonths(tenureMonths);
         loan.setMonthlyInstallment(monthlyInstallment);
         loan.setOutstandingBalance(principal);
-        loan.setStatus(Loan.LoanStatus.APPROVED);
+        loan.setStatus(LoanStatus.APPROVED);
         loan.setPurpose("Test");
         loan.setDisbursementDate(LocalDate.of(2025, 1, 15));
         loan.setMaturityDate(LocalDate.of(2025, 1, 15).plusMonths(tenureMonths));

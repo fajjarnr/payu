@@ -3,6 +3,12 @@ package id.payu.backoffice.application.service;
 import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.CustomerCaseStatus;
+import id.payu.backoffice.domain.FraudCaseStatus;
+import id.payu.backoffice.domain.KycStatus;
+import id.payu.backoffice.domain.Priority;
+import id.payu.backoffice.domain.RiskLevel;
 import id.payu.backoffice.dto.UniversalSearchResponse;
 import id.payu.backoffice.adapter.persistence.repository.CustomerCaseRepository;
 import id.payu.backoffice.adapter.persistence.repository.FraudCaseRepository;
@@ -59,7 +65,7 @@ class UniversalSearchServiceTest {
         sampleKycReview.setFullName("John Doe");
         sampleKycReview.setAddress("Jalan Test No. 123");
         sampleKycReview.setPhoneNumber("08123456789");
-        sampleKycReview.setStatus(KycReviewEntity.KycStatus.PENDING);
+        sampleKycReview.setStatus(KycStatus.PENDING);
         sampleKycReview.setCreatedAt(LocalDateTime.now());
 
         sampleFraudCase = new FraudCaseEntity();
@@ -69,8 +75,8 @@ class UniversalSearchServiceTest {
         sampleFraudCase.setTransactionType("TRANSFER");
         sampleFraudCase.setAmount(new BigDecimal("1000000"));
         sampleFraudCase.setFraudType("Unauthorized Transaction");
-        sampleFraudCase.setRiskLevel(FraudCaseEntity.RiskLevel.HIGH);
-        sampleFraudCase.setStatus(FraudCaseEntity.CaseStatus.OPEN);
+        sampleFraudCase.setRiskLevel(RiskLevel.HIGH);
+        sampleFraudCase.setStatus(FraudCaseStatus.OPEN);
         sampleFraudCase.setDescription("Unauthorized transfer detected");
         sampleFraudCase.setCreatedAt(LocalDateTime.now());
 
@@ -78,11 +84,11 @@ class UniversalSearchServiceTest {
         sampleCustomerCase.setUserId("testUser456");
         sampleCustomerCase.setAccountNumber("ACC_TEST_456");
         sampleCustomerCase.setCaseNumber("CASE_TEST_001");
-        sampleCustomerCase.setCaseType(CustomerCaseEntity.CaseType.TRANSACTION_DISPUTE);
-        sampleCustomerCase.setPriority(CustomerCaseEntity.Priority.HIGH);
+        sampleCustomerCase.setCaseType(CaseType.TRANSACTION_DISPUTE);
+        sampleCustomerCase.setPriority(Priority.HIGH);
         sampleCustomerCase.setSubject("Test case");
         sampleCustomerCase.setDescription("Test case description");
-        sampleCustomerCase.setStatus(CustomerCaseEntity.CaseStatus.OPEN);
+        sampleCustomerCase.setStatus(CustomerCaseStatus.OPEN);
         sampleCustomerCase.setCreatedAt(LocalDateTime.now());
     }
 

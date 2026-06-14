@@ -3,6 +3,7 @@ package id.payu.promotion.application.saga;
 import id.payu.promotion.adapter.client.WalletCreditException;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
+import id.payu.promotion.domain.CashbackStatus;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.saga.model.SagaResult;
@@ -109,7 +110,7 @@ class CashbackSagaOrchestratorTest {
         ArgumentCaptor<CashbackEntity> cashbackCaptor = ArgumentCaptor.forClass(CashbackEntity.class);
         verify(cashbackRepository).save(cashbackCaptor.capture());
         CashbackEntity capturedCashback = cashbackCaptor.getValue();
-        assertEquals(CashbackEntity.Status.CREDITED, capturedCashback.getStatus());
+        assertEquals(CashbackStatus.CREDITED, capturedCashback.getStatus());
         assertNotNull(capturedCashback.getCreditedAt());
     }
 
@@ -333,7 +334,7 @@ class CashbackSagaOrchestratorTest {
         cashback.setTransactionId(TEST_TRANSACTION_ID);
         cashback.setTransactionAmount(new BigDecimal("1000.00"));
         cashback.setCashbackAmount(amount);
-        cashback.setStatus(CashbackEntity.Status.CREDITED);
+        cashback.setStatus(CashbackStatus.CREDITED);
         cashback.setMerchantCode("MERCHANT001");
         cashback.setCategoryCode("GROCERY");
         return cashback;

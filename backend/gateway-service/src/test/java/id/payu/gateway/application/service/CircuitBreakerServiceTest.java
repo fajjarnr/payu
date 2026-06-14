@@ -50,7 +50,7 @@ class CircuitBreakerServiceTest {
         @DisplayName("should start in CLOSED state")
         void shouldStartClosed() {
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.CLOSED, info.state());
+            assertEquals(State.CLOSED, info.state());
         }
 
         @Test
@@ -75,7 +75,7 @@ class CircuitBreakerServiceTest {
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
             assertEquals(5, info.successCount());
             assertEquals(0, info.failureCount());
-            assertEquals(CircuitBreakerService.State.CLOSED, info.state());
+            assertEquals(State.CLOSED, info.state());
         }
 
         @Test
@@ -100,7 +100,7 @@ class CircuitBreakerServiceTest {
             }
 
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.OPEN, info.state());
+            assertEquals(State.OPEN, info.state());
         }
 
         @Test
@@ -171,7 +171,7 @@ class CircuitBreakerServiceTest {
             }
 
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.CLOSED, info.state(),
+            assertEquals(State.CLOSED, info.state(),
                     "Circuit should remain CLOSED below volume threshold");
         }
     }
@@ -231,7 +231,7 @@ class CircuitBreakerServiceTest {
             service.reset("test-service");
 
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.CLOSED, info.state());
+            assertEquals(State.CLOSED, info.state());
             assertEquals(0, info.failureCount());
         }
 
@@ -246,7 +246,7 @@ class CircuitBreakerServiceTest {
             }
 
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.OPEN, info.state());
+            assertEquals(State.OPEN, info.state());
             assertNotNull(info.openedAt(), "openedAt should be set when OPEN");
             assertTrue(info.retryAfterSeconds() > 0, "retryAfterSeconds should be positive when OPEN");
             assertTrue(info.retryAfterSeconds() <= 30, "retryAfterSeconds should not exceed delay");
@@ -260,7 +260,7 @@ class CircuitBreakerServiceTest {
             ).await().atMost(Duration.ofSeconds(5));
 
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
-            assertEquals(CircuitBreakerService.State.CLOSED, info.state());
+            assertEquals(State.CLOSED, info.state());
             assertEquals(0, info.retryAfterSeconds());
             assertNull(info.openedAt());
         }

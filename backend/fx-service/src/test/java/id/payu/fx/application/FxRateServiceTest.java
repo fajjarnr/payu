@@ -1,5 +1,6 @@
 package id.payu.fx.application;
 
+import id.payu.fx.domain.model.ConversionStatus;
 import id.payu.fx.domain.model.FxConversion;
 import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
@@ -118,7 +119,7 @@ class FxRateServiceTest {
         assertThat(result.getFromAmount()).isEqualByComparingTo("1000000");
         assertThat(result.getToAmount()).isEqualByComparingTo("65.00");
         assertThat(result.getExchangeRate()).isEqualByComparingTo("0.000065");
-        assertThat(result.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+        assertThat(result.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
     }
 
     @Test

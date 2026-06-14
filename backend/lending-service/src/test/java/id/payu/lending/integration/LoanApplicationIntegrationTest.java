@@ -3,6 +3,7 @@ package id.payu.lending.integration;
 import id.payu.lending.adapter.external.AccountClient;
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.Loan;
+import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.dto.LoanApplicationRequest;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.DisplayName;
@@ -59,7 +60,7 @@ class LoanApplicationIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 externalId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("5000000.00"),
                 12,
                 "Home renovation"
@@ -90,7 +91,7 @@ class LoanApplicationIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 externalId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("-100000.00"),
                 12,
                 "Invalid loan"
@@ -114,7 +115,7 @@ class LoanApplicationIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 externalId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("1000000.00"),
                 0,
                 "Invalid tenure"
@@ -141,7 +142,7 @@ class LoanApplicationIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
                 externalId,
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("2000000.00"),
                 6,
                 "Education"
@@ -193,7 +194,7 @@ class LoanApplicationIntegrationTest {
         LoanApplicationRequest request = new LoanApplicationRequest(
                 UUID.randomUUID(),
                 "EXT-NOAUTH",
-                Loan.LoanType.PERSONAL_LOAN,
+                LoanType.PERSONAL_LOAN,
                 new BigDecimal("1000000.00"),
                 12,
                 "Test"

@@ -3,6 +3,8 @@ package id.payu.backoffice.adapter.web;
 import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.backoffice.domain.CaseType;
+import id.payu.backoffice.domain.Priority;
 import id.payu.backoffice.dto.*;
 import id.payu.backoffice.testutil.IntegrationTest;
 import io.restassured.RestAssured;
@@ -82,7 +84,7 @@ public class BackofficeResourceTest {
                 .path("[0].id");
 
         KycReviewDecisionRequest request = new KycReviewDecisionRequest(
-                KycReviewDecisionRequest.KycReviewStatus.APPROVED,
+                KycReviewStatus.APPROVED,
                 "Looks good"
         );
 
@@ -125,8 +127,8 @@ public class BackofficeResourceTest {
         CustomerCaseRequest request = new CustomerCaseRequest(
                 "customer-1",
                 "ACC-CUST-1",
-                CustomerCaseEntity.CaseType.ACCOUNT_ISSUE,
-                CustomerCaseEntity.Priority.HIGH,
+                CaseType.ACCOUNT_ISSUE,
+                Priority.HIGH,
                 "Login issue",
                 "Cannot login",
                 "Please check"
