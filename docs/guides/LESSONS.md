@@ -131,5 +131,74 @@ Reuse one helper method (e.g. package-private `buildValueSerializer()`) across `
 4. **Bonus test bug surfaced**: `SecurityConfigPatternTest` (added in 1.8.11 as regression guard) used a wrong source path `account.config/SecurityConfig.java` (dot, not slash). The test always failed with `NoSuchFileException`. **Lesson for characterization tests**: write them after the production fix, but verify they actually run + pass before merging. A "regression test" that always fails is worse than no test — it normalizes failure in CI.
 5. **OpenRewrite dependency**: per the user's pre-task analysis, `JavaxMigrationToJakarta` and `SpringBoot3BestPractices` require the codebase to AST-parse cleanly. Test-compile failures break OpenRewrite silently — there's no error, just no migration. **Always clean test-compile before scheduling an OpenRewrite run**.
 
+## L-034: OpenRewrite `JavaxMigrationToJakarta` Strips `javax.annotation-api` — Re-Add After Every Rewrite Run (2026-06-14)
+
+**Date**: 2026-06-14
+**Domain**: Java / gRPC / OpenRewrite / Build Tooling
+**Context**: During ARCH-006 wallet-service pilot (Phase B OpenRewrite run), `mvn rewrite:run` with the `JavaxMigrationToJakarta` recipe **silently removed** the `javax.annotation:javax.annotation-api:1.3.2` dependency from `wallet-service/pom.xml`. The recipe appears to treat any `javax.*` artifact as "already migrated to jakarta" and deletes it. Result: gRPC-generated code (`@javax.annotation.Generated` from `protoc-gen-grpc-java`) failed to compile with `cannot find symbol: class Generated, location: package javax.annotation`.
+
+**Pattern**: OpenRewrite's `JavaxMigrationToJakarta` recipe is **too aggressive** for the `javax.annotation` namespace. The `jakarta.annotation-api` artifact does **not** contain `javax.annotation.Generated` — these are parallel packages, not aliases. The recipe should only migrate `javax.servlet`, `javax.persistence`, `javax.validation`, etc., but it strips ALL `javax.*` deps indiscriminately.
+
+**Lesson**:
+1. **Always re-add `javax.annotation:javax.annotation-api:1.3.2` AFTER every `mvn rewrite:run` for any gRPC-consuming service**. Treat the dep as "transient" in the pom — OpenRewrite will keep removing it.
+2. **Add a CI guard**: a post-OpenRewrite check that verifies `javax.annotation-api` is still in the pom for services with `protoc-gen-grpc-java` (e.g., wallet-service, transaction-service, integration-service). Could be a custom ArchUnit rule or a simple grep in CI.
+3. **Better fix (upstream)**: file an issue with OpenRewrite to add a `javax.annotation.Generated` exclusion to the `JavaxMigrationToJakarta` recipe, OR add a recipe option like `excludeArtifacts: javax.annotation:javax.annotation-api`.
+4. **OpenRewrite's `SpringBoot3BestPractices` recipe is also non-idempotent**: bumped `resilience4j-spring-boot3:2.3.0 → 2.6.0` and `maven-compiler-plugin:3.13.0 → 3.15.0` in the pom without being asked. Subsequent runs may bump further. Consider pinning versions explicitly in service poms if you want to control the version OpenRewrite bumps to.
+5. **No-op safety**: despite these pom mutations, OpenRewrite found **zero Java source changes** for wallet-service. The 2 `javax.sql.DataSource` references were correctly left alone (JDK class, not Jakarta). The Jakarta migration story for this service is "already done" — wallet-service was on jakarta.* imports since the 3.x era.
+
+**Recovery sequence** (reproducible):
+```bash
+# 1. Run OpenRewrite (will modify pom)
+mvn -f backend/wallet-service/pom.xml rewrite:run
+
+# 2. Re-add javax.annotation-api manually
+# Edit pom: insert <dependency>javax.annotation:javax.annotation-api:1.3.2</dependency>
+
+# 3. Verify
+mvn -f backend/wallet-service/pom.xml clean verify
+
+# 4. Commit
+git add backend/wallet-service/pom.xml
+git commit -m "fix(arch-006): re-add javax.annotation-api after OpenRewrite run"
+```
+
+## L-035: ARCH-006 Deferred — Shared Starter Migration is the True Prerequisite (2026-06-14)
+
+**Date**: 2026-06-14
+**Domain**: Java / Microservices / Build Tooling / Architecture
+**Context**: Attempted ARCH-006 platform-wide Spring Boot 4.1.0 migration via 2 strategies (Option A: per-service dep mgmt override, Option B: parent pom bump). Both failed. Option A failed at scale when auth-service hit Spring Cloud Vault version mismatch (5.0.0 requires Boot 4.0+, but Option A keeps mixed BOMs in classpath). Option B failed at shared starter compilation: 4 of 14 shared starters (jms, rest-client, events, saga) use Spring Boot 3.x APIs (actuate.health, jackson.datatype.jsr310, hibernate.query.BindableType, etc.) that no longer exist in Spring Boot 4.1.0 + Spring 7 + Hibernate 7. **The true prerequisite for ARCH-006 is migrating the 14 shared libraries FIRST, not the service-level migration.**
+
+**Pattern**: When a platform has many services sharing a common library set, framework upgrade ROI is concentrated in the shared libraries, not the services. A service-level migration is cheap (pom changes only) if shared libraries are already compatible. A library-level migration is expensive (API audits, package renames, method signature updates) but unblocks all downstream services.
+
+**Lesson**:
+1. **Framework migration order: libraries → parent pom → services**, not the reverse. We did services → discovered libraries break. The right order is libraries → services inherit the new framework.
+2. **Per-service dep mgmt override (Option A) is a workaround, not a strategy**. It works for trivial services but breaks down for services with strict version alignment (e.g., spring-cloud-vault). Don't build a migration plan around it.
+3. **The 14 shared starters are the platform's de facto framework contract**. Any framework upgrade must start with their audit. Treat them as a versioned artifact (e.g., `shared-starters:1.1.0` for Boot 4.1.0 compat) with their own release cadence.
+4. **Hidden coupling**: shared starters depend on Spring Boot APIs implicitly (autoconfigure, health indicators, Jackson modules). When Spring Boot 4.1.0 reorganizes these, starters break even if their own code didn't change. Always re-validate starter compilation before assuming "no changes needed".
+5. **Cost estimate (revised)**: 14 shared starters × ~2h each = ~28h = ~3-4 dev days. Plus per-service migration (~7.5h) + verification + deploy = ~5-7 dev days total. Previous estimates of "1-2 days" (per TODOS) were naive.
+
+**Decision**: ARCH-006 platform-wide rollout is **deferred** until shared starter migration is funded. Pilot services (statement-service, wallet-service if retained) remain on Boot 4.1.0. See ADR-0016 for full decision log.
+
+**Recovery for future ARCH-006 work**:
+```bash
+# Phase 0: Migrate 14 shared starters (NEW prerequisite, ~2-3 days)
+# - For each starter in backend/shared/*:
+#   - Update imports (javax.* → jakarta.*, moved packages)
+#   - Update method signatures (Spring 7 / Hibernate 7 / Jackson 3)
+#   - Verify with mvn -f backend/shared/<starter>/pom.xml clean test
+
+# Phase 1: Parent pom bump (Option B)
+# - backend/pom.xml: spring-boot-starter-parent 3.5.14 → 4.1.0
+# - Fix F-1 (rest-assured-bom), F-2 (starter-aop pin), F-3 (testcontainers-bom:1.20.6)
+# - mvn -f backend/pom.xml test-compile -T 1C
+
+# Phase 2: Per-service verification
+# - mvn -f backend/<service>/pom.xml clean verify per service
+
+# Phase 3: OpenRewrite
+# - mvn -f backend/pom.xml rewrite:run (per service or globally)
+# - Re-add javax.annotation-api per L-034 if gRPC service
+```
+
 ---
-*Last Updated: June 13, 2026*
+*Last Updated: June 14, 2026*
