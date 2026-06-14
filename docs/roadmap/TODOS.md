@@ -28,6 +28,8 @@
 | Key | Priority | Category | Summary | Status |
 |:---|:---:|:---|:---|:---|
 | UPGRADE-012 | P2 | Mobile | Modernize Mobile App: Upgrade to Expo SDK 55 and React Native 0.85 | ⏸️ Skipped |
+| UPGRADE-013 | P2 | Backend | Quarkus 3.36.2 Upgrade (Java 25 compat & CVE patches for simulators) | ⏳ Planned |
+| UPGRADE-014 | P2 | Frontend | Next.js 16.2.9 Upgrade (Performance & Turbopack default) | ⏳ Planned |
 
 ---
 
@@ -232,6 +234,51 @@
 - [ ] Deploy Kogito Management Console via `KogitoSupportingService` CRD
 - [ ] Configure `KogitoInfra` to link Kogito services with Strimzi Kafka cluster
 
+## 📝 Implementation Plan & Task Tracker: READY-034 (Shared Starter Migration)
+
+### Phase 1: Update Dependencies & Namespace (`javax` -> `jakarta`)
+- [ ] `api-commons`
+- [ ] `archunit-starter`
+- [ ] `cache-starter`
+- [ ] `events-starter`
+- [ ] `grpc-starter`
+- [ ] `jms-starter`
+- [ ] `logging-starter`
+- [ ] `mapper-starter`
+- [ ] `outbox-starter`
+- [ ] `quarkus-api-commons`
+- [ ] `resilience-starter`
+- [ ] `rest-client-starter`
+- [ ] `saga-starter`
+- [ ] `security-starter`
+
+### Phase 2: Fix 4 Known Broken Starters (Spring 7 / Hibernate 7 / Jackson 3)
+- [ ] **`jms-starter`**: Fix missing `actuate.health` API.
+- [ ] **`rest-client-starter`**: Fix `RestClientErrorHandler` override mismatch.
+- [ ] **`events-starter`**: Fix missing `jackson.datatype.jsr310` and `boot.autoconfigure.kafka`.
+- [ ] **`saga-starter`**: Fix missing `hibernate.query.BindableType` and `boot.autoconfigure.domain`.
+
+### Phase 3: Compile & Test Audit
+- [ ] Run `mvn clean test` for `api-commons`
+- [ ] Run `mvn clean test` for `archunit-starter`
+- [ ] Run `mvn clean test` for `cache-starter`
+- [ ] Run `mvn clean test` for `events-starter`
+- [ ] Run `mvn clean test` for `grpc-starter`
+- [ ] Run `mvn clean test` for `jms-starter`
+- [ ] Run `mvn clean test` for `logging-starter`
+- [ ] Run `mvn clean test` for `mapper-starter`
+- [ ] Run `mvn clean test` for `outbox-starter`
+- [ ] Run `mvn clean test` for `quarkus-api-commons`
+- [ ] Run `mvn clean test` for `resilience-starter`
+- [ ] Run `mvn clean test` for `rest-client-starter`
+- [ ] Run `mvn clean test` for `saga-starter`
+- [ ] Run `mvn clean test` for `security-starter`
+
+### Phase 4: Parent POM Bump & Validation
+- [ ] Update `backend/pom.xml`: `spring-boot-starter-parent` -> `4.1.0`.
+- [ ] Apply `rest-assured-bom`, `aspectjweaver` (for `starter-aop`), and `testcontainers-bom` fixes.
+- [ ] Run `mvn -f backend/pom.xml clean test-compile -T 1C` to verify downstream service compilation.
+
 ## 📝 Implementation Plan & Task Tracker: ARCH-006 (Spring Boot 4.1.0 & Jakarta EE 11)
 
 ### Pilot: `statement-service` (Completed 2026-06-13)
@@ -259,7 +306,31 @@
 - [ ] Run full E2E & unit test suite to verify behavior changes (especially around concurrency and validation).
 - [ ] Remove `spring-boot-properties-migrator` before production deployment.
 
+## 📝 Implementation Plan & Task Tracker: UPGRADE-013 (Quarkus 3.36.2 Upgrade)
+
+### Phase 1: Bump Version in Shared Libs
+- [ ] Update `quarkus-bom` version to `3.36.2` in `backend/shared/quarkus-api-commons/pom.xml`
+- [ ] Run `mvn clean install` for `quarkus-api-commons`
+
+### Phase 2: Bump Version in Simulators
+- [ ] Update `quarkus-bom` version to `3.36.2` in `backend/simulators/*/pom.xml` (BI-FAST, Biller, Dukcapil, QRIS, VA)
+- [ ] Verify compilation `mvn clean test-compile` in `backend/simulators`
+
+### Phase 3: Validation
+- [ ] Run unit and integration tests across all simulators to verify Java 25 compatibility and framework changes
+
+## 📝 Implementation Plan & Task Tracker: UPGRADE-014 (Next.js 16.2.9 Upgrade)
+
+### Phase 1: Bump Version in web-app
+- [ ] Update `next` version to `^16.2.9` in `frontend/web-app/package.json`
+- [ ] Run `npm install` to update `package-lock.json`
+- [ ] Verify if React needs a version bump to match Next.js 16.2.9 requirements
+
+### Phase 2: Validation
+- [ ] Run `npm run lint` and `npm run build` to verify production build works with Turbopack (default in 16.2)
+- [ ] Run frontend unit/E2E tests
+
 ---
 
-_Last Updated: June 13, 2026 — READY-003 unblocked at test-compile level (49 test files fixed across 8 services, zero production code changes). READY-031/032 (P1) opened for remaining Spring context + ArchUnit Java 25 issues. TODOS.md now 29 open items (1 P0 partial, 16 P1, 12 P2, 4 P3). Production readiness score: ~60%._
+_Last Updated: June 14, 2026 — UPGRADE-013 (Quarkus) and UPGRADE-014 (Next.js) added to roadmap. READY-003 test-compile unblocked. READY-031/032 (P1) pending. Production readiness score: ~60%._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
