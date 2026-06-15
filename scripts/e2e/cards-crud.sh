@@ -21,7 +21,7 @@ HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar
 ACCT="${ACCT:-7a51ced3-5602-40fb-96e7-1703e9243ed5}"
 
 # Resolve JWT from the keycloak pod (one-shot)
-JWT=$(oc exec -n payu-dev gateway-service-58dbc4cfbb-c8zbc -- cat /tmp/cust1-jwt.txt 2>/dev/null)
+JWT=$(oc exec -n payu-dev gateway-service-754d6c6599-gzjt9 -- cat /tmp/cust1-jwt.txt 2>/dev/null)
 [ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
 
 run_test() {

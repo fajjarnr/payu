@@ -432,6 +432,56 @@ True runtime confidence: **~25%**, not 75%.
 3. **Don't merge "production-ready" claims based on compile alone**. The orchestrator's "Verification-First Planning" SOP requires evidence of runtime correctness, not just absence of compile errors.
 4. **Future work**: Re-run `mvn -T 1C test` after each major fix (e.g., after Jackson 3 strategy is decided) to update the runtime metric.
 
+## L-048: 100% Test Green ≠ 100% Runtime Healthy — Always Verify Cluster Deploy (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Process / Testing / Deployment
+**Context**: After 6 iterations achieving **41/41 modules SUCCESS** in `mvn test`, iteration 7 rebuilt + deployed 26 images at `:1.8.21`. Result: 22 services UP, **3 services CrashLoopBackOff** with runtime production bugs that tests had never exposed:
+- **auth-service**: SB 4.1 reactive autoconfig stopped registering `WebClient.Builder` bean. KeycloakService `@Autowired` failed. Tests passed because `KeycloakService` was mocked via `@MockitoBean` in unit tests + the failing context was never loaded.
+- **wallet-service**: `org.springframework.grpc.client.AbstractGrpcClientRegistrar` class not found. spring-grpc 0.2.0 → 1.0.3 package rename. Tests passed because gRPC autoconfig was excluded in test slices.
+- **product-catalog-service**: 3-chain bug: Hypersistence `JsonType` (READY-037 family), cache-starter `@ConditionalOnClass(KafkaTemplate)` should be `@ConditionalOnBean`, payu.cache.invalidation.enabled=true requires Kafka that doesn't exist. All 3 surface only during full Spring context refresh in production env, not test slice.
+
+**Pattern**: Test isolation (mocks, autoconfig excludes, `@Disabled` for infra issues) hides framework integration bugs that only surface when:
+1. Full production context refreshes (no test mocks)
+2. Real classpath has full transitive dep tree (no test excludes)
+3. Real env vars + configmaps (no test profile defaults)
+4. Real network deps available/unavailable (e.g., Kafka broker, Postgres, Redis)
+
+**Lesson**:
+1. **`mvn test` SUCCESS is a NECESSARY but not SUFFICIENT condition for production readiness**. Always include a real deploy step in the verification pipeline.
+2. **Multi-dimensional readiness metric**:
+   - **Compile-time**: source compiles (cheapest, fastest signal)
+   - **Test-time runtime**: full test suite passes (catches unit-level bugs)
+   - **Container build**: image builds + has correct entrypoint (catches packaging bugs)
+   - **Cluster deploy**: pod starts + readiness probe passes (catches autoconfig + classpath + env bugs)
+   - **E2E**: real user flow via real network (catches integration + auth chain bugs)
+3. **Deploy verification is cheap (5-10 min total)**: build 4 fresh JARs + 4 podman images + 4 oc set image + 4 health endpoint curls. Always do this before claiming "production ready".
+4. **Iteration 8 fix pattern**: when test-green code fails to deploy, the fix is usually at the Spring autoconfig boundary (bean missing, condition wrong, classpath leak). Reach for `@Bean` explicit registration, `@ConditionalOnBean` vs `@ConditionalOnClass`, or yml/env property override.
+5. **Cluster infra issues are often pre-existing**: during iteration 2 deploy, 14+ services had been crashlooping 24h with `28P01 password authentication failed` because `db-secrets.DB_PASSWORD` random string didn't match Postgres `payu-postgres-credentials.password=payu-dev-password`. Patched secret → rollout restart → 0 CrashLoopBackOff. **Always inspect existing cluster state before assuming your code change is the root cause.**
+
+## L-049: Cluster Infrastructure Cleanup During Major Migration (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: OpenShift / Operations
+**Context**: During SB 4.1.0 migration deploy iterations, OpenShift `payu-dev` cluster had legacy infrastructure constraints that blocked rollouts:
+
+1. **HPA + PDB battles**: `auth-service-hpa min=2/max=5` overrode manual `oc scale --replicas=4`. HPA scaled back to 5. PDB `min-available=1` blocked pod evictions during rollout. Per user directive: deleted all 13 HPA + 18 PDB resources from namespace.
+
+2. **Topology spread constraints**: deployments had `topologySpreadConstraints: maxSkew:1, whenUnsatisfiable:DoNotSchedule`. With 4 workers + 5 replicas, the 5th pod always pending (`FailedScheduling: 4 node(s) didn't match pod topology spread constraints`). Scaled all deployments to `replicas=1` to bypass.
+
+3. **Container name mismatches**: Spring Boot service deployments have container name `app`. Quarkus simulators have container name matching the deployment name (e.g., `bi-fast-simulator`). The `oc set image deployment/X app=...` command fails on simulators with `error: unable to find container named "app"`. Need conditional script: `oc set image deployment/$svc $cname=$image:$tag` where `$cname` is detected via `oc get deployment $svc -o jsonpath='{.spec.template.spec.containers[0].name}'`.
+
+4. **Secret sync drift**: `db-secrets.DB_PASSWORD` value drifted from `payu-postgres-credentials.password` over time (cluster was rebuilt but secrets not re-synced). Result: `28P01 password authentication failed` for 14+ services. Patch via `oc patch secret db-secrets --type=json -p='[{"op":"replace","path":"/data/DB_PASSWORD","value":"<base64>"}]'`.
+
+5. **Memory limits insufficient for new framework deps**: wallet-service `:1.8.22` (Resilience4j 2.4 + spring-grpc 1.0.3 + new dep tree) OOMKilled at 512Mi limit. Bumped to 1024Mi. Pattern: framework upgrades typically need 1.5-2x baseline memory for the first iteration.
+
+**Lesson**:
+1. **Cluster maintenance is NOT free during major migrations**. Budget 30-60 min per deploy iteration for: secret sync verification, replica count adjustment, container name validation, memory limit tuning. These are NOT code bugs — they're infrastructure drift.
+2. **Topology spread + replica count is a footgun**. If you set `whenUnsatisfiable: DoNotSchedule` and your replicas exceed worker count, the extra pods will Pending forever. Either: (a) bump worker count, (b) reduce replicas, (c) change to `whenUnsatisfiable: ScheduleAnyway`.
+3. **Always check the container name before `oc set image`**. Use `oc get deployment $svc -o jsonpath='{.spec.template.spec.containers[*].name}'`. Spring Boot scaffolds often use `app`, Quarkus often uses service name.
+4. **Secret rotation is a separate operational concern from code migration**. Don't conflate "service crashed after my deploy" with "my code is broken" — verify infrastructure state first.
+5. **Memory limits ARE part of the deploy contract**. After major framework upgrade (Boot 3→4, Resilience4j 2.3→2.4, Jackson 2→3), expect ~25-50% memory increase. Re-baseline limits in the same PR as the framework upgrade.
+
 ---
 
-*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2) added.*
+*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration) added.*
