@@ -138,8 +138,8 @@ public class RouteRegistry {
 
         // Wallet Service extras
         registerDefault("savings-goals", "wallet-service", "/api/v1/wallets");
-        registerDefault("escrow", "wallet-service", "/api/v1/wallets/escrow");
-        registerDefault("settlements", "wallet-service", "/api/v1/wallets/settlements");
+        registerDefault("escrow", "wallet-service", "/api/v1/escrow");
+        registerDefault("settlements", "wallet-service", "/api/v1/settlements");
 
         // Billing Service
         registerDefault("billers", "billing-service", "/api/v1/billers");

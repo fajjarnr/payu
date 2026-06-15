@@ -597,6 +597,15 @@ gateway:
       service: "promotion-service"
       target-prefix: "/api/v1/gamification"
       methods: ["GET", "POST"]
+    # READY-066: Add missing escrow + settlements routes
+    escrow:
+      service: "wallet-service"
+      target-prefix: "/api/v1/escrow"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    settlements:
+      service: "wallet-service"
+      target-prefix: "/api/v1/settlements"
+      methods: ["GET", "POST", "PUT", "DELETE"]
     # BUG-CROSS-064: Add missing topup route
     topup:
       service: "billing-service"

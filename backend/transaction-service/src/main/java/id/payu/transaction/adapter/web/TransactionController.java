@@ -393,6 +393,16 @@ public class TransactionController extends BaseController {
             log.warn("QRIS payment failed: {}", e.getMessage());
             return ResponseEntity.unprocessableEntity()
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            // READY-066: External QRIS service unreachable. Mirror the bifast pattern
+            // (processDisbursement catches Exception). Log + return 503 so the client
+            // can retry. In production, add a circuit breaker to QrisServiceAdapter
+            // (like bifast) and a Kafka event to retry asynchronously.
+            log.error("QRIS external service unavailable for account={}: {}",
+                    request.getAccountId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ApiResponse.error("QRIS_SERVICE_UNAVAILABLE",
+                            "QRIS service temporarily unavailable. Please retry later."));
         }
         // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
     }
