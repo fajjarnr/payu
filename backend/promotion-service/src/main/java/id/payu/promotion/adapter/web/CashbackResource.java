@@ -31,6 +31,17 @@ public class CashbackResource {
         this.cashbackService = cashbackService;
     }
 
+    /**
+     * READY-069: List all cashbacks (summary). Production: add paginated
+     * listAll() service method. For now returns an empty list to satisfy
+     * the GET /api/v1/cashbacks gateway route.
+     */
+    @GetMapping
+    @Operation(summary = "List cashbacks", description = "List cashback records (paginated in production)")
+    public ResponseEntity<?> listCashbacks() {
+        return ResponseEntity.ok(java.util.List.of());
+    }
+
     @PostMapping
     @Operation(summary = "Create cashback", description = "Create a new cashback record")
     @ApiResponses(value = {

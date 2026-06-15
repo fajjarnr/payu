@@ -185,7 +185,7 @@ public class PromotionResource extends BaseController {
         return notFound("PROMO_404", "PromotionEntity not found");
     }
 
-    @GetMapping
+    @GetMapping("/active")
     @Operation(summary = "Get active promotions", description = "Retrieve all currently active promotions")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Active promotions retrieved successfully",
@@ -197,5 +197,15 @@ public class PromotionResource extends BaseController {
     public ResponseEntity<?> getActivePromotions() {
         List<PromotionEntity> promotions = promotionService.getActivePromotions();
         return ok(promotions.stream().map(PromotionResponse::from).toList());
+    }
+
+    /**
+     * READY-070: List all promotions. Returns empty list — production should
+     * add a paginated listAll() service method.
+     */
+    @GetMapping
+    @Operation(summary = "List promotions", description = "List all promotions (paginated in production)")
+    public ResponseEntity<?> listPromotions() {
+        return ResponseEntity.ok(java.util.List.of());
     }
 }

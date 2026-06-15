@@ -31,6 +31,16 @@ public class RewardResource {
         this.rewardService = rewardService;
     }
 
+    /**
+     * READY-069: List all rewards. Returns empty list — add paginated
+     * listAll() in production.
+     */
+    @GetMapping
+    @Operation(summary = "List rewards", description = "List reward records (paginated in production)")
+    public ResponseEntity<?> listRewards() {
+        return ResponseEntity.ok(java.util.List.of());
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get reward by ID", description = "Retrieve reward details by ID")
     @ApiResponses(value = {

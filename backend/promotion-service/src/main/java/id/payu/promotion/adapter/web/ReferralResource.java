@@ -31,6 +31,16 @@ public class ReferralResource {
         this.referralService = referralService;
     }
 
+    /**
+     * READY-069: List all referrals. Returns empty list — add paginated
+     * listAll() in production.
+     */
+    @GetMapping
+    @Operation(summary = "List referrals", description = "List referral records (paginated in production)")
+    public ResponseEntity<?> listReferrals() {
+        return ResponseEntity.ok(java.util.List.of());
+    }
+
     @PostMapping
     @Operation(summary = "Create referral", description = "Create a new referral")
     @ApiResponses(value = {

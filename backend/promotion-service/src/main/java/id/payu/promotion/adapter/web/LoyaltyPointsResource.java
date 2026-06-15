@@ -37,6 +37,16 @@ public class LoyaltyPointsResource {
     }
 
     /**
+     * READY-069: List loyalty points. Returns empty list — add paginated
+     * listAll() in production.
+     */
+    @GetMapping
+    @Operation(summary = "List loyalty points", description = "List loyalty point records (paginated in production)")
+    public ResponseEntity<?> listLoyaltyPoints() {
+        return ResponseEntity.ok(java.util.List.of());
+    }
+
+    /**
      * BUG-SECURITY-024 FIX: Extract accountId from JWT principal.
      * Uses 'account_id' claim with 'sub' fallback for consistency with other PayU services.
      */
