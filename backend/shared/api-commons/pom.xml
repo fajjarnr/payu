@@ -86,10 +86,10 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- AOP for aspects -->
+        <!-- AOP for aspects (SB 4.0+: starter-aop removed, use aspectjweaver directly) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
         </dependency>
 
         <!-- Testing -->

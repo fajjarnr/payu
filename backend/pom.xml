@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -34,11 +34,11 @@
         <payu.shared.version>1.0.0-SNAPSHOT</payu.shared.version>
 
         <!-- Third-party Versions -->
-        <resilience4j.version>2.2.0</resilience4j.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
         <cloudevents.version>4.0.1</cloudevents.version>
-        <hypersistence.version>3.15.2</hypersistence.version>
-        <spring-cloud.version>2025.0.2</spring-cloud.version>
-        <spring-cloud-contract.version>4.2.1</spring-cloud-contract.version>
+        <hypersistence.version>3.15.3</hypersistence.version>
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
+        <spring-cloud-contract.version>5.0.3</spring-cloud-contract.version>
         <springdoc.version>2.8.17</springdoc.version>
         <swagger-annotations.version>2.2.25</swagger-annotations.version>
         <lombok.version>1.18.42</lombok.version>
@@ -177,6 +177,24 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- REST Assured BOM (not in Spring Boot 4.1.0 BOM, added explicitly) -->
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>rest-assured-bom</artifactId>
+                <version>5.5.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Testcontainers 2.0.5 BOM (artifact names changed to testcontainers-* prefix) -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>2.0.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Resilience4j -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -221,10 +239,10 @@
                 <version>${cloudevents.version}</version>
             </dependency>
 
-            <!-- Hypersistence Utils for JSONB -->
+            <!-- Hypersistence Utils for JSONB (Hibernate 7.0) -->
             <dependency>
                 <groupId>io.hypersistence</groupId>
-                <artifactId>hypersistence-utils-hibernate-63</artifactId>
+                <artifactId>hypersistence-utils-hibernate-70</artifactId>
                 <version>${hypersistence.version}</version>
                 <exclusions>
                     <exclusion>
