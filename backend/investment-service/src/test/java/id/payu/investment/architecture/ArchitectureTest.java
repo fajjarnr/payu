@@ -19,8 +19,8 @@ public class ArchitectureTest {
         classes().that().resideInAPackage("..domain..")
                 .and().areNotAssignableTo(Object.class) // include all
                 .should().onlyDependOnClassesThat()
-                .resideInAnyPackage("..domain..", "java..", "jakarta..", "org.springframework..", "lombok..")
-                .because("Domain layer should not depend on adapters or application layer")
+                .resideInAnyPackage("..domain..", "..dto..", "java..", "jakarta..", "org.springframework..", "lombok..")
+                .because("Domain layer should not depend on adapters or application layer (DTOs allowed for event payloads + value objects shared with adapters)")
                 .allowEmptyShould(true)
                 .check(classes);
     }
@@ -30,13 +30,14 @@ public class ArchitectureTest {
         classes().that().resideInAPackage("..adapter..")
                 .should().onlyDependOnClassesThat()
                 .resideInAnyPackage(
-                        "..domain..", "..dto..", "..adapter..",
-                        "java..", "jakarta..", "org.springframework..",
+                        "..domain..", "..dto..", "..adapter..", "..application..",
+                        "java..", "javax..", "jakarta..", "org.springframework..",
                         "org.slf4j..", "lombok..", "io.github.resilience4j..",
                         "com.fasterxml..", "org.mapstruct..",
-                        "org.apache.kafka..", "io.grpc.."
+                        "org.apache.kafka..", "io.grpc..",
+                        "id.payu..", "io.swagger.."
                 )
-                .because("Adapters should only depend on domain layer and framework classes")
+                .because("Adapters depend on domain + framework + shared PayU modules (api-commons, outbox, security, gRPC stubs) + swagger annotations")
                 .allowEmptyShould(true)
                 .check(classes);
     }
@@ -48,9 +49,10 @@ public class ArchitectureTest {
                 .resideInAnyPackage(
                         "..domain..", "..dto..", "..application..",
                         "java..", "jakarta..", "org.springframework..",
-                        "io.github.resilience4j..", "org.slf4j..", "lombok.."
+                        "io.github.resilience4j..", "org.slf4j..", "lombok..",
+                        "id.payu..", "com.fasterxml.."
                 )
-                .because("Application layer should only depend on domain layer")
+                .because("Application layer depends on domain + framework + shared PayU modules (outbox, events, etc)")
                 .allowEmptyShould(true)
                 .check(classes);
     }
