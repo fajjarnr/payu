@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Bean;
         org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration.class,
         org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration.class,
         org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class,
+        org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerAutoConfiguration.class,
         org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class,
         org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration.class,
         id.payu.cache.config.CacheAutoConfiguration.class,
