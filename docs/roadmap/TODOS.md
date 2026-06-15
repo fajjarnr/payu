@@ -14,7 +14,7 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 |
-| **Open P1s** | 26 (17 closed: READY-001, 002, 010, 011, 012, 013, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032) |
+| **Open P1s** | 26 (17 closed: READY-001, 002, 010, 011, 012, 013, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032) + 1 partial (READY-034: main code done, test code as READY-035) |
 | **Open P2s** | 12 |
 | **Open P3s** | 4 (READY-060, 061, 062, 063) |
 | **Production Score** | ~60% (↑ from 58% — READY-003 test-compile unblocked across 8 services, 49 test files fixed, OpenRewrite parser unblocked for ARCH-006 platform-wide Jakarta EE 11 migration) |

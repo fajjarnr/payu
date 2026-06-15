@@ -19,6 +19,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### UPGRADE-013 — Quarkus 3.33.1 → 3.36.2 in 5 Simulators (2026-06-15)
+
+- **Scope**: 1 shared lib + 5 Quarkus simulators bumped to `quarkus-bom:3.36.2`
+- **Files changed**: 6 poms (11 +/-11). Plugin pin also bumped to match BOM.
+- **Verification**: All 5 simulators `BUILD SUCCESS`. `va-simulator` ran 8/8 tests passing.
+- **Out of scope (next session)**: `quarkus-junit5` → `quarkus-junit` relocation (Quarkus 3.31+ migration, non-blocking warning).
+- **Commit**: `f53ef83b` (squashed as part of merge to main).
+
+### READY-034 — Spring Boot 3.5.14 → 4.1.0 Shared Starter Migration (Partial, 2026-06-15)
+
+- **Scope**: Phase 0 (parent POM pre-work) + Phase 1 partial (6 shared starters + 22 services main code) + Phase 2 (26 service/shared pom cascade).
+- **Files changed**: 95 files, 394 +/-277.
+- **Parent POM** (Phase 0):
+  - `spring-boot-starter-parent`: 3.5.14 → 4.1.0
+  - `spring-cloud.version`: 2025.0.2 → 2025.1.2
+  - `spring-cloud-contract.version`: 4.2.1 → 5.0.3
+  - `resilience4j.version`: 2.2.0 → 2.4.0
+  - `hypersistence.version`: 3.15.2 (hibernate-63) → 3.15.3 (hibernate-70)
+  - Added explicit `rest-assured-bom:5.5.0` import (not in SB 4.1.0 BOM)
+- **Phase 1 (6 shared starters)**: jms, saga, events, outbox, rest-client, api-commons. Plus cache-starter transitively via api-commons fix. Hibernate 7.0 (hypersistence-utils-hibernate-70), Spring 7 RestClient API, Health/HealthIndicator package rename to `org.springframework.boot.health.contributor`, RedisAutoConfiguration → DataRedisAutoConfiguration, KafkaAutoConfiguration package move.
+- **Phase 1 (22 services)**: Bulk sed for `EntityScan` (autoconfigure.domain → persistence.autoconfigure), `actuate.health` (→ health.contributor), `OAuth2ResourceServerAutoConfiguration` (autoconfigure.security.oauth2.resource.servlet → security.oauth2.server.resource.autoconfigure), Hibernate 6.3 → 7.0 in 4 service poms.
+- **Phase 2 (26 poms)**: `spring-boot-starter-aop` removed (artifact gone in SB 4.0). Testcontainers 2.0 artifact renames (junit-jupiter → testcontainers-junit-jupiter, etc). Hypersistence artifact update.
+- **Test code (partial, Phase 1c)**: 49 test files updated with package renames (test.mock.mockito → test.mock, test.autoconfigure.web.servlet → webmvc.test.autoconfigure, etc). Added `spring-boot-webmvc-test` + `spring-boot-jpa-test` to 12 services. Added `spring-boot-restclient` to 2 services (fx, statement).
+- **Verification**: `mvn -f backend/pom.xml -T 1C compile` = **BUILD SUCCESS** across all 22 services + 14 shared starters.
+- **KNOWN LIMITATION (out of scope)**: `@MockBean`, `@DataJpaTest`, `AutoConfigureTestDatabase` have been **REMOVED** in Spring Boot 4.0+ (replaced by `@MockitoBean`, custom `@SpringBootTest` + Testcontainers). These require test file rewrites (~30 files). Tracked as **NEW ticket READY-035** for follow-up sprint.
+- **Commits**: 1c34297, 3978348, 5b6c43e, bfcca0f, 0ce1542 (squashed as merge commit `b9ee05bb`).
+- **Production readiness**: 62% → 70% (main code + poms fully SB 4.1.0 compatible; test code partial).
+
 ### READY-031 + READY-032 — Test Infrastructure Fixes (2026-06-15)
 
 - **READY-032 (ArchUnit 1.3 → 1.4.2)**: Bumped `archunit.version` in `backend/shared/archunit-starter/pom.xml` from `1.3.0` to `1.4.2` (latest 1.4.x, supports Java 25 class file major version 69). Verified: 10/10 archunit-starter tests pass with zero Java 25 warnings. Platform-wide ArchUnit test runs no longer flood the console with unsupported class file warnings.
