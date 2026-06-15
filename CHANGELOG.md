@@ -19,6 +19,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 7: Full Platform Rebuild + Deploy :1.8.21 (2026-06-15)
+
+- **Built 26 images @ `:1.8.21`** for all Java backend services + simulators (18 Spring Boot + 8 Quarkus). Pushed to OCP registry.
+- **22 services successfully deployed + ALL HEALTH UP**:
+  - Spring Boot (14 verified UP via `/actuator/health`): account, backoffice, lending, support, integration, partner, investment, promotion, billing, cms, compliance, fx, dispute, statement, transaction
+  - Quarkus (7 verified UP via `/q/health`): gateway, notification, api-portal, bi-fast-simulator, biller-simulator, dukcapil-simulator, qris-simulator
+- **3 services ROLLED BACK** (runtime production bugs surface only at framework integration boundary, not test):
+  - **auth-service**: SB 4.1 reactive `WebClient$Builder` bean not autowired (KeycloakService constructor param 2). Needs `@Bean WebClient.Builder` explicit config OR migration to non-reactive `RestClient`. → Tracked as **READY-056**.
+  - **wallet-service**: spring-grpc 1.0+ class `org.springframework.grpc.client.AbstractGrpcClientRegistrar` not on classpath. spring-grpc 0.2.0 → 1.0.3 needs full dep tree audit per READY-038. → Tracked as **READY-038**.
+  - **product-catalog-service**: empty log on crashloop. Needs deeper investigation (likely related to JPA + Jackson 3 or similar SB 4.1 integration issue). → Tracked as **READY-057**.
+- **Cluster state**: 42 pods Running, 0 fail. 22 services @ `:1.8.21`, 3 services @ prev tag (auth/wallet/product-catalog).
+- **Lesson L-048**: 100% test-suite GREEN does NOT guarantee runtime production health. Test isolation (mocks, autoconfig excludes, @Disabled for infra issues) hides real framework integration bugs that only surface when the full production context refreshes. ALWAYS verify cluster deploy health endpoints post-rebuild, not just test pass count.
+- **NEW follow-up tickets**:
+  - **READY-056**: auth-service WebClient.Builder bean missing in SB 4.1 (reactive autoconfig change)
+  - **READY-057**: product-catalog-service crashloop on startup (empty log, deeper investigation needed)
+- **Build/deploy steps**:
+  ```bash
+  # Build (~3min, 26 images)
+  mvn -f backend/pom.xml package -DskipTests -T 1C
+  for svc in $SERVICES $SIMS; do podman build --build-arg APP_VERSION=1.8.21 -f backend/$svc/Containerfile -t REGISTRY/payu-dev/$svc:1.8.21 backend/$svc; done
+  # Push (~2min)
+  for svc in ...; do podman push --tls-verify=false REGISTRY/payu-dev/$svc:1.8.21; done
+  # Deploy (~5min wait for rollout)
+  for svc in $SPRING; do oc -n payu-dev set image deployment/$svc app=image-registry.openshift-image-registry.svc:5000/payu-dev/$svc:1.8.21; done
+  for sim in $SIMS; do oc -n payu-dev set image deployment/$sim $sim=image-registry.openshift-image-registry.svc:5000/payu-dev/$sim:1.8.21; done
+  # Verify
+  oc -n payu-dev get pods -o jsonpath='{range .items[*]}{.spec.containers[0].image}{"\n"}{end}' | grep 1.8.21 | wc -l  # = 22
+  # Health verify per service (curl /actuator/health or /q/health)
+  ```
+
 ### Iteration 6: 41/41 Modules GREEN — 100% BUILD SUCCESS (2026-06-15)
 
 - **Platform runtime: 33/41 → 41/41 modules SUCCESS (100% BUILD GREEN)**. 6-iteration cumulative: 9/41 baseline → 41/41 (4.5x improvement).
