@@ -90,6 +90,12 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Spring Boot Kafka Auto-Configuration (provides KafkaAutoConfiguration for test exclusions) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-kafka</artifactId>
+        </dependency>
+
         <!-- PayU Cache Starter -->
         <dependency>
             <groupId>id.payu</groupId>

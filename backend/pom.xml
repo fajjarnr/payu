@@ -252,6 +252,13 @@
                 </exclusions>
             </dependency>
 
+            <!-- Spring Boot Auto-Configuration Classic (Jackson 2 + other legacy API support for SB 4.0+) -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-autoconfigure-classic</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
             <!-- SpringDoc OpenAPI -->
             <dependency>
                 <groupId>org.springdoc</groupId>

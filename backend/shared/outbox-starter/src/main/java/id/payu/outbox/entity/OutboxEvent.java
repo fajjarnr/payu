@@ -1,14 +1,14 @@
 package id.payu.outbox.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.Map;
@@ -72,7 +72,7 @@ public class OutboxEvent {
      * The event payload stored as JSONB.
      * Contains all the data necessary for consumers to process the event.
      */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> payload;
 
@@ -80,7 +80,7 @@ public class OutboxEvent {
      * Optional headers for the event, stored as JSONB.
      * Can include metadata like correlation IDs, trace IDs, etc.
      */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "headers", columnDefinition = "jsonb")
     private Map<String, Object> headers;
 

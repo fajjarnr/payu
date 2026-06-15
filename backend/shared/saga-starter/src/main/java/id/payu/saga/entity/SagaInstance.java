@@ -1,11 +1,11 @@
 package id.payu.saga.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -48,7 +48,7 @@ public class SagaInstance {
      * JSONB payload containing saga-specific data.
      * Uses PostgreSQL JSONB type for efficient querying.
      */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
     @Builder.Default
     private Map<String, Object> payload = new HashMap<>();
@@ -57,7 +57,7 @@ public class SagaInstance {
      * Stores the execution context for each step.
      * Key: step name, Value: step execution result/context
      */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "step_context", columnDefinition = "jsonb")
     @Builder.Default
     private Map<String, Object> stepContext = new HashMap<>();
@@ -66,7 +66,7 @@ public class SagaInstance {
      * List of completed steps in order.
      * Used for compensation ordering (LIFO).
      */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "completed_steps", columnDefinition = "jsonb")
     @Builder.Default
     private java.util.List<String> completedSteps = new java.util.ArrayList<>();
