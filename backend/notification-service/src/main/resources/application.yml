@@ -46,7 +46,7 @@ quarkus:
     jdbc:
       url: ${DB_URL:jdbc:postgresql://localhost:5432/notificationdb}
   hibernate-orm:
-    packages: id.payu.notification.domain
+    packages: id.payu.notification
     database:
       generation: update
     log:
