@@ -16,9 +16,8 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
         show_sql: false
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
+  # spring.jackson.serialization.* removed for SB 4.1.0 Jackson 3 compat (kebab-case to
+  # tools.jackson.databind.SerializationFeature enum binding fails).
 
 # Custom properties
 partner:

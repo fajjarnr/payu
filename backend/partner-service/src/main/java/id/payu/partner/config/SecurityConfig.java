@@ -2,6 +2,7 @@ package id.payu.partner.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,6 +24,7 @@ import java.util.List;
  * {@code security-starter} via {@code KeycloakJwtAutoConfiguration}.</p>
  */
 @Configuration
+@Profile("!test")
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {

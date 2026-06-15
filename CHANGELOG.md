@@ -19,6 +19,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 3 Quick Wins + Cluster Deploy 1.8.20 (2026-06-15)
+
+- **4 service rebuild + deploy `:1.8.20`** to OCP `payu-dev` cluster, all health UP:
+  - partner-service:1.8.20 ✓ UP
+  - integration-service:1.8.20 ✓ UP
+  - investment-service:1.8.20 ✓ UP
+  - promotion-service:1.8.20 ✓ UP
+- **Fixes applied**:
+  - **partner-service**: removed `spring.jackson.serialization.write-dates-as-timestamps` from `application.yml` + `application-test.yml`. SB 4.1.0 Jackson 3 (`tools.jackson.databind.SerializationFeature`) cannot bind kebab-case to enum (`No enum constant SerializationFeature.write-dates-as-timestamps`). Jackson 3 default is `false` already. PartnerControllerTest: 0/4 → 4/4 PASS.
+  - **integration-service**: Camel 4.4.0 → 4.20.0 (SB 4.1.0 compat). Old Camel referenced `org.springframework.boot.actuate.availability.LivenessStateHealthIndicator` (SB 3.x package path). Camel 4.20 aligns to SB 4.x packages.
+  - **integration-service + investment-service + partner-service + promotion-service**: added `@Profile("!test")` to production `SecurityConfig`. Spring Security 7 strict mode rejects multiple `SecurityFilterChain` beans matching `[any request]`. TestSecurityConfig's `@Primary` no longer wins in SB 4.x. Matches READY-042 pattern fix applied earlier to support-service.
+- **Cluster infrastructure cleanup**:
+  - **db-secrets.DB_PASSWORD sync**: was random `>3Se{I@_4JVvvo[-z:uOO2jh`, didn't match Postgres `payu-postgres-credentials.password=payu-dev-password`. All 14+ services were crashlooping with `28P01 password authentication failed` for 24h+. Patched secret + rollout restart all deployments → 0 CrashLoopBackOff.
+  - **HPA + PDB deleted (per user directive)**: 13 HPA + 18 PDB removed from `payu-dev` namespace. HPA was overriding manual scale operations (auth-service scale 4 → reverted to 5 by HPA min). PDB blocked pod evictions during rollout.
+  - **All deployments scaled to 1 replica**: avoids topology spread constraints (`maxSkew:1, whenUnsatisfiable:DoNotSchedule`) which were rejecting 5th replica on 4-worker cluster.
+  - Final cluster state: **42 pods Running, 0 fail**.
+- **Files changed (7)**:
+  - `backend/integration-service/pom.xml` — Camel 4.4.0 → 4.20.0
+  - `backend/integration-service/src/main/java/id/payu/integration/config/SecurityConfig.java` — @Profile("!test")
+  - `backend/investment-service/src/main/java/id/payu/investment/config/SecurityConfig.java` — @Profile("!test")
+  - `backend/partner-service/src/main/java/id/payu/partner/config/SecurityConfig.java` — @Profile("!test")
+  - `backend/partner-service/src/main/resources/application.yml` — removed jackson.serialization
+  - `backend/partner-service/src/test/resources/application-test.yml` — removed jackson.serialization
+  - `backend/promotion-service/src/main/java/id/payu/promotion/config/SecurityConfig.java` — @Profile("!test")
+- **Local runtime metric unchanged at 31/41 modules** — fix improved per-test result within failing services but didn't flip module green count (remaining failures are ArchUnit P2 + spring-grpc API rewrite + Quarkus REST auth + Testcontainers Docker missing — all distinct pre-existing issues).
+- **NEW lesson L-046**: SB 4.1.0 Jackson 3 cannot bind `spring.jackson.serialization.*` kebab-case to `tools.jackson.databind.SerializationFeature` enum (asymmetric vs Jackson 2's SCREAMING_SNAKE_CASE binding). Remove all `spring.jackson.serialization.*` properties OR migrate to Jackson 3-specific config (TBD upstream Spring Boot doc clarification).
+- **NEW lesson L-047**: Spring Cloud Camel autoconfig is tightly version-locked to Spring Boot major. Camel 4.4.x references SB 3.x package paths (e.g., `boot.actuate.availability.LivenessStateHealthIndicator`). Camel 4.20.0+ required for SB 4.1.0.
+
 ### Quick Wins After READY-036: READY-040 + READY-043 Closed + Profile Migrated (2026-06-15)
 
 - **Platform runtime: 29/41 → 31/41 modules SUCCESS** (baseline was 9/41 before READY-036). lending-service + backoffice-service flipped green.

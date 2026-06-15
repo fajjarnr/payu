@@ -20,7 +20,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <camel.version>4.4.0</camel.version>
+        <camel.version>4.20.0</camel.version>
         <test.excluded.groups>integration</test.excluded.groups>
     </properties>
 
