@@ -13,7 +13,7 @@ import java.util.UUID;
 import id.payu.transaction.domain.model.ScheduledStatus;
 
 @Repository
-public interface ScheduledTransferJpaRepository extends JpaRepository<ScheduledTransferEntity, UUID> {
+public interface ScheduledTransferJpaRepository extends JpaRepository<ScheduledTransferEntity, UUID>, ScheduledTransferJpaRepositoryCustom {
 
     Optional<ScheduledTransferEntity> findByReferenceNumber(String referenceNumber);
 

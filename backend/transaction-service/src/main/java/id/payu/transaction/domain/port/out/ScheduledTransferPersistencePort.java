@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface ScheduledTransferPersistencePort {
 
     ScheduledTransferEntity save(ScheduledTransferEntity scheduledTransfer);
+    ScheduledTransferEntity persistNew(ScheduledTransferEntity scheduledTransfer);
 
     Optional<ScheduledTransferEntity> findById(UUID id);
 

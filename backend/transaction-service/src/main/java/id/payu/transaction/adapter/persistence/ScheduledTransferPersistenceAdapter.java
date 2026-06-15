@@ -24,6 +24,18 @@ public class ScheduledTransferPersistenceAdapter implements ScheduledTransferPer
     }
 
     @Override
+    public ScheduledTransferEntity persistNew(ScheduledTransferEntity scheduledTransfer) {
+        if (scheduledTransfer.getId() == null) {
+            throw new IllegalStateException("Cannot persistNew: id is null");
+        }
+        scheduledTransfer.setUpdatedAt(Instant.now());
+        repository.persistNew(scheduledTransfer);
+        return repository.findById(scheduledTransfer.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "ScheduledTransfer not found after persist: " + scheduledTransfer.getId()));
+    }
+
+    @Override
     public Optional<ScheduledTransferEntity> findById(UUID id) {
         return repository.findById(id);
     }

@@ -350,8 +350,11 @@ public class ScheduledTransferEntity {
     }
 
 
+    // Application-assigned UUID (no @GeneratedValue). Per the READY-063 fix
+    // pattern: with manual id + @GeneratedValue, Spring Data JPA's isNew()
+    // detection treats the entity as "previously persisted" and calls merge()
+    // instead of persist(), which fails with StaleObject for new rows.
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "reference_number", nullable = false, unique = true)

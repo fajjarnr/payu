@@ -64,7 +64,11 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                 .updatedAt(Instant.now())
                 .build();
 
-        scheduledTransfer = persistencePort.save(scheduledTransfer);
+        // READY-072: Same fix as READY-063 — manual id + @GeneratedValue causes
+        // Spring Data JPA to call merge() which fails for new rows with
+        // StaleObjectStateException. Use persistNew() with direct
+        // EntityManager.persist() to bypass the isNew() detection.
+        scheduledTransfer = persistencePort.persistNew(scheduledTransfer);
         log.info("Scheduled transfer created, id: {}, reference: {}, nextExecution: {}",
                 scheduledTransfer.getId(), referenceNumber, nextExecutionDate);
 
