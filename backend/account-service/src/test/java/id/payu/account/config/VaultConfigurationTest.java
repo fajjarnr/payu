@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @SpringBootTest(
     classes = AccountServiceApplication.class,
     properties = {
-        "spring.autoconfigure.exclude=org.springframework.cloud.vault.core.VaultAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
+        "spring.autoconfigure.exclude=org.springframework.cloud.vault.core.VaultAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration,id.payu.outbox.config.OutboxAutoConfiguration",
         "payu.security.encryption.password=dummy",
         "payu.security.encryption.salt=dummy"
     }

@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### READY-031 + READY-032 — Test Infrastructure Fixes (2026-06-15)
+
+- **READY-032 (ArchUnit 1.3 → 1.4.2)**: Bumped `archunit.version` in `backend/shared/archunit-starter/pom.xml` from `1.3.0` to `1.4.2` (latest 1.4.x, supports Java 25 class file major version 69). Verified: 10/10 archunit-starter tests pass with zero Java 25 warnings. Platform-wide ArchUnit test runs no longer flood the console with unsupported class file warnings.
+- **READY-031 (account-service outbox JPA leak)**: Fixed `UnsatisfiedDependencyException: jpaMappingContext` -> `Metamodel must not be null` in 3 test classes (`VaultConfigurationTest`, `MonitoringConfigurationTest`, `TracingConfigurationTest`). Root cause: `outbox-starter OutboxAutoConfiguration` declares `@EnableJpaRepositories(basePackages = "id.payu.outbox.repository")` which requires a JPA metamodel, but the test contexts exclude `HibernateJpaAutoConfiguration` + `JpaRepositoriesAutoConfiguration` per the JPA-exclude pattern. Fix: added `id.payu.outbox.config.OutboxAutoConfiguration` to the `spring.autoconfigure.exclude` list in all 3 test files (1-line addition each). Verified: 14/14 tests pass across the 3 target classes (1 skipped intentionally via `@EnabledIfSystemProperty` for Vault).
+- **Note**: 11 pre-existing test errors in `NikVerificationControllerTest` and `OnboardingControllerTest` (web-slice tests) are NOT in scope — they're tracked under separate ticket **READY-033** (ThemeResolver removal in Spring 7 / Boot 4.1.0). Confirmed same errors on main branch without our changes.
+- **Verification commands**:
+  - `cd .worktrees/test-infra && mvn -f backend/shared/archunit-starter/pom.xml clean test` -> 10/10 pass
+  - `cd .worktrees/test-infra && mvn -f backend/account-service/pom.xml test -Dtest='VaultConfigurationTest,MonitoringConfigurationTest,TracingConfigurationTest'` -> 14/14 pass (1 skipped)
+
 ### READY-034 — Spring Boot 4.1.0 Shared Starter Migration Audit (2026-06-15)
 
 - **Deliverable**: Static audit-only migration report at [`docs/roadmap/READY-034_MIGRATION_REPORT.md`](docs/roadmap/READY-034_MIGRATION_REPORT.md). No code changes applied per audit-only directive.

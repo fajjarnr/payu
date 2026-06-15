@@ -13,14 +13,14 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 1 (READY-003 — unblocked at test-compile level; remaining infra tracked under READY-031/032) |
-| **Open P1s** | 28 (15 closed: READY-001, 002, 010, 011, 012, 013, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030) |
+| **Open P0s** | 0 |
+| **Open P1s** | 26 (17 closed: READY-001, 002, 010, 011, 012, 013, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032) |
 | **Open P2s** | 12 |
 | **Open P3s** | 4 (READY-060, 061, 062, 063) |
 | **Production Score** | ~60% (↑ from 58% — READY-003 test-compile unblocked across 8 services, 49 test files fixed, OpenRewrite parser unblocked for ARCH-006 platform-wide Jakarta EE 11 migration) |
-| **Last Audit** | June 13, 2026 — READY-003 unblocked at test-compile level. 49 test files fixed across 8 services. Zero production code changes. READY-031/032 (P1 test-infra) opened for remaining Spring context + ArchUnit Java 25 compat. |
-| **Last Release** | `web-app:1.5.1` + `account-service:1.8.13` + `transaction-service:1.8.15` + `wallet-service:1.8.15` + `cms-service:1.8.12` + `cache-starter:1.0.0-SNAPSHOT` |
+| **Last Audit** | June 15, 2026 — READY-031 + READY-032 fixed (test-infra blockers resolved). READY-033 (web-slice ThemeResolver) still open. READY-003/034 audit complete. |
 
+| **Last Release** | `web-app:1.5.1` + `account-service:1.8.13` + `transaction-service:1.8.15` + `wallet-service:1.8.15` + `cms-service:1.8.12` + `cache-starter:1.0.0-SNAPSHOT` |
 ---
 
 ## 🚀 Framework & Infrastructure Upgrades
@@ -114,6 +114,8 @@
 
 > **Status update 2026-06-13**: READY-003 unblocked at the `test-compile` level across 8 services. 49 test files fixed (596 insertions / 526 deletions), zero production code changes. `mvn test-compile` returns `BUILD SUCCESS` for all 20 backend services. OpenRewrite parser can now read the entire repo. ArchUnit + Spring-context test-execution failures documented as new P1 tickets READY-031/032 (separate concerns, not enum-related). See `CHANGELOG.md [Unreleased]` for full diff.
 
+> **Status update 2026-06-15**: READY-031 + READY-032 closed. **READY-032**: ArchUnit 1.3.0 → 1.4.2 in `archunit-starter` — 10/10 tests pass, zero Java 25 class file warnings. **READY-031**: Added `id.payu.outbox.config.OutboxAutoConfiguration` to `spring.autoconfigure.exclude` in 3 account-service test classes (`VaultConfigurationTest`, `MonitoringConfigurationTest`, `TracingConfigurationTest`) — 14/14 tests pass, 1 skipped intentional. Both fixes are minimal (1-line pom bump + 1-line exclude per test). READY-033 (web-slice ThemeResolver, 11 errors in `NikVerificationControllerTest` + `OnboardingControllerTest`) still open — separate ticket. See `CHANGELOG.md [Unreleased]` for full diff.
+
 ### 🟠 P1 — Critical (target ≥80%)
 
 | Key | Category | Summary | Current | Target |
@@ -139,8 +141,8 @@
 | **READY-028** | **HA** | **AMQ broker pair** (now 2/2 broker pods running, ActiveMQArtemis size=2 master+slave) | 30% | **100%** |
 | **READY-029** | Performance | Gatling load test: 1000 concurrent users, p99 < 10s | 5% | 100% |
 | **READY-030** | Performance | Stress: SOAK test 24h, no memory leak | 5% | 100% |
-| **READY-031** | **Test infra** | **`account-service` Spring test context excludes JPA but `outbox-starter` `OutboxAutoConfiguration` requires JPA** — `VaultConfigurationTest` (2), `MonitoringConfigurationTest` (8), `TracingConfigurationTest` (4) fail with `UnsatisfiedDependencyException` on `outboxRepository` → `jpaMappingContext`. Fix: test-specific `@MockBean` for outbox repos or move outbox config behind `@Profile` guard. Discovered 2026-06-13 during READY-003 verification. | 0% | 100% |
-| **READY-032** | **Test infra** | **ArchUnit pinned version doesn't support Java 25** (class file major version 69) — warnings flood every ArchitectureTest run. Bump `archunit-starter` to ArchUnit 1.4.x+ for Java 25 support. Discovered 2026-06-13 during READY-003 verification. | 0% | 100% |
+| **READY-031** | **Test infra** | **`account-service` Spring test context excludes JPA but `outbox-starter` `OutboxAutoConfiguration` requires JPA** — `VaultConfigurationTest` (2), `MonitoringConfigurationTest` (8), `TracingConfigurationTest` (4) fail with `UnsatisfiedDependencyException` on `outboxRepository` → `jpaMappingContext`. Fix: test-specific `@MockBean` for outbox repos or move outbox config behind `@Profile` guard. Discovered 2026-06-13 during READY-003 verification. **FIXED 2026-06-15**: added `id.payu.outbox.config.OutboxAutoConfiguration` to `spring.autoconfigure.exclude` in 3 test files. 14/14 tests pass, 1 skipped intentional. | 100% | 100% |
+| **READY-032** | **Test infra** | **ArchUnit pinned version doesn't support Java 25** (class file major version 69) — warnings flood every ArchitectureTest run. Bump `archunit-starter` to ArchUnit 1.4.x+ for Java 25 support. Discovered 2026-06-13 during READY-003 verification. **FIXED 2026-06-15**: bumped to ArchUnit 1.4.2 in `backend/shared/archunit-starter/pom.xml`. 10/10 tests pass, zero Java 25 class file warnings. | 100% | 100% |
 | **READY-033** | **Test infra** | **`wallet-service/ContractVerifierTest` fails on Spring 7 `ThemeResolver` removal** — `java.lang.NoClassDefFoundError: org.springframework.web.servlet.ThemeResolver`. Spring Cloud Contract plugin auto-generates this test from contract definitions; it loads full Spring context, which transitively requires `ThemeResolver`. Spring 7 (Boot 4.1.0 base) reorg removed `ThemeResolver` from default `spring-webmvc` classpath. **Workaround applied (pilot)**: surefire `<excludes>**/ContractVerifierTest.java</exclude>` in `wallet-service/pom.xml`. **Proper fix**: (a) add `spring-webmvc` with version that includes ThemeResolver, OR (b) exclude `WebMvcAutoConfiguration` from the test, OR (c) migrate from Spring Cloud Contract to a JUnit-only contract framework. **Note**: `account-service` has 4 web-slice test classes (29 tests total) hitting same ThemeResolver CNF — needs same workaround or proper fix. Discovered 2026-06-14 during ARCH-006 wallet-service + account-service pilots. | 0% | 100% |
 | **READY-034** | **Pre-ARCH-006** | **Migrate 14 shared starters to Spring Boot 4.1.0 + Spring 7 + Hibernate 7 + Jackson 3** before platform-wide Boot 4.1.0 rollout. **4 starters already confirmed broken**: `jms-starter` (missing `actuate.health`), `rest-client-starter` (RestClientErrorHandler override mismatch in Spring 7), `events-starter` (missing `jackson.datatype.jsr310`, `boot.autoconfigure.kafka`), `saga-starter` (missing `hibernate.query.BindableType`, `boot.autoconfigure.domain`). Other 10 starters (cache, security, outbox, resilience, logging, archunit, mapper, grpc, api-commons, quarkus-api-commons) need audit but compile-time might be OK. **Phase 0 of ARCH-006**: ~2-3 days effort. Discovered 2026-06-14 when parent pom bump to 4.1.0 failed. | 0% | 100% |
 
@@ -352,5 +354,5 @@
 
 ---
 
-_Last Updated: June 14, 2026 — UPGRADE-013 (Quarkus) and UPGRADE-014 (Next.js) added to roadmap. READY-003 test-compile unblocked. READY-031/032 (P1) pending. Production readiness score: ~60%._
+_Last Updated: June 15, 2026 — READY-031 + READY-032 fixed (test-infra blockers resolved). READY-034 audit complete (execution deferred). UPGRADE-013 (Quarkus) and UPGRADE-014 (Next.js) added to roadmap. Production readiness score: ~62%._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_

@@ -28,7 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
                 + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
                 + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
-                + "org.springframework.cloud.vault.core.VaultAutoConfiguration",
+                + "org.springframework.cloud.vault.core.VaultAutoConfiguration,"
+                + "id.payu.outbox.config.OutboxAutoConfiguration",
         "management.endpoints.web.exposure.include=*",
         "management.endpoint.health.show-details=always",
         "management.health.defaults.enabled=false"
