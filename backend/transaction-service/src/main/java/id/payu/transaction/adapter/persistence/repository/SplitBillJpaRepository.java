@@ -12,5 +12,12 @@ import java.util.UUID;
 @Repository
 public interface SplitBillJpaRepository extends JpaRepository<SplitBillEntity, UUID> {
     Optional<SplitBillEntity> findByReferenceNumber(String referenceNumber);
+
+    /**
+     * READY-071: Fetch participants eagerly to avoid LazyInitializationException
+     * during JSON serialization (JPA session is closed after the @Transactional
+     * boundary). Per JPA best practice, use @EntityGraph for the eager fetch.
+     */
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"participants"})
     List<SplitBillEntity> findByCreatorAccountId(UUID accountId, Pageable pageable);
 }
