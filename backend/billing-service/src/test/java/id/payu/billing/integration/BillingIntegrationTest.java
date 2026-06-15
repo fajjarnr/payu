@@ -11,7 +11,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import id.payu.outbox.service.OutboxService;
 import org.springframework.test.context.ActiveProfiles;
