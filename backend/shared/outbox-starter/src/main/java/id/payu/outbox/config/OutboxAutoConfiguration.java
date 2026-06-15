@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,7 +40,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @since 1.0.0
  */
 @Slf4j
-@AutoConfiguration(after = org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class)
+@AutoConfiguration(after = org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration.class)
 @ConditionalOnClass({OutboxRepository.class, KafkaTemplate.class})
 @ConditionalOnProperty(prefix = "payu.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(OutboxProperties.class)

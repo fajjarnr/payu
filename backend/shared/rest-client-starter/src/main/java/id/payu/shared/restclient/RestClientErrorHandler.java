@@ -29,11 +29,6 @@ public class RestClientErrorHandler implements ResponseErrorHandler {
     }
 
     @Override
-    public void handleError(ClientHttpResponse response) throws IOException {
-        handleError(null, null, response);
-    }
-
-    @Override
     public void handleError(URI url, org.springframework.http.HttpMethod method,
                             ClientHttpResponse response) throws IOException {
         int statusCode = response.getStatusCode().value();

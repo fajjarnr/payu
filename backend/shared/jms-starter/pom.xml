@@ -73,6 +73,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Boot Health (Health/HealthIndicator classes in SB 4.1.0+) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

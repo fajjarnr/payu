@@ -23,7 +23,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  * Automatically configures CloudEvents infrastructure when the starter is added.
  */
 @Slf4j
-@AutoConfiguration(after = org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class)
+@AutoConfiguration(after = org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration.class)
 @EnableConfigurationProperties(EventsAutoConfiguration.EventsProperties.class)
 @ComponentScan(basePackages = "id.payu.events")
 @ConditionalOnProperty(
