@@ -60,6 +60,13 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
 
+        <!-- Jackson 2 ObjectMapper bean autoconfig (required by IdempotencyAutoConfiguration which uses com.fasterxml.jackson.databind.ObjectMapper for cache serialization).
+             SB 4.1.0 defaults to Jackson 3 (tools.jackson.databind.json.JsonMapper) and does NOT create a Jackson 2 ObjectMapper bean by default. spring-boot-jackson2 provides Jackson2AutoConfiguration. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
+        </dependency>
+
         <!-- Slf4j -->
         <dependency>
             <groupId>org.slf4j</groupId>

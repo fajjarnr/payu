@@ -19,6 +19,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Quick Wins After READY-036: READY-040 + READY-043 Closed + Profile Migrated (2026-06-15)
+
+- **Platform runtime: 29/41 → 31/41 modules SUCCESS** (baseline was 9/41 before READY-036). lending-service + backoffice-service flipped green.
+- **READY-043 CLOSED** — lending-service `PreApprovalStatus` enum duplicate fixed:
+  - Deleted `id.payu.lending.dto.PreApprovalStatus` (7-line duplicate of `domain.model.PreApprovalStatus`).
+  - Updated `LoanPreApprovalResponse` record to use `domain.model.PreApprovalStatus`.
+  - Removed `convertStatus()` helper + `valueOf(name())` cross-package round-trip in `LoanPreApprovalService.mapToResponse`.
+  - **Result**: `LoanPreApprovalServiceTest` 0/9 → 9/9 PASS. lending-service module GREEN.
+- **READY-040 CLOSED** — backoffice-service Spring context fix:
+  - Root cause: `WebhookProcessor` (`shared/api-commons`) is `@Component` (always active), requires `KafkaTemplate<String, WebhookEvent>` bean. In test contexts without Kafka setup, bean creation fails with `NoSuchBeanDefinitionException`.
+  - **Fix (1 annotation)**: Added `@ConditionalOnBean({KafkaTemplate.class, StringRedisTemplate.class})` to `WebhookProcessor`. Now only loads when both deps are present (true in production, false in test slices).
+  - **Result**: `CustomerCaseServiceTest`, `FraudCaseServiceTest`, `KycReviewServiceTest` cascade-load failures resolved. backoffice-service module GREEN.
+- **READY-037 PARTIAL** — Profile entity migrated to Hibernate 7 native JSON:
+  - `account-service/Profile.java` field `additionalData` (Map<String, Object>): `@Type(JsonType.class)` → `@JdbcTypeCode(SqlTypes.JSON)`.
+  - Removed `import io.hypersistence.utils.hibernate.type.json.JsonType` + `import org.hibernate.annotations.Type`. Added `import org.hibernate.annotations.JdbcTypeCode` + `import org.hibernate.type.SqlTypes`.
+  - **Result**: `IncompatibleClassChangeError` chain at entity load is RESOLVED. `Profile` no longer triggers Hypersistence Hibernate 7 ABI mismatch.
+  - **Not fully closed**: 2 web-slice tests (`NikVerificationControllerTest`, `OnboardingControllerTest`) still fail but with DIFFERENT errors now (`JwtAuthenticationConverter` bean missing from `@WebMvcTest` slice + H2 schema `STATUS` column not found). Re-added `@Disabled` on `NikVerificationControllerTest` with new comment pointing at new unrelated issues. Track as separate web-slice test infra ticket (NEW: READY-045).
+- **READY-042 attempted** — support-service Spring Security filter chain:
+  - Root cause: Spring Security 7 strict mode throws `UnreachableFilterChainException` when multiple `SecurityFilterChain` beans match `[any request]`. Both `SecurityConfig` (production) + `TestSecurityConfig` (test) defined chains matching anything.
+  - **Fix**: Added `@Profile("!test")` to production `SecurityConfig` so only `TestSecurityConfig.testSecurityFilterChain` is active during tests.
+  - **Result**: support-service `AgentServiceTest`, `AgentTrainingServiceTest`, `TrainingModuleServiceTest` (all `@SpringBootTest`) now PASS. `SupportResourceTest` + integration tests still fail with NPE / DataIntegrityViolation (different unrelated issues, NEW tickets).
+- **Files changed (6)**:
+  - `backend/lending-service/src/main/java/id/payu/lending/application/service/LoanPreApprovalService.java`
+  - `backend/lending-service/src/main/java/id/payu/lending/dto/LoanPreApprovalResponse.java`
+  - `backend/lending-service/src/main/java/id/payu/lending/dto/PreApprovalStatus.java` (DELETED)
+  - `backend/account-service/src/main/java/id/payu/account/entity/Profile.java`
+  - `backend/account-service/src/test/java/id/payu/account/adapter/web/NikVerificationControllerTest.java` (revised `@Disabled` comment)
+  - `backend/shared/api-commons/src/main/java/id/payu/api/common/webhook/WebhookProcessor.java`
+  - `backend/support-service/src/main/java/id/payu/support/config/SecurityConfig.java`
+- **NEW follow-up tickets**:
+  - **READY-045**: account-service `@WebMvcTest` slice needs `JwtAuthenticationConverter` mock + H2 schema fix (`STATUS` column) — re-enables NIK + Onboarding controller tests
+  - **READY-046**: support-service `SupportResourceTest` NPE + `SupportServiceExceptionHandlerTest` H2 DataIntegrityViolation + integration tests NPE
+  - **READY-047**: account-service `MonitoringConfigurationTest` + `TracingConfigurationTest` AssertionError (now actual test logic asserts, not context load — likely Micrometer 1.17 API changes)
+
+### READY-036 — Jackson 3 Runtime Blocker RESOLVED + 4 Cascading Framework Fixes (2026-06-15)
+
+- **TL;DR**: Platform runtime test pass rate improved from **9/41 → 29/41 modules** (3.2x) after Jackson + Resilience4j + Springdoc + Spring Cloud + Jackson2 ObjectMapper cascade fixes. All 14 shared starters + 5 simulators now runtime-green. Saga + Outbox starters unblocked (146/146 + 83/83 PASS).
+- **Root cause of READY-036 (CORRECTED)**: Original analysis claimed `JsonSerializeAs` was REMOVED in Jackson 2.18. **WRONG.** Verified via jar inspection: `JsonSerializeAs` was **ADDED in Jackson 2.21** (specifically to support Jackson 3's `JacksonAnnotationIntrospector.<clinit>` at runtime). PayU parent pom pinned `<jackson.version>2.18.6</jackson.version>` which overrode SB 4.1.0's auto-imported `jackson-2-bom:2.21.4` (correct version + `jackson-annotations:2.21` which has the class).
+- **Fix #1 (Jackson)**: Removed entire `<jackson.version>` property + explicit Jackson dep-mgmt block from `backend/pom.xml`. Let SB 4.1.0's `spring-boot-dependencies:4.1.0` → `jackson-2-bom:2.21.4` manage all Jackson 2 artifacts. saga-starter pom: removed duplicate `jackson-annotations` declaration. **Effect**: saga-starter 0/146 → 146/146 PASS. outbox-starter 0/83 → 83/83 PASS.
+- **Fix #2 (Resilience4j 2.3 → 2.4 + spring-boot4 module)**: SB 4.1.0 requires `resilience4j-spring-boot4` (not `resilience4j-spring-boot3`). Bulk sed across 14 poms. Discovered cascade issue: `resilience4j-bom:2.3.0` (transitively from Spring Cloud) pins spring6/annotations/core to 2.2.0/2.3.0, conflicting with intended 2.4.0. Added explicit dep-mgmt pins for `resilience4j-spring-boot4`, `resilience4j-spring6`, `resilience4j-annotations`, `resilience4j-core`, `resilience4j-consumer`, `resilience4j-framework-common`, `resilience4j-circularbuffer`, `resilience4j-ratelimiter` to parent pom (all at `${resilience4j.version}` = 2.4.0). Also imported `resilience4j-bom:2.4.0` for managed artifacts.
+- **Fix #3 (RxJava3 runtime dep)**: `RxJava3FallbackDecorator` in `resilience4j-spring6:2.4.0` imports `io.reactivex.rxjava3.*` directly. Spring's `@ConditionalOnMissingBean` type-deduction forces class introspection BEFORE the `@Conditional` gate fires, so RxJava3 MUST be on classpath at runtime. Added `io.reactivex.rxjava3:rxjava` as runtime dep to `resilience-starter` (version 3.1.12 managed by SB 4.1.0 BOM).
+- **Fix #4 (Springdoc 2.8.17 → 3.0.3)**: Springdoc 2.x references `org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties` (SB 3.x package, removed in 4.0). Bumped parent pom property.
+- **Fix #5 (Spring Cloud 2025.0.2 → 2025.1.2 across 14 service poms)**: Per-service `<spring-cloud.version>2025.0.2</spring-cloud.version>` overrides + local `spring-cloud-dependencies` imports were pinning spring-cloud-* artifacts to 4.3.2 (SB 3.x compat). 4.3.2 references SB 3.x packages (`ServerProperties`, `WebMvcProperties`) that are gone in SB 4.0. Bulk sed across all 14 services: `s|<spring-cloud.version>2025.0.2</spring-cloud.version>|<spring-cloud.version>2025.1.2</spring-cloud.version>|g`.
+- **Fix #6 (`spring-boot-jackson2` for IdempotencyAutoConfiguration)**: SB 4.1.0 default is Jackson 3 (`JsonMapper`). No Jackson 2 `ObjectMapper` bean is created by default. `IdempotencyAutoConfiguration` (in `shared/api-commons`) `@Autowired`s `com.fasterxml.jackson.databind.ObjectMapper` → `NoSuchBeanDefinitionException`. Added `spring-boot-jackson2` dep to `shared/api-commons/pom.xml` which provides `Jackson2AutoConfiguration` (creates Jackson 2 `ObjectMapper` alongside the Jackson 3 `JsonMapper`).
+- **Files changed (15 poms + 1 service)**:
+  - `backend/pom.xml` — Jackson deps removed, Resilience4j cascade added, springdoc bumped
+  - `backend/shared/api-commons/pom.xml` — `spring-boot-jackson2` added
+  - `backend/shared/resilience-starter/pom.xml` — local r4j.version override removed, rxjava3 runtime dep added
+  - `backend/shared/rest-client-starter/pom.xml` — local r4j.version override removed
+  - `backend/shared/saga-starter/pom.xml` — duplicate jackson-annotations removed, resilience4j 2.2.0 pin removed
+  - `backend/shared/grpc-starter/pom.xml` — spring-grpc 0.2.0 → 1.0.3 (preparation for follow-up)
+  - 14 service poms — `resilience4j-spring-boot3` → `resilience4j-spring-boot4` + spring-cloud 2025.0.2 → 2025.1.2 + auth-service r4j 2.2.0 hardcoded version removed
+- **Verification (final `mvn -T 1C -fae test`)**:
+  - **29/41 SUCCESS** (was 9/41 baseline): All 14 shared starters + 5 simulators + auth, wallet, statement, notification, gateway, compliance, fx, api-portal, dispute pass 100%
+  - 12 services still FAILURE — all with **distinct, pre-existing, non-Jackson** root causes:
+    - 7 ArchUnit violations (pre-existing P2 architecture refactor leftovers — account, product-catalog, transaction, investment, support, cms, integration)
+    - account-service `OnboardingControllerTest` — Hypersistence `JsonType` IncompatibleClassChangeError (per L-039, requires `Profile` entity migration to `@JdbcTypeCode(SqlTypes.JSON)`)
+    - lending-service `LoanPreApprovalServiceTest` — `domain.PreApprovalStatus` vs `dto.PreApprovalStatus` enum duplicate (code-level cleanup)
+    - cms-service `ContentRepositoryIntegrationTest` — Testcontainers requires Docker (env issue)
+    - billing-service + promotion-service — spring-grpc 0.2.0 → 1.0.3 API rewrite needed (NEW ticket)
+    - partner-service — Spring Security WebSecurityConfiguration bean issue (NEW ticket)
+    - backoffice-service — outbox-starter JPA leak similar to READY-031 pattern (NEW ticket)
+    - support-service — Spring Security filter chain (NEW ticket)
+    - promotion-service Quarkus tests — Quarkus + Jackson 2/3 conflict (NEW ticket)
+- **Production readiness**: ~25% runtime → **~71% runtime** on the 41 modules tested (Maven cascade-skip eliminated). Big jump from "75% compile / 25% runtime" pre-fix to "75% compile / 71% runtime" post-fix.
+- **Lessons captured** (`docs/guides/LESSONS.md`):
+  - **L-041 CORRECTED**: Jackson `JsonSerializeAs` was ADDED in 2.21 (not removed in 2.18). Original misdiagnosis cost a planning cycle.
+  - **L-043**: Resilience4j 2.4 + SB 4.1 requires spring-boot4 module + 7 transitive dep-mgmt pins + RxJava3 runtime dep
+  - **L-044**: Spring Cloud 2025.1.2 + service-local version overrides trap; bulk sed required across 14 services
+  - **L-045**: SB 4.1.0 drops default Jackson 2 ObjectMapper bean; `spring-boot-jackson2` provides Jackson2AutoConfiguration
+- **Out of scope (NEW follow-up tickets)**:
+  - READY-037: Migrate `Profile` + other entities using `@Type(JsonType.class)` → `@JdbcTypeCode(SqlTypes.JSON)` (Hibernate 7 native JSON)
+  - READY-038: spring-grpc 0.2.0 → 1.0.3 API migration (billing-service, promotion-service)
+  - READY-039: Resolve 7 pre-existing ArchUnit violations
+  - READY-040: backoffice-service outbox JPA leak (READY-031 pattern repeat)
+  - READY-041: partner-service Spring Security config audit
+  - READY-042: support-service Spring Security filter chain
+  - READY-043: lending-service `PreApprovalStatus` enum dedup
+  - READY-044: Quarkus tests JSON empty body fix (promotion-service)
+
 ### Hypersistence JsonType → Hibernate 7 Native JSON (2026-06-15)
 
 - **Issue**: `hypersistence-utils-hibernate-70:3.15.3` (latest on Maven Central) was compiled against Hibernate 6.x. With SB 4.1 + Hibernate 7, method `AbstractClassJavaType.getJavaTypeClass()` became `final`, causing `IncompatibleClassChangeError` when loading any entity with `@Type(JsonType.class)`.

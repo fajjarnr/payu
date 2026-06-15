@@ -103,7 +103,7 @@
         <!-- Resilience -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
         </dependency>
 
         <!-- SB 4.0+: spring-boot-starter-aop removed (no @Aspect in this service) -->

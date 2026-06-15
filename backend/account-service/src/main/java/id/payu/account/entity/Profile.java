@@ -4,10 +4,10 @@ import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import id.payu.security.annotation.Sensitive;
 import id.payu.security.converter.EncryptedStringConverter;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Comment;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -67,7 +67,7 @@ public class Profile {
     @Sensitive
     private String address;
 
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "additional_data", columnDefinition = "jsonb")
     private Map<String, Object> additionalData = new HashMap<>();
 

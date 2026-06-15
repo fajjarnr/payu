@@ -2,6 +2,7 @@ package id.payu.lending.dto;
 
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.CreditScore;
+import id.payu.lending.domain.model.PreApprovalStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -194,10 +194,6 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         }
     }
 
-    private PreApprovalStatus convertStatus(id.payu.lending.dto.PreApprovalStatus responseStatus) {
-        return PreApprovalStatus.valueOf(responseStatus.name());
-    }
-
     private LoanPreApprovalResponse mapToResponse(LoanPreApproval preApproval) {
         return new LoanPreApprovalResponse(
                 preApproval.getId(),
@@ -208,7 +204,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
                 preApproval.getMinInterestRate(),
                 preApproval.getMaxTenureMonths(),
                 preApproval.getEstimatedMonthlyPayment(),
-                id.payu.lending.dto.PreApprovalStatus.valueOf(preApproval.getStatus().name()),
+                preApproval.getStatus(),
                 preApproval.getCreditScore(),
                 preApproval.getRiskCategory(),
                 preApproval.getReason(),

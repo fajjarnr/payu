@@ -19,7 +19,6 @@
 
     <properties>
         <java.version>25</java.version>
-        <resilience4j.version>2.2.0</resilience4j.version>
     </properties>
 
     <dependencies>
@@ -41,7 +40,7 @@
         <!-- Resilience4j Spring Boot Starter -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
             <version>${resilience4j.version}</version>
         </dependency>
 
@@ -78,6 +77,18 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-micrometer</artifactId>
             <version>${resilience4j.version}</version>
+        </dependency>
+
+        <!-- RxJava 3 (required by Resilience4j 2.4.0 + SB 4.1.0; spring-boot4 module's
+             FallbackConfigurationOnMissingBean references RxJava3FallbackDecorator which
+             directly imports io.reactivex.rxjava3.*; Spring's @ConditionalOnMissingBean
+             type deduction forces class introspection BEFORE the @Conditional gate fires,
+             so RxJava3 must be on classpath at runtime even though we don't use it.
+             See https://github.com/resilience4j/resilience4j/issues/2003-style bug). -->
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Micrometer for metrics -->

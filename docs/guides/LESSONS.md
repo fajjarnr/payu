@@ -277,23 +277,136 @@ The service-level work was 90% mechanical sed. The library work required real co
 2. **Always present the audit alongside the work**, not instead of it. The audit informs the next session's decision; the work delivers immediate value.
 3. **The audit-only phase is a discrete milestone**, not a stalling tactic. It produces a file with measurable value: line count, known issues count, effort estimate, references to upstream release notes.
 
-## L-041: Jackson 3 (tools.jackson.databind) ↔ Jackson 2 (com.fasterxml.jackson) ABI Break in SB 4.1.0 (2026-06-15)
+## L-041: Jackson 3 ↔ Jackson 2 Annotation Version Mismatch in SB 4.1.0 (CORRECTED) (2026-06-15)
 
-**Date**: 2026-06-15
+**Date**: 2026-06-15 (corrected)
 **Domain**: Java / Jackson / Spring Boot
-**Context**: Spring Boot 4.1.0 defaults to **Jackson 3** (`tools.jackson.databind.*` package). The SB 4.0 release notes state: "Jackson 3 is the recommended and default choice" and "Jackson 2 support ships in a deprecated form for facilitating migration to Jackson 3." However, **at runtime**, Jackson 3's `JsonMapper.Builder.<clinit>` calls `JacksonAnnotationIntrospector.<clinit>` which transitively requires `com.fasterxml.jackson.annotation.JsonSerializeAs` (a Jackson 2 annotation). This class was **REMOVED in Jackson 2.18**. Result: `java.lang.NoClassDefFoundError: com/fasterxml/jackson/annotation/JsonSerializeAs` at first Jackson 3 init in any Spring Boot 4.1.0 test that triggers `JsonMapper.builder()`.
+**Context**: Spring Boot 4.1.0 defaults to **Jackson 3** (`tools.jackson.databind.*` package). The SB 4.0 release notes state: "Jackson 3 is the recommended and default choice" and "Jackson 2 support ships in a deprecated form for facilitating migration to Jackson 3." At runtime, Jackson 3's `JsonMapper.Builder.<clinit>` calls `JacksonAnnotationIntrospector.<clinit>` which transitively requires `com.fasterxml.jackson.annotation.JsonSerializeAs`.
 
-**Pattern**: The classic fix is to use `spring-boot-autoconfigure-classic` (which provides Jackson 2 + Spring 6-style autoconfig). This module is at `org.springframework.boot:spring-boot-autoconfigure-classic:4.1.0` and pulls in `spring-boot-autoconfigure-classic-modules` (parent). It activates the Jackson 2 autoconfig path. But — **the Jackson 3 jar is STILL on the classpath** (provided by `spring-boot-starter-json` or similar). The fix is incomplete: classic module activates Jackson 2 autoconfig, but Jackson 3's static init still fails when something triggers it.
+**THE BUG (original misdiagnosis)**: Initial analysis claimed "`JsonSerializeAs` was REMOVED in Jackson 2.18". **This was wrong**.
 
-**Real fix options**:
-1. **Force Jackson 2 everywhere**: Exclude Jackson 3 modules from classpath via `spring-boot-starter-json` exclusions. The classic module then becomes the only JSON path. ~1-2 days effort.
-2. **Full Jackson 3 migration**: Replace all `com.fasterxml.jackson.*` imports with `tools.jackson.*` across the platform. 1-2 weeks effort. Per AGENTS.md, this is a `frontend-architect` (web) + `logic-builder` (backend) parallel work.
-3. **Wait for SB 4.x patch** that fixes the `JsonSerializeAs` resolution. Unclear timeline.
+**THE ACTUAL ROOT CAUSE**: `JsonSerializeAs` was **ADDED in Jackson 2.21** specifically to support Jackson 3's annotation introspection. Verification (`unzip -l jackson-annotations-2.{17,18,21}.jar | grep JsonSerializeAs`):
+- 2.17.x: NOT present
+- 2.18.x: NOT present
+- 2.21+: PRESENT
+
+The Jackson 3.1.4 BOM explicitly pins `<jackson.version.annotations>2.21</jackson.version.annotations>` (comment: "latest 2.x at time of 3.x minor version is released"). Our parent pom had `<jackson.version>2.18.6</jackson.version>` which overrode the BOM-managed annotation jar to an older version that lacked the class Jackson 3 needs.
+
+**THE FIX (1 line + cleanup)**: Remove the entire `<jackson.version>` property + the explicit Jackson dependency management block from parent pom. Let Spring Boot 4.1.0's `jackson-2-bom:2.21.4` (auto-imported via `spring-boot-dependencies`) manage all Jackson 2 artifact versions. Result:
+- jackson-core → 2.21.4 (from SB BOM)
+- jackson-databind → 2.21.4 (from SB BOM)
+- **jackson-annotations → 2.21** (from SB BOM, has `JsonSerializeAs`)
+- jackson-datatype-jsr310 → 2.21.4 (from SB BOM)
+
+**Verification**: `mvn test` on saga-starter went from 23 errors (all `NoClassDefFoundError: JsonSerializeAs` at context refresh) to 146/146 PASS. Same for outbox-starter (83/83 PASS). Cascade unblocked 20+ downstream service tests.
 
 **Lesson**:
-1. **SB 4.1.0 + Jackson 3 is a dual-stack transition period**, not a clean migration. The classic module is a half-fix. Plan for option 1 (lock to Jackson 2) for now, with option 2 (full Jackson 3 migration) as a future initiative.
-2. **The runtime error happens at first `JsonMapper.builder()` call** — meaning even tests that don't directly use JSON can fail if the Spring context loads `JacksonAutoConfiguration`. This is why the `saga-starter` and `outbox-starter` integration tests fail at context refresh, not at test execution.
-3. **Don't trust "Jackson 2 support ships in a deprecated form"** as a complete migration path. Verify the runtime init path yourself — the classic module alone is insufficient.
+1. **Never assume "class removed" without verifying the artifact directly**. The fix was actually "class added in newer version, you need to upgrade". Use `unzip -l` or `javap` against the actual jar in `~/.m2/repository` to confirm class presence before forming a hypothesis.
+2. **SB 4.1.0 ships a `jackson-2-bom` import** that pins all Jackson 2 artifacts correctly for Jackson 3 compat. **Never override `jackson.version` in a parent pom unless you also bump `jackson-annotations` to a compatible version**. The two artifacts have asymmetric versioning (annotations releases independently as `2.x`, core releases as `2.x.y`).
+3. **`spring-boot-autoconfigure-classic` is for AUTOCONFIG fallback, not Jackson version pinning**. It provides Jackson 2-style autoconfig (e.g., `ObjectMapper` bean if `spring-boot-jackson2` is also added) but doesn't fix annotation version mismatches.
+4. **Stakeholder decision is moot if root cause is wrong**: The original "Option A (force Jackson 2) vs Option B (full Jackson 3 migration)" framing in READY-036 became unnecessary once the actual root cause (annotation version) was identified. The fix is neither — it's removing an incorrect override.
+
+## L-043: Resilience4j 2.4.0 + Spring Boot 4.1.0 — `resilience4j-spring-boot4` Module Required + Transitive Cascade (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Resilience4j / Spring Boot
+**Context**: Per L-035 / L-038, Spring Cloud BOM is tightly coupled to Spring Boot major. Spring Cloud 2025.1.2 (for SB 4.1.0) pulls `spring-cloud-circuitbreaker-dependencies:5.0.2` which pins `<resilience4j.version>2.3.0</resilience4j.version>` and imports `resilience4j-bom:2.3.0`. PayU's parent pom sets `<resilience4j.version>2.4.0</resilience4j.version>` AND uses `resilience4j-spring-boot3` artifact. Two distinct issues surface at SB 4.1.0:
+
+1. **`resilience4j-spring-boot3` is for SB 3.x only**. SB 4.x requires `resilience4j-spring-boot4` (published since 2.4.0, March 2026). Failure to switch causes class loading failures during `@ConditionalOnMissingBean` introspection of fallback decorators.
+
+2. **`resilience4j-spring-boot4:2.4.0` depends on `resilience4j-spring6:2.4.0`** (compile scope). But Maven dep mediation prefers the older `resilience4j-spring6:2.2.0` brought in transitively by `resilience4j-bom:2.3.0` (from Spring Cloud). The 2.2.0 spring6 jar contains `RxJava3FallbackDecorator` but references `io.reactivex.rxjava3.*` packages directly. Without an explicit dep-mgmt pin, Maven serves the wrong (older) jar and `@ConditionalOnMissingBean` fails with `NoSuchMethodError: io.github.resilience4j.retry.annotation.Retry.configuration()` (2.4.0 spring6 expects 2.4.0 annotations, but mediation gives 2.2.0 annotations).
+
+3. **`resilience4j-bom` does NOT manage `resilience4j-spring-boot4`** (only spring-boot3 + spring6 + core artifacts). Manual pin required.
+
+**Pattern (verified migration recipe)**:
+```xml
+<!-- Parent pom dependencyManagement: pin ALL Resilience4j artifacts explicitly + import BOM -->
+<dependencyManagement>
+    <dependencies>
+        <!-- BOM (manages core/circuitbreaker/retry/bulkhead/timelimiter/spring6/spring-boot3) -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-bom</artifactId>
+            <version>${resilience4j.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
+        <!-- spring-boot4 (NOT in BOM) -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot4</artifactId>
+            <version>${resilience4j.version}</version>
+        </dependency>
+
+        <!-- Override Spring Cloud BOM's older r4j-spring6 + annotations + core + consumer + framework-common + circularbuffer + ratelimiter pins -->
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-spring6</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-annotations</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-core</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-consumer</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-framework-common</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-circularbuffer</artifactId><version>${resilience4j.version}</version></dependency>
+        <dependency><groupId>io.github.resilience4j</groupId><artifactId>resilience4j-ratelimiter</artifactId><version>${resilience4j.version}</version></dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+```xml
+<!-- All service/shared poms using r4j: switch to spring-boot4 artifact -->
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot4</artifactId>  <!-- was: resilience4j-spring-boot3 -->
+</dependency>
+```
+
+**Additional runtime dep required**: `RxJava3FallbackDecorator` in spring6:2.4.0 imports `io.reactivex.rxjava3.*` directly. Spring's `@ConditionalOnMissingBean` type-deduction forces class introspection BEFORE the `@Conditional` gate fires, so RxJava3 MUST be on classpath even though the application doesn't use RxJava3. Add to `resilience-starter/pom.xml`:
+```xml
+<dependency>
+    <groupId>io.reactivex.rxjava3</groupId>
+    <artifactId>rxjava</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+Version managed by SB 4.1.0 BOM (3.1.12).
+
+**Lesson**:
+1. **Spring Cloud BOM pins transitive r4j artifacts to older versions** that don't match our intended r4j.version. Maven dep mediation picks the BOM-managed version (depth 2) over the desired version (declared transitively at depth 3). The fix is explicit dep-mgmt pins for EVERY artifact in the r4j family, not just the entry-point starter.
+2. **Use `mvn dependency:tree -Dverbose -Dincludes='io.github.resilience4j:*'`** to detect version cascading bugs. Look for `(version managed from X.Y)` and `(omitted for conflict)` lines.
+3. **r4j-bom is incomplete** — doesn't include `spring-boot4`. Track Resilience4j team to add it. Until then, manual pin.
+4. **Spring's type-deduction in `@ConditionalOnMissingBean` is eager** — it forces class introspection BEFORE the bean's `@Conditional` annotations are evaluated. If the bean class references optional runtime libs (like RxJava3 here), those libs MUST be on classpath even when the bean is never instantiated. Workaround: include the optional libs as `runtime` scope deps.
+
+## L-044: Spring Cloud Vault 5.0.x Requires Spring Boot 4.0+ + Service-Local SC Version Overrides Trap (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Spring Cloud / Spring Boot
+**Context**: PayU services had per-service `<spring-cloud.version>2025.0.2</spring-cloud.version>` overrides plus local `<dependencyManagement>` imports of `spring-cloud-dependencies:2025.0.2`. When parent pom was bumped to SB 4.1.0 (which requires Spring Cloud 2025.1.2), the service-local overrides won (Maven dep-mgmt nearest-wins), pinning spring-cloud-* artifacts to 4.3.2 (the SB 3.x compat version). Result: services pulled `spring-cloud-vault-config:4.3.2` which references `org.springframework.boot.autoconfigure.web.ServerProperties` (SB 3.x package path) and `spring-cloud-commons:4.3.2` which references `org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties` (also SB 3.x). Both classes were moved/removed in SB 4.0. Symptom: `NoClassDefFoundError: org/springframework/boot/autoconfigure/web/ServerProperties` at context refresh.
+
+**Pattern**: Per-service Spring Cloud version overrides are a foot-gun during major SB migrations. They silently break the parent's intent.
+
+**Lesson**:
+1. **Audit per-service `<spring-cloud.version>` overrides + local dep-mgmt imports BEFORE bumping parent SB version**. 14 PayU services had this pattern (account, auth, transaction, lending, fx, dispute, wallet, support, backoffice, billing, investment, partner, compliance, promotion). Bulk sed: `s|<spring-cloud.version>2025.0.2</spring-cloud.version>|<spring-cloud.version>2025.1.2</spring-cloud.version>|g; s|<version>2025.0.2</version>|<version>2025.1.2</version>|g`.
+2. **Springdoc-openapi version is also coupled to SB major**. 2.x is SB 3.x compat; 3.0+ is SB 4.x compat. Bumping SB without bumping springdoc causes `NoClassDefFoundError: org/springframework/boot/autoconfigure/web/servlet/WebMvcProperties` at first SwaggerConfig load. Bump from 2.8.x → 3.0.3 (April 2026).
+3. **The "DRY parent pom" pattern fails when services override**. Consider a CI/ArchUnit check that fails the build if any service pom has `<spring-cloud.version>` property set OR imports `spring-cloud-dependencies` locally (forcing all services to inherit parent's version).
+
+## L-045: SB 4.1.0 Drops Default Jackson 2 `ObjectMapper` Bean — Add `spring-boot-jackson2` for Idempotency / Cache Use Cases (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Spring Boot / Jackson
+**Context**: PayU's `IdempotencyAutoConfiguration` (in `shared/api-commons`) `@Autowired`s a `com.fasterxml.jackson.databind.ObjectMapper` (Jackson 2) to serialize cached idempotency responses. In SB 3.x, the default `JacksonAutoConfiguration` created this bean automatically. In SB 4.1.0, the default is `tools.jackson.databind.json.JsonMapper` (Jackson 3) — no Jackson 2 `ObjectMapper` bean is created. Result: `NoSuchBeanDefinitionException: No qualifying bean of type 'com.fasterxml.jackson.databind.ObjectMapper'` when any service using `@Idempotent` loads its Spring context.
+
+**Pattern**: For services that need Jackson 2 `ObjectMapper` (because they use Jackson 2 API directly — e.g., cache wire format, idempotency response cache), explicitly add `spring-boot-jackson2`:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-jackson2</artifactId>
+</dependency>
+```
+This provides `Jackson2AutoConfiguration` which creates a Jackson 2 `ObjectMapper` bean alongside the Jackson 3 `JsonMapper`. Both can coexist.
+
+**Lesson**:
+1. **Identify all places using Jackson 2 `ObjectMapper` directly** (search `@Autowired ObjectMapper`, `@Bean ObjectMapper`, `new ObjectMapper()`). These all need `spring-boot-jackson2` on classpath.
+2. **The fix is library-level, not service-level**. Add the dep to the shared starter that consumes Jackson 2 (in our case, `api-commons`) so all downstream services inherit it transitively.
+3. **Plan a Jackson 3 migration as separate ticket**. Long-term, migrate `IdempotencyService` (and other consumers) to `tools.jackson.databind.json.JsonMapper`. Until then, `spring-boot-jackson2` is the bridge.
 
 ## L-042: The "Compile-Only" Production Readiness Metric is Misleading (2026-06-15)
 
@@ -321,4 +434,4 @@ True runtime confidence: **~25%**, not 75%.
 
 ---
 
-*Last Updated: June 15, 2026*
+*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2) added.*

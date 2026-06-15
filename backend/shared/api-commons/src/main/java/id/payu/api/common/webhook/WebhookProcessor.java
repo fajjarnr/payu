@@ -3,6 +3,7 @@ package id.payu.api.common.webhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
+@ConditionalOnBean({KafkaTemplate.class, StringRedisTemplate.class})
 @RequiredArgsConstructor
 public class WebhookProcessor implements DisposableBean {
 

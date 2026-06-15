@@ -6,8 +6,8 @@ import id.payu.account.dto.VerifyNikRequest;
 import id.payu.account.dto.VerifyNikResponse;
 import org.junit.jupiter.api.BeforeEach;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("READY-033 + READY-035: Profile entity uses @Type(JsonType.class) -> hypersistence-utils Hibernate 7 IncompatibleClassChangeError. Track hypersistence upgrade.")
+@Disabled("READY-037 (Profile entity Hypersistence migration DONE). Test now fails on different unrelated issues: (1) JwtAuthenticationConverter bean missing from @WebMvcTest slice, (2) H2 schema STATUS column not found. Track as separate web-slice test infrastructure ticket.")
 @WebMvcTest(controllers = NikVerificationController.class)
 @ImportAutoConfiguration({DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
 @Import(id.payu.account.config.SecurityConfig.class)

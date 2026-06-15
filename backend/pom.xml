@@ -26,7 +26,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Security Patches (RHACS Compliance) -->
-        <jackson.version>2.18.6</jackson.version>
+        <!-- Jackson 2 versions are managed by SB 4.1.0's jackson-2-bom (currently 2.21.4 + annotations 2.21 which provides JsonSerializeAs required by Jackson 3 BOM). Do NOT pin <jackson.version> here unless you also bump the SB parent BOM. -->
         <commons-io.version>2.18.0</commons-io.version>
         <commons-fileupload.version>1.6.0</commons-fileupload.version>
 
@@ -39,7 +39,7 @@
         <hypersistence.version>3.15.3</hypersistence.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
         <spring-cloud-contract.version>4.3.4</spring-cloud-contract.version>
-        <springdoc.version>2.8.17</springdoc.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <swagger-annotations.version>2.2.25</swagger-annotations.version>
         <lombok.version>1.18.42</lombok.version>
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
@@ -195,6 +195,61 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Resilience4j BOM (manages spring6 + spring-boot3 + core artifacts) -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bom</artifactId>
+                <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Resilience4j spring-boot4 (NOT in r4j-bom, must pin explicitly) -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot4</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- Resilience4j spring6 (override Spring Cloud BOM's 2.3.0 pin to match our 2.4.0) -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring6</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- Resilience4j core/annotations/consumer/framework-common (transitive pins not picked up from r4j-bom) -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-annotations</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-core</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-consumer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-framework-common</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circularbuffer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-ratelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
             <!-- Resilience4j -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -280,37 +335,7 @@
                 <version>${mapstruct.version}</version>
             </dependency>
 
-            <!-- Jackson Security Patches (Explicit Management) -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-parameter-names</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
+            <!-- Jackson 2 versions are managed by SB 4.1.0's jackson-2-bom (do not override here) -->
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
