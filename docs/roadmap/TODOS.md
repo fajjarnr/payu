@@ -236,7 +236,16 @@
 
 ## 📝 Implementation Plan & Task Tracker: READY-034 (Shared Starter Migration)
 
-### Phase 1: Update Dependencies & Namespace (`javax` -> `jakarta`)
+> **Status (2026-06-15)**: **AUDIT COMPLETE**. Migration report at [`READY-034_MIGRATION_REPORT.md`](./READY-034_MIGRATION_REPORT.md). No code changes applied per audit-only directive. Execution deferred to future sprint.
+>
+> **Blast radius**: 14 shared starters + 16+ service POMs (parent pom cascade) + 22 service property renames. Estimated effort: **4.0 dev days**.
+>
+> **Open questions before execution**:
+> 1. Exact package path for `org.springframework.boot.actuate.health.Health` in SB 4.1.0
+> 2. spring-grpc 0.2.0 → 1.0+ compat with Spring 7
+> 3. MapStruct 1.6.x compat with Spring 7 / Hibernate 7
+
+### Phase 0: Update Dependencies & Namespace (`javax` -> `jakarta`)
 - [ ] `api-commons`
 - [ ] `archunit-starter`
 - [ ] `cache-starter`
@@ -246,19 +255,19 @@
 - [ ] `logging-starter`
 - [ ] `mapper-starter`
 - [ ] `outbox-starter`
-- [ ] `quarkus-api-commons`
+- [ ] `quarkus-api-commons` *(deferred to UPGRADE-013 — Quarkus stack)*
 - [ ] `resilience-starter`
 - [ ] `rest-client-starter`
 - [ ] `saga-starter`
 - [ ] `security-starter`
 
-### Phase 2: Fix 4 Known Broken Starters (Spring 7 / Hibernate 7 / Jackson 3)
-- [ ] **`jms-starter`**: Fix missing `actuate.health` API.
-- [ ] **`rest-client-starter`**: Fix `RestClientErrorHandler` override mismatch.
-- [ ] **`events-starter`**: Fix missing `jackson.datatype.jsr310` and `boot.autoconfigure.kafka`.
-- [ ] **`saga-starter`**: Fix missing `hibernate.query.BindableType` and `boot.autoconfigure.domain`.
+### Phase 1: Fix 4 Known Broken Starters (Spring 7 / Hibernate 7 / Jackson 3)
+- [ ] **`jms-starter`**: Verify `actuate.health` package (likely stable in 4.1.0; smoke test).
+- [ ] **`rest-client-starter`**: Refactor `RestClient.Builder.defaultStatusHandler()` (REMOVED in Spring 7) to `.statusHandler(Predicate, ErrorHandler)`. Remove unused `spring-boot-starter-aop` dep.
+- [ ] **`events-starter`**: 3 fixes — (a) remove hardcoded Java 21 `<source>/<target>`, (b) rename `KafkaAutoConfiguration` import, (c) verify Jackson 2 `Jackson2ObjectMapperBuilder` still works.
+- [ ] **`saga-starter`**: 2 fixes — (a) rename `EntityScan` import, (b) bump `hypersistence-utils-hibernate-63:3.9.0` → `hypersistence-utils-hibernate-70:3.15.3`.
 
-### Phase 3: Compile & Test Audit
+### Phase 2: Compile & Test Audit
 - [ ] Run `mvn clean test` for `api-commons`
 - [ ] Run `mvn clean test` for `archunit-starter`
 - [ ] Run `mvn clean test` for `cache-starter`
@@ -268,16 +277,27 @@
 - [ ] Run `mvn clean test` for `logging-starter`
 - [ ] Run `mvn clean test` for `mapper-starter`
 - [ ] Run `mvn clean test` for `outbox-starter`
-- [ ] Run `mvn clean test` for `quarkus-api-commons`
 - [ ] Run `mvn clean test` for `resilience-starter`
 - [ ] Run `mvn clean test` for `rest-client-starter`
 - [ ] Run `mvn clean test` for `saga-starter`
 - [ ] Run `mvn clean test` for `security-starter`
 
-### Phase 4: Parent POM Bump & Validation
+### Phase 3: Parent POM Bump & Validation
 - [ ] Update `backend/pom.xml`: `spring-boot-starter-parent` -> `4.1.0`.
-- [ ] Apply `rest-assured-bom`, `aspectjweaver` (for `starter-aop`), and `testcontainers-bom` fixes.
+- [ ] Bump `spring-cloud.version`: `2025.0.2` → `2025.1.2`.
+- [ ] Bump `spring-cloud-contract.version`: `4.2.1` → `5.0.3`.
+- [ ] Bump `resilience4j.version`: `2.2.0` → `2.4.0`.
+- [ ] Bump `hypersistence.version`: `3.15.2` (hibernate-63) → `3.15.3` (hibernate-70).
+- [ ] Add `rest-assured-bom` to parent `dependencyManagement`.
+- [ ] Add `testcontainers-bom` to parent `dependencyManagement`.
 - [ ] Run `mvn -f backend/pom.xml clean test-compile -T 1C` to verify downstream service compilation.
+- [ ] **Service cascade (NEW)**: Update 16+ service poms to remove `spring-boot-starter-aop` + add `aspectjweaver` where AOP is used.
+- [ ] **Service property renames (NEW)**: Update 22 services — `management.tracing.enabled` → `management.tracing.export.enabled`, `spring.dao.exceptiontranslation.enabled` → `spring.persistence.exceptiontranslation.enabled`.
+
+### Phase 4: OpenRewrite & E2E Validation
+- [ ] Run OpenRewrite `JavaxMigrationToJakarta` + `SpringBoot3BestPractices` per service (per L-034: re-add `javax.annotation-api` after for gRPC services).
+- [ ] Deploy pilot service to OCP, verify E2E with `spring-boot-properties-migrator` runtime check.
+- [ ] Capture deprecation warnings, file follow-up tickets for remaining issues.
 
 ## 📝 Implementation Plan & Task Tracker: ARCH-006 (Spring Boot 4.1.0 & Jakarta EE 11)
 

@@ -19,6 +19,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### READY-034 — Spring Boot 4.1.0 Shared Starter Migration Audit (2026-06-15)
+
+- **Deliverable**: Static audit-only migration report at [`docs/roadmap/READY-034_MIGRATION_REPORT.md`](docs/roadmap/READY-034_MIGRATION_REPORT.md). No code changes applied per audit-only directive.
+- **Key findings**:
+  - 4 P0 blockers identified: `jms-starter` (actuator package rename verification), `rest-client-starter` (Spring 7 `RestClient.Builder.defaultStatusHandler()` REMOVED), `events-starter` (3 issues including `KafkaAutoConfiguration` package rename + Jackson 2 deprecated + hardcoded Java 21), `saga-starter` (Hibernate 7 + EntityScan package rename).
+  - `spring-boot-starter-aop` was **silently REMOVED** in Spring Boot 4.0 (last published at 3.5.15 + 4.0.0-M2). Affects 5 shared starters + 16 service poms = **20 total poms**. Replacement: AOP is now auto-configured when `aspectjweaver` is on classpath.
+  - 12 of 14 starters need **at minimum** pom-only changes (BOM imports, version bumps, dep removals). 10 need code changes.
+  - `quarkus-api-commons` is OUT OF SCOPE (Quarkus 3.33.1 stack, deferred to UPGRADE-013).
+- **Cascade to services**:
+  - `rest-assured-bom` + `testcontainers-bom` not in SB 4.1.0 parent BOM → 35+ service poms need explicit `<dependencyManagement>` imports.
+  - 16 service poms reference `spring-boot-starter-aop` (removed) → must be removed + AspectJ handling verified.
+  - Property renames: `management.tracing.enabled` → `management.tracing.export.enabled` + `spring.dao.exceptiontranslation.enabled` → `spring.persistence.exceptiontranslation.enabled` (22 services).
+- **Dependency version matrix** (verified against Maven Central + SB 4.0 release notes):
+  - Spring Cloud 2025.0.2 → **2025.1.2** (Spring Cloud BOM is tightly coupled to SB major version)
+  - Spring Cloud Contract 4.2.1 → **5.0.3** (5.0.x line for Spring 7)
+  - Hypersistence Utils 3.15.2 (hibernate-63) → **3.15.3 (hibernate-70)** (Hibernate 7.1 compat)
+  - Resilience4j 2.2.0 → **2.4.0** (Spring 7 compat)
+  - ArchUnit 1.3.0 → **1.4.1+** (Java 25 support — confirms READY-032 fix)
+- **Total migration effort estimate**: **4.0 dev days** (matches L-035 revised estimate). NOT bounded to 14 starters — parent POM cascade touches 30+ poms.
+- **Migration phases** (documented in report, not executed):
+  1. Phase 0: Parent POM pre-work (BOM imports + version bumps) — 0.5 day
+  2. Phase 1: 14 shared starter migrations in dependency order — 1.0 day
+  3. Phase 2: 16+ service POM cascade (mechanical) — 1.0 day
+  4. Phase 3: 22 service property renames — 0.5 day
+  5. Phase 4: E2E validation + OCP deploy — 1.0 day
+- **Lessons captured** (L-036 to L-040, pending add to LESSONS.md after execution):
+  - L-036: SB major migration cost concentrated in shared libs, not services
+  - L-037: `spring-boot-starter-aop` removal is undocumented in migration guide — silent removal
+  - L-038: Spring Cloud BOM version tightly coupled to Spring Boot major version
+  - L-039: Audit-only mode is a viable scope for "too-big" migrations
+  - L-040: Hypersistence `JsonType` API stable across Hibernate 6.3→7.0, only artifact name changes
+- **Open questions** (require verification before Phase 1 execution):
+  - Exact new package for `org.springframework.boot.actuate.health.Health` in SB 4.1.0 (artifact `spring-boot-actuator:4.1.0` exists but package may have moved)
+  - spring-grpc 0.2.0 → 1.0+ compatibility with Spring 7 (no Maven Central release notes for this transition)
+  - MapStruct 1.6.x compat with Spring 7 / Hibernate 7
+
 ### READY-003 — Test-Compile Green Platform-Wide (2026-06-13)
 
 - **Bug**: `mvn test-compile` failed in 8 backend services (account, auth, backoffice, fx, gateway, lending, partner, promotion) due to pre-existing inner-enum references in test files. Production code was already migrated to top-level enums per ARCH-009 (LESSONS L-032), but test files still referenced `X.InnerEnum.VALUE` after `git mv`. Also `SecurityConfigPatternTest` (added in 1.8.11) used a wrong source path (`account.config` dot-separated instead of `account/config` slash-separated) in 5 services, causing `NoSuchFileException` on every run.
