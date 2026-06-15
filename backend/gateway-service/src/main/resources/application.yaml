@@ -496,8 +496,12 @@ gateway:
       methods: ["GET", "POST", "PUT"]
     qris:
       service: "transaction-service"
-      target-prefix: "/api/v1/qris"
+      target-prefix: "/api/v1/transactions/qris"
       methods: ["GET", "POST"]
+    payments/va:
+      service: "transaction-service"
+      target-prefix: "/api/v1/payments/va"
+      methods: ["GET", "POST", "PUT", "DELETE"]
     billers:
       service: "billing-service"
       target-prefix: "/api/v1/billers"

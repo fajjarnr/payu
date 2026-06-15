@@ -65,6 +65,10 @@ public class RequestValidationFilter implements ContainerRequestFilter {
 
         // Payment endpoints
         map.put("/api/v1/payments", "payments-create.json");
+        // Virtual Account endpoints (must be more specific than /api/v1/payments
+        // to win longest-prefix match in the filter's path resolution)
+        map.put("/api/v1/payments/va", "payments-va-create.json");
+        map.put("/api/v1/payments/va/{vaId}", "payments-va-create.json");
 
         // Partner endpoints
         map.put("/api/v1/partners", "partners-create.json");

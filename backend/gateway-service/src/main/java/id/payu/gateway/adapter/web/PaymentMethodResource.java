@@ -25,7 +25,7 @@ import java.util.List;
  *
  * Part of E-15 IMP-041: Payment Method Selection API
  */
-@Path("/api/v1/payments")
+@Path("/api/v1/payments/methods")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
@@ -36,7 +36,6 @@ public class PaymentMethodResource {
     PaymentMethodService paymentMethodService;
 
     @GET
-    @Path("/methods")
     @Operation(summary = "Get available payment methods", description = "Returns available payment methods with eligibility, fees, and settlement times based on payment context")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Payment methods retrieved successfully",

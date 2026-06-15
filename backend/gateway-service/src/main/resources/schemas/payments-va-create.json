@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/payments-va-create.json",
+  "title": "Create Virtual Account Request",
+  "description": "Schema for creating a virtual account for payment collection",
+  "type": "object",
+  "properties": {
+    "bankCode": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 10,
+      "description": "Bank code (e.g., BCA, BRI, MANDIRI)"
+    },
+    "billerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Biller identifier"
+    },
+    "partnerId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Partner UUID"
+    },
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Virtual account amount"
+    },
+    "currency": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3,
+      "description": "Currency code (ISO 4217)"
+    },
+    "customerName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "customerEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "customerPhone": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "externalId": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "callbackUrl": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": ["bankCode", "billerId", "partnerId", "amount", "customerName"],
+  "additionalProperties": false
+}
