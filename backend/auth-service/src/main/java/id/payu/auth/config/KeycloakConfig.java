@@ -6,6 +6,7 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 @ConfigurationProperties(prefix = "payu.keycloak")
@@ -33,5 +34,18 @@ public class KeycloakConfig {
                 .username(admin.username)
                 .password(admin.password)
                 .build();
+    }
+
+    /**
+     * SB 4.1.0 + Spring 7 reactive autoconfig changed: WebClient.Builder is no longer
+     * auto-registered as @Bean even with spring-boot-starter-webflux on classpath.
+     * Must define explicitly for downstream @Autowired WebClient.Builder usage
+     * (KeycloakService.webClientBuilder constructor param).
+     *
+     * READY-056: Track Spring Boot upstream issue for proper autoconfig restoration.
+     */
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
     }
 }

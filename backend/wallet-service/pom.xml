@@ -22,7 +22,7 @@
         <test.excluded.groups>integration</test.excluded.groups>
         <grpc.version>1.69.0</grpc.version>
         <protobuf.version>3.25.5</protobuf.version>
-        <spring-grpc.version>0.2.0</spring-grpc.version>
+        <spring-grpc.version>1.0.3</spring-grpc.version>
         <protoc.version>3.25.5</protoc.version>
     </properties>
 

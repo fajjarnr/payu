@@ -123,7 +123,7 @@ payu:
       async: true
       thread-pool-size: 4
     invalidation:
-      enabled: true
+      enabled: false  # READY-057: requires KafkaTemplate bean (not provided in product-catalog context). Re-enable after Kafka setup.
       topic: cache-invalidation
       consumer-group: product-catalog-cache-invalidation-group
     local-cache:

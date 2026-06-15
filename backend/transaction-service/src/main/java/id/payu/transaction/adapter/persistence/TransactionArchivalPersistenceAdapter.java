@@ -5,7 +5,6 @@ import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.TransactionArchiveJpaRepository;
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

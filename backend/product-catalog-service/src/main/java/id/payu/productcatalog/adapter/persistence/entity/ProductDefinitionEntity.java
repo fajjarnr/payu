@@ -1,11 +1,11 @@
 package id.payu.productcatalog.adapter.persistence.entity;
 
 import id.payu.productcatalog.domain.model.ProductType;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class ProductDefinitionEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "parameters", columnDefinition = "jsonb")
     private Map<String, Object> parameters;
 
