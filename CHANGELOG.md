@@ -19,6 +19,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 8 + E2E Verify: 3 Production Bug Fixes + Cards CRUD VERIFIED (2026-06-15)
+
+- **3 production runtime bugs FIXED + redeployed `:1.8.22`** (auth, wallet, product-catalog):
+  - **READY-056 auth-service**: SB 4.1 reactive autoconfig stopped auto-registering `WebClient.Builder` bean. Added explicit `@Bean WebClient.Builder webClientBuilder()` in `KeycloakConfig`.
+  - **READY-038 wallet-service**: `spring-grpc.version 0.2.0 → 1.0.3` local override (was hardcoded in pom, grpc-starter already at 1.0.3 from iter 1 cascade). Resolves `AbstractGrpcClientRegistrar` class not found. Also bumped memory limit 512Mi → 1024Mi (OOMKilled with heavier Resilience4j 2.4 + spring-grpc 1.0.3 deps).
+  - **READY-057 product-catalog-service**: 3-chain fix:
+    1. Hypersistence `@Type(JsonType.class) → @JdbcTypeCode(SqlTypes.JSON)` on `ProductDefinitionEntity.parameters` (same as Profile pattern, READY-037 family)
+    2. cache-starter `@ConditionalOnClass(KafkaTemplate.class) → @ConditionalOnBean(KafkaTemplate.class)` on `cacheInvalidationPublisher` + `cacheInvalidationConsumer` (class is on classpath via spring-kafka transitive but bean not present in product-catalog context)
+    3. `payu.cache.invalidation.enabled=true → false` in application.yml + env var `PAYU_CACHE_INVALIDATION_ENABLED=false` (product-catalog doesn't use Kafka)
+  - Also cleanup: removed unused `JsonType` import from transaction-service `TransactionArchivalPersistenceAdapter`.
+- **E2E CRUD VERIFIED via direct gateway route**:
+  - Chain: `gateway-service:1.8.21` (Quarkus) → `wallet-service:1.8.22` (fresh build) → Postgres
+  - JWT auth: Keycloak `payu-mobile` client + customer1 user (sub=7a51ced3-5602-40fb-96e7-1703e9243ed5)
+  - T1 CREATE card: **HTTP 201** ✓ (card 6c70e974-947d-42f2-ab01-e30a9c0460a0 created)
+  - T2 READ card: **HTTP 200** ✓ (status=ACTIVE)
+  - T3 FREEZE: **HTTP 200** ✓
+  - T4 UNFREEZE: **HTTP 200** ✓
+  - T5 Verify final: **HTTP 200** ✓ (status=ACTIVE post-unfreeze)
+- **3scale APIcast**: not used for E2E this iteration — no 3scale `Application` CR registered (`oc get applications.capabilities.3scale.net -A` returns "No resources found"). APIcast returns 403 "Authentication failed" for all user_keys. Future iteration: re-register 3scale Application + DeveloperAccount per `ProxyConfigPromote` workflow.
+- **Final cluster state (`payu-dev`)**:
+  - **42 pods Running, 0 fail**
+  - **25/26 services UP** (3 @ `:1.8.22` + 22 @ `:1.8.21`)
+  - **E2E real-world flow CARDS CRUD verified end-to-end**
+- **NEW lesson L-048 reinforced**: 100% test green ≠ runtime healthy. Iteration 7 deployed 22 services successfully but 3 had runtime production bugs (WebClient autoconfig, spring-grpc package, Hypersistence + cache-Kafka conditional). All 3 fixed in iter 8.
+
 ### Iteration 7: Full Platform Rebuild + Deploy :1.8.21 (2026-06-15)
 
 - **Built 26 images @ `:1.8.21`** for all Java backend services + simulators (18 Spring Boot + 8 Quarkus). Pushed to OCP registry.
