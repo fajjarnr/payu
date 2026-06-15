@@ -22,13 +22,13 @@ public class SplitBillParticipantEntity {
     @Column(name = "split_bill_id")
     private UUID splitBillId;
 
-    @Column(name = "account_id", nullable = false)
+    @Column(name = "account_id", nullable = true)
     private UUID accountId;
 
-    @Column(name = "account_number", nullable = false)
+    @Column(name = "account_number", nullable = true)
     private String accountNumber;
 
-    @Column(name = "account_name", nullable = false)
+    @Column(name = "account_name", nullable = true)
     private String accountName;
 
     @Column(name = "amount_owed", nullable = false)
