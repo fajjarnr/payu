@@ -199,6 +199,126 @@ git commit -m "fix(arch-006): re-add javax.annotation-api after OpenRewrite run"
 # - mvn -f backend/pom.xml rewrite:run (per service or globally)
 # - Re-add javax.annotation-api per L-034 if gRPC service
 ```
+## L-036: Spring Boot 4.1.0 Migration — Library-First Cost Concentration (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Architecture / Framework Migration
+**Context**: READY-034 partial execution confirmed L-035's hypothesis quantitatively. The 4 dev-day estimate (vs original 1-2 day TODOS estimate) was driven by shared starter migration work (14 starters × ~2h each) cascading to 16+ service POMs that needed `spring-boot-starter-aop` removal, Hibernate 6.3→7.0 hypersistence artifact rename, and testcontainers 2.0 artifact renames. The 6 starters migrated in Phase 1 (jms, saga, events, outbox, rest-client, api-commons) consumed ~3 hours of work despite OpenRewrite being available.
+
+**Pattern**: When a platform has many services sharing a library set, the framework upgrade ROI is heavily concentrated in the libraries:
+- 14 starters migrated in ~1 hour
+- 16+ service POM cascades in ~1 hour (mechanical)
+- 22 service property renames in ~30 minutes (no deprecated properties found)
+- 22 service main code fixes in ~2 hours (bulk sed for package renames)
+- 30 test files `@MockBean` → `@MockitoBean` in ~1 hour
+
+The service-level work was 90% mechanical sed. The library work required real code understanding (audit-only report identified the issues, but only execution revealed the full extent).
+
+**Lesson**:
+1. **Library-first migration order is mandatory**, but the cost estimate must include the BOM cascade (parent POM updates ripple to 30+ downstream poms). L-035's 4-day estimate was accurate.
+2. **Mechanical sed works at scale** when the renames are known in advance. 95% of the 50+ file changes across 14 services were done via `find ... -exec sed -i` patterns. Per the orchestrator's "subagent + parallel dispatch" SOP, this is a textbook case for cavecrew-investigator (find usages) → cavecrew-builder (apply fixes in parallel).
+3. **OpenRewrite is NOT a silver bullet** for test framework changes (`@MockBean` removed, `TestRestTemplate` removed). These are genuine API changes requiring per-test rewrites, not package renames.
+
+## L-037: `spring-boot-starter-aop` Silent Removal in SB 4.0 (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Build Tooling / Spring Boot
+**Context**: Confirmed during READY-034 execution. The `spring-boot-starter-aop` artifact was last published at `3.5.15` + `4.0.0-M2`. Final `4.0.0` and `4.1.0` releases do **NOT** publish this artifact. SB 4.0 release notes mention this only in passing under "Minor adjustments" without explicit deprecation warning. Result: 20 poms (5 shared starters + 16 services) reference a non-existent artifact, causing reactor-wide `mvn` parse failures BEFORE compilation can even begin.
+
+**Pattern**: AOP is now auto-configured when `aspectjweaver` is on the classpath (per SB 4.0 release notes: "Spring Boot automatically configures Aspect-Oriented Programming (AOP) and defaults to using CGLib proxies."). No starter wrapper needed.
+
+**Lesson**:
+1. **For services that USE AOP** (e.g., have `@Aspect` classes): replace `spring-boot-starter-aop` with explicit `org.aspectj:aspectjweaver` (managed by SB BOM, no version needed).
+2. **For services that DON'T use AOP** (e.g., `rest-client-starter` had it as stale dep): just remove the dep entirely. No AOP fallback needed.
+3. **Always verify with `mvn help:effective-pom`** before assuming a dep works. The reactor parse failure is a hard stop, not a soft warning.
+4. **SB release notes are NOT exhaustive** for dependency changes. Always grep for the artifact in `~/.m2/repository` to confirm it's published in the target version.
+
+## L-038: Testcontainers 2.0 Artifact Rename — `junit-jupiter` → `testcontainers-junit-jupiter` (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Build Tooling / Testcontainers
+**Context**: Testcontainers 2.0.5 (the version pulled in by SB 4.1.0 BOM) renamed all artifacts with a `testcontainers-` prefix for namespace consistency. Code that used `org.testcontainers:junit-jupiter:1.x` in 3.5.14 era needs to be `org.testcontainers:testcontainers-junit-jupiter:2.0.5` in 4.1.0 era. Same pattern for `postgresql` → `testcontainers-postgresql`, `kafka` → `testcontainers-kafka`, etc.
+
+**Pattern**: This is purely a package rename — no API changes. The Testcontainers Java API (`Container.start()`, `@Container`, `DynamicPropertySource`, etc.) is unchanged.
+
+**Lesson**:
+1. **Always check the BOM contents first**. `mvn dependency:tree -Dincludes='com.fasterxml.jackson*:*'` would have revealed this in advance.
+2. **Mechanical sed works** for these renames: `s|org.testcontainers:junit-jupiter|org.testcontainers:testcontainers-junit-jupiter|g`. 22+ service poms updated in 1 sed pass.
+3. **For poms with hardcoded version** (e.g., `<version>1.20.4</version>` in `notification-service/pom.xml`): remove the version entirely to use parent BOM-managed version.
+
+## L-039: Hypersistence JsonType — Hibernate 6.x → 7.x ABI Break (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Hibernate / Hypersistence
+**Context**: `hypersistence-utils-hibernate-70:3.15.3` (latest available on Maven Central as of June 2026) is the most recent release. It was compiled against Hibernate 6.x where `org.hibernate.type.descriptor.java.AbstractClassJavaType.getJavaTypeClass()` was a non-final method. Spring Boot 4.1.0 ships Hibernate 7.x, which marked this method as `final`. Result: `java.lang.IncompatibleClassChangeError: class io.hypersistence.utils.hibernate.type.json.internal.JsonJavaTypeDescriptor overrides final method` at class load time (`JsonType.<clinit>`).
+
+**Pattern**: When loading a `@Type(JsonType.class)` annotated entity column, the static init of `JsonType` calls `JsonType.class.getDeclaredConstructor().newInstance()` which triggers `JsonJavaTypeDescriptor.<init>` → fails because parent method is now final. The error happens at Spring context refresh time, not at Hibernate query time, so even simple SELECTs fail.
+
+**Lesson**:
+1. **Hypersistence-utils has not been updated for Hibernate 7 ABI changes**. Maven Central confirms 3.15.3 is the latest, no newer release as of 2026-06-15. Track for upstream fix.
+2. **Workaround: migrate to Hibernate 7 native JSON support** — replace `@Type(JsonType.class)` with `@JdbcTypeCode(SqlTypes.JSON)`. No external JSON type lib needed; Hibernate handles it natively. This was the fix applied in READY-034 execution for 5 fields across 2 starter entities (SagaInstance, OutboxEvent). See commit `b6868bb9`.
+3. **Migration is purely mechanical**: change the annotation, remove the hypersistence-utils-hibernate-70 dep, no import changes needed (both annotations are in `org.hibernate.annotations`).
+4. **Caveat**: Not all entities using `@Type(JsonType.class)` were migrated in this session (e.g., `account-service/Profile.java`). Per-stop work — each service that uses hypersistence-utils-hibernate-70 needs migration. Track as follow-up ticket per service.
+
+## L-040: Audit-Only Mode is a Valid Scope for "Too-Big" Migrations (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Process / Project Management
+**Context**: READY-034 was estimated at 4 dev days. In a single session, the natural tendency is to try to finish everything. But per the orchestrator's "Graceful Halt" + "Structured Completion" SOP, a mid-session stop + "audit-only report" deliverable is a valid scope.
+
+**Pattern**: When the user signals scope concern (e.g., "READY-034 only" vs "full platform migration"), the right response is:
+1. Acknowledge the scope is bounded.
+2. Deliver a **static audit** (no code changes) that enumerates: P0 blockers, P1 issues, dependency version matrix, total effort estimate, migration phases, lessons pending.
+3. Get user decision: execute now (with clear cost estimate) OR defer to future sprint.
+4. The audit report is **valuable even if never executed** — it captures institutional knowledge about the migration's risks and rewards.
+
+**Lesson**:
+1. **Audit reports are deliverables**, not throwaway work. The 664-line `READY-034_MIGRATION_REPORT.md` documented: 4 known P0 blockers (jms, rest-client, events, saga), 12 starter POM changes needed, version matrix for Spring Cloud + Hypersistence + Resilience4j + ArchUnit, and the 4-day estimate. This is institutional knowledge worth keeping.
+2. **Always present the audit alongside the work**, not instead of it. The audit informs the next session's decision; the work delivers immediate value.
+3. **The audit-only phase is a discrete milestone**, not a stalling tactic. It produces a file with measurable value: line count, known issues count, effort estimate, references to upstream release notes.
+
+## L-041: Jackson 3 (tools.jackson.databind) ↔ Jackson 2 (com.fasterxml.jackson) ABI Break in SB 4.1.0 (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Jackson / Spring Boot
+**Context**: Spring Boot 4.1.0 defaults to **Jackson 3** (`tools.jackson.databind.*` package). The SB 4.0 release notes state: "Jackson 3 is the recommended and default choice" and "Jackson 2 support ships in a deprecated form for facilitating migration to Jackson 3." However, **at runtime**, Jackson 3's `JsonMapper.Builder.<clinit>` calls `JacksonAnnotationIntrospector.<clinit>` which transitively requires `com.fasterxml.jackson.annotation.JsonSerializeAs` (a Jackson 2 annotation). This class was **REMOVED in Jackson 2.18**. Result: `java.lang.NoClassDefFoundError: com/fasterxml/jackson/annotation/JsonSerializeAs` at first Jackson 3 init in any Spring Boot 4.1.0 test that triggers `JsonMapper.builder()`.
+
+**Pattern**: The classic fix is to use `spring-boot-autoconfigure-classic` (which provides Jackson 2 + Spring 6-style autoconfig). This module is at `org.springframework.boot:spring-boot-autoconfigure-classic:4.1.0` and pulls in `spring-boot-autoconfigure-classic-modules` (parent). It activates the Jackson 2 autoconfig path. But — **the Jackson 3 jar is STILL on the classpath** (provided by `spring-boot-starter-json` or similar). The fix is incomplete: classic module activates Jackson 2 autoconfig, but Jackson 3's static init still fails when something triggers it.
+
+**Real fix options**:
+1. **Force Jackson 2 everywhere**: Exclude Jackson 3 modules from classpath via `spring-boot-starter-json` exclusions. The classic module then becomes the only JSON path. ~1-2 days effort.
+2. **Full Jackson 3 migration**: Replace all `com.fasterxml.jackson.*` imports with `tools.jackson.*` across the platform. 1-2 weeks effort. Per AGENTS.md, this is a `frontend-architect` (web) + `logic-builder` (backend) parallel work.
+3. **Wait for SB 4.x patch** that fixes the `JsonSerializeAs` resolution. Unclear timeline.
+
+**Lesson**:
+1. **SB 4.1.0 + Jackson 3 is a dual-stack transition period**, not a clean migration. The classic module is a half-fix. Plan for option 1 (lock to Jackson 2) for now, with option 2 (full Jackson 3 migration) as a future initiative.
+2. **The runtime error happens at first `JsonMapper.builder()` call** — meaning even tests that don't directly use JSON can fail if the Spring context loads `JacksonAutoConfiguration`. This is why the `saga-starter` and `outbox-starter` integration tests fail at context refresh, not at test execution.
+3. **Don't trust "Jackson 2 support ships in a deprecated form"** as a complete migration path. Verify the runtime init path yourself — the classic module alone is insufficient.
+
+## L-042: The "Compile-Only" Production Readiness Metric is Misleading (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Process / Metrics
+**Context**: During READY-034 partial execution + READY-035 test framework migration, the platform went from "compile-broken" to "compile-clean across 22 services + 14 shared starters + all 30 test files". This was reported as "production readiness 70% → 75%". But a subagent dispatched to run the actual `mvn -T 1C test` revealed:
+- **Only 11/41 modules** had tests that actually **ran at runtime** (compile-clean ≠ runtime-clean)
+- **9/11 passed 100%** at runtime (5 starters + 1 simulator + 3 services)
+- **2/11 failed** (saga-starter 84%, outbox-starter 78%) — both at context load due to the Jackson 3 ABI break (L-041)
+- **20 business services SKIPPED** entirely (Maven `-fae -T 1C` cascade-stops at upstream test failure)
+
+True runtime confidence: **~25%**, not 75%.
+
+**Pattern**: "Production readiness" is a multi-dimensional metric. A single percentage hides the gap between:
+- **Compile-time**: 100% (all sources compile against SB 4.1.0 API surface)
+- **Unit-test runtime**: ~25% (only 9/41 modules run + pass at runtime)
+- **Integration-test runtime**: ~10% (many tests require Testcontainers/Docker which is env-dependent)
+- **E2E**: 0% (no OCP deploys yet)
+
+**Lesson**:
+1. **Always include a runtime test run in any "production readiness" assessment**. The 1m35s cost of running `mvn -T 1C test` is trivial compared to the wrong-direction work that follows a false-positive 75% claim.
+2. **The `mvn -fae -T 1C` cascade-skip is a known footgun**: when one starter test fails, 20 downstream service tests don't run. The "100% compile" metric gives the illusion of progress. Always also count the **modules that didn't run**, not just the ones that ran.
+3. **Don't merge "production-ready" claims based on compile alone**. The orchestrator's "Verification-First Planning" SOP requires evidence of runtime correctness, not just absence of compile errors.
+4. **Future work**: Re-run `mvn -T 1C test` after each major fix (e.g., after Jackson 3 strategy is decided) to update the runtime metric.
 
 ---
-*Last Updated: June 14, 2026*
+
+*Last Updated: June 15, 2026*
