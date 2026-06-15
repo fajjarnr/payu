@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * Supports transaction history aggregation, balance snapshots, and secure PDF delivery.
  */
 @EnableJpaRepositories(basePackages = "id.payu.statement.adapter.persistence.repository")
-@org.springframework.boot.autoconfigure.domain.EntityScan(basePackages = "id.payu.statement.adapter.persistence.entity")
+@org.springframework.boot.persistence.autoconfigure.EntityScan(basePackages = "id.payu.statement.adapter.persistence.entity")
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableScheduling

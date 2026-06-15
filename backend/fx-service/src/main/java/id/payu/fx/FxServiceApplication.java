@@ -8,7 +8,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories(basePackages = "id.payu.fx.adapter.persistence.repository")
-@org.springframework.boot.autoconfigure.domain.EntityScan(basePackages = "id.payu.fx.adapter.persistence.entity")
+@org.springframework.boot.persistence.autoconfigure.EntityScan(basePackages = "id.payu.fx.adapter.persistence.entity")
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients

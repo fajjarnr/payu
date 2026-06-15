@@ -68,10 +68,29 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Boot Kafka Auto-Configuration (provides KafkaAutoConfiguration) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-kafka</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Jackson 2 (pinned explicitly — SB 4.1.0 BOM defaults to Jackson 3) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.18.6</version>
         </dependency>
 
         <!-- Lombok -->

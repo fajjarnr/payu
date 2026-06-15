@@ -89,11 +89,11 @@ public class JmsAutoConfiguration {
     }
 
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(org.springframework.boot.actuate.health.HealthIndicator.class)
+    @ConditionalOnClass(org.springframework.boot.health.contributor.HealthIndicator.class)
     static class JmsHealthConfiguration {
         @Bean
         @ConditionalOnMissingBean(name = "artemisJmsHealthIndicator")
-        public org.springframework.boot.actuate.health.HealthIndicator artemisJmsHealthIndicator(ConnectionFactory connectionFactory) {
+        public org.springframework.boot.health.contributor.HealthIndicator artemisJmsHealthIndicator(ConnectionFactory connectionFactory) {
             return new id.payu.jms.health.JmsHealthIndicator(connectionFactory);
         }
     }

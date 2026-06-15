@@ -42,11 +42,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring AOP for aspects -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
+        <!-- SB 4.0+: spring-boot-starter-aop removed; not needed (no @Aspect in this starter) -->
 
         <!-- Resilience4j Spring Boot Starter -->
         <dependency>
