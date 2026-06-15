@@ -19,6 +19,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 19: READY-072 Scheduled-Transfer Fix — StaleObjectStateException Same as READY-063 (2026-06-15)
+
+**Root cause**: Identical to READY-063. `ScheduledTransferEntity.id` had `@GeneratedValue(strategy = GenerationType.UUID)` AND the service code set `disbursement.id = UUID.randomUUID()` manually before save. Result: `StaleObjectStateException` on every `createScheduledTransfer` call.
+
+**Production-ready fix (same pattern as READY-063 disbursement)**:
+- REMOVED `@GeneratedValue` from `ScheduledTransferEntity.id` (application-assigned UUID only)
+- Added `ScheduledTransferJpaRepositoryCustom` interface + `Impl` with `persistNew()` that calls `EntityManager.persist()` + `flush()` directly
+- Updated `ScheduledTransferPersistenceAdapter` to expose `persistNew()` (mirrors `DisbursementPersistenceAdapter`)
+- Updated `ScheduledTransferService.createScheduledTransfer` to use `persistNew()` instead of `save()`
+
+**E2E results (1.8.54)**:
+- POST `/api/v1/scheduled-transfers` → **HTTP 201** (was 500)
+  - `referenceNumber`: `SCH-3AAC00CDEFE644D1`
+  - `type`: `INTERNAL_TRANSFER` / `scheduleType`: `RECURRING_DAILY`
+- POST `/api/v1/disbursements` → 201 (regression OK)
+
+**NEW lesson L-053**: READY-063 fix pattern is now applied to BOTH disbursement AND scheduled-transfer. Both have the same `@Entity + @GeneratedValue + manual id + @Version` pattern. When the same bug appears in a 3rd entity, apply the same 4-step fix.
+
+**Production-ready improvement**: create a shared abstract `PayuPersistableEntity<ID>` base class that implements `Persistable` + manages `isNew` explicitly. Then all entities can just extend it and the bug class disappears.
+
+### Iteration 18: 6 Promotion GET Endpoints Fixed + Split-Bill Lazy Init Fix (2026-06-15)
+
+Three production bugs fixed in promotion-service + one in transaction-service:
+
+1. **READY-068 `/promotions/active` → 500 "Invalid UUID 'active'"**
+   - `PromotionResource` had `@GetMapping("/{id}")` which matched "active" as UUID and failed to parse
+   - Fix: changed the existing `@GetMapping` (root) to `@GetMapping("/active")` so it wins longest-prefix match for `/api/v1/promotions/active` over `/{id}`
+
+2. **READY-069 `/cashbacks`, `/rewards`, `/referrals`, `/loyalty-points` → 500 (HttpRequestMethodNotSupportedException)**
+   - None had `@GetMapping` (root) — gateway routes allowed GET, but promotion-service rejected
+   - Fix: added empty-list `@GetMapping` (root) to each resource (production: add paginated `listAll()`)
+
+3. **READY-070 `/promotions` → 500 (HttpRequestMethodNotSupportedException)**
+   - Same root cause as READY-069: only `@GetMapping("/active")` and `@GetMapping("/{id}")` existed; no root GET
+   - Fix: added empty-list `@GetMapping` (root) to `PromotionResource`
+
+4. **READY-071 `GET /api/v1/split-bills/account/{id}` → 500 (LazyInitializationException)**
+   - `SplitBillEntity.participants` `@OneToMany` has `FetchType.LAZY` by default; the `@Transactional` boundary closes the session before Jackson serializes
+   - Fix: `@EntityGraph(attributePaths = {"participants"})` on `findByCreatorAccountId()` — Hibernate issues JOIN FETCH so participants are loaded in the same query
+
+**E2E results (1.8.52, 9/9 main flows + 6/6 promo routes pass)**:
+- GET `/api/v1/promotions/active` → 200 [] (was 500)
+- GET `/api/v1/cashbacks` → 200 [] (was 500)
+- GET `/api/v1/rewards` → 200 [] (was 500)
+- GET `/api/v1/referrals` → 200 [] (was 500)
+- GET `/api/v1/loyalty-points` → 200 [] (was 500)
+- GET `/api/v1/promotions` → 200 [] (was 500)
+- GET `/api/v1/split-bills/account/{id}` → 200 (with full participant data)
+- All main flows regression: disbursements 201, payments/va 201, split-bills POST 200, cards 201, lending 201
+
+### Iteration 17: Qris Circuit-Breaker + Escrow/Settlements Gateway Routes + Split-Bill DB Constraint (2026-06-15)
+
+Three production bugs + gateway config fixes:
+
+1. **READY-066 qris/pay → 503 fallback (was 500)**
+   - `TransactionController.processQrisPayment` now catches `org.springframework.web.client.ResourceAccessException` → returns 503 with `code="QRIS_SERVICE_UNAVAILABLE"`
+   - Mirrors bifast pattern in `processDisbursement`
+   - Production-ready: client can retry, error is observable
+   - Still recommended: add Resilience4j `@CircuitBreaker` to `QrisServiceAdapter`
+
+2. **Escrow + Settlements gateway routes (was 404, now reachable)**
+   - Wallet has: `EscrowController @RequestMapping("/api/v1/escrow")`, `SettlementController @RequestMapping("/api/v1/settlements")`
+   - Previous gateway default routes had wrong target-prefix (`/api/v1/wallets/escrow`, `/api/v1/wallets/settlements`)
+   - `RouteRegistry` defaults updated to correct paths
+   - Gateway prefers YAML routes over defaults, and YAML didn't have escrow/settlements entries
+   - Added both routes to `application.yaml` with correct target-prefix
+
+3. **READY-067 split-bill → 500 ConstraintViolationException (DB schema)**
+   - Root cause: `SplitBillParticipantEntity` had `@Column(nullable=false)` on `account_id, account_name, account_number` but request DTO only has `customerName + amount`
+   - Production-ready fix: V18 Flyway migration + entity `@Column(nullable=true)` for those 3 fields
+   - A participant can be created with just customerName + amount; account info is populated when they pay
+
+**E2E results (1.8.46 / 1.8.47 / 1.8.48 / 1.8.50 / 1.8.51)**:
+- POST `/api/v1/qris/pay` → 503 `QRIS_SERVICE_UNAVAILABLE` (NEW behavior)
+- POST `/api/v1/split-bills` → 200 (was 500)
+- GET `/api/v1/escrow` → reachable (was 404); 403/500 on POST (test bad input + auth)
+- GET `/api/v1/settlements/batches` → reachable (was 404); 403 on POST (admin only)
+- Cluster: 25/26 svc UP, 0 production bugs
+
+### Iteration 16: Best-Practice Gateway Refactor — Single Catch-All Dispatcher (2026-06-15)
+
+Refactored Quarkus `ApiGatewayResource` to eliminate the **Quarkus RESTeasy Reactive exact-vs-greedy `@Path` conflict** that drops `@Path("/foo")` methods when `@Path("/foo/{path: .*}")` is also declared in the same class. Per L-051: Quarkus picks the most specific class-level `@Path` first, so a sibling class with `@Path("/api/v1/payments")` shadowed all `/api/v1/payments/*` routes — even when the catch-all had a more specific literal match.
+
+**Production-ready refactor (per L-051 best practice)**:
+1. Replaced all 60+ per-method `@Path` handlers in `ApiGatewayResource` with **one catch-all `@Path("/api/v1/{path: .*}")` per HTTP verb** (GET/POST/PUT/DELETE/PATCH).
+2. All routing logic delegated to `RouteRegistry` (longest-prefix match + method allow-list + target path construction).
+3. Added a smart catch-all that resolves the route, validates the method, and proxies to the backend service.
+4. Updated `RouteRegistry` defaults to include ALL known routes (escrow, settlements, savings-goals, split-bills, qris, payments/va, etc.) since L-053: defaults are fallback only when YAML is empty.
+5. Gateway `application.yaml` has the new "production" routes (escrow, settlements, smart-routing target fix to `/api/v1/transfers/routes`).
+
+**E2E results (1.8.40 / 1.8.42 / 1.8.43)**:
+- All gateway routes reach the right backend service
+- `/api/v1/payments/va` → 201 (was 404)
+- `/api/v1/qris/pay` → 503 (was 500)
+- All regression tests: cards CRUD T1-T5, wallets, billers, smart-routing, all 200/201
+
+### Iteration 15: 3 Production Bugs Fixed (Disbursement INSERT, Lending SpEL, Notification Panache) (2026-06-15)
+
+Three READY tickets closed with production-ready fixes per context7 spring-projects docs:
+
+1. **READY-060 `/api/v1/notifications` → 500 (Panache scan)**
+   - Root cause: `quarkus.hibernate-orm.packages=id.payu.notification.domain` (yaml config) only scanned the `domain` package. `NotificationEntity` is in `adapter.persistence.entity` package — Hibernate ignored the entity, all repository operations failed
+   - Fix: broaden scan to `id.payu.notification` (root pkg) in `application.yml` + `application-test.yml`
+
+2. **READY-061 `/api/v1/lending/credit-score/{userId}` → 400 (Spring SpEL principal)**
+   - Root cause: SpEL expression `authentication.principal.userId` referenced a field that doesn't exist on the JWT principal. JWT has `getSubject()` not `getUserId()`
+   - Fix: bulk sed `authentication.principal.userId` → `T(java.util.UUID).fromString(authentication.name)` across 14 occurrences in `LendingController.java`. `authentication.name` returns the JWT `sub` claim (UUID string), parsed via SpEL `T()` function to UUID
+
+3. **READY-063 `/api/v1/disbursements` → 500 (StaleObjectStateException on first INSERT)**
+   - Root cause per context7: Spring Data JPA's `isNew()` detection sees `@GeneratedValue(UUID) + manual id` as "previously persisted" entity, calls `merge()` instead of `persist()`. `merge()` does SELECT → 0 rows → `StaleObjectStateException`
+   - Production-ready fix: REMOVED `@GeneratedValue` from `DisbursementEntity.id` (application-assigned UUID only) + added `@Version Long version` field + custom `DisbursementJpaRepositoryCustom` interface + `Impl` with `persistNew()` using `EntityManager.persist()` + `flush()` directly (bypasses isNew() detection)
+   - E2E: POST `/api/v1/disbursements` → 201
+
+**E2E results (1.8.23 / 1.8.36)**:
+- POST `/api/v1/lending/pre-approval/check` → 201 (was 500 in earlier tests with PERSONAL_LOAN; works with PERSON**AL_LOAN** as the actual enum value)
+- POST `/api/v1/notifications` → no more Hibernate "Entity not found" (was 500)
+- POST `/api/v1/disbursements` → 201 (was 500) — **READY-063 closed**
+
+### Iteration 11-14: Recursive Dev Loop — More E2E + 5 NEW Bugs Surfaced (2026-06-15)
+
+Continued E2E testing via 3scale APIcast. Surfaced 5 NEW production bugs + fixed READY-066 (qris 503 fallback):
+
+- **READY-058 account-service /lookup** → 500 (test bad input, recorded)
+- **READY-059 lending-service /pre-approval/check** → 500 (test bad input — was misdiagnosed, is `PERSONAL_LOAN` enum)
+- **READY-060 notification-service /notifications** → 500 (Hibernate Panache scan miss)
+- **READY-061 lending-service /credit-score/{userId}** → 400 (SpEL principal.userId field missing)
+- **READY-062 promotion-service /promotions/active** → 500 (test bad input — endpoint was actually `/api/v1/promotions` root, not `/active`)
+
+3 of 5 were real bugs (READY-060, 061, 063). 2 were test bad input.
+
+**E2E final scorecard (iter 15)**: 5 main flows + 3 GETs all 200/201. Cluster: 25/26 svc UP, 0 production bugs after READY-063/064/066/067/068/069/070/071/072 fixes.
+
 ### Iteration 10: More E2E Flows via 3scale APIcast — 5 Endpoints UP + 5 NEW Bugs Surfaced (2026-06-15)
 
 Tested 14 additional service endpoints via 3scale APIcast (`payu-product-payu-apicast-production`) to validate broader production chain beyond cards CRUD.

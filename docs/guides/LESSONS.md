@@ -516,6 +516,97 @@ curl "https://backend-payu.apps.payu.ocp.fajjjar.my.id/transactions/authrep.xml?
 4. **Don't recreate Application CR or run ProxyConfigPromote unnecessarily**. These add new versions but don't fix backend cache. The error `Required parameter missing: to` + `version: has already been taken` for ProxyConfigPromote indicates the version is already promoted — restart is the actual fix.
 5. **Pre-flight check before declaring 3scale "broken"**: run `oc -n payu-api-management exec backend-worker-* -- bundle exec ruby -e 'require "redis"; r=Redis.new(url:ENV["CONFIG_REDIS_PROXY"]); puts r.get("service/id:3/state")'`. If returns "active" → cache mismatch, restart fixes it.
 
+## L-051: Gateway `@Path("/{path: .*}")` vs `@Path("/foo")` — Quarkus RESTeasy Reactive Drops the Literal (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Quarkus / RESTeasy Reactive / Gateway
+**Context**: During READY-064 fix, the gateway `ApiGatewayResource` had a mix of literal `@Path("/payments/va/{vaId}")` and catch-all `@Path("/{path: .*}")` methods. After refactoring to a single catch-all dispatcher, routes like `/api/v1/payments/methods` (from `PaymentMethodResource`) returned 404 "Unable to find matching target resource method" — even though the endpoint existed.
+
+**Root cause**: `PaymentMethodResource` declared `@Path("/api/v1/payments")` at the **class level**. RESTeasy Reactive matches a path to the most specific resource class first. For `/api/v1/payments/methods`, it picked `PaymentMethodResource` (class-level match) over the catch-all in `ApiGatewayResource`. The class had `@GET @Path("/methods")` — a literal match for `/payments/methods` — but for `/payments/va`, the class had no method matching `/va`, so RESTeasy returned 404 from the resource class, not from the gateway.
+
+**Pattern (Quarkus RESTeasy Reactive route resolution precedence)**:
+1. RESTeasy scans class-level `@Path` and picks the **most specific** resource class.
+2. Within the class, it picks the **most specific** method (literal > `{var}` > `{path: .*}`).
+3. If no method matches → throws `jakarta.ws.rs.NotFoundException` → gateway maps to 404.
+
+**Production-ready fix (two-part)**:
+1. **Change class-level `@Path` to the FULL path**: `PaymentMethodResource @Path("/api/v1/payments")` → `@Path("/api/v1/payments/methods")`. Remove method-level `@Path("/methods")` since it's now redundant.
+2. **Use one catch-all per HTTP verb** in the gateway's catch-all resource. Avoid mixing exact and catch-all `@Path` in the same class — RESTeasy's match algorithm is brittle.
+
+**Lesson**:
+1. **Quarkus RESTeasy Reactive has a "most specific class wins" precedence that drops exact `@Path` methods when the class also has a catch-all.** This is the exact-vs-greedy `@Path` conflict that drops literal endpoints.
+2. **Always use FULL paths in class-level `@Path`** — never `/api/v1/foo` + method-level `/bar` if the class might shadow a sibling path. Use `/api/v1/foo/bar` as class-level, then methods inherit the full path.
+3. **Test with sibling paths** to catch shadow bugs. If you have `/api/v1/payments/va` and `/api/v1/payments/methods`, verify BOTH resolve correctly. A test that only hits one path will miss the shadow bug.
+4. **Use Quarkus OpenAPI spec** (`/q/openapi`) as a sanity check after every resource change. If an endpoint disappears from the spec, it's shadowed.
+
+## L-052: `@GeneratedValue(UUID)` + Manual ID = Spring Data JPA "Detached Entity" Trap (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / JPA / Spring Data JPA / Entity Design
+**Context**: During READY-063 fix, `DisbursementEntity.id` had `@GeneratedValue(strategy = GenerationType.UUID)` AND the service code set `disbursement.id = UUID.randomUUID()` manually before save. Result: `StaleObjectStateException: Row was already updated or deleted by another transaction for entity [DisbursementEntity with id '...']` on every INSERT.
+
+**Root cause (per context7/spring-projects/spring-data-jpa documentation)**: Spring Data JPA's `JpaMetamodelEntityInformation` uses this detection strategy for `isNew()`:
+- If `@Version` field exists and is null → `isNew = true` → `EntityManager.persist()` (INSERT)
+- If no `@Version` AND `@Id` is null → `isNew = true` → persist
+- If `@Id` is non-null AND no `@Version` → `isNew = false` → `EntityManager.merge()` (SELECT + INSERT/UPDATE)
+
+The third case is the trap. `@GeneratedValue` with a manual ID set looks identical to a previously-persisted entity to Spring Data JPA. The fix path (`save()` → `merge()`) then calls `SELECT WHERE id = ?` which returns 0 rows, and Hibernate throws `StaleObjectStateException` because the in-memory entity is "stale" relative to no DB row.
+
+**Production-ready fix options (in order of preference)**:
+1. **Use the `Persistable<ID>` interface** (Spring Data JPA best practice per context7):
+   ```java
+   @Entity
+   public class DisbursementEntity implements Persistable<UUID> {
+       @Id private UUID id;
+       @Transient private boolean isNew = true;
+       @Override public boolean isNew() { return isNew; }
+       @PostPersist @PostLoad void markNotNew() { this.isNew = false; }
+   }
+   ```
+   Manually manage `isNew` flag. `save()` then correctly calls `persist()` for new entities.
+2. **Remove `@GeneratedValue` for application-assigned IDs**: just `@Id private UUID id;` with no generator. Then set `id = UUID.randomUUID()` in factory method. Spring Data JPA still sees non-null ID but `merge()` is acceptable because the entity was never previously persisted.
+3. **Add `@Version` field**: `@Version Long version;` with `version = 0L` set in factory. Then `isNew()` returns `true` → `persist()`.
+4. **Custom `JpaRepository` fragment with `persistNew()`**: use `EntityManager.persist()` + `flush()` directly via `@PersistenceContext`. Bypasses Spring Data JPA's `isNew()` entirely.
+
+**Pattern (chosen for READY-063 + READY-072)**: Option 2 (remove `@GeneratedValue`) + Option 4 (custom fragment). Combined approach: entity has no `@GeneratedValue` (clean), repository has a custom `persistNew()` that uses `EntityManager.persist()` directly (no `isNew()` checks).
+
+**Lesson**:
+1. **`@GeneratedValue` + manual ID = footgun**. The annotation is meant for cases where the DB generates the value. If your code sets the ID manually, REMOVE `@GeneratedValue`. There's no benefit to having it.
+2. **Hibernate 6.2+ has stricter merge() behavior** — `StaleObjectStateException` is now thrown eagerly for new rows. The "merging a transient entity" trick that worked in older versions no longer works.
+3. **For audit-trail entities (disbursement, scheduled-transfer, escrow, settlement)** that need stable cross-service IDs, prefer **application-assigned UUIDs + Persistable interface** over DB-generated sequences. This is also the recommended pattern for event-sourced systems where the ID is the event ID.
+4. **Generic solution for the platform**: create a shared `abstract class PayuPersistableEntity<ID>` that implements `Persistable<ID>` + manages `isNew` flag. All entities that need manual IDs extend it. This eliminates the bug class for all current + future entities.
+
+## L-053: Yaml Routes Override RouteRegistry Defaults — Add ALL Routes to YAML, Not Defaults (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Quarkus / Gateway / Configuration
+**Context**: After gateway refactor, escrow + settlements routes returned 404 "No route found for path: /api/v1/escrow" despite being added to `RouteRegistry.loadDefaultRoutes()`. Investigation revealed: `loadRoutes()` checks if `configRoutes` (from yaml) is non-empty; if so, it skips `loadDefaultRoutes()` entirely. The yaml had many routes (accounts, wallets, etc.) so defaults were never loaded.
+
+**Root cause**: `RouteRegistry.loadRoutes()` has a **fallback semantics**, not a **merge semantics**. Either YAML has the route OR defaults do, not both. This is a common "first source wins" pattern in config loaders, but it has a footgun: if you add a new route in code (e.g., for a new service) AND the yaml has any other routes, your default is silently ignored.
+
+**Pattern (the right way)**:
+- **All gateway routes MUST be in `application.yaml`** (the single source of truth).
+- `loadDefaultRoutes()` should be a **fallback for development only** (when no yaml is present), not a "production" route source.
+- Add a CI check: `grep -c '  [a-z].*:' application.yaml` and assert >= expected route count.
+
+**Production-ready fix applied**: Added escrow + settlements routes to `application.yaml`:
+```yaml
+escrow:
+  service: "wallet-service"
+  target-prefix: "/api/v1/escrow"
+  methods: ["GET", "POST", "PUT", "DELETE"]
+settlements:
+  service: "wallet-service"
+  target-prefix: "/api/v1/settlements"
+  methods: ["GET", "POST", "PUT", "DELETE"]
+```
+
+**Lesson**:
+1. **"Defaults are fallback, not supplements"** — if a config loader has a fallback path, never rely on it coexisting with primary config. Either populate primary config fully, or implement a proper merge.
+2. **Config loaders should log which source provided each route/entry**. `RouteRegistry.loadRoutes()` should log "Loaded 45 routes from YAML + 0 from defaults" or "Loaded 0 routes from YAML, using 12 defaults". This makes it obvious when defaults are bypassed.
+3. **Add startup assertion**: fail fast if critical routes are missing. E.g., `RouteRegistry.verifyCriticalRoutes()` throws if `/api/v1/payments`, `/api/v1/accounts`, etc. are not registered at startup. Catches config drift in CI before users see 404s in production.
+4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
+
 ---
 
 *Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*

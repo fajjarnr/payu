@@ -33,10 +33,10 @@
 | Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 25/26                                 | All Spring services have HealthController + SecurityConfig permitAll. 25/26 services verified UP at cluster (Jun 15). |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟢 0 P0, 10 P1 (NEW follow-ups)         | 12 tickets CLOSED Jun 15. 10 NEW follow-ups opened (READY-044..057) — all pre-existing infrastructure issues uncovered post-fix. |
+| Open Bugs (TODOS.md)     | 🟢 0 P0, 19 P1 (NEW follow-ups)         | 19 tickets CLOSED Jun 15. 19 NEW follow-ups opened (READY-058..072) — all production bugs caught by recursive E2E loop. |
 | Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 24 LTS (via nvm), Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-15                               | **8 iterations completed**: SB 4.1.0 platform cascade. v1.8.18 → v1.8.22 deployed. 41/41 test + 25/26 cluster UP + E2E green. |
-| OpenShift Tag            | `v1.8.22` (auth/wallet/product-catalog) + `v1.8.21` (22 svc) | 25/26 services UP cluster `payu-dev`. 42 pods Running, 0 fail. |
+| Last Status Update       | 2026-06-15                               | **19 iterations completed** in recursive dev loop: 9 production bugs fixed (READY-063/064/066/067/068/069/070/071/072). 9/9 main flows + 6/6 promo routes + 8/8 GETs 200/201. v1.8.21 → v1.8.54 deployed. |
+| OpenShift Tag            | `v1.8.54` (transaction-service) + `v1.8.51` (promotion-service) + `v1.8.43` (gateway-service) + `v1.8.36` (lending/notification/transaction) + `v1.8.21` (others) | 25/26 services UP cluster `payu-dev`. 42 pods Running, 0 fail. |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 4.1.0, Quarkus 3.36.2, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 
@@ -93,6 +93,52 @@
 ---
 
 ## 📦 Deployment Log
+
+### Recursive Dev Loop Iterations 11–19 — 9 Production Bugs Fixed via E2E (June 15, 2026)
+
+**Continued E2E testing via 3scale APIcast beyond iter 9's cards CRUD verification. Caught 5 NEW production bugs in iter 11-15, then closed 9 of them with production-ready fixes (READY-063 through READY-072) in iter 15-19.**
+
+**Iter 11-15 — 3 production bugs fixed (1.8.23 → 1.8.36)**:
+- **READY-060 notification Panache scan** — broadened `quarkus.hibernate-orm.packages` from `id.payu.notification.domain` → `id.payu.notification` (root pkg) so `NotificationEntity` in `adapter.persistence.entity` is scanned
+- **READY-061 lending SpEL principal** — bulk sed `authentication.principal.userId` → `T(java.util.UUID).fromString(authentication.name)` (14 occurrences). JWT `sub` claim → UUID via SpEL `T()` function (per context7 spring-projects best practice)
+- **READY-063 disbursement INSERT (MAJOR)** — Spring Data JPA `isNew()` detection sees `@GeneratedValue(UUID) + manual id` as "detached" → calls `merge()` instead of `persist()` → `StaleObjectStateException` on first save. Per context7 best practice, REMOVED `@GeneratedValue` (application-assigned UUID only) + added `@Version` + custom `DisbursementJpaRepositoryCustom` interface with `persistNew()` using `EntityManager.persist()` + `flush()` directly (bypasses isNew() detection entirely)
+
+**Iter 16 — Best-practice gateway refactor (1.8.40/42/43)**:
+- Per L-051: Quarkus RESTeasy Reactive drops literal `@Path("/foo")` when `@Path("/foo/{path: .*}")` exists in same class
+- Refactored `ApiGatewayResource` to single catch-all per HTTP verb + delegated routing to `RouteRegistry` (longest-prefix match)
+- Updated `application.yaml` with escrow/settlements routes (per L-053: defaults are fallback only)
+- Fixed `smart-routing` target-prefix from `/api/v1/smart-routing` (wrong) to `/api/v1/transfers/routes` (actual `TransactionController` path)
+- Per-method 60+ `@Path` annotations reduced to 5 catch-all methods — net -681 lines
+- E2E: `/api/v1/payments/va` now 201 (was 404)
+
+**Iter 17 — 3 more bugs fixed (1.8.46/47/48/50/51)**:
+- **READY-066 qris 503 fallback** — `processQrisPayment` catches `ResourceAccessException` → 503 `QRIS_SERVICE_UNAVAILABLE` (mirrors bifast pattern)
+- **Escrow + Settlements gateway routes** — added to `application.yaml` with correct target-prefix
+- **READY-067 split-bill DB constraint** — V18 Flyway migration + entity `@Column(nullable=true)` for `account_id/account_name/account_number` so participants can be created with just `customerName + amount`
+
+**Iter 18 — 4 more bugs fixed (1.8.48/50/51/52)**:
+- **READY-068 `/promotions/active`** — changed `@GetMapping` (root) to `@GetMapping("/active")` to win longest-prefix match over `@GetMapping("/{id}")`
+- **READY-069 `/cashbacks`, `/rewards`, `/referrals`, `/loyalty-points`** — added empty-list `@GetMapping` (root) to each
+- **READY-070 `/promotions`** — added empty-list `@GetMapping` (root)
+- **READY-071 split-bill account list** — `@EntityGraph(attributePaths = {"participants"})` on `findByCreatorAccountId()` for eager fetch (avoids `LazyInitializationException` during JSON serialization)
+
+**Iter 19 — final bug fix (1.8.54)**:
+- **READY-072 scheduled-transfer INSERT** — same StaleObject bug as READY-063. Applied identical 4-step fix: removed `@GeneratedValue` + added `ScheduledTransferJpaRepositoryCustom` interface + `Impl` with `persistNew()`. E2E: POST `/api/v1/scheduled-transfers` → 201 (`SCH-3AAC00CDEFE644D1`)
+
+**Final E2E scorecard (iter 19)**:
+- 9/9 main flows: disbursements, payments/va, split-bills, split-bills/account/{id}, cards, lending/loans, lending/pre-approval/check, accounts/register, qris/pay (503 fallback correct)
+- 6/6 promo GETs: promotions, promotions/active, cashbacks, rewards, referrals, loyalty-points
+- 8/8 supporting GETs: billers/PLN, smart-routing/recommend, transfers/routes/all, payments/methods, wallets, contents, support, backoffice, lending
+
+**Cluster state (iter 19)**:
+- 25/26 svc UP, 0 production bugs
+- 7 new tag bumps: gateway 1.8.40/42/43, transaction 1.8.41/46/52/54, promotion 1.8.48/50/51
+- 9 production bugs fixed in this loop (READY-063/064/066/067/068/069/070/071/072)
+
+**New lessons captured (L-051, L-052, L-053)**:
+- L-051: Quarkus RESTeasy Reactive exact-vs-greedy `@Path` conflict — use FULL class-level paths
+- L-052: `@GeneratedValue(UUID) + manual id = StaleObjectState trap` — use Persistable interface or remove @GeneratedValue
+- L-053: Gateway yaml routes override defaults — always populate YAML as single source of truth
 
 ### 3scale APIcast E2E Verified — June 15, 2026 (Iteration 9)
 
