@@ -104,8 +104,12 @@ public class DisbursementService implements DisbursementUseCase {
         log.info("Reserved balance for disbursement: {}, reservationId: {}",
                 disbursement.getId(), reservation.getReservationId());
 
-        // Save disbursement
-        DisbursementEntity saved = disbursementRepository.save(disbursement);
+        // Save disbursement using EntityManager.persist() directly to bypass
+        // Spring Data JPA's isNew() detection. The default detection sees
+        // (id=non-null, version=null) as "detached" and calls merge() which
+        // throws StaleObjectStateException for new rows. See context7
+        // spring-projects spring-data-jpa entity state-detection strategy.
+        DisbursementEntity saved = disbursementRepository.persistNew(disbursement);
         log.info("Created disbursement: {}", saved.getId());
 
         return saved;

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface DisbursementRepositoryPort {
     DisbursementEntity save(DisbursementEntity disbursement);
+    DisbursementEntity persistNew(DisbursementEntity disbursement);
     Optional<DisbursementEntity> findById(UUID id);
     Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
     List<DisbursementEntity> findBySourceAccountId(UUID sourceAccountId, int limit, int offset);

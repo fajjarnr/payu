@@ -174,6 +174,14 @@ public class DisbursementEntity {
         this.id = id;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     public String getIdempotencyKey() {
         return idempotencyKey;
     }
@@ -323,9 +331,25 @@ public class DisbursementEntity {
 
 
 
+    // Application-assigned UUID. No @GeneratedValue — manual ID assignment
+    // would conflict with @GeneratedValue detection (Hibernate would treat
+    // the entity as "previously persisted" and call merge() instead of
+    // persist() for new rows, causing StaleObjectStateException).
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    /**
+     * Optimistic locking version. Spring Data JPA uses this field to determine
+     * if an entity is new (isNew=true if version is null), which routes save() to
+     * EntityManager.persist() (INSERT) instead of merge() (UPDATE/INSERT for detached).
+     *
+     * <p>Per Spring Data JPA detection strategy: when a non-primitive @Version
+     * property exists, the entity is considered new when its value is null.
+     * This allows manual id assignment to coexist with @GeneratedValue UUID.</p>
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     @Column(name = "idempotency_key", nullable = false, unique = true, length = 64)
     private String idempotencyKey;
@@ -432,6 +456,9 @@ public class DisbursementEntity {
         validateIdempotencyKey(idempotencyKey);
 
         DisbursementEntity disbursement = new DisbursementEntity();
+        // Application-assigned UUID (no @GeneratedValue). Hibernate will persist
+        // as INSERT because isNew() detection sees id != null + no @Version field.
+        // Wallet service uses this stable id as transactionId for the reservation.
         disbursement.id = UUID.randomUUID();
         disbursement.idempotencyKey = idempotencyKey;
         disbursement.sourceAccountId = sourceAccountId;

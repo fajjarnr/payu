@@ -147,3 +147,18 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        # Services URL config (read by id.payu.transaction.adapter.client.* adapters)
+        # Code reads these via @Value("${services.<name>.url}") which Spring resolves
+        # from env var SERVICES_<NAME>_URL (uppercase, dots->underscores).
+        - name: SERVICES_WALLET_URL
+          value: "http://wallet-service:8080"
+        - name: SERVICES_ACCOUNT_URL
+          value: "http://account-service:8080"
+        - name: SERVICES_BIFAST_URL
+          value: "http://bifast-service:8080"
+        - name: SERVICES_QRIS_URL
+          value: "http://qris-service:8080"
+        - name: SERVICES_RGS_URL
+          value: "http://rgs-service:8080"
+        - name: SERVICES_SKN_URL
+          value: "http://skn-service:8080"

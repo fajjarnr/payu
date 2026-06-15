@@ -27,6 +27,28 @@ public class DisbursementPersistenceAdapter implements DisbursementRepositoryPor
         return jpaRepository.save(disbursement);
     }
 
+    /**
+     * Persist a new disbursement bypassing Spring Data JPA's isNew() detection.
+     *
+     * <p>Use this for new entities where you have manually assigned the ID (e.g.,
+     * for stable cross-service transaction references) but the @Version is null
+     * because the entity has not been persisted yet. Spring Data JPA's default
+     * detection sees {@code id != null && version == null} as "detached" and
+     * calls merge() (which fails with StaleObjectStateException for new rows).</p>
+     *
+     * <p>Calling EntityManager.persist() directly is the correct JPA pattern for
+     * new entities per context7/spring-projects/spring-data-jpa documentation.</p>
+     */
+    @Override
+    public DisbursementEntity persistNew(DisbursementEntity disbursement) {
+        if (disbursement.getId() == null) {
+            throw new IllegalStateException("Cannot persistNew: id is null");
+        }
+        jpaRepository.persistNew(disbursement);
+        return jpaRepository.findById(disbursement.getId())
+                .orElseThrow(() -> new IllegalStateException("Entity not found after persist: " + disbursement.getId()));
+    }
+
     @Override
     public Optional<DisbursementEntity> findById(UUID id) {
         return jpaRepository.findById(id);

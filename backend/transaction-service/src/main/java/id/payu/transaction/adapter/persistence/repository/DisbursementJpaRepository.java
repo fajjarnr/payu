@@ -14,7 +14,7 @@ import java.util.UUID;
  * JPA repository for DisbursementEntity entity.
  */
 @Repository
-public interface DisbursementJpaRepository extends JpaRepository<DisbursementEntity, UUID> {
+public interface DisbursementJpaRepository extends JpaRepository<DisbursementEntity, UUID>, DisbursementJpaRepositoryCustom {
 
     Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
 
