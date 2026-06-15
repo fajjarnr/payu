@@ -102,13 +102,17 @@ spring:
         max.poll.records: 500
 services:
   wallet:
-    url: http://localhost:8080
+    url: ${SERVICES_WALLET_URL:http://wallet-service:8080}
   bifast:
-    url: http://localhost:9000
+    url: ${SERVICES_BIFAST_URL:http://bifast-service:8080}
   qris:
-    url: http://localhost:9001
+    url: ${SERVICES_QRIS_URL:http://qris-service:8080}
   account:
-    url: http://account-service:8080
+    url: ${SERVICES_ACCOUNT_URL:http://account-service:8080}
+  rgs:
+    url: ${SERVICES_RGS_URL:http://rgs-service:8080}
+  skn:
+    url: ${SERVICES_SKN_URL:http://skn-service:8080}
 management:
   endpoints:
     web:

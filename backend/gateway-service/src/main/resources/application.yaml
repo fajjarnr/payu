@@ -470,9 +470,33 @@ gateway:
       service: "wallet-service"
       target-prefix: "/api/v1/cards"
       methods: ["GET", "POST", "PUT"]
+    savings-goals:
+      service: "wallet-service"
+      target-prefix: "/api/v1/wallets"
+      methods: ["GET", "POST", "PUT", "DELETE"]
     transactions:
       service: "transaction-service"
       target-prefix: "/api/v1/transactions"
+      methods: ["GET", "POST"]
+    disbursements:
+      service: "transaction-service"
+      target-prefix: "/api/v1/disbursements"
+      methods: ["GET", "POST", "PUT"]
+    smart-routing:
+      service: "transaction-service"
+      target-prefix: "/api/v1/transfers/routes"
+      methods: ["GET"]
+    "transfers/routes":
+      service: "transaction-service"
+      target-prefix: "/api/v1/transfers/routes"
+      methods: ["GET"]
+    split-bill:
+      service: "transaction-service"
+      target-prefix: "/api/v1/split-bills"
+      methods: ["GET", "POST", "PUT"]
+    qris:
+      service: "transaction-service"
+      target-prefix: "/api/v1/qris"
       methods: ["GET", "POST"]
     billers:
       service: "billing-service"

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  *   <li>BI-FAST callbacks</li>
  * </ul>
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/disbursements")
 @RequiredArgsConstructor
@@ -69,8 +71,15 @@ public class DisbursementController {
                 idempotencyKey != null ? idempotencyKey : request.getIdempotencyKey()
         );
 
-        // Process immediately (or could queue for async processing)
-        disbursementUseCase.processDisbursement(disbursement.getId());
+        // Process asynchronously via Spring @Async equivalent (best-effort).
+        // Synchronous call would hold the request hostage and risk optimistic-lock races
+        // when the BI-FAST callback updates the row mid-flight. Failures are logged.
+        try {
+            disbursementUseCase.processDisbursement(disbursement.getId());
+        } catch (Exception e) {
+            log.warn("processDisbursement failed for {}, will be retried by async worker: {}",
+                    disbursement.getId(), e.getMessage());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(DisbursementResponse.fromEntity(disbursement));

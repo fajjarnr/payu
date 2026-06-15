@@ -129,6 +129,17 @@ public class RouteRegistry {
 
         // Transaction Service
         registerDefault("transactions", "transaction-service", "/api/v1/transactions");
+        registerDefault("disbursements", "transaction-service", "/api/v1/disbursements");
+        registerDefault("smart-routing", "transaction-service", "/api/v1/transfers/routes");
+        registerDefault("transfers/routes", "transaction-service", "/api/v1/transfers/routes");
+        registerDefault("split-bills", "transaction-service", "/api/v1/split-bills");
+        registerDefault("qris", "transaction-service", "/api/v1/qris");
+        registerDefault("payments/va", "transaction-service", "/api/v1/payments/va");
+
+        // Wallet Service extras
+        registerDefault("savings-goals", "wallet-service", "/api/v1/wallets");
+        registerDefault("escrow", "wallet-service", "/api/v1/wallets/escrow");
+        registerDefault("settlements", "wallet-service", "/api/v1/wallets/settlements");
 
         // Billing Service
         registerDefault("billers", "billing-service", "/api/v1/billers");

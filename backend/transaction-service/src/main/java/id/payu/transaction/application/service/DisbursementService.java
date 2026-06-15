@@ -125,7 +125,6 @@ public class DisbursementService implements DisbursementUseCase {
     public List<DisbursementEntity> listDisbursementsByAccount(UUID sourceAccountId, int limit, int offset) {
         return disbursementRepository.findBySourceAccountId(sourceAccountId, limit, offset);
     }
-
     @Override
     @Transactional
     public DisbursementEntity processDisbursement(UUID id) {
@@ -134,8 +133,13 @@ public class DisbursementService implements DisbursementUseCase {
         DisbursementEntity disbursement = disbursementRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
-        // Transition to PROCESSING
-        disbursement.process();
+        // Idempotent: only transition PENDING -> PROCESSING. If already PROCESSING/COMPLETED,
+        // skip the transition (avoids IllegalStateException on retry path).
+        if (disbursement.getStatus() == DisbursementStatus.PENDING) {
+            disbursement.process();
+        } else {
+            log.info("Disbursement {} already in status {}, skipping transition", id, disbursement.getStatus());
+        }
 
         // Initiate BI-FAST transfer
         BifastTransferRequest request = BifastTransferRequest.builder()
@@ -158,7 +162,27 @@ public class DisbursementService implements DisbursementUseCase {
             // Don't fail here - let the async callback handle the actual result
         }
 
-        return disbursementRepository.save(disbursement);
+        return saveWithOptimisticLockRetry(disbursement);
+    }
+
+    private DisbursementEntity saveWithOptimisticLockRetry(DisbursementEntity entity) {
+        int maxAttempts = 3;
+        org.springframework.orm.ObjectOptimisticLockingFailureException last = null;
+        DisbursementEntity current = entity;
+        for (int i = 0; i < maxAttempts; i++) {
+            final DisbursementEntity toSave = current;
+            try {
+                return disbursementRepository.save(toSave);
+            } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+                last = e;
+                log.warn("Optimistic lock attempt {}/{}, re-fetching entity {}", i + 1, maxAttempts, toSave.getId());
+                try { Thread.sleep(50L * (i + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+                final DisbursementEntity refetched = disbursementRepository.findById(toSave.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity disappeared: " + toSave.getId()));
+                current = refetched;
+            }
+        }
+        throw last;
     }
 
     @Override
