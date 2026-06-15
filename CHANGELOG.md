@@ -19,6 +19,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 9: 3scale APIcast E2E VERIFIED — Full Production Chain (2026-06-15)
+
+- **3scale APIcast → backend → gateway → wallet → Postgres** end-to-end chain verified.
+- **Application already existed** in 3scale System (created during earlier 1.8.11 era):
+  - DeveloperAccount ID 3 ("Developer")
+  - Application ID 7 with user_key `04dc03f2e2a776bffcb9b16eb9f93796`, plan="Unlimited Plan", state=live, enabled=true, bound to service ID 3 (PayU Product API)
+  - Provider key for service 3 = `95ebe8814cdbaad764b4c62615c4bc39`
+  - Service token for service 3 = `13660f3d056c8d4cd3146e72bc369c37abdb32c9e81d9ab6b9f4e3345072fa5e`
+- **Root cause of "Authentication failed" 403 from APIcast** (NOT a config bug): backend-listener had stale in-memory cache. Redis storage (`payu-cache:6379/0`) had all 298 keys synced correctly (service 1/2/3 + provider_keys + applications) but backend-listener authrep validation rejected ALL services with `service_id_invalid`. Fix: `oc rollout restart deployment backend-listener` + `oc rollout restart deployment backend-worker`. After restart, authrep returns `<authorized>true</authorized><plan>Unlimited Plan</plan>`.
+- **E2E Cards CRUD via APIcast** (`payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`):
+  - T1 CREATE: **HTTP 201** ✓ (card `ac6d7f49-7f9d-4e9b-8fe9-ba2ec3449e86`)
+  - T2 READ: **HTTP 200** ✓ (status=ACTIVE)
+  - T3 FREEZE: **HTTP 200** ✓
+  - T4 UNFREEZE: **HTTP 200** ✓
+  - T5 Verify final: **HTTP 200** ✓ (status=ACTIVE)
+- **Auth chain**: 3scale APIcast (user_key) → backend-listener authrep (provider_key validation against Redis) → gateway-service:1.8.21 (route + AuthorizationFilter) → wallet-service:1.8.22 (OAuth2ResourceServer JWT validation against Keycloak `payu-mobile` client + customer1 sub `7a51ced3-5602-40fb-96e7-1703e9243ed5`) → Postgres.
+- **No code changes** — pure 3scale infrastructure unblock via backend pod restart.
+- **NEW lesson L-050**: 3scale backend-listener pods cache service registrations in-memory. When App + plan exist in Redis but backend authrep returns `service_id_invalid`, the fix is `oc rollout restart deployment backend-listener` (and `backend-worker`) — NOT recreating the Application CR or running ProxyConfigPromote. Always verify backend cache state before declaring "config broken".
+
 ### Iteration 8 + E2E Verify: 3 Production Bug Fixes + Cards CRUD VERIFIED (2026-06-15)
 
 - **3 production runtime bugs FIXED + redeployed `:1.8.22`** (auth, wallet, product-catalog):

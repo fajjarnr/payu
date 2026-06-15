@@ -94,6 +94,21 @@
 
 ## 📦 Deployment Log
 
+### 3scale APIcast E2E Verified — June 15, 2026 (Iteration 9)
+
+**Full production API chain validated end-to-end via 3scale APIcast for the first time post-SB 4.1.0 migration.**
+
+- ✅ **Application already existed** in 3scale System (ID 7, user_key `04dc03f2e2a776bffcb9b16eb9f93796`, plan="Unlimited Plan", bound to service 3=PayU Product API)
+- ✅ **Root cause of "Authentication failed" 403 from APIcast**: backend-listener stale in-memory cache. Redis storage layer (`payu-cache:6379/0`) had all 298 keys synced correctly. Fix: `oc rollout restart deployment backend-listener` + `backend-worker`. After restart, authrep returns `<authorized>true</authorized>`.
+- ✅ **E2E Cards CRUD via APIcast** (`payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`):
+  - T1 CREATE: HTTP 201 (card `ac6d7f49-...`)
+  - T2 READ: HTTP 200 (status=ACTIVE)
+  - T3 FREEZE: HTTP 200
+  - T4 UNFREEZE: HTTP 200
+  - T5 Verify final: HTTP 200
+- ✅ **Auth chain proven**: APIcast (user_key) → backend authrep (provider_key) → gateway-service:1.8.21 (route + filter) → wallet-service:1.8.22 (JWT OAuth2ResourceServer) → Postgres.
+- 💡 **NEW lesson L-050**: 3scale backend-listener cache stale fix is `oc rollout restart`, not ProxyConfigPromote or Application CR recreation.
+
 ### v1.8.22 (auth/wallet/product-catalog) — June 15, 2026 — Production Bug Fixes + E2E VERIFIED
 
 **Final session iteration (iter 8 of 8). Closed 3 production runtime bugs uncovered post-rebuild + E2E cards CRUD verified end-to-end.**

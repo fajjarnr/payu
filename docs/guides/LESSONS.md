@@ -482,6 +482,40 @@ True runtime confidence: **~25%**, not 75%.
 4. **Secret rotation is a separate operational concern from code migration**. Don't conflate "service crashed after my deploy" with "my code is broken" — verify infrastructure state first.
 5. **Memory limits ARE part of the deploy contract**. After major framework upgrade (Boot 3→4, Resilience4j 2.3→2.4, Jackson 2→3), expect ~25-50% memory increase. Re-baseline limits in the same PR as the framework upgrade.
 
+## L-050: 3scale Backend-Listener Stale In-Memory Cache — Restart Fixes "service_id_invalid" (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: 3scale / API Management / Backend
+**Context**: After deploying SB 4.1.0 cascade, attempted to verify E2E via 3scale APIcast (`payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`). APIcast returned 403 "Authentication failed" for valid user_key `04dc03f2e2a776bffcb9b16eb9f93796`. Investigation revealed:
+
+1. **3scale System state was CORRECT**: Admin API confirmed Application ID 7 with valid user_key, plan="Unlimited Plan", state=live, enabled=true, bound to service 3.
+2. **Backend Redis was POPULATED**: `payu-cache:6379/0` had 298 keys including `service/id:3/provider_key=95ebe8814cdbaad764b4c62615c4bc39`, `service/id:3/state=active`, `application/service_id:3/key:04dc03f2e2a776bffcb9b16eb9f93796/id=d3a5040b`.
+3. **APIcast proxy config was CORRECT**: HTTP fetch from system-master returned valid proxy config v2 with correct hosts, auth_user_key, credentials_location.
+4. **But backend-listener `/transactions/authrep.xml` STILL returned `service_id_invalid` for ALL service IDs (1, 2, 3)** — even with correct provider_key. Same error from external route + internal port.
+
+**Root cause**: backend-listener pods maintain an in-memory LRU cache of service registrations. When the cache is stale (e.g., from a previous deploy where services hadn't been synced yet), `authrep` validation rejects requests even though Redis has the data. The cache doesn't auto-refresh from Redis on each request — it relies on sidekiq worker sync events that may have been missed.
+
+**Fix (1 command, instant)**:
+```bash
+oc -n payu-api-management rollout restart deployment backend-listener
+oc -n payu-api-management rollout restart deployment backend-worker
+# Wait ~60s for pods to come up
+# Verify:
+curl "https://backend-payu.apps.payu.ocp.fajjjar.my.id/transactions/authrep.xml?provider_key=<KEY>&service_id=3&user_key=<USER_KEY>&usage[hits]=1"
+# Should return: <status><authorized>true</authorized><plan>...</plan></status>
+```
+
+**Verification (after restart)**:
+- Backend authrep: `<authorized>true</authorized><plan>Unlimited Plan</plan>` ✓
+- APIcast → gateway → wallet → Postgres E2E cards CRUD: T1-T5 all HTTP 200/201 ✓
+
+**Lesson**:
+1. **3scale backend has 3 cache layers**: (a) APIcast proxy config cache (TTL 300s), (b) backend-listener in-memory service cache (refreshed on sidekiq event), (c) backend Redis (source of truth). When debugging "Authentication failed", check ALL THREE before assuming config is broken.
+2. **Order of investigation**: (1) Verify Application + Plan in Admin API. (2) Verify keys in backend Redis. (3) Verify proxy config via system-master endpoint. (4) Verify authrep XML response from backend route. (5) If 4 fails despite 1-3 being correct → **restart backend-listener**.
+3. **Symptom hint**: if `authrep` returns `service_id_invalid` for EVERY service ID (not just the one being tested), it's the in-memory cache. If only specific service fails, it's likely a registration issue.
+4. **Don't recreate Application CR or run ProxyConfigPromote unnecessarily**. These add new versions but don't fix backend cache. The error `Required parameter missing: to` + `version: has already been taken` for ProxyConfigPromote indicates the version is already promoted — restart is the actual fix.
+5. **Pre-flight check before declaring 3scale "broken"**: run `oc -n payu-api-management exec backend-worker-* -- bundle exec ruby -e 'require "redis"; r=Redis.new(url:ENV["CONFIG_REDIS_PROXY"]); puts r.get("service/id:3/state")'`. If returns "active" → cache mismatch, restart fixes it.
+
 ---
 
-*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration) added.*
+*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*

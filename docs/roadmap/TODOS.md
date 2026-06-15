@@ -17,8 +17,8 @@
 | **Open P1s** | 10 NEW follow-ups (READY-044/045/046/047/049/050/051/052/054/055/056..057 closed) + READY-035 partial. 12 tickets CLOSED Jun 15 session. |
 | **Open P2s** | 12 |
 | **Open P3s** | 4 (READY-060, 061, 062, 063) |
-| **Production Score** | ~75% compile / **100% runtime test** / **96% cluster UP** / **E2E verified ✓**. Achieved 8-iteration loop Jun 15: 9/41 baseline → 41/41 modules. Cluster: 25/26 services UP @ :1.8.21/:1.8.22 + cards CRUD T1-T5 verified end-to-end via gateway→wallet→Postgres chain. |
-| **Last Audit** | June 15, 2026 — **8 iterations complete (SB 4.1.0 platform cascade)**. Closed READY-036/037/038/039/040/041/042/043/048/053/056/057. 10 NEW follow-up tickets opened for pre-existing infrastructure debt (READY-044..055). E2E cards CRUD verified post-deploy. 42 pods Running, 0 fail. |
+| **Production Score** | ~75% compile / **100% runtime test** / **96% cluster UP** / **E2E verified via direct gateway + 3scale APIcast** ✓. Achieved 9-iteration loop Jun 15: 9/41 baseline → 41/41 modules. Cluster: 25/26 services UP @ :1.8.21/:1.8.22 + cards CRUD T1-T5 verified end-to-end via APIcast (user_key) → backend authrep (provider_key) → gateway → wallet → Postgres. |
+| **Last Audit** | June 15, 2026 — **9 iterations complete (SB 4.1.0 + 3scale E2E)**. Closed READY-036/037/038/039/040/041/042/043/048/053/056/057. 3scale APIcast E2E verified (no code change — backend-listener cache restart fixed stale `service_id_invalid`). 10 NEW follow-up tickets open (READY-044..055). 42 pods Running, 0 fail. |
 | **Last Release** | `:1.8.22` (auth/wallet/product-catalog) + `:1.8.21` (22 svc backend/sims) + `cache-starter:1.0.0-SNAPSHOT` + `web-app:1.5.1` |
 ---
 
