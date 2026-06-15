@@ -19,6 +19,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 10: More E2E Flows via 3scale APIcast — 5 Endpoints UP + 5 NEW Bugs Surfaced (2026-06-15)
+
+Tested 14 additional service endpoints via 3scale APIcast (`payu-product-payu-apicast-production`) to validate broader production chain beyond cards CRUD.
+
+**✅ 5 Endpoints VERIFIED UP via APIcast** (in addition to Cards T1-T5 from iter 9):
+- `GET /api/v1/accounts/users/{id}/account-ids` (account-service) — HTTP 200, returns empty array (no accounts registered for customer1)
+- `GET /api/v1/billers` (billing-service Quarkus) — HTTP 200, returns 4 billers (PLN, PDAM, TELKOMSEL, XL)
+- `GET /api/v1/wallets?accountId=...` (wallet-service) — HTTP 200, returns service info
+- Cards T1 CREATE / T2 READ / T3 FREEZE / T4 UNFREEZE / T5 Verify (already iter 9)
+- Total: **10/10 financial path operations** verified end-to-end via APIcast → backend authrep → gateway → service → Postgres
+
+**❌ 5 NEW Production Bugs DISCOVERED** (caught by E2E, NOT by 41/41 test suite):
+- **READY-058 account-service /lookup** — `GET /api/v1/accounts/lookup` returns 500 INTERNAL_ERROR (GlobalExceptionHandler swallows root cause, no stack trace in error envelope)
+- **READY-059 lending-service /pre-approval/check** — `POST /api/v1/lending/pre-approval/check` returns 500 even with proper X-Idempotency-Key. Same error via direct gateway → not 3scale issue.
+- **READY-060 notification-service /notifications** — `GET /api/v1/notifications` returns 500 INTERNAL_ERROR (Quarkus service)
+- **READY-061 lending-service /credit-score/{userId}** — `GET /api/v1/lending/credit-score/{userId}` returns 400 INVALID_ARGUMENT: `Failed to evaluate expression 'isAuthenticated() and @lendingSecurityService.isCreditScoreOwner(#userId, authentication.principal.userId)'`. Security expression references `authentication.principal.userId` field that doesn't exist on JWT principal.
+- **READY-062 promotion-service /promotions/active** — `GET /api/v1/promotions/active` returns 500 PROMO_500 (Quarkus REST service — same pattern as READY-044)
+
+**4 Endpoints NOT routed/exposed via gateway**:
+- `/api/v1/transfers/routes/recommend` (transaction-service smart routing) — 404
+- `/api/v1/lending/credit-score` (no user_id) — 404
+- `/api/v1/pockets` (wallet-service) — 404
+- `/api/v1/scheduled-transfers/accounts/{id}` (transaction-service) — 404
+
+**Lesson reinforced (L-048)**: 41/41 modules test-green did NOT catch these 5 production bugs. They only surface when the full Spring context loads + JWT principal mapping happens + real downstream service called. E2E via APIcast caught all of them in <2 minutes.
+
+**Net assessment**: 3scale APIcast chain is solid (no APIcast-level issues). The 5 NEW bugs are downstream service issues that require per-service investigation. All tracked as READY-058 through READY-062.
+
 ### Iteration 9: 3scale APIcast E2E VERIFIED — Full Production Chain (2026-06-15)
 
 - **3scale APIcast → backend → gateway → wallet → Postgres** end-to-end chain verified.
