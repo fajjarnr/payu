@@ -8,7 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.AutoConfigureTestEntityManager;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,8 +27,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration tests for StatementEntity Repository.
  * Tests CRUD operations and custom queries.
+ *
+ * Migration note: @DataJpaTest was REMOVED in Spring Boot 4.0+.
+ * Replaced with @SpringBootTest + @AutoConfigureTestEntityManager
+ * (provides TestEntityManager in full Spring context).
  */
-@DataJpaTest
+@SpringBootTest
+@AutoConfigureTestEntityManager
 @ActiveProfiles("test")
 @Tag("integration")
 @DisplayName("StatementEntity Repository Integration Tests")

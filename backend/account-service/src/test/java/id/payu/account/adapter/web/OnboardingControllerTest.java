@@ -7,6 +7,7 @@ import id.payu.account.domain.model.UserStatus;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

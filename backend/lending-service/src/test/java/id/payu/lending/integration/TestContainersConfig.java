@@ -68,7 +68,7 @@ public class TestContainersConfig {
     /**
      * Returns a Bearer Authorization header value suitable for
      * {@link org.springframework.test.web.reactive.server.WebTestClient} or
-     * {@link org.springframework.boot.restclient.test.TestRestTemplate}.
+     * {@link org.springframework.boot.resttestclient.TestRestTemplate}.
      */
     public static String bearerToken() {
         return "Bearer test-token";
