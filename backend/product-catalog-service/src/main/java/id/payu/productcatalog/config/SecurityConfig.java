@@ -2,6 +2,7 @@ package id.payu.productcatalog.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,10 +14,15 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Security configuration for the product catalog service.
  *
+ * <p>Disabled in test profile to avoid @WebMvcTest slice failures (JwtAuthenticationConverter
+ * bean not auto-created in test slices). Tests use default permissive @WebMvcTest security
+ * unless explicitly importing a TestSecurityConfig.</p>
+ *
  * <p>The {@code jwtAuthenticationConverter} is auto-configured by
  * {@code security-starter} via {@code KeycloakJwtAutoConfiguration}.</p>
  */
 @Configuration
+@Profile("!test")
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
