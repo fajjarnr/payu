@@ -9,12 +9,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -65,22 +65,22 @@ class SecurityConfigTest {
     private MockMvc mockMvc;
 
     // Mock all service dependencies of AuthController
-    @MockBean
+    @MockitoBean
     private KeycloakService keycloakService;
 
-    @MockBean
+    @MockitoBean
     private RiskEvaluationService riskEvaluationService;
 
-    @MockBean
+    @MockitoBean
     private RefreshTokenService refreshTokenService;
 
-    @MockBean
+    @MockitoBean
     private SessionValidationService sessionValidationService;
 
-    @MockBean
+    @MockitoBean
     private RedisConnectionFactory redisConnectionFactory;
 
-    @MockBean
+    @MockitoBean
     @SuppressWarnings("rawtypes")
     private RedisTemplate redisTemplate;
 

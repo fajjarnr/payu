@@ -14,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -39,19 +39,19 @@ class TopUpResourceTest {
     @LocalServerPort
     int port;
 
-    @MockBean
+    @MockitoBean
     WalletPort walletPort;
 
-    @MockBean
+    @MockitoBean
     BillerPort billerPort;
 
-    @MockBean
+    @MockitoBean
     PaymentEventPort eventPort;
 
-    @MockBean
+    @MockitoBean
     IdempotencyRepository idempotencyRepository;
 
-    @MockBean
+    @MockitoBean
     JwtDecoder jwtDecoder;
 
     @BeforeEach

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @SpringBootTest(
     classes = AccountServiceApplication.class,
     properties = {
-        "spring.autoconfigure.exclude=org.springframework.cloud.vault.core.VaultAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration,id.payu.outbox.config.OutboxAutoConfiguration",
+        "spring.autoconfigure.exclude=org.springframework.cloud.vault.core.VaultAutoConfiguration,org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration,id.payu.outbox.config.OutboxAutoConfiguration",
         "payu.security.encryption.password=dummy",
         "payu.security.encryption.salt=dummy"
     }
@@ -40,55 +40,55 @@ class VaultConfigurationTest {
     private VaultTemplate vaultTemplate;
 
     // Mock security beans
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     // Mock KafkaTemplate for cache and messaging
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
     // Mock KafkaTemplate<String, Object> for DeepHealthIndicator
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<String, Object> stringKafkaTemplate;
 
     // Mock health indicator dependencies
-    @MockBean
+    @MockitoBean
     private RedisConnectionFactory redisConnectionFactory;
 
-    @MockBean
+    @MockitoBean
     private ListenerContainerRegistry listenerContainerRegistry;
 
     // Mock application components that depend on JPA
-    @MockBean
+    @MockitoBean
     private id.payu.account.adapter.messaging.KafkaUserEventPublisherAdapter kafkaUserEventPublisherAdapter;
 
-    @MockBean
+    @MockitoBean
     private id.payu.account.adapter.persistence.UserPersistenceAdapter userPersistenceAdapter;
 
-    @MockBean
+    @MockitoBean
     private id.payu.account.adapter.persistence.repository.UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private id.payu.account.adapter.persistence.repository.ProfileRepository profileRepository;
 
     // Mock remaining JPA repositories to avoid EntityManagerFactory creation
-    @MockBean
+    @MockitoBean
     private id.payu.account.repository.AccountRepository accountRepository;
 
-    @MockBean
+    @MockitoBean
     private id.payu.account.repository.BudgetJpaRepository budgetJpaRepository;
 
-    @MockBean
+    @MockitoBean
     private id.payu.account.repository.BeneficiaryRepository beneficiaryRepository;
 
     // Mock cache-starter dependencies
-    @MockBean
+    @MockitoBean
     private CacheService cacheService;
 
-    @MockBean(name = "cacheInvalidationPublisher")
+    @MockitoBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
 
-    @MockBean(name = "cachedAccountQueryService")
+    @MockitoBean(name = "cachedAccountQueryService")
     private Object cachedAccountQueryService;
 
     @Test

@@ -64,7 +64,7 @@ public class FxTestConfig {
 
     /**
      * Returns a Bearer Authorization header value suitable for
-     * {@link org.springframework.boot.test.web.client.TestRestTemplate}.
+     * {@link org.springframework.boot.restclient.test.TestRestTemplate}.
      */
     static String bearerToken() {
         return "Bearer test-token";

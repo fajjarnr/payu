@@ -10,8 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.AutoConfigureTestEntityManager;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -31,10 +31,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for ContentRepository using Testcontainers PostgreSQL.
+ *
+ * Migration note: @DataJpaTest and @AutoConfigureTestDatabase were
+ * REMOVED in Spring Boot 4.0+. Replaced with @SpringBootTest +
+ * @AutoConfigureTestEntityManager (the closest equivalent providing
+ * a TestEntityManager in a full Spring context). Testcontainers is
+ * still used to provide the real PostgreSQL database.
  */
-@DataJpaTest
+@SpringBootTest
 @Testcontainers
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestEntityManager
 @Tag("integration")
 @DisplayName("ContentRepository Integration Tests")
 class ContentRepositoryIntegrationTest {

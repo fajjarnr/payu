@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -40,13 +40,13 @@ class LoanApplicationIntegrationTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @MockBean
+    @MockitoBean
     private AccountClient accountClient;
 
-    @MockBean
+    @MockitoBean
     private TransactionClient transactionClient;
 
-    @MockBean
+    @MockitoBean
     private OutboxService outboxService;
 
     // ─── POST /loans ────────────────────────────────────────────────

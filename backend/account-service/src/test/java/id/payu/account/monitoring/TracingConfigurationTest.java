@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -24,10 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(
     properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration,"
+                + "org.springframework.boot.data.jpa.autoconfigure.JpaRepositoriesAutoConfiguration,"
                 + "org.springframework.cloud.vault.core.VaultAutoConfiguration,"
                 + "id.payu.outbox.config.OutboxAutoConfiguration",
         "management.endpoints.web.exposure.include=*",
@@ -48,15 +48,15 @@ class TracingConfigurationTest {
     private MockMvc mockMvc;
 
     // Mock security beans
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     // Mock shared library dependencies
-    @MockBean(name = "cacheInvalidationPublisher")
+    @MockitoBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
 
     // Mock KafkaTemplate for cache invalidation
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
     @Test

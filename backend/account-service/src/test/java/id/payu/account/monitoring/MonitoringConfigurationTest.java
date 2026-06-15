@@ -5,11 +5,11 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration;
+import org.springframework.boot.micrometer.metrics.autoconfigure.export.prometheus.PrometheusMetricsExportAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -32,10 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(
     properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration,"
+                + "org.springframework.boot.data.jpa.autoconfigure.JpaRepositoriesAutoConfiguration,"
                 + "org.springframework.cloud.vault.core.VaultAutoConfiguration,"
                 + "id.payu.outbox.config.OutboxAutoConfiguration",
         "management.endpoints.web.exposure.include=*",
@@ -58,15 +58,15 @@ class MonitoringConfigurationTest {
     private MockMvc mockMvc;
 
     // Mock security beans
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     // Mock shared library dependencies
-    @MockBean(name = "cacheInvalidationPublisher")
+    @MockitoBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
 
     // Mock KafkaTemplate for cache invalidation
-    @MockBean
+    @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
     /**

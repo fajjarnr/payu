@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import id.payu.promotion.adapter.persistence.repository.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
@@ -42,7 +42,7 @@ class ReferralServiceTest {
     @Autowired
     LoyaltyPointsRepository loyaltyPointsRepository;
 
-    @MockBean
+    @MockitoBean
     @SuppressWarnings("rawtypes")
     id.payu.promotion.application.service.EmitterPlaceholder promotionEvents;
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import id.payu.outbox.service.OutboxService;
 import org.springframework.test.context.ActiveProfiles;
@@ -39,10 +39,10 @@ public class BillingIntegrationTest {
     @LocalServerPort
     int port;
 
-    @MockBean
+    @MockitoBean
     WalletClient walletClient;
 
-    @MockBean
+    @MockitoBean
     OutboxService outboxService;
 
     @BeforeEach
