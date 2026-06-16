@@ -1,12 +1,12 @@
 #!/bin/bash
 # Trigger PayU Quarkus Services Pipelines (including Simulators)
-# Semantic Versioning: v1.7.2
+# Semantic Versioning: v1.8.55
 # Decoupled Service Name (Image) from Service Path (Context)
 
 NAMESPACE="payu-cicd"
 GIT_URL="https://github.com/fajjarnr/payu.git"
 GIT_REVISION="main"
-IMAGE_TAG="v1.7.8"
+IMAGE_TAG="v1.8.55"
 
 # Format: "service-name|service-path"
 SERVICES=(

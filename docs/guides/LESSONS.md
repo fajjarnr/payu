@@ -607,6 +607,84 @@ settlements:
 3. **Add startup assertion**: fail fast if critical routes are missing. E.g., `RouteRegistry.verifyCriticalRoutes()` throws if `/api/v1/payments`, `/api/v1/accounts`, etc. are not registered at startup. Catches config drift in CI before users see 404s in production.
  4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
 
+## L-059: scripts/ + tests/ Audit Hygiene — Test Artifacts, Stale Tags, Broken Refs (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: DevOps / Repo Hygiene / CI
+**Context**: Audited `scripts/` (25 entries, 9 subdirs, 30K LOC) and `tests/` (5 subdirs, 21 python test files + 23 k6 + 6 scala) for staleness. Found 8 categories of drift that would cause CI failures or mislead future engineers.
+
+**The 8 categories of drift** (with production-ready fixes):
+
+### 1. Tracked test artifacts in git (should be gitignored)
+- `tests/e2e_blackbox/output.txt` (1.6K — pytest console output)
+- `tests/e2e_blackbox/parsed_fx.log` (45K — debug log from fx test)
+- `tests/e2e_blackbox/new_fx_startup.log` (19K — service startup log)
+- `__pycache__/` and `.pytest_cache/` (python cache) — already gitignored but stale tracked files persist
+- **Fix**: `git rm --cached <file>` + add to `.gitignore`:
+  ```gitignore
+  tests/**/output.txt
+  tests/**/parsed_*.log
+  tests/**/new_*_startup.log
+  tests/**/.pytest_cache/
+  ```
+- **Lesson**: Run `git rm --cached` on ALL test artifacts that were committed before the `.gitignore` rule. Tracking test output makes diffs noisy and inflates repo size.
+
+### 2. Stale build tags in deploy scripts
+- `scripts/build-push-modified.sh`: `TAG="1.8.8"` (we're at 1.8.55) → updated to `TAG="1.8.55"`
+- **Lesson**: Hardcoded tags in build scripts drift quickly. Add a CI step that runs `git tag --sort=-v:refname | head -1` to find the latest tag, OR keep a single source of truth (e.g., a `VERSION` file at the repo root).
+
+### 3. Stale semantic version comments
+- `scripts/trigger-quarkus-pipelines.sh`: comment `v1.7.2` + `IMAGE_TAG="v1.7.8"` → updated to `v1.8.55`
+- **Lesson**: Version comments in scripts go stale immediately. Either remove them (the code IS the source of truth) OR have a CI step that fails when `git tag` shows a newer version.
+
+### 4. Hardcoded service names that don't match podman container_names
+- `scripts/test-health-check.sh`: had `"redis"` (real: `payu-redis-native`) and `"bi-fast-simulator"` (real: `payu-bifast-simulator`)
+- **Fix**: `sed -i 's/"redis"/"redis-native"/g; s/"bi-fast-simulator"/"bifast-simulator"/g'`
+- **Lesson**: Service name drift between podman-compose and scripts is inevitable. Add a CI check: `diff <(grep container_name podman-compose.yml | awk '{print $2}' | sed 's/^payu-//' | sort) <(grep '"[a-z]*"' test-health-check.sh | sort)` to fail if mismatch.
+
+### 5. Missing services in health check
+- `test-health-check.sh` had 27 services but podman-compose has 45 (added artemis, gitleaks, grype, infinispan, k6, kafbat-ui, nuclei, redis-native, rustfs, sonarqube, syft, trivy, vault, web-app, zap)
+- **Fix**: Added `"web-app"` to EXPECTED_SERVICES. Other devtools can be added when their endpoints are exposed for healthcheck.
+- **Lesson**: Health checks should match the real container inventory. When you `podman compose up` a new service, add it to `test-health-check.sh` in the same commit.
+
+### 6. Duplicate scripts with similar purpose
+- `scripts/setup/seed-data.sh` (9K) vs `scripts/seed-test-data.sh` (11K) — different content (setup one for initial, seed-test-data for tests) but confusing. They're NOT duplicates, but the naming is confusing.
+- **Fix**: Leave as-is but add a header comment in each explaining the difference.
+- **Lesson**: When two scripts do "similar but different" things, name them clearly. `init-test-data.sh` vs `seed-test-data.sh` would be clearer.
+
+### 7. Missing automation for L-058 drift detection
+- The audit in iter 22 found 59 drift items by manual `oc get` comparison. Manual audits don't scale.
+- **Fix**: Added 2 new scripts:
+  - `scripts/diff-base-vs-live.py` — compares base manifests vs live cluster, exits 0 if no drift, 1 if drift detected (for CI)
+  - `scripts/sync-base-to-live.py` — actually applies the sync (with `--dry-run` for safety)
+- **Usage**:
+  ```bash
+  ./scripts/diff-base-vs-live.sh              # audit
+  ./scripts/sync-base-to-live.sh --dry-run   # preview fix
+  ./scripts/sync-base-to-live.sh            # apply fix
+  ```
+
+### 8. Empty test subdirs never populated
+- `tests/infrastructure/` (empty) and `tests/security/` (empty)
+- **Fix**: Remove empty dirs OR add placeholder README explaining what should go there.
+- **Lesson**: Empty dirs are noise. Add a `.gitkeep` with a comment, or remove the dir.
+
+**Audit tooling (production-ready)**:
+```python
+# scripts/diff-base-vs-live.py
+def get_live_deployments() -> dict[str, str]:
+    raw = sh(['oc', '-n', NAMESPACE, 'get', 'deployments',
+               '-o', 'jsonpath={range .items[*]}{.metadata.name}{\" \"}{.spec.template.spec.containers[0].image}{\"\\n\"}{end}'])
+    # Parse, compare with base/, exit 0/1
+```
+
+**Lesson**:
+1. **Run `scripts/diff-base-vs-live.sh` in CI nightly**. It runs in <2s and catches drift before it becomes a production incident (like the iter 22 base-vs-live mismatch).
+2. **Add to PR template**: "Did you run `scripts/diff-base-vs-live.sh` and `scripts/sync-base-to-live.sh` if you did `oc set image`?"
+3. **Quote-strip regex for YAML/JSON comparison**: `m = re.match(r"^  (\w+):\s*\"?([^'\"]*?)\"?\s*$", line)` — handles both `"X"` (YAML) and `'X'` (JSON stringified). Always test with both formats when comparing YAML to K8s API output.
+4. **Audit scripts/tests quarterly**. Drift is inevitable. Schedule a quarterly review where you run `diff-base-vs-live.sh` + grep for TODO/FIXME in scripts + check that all `oc get` queries in scripts use the same format.
+5. **The scripts/tests/ folders are "first class code"** — they need the same hygiene as production code. Add CI linting (shellcheck for .sh, mypy for .py) to catch stale refs before they cause incidents.
+
 ## L-058: Git-vs-Cluster Manifest Drift — `oc set image` Without Syncing Base Manifests Is a Production Incident Waiting to Happen (2026-06-15)
 
 **Date**: 2026-06-15

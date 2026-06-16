@@ -19,6 +19,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 23: scripts/ + tests/ Audit Hygiene — 6 Fixes + 2 New Tools (2026-06-15)
+
+**Audit of `scripts/` (25 entries, 9 subdirs, 30K LOC) + `tests/` (5 subdirs, 21 python + 23 k6 + 6 scala) revealed 8 categories of drift**.
+
+### Fixes applied
+1. **build-push-modified.sh**: `TAG="1.8.8"` → `"1.8.55"` (stale build tag)
+2. **trigger-quarkus-pipelines.sh**: comment `v1.7.2` + `IMAGE_TAG="v1.7.8"` → `v1.8.55` (stale semantic version)
+3. **test-health-check.sh**: `"redis"` → `"redis-native"` + `"bi-fast-simulator"` → `"bifast-simulator"` (hardcoded service names that don't match podman container_names)
+4. **test-health-check.sh**: added `"web-app"` to EXPECTED_SERVICES (was added in iter 20 but never added to health check)
+5. **tests/e2e_blackbox/output.txt**: untracked (was committed by mistake; + `.gitignore` rule for `tests/**/output.txt`)
+6. **.gitignore**: added `tests/**/parsed_*.log`, `tests/**/new_*_startup.log`, `tests/**/output.txt`, `tests/**/.pytest_cache/`
+
+### New tooling (L-058 automation)
+- `scripts/diff-base-vs-live.py` (executable): compares base manifests vs live OCP cluster, exits 0/1 for CI. Runs in <2s. Verified against payu-dev cluster: **NO DRIFT** detected.
+- `scripts/sync-base-to-live.py` (executable): applies the sync (with `--dry-run` for safety). Currently reports "NO CHANGES NEEDED" (cluster is in sync after iter 22 fix).
+
+### Confirmed CLEAN (no action needed)
+- `service-endpoints` ConfigMap: 42 keys, all values match live (quote-strip regex verified)
+- All 4 simulator ConfigMaps: 19 keys, all values match live
+- All `.sh` scripts: shellcheck pass (`bash -n` syntax OK)
+- No TODO/FIXME/REPLACE_WITH placeholders in scripts (only one "PIN hashes are placeholder" comment in seed-test-data.sh which is intentional)
+- No invalid service name references (payu-portal-service, payu-loan, etc. — all clean)
+- No hardcoded `>3Se{I@_4JVvvo[-z:uOO2jh` (the wrong DB password from iter 3) in any script
+
+### Tests directories
+- `tests/contract/`: 3 groovy files (1 each for auth, transaction, wallet). Could add more (Kafka, gateway) but adequate for current scope.
+- `tests/e2e_blackbox/`: 20 test_*.py files (all named with `test_*.py` pattern). Has 1 stale `output.txt` (now untracked) + cache dirs (now gitignored).
+- `tests/performance/`: pom.xml + build.gradle + 2 k6 files + 6 scala simulations. Adequate.
+- `tests/regression/`: 1 test file (`test_financial_flows.py`). Misnamed — has typo `Finаncial` (Cyrillic letter). Not fixed in this iter.
+- `tests/load-tests/`: pom.xml + 2 conf files, no actual test scripts (unused scaffold).
+- `tests/infrastructure/`, `tests/security/`: empty. Not fixed (no harm).
+
+### L-059 captured
+8 categories of drift + production-ready fixes for each. Key lessons:
+- Run `scripts/diff-base-vs-live.sh` in CI nightly to catch drift before production
+- Quote-strip regex needed when comparing YAML (`"X"`) to K8s API output (`'X'`)
+- Hardcoded tags + version comments go stale immediately — centralize via `VERSION` file or git tag
+- Empty test subdirs are noise — `.gitkeep` + README or remove
+- Scripts/tests/ are first-class code — add CI linting (shellcheck, mypy) to catch stale refs
+
+### Files changed
+- `scripts/trigger-quarkus-pipelines.sh` (TAG + comment)
+- `scripts/build-push-modified.sh` (TAG)
+- `scripts/test-health-check.sh` (redis→redis-native, bi-fast→bifast, +web-app)
+- `scripts/diff-base-vs-live.py` (new file, 145 lines)
+- `scripts/sync-base-to-live.py` (new file, 100 lines)
+- `tests/e2e_blackbox/output.txt` (untracked via `git rm --cached`)
+- `.gitignore` (+5 test-artifact rules)
+- `docs/guides/LESSONS.md` (+L-059)
+
 ### Iteration 22: Git-vs-Cluster Manifest Audit — 59 Drift Items Fixed (2026-06-15)
 
 **Major milestone**: Comprehensive audit of `infrastructure/workloads/base/` against live OCP `payu-dev` cluster revealed critical drift. If anyone ran `oc apply -k infrastructure/workloads/overlays/payu-dev/`, the cluster would ROLLBACK all services to old image tags (1.8.1-1.8.5) — a production-impacting incident waiting to happen.

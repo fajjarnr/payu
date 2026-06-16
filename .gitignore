@@ -60,6 +60,11 @@ bin/
 
 # --- Python ---
 __pycache__/
+tests/e2e_blackbox/output.txt
+tests/**/parsed_*.log
+tests/**/new_*_startup.log
+tests/**/output.txt
+tests/**/.pytest_cache/
 *.py[cod]
 *$py.class
 *.so

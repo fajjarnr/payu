@@ -3,7 +3,7 @@ set -e
 
 REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
 NAMESPACE="payu-dev"
-TAG="1.8.8"
+TAG="1.8.55"
 
 # List of services that we actually modified and need to rebuild and redeploy
 SERVICES=(

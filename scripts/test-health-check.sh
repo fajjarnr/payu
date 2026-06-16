@@ -46,10 +46,10 @@ fi
 # Expected services (in dependency order)
 EXPECTED_SERVICES=(
     "postgres"
-    "redis"
+    "redis-native"
     "kafka"
     "keycloak"
-    "bi-fast-simulator"
+    "bifast-simulator"
     "dukcapil-simulator"
     "qris-simulator"
     "account-service"
@@ -75,6 +75,7 @@ EXPECTED_SERVICES=(
     "dispute-service"
     "integration-service"
     "product-catalog-service"
+    "web-app"
 )
 
 FAILED_SERVICES=()
