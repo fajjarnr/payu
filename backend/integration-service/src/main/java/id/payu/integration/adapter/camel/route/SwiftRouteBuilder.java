@@ -96,7 +96,8 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 exchange.getIn().setBody(message);
             })
             .marshal().json(JsonLibrary.Jackson)
-            .to("kafka:payu.integration.swift-processed.v1")
+            .to(String.format("kafka:payu.integration.swift-processed.v1?brokers=%s",
+                    System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")))
             .process(exchange -> {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 messageProcessingService.markSent(message.getMessageId());
@@ -128,7 +129,8 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 }
                 log.error("SWIFT processing error for message {}: {}", messageId, exception.getMessage());
             })
-            .to("kafka:payu.integration.swift-errors.v1");
+            .to(String.format("kafka:payu.integration.swift-errors.v1?brokers=%s",
+                    System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")));
     }
 
     private MessageType parseMessageType(String messageTypeStr) {
