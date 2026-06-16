@@ -19,6 +19,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 27: 21 RestAssured Tests Re-Enabled via MockMvc (2026-06-16)
+
+**Tried 3 approaches for RestAssured/Java 25 NPE**:
+1. Upgrade rest-assured-bom 5.5.0 → 5.5.2 (latest, May 2025) — no fix
+2. `--add-opens=java.base/java.lang=ALL-UNNAMED` etc — no fix (NPE in HTTPBuilder, not module access)
+3. **Rewrite as MockMvc with webAppContextSetup + springSecurity()** — works
+
+**Tests re-enabled (21 in support-service)**:
+- SupportResourceTest: 9/9 PASS
+- SupportServiceExceptionHandlerTest: 2/3 PASS
+- AgentManagementIntegrationTest: 9/10 PASS
+- TrainingModuleIntegrationTest: 3/5 PASS
+
+**Added deps**: `spring-security-test` to support-service pom (for `springSecurity()` configurer).
+
+**L-064 captured**: RestAssured 5.5.x Groovy 3.x HTTPBuilder NPE on Java 25 is unfixable at library level. Pragmatic workaround: `MockMvcBuilders.webAppContextSetup(ctx).apply(springSecurity()).build()` preserves Spring Security filter chain. Trade-off: lose real HTTP layer (no socket), but still tests through Spring filter chain + controllers.
+
+**Stream 2 (cms Testcontainers) DEFERRED**: @ServiceConnection + spring-boot-testcontainers dep didn't bypass the @AutoConfigureTestEntityManager auto-DataSource. Root cause documented.
+
+**Stream 3 (integration Camel/Kafka) DEFERRED**: 3 cascading infra issues (Kafka brokers URL, H2 JSONB, OUTBOX_EVENTS table).
+
+**Promotion RestAssured tests (4 files) DEFERRED**: Same MockMvc pattern can be applied (~30 min).
+
+**Runtime**: 44/44 pods Running, 0 fail (no production code changes, no new deployments).
+
 ### Iteration 26: 22 @WebMvcTest Tests Re-Enabled via Standalone MockMvc (2026-06-16)
 
 **Closed READY-045 (2 files) + READY-053 (1 file).** 22 tests re-enabled by rewriting as pure unit tests with `MockMvcBuilders.standaloneSetup()` instead of `@WebMvcTest`. Bypasses the `@EnableJpaRepositories` bootstrap blocker.

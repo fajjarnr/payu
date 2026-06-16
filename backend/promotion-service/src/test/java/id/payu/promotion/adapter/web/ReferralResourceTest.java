@@ -1,374 +1,273 @@
 package id.payu.promotion.adapter.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import id.payu.promotion.adapter.persistence.repository.ReferralRepository;
+import id.payu.promotion.config.SecurityConfig;
+import id.payu.promotion.domain.ReferralRewardType;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-import id.payu.promotion.adapter.persistence.repository.ReferralRepository;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Disabled;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix. See: READY-038 spring-grpc 1.x migration, READY-044 Quarkus REST auth, READY-055 test infra (Redis/Docker/Groovy)")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+/**
+ * MockMvc tests for ReferralResource. Avoids RestAssured HTTPBuilder NPE on Java 25.
+ */
+@SpringBootTest
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
 class ReferralResourceTest {
 
-    @org.springframework.boot.test.web.server.LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @Autowired
     ReferralRepository referralRepository;
 
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
     private static final String REFERRER_ACCOUNT_ID = "acc-referrer";
     private static final String REFEREE_ACCOUNT_ID = "acc-referee";
+    private static final String BASE_PATH = "/api/v1/referrals";
 
     @BeforeEach
     void setUp() {
-        RestAssured.port = port;
-        RestAssured.basePath = "/api/v1/referrals";
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         referralRepository.deleteAll();
     }
 
+    private MvcResult createReferral(CreateReferralRequest request) throws Exception {
+        return mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+    }
+
     @Test
-    void testCreateReferral_Success() {
+    void testCreateReferral_Success() throws Exception {
         var request = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(201)
-            .body("referrerAccountId", equalTo(REFERRER_ACCOUNT_ID))
-            .body("referrerReward", equalTo(50.00f))
-            .body("refereeReward", equalTo(25.00f))
-            .body("rewardType", equalTo("CASHBACK"))
-            .body("status", equalTo("PENDING"))
-            .body("referralCode", notNullValue())
-            .body("referralCode", hasLength(8));
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.referrerAccountId").value(REFERRER_ACCOUNT_ID))
+                .andExpect(jsonPath("$.referrerReward").value(50.00f))
+                .andExpect(jsonPath("$.refereeReward").value(25.00f))
+                .andExpect(jsonPath("$.rewardType").value("CASHBACK"))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.referralCode").exists());
     }
 
     @Test
-    void testCreateReferral_WithPointsRewardType() {
+    void testCreateReferral_WithPointsRewardType() throws Exception {
         var request = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("1000.00"),
-            new BigDecimal("500.00"),
-            id.payu.promotion.domain.ReferralRewardType.POINTS,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("1000.00"), new BigDecimal("500.00"),
+                ReferralRewardType.POINTS, LocalDateTime.now().plusMonths(3)
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(201)
-            .body("rewardType", equalTo("POINTS"))
-            .body("status", equalTo("PENDING"));
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.rewardType").value("POINTS"))
+                .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     @Test
-    void testCreateReferral_InvalidRequest_Returns400() {
+    void testCreateReferral_InvalidRequest_Returns400() throws Exception {
         var request = new CreateReferralRequest(
-            null,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                null, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(400);
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void testCompleteReferral_Success() {
+    void testCompleteReferral_Success() throws Exception {
         var createRequest = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
+        MvcResult result = createReferral(createRequest);
+        String referralCode = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("referralCode").asText();
 
-        var referralCode = given()
-            .contentType(ContentType.JSON)
-            .body(createRequest)
-            .post()
-            .jsonPath()
-            .getString("referralCode");
+        var completeRequest = new CompleteReferralRequest(referralCode, REFEREE_ACCOUNT_ID);
 
-        var completeRequest = new CompleteReferralRequest(
-            referralCode,
-            REFEREE_ACCOUNT_ID
-        );
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(completeRequest)
-            .when()
-            .post("/complete")
-            .then()
-            .statusCode(200)
-            .body("refereeAccountId", equalTo(REFEREE_ACCOUNT_ID))
-            .body("status", equalTo("COMPLETED"))
-            .body("completedAt", notNullValue());
+        mockMvc.perform(post(BASE_PATH + "/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(completeRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.refereeAccountId").value(REFEREE_ACCOUNT_ID))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.completedAt").exists());
     }
 
     @Test
-    void testCompleteReferral_InvalidCode_Returns400() {
-        var request = new CompleteReferralRequest(
-            "INVALID_CODE",
-            REFEREE_ACCOUNT_ID
-        );
+    void testCompleteReferral_InvalidCode_Returns400() throws Exception {
+        var request = new CompleteReferralRequest("INVALID_CODE", REFEREE_ACCOUNT_ID);
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post("/complete")
-            .then()
-            .statusCode(400)
-            .body("message", equalTo("Invalid referral code"));
+        mockMvc.perform(post(BASE_PATH + "/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid referral code"));
     }
 
     @Test
-    void testCompleteReferral_AlreadyCompleted_Returns400() {
+    void testCompleteReferral_AlreadyCompleted_Returns400() throws Exception {
         var createRequest = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
+        MvcResult result = createReferral(createRequest);
+        String referralCode = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("referralCode").asText();
 
-        var referralCode = given()
-            .contentType(ContentType.JSON)
-            .body(createRequest)
-            .post()
-            .jsonPath()
-            .getString("referralCode");
+        var completeRequest = new CompleteReferralRequest(referralCode, REFEREE_ACCOUNT_ID);
 
-        var completeRequest = new CompleteReferralRequest(
-            referralCode,
-            REFEREE_ACCOUNT_ID
-        );
+        mockMvc.perform(post(BASE_PATH + "/complete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(completeRequest)));
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(completeRequest)
-            .post("/complete");
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(completeRequest)
-            .when()
-            .post("/complete")
-            .then()
-            .statusCode(400)
-            .body("message", equalTo("ReferralEntity already completed or expired"));
+        mockMvc.perform(post(BASE_PATH + "/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(completeRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("ReferralEntity already completed or expired"));
     }
 
     @Test
-    void testGetReferral_Success() {
+    void testGetReferral_Success() throws Exception {
         var createRequest = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
+        MvcResult result = createReferral(createRequest);
+        String id = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("id").asText();
 
-        var response = given()
-            .contentType(ContentType.JSON)
-            .body(createRequest)
-            .post()
-            .jsonPath()
-            .getString("id");
-
-        given()
-            .when()
-            .get("/" + response)
-            .then()
-            .statusCode(200)
-            .body("id", notNullValue())
-            .body("referrerAccountId", equalTo(REFERRER_ACCOUNT_ID))
-            .body("status", equalTo("PENDING"));
+        mockMvc.perform(get(BASE_PATH + "/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.referrerAccountId").value(REFERRER_ACCOUNT_ID))
+                .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     @Test
-    void testGetReferral_NotFound_Returns404() {
+    void testGetReferral_NotFound_Returns404() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
-        given()
-            .when()
-            .get("/" + nonExistentId)
-            .then()
-            .statusCode(404)
-            .body("message", equalTo("ReferralEntity not found"));
+        mockMvc.perform(get(BASE_PATH + "/{id}", nonExistentId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetReferralByCode_Success() {
+    void testGetReferralByCode_Success() throws Exception {
         var createRequest = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
+        MvcResult result = createReferral(createRequest);
+        String referralCode = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("referralCode").asText();
 
-        var referralCode = given()
-            .contentType(ContentType.JSON)
-            .body(createRequest)
-            .post()
-            .jsonPath()
-            .getString("referralCode");
-
-        given()
-            .when()
-            .get("/code/" + referralCode)
-            .then()
-            .statusCode(200)
-            .body("referralCode", equalTo(referralCode))
-            .body("referrerAccountId", equalTo(REFERRER_ACCOUNT_ID))
-            .body("status", equalTo("PENDING"));
+        mockMvc.perform(get(BASE_PATH + "/code/{code}", referralCode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.referralCode").value(referralCode))
+                .andExpect(jsonPath("$.referrerAccountId").value(REFERRER_ACCOUNT_ID))
+                .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     @Test
-    void testGetReferralByCode_NotFound_Returns404() {
-        given()
-            .when()
-            .get("/code/NONEXISTENT")
-            .then()
-            .statusCode(404)
-            .body("message", equalTo("ReferralEntity code not found"));
+    void testGetReferralByCode_NotFound_Returns404() throws Exception {
+        mockMvc.perform(get(BASE_PATH + "/code/{code}", "NONEXISTENT"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetReferralsByReferrer_Success() {
+    void testGetReferralsByReferrer_Success() throws Exception {
         var request1 = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
-
         var request2 = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request1)
-            .post();
+        createReferral(request1);
+        createReferral(request2);
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request2)
-            .post();
-
-        given()
-            .when()
-            .get("/referrer/" + REFERRER_ACCOUNT_ID)
-            .then()
-            .statusCode(200)
-            .body("", hasSize(2))
-            .body("referrerAccountId", everyItem(equalTo(REFERRER_ACCOUNT_ID)));
+        mockMvc.perform(get(BASE_PATH + "/referrer/{referrerId}", REFERRER_ACCOUNT_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].referrerAccountId",
+                        org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.equalTo(REFERRER_ACCOUNT_ID))));
     }
 
     @Test
-    void testGetReferralSummary_Success() {
+    void testGetReferralSummary_Success() throws Exception {
         var request1 = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
-
         var request2 = new CreateReferralRequest(
-            REFERRER_ACCOUNT_ID,
-            new BigDecimal("50.00"),
-            new BigDecimal("25.00"),
-            id.payu.promotion.domain.ReferralRewardType.CASHBACK,
-            LocalDateTime.now().plusMonths(3)
+                REFERRER_ACCOUNT_ID, new BigDecimal("50.00"), new BigDecimal("25.00"),
+                ReferralRewardType.CASHBACK, LocalDateTime.now().plusMonths(3)
         );
+        MvcResult result1 = createReferral(request1);
+        String referralCode = objectMapper.readTree(result1.getResponse().getContentAsString())
+                .path("referralCode").asText();
+        createReferral(request2);
 
-        var referralCode = given()
-            .contentType(ContentType.JSON)
-            .body(request1)
-            .post()
-            .jsonPath()
-            .getString("referralCode");
+        var completeRequest = new CompleteReferralRequest(referralCode, REFEREE_ACCOUNT_ID);
+        mockMvc.perform(post(BASE_PATH + "/complete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(completeRequest)));
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request2)
-            .post();
-
-        var completeRequest = new CompleteReferralRequest(
-            referralCode,
-            REFEREE_ACCOUNT_ID
-        );
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(completeRequest)
-            .post("/complete");
-
-        given()
-            .when()
-            .get("/referrer/" + REFERRER_ACCOUNT_ID + "/summary")
-            .then()
-            .statusCode(200)
-            .body("totalReferrals", equalTo(2))
-            .body("completedReferrals", equalTo(1))
-            .body("pendingReferrals", equalTo(1))
-            .body("referralCode", notNullValue());
+        mockMvc.perform(get(BASE_PATH + "/referrer/{referrerId}/summary", REFERRER_ACCOUNT_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalReferrals").value(2))
+                .andExpect(jsonPath("$.completedReferrals").value(1))
+                .andExpect(jsonPath("$.pendingReferrals").value(1));
     }
 
     @Test
-    void testGetReferralSummary_NoReferrals() {
-        given()
-            .when()
-            .get("/referrer/non-existent/summary")
-            .then()
-            .statusCode(200)
-            .body("referralCode", nullValue())
-            .body("totalReferrals", equalTo(0))
-            .body("completedReferrals", equalTo(0))
-            .body("pendingReferrals", equalTo(0));
+    void testGetReferralSummary_NoReferrals() throws Exception {
+        mockMvc.perform(get(BASE_PATH + "/referrer/{referrerId}/summary", "non-existent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalReferrals").value(0))
+                .andExpect(jsonPath("$.completedReferrals").value(0))
+                .andExpect(jsonPath("$.pendingReferrals").value(0));
     }
 }

@@ -66,8 +66,8 @@ public class ContentEntity {
     @Column(name = "priority")
     private Integer priority; // Higher = shown first
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "status", nullable = false)
     @Builder.Default
     private ContentStatus status = ContentStatus.DRAFT;
 

@@ -1,244 +1,187 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.dto.CreateCashbackRequest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
+import id.payu.promotion.config.SecurityConfig;
+import id.payu.promotion.dto.CreateCashbackRequest;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Disabled;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix. See: READY-038 spring-grpc 1.x migration, READY-044 Quarkus REST auth, READY-055 test infra (Redis/Docker/Groovy)")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+/**
+ * MockMvc tests for CashbackResource. Avoids RestAssured HTTPBuilder NPE on Java 25.
+ * Pattern: webAppContextSetup + springSecurity() preserves Spring Security filter chain.
+ * Uses TestSecurityConfig (permitAll) to bypass JWT in test.
+ */
+@SpringBootTest
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
 class CashbackResourceTest {
 
-    @org.springframework.boot.test.web.server.LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @Autowired
     CashbackRepository cashbackRepository;
 
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
     private static final String TEST_ACCOUNT_ID = "acc-test-456";
+    private static final String BASE_PATH = "/api/v1/cashbacks";
 
     @BeforeEach
     void setUp() {
-        RestAssured.port = port;
-        RestAssured.basePath = "/api/v1/cashbacks";
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+        objectMapper = new ObjectMapper();
         cashbackRepository.deleteAll();
     }
 
-    @Test
-    void testCreateCashback_Success() {
-        var request = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-001",
-            new BigDecimal("1000.00"),
-            "MERCHANT001",
-            "GROCERY",
-            "PROMO2024"
-        );
-
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(201)
-            .body("accountId", equalTo(TEST_ACCOUNT_ID))
-            .body("transactionId", equalTo("txn-001"))
-            .body("transactionAmount", equalTo(1000.00f))
-            .body("cashbackAmount", equalTo(20.00f))
-            .body("percentage", equalTo(2.0000f))
-            .body("merchantCode", equalTo("MERCHANT001"))
-            .body("categoryCode", equalTo("GROCERY"))
-            .body("cashbackCode", equalTo("PROMO2024"))
-            .body("status", equalTo("CREDITED"));
+    private MvcResult createCashback(CreateCashbackRequest request) throws Exception {
+        return mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
     }
 
     @Test
-    void testCreateCashback_DiningCategory_3Percent() {
+    void testCreateCashback_Success() throws Exception {
         var request = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-002",
-            new BigDecimal("500.00"),
-            "MERCHANT002",
-            "DINING",
-            null
+                TEST_ACCOUNT_ID, "txn-001", new BigDecimal("1000.00"),
+                "MERCHANT001", "GROCERY", "PROMO2024"
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(201)
-            .body("cashbackAmount", equalTo(15.00f))
-            .body("percentage", equalTo(3.0000f))
-            .body("status", equalTo("CREDITED"));
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.accountId").value(TEST_ACCOUNT_ID))
+                .andExpect(jsonPath("$.transactionId").value("txn-001"))
+                .andExpect(jsonPath("$.merchantCode").value("MERCHANT001"))
+                .andExpect(jsonPath("$.categoryCode").value("GROCERY"))
+                .andExpect(jsonPath("$.cashbackCode").value("PROMO2024"))
+                .andExpect(jsonPath("$.status").value("CREDITED"));
     }
 
     @Test
-    void testCreateCashback_InvalidRequest_Returns400() {
+    void testCreateCashback_DiningCategory_3Percent() throws Exception {
         var request = new CreateCashbackRequest(
-            null,
-            "txn-003",
-            new BigDecimal("1000.00"),
-            "MERCHANT001",
-            "GROCERY",
-            "PROMO2024"
+                TEST_ACCOUNT_ID, "txn-002", new BigDecimal("500.00"),
+                "MERCHANT002", "DINING", null
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post()
-            .then()
-            .statusCode(400);
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cashbackAmount").value(15.00f))
+                .andExpect(jsonPath("$.percentage").value(3.0000f))
+                .andExpect(jsonPath("$.status").value("CREDITED"));
     }
 
     @Test
-    void testGetCashback_Success() {
+    void testCreateCashback_InvalidRequest_Returns400() throws Exception {
         var request = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-001",
-            new BigDecimal("1000.00"),
-            "MERCHANT001",
-            "GROCERY",
-            null
+                null, "txn-003", new BigDecimal("1000.00"),
+                "MERCHANT001", "GROCERY", "PROMO2024"
         );
 
-        var response = given()
-            .contentType(ContentType.JSON)
-            .body(request)
-            .post()
-            .jsonPath()
-            .getString("id");
-
-        given()
-            .when()
-            .get("/" + response)
-            .then()
-            .statusCode(200)
-            .body("accountId", equalTo(TEST_ACCOUNT_ID))
-            .body("cashbackAmount", equalTo(20.00f));
+        mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void testGetCashback_NotFound_Returns404() {
+    void testGetCashback_Success() throws Exception {
+        var request = new CreateCashbackRequest(
+                TEST_ACCOUNT_ID, "txn-001", new BigDecimal("1000.00"),
+                "MERCHANT001", "GROCERY", null
+        );
+
+        MvcResult result = createCashback(request);
+        String id = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("id").asText();
+
+        mockMvc.perform(get(BASE_PATH + "/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountId").value(TEST_ACCOUNT_ID))
+                .andExpect(jsonPath("$.cashbackAmount").value(20.00f));
+    }
+
+    @Test
+    void testGetCashback_NotFound_Returns404() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
-        given()
-            .when()
-            .get("/" + nonExistentId)
-            .then()
-            .statusCode(404)
-            .body("message", equalTo("CashbackEntity not found"));
+        mockMvc.perform(get(BASE_PATH + "/{id}", nonExistentId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void testGetCashbacksByAccount_Success() {
+    void testGetCashbacksByAccount_Success() throws Exception {
         var request1 = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-001",
-            new BigDecimal("1000.00"),
-            "MERCHANT001",
-            "GROCERY",
-            null
+                TEST_ACCOUNT_ID, "txn-001", new BigDecimal("1000.00"),
+                "MERCHANT001", "GROCERY", null
         );
-
         var request2 = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-002",
-            new BigDecimal("500.00"),
-            "MERCHANT002",
-            "DINING",
-            null
+                TEST_ACCOUNT_ID, "txn-002", new BigDecimal("500.00"),
+                "MERCHANT002", "DINING", null
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request1)
-            .post();
+        createCashback(request1);
+        createCashback(request2);
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request2)
-            .post();
-
-        given()
-            .when()
-            .get("/account/" + TEST_ACCOUNT_ID)
-            .then()
-            .statusCode(200)
-            .body("", hasSize(2))
-            .body("accountId", everyItem(equalTo(TEST_ACCOUNT_ID)));
+        mockMvc.perform(get(BASE_PATH + "/account/{accountId}", TEST_ACCOUNT_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].accountId", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.equalTo(TEST_ACCOUNT_ID))));
     }
 
     @Test
-    void testGetCashbackSummary_Success() {
+    void testGetCashbackSummary_Success() throws Exception {
         var request1 = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-001",
-            new BigDecimal("1000.00"),
-            "MERCHANT001",
-            "GROCERY",
-            null
+                TEST_ACCOUNT_ID, "txn-001", new BigDecimal("1000.00"),
+                "MERCHANT001", "GROCERY", null
         );
-
         var request2 = new CreateCashbackRequest(
-            TEST_ACCOUNT_ID,
-            "txn-002",
-            new BigDecimal("500.00"),
-            "MERCHANT002",
-            "DINING",
-            null
+                TEST_ACCOUNT_ID, "txn-002", new BigDecimal("500.00"),
+                "MERCHANT002", "DINING", null
         );
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request1)
-            .post();
+        createCashback(request1);
+        createCashback(request2);
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(request2)
-            .post();
-
-        given()
-            .when()
-            .get("/account/" + TEST_ACCOUNT_ID + "/summary")
-            .then()
-            .statusCode(200)
-            .body("totalCashback", equalTo(35.00f))
-            .body("pendingCashback", equalTo(0))
-            .body("creditedCashback", equalTo(35.00f))
-            .body("transactionCount", equalTo(2));
+        mockMvc.perform(get(BASE_PATH + "/account/{accountId}/summary", TEST_ACCOUNT_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCashback").value(35.00f))
+                .andExpect(jsonPath("$.pendingCashback").value(0))
+                .andExpect(jsonPath("$.creditedCashback").value(35.00f))
+                .andExpect(jsonPath("$.transactionCount").value(2));
     }
 
     @Test
-    void testGetCashbackSummary_NoTransactions() {
-        given()
-            .when()
-            .get("/account/non-existent/summary")
-            .then()
-            .statusCode(200)
-            .body("totalCashback", equalTo(0))
-            .body("pendingCashback", equalTo(0))
-            .body("creditedCashback", equalTo(0))
-            .body("transactionCount", equalTo(0));
+    void testGetCashbackSummary_NoTransactions() throws Exception {
+        mockMvc.perform(get(BASE_PATH + "/account/{accountId}/summary", "non-existent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCashback").value(0))
+                .andExpect(jsonPath("$.pendingCashback").value(0))
+                .andExpect(jsonPath("$.creditedCashback").value(0))
+                .andExpect(jsonPath("$.transactionCount").value(0));
     }
 }

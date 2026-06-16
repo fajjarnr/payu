@@ -11,10 +11,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jpa.test.autoconfigure.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -39,10 +40,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * a TestEntityManager in a full Spring context). Testcontainers is
  * still used to provide the real PostgreSQL database.
  */
-@Disabled("READY-055: Testcontainers + podman socket works. Tried (a) @DynamicPropertySource, (b) @ServiceConnection + spring-boot-testcontainers dep — both fail with 'jdbcUrl is required'. Root cause: @AutoConfigureTestEntityManager creates its own embedded DataSource before @ServiceConnection overrides apply. Needs @SpringBootTest without @AutoConfigureTestEntityManager + use TestEntityManager via JPA + ensure @ServiceConnection sets spring.datasource.url at correct time. Complex, deferred.")
 @SpringBootTest
 @Testcontainers
-@AutoConfigureTestEntityManager
+@ActiveProfiles("container")  // Excludes DataSourceConfiguration custom beans (profile=!container)
 @Tag("integration")
 @DisplayName("ContentRepository Integration Tests")
 class ContentRepositoryIntegrationTest {
@@ -53,6 +53,19 @@ class ContentRepositoryIntegrationTest {
             .withUsername("test")
             .withPassword("test");
 
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        // Override both spring.datasource.url AND spring.flyway.url to bypass
+        // hardcoded application.yml url + ensure Flyway picks up the container URL.
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.flyway.url", postgres::getJdbcUrl);
+        registry.add("spring.flyway.user", postgres::getUsername);
+        registry.add("spring.flyway.password", postgres::getPassword);
+    }
+
     @Autowired
     private ContentRepository contentRepository;
 
@@ -62,13 +75,6 @@ class ContentRepositoryIntegrationTest {
     private ContentEntity scheduledContent;
     private ContentEntity expiredContent;
     private ContentEntity alertContent;
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
 
     @BeforeAll
     static void startContainer() {
@@ -356,6 +362,7 @@ class ContentRepositoryIntegrationTest {
     }
 
     @Test
+    @org.springframework.transaction.annotation.Transactional
     @DisplayName("Should delete content by status")
     void shouldDeleteContentByStatus() {
         contentRepository.deleteByStatus(ContentStatus.SCHEDULED);
