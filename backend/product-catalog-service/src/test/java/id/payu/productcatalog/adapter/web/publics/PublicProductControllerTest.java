@@ -1,49 +1,52 @@
 package id.payu.productcatalog.adapter.web.publics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import id.payu.productcatalog.adapter.web.BaseController;
+import id.payu.productcatalog.config.GlobalExceptionHandler;
 import id.payu.productcatalog.domain.model.ProductDefinition;
 import id.payu.productcatalog.domain.model.ProductType;
 import id.payu.productcatalog.domain.port.in.ProductCatalogUseCase;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("READY-053: @WebMvcTest slice fails to bootstrap due to spring-data-jpa creating 'jpaSharedEM_entityManagerFactory' bean even with excludeAutoConfiguration set. Needs @EnableJpaRepositories opt-out OR test rewrite as @SpringBootTest + @Transactional. Discovered 2026-06-15 iteration 5.")
-@WebMvcTest(controllers = PublicProductController.class,
-        excludeAutoConfiguration = {
-                org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration.class,
-                org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration.class,
-                org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration.class
-        })
-@ActiveProfiles("test")
+/**
+ * Pure unit tests for PublicProductController using standalone MockMvc.
+ * No Spring context — avoids @EnableJpaRepositories bootstrap that blocks
+ * @WebMvcTest in this project (per READY-053 / L-060).
+ *
+ * The controller extends BaseController which uses @RequestMapping("/products")
+ * and has 3 GET endpoints: list, get-by-code, get-parameter.
+ */
 @DisplayName("PublicProductController Unit Tests")
 class PublicProductControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
     private ProductCatalogUseCase productCatalogUseCase;
 
-    // ── Helper ──────────────────────────────────────────────────────────────
+    @BeforeEach
+    void setUp() {
+        productCatalogUseCase = mock(ProductCatalogUseCase.class);
+        PublicProductController controller = new PublicProductController(productCatalogUseCase);
+        // BaseController may add security annotations; standalone setup doesn't enforce them
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
 
     private ProductDefinition sampleProduct(String code, ProductType type, boolean active) {
         return ProductDefinition.builder()
@@ -57,8 +60,6 @@ class PublicProductControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
-
-    // ── Get Active Products ─────────────────────────────────────────────────
 
     @Nested
     @DisplayName("GET /products")
@@ -101,8 +102,6 @@ class PublicProductControllerTest {
         }
     }
 
-    // ── Get Product By Code ─────────────────────────────────────────────────
-
     @Nested
     @DisplayName("GET /products/{code}")
     class GetProductByCode {
@@ -139,8 +138,6 @@ class PublicProductControllerTest {
                     .andExpect(status().isNotFound());
         }
     }
-
-    // ── Get Product Parameter ───────────────────────────────────────────────
 
     @Nested
     @DisplayName("GET /products/{code}/parameters/{key}")
