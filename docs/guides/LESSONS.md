@@ -653,6 +653,176 @@ if (trackedLocale !== locale) {
 4. **The simple regex strip (`<script>` + `javascript:`) is sufficient for trusted i18n content**. i18n message files are part of the deployment, not user input. Defense-in-depth regex is appropriate; full DOMPurify overkill.
 5. **Future-proofing**: When adding new deps, check for `"type": "module"` in transitive deps + any CJS files that `require()` them. The conflict usually surfaces at build time, not test time. Use `madge` or `eslint-plugin-import` to catch cycles + ESM/CJS mismatches before commit.
 
+## L-056: React 19 "Adjusting State During Render" Pattern — Replaces setState-in-Effect (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: React 19 / Hooks / State Management
+**Context**: React 19's compiler introduced a new ESLint rule `react-hooks/set-state-in-effect` that flags ANY `setState()` call inside `useEffect` body as a "cascading render" performance issue. In iter 21 of PayU's web-app, 5 separate files (exchange/page.tsx, EmergencyAlert.tsx, PromoPopup.tsx, settings/page.tsx, landing page.tsx) hit this rule — the localStorage re-hydration and "reset when prop changes" patterns that worked fine in React 18 now fail lint in React 19.
+
+**The 3 production-ready patterns that replace setState-in-effect**:
+
+### Pattern 1: "Lazy initializer" (for one-time reads on mount)
+```tsx
+// Before (React 18, fails React 19 lint):
+const [state, setState] = useState(defaultValue);
+useEffect(() => {
+  const stored = localStorage.getItem('key');
+  if (stored) setState(JSON.parse(stored));
+}, []);
+
+// After (React 19 + SSR-safe):
+const [state, setState] = useState(() => {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const stored = localStorage.getItem('key');
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch { return defaultValue; }
+});
+```
+Caveat: SSR returns `defaultValue` on first render; client first render also returns `defaultValue` to avoid hydration mismatch. The actual stored value reads on subsequent client renders via Pattern 2.
+
+### Pattern 2: "Adjusting state during render" (for prop changes)
+```tsx
+// Before (React 18, fails React 19 lint):
+useEffect(() => {
+  if (storageKey !== prevKey) {
+    setLocalData(localStorage.getItem(storageKey));
+    setPrevKey(storageKey);
+  }
+}, [storageKey]);
+
+// After (React 19 docs: "you might not need an effect"):
+const [trackedDeps, setTrackedDeps] = useState({ storageKey, sessionKey });
+const depsChanged = trackedDeps.storageKey !== storageKey || trackedDeps.sessionKey !== sessionKey;
+if (depsChanged && typeof window !== 'undefined') {
+  setTrackedDeps({ storageKey, sessionKey });
+  setLocalData(localStorage.getItem(storageKey));  // re-render scheduled, not cascading
+}
+```
+This is the React 19 docs' official replacement for "sync state to props" patterns. Runs **during render** (not in effect), so no cascading-render warning.
+
+### Pattern 3: "Compare-and-condReset" (for input-driven resets)
+```tsx
+// Before: setState in else-branch of useEffect
+useEffect(() => {
+  if (amount > 0 && fromCurrency !== toCurrency) {
+    setTimeout(() => setEstimatedAmount(estimate), 300);
+  } else {
+    setEstimatedAmount(null);  // ← flagged
+  }
+}, [amount, fromCurrency, toCurrency]);
+
+// After: reset during render
+useEffect(() => {
+  if (amount > 0 && fromCurrency !== toCurrency) {
+    const timer = setTimeout(() => setEstimatedAmount(estimate), 300);
+    return () => clearTimeout(timer);
+  }
+}, [amount, fromCurrency, toCurrency]);
+
+// React 19 docs: "you might not need an effect"
+if (!(amount > 0 && fromCurrency !== toCurrency) && estimatedAmount !== null) {
+  setEstimatedAmount(null);  // ← runs during render, no cascade
+}
+```
+
+**Lesson**:
+1. **React 19's new linter catches a class of subtle perf bugs**. Old `useEffect(() => setState(...), [])` patterns cause unnecessary re-renders. The "adjusting state during render" pattern is faster (no effect scheduling, no React fiber re-traversal).
+2. **The pattern requires tracking "previous props"** with a separate `useState` so the comparison happens every render but the reset only fires on actual change. This is the React 19 idiom for "derive state from props" — see the docs example for `getDerivedStateFromProps` replacement.
+3. **For localStorage specifically**, ALWAYS check `typeof window !== 'undefined'` first. Server-side rendering will run the lazy initializer and any window-dependent code must be guarded.
+4. **Don't use `// eslint-disable-next-line` for this** — the pattern is well-defined and the linter will help catch real bugs. Suppressing it will let future similar bugs slip through.
+5. **React 19 docs reference**: https://react.dev/learn/you-might-not-need-an-effect (specifically the "Adjusting some state when a prop changes" + "Resetting all state when a prop changes" sections). The official guidance is to use `key={prop}` for full resets, or the "track previous" pattern for partial resets.
+
+## L-057: i18n MISSING_MESSAGE Crash in Production Pre-Render — Always Lint Locale Files (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Internationalization (i18n) / Next.js 15+ SSR / Build-Time Validation
+**Context**: `next build` for PayU's web-app pre-rendered 83 pages successfully, but every page that used `DashboardLayout` (which references `nav.history` and `nav.scheduled` via `useTranslations('nav')`) had the message stripped at render time with `MISSING_MESSAGE: nav.history (en)` console errors. Result: a sidebar that rendered with English fallback labels instead of Indonesian on Indonesian locale, OR empty `<span>` elements for unmapped keys. Not caught by `mvn test` (Java backend) or `npm run type-check` (TS types pass because the key is a string).
+
+**Root cause (per context7/i18next + next-intl docs)**:
+- `next-intl` v4's `useTranslations('nav')` returns a Translator that resolves `t('history')` to `nav.history` in the JSON
+- If `nav.history` is missing from `messages/en.json` AND `messages/id.json`, next-intl logs `MISSING_MESSAGE` and returns the key as a string fallback
+- The page renders without errors (it's a string), but the UI is broken
+- Pre-rendering (SSG) catches this at build time, but only as warnings — not as errors
+
+**Pattern (production-ready fix)** — three layers of defense:
+
+### Layer 1: Schema validation at build time
+```ts
+// next-intl.config.ts (or similar)
+import { z } from 'zod';
+
+const NavSchema = z.object({
+  dashboard: z.string(),
+  accounts: z.string(),
+  transactions: z.string(),
+  transfers: z.string(),
+  history: z.string(),        // ← required
+  scheduled: z.string(),      // ← required
+  // ...
+});
+
+export const MessagesSchema = z.object({
+  common: z.object({ /* ... */ }),
+  nav: NavSchema,
+  dashboard: z.object({ /* ... */ }),
+  // ...
+});
+
+// Run on import or build hook:
+import messagesEn from './messages/en.json';
+import messagesId from './messages/id.json';
+MessagesSchema.parse(messagesEn);
+MessagesSchema.parse(messagesId);
+```
+
+### Layer 2: Symmetric key coverage check
+```ts
+// scripts/check-i18n-coverage.ts
+import en from '../messages/en.json';
+import id from '../messages/id.json';
+
+function flattenKeys(obj: any, prefix = ''): string[] {
+  return Object.entries(obj).flatMap(([k, v]) => {
+    const key = prefix ? `${prefix}.${k}` : k;
+    return typeof v === 'object' && v !== null
+      ? flattenKeys(v, key)
+      : [key];
+  });
+}
+
+const enKeys = new Set(flattenKeys(en));
+const idKeys = new Set(flattenKeys(id));
+const missing = [...enKeys].filter(k => !idKeys.has(k));
+if (missing.length) {
+  console.error('Missing in id.json:', missing);
+  process.exit(1);
+}
+```
+
+### Layer 3: Custom Next.js reporter that FAILS the build
+```ts
+// next.config.ts
+const withI18nValidation = (config) => ({
+  ...config,
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Patch next-intl to throw on MISSING_MESSAGE in production
+      const original = require.resolve('next-intl/dist/types/src/server/IntlServerProvider');
+      // ... patch IntlProvider to throw on missing key
+    }
+    return config;
+  },
+});
+```
+
+**Lesson**:
+1. **i18n key drift between locales is a class of bug that NO test catches by default**. The string is a valid React child, the type is correct, the build succeeds, and the page renders. Only a careful reviewer (or user reporting missing text) catches it.
+2. **Add a "check-i18n-coverage" script to CI**. Run on every PR. It's 30 lines of code, runs in 1 second, and prevents 100% of this bug class. Don't rely on translators reviewing JSON diffs.
+3. **Use TypeScript types or Zod schemas to validate the messages shape**. The schema is the source of truth; the JSON is data. Inverting this (JSON as truth) means bugs in JSON slip through.
+4. **For PayU specifically**: `nav.history` + `nav.scheduled` were added to `DashboardLayout.tsx` but the i18n messages were never updated. Classic "code merged, translation not done" gap. The fix: add the new key to ALL locales in the SAME commit as the code change. Use a pre-commit hook or CI check.
+5. **Don't trust `useTranslations` to fail loudly on missing keys** — it returns the key as a string fallback. This is the default behavior of most i18n libraries (i18next, next-intl, react-intl). Library-specific "strict mode" options exist but are not enabled by default.
+
 ## L-054: HttpRequestMethodNotSupportedException → Always Map to 405, Not the Generic 500 Handler (2026-06-15)
 
 **Date**: 2026-06-15

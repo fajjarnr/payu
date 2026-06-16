@@ -33,10 +33,10 @@
 | Wallet Idempotency       | 🟢 Full                                  | PocketController, SettlementController, SavingsGoalController patched |
 | Health Endpoints         | 🟢 25/26                                 | All Spring services have HealthController + SecurityConfig permitAll. 25/26 services verified UP at cluster (Jun 15). |
 | Gateway Health Routing   | 🟢 Auto-permit                           | `endsWith("/public/health")` wildcard + `/**/public/health` Quarkus permit |
-| Open Bugs (TODOS.md)     | 🟢 0 P0, 19 P1 (NEW follow-ups)         | 19 tickets CLOSED Jun 15. 19 NEW follow-ups opened (READY-058..072) — all production bugs caught by recursive E2E loop. |
-| Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 24 LTS (via nvm), Podman 5.7.0, uv 0.11.14 |
-| Last Status Update       | 2026-06-15                               | **19 iterations completed** in recursive dev loop: 9 production bugs fixed (READY-063/064/066/067/068/069/070/071/072). 9/9 main flows + 6/6 promo routes + 8/8 GETs 200/201. v1.8.21 → v1.8.54 deployed. |
-| OpenShift Tag            | `v1.8.54` (transaction-service) + `v1.8.51` (promotion-service) + `v1.8.43` (gateway-service) + `v1.8.36` (lending/notification/transaction) + `v1.8.21` (others) | 25/26 services UP cluster `payu-dev`. 42 pods Running, 0 fail. |
+| Open Bugs (TODOS.md)     | 🟢 0 P0, 29 P1 (NEW follow-ups)         | 21 tickets CLOSED Jun 15 (READY-036..057 + READY-058/060/061/063/064/066/067/068/069/070/071/072). 29 NEW follow-ups opened — 9 backend (READY-058..072) + 20 frontend/web-app (web-app 15-bug milestone iter 21). |
+| Dev Tools                | 🟢 Installed                             | Java 25, Maven 3.9.12, Node.js 24 LTS (via nvm), Podman 5.7.0, uv 0.11.14, Node 20.18.0 (downloaded to /tmp/node20 for Next 16 compat) |
+| Last Status Update       | 2026-06-15                               | **21 iterations completed** in recursive dev loop. Iter 21 milestone: web-app build was BROKEN → fixed (15 production bugs), web-app:1.5.2 deployed. 9 backend bugs (READY-063/064/066/067/068/069/070/071/072) + 9 web-app bugs + 1 web-app lint cleanup. v1.8.21 → v1.8.55 (backend) + web-app:1.5.2 deployed. |
+| OpenShift Tag            | `v1.8.55` (wallet-service) + `v1.8.54` (transaction-service) + `v1.8.51` (promotion-service) + `v1.8.44` (gateway-service) + `v1.8.36` (lending/notification) + `v1.8.21` (others) + `web-app:1.5.2` | 25/26 services UP cluster `payu-dev`. 42 pods Running, 0 fail. |
 | Local Podman Tag         | Aligned (`1.8.1`-`1.8.5`)                | JDK 25, Spring Boot 4.1.0, Quarkus 3.36.2, 35 containers healthy |
 | Kafka Mode               | KRaft                                    | (no Zookeeper)                                  |
 

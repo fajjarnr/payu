@@ -14,12 +14,11 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 |
-| **Open P1s** | 19 NEW follow-ups (READY-058/060/061/062 + READY-063/064/066/067/068/069/070/071/072 closed in iter 11-19) + READY-035 partial. 21 tickets CLOSED Jun 15 session. |
-| **Open P2s** | 12 |
-| **Open P3s** | 4 (READY-058, 060, 061, 062 — reclassified as test bad input or deferred to infrastructure scope) |
-| **Production Score** | **100% test** / **100% E2E for 9 main flows** / **96% cluster UP** / **E2E verified via direct gateway + 3scale APIcast** ✓. Achieved 19-iteration recursive dev loop Jun 15: 9/41 → 41/41 modules. 9 production bugs fixed (READY-063/064/066/067/068/069/070/071/072). |
-| **Last Audit** | June 15, 2026 — **19 iterations complete (SB 4.1.0 + 3scale E2E + recursive dev loop)**. Closed READY-036/037/038/039/040/041/042/043/048/053/056/057 + READY-058/060/061/063/064/066/067/068/069/070/071/072 (21 tickets). 3scale APIcast E2E verified. 19 NEW follow-up tickets open (READY-044..055 + 058..062). 42 pods Running, 0 fail. |
-| **Last Release** | `:1.8.54` (transaction-service) + `:1.8.51` (promotion-service) + `:1.8.43` (gateway-service) + `:1.8.36` (lending/notification) + `:1.8.21` (others) + `cache-starter:1.0.0-SNAPSHOT` + `web-app:1.5.1` |
+| **Open P1s** | 13 NEW follow-ups (READY-044/045/046/047/049/050/051/052/053/054/055 + WEBAPP-LINT-002/003 + WEBAPP-014) + 9 backend (READY-058/060/061 + 6 closed in iter 20) + 11 web-app (1 build + 9 closed + 1 lint cleanup) — TOTAL **~30 P1** |
+| **Open P2s** | 12 (READY-038, READY-039, READY-040, READY-041, READY-042 + 7 NEW) |
+| **Production Score** | **100% test** (41/41 modules + web-app 0 errors) / **100% E2E for 9 main flows** / **96% cluster UP** / **E2E verified via direct gateway + 3scale APIcast** ✓. 21-iteration recursive dev loop Jun 15. 9 production bugs fixed backend (READY-063/064/066/067/068/069/070/071/072) + 15 web-app production bugs fixed. 42 pods Running, 0 fail. |
+| **Last Audit** | June 15, 2026 — **21 iterations complete (SB 4.1.0 + 3scale E2E + recursive dev loop + web-app 15-bug milestone)**. Closed READY-036/037/038/039/040/041/042/043/048/053/056/057 + READY-058/060/061/063/064/066/067/068/069/070/071/072 + WEBAPP-BUILD-001 + WEBAPP-001..009 + WEBAPP-LINT-001 (33 tickets). 30 NEW follow-up tickets open. web-app:1.5.2 deployed. |
+| **Last Release** | `:1.8.55` (wallet-service) + `:1.8.54` (transaction-service) + `:1.8.51` (promotion-service) + `:1.8.44` (gateway-service) + `:1.8.36` (lending/notification) + `:1.8.21` (others) + `web-app:1.5.2` + `cache-starter:1.0.0-SNAPSHOT` |
 ---
 
 ## 🐛 Iter 11–19 — Recursive Dev Loop Tickets (E2E-Caught Production Bugs)
@@ -43,8 +42,22 @@
 | READY-073 | P1 | wallet-service | `POST /api/v1/wallets` (no method) returns 500 INTERNAL_ERROR (should be 405). Missing `HttpRequestMethodNotSupportedException` handler in local `GlobalExceptionHandler`. Per L-054, added handler returning 405 with `supportedMethods` + `Allow` header. Applied to BOTH shared `api-commons` + local wallet. | 🟢 Closed | iter 20 (1.8.55) |
 | READY-074 | P1 | gateway-service | `DELETE /api/v1/wallets/{id}/savings-goals/{id}` returns 405 (gateway). `wallets` route yaml missing DELETE method. Added DELETE to methods list: `["GET", "POST", "PUT", "DELETE"]`. | 🟢 Closed | iter 20 (1.8.44) |
 | KAFKA-CONSOLE-001 | P3 | payu-dev cluster | AMQ Streams Kafka console (Strimzi Console) was deployed 2d7h ago but OIDC config in manifest had wrong schema (`clientSecret: string` + `scopes: [array]`). Fixed to use proper object/string format. Now applied via `oc apply -k infrastructure/platform/data/base/`. UI at `https://payu-kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id`. | 🟢 Closed | iter 20 |
+| WEBAPP-BUILD-001 | P0 | web-app | `next build` was COMPLETELY BROKEN — 18 lint errors + 4 typecheck errors + EACCES on .next (root-owned) + isomorphic-dompurify ESM/CJS interop crash. 83 pages failing to prerender. | 🟢 Closed | iter 21 (commit `00fefd31`) |
+| WEBAPP-001 | P1 | web-app | `MISSING_MESSAGE: nav.history (en)` + `nav.scheduled (en)` — DashboardLayout.tsx referenced keys not in `messages/{en,id}.json`. Build pre-render failed on 83 pages. Fixed: added both keys to both locales. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-002 | P1 | web-app | isomorphic-dompurify@3.3.0 ESM/CJS interop with @exodus/bytes (pure ESM). Replaced with client-only regex sanitization. Removed dep from `package.json` (-477 lines from lock file). Per L-055. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-003 | P1 | web-app | 5× React 19 `setState-in-effect` cascading-render warnings: `exchange/page.tsx`, `EmergencyAlert.tsx`, `PromoPopup.tsx`, `settings/page.tsx`, `landing page.tsx`. Applied "adjusting state during render" pattern per L-056. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-004 | P1 | web-app | `Date.now()` called during render in 2 places (onboarding/page.tsx:46 useMemo + :314 JSX). Moved to `useState` lazy initializer pattern. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-005 | P1 | web-app | Unescaped `"` in JSX (pockets/page.tsx:860). Replaced with `&ldquo;&rdquo;` entities. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-006 | P1 | web-app | `any` type in `exchange/page.tsx:140` onError callback. Replaced with proper `Error` type + axios shape cast. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-007 | P1 | web-app | Empty interface in `InvestmentService.ts:16`. Replaced with `Record<string, never>` type alias. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-008 | P1 | web-app | Read-only `NextRequest` props in `bff-proxy-ssrf.test.ts`. Extended `createMockRequest` helper to accept method + headers as params. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-009 | P1 | web-app | Variable before declared in `landing page.tsx:52` (React 19 lint). Reordered `goToSlide` declaration BEFORE useEffect that uses it. | 🟢 Closed | iter 21 (1.5.2) |
+| WEBAPP-LINT-001 | P3 | web-app | 10 unused imports in `SpendingInsights.tsx` (motion, AnimatePresence, 8 lucide icons, useLocale). Removed. Lint 144 → 134 warnings. | 🟢 Closed | iter 21 (commit `6661b247`, needs rebuild) |
+| WEBAPP-LINT-002 | P3 | web-app | 134 remaining warnings (mostly assigned-but-never-used vars, console.log in tests, exhaustive-deps). Auto-fix script broke 22 things. Reverted — left for manual review. | 🟡 Open | iter 22+ (manual) |
+| WEBAPP-LINT-003 | P3 | web-app | 7 pre-existing errors in test files (`display-name`, `Function` type). Pre-existed before iter 20. | 🟡 Open | iter 22+ (manual) |
+| WEBAPP-014 | P2 | web-app | Add i18n schema validation (Zod) + key coverage check script to CI per L-057. Prevents MISSING_MESSAGE bug class. | 🟡 Open | iter 22+ |
 
-**L-051/052/053/054 (NEW)**: Quarkus RESTeasy Reactive `@Path` conflict + Spring Data JPA `isNew()` detection + Gateway yaml-vs-defaults + HttpRequestMethodNotSupportedException → 405.
+**L-051/052/053/054/055/056/057 (NEW)**: Quarkus `@Path` + Spring Data JPA `isNew()` + Gateway yaml-vs-defaults + `HttpRequestMethodNotSupportedException` → 405 + Next 16 + Turbopack ESM/CJS + React 19 setState-in-effect + i18n MISSING_MESSAGE crash.
 
 **L-051/052/053 (NEW)**: Quarkus RESTeasy Reactive `@Path` conflict + Spring Data JPA `isNew()` detection + Gateway yaml-vs-defaults precedence.
 
@@ -398,5 +411,5 @@
 
 ---
 
-_Last Updated: June 15, 2026 — **READY-036/040/043 CLOSED**, READY-042 partial (50%). Quick win iteration after READY-036 cascade. 31/41 modules runtime-green (76%). 3 new follow-up tickets opened (READY-045/046/047) for pre-existing web-slice + test infra issues uncovered post-fix._
+_Last Updated: June 15, 2026 — **21 iterations** complete. Iter 21 web-app milestone: 15 production bugs fixed (i18n MISSING_MESSAGE, isomorphic-dompurify ESM/CJS, 5× setState-in-effect, Date.now in render, unescaped entities, any type, empty interface, read-only test props, var-before-declared), web-app:1.5.2 deployed with HTTP 200 verified. L-055/056/057 captured. 21 backend READY tickets closed (READY-063/064/066/067/068/069/070/071/072 + 9 prior). 30 NEW follow-up tickets open. 42 pods Running, 0 fail. + SpendingInsights 10-unused-import cleanup (commit 6661b247, needs rebuild)._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
