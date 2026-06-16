@@ -18,17 +18,7 @@ variable "hcp_cli_trust_arn" {
   description = "Optional IAM user/role ARN to trust for assuming the HCP CLI role"
 }
 
-variable "oidc_bucket_name" {
+variable "shared_oidc_bucket" {
   type        = string
-  description = "The name of the OIDC storage S3 bucket"
-}
-
-variable "oidc_bucket_arn" {
-  type        = string
-  description = "The ARN of the OIDC storage S3 bucket"
-}
-
-variable "oidc_bucket_domain" {
-  type        = string
-  description = "The regional domain name of the OIDC storage S3 bucket"
+  description = "Name of the SHARED OIDC S3 bucket used by ALL hosted clusters. The per-cluster OIDC issuer URL is constructed as https://<bucket>.s3.<region>.amazonaws.com/<infra_id>"
 }

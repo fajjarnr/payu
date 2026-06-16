@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cni-fixer
+  namespace: kube-system
+  labels:
+    app: cni-fixer
+spec:
+  selector:
+    matchLabels:
+      app: cni-fixer
+  template:
+    metadata:
+      labels:
+        app: cni-fixer
+    spec:
+      hostNetwork: true
+      hostPID: true
+      priorityClassName: system-node-critical
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: fixer
+        image: registry.access.redhat.com/ubi9/ubi:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -x
+          # Wait for CNI config to appear at the default path
+          for i in $(seq 1 60); do
+            if [ -f /host/etc/cni/net.d/05-cilium.conflist ] || [ -f /host/etc/cni/net.d/100-crio-bridge.conflist ]; then
+              echo "CNI config found, copying to all paths..."
+              # Copy all configs to kubelet's CNI conf dir
+              mkdir -p /host/etc/kubernetes/cni/net.d /host/run/multus/cni/net.d
+              for f in /host/etc/cni/net.d/*; do
+                [ -f "$f" ] || continue
+                fname=$(basename "$f")
+                cp -f "$f" "/host/etc/kubernetes/cni/net.d/$fname"
+                cp -f "$f" "/host/run/multus/cni/net.d/$fname"
+              done
+              # Force kubelet to re-check by sending SIGKILL (systemd will restart it)
+              echo "Restarting kubelet..."
+              for d in /host/proc/[0-9]*; do
+                if [ -r "$d/cmdline" ]; then
+                  cmd=$(tr "\0" " " < "$d/cmdline" 2>/dev/null)
+                  if echo "$cmd" | grep -q "^/usr/bin/kubelet"; then
+                    pid=$(basename "$d")
+                    echo "Killing kubelet PID $pid"
+                    kill -KILL $pid 2>/dev/null || true
+                    break
+                  fi
+                fi
+              done
+              # Keep running to fix future issues (e.g., Cilium pod restart clears config)
+              while true; do
+                sleep 30
+                for f in /host/etc/cni/net.d/*; do
+                  [ -f "$f" ] || continue
+                  fname=$(basename "$f")
+                  [ -f "/host/etc/kubernetes/cni/net.d/$fname" ] || cp -f "$f" "/host/etc/kubernetes/cni/net.d/$fname"
+                  [ -f "/host/run/multus/cni/net.d/$fname" ] || cp -f "$f" "/host/run/multus/cni/net.d/$fname"
+                done
+              done
+            fi
+            sleep 5
+          done
+          echo "Timeout: CNI config never appeared"
+          # Still try to fix
+          while true; do
+            sleep 30
+            for f in /host/etc/cni/net.d/*; do
+              [ -f "$f" ] || continue
+              fname=$(basename "$f")
+              [ -f "/host/etc/kubernetes/cni/net.d/$fname" ] || cp -f "$f" "/host/etc/kubernetes/cni/net.d/$fname"
+              [ -f "/host/run/multus/cni/net.d/$fname" ] || cp -f "$f" "/host/run/multus/cni/net.d/$fname"
+            done
+          done
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host
+          mountPath: /host
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      volumes:
+      - name: host
+        hostPath:
+          path: /

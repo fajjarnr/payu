@@ -1,15 +1,15 @@
 apiVersion: hypershift.openshift.io/v1beta1
 kind: HostedCluster
 metadata:
-  name: payu-onprem
+  name: payu-cloud
   namespace: clusters
   labels:
     app.kubernetes.io/part-of: payu
-    environment: onprem
+    environment: cloud
 spec:
-  channel: stable-4.18
+  channel: stable-4.20
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.18.43-multi
+    image: quay.io/openshift-release-dev/ocp-release:4.20.24-multi
   dns:
     baseDomain: payu.ocp.fajjjar.my.id
     privateZoneID: Z0688851VIBKG68U8DFU
@@ -21,24 +21,24 @@ spec:
       multiArch: false
       cloudProviderConfig:
         subnet:
-          id: subnet-0eaeeed588ae98882
-        vpc: vpc-0990e89bb39594fda
+          id: subnet-0b51076311ac7c47d
+        vpc: vpc-01f49ec611641c9c5
         zone: ap-southeast-1a
       rolesRef:
-        controlPlaneOperatorARN: arn:aws:iam::559050246145:role/payu-onprem-control-plane-operator
-        imageRegistryARN: arn:aws:iam::559050246145:role/payu-onprem-openshift-image-registry
-        ingressARN: arn:aws:iam::559050246145:role/payu-onprem-openshift-ingress
-        kubeCloudControllerARN: arn:aws:iam::559050246145:role/payu-onprem-cloud-controller
-        networkARN: arn:aws:iam::559050246145:role/payu-onprem-cloud-network-config-controller
-        nodePoolManagementARN: arn:aws:iam::559050246145:role/payu-onprem-node-pool
-        storageARN: arn:aws:iam::559050246145:role/payu-onprem-aws-ebs-csi-driver-controller
+        controlPlaneOperatorARN: arn:aws:iam::559050246145:role/payu-cloud-control-plane-operator
+        imageRegistryARN: arn:aws:iam::559050246145:role/payu-cloud-openshift-image-registry
+        ingressARN: arn:aws:iam::559050246145:role/payu-cloud-openshift-ingress
+        kubeCloudControllerARN: arn:aws:iam::559050246145:role/payu-cloud-cloud-controller
+        networkARN: arn:aws:iam::559050246145:role/payu-cloud-cloud-network-config-controller
+        nodePoolManagementARN: arn:aws:iam::559050246145:role/payu-cloud-node-pool
+        storageARN: arn:aws:iam::559050246145:role/payu-cloud-aws-ebs-csi-driver-controller
       resourceTags:
-        - key: kubernetes.io/cluster/payu-onprem
+        - key: kubernetes.io/cluster/payu-cloud
           value: owned
         - key: app.kubernetes.io/part-of
           value: payu
         - key: environment
-          value: onprem
+          value: cloud
         - key: cost-center
           value: platform-engineering
         - key: owner
@@ -46,15 +46,15 @@ spec:
     type: AWS
   networking:
     clusterNetwork:
-      - cidr: 10.132.0.0/14
+      - cidr: 10.136.0.0/14
     machineNetwork:
       - cidr: 10.0.0.0/16
     networkType: Other
     serviceNetwork:
-      - cidr: 172.31.0.0/16
-  infraID: payu-onprem
+      - cidr: 172.32.0.0/16
+  infraID: payu-cloud
   fips: false
-  issuerURL: https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/payu-onprem
+  issuerURL: https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/payu-cloud
   configuration:
     ingress:
       loadBalancer:
@@ -91,7 +91,7 @@ spec:
   secretEncryption:
     aescbc:
       activeKey:
-        name: payu-onprem-etcd-encryption-key
+        name: payu-cloud-etcd-encryption-key
     type: aescbc
   pullSecret:
-    name: payu-onprem-pull-secret
+    name: payu-cloud-pull-secret

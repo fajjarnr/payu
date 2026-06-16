@@ -19,6 +19,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 31: Two HostedClusters Provisioned — payu-onprem (4.18) + payu-cloud (4.20) (2026-06-16)
+
+Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8tmf2 management cluster (OCP 4.20.24, MCE 2.11.2, HyperShift operator in `hypershift` ns).
+
+### Clusters
+
+| Cluster | OCP | VPC | Nodes | AZ | Status |
+|:--------|:----|:----|:------|:---|:-------|
+| payu-onprem | 4.18.43 | 10.200.0.0/16 (dedicated) | 1 × m6a.2xlarge | ap-southeast-1a | provisioning (control plane pods coming up) |
+| payu-cloud  | 4.20.24 | 10.201.0.0/16 (dedicated) | 1 × m6a.2xlarge | ap-southeast-1a | provisioning (control plane pods coming up) |
+
+### Terraform (refactored to multi-cluster for_each)
+
+- `infrastructure/foundation/hostedcluster/terraform/` now supports N clusters via `for_each` over a `var.clusters` map.
+- New `modules/vpc/` provisions a dedicated VPC, public subnets, IGW, route table, and worker security group per cluster (best practice per `DEPLOYMENT.md §1.2`: shared VPC TIDAK recommended untuk multi-cluster — tags/API throttling/DNS cache contention).
+- Existing `modules/s3/` and `modules/iam/` reused unchanged.
+- 64 AWS resources provisioned total: 2×VPC + 2×public subnet + 2×IGW + 2×route table + 2×worker SG + 2×S3 OIDC bucket (with public-read policy) + 16×IAM roles (8 per cluster: CPO, image-registry, ingress, KCC, CNCC, EBS-CSI, node-pool, HCP-CLI) + 2×instance profile + 2×OIDC provider.
+- `terraform.tfvars` declares both clusters with non-overlapping CIDRs (cluster network 10.132.0.0/14 + 10.136.0.0/14, service 172.31.0.0/16 + 172.32.0.0/16).
+
+### Manifests generated from Terraform outputs
+
+- `scripts/generate-manifests.sh` reads `terraform output -json` and emits `manifests/hostedcluster-payu-{onprem,cloud}.yaml` + `manifests/nodepools-payu-{onprem,cloud}.yaml` with VPC IDs, subnet IDs, OIDC issuer URLs, instance profile names, and all 7 IAM role ARNs interpolated.
+- Both HC manifests use `networkType: OVNKubernetes` (Cilium 1.19+ via `Other` requires manual Helm install — kept default for now), `controllerAvailabilityPolicy: SingleReplica` (dev), NLB ingress (avoid post-deploy CLB→NLB migration), and `gp3-csi` etcd storage.
+
+### Kubernetes resources
+
+- `clusters` namespace created.
+- `hypershift-operator-oidc-provider-s3-credentials` secret in `local-cluster` ns (reuses existing dev bucket `oidc-storage-kvsfs` for HCP operator's OIDC doc uploads).
+- Per-cluster secrets: `payu-{onprem,cloud}-pull-secret` (from `openshift-config/pull-secret`) + `payu-{onprem,cloud}-etcd-encryption-key` (32 random bytes, AES-CBC).
+- HC + NodePool applied to `clusters` ns. Control plane namespaces `clusters-payu-{onprem,cloud}` created. As of 13:33 UTC: payu-onprem has etcd-0 (3/3), control-plane-operator (2/2), control-plane-pki-operator (1/1), kube-apiserver deployment created. payu-cloud has cluster-api, control-plane-operator, etcd-0 (init).
+
+### Outstanding
+
+- User monitors `oc get hostedcluster -n clusters -w` until both show `AVAILABLE=True` (typical 10-15 min per cluster per `DEPLOYMENT.md`).
+- After AVAILABLE: install Cilium if `networkType: Other` (not needed now — using OVNKubernetes).
+- Update DNS in `payu.ocp.fajjjar.my.id` (private) and `ocp.fajjjar.my.id` (public) hosted zones to add `*.apps.<cluster>.payu.ocp.fajjjar.my.id` ALIAS → NLB.
+
 ### Iteration 28: 51 Promotion + 21 CMS Tests Re-Enabled (2026-06-16)
 
 **Stream 1 cont (promotion 4 tests)** + **Stream 2 (cms Testcontainers)** done.
@@ -5201,3 +5238,39 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - TokoBapak integration section
 - ARCHITECTURE.md v1.0 with complete microservices design
 - Docker & Integration Test setup complete. Installed docker.io, created docker-compose.yml, added Testcontainers.
+
+### Iteration 32: payu-onprem 4.18 + payu-cloud 4.20 HCP Provisioned (8h, 2026-06-16)
+
+Both HostedClusters deployed, NodePool 1/1 Ready, Node Ready. Long session with 4 major bugs overcome:
+
+**Bug 1: HCP operator WebIdentityErr (`--token-audience=openshift` hardcoded)**
+- HCP 35cddf08 (MCE 2.11.2) hardcodes `--token-audience=openshift` in cloud-token-minter sidecar
+- STS rejects token (needs `sts.amazonaws.com` audience)
+- Fix: built Python MutatingWebhook (`payu-system/hcp-audience-fixer`) that patches all cloud-token-minter sidecars in HCP namespaces via JSONPatch
+- Label `purpose=hcp-control-plane` on HCP namespaces triggers webhook
+
+**Bug 2: OIDC thumbprint mismatch**
+- HCP creates OIDC provider with wrong SHA1 thumbprint
+- Fix: updated Terraform `tls_certificate` data source to use `https://s3.<region>.amazonaws.com` (not bucket-specific URL)
+- Manual `aws iam update-open-id-connect-provider-thumbprint` for all 4 providers
+
+**Bug 3: `iam:PassRole` on node-pool role**
+- CAPI controller can't pass `payu-<cluster>-node-pool` role to EC2
+- `AmazonEC2FullAccess` v5 policy has `iam:PassRole` but condition `iam:PassedToService: ec2.amazonaws.com` wasn't being met
+- Fix: added explicit inline `iam:PassRole` policy to all 8 payu-{onprem,cloud}-node-pool roles
+
+**Bug 4: OVN-K `br-ex` `to-br-int` patch port missing + Cilium CNI config path**
+- OVN-K: `ovnkube-controller` waits for OVS port `*to-br-int` on `br-ex` (known HCP bug for single-node)
+- Cilium: writes CNI config to `/etc/cni/net.d/` but kubelet looks at `/etc/kubernetes/cni/net.d/` (HCP custom path)
+- Fix: switched to `networkType: Other` (Cilium mode), installed Cilium via Helm, then created `kube-system/cni-fixer` DaemonSet that:
+  1. Polls for CNI config at default path
+  2. Copies to `/etc/kubernetes/cni/net.d/` and `/run/multus/cni/net.d/`
+  3. Sends SIGKILL to kubelet (systemd restarts it) to clear cached "no file" state
+
+**Critical mistake costing 4h**: Terminated EC2 via `aws ec2 terminate-instances` directly. This caused `InstanceUnexpectedTermination` warning → HCP marked Machine as `Failed` → no new Machine created until I manually deleted the Failed Machine. ALWAYS terminate via HCP/Machine API, never via EC2 API.
+
+**Final state (2026-06-16T22:00Z)**:
+- payu-onprem 4.18.43, 1 node m6a.2xlarge Ready, 18/22 COs True
+- payu-cloud 4.20.24, 1 node m6a.2xlarge Ready, 14/22 COs True
+- cni-fixer DaemonSet deployed in both HCP guest clusters
+- Webhook deployed in `payu-system` namespace

@@ -4,8 +4,8 @@ output "oidc_provider_arn" {
 }
 
 output "oidc_issuer_url" {
-  value       = aws_iam_openid_connect_provider.oidc.url
-  description = "The OIDC issuer URL for the Hosted Cluster"
+  value       = local.oidc_issuer_url
+  description = "The OIDC issuer URL for the Hosted Cluster (https://<shared-bucket>.s3.<region>.amazonaws.com/<infra_id>)"
 }
 
 output "worker_instance_profile_name" {
@@ -20,13 +20,13 @@ output "hcp_cli_role_arn" {
 
 output "iam_role_arns" {
   value = {
-    control_plane_operator         = aws_iam_role.control_plane_operator.arn
-    openshift_image_registry       = aws_iam_role.image_registry.arn
-    openshift_ingress              = aws_iam_role.ingress.arn
-    cloud_controller               = aws_iam_role.cloud_controller.arn
+    control_plane_operator          = aws_iam_role.control_plane_operator.arn
+    openshift_image_registry        = aws_iam_role.image_registry.arn
+    openshift_ingress               = aws_iam_role.ingress.arn
+    cloud_controller                = aws_iam_role.cloud_controller.arn
     cloud_network_config_controller = aws_iam_role.cloud_network_config_controller.arn
-    aws_ebs_csi_driver_controller  = aws_iam_role.aws_ebs_csi_driver_controller.arn
-    node_pool                      = aws_iam_role.node_pool.arn
+    aws_ebs_csi_driver_controller   = aws_iam_role.aws_ebs_csi_driver_controller.arn
+    node_pool                       = aws_iam_role.node_pool.arn
   }
   description = "A map of IAM role ARNs for Hosted Cluster components"
 }

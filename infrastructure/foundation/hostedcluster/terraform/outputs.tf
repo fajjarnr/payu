@@ -1,34 +1,39 @@
-output "oidc_bucket_name" {
-  value       = module.s3.bucket_name
-  description = "The name of the OIDC storage S3 bucket"
+output "shared_oidc_bucket" {
+  value       = aws_s3_bucket.shared_oidc.id
+  description = "The name of the shared OIDC S3 bucket (used by ALL hosted clusters, with per-cluster sub-paths)"
 }
 
-output "oidc_bucket_arn" {
-  value       = module.s3.bucket_arn
-  description = "The ARN of the OIDC storage S3 bucket"
+output "cluster_ids" {
+  value       = { for k, v in module.iam : k => v.iam_role_arns }
+  description = "Per-cluster IAM role ARNs (controlPlaneOperator, imageRegistry, ingress, kubeCloudController, network, nodePool, storage)"
 }
 
-output "oidc_issuer_url" {
-  value       = module.iam.oidc_issuer_url
-  description = "The OIDC issuer URL for the Hosted Cluster"
+output "cluster_vpcs" {
+  value       = { for k, v in module.vpc : k => v.vpc_id }
+  description = "Per-cluster dedicated VPC IDs"
 }
 
-output "oidc_provider_arn" {
-  value       = module.iam.oidc_provider_arn
-  description = "The ARN of the IAM OIDC Connect Provider"
+output "cluster_public_subnet_ids" {
+  value       = { for k, v in module.vpc : k => v.public_subnet_ids }
+  description = "Per-cluster public subnet IDs (ordered by AZ)"
 }
 
-output "worker_instance_profile_name" {
-  value       = module.iam.worker_instance_profile_name
-  description = "The name of the IAM instance profile for worker nodes"
+output "cluster_worker_security_group_ids" {
+  value       = { for k, v in module.vpc : k => v.worker_security_group_id }
+  description = "Per-cluster worker security group IDs"
 }
 
-output "hcp_cli_role_arn" {
-  value       = module.iam.hcp_cli_role_arn
-  description = "The ARN of the HCP CLI Role"
+output "cluster_oidc_issuer_urls" {
+  value       = { for k, v in module.iam : k => v.oidc_issuer_url }
+  description = "Per-cluster OIDC issuer URLs"
 }
 
-output "iam_role_arns" {
-  value       = module.iam.iam_role_arns
-  description = "A map of IAM role ARNs for Hosted Cluster components"
+output "cluster_worker_instance_profiles" {
+  value       = { for k, v in module.iam : k => v.worker_instance_profile_name }
+  description = "Per-cluster worker IAM instance profile names"
+}
+
+output "cluster_hcp_cli_role_arns" {
+  value       = { for k, v in module.iam : k => v.hcp_cli_role_arn }
+  description = "Per-cluster HCP CLI role ARNs"
 }

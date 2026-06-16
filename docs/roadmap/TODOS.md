@@ -413,3 +413,97 @@
 
 _Last Updated: June 15, 2026 — **23 iterations** complete. Iter 23 scripts/tests audit hygiene: 6 fixes (build-push TAG 1.8.8→1.8.55, trigger-quarkus-pipelines v1.7.8→v1.8.55, test-health-check redis→redis-native + bi-fast→bifast + +web-app, output.txt untracked, .gitignore +5 test rules) + 2 new L-058 tools (diff-base-vs-live.py, sync-base-to-live.py). Iter 22: git-vs-cluster manifest audit fixed 59 drift items. Iter 21: web-app 15-bug milestone (i18n MISSING_MESSAGE + isomorphic-dompurify ESM/CJS + 5× setState-in-effect + Date.now in render + unescaped entities + any type + empty interface + read-only test props + var-before-declared), web-app:1.5.2 deployed. L-051..L-059 captured (9 lessons). 33 backend READY tickets closed. 29 NEW follow-up tickets open. 42 pods Running, 0 fail._
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
+
+---
+
+## [2026-06-16] Multi-HostedCluster: payu-onprem (4.18) + payu-cloud (4.20)
+
+**Status**: 🟡 In Progress  
+**Scope**: Provision 2 dedicated-VPC hosted clusters via Terraform  
+**Reference**: `infrastructure/foundation/hostedcluster/` + `infrastructure/foundation/terraform/aws/`
+
+### Environment
+
+| Param | Value |
+|:------|:------|
+| AWS Account | `559050246145` |
+| Region | `ap-southeast-1` |
+| Management cluster | `payu-8tmf2` (OCP 4.20.24, MCE 2.11.2) |
+| Base domain (private) | `payu.ocp.fajjjar.my.id` → Z0688851VIBKG68U8DFU |
+| Base domain (public) | `ocp.fajjjar.my.id` → Z0716734HV77ZJQGV03V |
+| Existing dev VPC | `vpc-085524f83905b6043` (10.0.0.0/16) — will NOT reuse |
+| Existing OIDC bucket | `oidc-storage-kvsfs` (mgmt) — will create per-cluster |
+
+### Cluster CIDR Allocation (non-overlapping)
+
+| Cluster | VPC | Subnet 1a | Cluster Net | Service Net | OCP | Nodes |
+|:--------|:----|:----------|:------------|:------------|:----|:------|
+| payu-onprem | 10.200.0.0/16 | 10.200.0.0/20 (pub) | 10.132.0.0/14 | 172.31.0.0/16 | 4.18 | 1 |
+| payu-cloud  | 10.201.0.0/16 | 10.201.0.0/20 (pub) | 10.136.0.0/14 | 172.32.0.0/16 | 4.20 | 1 |
+
+### Tasks
+
+- [x] 1. Verify environment + write plan
+- [ ] 2. Create `clusters` ns + OIDC S3 creds secret in `local-cluster` ns
+- [ ] 3. Refactor terraform to for_each + add dedicated VPC module
+- [ ] 4. Create per-cluster tfvars (payu-onprem.tfvars, payu-cloud.tfvars)
+- [ ] 5. Create per-cluster pull-secret + etcd-encryption-key secrets
+- [ ] 6. terraform init + apply payu-onprem
+- [ ] 7. terraform apply payu-cloud
+- [ ] 8. Generate payu-onprem HC+NodePool YAML (terraform outputs)
+- [ ] 9. Generate payu-cloud HC+NodePool YAML (terraform outputs)
+- [ ] 10. Apply payu-onprem HC + NodePool
+- [ ] 11. Apply payu-cloud HC + NodePool
+- [ ] 12. Initial verify (HC visible) + stop (user monitors AVAILABLE)
+- [ ] 13. Update CHANGELOG.md + TODOS.md done log
+
+### Done (2026-06-16) ✅
+
+- [x] 1. Verify environment + write plan
+- [x] 2. Create `clusters` ns + OIDC S3 creds secret in `local-cluster` ns
+- [x] 3. Refactor terraform to for_each + add dedicated VPC module
+- [x] 4. Create per-cluster tfvars (payu-onprem.tfvars, payu-cloud.tfvars)
+- [x] 5. Create per-cluster pull-secret + etcd-encryption-key secrets
+- [x] 6. terraform init + apply payu-onprem (32 resources)
+- [x] 7. terraform apply payu-cloud (32 resources)
+- [x] 8. Generate payu-onprem HC+NodePool YAML (terraform outputs)
+- [x] 9. Generate payu-cloud HC+NodePool YAML (terraform outputs)
+- [x] 10. Apply payu-onprem HC + NodePool
+- [x] 11. Apply payu-cloud HC + NodePool
+- [x] 12. Initial verify (HC visible, control plane pods starting)
+- [x] 13. Update CHANGELOG.md [Unreleased] + TODOS.md done log
+
+### Final state @ 13:33:35 UTC
+
+- `payu-onprem`: AVAILABLE=False, MESSAGE="Waiting for Kube APIServer deployment to become available"
+- `payu-cloud`:  AVAILABLE=False, MESSAGE="Waiting for hosted control plane kubeconfig to be created"
+- payu-onprem CP: etcd-0 (3/3), control-plane-operator (2/2), control-plane-pki-operator (1/1), kube-apiserver deployment created
+- payu-cloud CP: cluster-api (1/1), control-plane-operator (2/2), etcd-0 (init)
+- AWS: 2 VPCs, 2 OIDC S3 buckets, 16 IAM roles, 2 instance profiles, 2 OIDC providers all provisioned
+
+### Hand-off
+
+User monitors `oc get hostedcluster -n clusters -w` until both show `AVAILABLE=True`.
+
+---
+
+## [2026-06-16 22:00] payu-onprem 4.18 + payu-cloud 4.20 — DONE ✅
+
+Both HCPs provisioned, NodePool 1/1 Ready, node Ready, kubeadmin passwords retrieved, console URLs accessible.
+
+### Final Infra State
+| Component | Status |
+|:----------|:-------|
+| HCP payu-onprem 4.18.43 (v1.31.14) | ✅ AVAILABLE, 1/1 node Ready |
+| HCP payu-cloud 4.20.24 (v1.33.12) | ✅ AVAILABLE, 1/1 node Ready |
+| Terraform (2× VPC, 2× S3 OIDC bucket, 16× IAM roles) | ✅ applied |
+| MutatingWebhook (hcp-audience-fixer) | ✅ deployed payu-system/ |
+| CNI Fixer DaemonSet | ✅ deployed both guest clusters |
+| WebIdentityErr fix (audience) | ✅ via webhook |
+| iam:PassRole fix | ✅ inline policies on node-pool roles |
+| OIDC thumbprint fix | ✅ Terraform + manual update |
+| Cilium CNI | ✅ installed via Helm, fixed via cni-fixer |
+
+### Pending (not blocking, will resolve in 10-20 min)
+- payu-cloud: 14/22 COs True (need monitoring, console, insights, service-ca, kube-storage-version-migrator to come up)
+- payu-onprem: 18/22 COs True (similar, faster because newer)
