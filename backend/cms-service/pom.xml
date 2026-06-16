@@ -177,7 +177,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-kafka</artifactId>
-            
+
         </dependency>
     </dependencies>
 

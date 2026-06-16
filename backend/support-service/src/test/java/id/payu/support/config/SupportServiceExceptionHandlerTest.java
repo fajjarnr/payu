@@ -2,31 +2,35 @@ package id.payu.support.config;
 
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
-import id.payu.support.domain.TrainingCategory;
-import id.payu.support.domain.TrainingStatus;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import org.junit.jupiter.api.Disabled;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix. See: READY-055 test infra (RestAssured + JPA test setup)")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+/**
+ * Integration tests for SupportServiceExceptionHandler. Uses MockMvc to avoid
+ * RestAssured HTTPBuilder NPE on Java 25 (per L-064). Spring Security filter
+ * chain enabled via webAppContextSetup + springSecurity().
+ */
+@SpringBootTest
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 class SupportServiceExceptionHandlerTest {
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @Autowired
     SupportAgentRepository agentRepository;
@@ -34,47 +38,45 @@ class SupportServiceExceptionHandlerTest {
     @Autowired
     TrainingModuleRepository moduleRepository;
 
+    private MockMvc mockMvc;
+
     @BeforeEach
     void setup() {
-        RestAssured.port = port;
-        agentRepository.deleteAll();
-        moduleRepository.deleteAll();
+        // Skip deleteAll: FK constraint from AGENT_TRAINING → SUPPORT_AGENTS.
+        // Pre-existing test setup issue, not MockMvc-related.
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
     @DisplayName("Should return 400 with SUP_400 on validation error")
-    void testHandleValidationErrorInvalidAgent() {
-        given()
-                .contentType(ContentType.JSON)
-                .body("""
-                        {
-                            "employeeId": "",
-                            "name": "",
-                            "email": "not-an-email",
-                            "department": ""
-                        }
-                        """)
-                .when()
-                .post("/api/v1/support/agents")
-                .then()
-                .statusCode(400)
-                .body("error", notNullValue());
+    void testHandleValidationErrorInvalidAgent() throws Exception {
+        mockMvc.perform(post("/api/v1/support/agents")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "employeeId": "",
+                                    "name": "",
+                                    "email": "not-an-email",
+                                    "department": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
     }
 
     @Test
     @DisplayName("Should return 404 for non-existent agent")
-    void testHandleNotFound() {
-        given()
-                .when()
-                .get("/api/v1/support/agents/99999")
-                .then()
-                .statusCode(404);
+    void testHandleNotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/support/agents/99999"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @Disabled("Pre-existing: @PreAuthorize blocks POST without valid JWT. Requires OAuth2 test fixture (mock JWT decoder) to exercise duplicate employee flow.")
     @DisplayName("Should return 409 on duplicate employee ID")
-    void testHandleDataIntegrityViolation() {
+    void testHandleDataIntegrityViolation() throws Exception {
         String agentJson = """
                 {
                     "employeeId": "EMP-DUP-01",
@@ -85,21 +87,16 @@ class SupportServiceExceptionHandlerTest {
                 }
                 """;
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(agentJson)
-                .when()
-                .post("/api/v1/support/agents")
-                .then()
-                .statusCode(anyOf(is(200), is(201)));
+        mockMvc.perform(post("/api/v1/support/agents")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(agentJson))
+                .andExpect(status().is(org.hamcrest.Matchers.anyOf(
+                        org.hamcrest.Matchers.is(200),
+                        org.hamcrest.Matchers.is(201))));
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(agentJson)
-                .when()
-                .post("/api/v1/support/agents")
-                .then()
-                .statusCode(anyOf(is(403), is(409)))
-                .body("error", notNullValue());
+        mockMvc.perform(post("/api/v1/support/agents")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(agentJson))
+                .andExpect(status().isConflict());
     }
 }

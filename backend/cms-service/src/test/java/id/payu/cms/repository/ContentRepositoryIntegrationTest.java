@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * a TestEntityManager in a full Spring context). Testcontainers is
  * still used to provide the real PostgreSQL database.
  */
-@Disabled("READY-055: Testcontainers + podman socket works (postgres:16-alpine starts OK) but Flyway says 'jdbcUrl is required' — application.yml hardcodes spring.datasource.url + @DynamicPropertySource not winning. Needs precedence fix (e.g. spring.flyway.url explicit + remove hardcoded url from app.yml) OR use @ServiceConnection for auto-config.")
+@Disabled("READY-055: Testcontainers + podman socket works. Tried (a) @DynamicPropertySource, (b) @ServiceConnection + spring-boot-testcontainers dep — both fail with 'jdbcUrl is required'. Root cause: @AutoConfigureTestEntityManager creates its own embedded DataSource before @ServiceConnection overrides apply. Needs @SpringBootTest without @AutoConfigureTestEntityManager + use TestEntityManager via JPA + ensure @ServiceConnection sets spring.datasource.url at correct time. Complex, deferred.")
 @SpringBootTest
 @Testcontainers
 @AutoConfigureTestEntityManager

@@ -4,18 +4,17 @@ import id.payu.integration.config.TestSecurityConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.Map;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix unblocked execution. See: READY-045 (account web-slice), READY-047 (Micrometer asserts), READY-053 (web-slice JPA bootstrap), READY-054 (integration Camel WireMock), READY-055 (Testcontainers Docker required)")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Disabled("READY-054: 3 cascading infrastructure issues — (1) camel.kafka.brokers URL required even with camel.component.kafka.enabled=false, (2) H2 doesn't support JSONB type in Flyway migrations, (3) OUTBOX_EVENTS table not created without Flyway. All 3 fixes require test-infra upgrade (H2 PostgreSQL mode + Testcontainers Kafka + @MockBean OutboxService).")
+@SpringBootTest
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

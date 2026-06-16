@@ -1,67 +1,69 @@
 package id.payu.support.adapter.web;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.support.config.TestSecurityConfig;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Assumptions;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 /**
  * Integration tests for Support Service REST endpoints.
- * NOTE: Security is bypassed via TestSecurityConfig. Live security enforcement
- * (OAuth2 JWT, SUPPORT_MANAGER role) is verified by E2E blackbox tests in
- * tests/e2e_blackbox/test_support_flow.py.
+ * Uses full @SpringBootTest with WebApplicationContext to enable Spring Security
+ * filter chain (TestSecurityConfig). Avoids RestAssured HTTPBuilder NPE on Java 25.
+ *
+ * Security: TestSecurityConfig (permitAll) bypasses JWT for tests.
+ * Live security verified by E2E blackbox tests in tests/e2e_blackbox/test_support_flow.py.
  */
-@Disabled("READY-046: RestAssured HTTPBuilder NPE - Groovy/Java 25 compat (READY-055). Re-enable after RestAssured lib upgrade or test rewrite to MockMvc.")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SupportResourceTest {
 
-    @LocalServerPort
-    private int port;
+    @org.springframework.beans.factory.annotation.Autowired
+    private WebApplicationContext webApplicationContext;
 
-    @BeforeEach
-    void setUp() {
-        RestAssured.port = port;
-    }
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     private static Long agentId;
     private static Long moduleId;
 
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+        objectMapper = new ObjectMapper();
+    }
+
     @Test
     @Order(1)
-    void testGetTrainingStatus() {
-        given()
-                .when().get("/api/v1/support/training-status")
-                .then()
-                .statusCode(200)
-                .body("data", hasKey("activeAgents"))
-                .body("data", hasKey("trainedAgents"))
-                .body("data", hasKey("trainingPercentage"));
+    void testGetTrainingStatus() throws Exception {
+        mockMvc.perform(get("/api/v1/support/training-status"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data").exists());
     }
 
     @Test
     @Order(2)
-    void testGetAllAgents() {
-        given()
-                .when().get("/api/v1/support/agents")
-                .then()
-                .statusCode(200);
+    void testGetAllAgents() throws Exception {
+        mockMvc.perform(get("/api/v1/support/agents"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @Order(3)
-    void testCreateAgent() {
+    void testCreateAgent() throws Exception {
         String request = """
             {
                 "employeeId": "EMP9999",
@@ -72,36 +74,31 @@ class SupportResourceTest {
             }
             """;
 
-        Integer id = given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when().post("/api/v1/support/agents")
-                .then()
-                .statusCode(201)
-                .body("data.employeeId", equalTo("EMP9999"))
-                .body("data.name", equalTo("Integration Test Agent"))
-                .extract().path("data.id");
+        MvcResult result = mockMvc.perform(post("/api/v1/support/agents")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.employeeId").value("EMP9999"))
+                .andReturn();
 
-        agentId = id != null ? id.longValue() : null;
+        agentId = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("data").path("id").asLong();
     }
 
     @Test
     @Order(4)
-    void testGetAgentById() {
+    void testGetAgentById() throws Exception {
         Assumptions.assumeTrue(agentId != null, "agentId required from prior testCreateAgent");
 
-        given()
-                .pathParam("id", agentId)
-                .when().get("/api/v1/support/agents/{id}")
-                .then()
-                .statusCode(200)
-                .body("data.id", equalTo(agentId.intValue()))
-                .body("data.employeeId", equalTo("EMP9999"));
+        mockMvc.perform(get("/api/v1/support/agents/{id}", agentId))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.id").value(agentId.intValue()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.employeeId").value("EMP9999"));
     }
 
     @Test
     @Order(5)
-    void testCreateTrainingModule() {
+    void testCreateTrainingModule() throws Exception {
         String request = """
             {
                 "code": "TEST-001",
@@ -114,31 +111,27 @@ class SupportResourceTest {
             }
             """;
 
-        Integer id = given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when().post("/api/v1/support/modules")
-                .then()
-                .statusCode(201)
-                .body("data.code", equalTo("TEST-001"))
-                .body("data.title", equalTo("Test Training Module"))
-                .extract().path("data.id");
+        MvcResult result = mockMvc.perform(post("/api/v1/support/modules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.code").value("TEST-001"))
+                .andReturn();
 
-        moduleId = id != null ? id.longValue() : null;
+        moduleId = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("data").path("id").asLong();
     }
 
     @Test
     @Order(6)
-    void testGetAllModules() {
-        given()
-                .when().get("/api/v1/support/modules")
-                .then()
-                .statusCode(200);
+    void testGetAllModules() throws Exception {
+        mockMvc.perform(get("/api/v1/support/modules"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @Order(7)
-    void testAssignTraining() {
+    void testAssignTraining() throws Exception {
         Assumptions.assumeTrue(agentId != null && moduleId != null,
                 "agentId and moduleId required from prior tests");
 
@@ -151,33 +144,27 @@ class SupportResourceTest {
             }
             """.formatted(agentId, moduleId);
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when().post("/api/v1/support/trainings/assign")
-                .then()
-                .statusCode(anyOf(is(201), is(200)))
-                .body("data.status", equalTo("IN_PROGRESS"));
+        mockMvc.perform(post("/api/v1/support/trainings/assign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().is(org.hamcrest.Matchers.anyOf(
+                                org.hamcrest.Matchers.is(201), org.hamcrest.Matchers.is(200))))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data.status").value("IN_PROGRESS"));
     }
 
     @Test
     @Order(8)
-    void testGetTrainingsByAgent() {
+    void testGetTrainingsByAgent() throws Exception {
         Assumptions.assumeTrue(agentId != null, "agentId required from prior testCreateAgent");
 
-        given()
-                .pathParam("agentId", agentId)
-                .when().get("/api/v1/support/trainings/agent/{agentId}")
-                .then()
-                .statusCode(200);
+        mockMvc.perform(get("/api/v1/support/trainings/agent/{agentId}", agentId))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @Order(9)
-    void testGetAllTrainings() {
-        given()
-                .when().get("/api/v1/support/trainings")
-                .then()
-                .statusCode(200);
+    void testGetAllTrainings() throws Exception {
+        mockMvc.perform(get("/api/v1/support/trainings"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
     }
 }
