@@ -19,6 +19,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 25: 2 More Tests Re-Enabled + 1 Pre-Existing Mock Bug Fixed (2026-06-16)
+
+### Fixes applied
+
+1. **transaction-service DisbursementServiceTest (5 tests)**: Pre-existing mock bug. Test mocked `disbursementRepository.save()` but service uses `persistNew()` (from READY-063 fix). Changed 2 mock lines + 1 verify. 5/5 PASS.
+2. **promotion-service CashbackServiceTest (11 tests)**: Test only @Mock'd 3 of 5 `CashbackService` dependencies. Added `@Mock OutboxService` + `@Mock CashbackRepository`. Injected `MeterRegistry` (`@Autowired(required=false)`) + `promotionEventsTopic` (`@Value`) via `ReflectionTestUtils` in `@BeforeEach` (Mockito `@InjectMocks` cannot set optional/Value deps). Removed stale `@Mock KafkaTemplate` (service migrated to outbox in MSG-009). 11/11 PASS.
+3. **cms-service ContentRepositoryIntegrationTest (Testcontainers)**: Testcontainers + podman socket works! `postgres:16-alpine` container starts in 1.7s. BUT Flyway fails with `jdbcUrl is required` — `@DynamicPropertySource` not winning against hardcoded `spring.datasource.url` in `application.yml`. Reverted @Disabled. Documented as L-062.
+
+### L-062 captured
+**Testcontainers + podman socket works in this env**:
+```bash
+podman system service -t 0 unix:///tmp/podman.sock &  # start podman as service
+DOCKER_HOST=unix:///tmp/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn test
+```
+Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podman socket doesn't support all docker features.
+
+**Remaining issue**: @DynamicPropertySource not overriding hardcoded `spring.datasource.url` in `application.yml`. Possible fixes:
+- (a) Explicit `spring.flyway.url` in @DynamicPropertySource
+- (b) `@ServiceConnection` annotation (Spring Boot 3.1+) for auto-config
+- (c) Remove hardcoded url from app.yml (replace with `${SPRING_DATASOURCE_URL:default}`)
+- (d) `@TestPropertySource(properties = {...})` with higher precedence
+
+### Runtime metrics
+- **After iter 25**: 41/41 modules SUCCESS (txn + promo now green, cms still has 1 test @Disabled due to L-062)
+- **Tests re-enabled iter 24+25**: 12 account + 6 partner + 1 promo + 1 txn = 20
+- **Cluster**: 44 pods Running, 0 fail (was 42, +2 from promotion/transaction redeploys)
+- **Deployed**: transaction-service:1.8.57, promotion-service:1.8.57
+
+### Files changed (3)
+- `backend/transaction-service/src/test/java/id/payu/transaction/DisbursementServiceTest.java` (save→persistNew)
+- `backend/promotion-service/src/test/java/id/payu/promotion/application/service/CashbackServiceTest.java` (+@Mock OutboxService, CashbackRepository, ReflectionTestUtils, removed @Mock KafkaTemplate)
+- `backend/cms-service/src/test/java/id/payu/cms/repository/ContentRepositoryIntegrationTest.java` (reverted @Disabled with L-062 doc)
+
 ### Iteration 24: Test Runtime Gap — 18 Tests Re-Enabled + 1 Production Bug Fixed (2026-06-16)
 
 **Recursive dev loop kickoff**: closed READY-047 (account-service Monitoring/Tracing) + READY-055 partial (partner-service SandboxIntegrationTest). 18 @Disabled tests re-enabled. 1 production bug fixed (BudgetEntity bogus index). Deployed `:1.8.56` to OCP.

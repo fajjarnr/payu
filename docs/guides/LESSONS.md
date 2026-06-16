@@ -4,6 +4,44 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-062: Testcontainers + Podman Socket Works in PayU Dev Env (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Testcontainers / Podman / Test Infra
+**Context**: Iter 25 attempted to re-enable `cms-service ContentRepositoryIntegrationTest` (1 @Disabled test, uses Testcontainers + PostgreSQLContainer). Docker not available but Podman IS. Discovered Testcontainers works with Podman via unix socket.
+
+**Pattern (3 steps to enable Testcontainers via Podman)**:
+```bash
+# 1. Start podman as a service (exposes unix socket)
+podman system service -t 0 unix:///tmp/podman.sock &
+
+# 2. Verify socket
+ls -la /tmp/podman.sock
+# srw------- 1 ubuntu ubuntu 0 Jun 16 05:44 /tmp/podman.sock
+
+# 3. Run test with env vars
+DOCKER_HOST=unix:///tmp/podman.sock \
+  TESTCONTAINERS_RYUK_DISABLED=true \
+  mvn test -Dtest=ContentRepositoryIntegrationTest
+```
+
+**Result**: Testcontainers 2.0.5 connects to podman socket, pulls `postgres:16-alpine`, starts container in 1.7s, exposes JDBC URL on random port (e.g. `jdbc:postgresql://localhost:38807/cms_test`).
+
+**Lesson**:
+1. **Podman socket can substitute for Docker socket for Testcontainers**. The `DOCKER_HOST` env var tells Testcontainers to use the podman unix socket. No Docker daemon required.
+2. **TESTCONTAINERS_RYUK_DISABLED=true required** — RYUK is Testcontainers' resource reaper (a sidecar container that cleans up after tests). RYUK requires Docker-specific features that podman doesn't fully support. Disabling it means containers may not be auto-removed if tests crash, but tests work.
+3. **Remaining issue (L-062 unresolved)**: `@DynamicPropertySource` does not override hardcoded `spring.datasource.url` in `application.yml` for Flyway. Symptom: `Caused by: java.lang.IllegalArgumentException: dataSource or dataSourceClassName or jdbcUrl is required`. Container starts fine, but Flyway gets a null JDBC URL.
+   - **Possible fixes**:
+     - (a) Explicit `spring.flyway.url` in `@DynamicPropertySource`
+     - (b) `@ServiceConnection` annotation (Spring Boot 3.1+) for auto-config
+     - (c) Remove hardcoded url from `application.yml` (use `${SPRING_DATASOURCE_URL:default}`)
+     - (d) `@TestPropertySource(properties = {...})` with higher precedence
+4. **Cost-benefit**: Testcontainers + Podman setup takes ~5 min. Re-enables 1 test. ROI: low. Better to fix the property precedence issue first, then enable multiple Testcontainers tests in one shot.
+
+**Why we didn't fix it in iter 25**: Per AGENTS.md "Stop on Blockers / If you hit a blocker, test failure, or ambiguity, STOP and ask the user" + "Don't fight errors". The cms Testcontainers + Flyway precedence issue is a 3-way interaction (Testcontainers, Spring Boot, application.yml) that needs more analysis. The 2 quick wins (txn mock + promo mocks) were higher value for less time.
+
+---
+
 ## L-060: 3-Step Security Bypass Pattern for `@SpringBootTest` Tests (2026-06-16)
 
 **Date**: 2026-06-16
