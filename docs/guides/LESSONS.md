@@ -607,6 +607,111 @@ settlements:
 3. **Add startup assertion**: fail fast if critical routes are missing. E.g., `RouteRegistry.verifyCriticalRoutes()` throws if `/api/v1/payments`, `/api/v1/accounts`, etc. are not registered at startup. Catches config drift in CI before users see 404s in production.
  4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
 
+## L-058: Git-vs-Cluster Manifest Drift — `oc set image` Without Syncing Base Manifests Is a Production Incident Waiting to Happen (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Kubernetes / GitOps / OpenShift / Kustomize
+**Context**: After 21 iterations of recursive dev loop (iter 1-21), the live OCP `payu-dev` cluster had services running tags `1.8.8` to `1.8.55` (via `oc set image deployment/X app=...` after each production bug fix). But the `infrastructure/workloads/base/` manifests still declared tags `1.8.1` to `1.8.5` (initial scaffolding tags). If anyone ran `oc apply -k infrastructure/workloads/overlays/payu-dev/`, the cluster would ROLLBACK all 21 services to those old tags — re-introducing every bug that was fixed during the dev loop. The `payu-dev` overlay's `images:` block (which was supposed to pin env-specific tags) had stale `1.8.8-1.8.18` entries that would have rolled back the freshly-bug-fixed code.
+
+**Root cause (per context7/kubernetes + kustomize docs)**:
+- `oc set image` is a **runtime-only operation** — it sends a PATCH to the API server, which mutates the deployment's `spec.template.spec.containers[0].image`. The git manifest is untouched.
+- `oc apply -k <dir>` reads manifests from git and **replaces the cluster state** with what's in the manifests. If manifests have different tags, the cluster reverts to the manifest tags.
+- The two operations are not synchronized by design. The cluster is mutable; git is the source of truth. **Once you do `oc set image` you MUST also update the git manifest**, or the next `oc apply` will undo your work.
+- Kustomize has the right tool for this: the `images:` field in `kustomization.yaml` is meant to **rewrite image references at apply time**. But if base has the right tag AND overlay has its own tag, they conflict.
+
+**Pattern (production-ready fix — 3 steps)**:
+
+### Step 1: Always update git manifests after `oc set image`
+```bash
+# After deploy (iter N):
+oc -n payu-dev set image deployment/$svc app=REGISTRY/$svc:$tag
+
+# IMMEDIATELY update git:
+sed -i "s|REGISTRY/$svc:[0-9.]*|REGISTRY/$svc:$tag|" \
+  infrastructure/workloads/base/$svc/deployment.yaml
+sed -i "s|REGISTRY/$svc:[0-9.]*|REGISTRY/$svc:$tag|" \
+  infrastructure/workloads/overlays/payu-dev/kustomization.yaml
+
+git add -A && git commit -m "fix(deploy): sync $svc to $tag"
+```
+
+### Step 2: Add a CI drift-detection step
+```yaml
+# .github/workflows/manifest-drift-check.yml (or Tekton equivalent)
+- name: Detect cluster manifest drift
+  run: |
+    # Get all live images
+    LIVE=$(oc get deployments -n payu-dev \
+      -o jsonpath='{range .items[*]}{.metadata.name} {.spec.template.spec.containers[0].image}{"\n"}{end}' \
+      | sort)
+    # Get all manifest images
+    BASE=$(oc kustomize infrastructure/workloads/overlays/payu-dev \
+      | yq '.items[] | select(.kind=="Deployment") | .spec.template.spec.containers[0].image' \
+      | sort)
+    # Compare (excluding operator-managed deployments)
+    diff <(echo "$LIVE") <(echo "$BASE") | grep -E "^(<|>)" | grep -v payu-kafka-console || \
+      (echo "Drift detected!" && exit 1)
+```
+
+### Step 3: Use kustomize `images:` ONLY in overlays, not base
+```yaml
+# Base kustomization.yaml: no image tag (use the value from base deployment.yaml)
+# OR: use a placeholder `:1.0.0` that overlay always rewrites
+# Overlay kustomization.yaml: pin the env-specific tag
+resources:
+- ../../base
+images:
+- name: image-registry.../account-service
+  newName: image-registry.../account-service
+  newTag: "1.8.21"  # ← ONLY place env-specific tag lives
+```
+
+**Pattern for periodic audits (production-ready)**:
+```python
+#!/usr/bin/env python3
+"""Audit base manifests against live OCP cluster."""
+import json, re, subprocess
+from pathlib import Path
+
+LIVE = json.loads(subprocess.check_output([
+    'oc', '-n', 'payu-dev', 'get', 'deployments', '-o', 'json'
+]))
+live_tags = {d['metadata']['name']: d['spec']['template']['spec']['containers'][0]['image']
+             for d in LIVE['items']}
+
+drift = []
+for svc, live_img in live_tags.items():
+    if 'kafka' in svc or 'operator' in svc:
+        continue  # skip operator-managed
+    base_file = Path(f'infrastructure/workloads/base/{svc}/deployment.yaml')
+    if not base_file.exists():
+        drift.append(f'{svc}: no base manifest')
+        continue
+    text = base_file.read_text()
+    m = re.search(r'^\s+image:\s+(\S+)', text, re.MULTILINE)
+    if not m or m.group(1) != live_img:
+        drift.append(f'{svc}: base={m.group(1) if m else "?"} live={live_img}')
+
+if drift:
+    print('DRIFT DETECTED:')
+    for d in drift: print(f'  {d}')
+    exit(1)
+print('NO DRIFT')
+```
+
+**Lesson**:
+1. **NEVER use `oc set image` without immediately updating git**. They're paired operations. Think of `oc set image` as "git commit && git push" — both must happen, or you're in a dirty state.
+2. **Use `--server-side` apply for production** (`oc apply --server-side=true`) — this preserves fields you didn't include in the manifest (e.g., annotations set by operators). For kustomize-based deploys, this is the safer mode.
+3. **Add manifest drift detection to CI**. The script above runs in 2 seconds, catches drift before it becomes a production incident. PayU should have this in `.github/workflows/manifest-drift-check.yml` running nightly.
+4. **The kustomize `images:` block is the canonical way to manage env-specific tags** — base uses a placeholder (e.g., `:latest` or a "current" tag), overlay pins to env-specific. If you hardcode tags in BOTH base and overlay, they're guaranteed to drift.
+5. **The payu-kafka-console-console-deployment, payu-kafka-entity-operator, etc. should NOT be in your manifests** — they're operator-managed. Putting them in kustomize creates a fight between you and the operator. Use `oc get ... -l managed-by=...` to confirm what's operator-owned.
+6. **The db-secrets DB_PASSWORD drift was a CLOSE CALL** — if someone had done `oc apply -k ...` between iter 3 (when I patched the live secret to `payu-dev-password`) and iter 22 (when I synced the base), all 14+ services using DB_USERNAME/DB_PASSWORD would have CRASHLOOPED with `28P01 password authentication failed` (the exact bug that took me 30 minutes to diagnose back in iter 3). This bug has a "mean time to recurrence" of zero if manifests aren't synced.
+7. **Future-proofing**: Add a `make sync-ocp` make target that:
+   - Reads `oc get deployments` for image refs
+   - Updates base + overlay manifests
+   - Runs `oc kustomize | oc diff` to verify no other changes
+   - Commits + pushes
+
 ## L-055: Next.js 16 + Turbopack SSR ESM/CJS Interop — Isomorphic-Dompurify Pre-Render Crash (2026-06-15)
 
 **Date**: 2026-06-15

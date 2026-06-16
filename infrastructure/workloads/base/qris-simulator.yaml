@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: qris-simulator
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.1
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.21
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

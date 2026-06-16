@@ -19,6 +19,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 22: Git-vs-Cluster Manifest Audit — 59 Drift Items Fixed (2026-06-15)
+
+**Major milestone**: Comprehensive audit of `infrastructure/workloads/base/` against live OCP `payu-dev` cluster revealed critical drift. If anyone ran `oc apply -k infrastructure/workloads/overlays/payu-dev/`, the cluster would ROLLBACK all services to old image tags (1.8.1-1.8.5) — a production-impacting incident waiting to happen.
+
+**OCP audit findings (via `oc get deployments -n payu-dev -o jsonpath=...`)**:
+
+### 1. Image tag drift (27 services + 4 simulators = 31 files)
+Every base deployment.yaml had stale image tags:
+- Base: `1.8.1` to `1.8.5` (initial scaffolding tags from earlier)
+- Live: `1.8.8` to `1.8.55` (rolled forward via `oc set image` during recursive dev loop)
+- Drift magnitude: 21 services off by 0.10-0.34 patch versions
+
+Per-service diff:
+```
+account-service        1.8.1 → 1.8.21  ✗ (14 minor versions behind)
+analytics-service      1.8.1 → 1.8.8   ✗
+api-portal-service     1.8.1 → 1.8.21  ✗
+auth-service          1.8.1 → 1.8.22  ✗
+backoffice-service    1.8.1 → 1.8.21  ✗
+billing-service       1.8.2 → 1.8.21  ✗
+cms-service           1.8.1 → 1.8.21  ✗
+compliance-service    1.8.1 → 1.8.21  ✗
+dispute-service       1.8.5 → 1.8.21  ✗
+fx-service            1.8.1 → 1.8.21  ✗
+integration-service   1.8.4 → 1.8.21  ✗
+investment-service    1.8.1 → 1.8.21  ✗
+kyc-service           1.8.1 → 1.8.8   ✗
+lending-service       1.8.1 → 1.8.23  ✗
+notification-service  1.8.1 → 1.8.23  ✗
+partner-service       1.8.5 → 1.8.21  ✗
+product-catalog-svc   1.8.4 → 1.8.22  ✗
+promotion-service     1.8.2 → 1.8.51  ✗ (49 minor versions behind — biggest drift)
+statement-service     1.8.1 → 1.8.21  ✗
+support-service       1.8.1 → 1.8.21  ✗
+transaction-service   1.8.2 → 1.8.54  ✗
+wallet-service        1.8.1 → 1.8.55  ✗
+```
+
+### 2. Image registry drift (3 services)
+- Base: `image-registry.openshift-image-registry.svc:5000/payu-dev/...` (internal registry)
+- Live: `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/...` (external route)
+- Affected: `gateway-service`, `wallet-service`, `web-app` (rebuilt via podman + pushed to default-route)
+
+### 3. payu-dev overlay `images:` block (stale)
+The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). Even with the base fixed, the overlay would have rolled back on apply. All updated to match live state.
+
+### 4. db-secrets.yaml DB_PASSWORD (incorrect)
+- Base: `>3Se{I@_4JVvvo[-z:uOO2jh` (the WRONG password from earlier scaffolding)
+- Live: `payu-dev-password` (patched via `oc patch secret db-secrets` in iter 3 after 14+ services crashlooped with `28P01 password authentication failed`)
+- **Reverted to wrong password in base would re-crashloop all services on next apply**
+
+### 5. Confirmed CLEAN (zero drift)
+- `service-endpoints` ConfigMap: 42 keys, all values match live
+- All 4 simulator ConfigMaps: 19 keys, all values match live
+- `spring-config` ConfigMap: matches
+- HPA: 0 in cluster, 0 in base (correctly removed per L-049)
+- VPA: 0 in cluster, 0 in base
+- PDB: 2 in cluster (kafka operator-managed, not application), 0 in base
+
+### 6. Cluster-only resources (operator-managed, NOT in base — correct)
+- `payu-kafka-console-console-deployment` (AMQ Streams console operator)
+- `payu-kafka-console-prometheus-deployment` (AMQ Streams console operator)
+- `payu-kafka-entity-operator` (Strimzi operator)
+- All 4 `payu-kafka-*` KafkaUser / KafkaTopic (Strimzi)
+- All 7 `payu-kafka-payu-kafka-broker-{0,2,3}` and `payu-kafka-payu-kafka-controller-{1,4,5}` (Strimzi StatefulSets)
+- `payu-postgres-init` ConfigMap (Crunchy PostgreSQL operator)
+- These are correctly absent from `infrastructure/workloads/base/` — they're managed by their respective operators, not by Kustomize.
+
+**Fix applied (via `/tmp/sync-base-to-live.py`)**:
+- 27 base deployment.yaml image tags updated to live state
+- 4 simulator top-level yamls image tags updated
+- 3 base deployment.yaml image registry updated (wallet/gateway/web-app → default-route)
+- 27 payu-dev overlay `images:` blocks updated
+- 1 db-secrets.yaml DB_PASSWORD updated to `payu-dev-password`
+- Total: **59 file/block updates**
+
+**Verification**:
+- `oc kustomize infrastructure/workloads/overlays/payu-dev/` → 4655 lines, 91 resources, 0 errors
+- Service-account count: 24 base + 3 operator (kafka) = 27 unique. Diff shows only operator-managed SAs as "extra" in live.
+- `oc kustomize ... | grep 'image:'` → 28 image refs (27 services + 1 from operator console)
+
+**NEW lesson L-058**: Always sync base manifests to live cluster state after every `oc set image` deployment. Use a `git-vs-cluster` audit script that runs in CI to catch drift before it becomes a production incident.
+
+**Lesson details (see LESSONS.md)**:
+1. **`oc set image deployment/X app=...` is a runtime-only operation** — it changes the cluster state but NOT the manifests in git. If the manifests are later re-applied, they overwrite the runtime changes.
+2. **The kustomize `images:` block is the CORRECT way to manage env-specific tags** — base uses placeholder (or no tag), overlay pins. Don't hardcode tags in both places.
+3. **`--server-side` apply** (`oc apply --server-side=true`) helps avoid some drift by letting cluster be source of truth, but for `oc apply -k` (kustomize), the manifests ARE the source of truth.
+4. **Add a CI step**: `diff <(oc kustomize ... 2>/dev/null | yq '.items[].spec.template.spec.containers[0].image' | sort) <(oc get deploy -o jsonpath='{..image}' | sort)` — fails if any image drifts.
+
+**Files changed (30 total)**:
+- 27 base service `deployment.yaml`
+- 1 base `db-secrets.yaml`
+- 1 payu-dev overlay `kustomization.yaml` (114 insertions, 86 deletions — 27 `images:` blocks updated + 1 new)
+- 1 base `kustomization.yaml` (no change to resources list; verified simulator-configmaps was redundant)
+
+**Cluster state unchanged**: The fix only updates git manifests to match the running cluster. No re-apply performed. To verify: `oc kustomize infrastructure/workloads/overlays/payu-dev | oc apply --dry-run=client -f -` should show "no changes" (or only the kustomize-rendered `default` SA which is harmless).
+
 ### Iteration 21: Web-App Build Unblocked + 15 Production Bugs Fixed + Deployed (2026-06-15)
 
 **Major milestone**: The web-app build was COMPLETELY BROKEN before this iteration. `next build` crashed at the SSR pre-render step (EACCES on .next, then ESM/CommonJS interop crash). 18 lint errors blocked any new commits. Users were seeing stale 1.5.1 pages.
