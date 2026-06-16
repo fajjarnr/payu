@@ -4,6 +4,113 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-060: 3-Step Security Bypass Pattern for `@SpringBootTest` Tests (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Spring Security / Testing
+**Context**: Closed READY-047 (account-service Monitoring/Tracing, 12 tests) + READY-055 (partner-service SandboxIntegrationTest, 6 tests) in iter 24. All tests were `@Disabled` because of HTTP 401 on every actuator/Sandbox request despite `@WithMockUser` annotation.
+
+**Root cause**: Production `SecurityConfig` in account-service had NO `@Profile("!test")` annotation, so test profile loaded prod OAuth2 Resource Server JWT validator. `@WithMockUser` provides Spring Security auth context but NOT a real JWT token, so the JWT filter rejected with 401. Partner-service `TestSecurityConfig` only had `@Bean JwtDecoder` mock — no `SecurityFilterChain` override, so default Spring Security applied → 401.
+
+**Pattern (3 steps)**:
+```java
+// 1. Production SecurityConfig — add @Profile("!test")
+@Configuration
+@Profile("!test")
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ...) throws Exception {
+        // ... full OAuth2 JWT config
+    }
+}
+
+// 2. Test sources — create TestSecurityConfig with permitAll + JwtDecoder mock
+@TestConfiguration
+public class TestSecurityConfig {
+    @Bean
+    @Primary
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(a -> a.anyRequest().permitAll());
+        return http.build();
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return mock(JwtDecoder.class);
+    }
+}
+
+// 3. Test class — @Import(TestSecurityConfig.class)
+@SpringBootTest(...)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
+class MonitoringConfigurationTest { ... }
+```
+
+**Lesson**:
+1. **Always guard production SecurityConfig with `@Profile("!test")`**. Per L-042 (iter 3): 5 services already had this fix (support, partner, integration, investment, promotion). Account-service was MISSING this fix — closed in iter 24. Pattern: any new service must have `@Profile("!test")` on production `SecurityConfig` from day 1.
+2. **TestSecurityConfig MUST include SecurityFilterChain**, not just `@Bean JwtDecoder`. Without the filter chain override, default Spring Security applies (which still requires real JWT). The `JwtDecoder` mock alone is insufficient because Spring Security's default `SecurityFilterChain` validator runs FIRST.
+3. **Use `@Primary` on test's `SecurityFilterChain` bean** so it wins over any auto-configured one from `@SpringBootTest`. The `@TestConfiguration` annotation also helps with test slice isolation.
+4. **`@WithMockUser` does NOT bypass JWT validation**. It only sets the `SecurityContextHolder` — if a JWT filter runs before the security context is consulted, the request is rejected. This is why the simple `@WithMockUser` + csrf pattern worked for `@WebMvcTest` (which has no JWT filter) but failed for `@SpringBootTest` (which loads the full OAuth2 Resource Server filter chain).
+5. **Test infrastructure bootstrap is the biggest blocker for SB 4.1.0 platform-wide rollout**. Per L-042: 25% runtime confidence → now ~30% after iter 24. 15 tests still @Disabled, each requires different infra work (RestAssured/Groovy/Java 25 NPE, Testcontainers Docker, JPA bootstrap in @WebMvcTest, etc).
+
+**Anti-pattern (DON'T DO THIS)**:
+```java
+// BAD: TestSecurityConfig with only JwtDecoder mock — leaves default SecurityFilterChain
+@TestConfiguration
+public class TestSecurityConfig {
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return mock(JwtDecoder.class);
+    }
+    // NO SecurityFilterChain bean → default Spring Security applies → 401
+}
+```
+
+## L-061: Production Bug Pattern — Bogus `@Index` in Entity (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Hibernate / Flyway / Test
+**Context**: Found during iter 24 while closing READY-047. `BudgetEntity` had `@Index(name = "idx_budget_status", columnList = "status")` referencing non-existent `status` column. V9__create_budgets_table.sql has NO `status` column. Entity field also has no `status` mapping.
+
+**Symptom** (in test, not production):
+```
+org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "
+       on budgets (status)" via JDBC [Column "STATUS" not found;]
+```
+
+**Root cause**: The `@Index` annotation in `BudgetEntity` was added speculatively for a future `status` field that was never implemented. Production has Flyway migrations + `ddl-auto: validate` → Hibernate validates column types but IGNORES index definitions. So the bogus index was invisible in production. But in test, Hibernate auto-creates the schema from entity → tries to create the index → fails.
+
+**Lesson**:
+1. **Bogus entity annotations are invisible in production but block tests**. Always cross-check entity annotations against actual Flyway migrations:
+   ```bash
+   rg '@Index' src/main/java/**/entity/  # list all index annotations
+   rg 'CREATE INDEX' src/main/resources/db/migration/  # list actual indexes
+   ```
+2. **Hibernate `ddl-auto: validate` does NOT validate indexes**. Only column names + types. This is by design (indexes are DB-specific and may differ). But it means bogus index annotations are silent in production.
+3. **Test env uses `ddl-auto: create-drop` (or similar) which DOES try to create indexes**. This is the only place bogus indexes surface.
+4. **Fix is mechanical**: remove the bogus `@Index` from entity. The cross-check is the discovery mechanism.
+
+**Detection script** (caveman-style one-liner):
+```bash
+for f in $(rg -l '@Index' backend/*/src/main/java/**/entity/); do
+  entity=$(basename $f)
+  for col in $(rg '@Index.*columnList *= *"(.*?)"' $f -or '$1'); do
+    if ! rg -q "ALTER TABLE.*ADD COLUMN *$col\| *$col " $(dirname $f)/../../../../resources/db/migration/*.sql 2>/dev/null; then
+      echo "$entity: index references non-existent column '$col'"
+    fi
+  done
+done
+```
+
+---
+
 ## L-027: Tekton Pipeline — `onError: continue` Not Supported in v1.9
 
 **Date**: 2026-05-02  
