@@ -19,6 +19,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 21: Web-App Build Unblocked + 15 Production Bugs Fixed + Deployed (2026-06-15)
+
+**Major milestone**: The web-app build was COMPLETELY BROKEN before this iteration. `next build` crashed at the SSR pre-render step (EACCES on .next, then ESM/CommonJS interop crash). 18 lint errors blocked any new commits. Users were seeing stale 1.5.1 pages.
+
+**Root cause of build break**:
+- `.next/` owned by root (previous podman run) → EACCES
+- `isomorphic-dompurify:3.3.0` uses `html-encoding-sniffer` (CJS) which `require()`s `@exodus/bytes/encoding-lite.js` (pure ESM) → `ERR_REQUIRE_ESM` in Next 16 + Turbopack
+
+**15 production bugs fixed** (in commit `00fefd31`):
+- **i18n MISSING_MESSAGE crash**: `DashboardLayout.tsx` referenced `nav.history` + `nav.scheduled` but keys were missing in `messages/{en,id}.json`. Build pre-rendered 83 pages with `MISSING_MESSAGE: nav.history (en)` errors. Fixed: added both keys to both locales.
+- **isomorphic-dompurify ESM/CJS interop** (L-055): replaced with client-only regex sanitization (strip `<script>` + `javascript:` URIs). Removed dep from `package.json` (-477 lines from lock file). Per L-055: don't trust `transpilePackages` as universal fix for Turbopack.
+- **5× React 19 `setState-in-effect` cascading-render warnings**: applied "adjusting state during render" pattern in `exchange/page.tsx`, `EmergencyAlert.tsx`, `PromoPopup.tsx`, `settings/page.tsx`, `landing page.tsx`.
+- **2× `Date.now()` in render warnings**: `onboarding/page.tsx:46` (useMemo initializer) → `useState` lazy initializer; `onboarding/page.tsx:314` (JSX) → stable per-mount ID.
+- **Unescaped `"` in JSX** (`pockets:860`) → `&ldquo;&rdquo;` entities.
+- **`any` type** (`exchange:140`) → proper `Error` type with axios shape cast.
+- **Empty interface** (`InvestmentService.ts:16`) → `Record<string, never>` type alias.
+- **Read-only `NextRequest` props** (`bff-proxy-ssrf.test.ts`) → extended `createMockRequest` helper.
+- **Variable before declared** (`landing page.tsx:52`) → reordered `goToSlide` before useEffect.
+
+**Iter 21 bonus — SpendingInsights cleanup** (commit `6661b247`):
+- 10 unused imports removed (`motion`, `AnimatePresence`, 8 lucide icons, `useLocale`)
+- Lint warnings 144 → 134 (-10) in src/components+app+services scope
+- L-055 lesson captured (Next 16 + Turbopack ESM/CJS interop)
+
+**L-055 captured**: Don't trust `transpilePackages` as universal fix for ESM/CJS interop on Next 16. Isomorphic-dompurify is a footgun in modern Next.js. JavaScript ecosystem has 3 runtime axes: (1) compile, (2) test runtime, (3) production SSR pre-render. All 3 must be green.
+
+**Deployed**:
+- `web-app:1.5.2` (with i18n fix) deployed to OCP payu-dev cluster
+- HTTP 200 verified on external route
+- `SpendingInsights` cleanup is committed (6661b247) but not yet rebuilt into a new image — runtime behavior unchanged so the deployed 1.5.2 is fully functional
+
+**Files changed (15 in iter 20 + 2 in iter 21)**:
+- `messages/{en,id}.json` (+2 i18n keys each)
+- `next.config.ts` (transpilePackages attempt — kept for future Webpack)
+- `package.json` + `package-lock.json` (-isomorphic-dompurify dep)
+- 8× source files: `exchange/page.tsx`, `onboarding/page.tsx`, `page.tsx`, `pockets/page.tsx`, `settings/page.tsx`, `EmergencyAlert.tsx`, `PromoPopup.tsx`, `SpendingInsights.tsx`
+- 1× test file: `bff-proxy-ssrf.test.ts`
+- 1× service: `InvestmentService.ts`
+- `docs/guides/LESSONS.md` (+L-054, L-055)
+
+**Verification**:
+- typecheck: 0 errors (was 4)
+- lint (src/components+app+services scope): 134 warnings, 0 errors (was 144, 0)
+- next build: SUCCESS — 83 pages prerendered (was FAILED)
+- external HTTP: 200 on web-app route
+
 ### Iteration 20: 2 Production Bugs + Kafka Console Applied (2026-06-15)
 
 Three deliverables for iter 20: 2 production bugs fixed + Kafka console applied to cluster.
