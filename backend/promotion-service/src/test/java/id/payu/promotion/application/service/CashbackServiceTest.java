@@ -3,20 +3,23 @@ package id.payu.promotion.application.service;
 import id.payu.promotion.application.saga.CashbackSagaContext;
 import id.payu.promotion.application.saga.CashbackSagaOrchestrator;
 import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
+import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import id.payu.promotion.domain.CashbackStatus;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.domain.port.out.WalletServicePort;
+import id.payu.outbox.service.OutboxService;
 import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaState;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -30,7 +33,6 @@ import static org.mockito.Mockito.*;
  * Unit tests for CashbackService with mocked wallet service.
  * Tests the saga pattern implementation for cashback creation.
  */
-@Disabled("READY-044: CashbackService has 9+ dependencies (OutboxService, KafkaTemplate, etc) but test only @Mocks 3 (saga, repository, port). Test was outdated when outbox-based messaging was added. Re-enable when test is updated to mock all dependencies.")
 @ExtendWith(MockitoExtension.class)
 class CashbackServiceTest {
 
@@ -41,8 +43,10 @@ class CashbackServiceTest {
     private WalletServicePort walletServicePort;
 
     @Mock
-    @SuppressWarnings("rawtypes")
-    private KafkaTemplate kafkaTemplate;
+    private CashbackRepository cashbackRepository;
+
+    @Mock
+    private OutboxService outboxService;
 
     @InjectMocks
     private CashbackService cashbackService;
@@ -52,7 +56,11 @@ class CashbackServiceTest {
 
     @BeforeEach
     void setUp() {
-        // No need for MockitoAnnotations.openMocks with @ExtendWith(MockitoExtension.class)
+        // MeterRegistry is @Autowired(required=false); inject a simple in-memory instance
+        // since constructor injection of Mockito @InjectMocks cannot set required=false deps
+        ReflectionTestUtils.setField(cashbackService, "meterRegistry", new SimpleMeterRegistry());
+        // promotionEventsTopic String has @Value default; inject a test value
+        ReflectionTestUtils.setField(cashbackService, "promotionEventsTopic", "payu.promotion.cashback-event.v1");
     }
 
     @Test

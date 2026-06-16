@@ -65,7 +65,7 @@ class DisbursementServiceTest {
                     .thenReturn(Optional.empty());
             when(walletService.reserveBalance(any(), any(), any()))
                     .thenReturn(new ReserveBalanceResponse("res-123", SOURCE_ACCOUNT_ID.toString(), "ref-123", "RESERVED"));
-            when(disbursementRepository.save(any()))
+            when(disbursementRepository.persistNew(any()))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
@@ -79,7 +79,7 @@ class DisbursementServiceTest {
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.PENDING);
             assertThat(result.getIdempotencyKey()).isEqualTo(idempotencyKey);
             verify(walletService).reserveBalance(eq(SOURCE_ACCOUNT_ID), any(), eq(AMOUNT.getAmount()));
-            verify(disbursementRepository).save(any());
+            verify(disbursementRepository).persistNew(any());
         }
 
         @Test
