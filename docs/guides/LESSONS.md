@@ -4,6 +4,64 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-063: `@WebMvcTest` Blocked by `@EnableJpaRepositories` — Standalone MockMvc Workaround (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Spring Boot Testing / Hexagonal Architecture
+**Context**: Closed READY-045 (account-service 2 tests) + READY-053 (product-catalog 1 test) in iter 26 via standalone MockMvc approach. 22 @Disabled tests re-enabled.
+
+**Root cause**: `@WebMvcTest` auto-discovers `@SpringBootConfiguration` (the main app class). Main app has `@EnableJpaRepositories(basePackages = "...")` which forces JPA bootstrap regardless of `excludeAutoConfiguration` in @WebMvcTest. The `@EnableJpaRepositories` annotation is processed at startup and bypasses auto-config exclusion. Result: `jpaSharedEM_entityManagerFactory` bean required, fails without DataSource.
+
+**Pattern (3 steps to bypass with standalone MockMvc)**:
+```java
+// 1. Setup MockMvc via MockMvcBuilders.standaloneSetup() in @BeforeEach
+@BeforeEach
+void setUp() {
+    T controller = new T(...);  // instantiate directly
+    mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GlobalExceptionHandler())  // include error handlers
+        .setValidator(new LocalValidatorFactoryBean())       // enable bean validation
+        .build();
+}
+
+// 2. Mock dependencies with Mockito.mock() (not @MockBean)
+private T dep = mock(T.class);
+
+// 3. Auth tests (401/403/@WithMockUser) stay @Disabled
+@Disabled("Requires Spring Security filter chain. Re-enable with @SpringBootTest + TestSecurityConfig when JPA bootstrap blocker resolved.")
+void shouldReturnUnauthorizedWhenNotAuthenticated() { ... }
+```
+
+**Trade-off**:
+- ✅ **Wins**: Fast (no Spring context), no JPA bootstrap, no security config, no exclude logic
+- ❌ **Loses**: Spring Security filter chain (no 401/403 testing), `@WithMockUser` (no auth context), `csrf()` post-processor (standalone disables CSRF by default)
+
+**Lesson**:
+1. **`@EnableJpaRepositories` on main app = footgun for @WebMvcTest**. The annotation is processed BEFORE `excludeAutoConfiguration` can act. The "production-ready" fix is to move `@EnableJpaRepositories` to a JPA-specific config class with `@Profile("!test")` or `excludeFilters`. But that's invasive — standalone MockMvc is the pragmatic workaround.
+2. **Standalone MockMvc is the de-facto standard for pure controller unit tests** in Spring Boot. The full `@WebMvcTest` is overkill when you only need to test the controller logic without security. Use it for: validation, request/response shapes, exception handlers, async dispatch.
+3. **For Spring Security tests, MUST use @SpringBootTest or @WebMvcTest** with the full filter chain. Standalone MockMvc bypasses security. So the auth-behavior tests (401/403) stay @Disabled.
+4. **Detection script** (one-liner): `rg -l '@EnableJpaRepositories' backend/*/src/main/java` → list of services where @WebMvcTest is blocked. Mitigations: (a) move annotation to a JPA-specific config, (b) rewrite tests as standalone MockMvc, (c) @SpringBootTest with proper excludes (heavy but works).
+5. **Coverage cost**: ~3-4 auth tests per @WebMvcTest file stay @Disabled. For 3 files in this iter, 3 auth tests. Acceptable trade-off for re-enabling 22 controller-logic tests.
+
+**Why this works** (technical detail):
+- `MockMvcBuilders.standaloneSetup()` does NOT load any Spring context
+- `new T(...)` instantiates the controller directly (works for any constructor injection)
+- `mock(T.class)` creates a Mockito stub for dependencies (works for any class)
+- `LocalValidatorFactoryBean` provides `@Valid` / `@NotNull` / `@Size` etc. validation
+- `setControllerAdvice()` includes `@RestControllerAdvice` global exception handlers
+- Result: 100% controller logic tested, 0% Spring infrastructure tested (acceptable for slice tests)
+
+**When NOT to use standalone MockMvc**:
+- Testing Spring Security filter chain (401/403, @PreAuthorize, @WithMockUser)
+- Testing servlet filters (CORS, rate limit, correlation ID)
+- Testing servlet path matching (trailing slashes, path variables, regex)
+- Testing async dispatch with security context propagation
+- Testing exception handlers that depend on Spring's ResponseEntityExceptionHandler
+
+For these cases, use `@SpringBootTest` + `TestSecurityConfig` (L-060 pattern) + JPA bootstrap fix (TBD).
+
+---
+
 ## L-062: Testcontainers + Podman Socket Works in PayU Dev Env (2026-06-16)
 
 **Date**: 2026-06-16
