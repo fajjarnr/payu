@@ -9,6 +9,25 @@ import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
 import { usePopups } from '@/hooks';
 import { Button } from '@/components/ui/button';
+
+/** Read dismissed/shown popup id sets from localStorage + sessionStorage. */
+function readPopupSetsFromStorage(
+  popups: Array<{ id: string }>,
+  storageKey: string,
+  sessionKey: string
+): { dismissed: Set<string>; shown: Set<string> } {
+  const dismissed = new Set<string>();
+  const shown = new Set<string>();
+  for (const popup of popups) {
+    if (localStorage.getItem(`${storageKey}-dismissed-${popup.id}`) === 'true') {
+      dismissed.add(popup.id);
+    }
+    if (sessionStorage.getItem(`${sessionKey}-shown-${popup.id}`) === 'true') {
+      shown.add(popup.id);
+    }
+  }
+  return { dismissed, shown };
+}
 import {
   Dialog,
   DialogContent,
@@ -46,49 +65,52 @@ export default function PromoPopup({
   const { data: popups, isLoading } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
-  const [sessionState, setSessionState] = useState<PopupSession>({ shownThisSession: false, timestamp: 0 });
-  const [dismissedPopups, setDismissedPopups] = useState<Set<string>>(new Set());
-  const [sessionShownPopups, setSessionShownPopups] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Lazy-init from sessionStorage. Server returns default; client first
+  // render also returns the same default to avoid hydration mismatch.
+  const [sessionState, setSessionState] = useState<PopupSession>(() => {
+    if (typeof window === 'undefined') return { shownThisSession: false, timestamp: 0 };
     try {
       const stored = sessionStorage.getItem('promo-popup-session');
-      if (stored) {
-        const parsed = JSON.parse(stored) as PopupSession;
-        const now = Date.now();
-        if (now - parsed.timestamp > 30 * 60 * 1000) {
-          sessionStorage.removeItem('promo-popup-session');
-        } else {
-          setSessionState(parsed);
-        }
+      if (!stored) return { shownThisSession: false, timestamp: 0 };
+      const parsed = JSON.parse(stored) as PopupSession;
+      if (Date.now() - parsed.timestamp > 30 * 60 * 1000) {
+        sessionStorage.removeItem('promo-popup-session');
+        return { shownThisSession: false, timestamp: 0 };
       }
+      return parsed;
     } catch (err) {
       console.error('[PromoPopup] Failed to parse session state:', err);
+      return { shownThisSession: false, timestamp: 0 };
     }
-  }, []);
+  });
+  const [dismissedPopups, setDismissedPopups] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined' || !popups) return new Set();
+    return readPopupSetsFromStorage(popups, storageKey, sessionKey).dismissed;
+  });
+  const [sessionShownPopups, setSessionShownPopups] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined' || !popups) return new Set();
+    return readPopupSetsFromStorage(popups, storageKey, sessionKey).shown;
+  });
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Re-sync when popups list arrives (after the lazy initializer).
+  // React 19 "adjusting state during render" pattern — runs during render
+  // when popups/storageKey/sessionKey change to avoid cascading-render
+  // warning from setState-in-effect.
+  const [trackedDeps, setTrackedDeps] = useState({ popups, storageKey, sessionKey });
+  const popupsChanged =
+    trackedDeps.popups !== popups ||
+    trackedDeps.storageKey !== storageKey ||
+    trackedDeps.sessionKey !== sessionKey;
+  if (popupsChanged && typeof window !== 'undefined' && popups) {
+    setTrackedDeps({ popups, storageKey, sessionKey });
     try {
-      const dismissed = new Set<string>();
-      const shown = new Set<string>();
-      if (popups) {
-        for (const popup of popups) {
-          if (localStorage.getItem(`${storageKey}-dismissed-${popup.id}`) === 'true') {
-            dismissed.add(popup.id);
-          }
-          if (sessionStorage.getItem(`${sessionKey}-shown-${popup.id}`) === 'true') {
-            shown.add(popup.id);
-          }
-        }
-      }
+      const { dismissed, shown } = readPopupSetsFromStorage(popups, storageKey, sessionKey);
       setDismissedPopups(dismissed);
       setSessionShownPopups(shown);
     } catch (err) {
       console.error('[PromoPopup] Failed to read popup state:', err);
     }
-  }, [popups, storageKey, sessionKey]);
+  }
 
   // Filter eligible popups
   const eligiblePopups = useMemo(() =>

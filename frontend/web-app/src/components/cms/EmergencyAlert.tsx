@@ -35,17 +35,35 @@ export default function EmergencyAlert({
 }: EmergencyAlertProps) {
   const router = useRouter();
   const { data: alerts, isLoading } = useEmergencyAlerts({ segment, location, device });
-  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Initialize from localStorage lazily (avoids cascading render warning).
+  // Server returns empty Set; first client render also returns empty Set to
+  // match SSR. The actual localStorage value is then read on mount.
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
     try {
       const stored = localStorage.getItem(storageKey);
-      if (stored) setDismissedAlerts(new Set(JSON.parse(stored)));
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
     } catch (err) {
       console.error('[EmergencyAlert] Failed to read dismissed alerts:', err);
+      return new Set();
     }
-  }, [storageKey]);
+  });
+
+  // React 19 "adjusting state during render" — re-seed the set when the
+  // storageKey prop changes. Runs during render so no cascading-render
+  // warning from setState-in-effect.
+  const [trackedKey, setTrackedKey] = useState(storageKey);
+  if (trackedKey !== storageKey) {
+    setTrackedKey(storageKey);
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        setDismissedAlerts(stored ? new Set(JSON.parse(stored) as string[]) : new Set());
+      } catch (err) {
+        console.error('[EmergencyAlert] Failed to read dismissed alerts:', err);
+      }
+    }
+  }
 
   // Save dismissed alerts to localStorage
   const saveDismissedAlert = (alertId: string) => {

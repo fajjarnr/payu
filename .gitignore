@@ -152,3 +152,9 @@ java_pid*.hprof
 
 # --- Worktrees ---
 .worktrees/
+
+.next.old/
+
+# Untracked dirs
+docs/operations/OPENSHIFT_BACKUP_EVALUATION.md
+infrastructure/foundation/hostedcluster/

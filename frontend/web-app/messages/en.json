@@ -40,7 +40,9 @@
     "support": "Support",
     "logout": "Logout",
     "main": "Main",
-    "others": "Others"
+    "others": "Others",
+    "history": "Transaction History",
+    "scheduled": "Scheduled Transfers"
   },
   "dashboard": {
     "welcome_morning": "Good Morning",

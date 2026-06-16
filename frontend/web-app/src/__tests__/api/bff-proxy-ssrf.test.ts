@@ -57,13 +57,17 @@ describe('BFF Proxy SSRF Prevention', () => {
   });
 
   // Helper to create mock request
-  const createMockRequest = (pathname: string): NextRequest => {
+  const createMockRequest = (
+    pathname: string,
+    method: string = 'GET',
+    headers: Record<string, string> = {}
+  ): NextRequest => {
     const url = new URL(`http://localhost:3000${pathname}`);
     return {
-      method: 'GET',
+      method,
       url: url.toString(),
       nextUrl: url,
-      headers: new Headers(),
+      headers: new Headers(headers),
     } as unknown as NextRequest;
   };
 
@@ -380,9 +384,7 @@ describe('BFF Proxy SSRF Prevention', () => {
       // Simulates POST /api/v1/cards/{id}/freeze from the browser:
       // Content-Type: application/json is set, but the body is empty.
       // The previous code forwarded both, causing gateway 415.
-      const request = createMockRequest('/api/v1/cards/abc-123/freeze');
-      request.method = 'POST';
-      request.headers = new Headers({ 'content-type': 'application/json' });
+      const request = createMockRequest('/api/v1/cards/abc-123/freeze', 'POST', { 'content-type': 'application/json' });
       (request as unknown as { text: () => Promise<string> }).text =
         vi.fn().mockResolvedValue('');
       const params = createParams(['cards', 'abc-123', 'freeze']);
@@ -399,9 +401,7 @@ describe('BFF Proxy SSRF Prevention', () => {
     });
 
     it('SHOULD forward Content-Type when POST body is non-empty', async () => {
-      const request = createMockRequest('/api/v1/cards');
-      request.method = 'POST';
-      request.headers = new Headers({ 'content-type': 'application/json' });
+      const request = createMockRequest('/api/v1/cards', 'POST', { 'content-type': 'application/json' });
       (request as unknown as { text: () => Promise<string> }).text =
         vi.fn().mockResolvedValue('{"accountId":"abc","cardHolderName":"E2E"}');
       const params = createParams(['cards']);

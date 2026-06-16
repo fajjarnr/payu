@@ -27,16 +27,18 @@ export default function SettingsPage() {
     phoneNumber: '',
   });
 
-  // Initialize form with user data
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        fullName: user.fullName || '',
-        email: user.email || '',
-        phoneNumber: user.phoneNumber || '',
-      });
-    }
-  }, [user]);
+  // React 19 "adjusting state during render" pattern: when the user changes
+  // (login/logout/swap), re-seed the form fields. This avoids the cascading
+  // render warning that comes from setState-in-effect.
+  const [prevUserId, setPrevUserId] = useState(user?.id);
+  if (user?.id !== prevUserId) {
+    setPrevUserId(user?.id);
+    setFormData({
+      fullName: user?.fullName || '',
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || '',
+    });
+  }
 
   const menuItems = [
     { label: t('menu.generalProfile'), icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },

@@ -857,7 +857,7 @@ export default function PocketsPage() {
                             Tutup Kantong?
                         </DialogTitle>
                         <DialogDescription>
-                            Apakah Anda yakin ingin menutup kantong "{selectedPocketForAction?.name}"? Dana yang tersisa akan dikembalikan ke dompet utama.
+                            Apakah Anda yakin ingin menutup kantong &ldquo;{selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan dikembalikan ke dompet utama.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="p-4 bg-red-50 rounded-xl border border-red-100">

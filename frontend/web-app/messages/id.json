@@ -40,7 +40,9 @@
     "support": "Bantuan",
     "logout": "Keluar",
     "main": "Utama",
-    "others": "Lainnya"
+    "others": "Lainnya",
+    "history": "Riwayat Transaksi",
+    "scheduled": "Transfer Terjadwal"
   },
   "dashboard": {
     "welcome_morning": "Selamat Pagi",

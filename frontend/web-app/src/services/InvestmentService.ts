@@ -13,9 +13,9 @@ export interface InvestmentAccount {
 }
 
 // BUG-CROSS-049: Backend createAccount takes no body — empty POST
-export interface CreateAccountRequest {
-  // No fields — backend expects empty POST
-}
+// Using type alias to satisfy @typescript-eslint/no-empty-object-type
+// while still documenting the contract.
+export type CreateAccountRequest = Record<string, never>;
 
 // BUG-CROSS-050: Backend BuyDepositRequest: accountId, amount, tenure (Integer)
 export interface BuyDepositRequest {

@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { Shield, Zap, Menu, X, PieChart, Globe, ArrowUpRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import DOMPurify from 'isomorphic-dompurify';
 import gsap from 'gsap';
 import { Observer } from 'gsap/Observer';
 
@@ -23,11 +22,46 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  // Sanitize the i18n hero title on the client only — isomorphic-dompurify
+  // breaks Next 16 + Turbopack SSR because html-encoding-sniffer (CJS) requires
+  // @exodus/bytes/encoding-lite.js which is pure ESM. i18n content is trusted,
+  // but we strip <script> and javascript: URIs as a defense-in-depth measure.
+  const [safeHeroTitle, setSafeHeroTitle] = useState('');
+  // React 19 "adjusting state during render" — re-sanitize when the active
+  // locale changes. Runs during render so no cascading-render warning
+  // from setState-in-effect. Track by locale string (stable + comparable).
+  const [trackedLocale, setTrackedLocale] = useState(locale);
+  if (trackedLocale !== locale) {
+    setTrackedLocale(locale);
+    const raw = t.raw('heroTitle') as string;
+    setSafeHeroTitle(
+      raw
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/javascript:/gi, '')
+    );
+  }
   const containerRef = useRef<HTMLDivElement>(null);
   const isAnimating = useRef(false);
-
   const totalSlides = 4;
   const slideIds = ['hero', 'app', 'about', 'support'];
+
+  // Defined BEFORE the useEffect that uses it so the closure can resolve
+  // the binding (avoids the React 19 "access before declared" lint error).
+  const goToSlide = (index: number) => {
+    if (index < 0 || index >= totalSlides) return;
+    isAnimating.current = true;
+    setCurrentSlide(index);
+
+    gsap.to(containerRef.current, {
+      xPercent: -index * 100,
+      duration: 1.2,
+      ease: 'power4.inOut',
+      onComplete: () => {
+        isAnimating.current = false;
+        setScrolled(index > 0);
+      }
+    });
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -46,22 +80,6 @@ export default function LandingPage() {
 
     return () => ctx.revert();
   }, [currentSlide]);
-
-  const goToSlide = (index: number) => {
-    if (index < 0 || index >= totalSlides) return;
-    isAnimating.current = true;
-    setCurrentSlide(index);
-
-    gsap.to(containerRef.current, {
-      xPercent: -index * 100,
-      duration: 1.2,
-      ease: 'power4.inOut',
-      onComplete: () => {
-        isAnimating.current = false;
-        setScrolled(index > 0);
-      }
-    });
-  };
 
   const handleNavClick = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
@@ -170,10 +188,10 @@ export default function LandingPage() {
                {t('badge')}
              </motion.div>
              
-             <h1 
-               className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight text-shadow-lg"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.raw('heroTitle')) }}
-             />
+              <h1
+                className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight text-shadow-lg"
+                 dangerouslySetInnerHTML={{ __html: safeHeroTitle }}
+              />
              
              {/* The Floating Card System */}
             <div className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center perspective-1000">

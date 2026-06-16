@@ -90,10 +90,15 @@ export default function ExchangePage() {
       }, 300);
 
       return () => clearTimeout(timer);
-    } else {
-      setEstimatedAmount(null);
     }
   }, [amount, fromCurrency, toCurrency]);
+
+  // React 19 "adjusting state during render" — when the input is cleared or
+  // currencies match, reset the previous estimate during render (avoids the
+  // cascading-render warning from setState-in-effect).
+  if (!(amount > 0 && fromCurrency !== toCurrency) && estimatedAmount !== null) {
+    setEstimatedAmount(null);
+  }
 
   // Calculate converted amount manually if we have the rate
   const manualConvertedAmount = useMemo(() => {
@@ -137,8 +142,10 @@ export default function ExchangePage() {
         setValue('amount', 0);
         setEstimatedAmount(null);
       },
-      onError: (error: any) => {
-        addToast(error?.response?.data?.message || 'Exchange failed. Please try again.', 'error');
+      onError: (error: Error) => {
+        // React Query passes an Error-derived value; access axios shape safely.
+        const response = (error as { response?: { data?: { message?: string } } }).response;
+        addToast(response?.data?.message || 'Exchange failed. Please try again.', 'error');
       }
     });
   };
