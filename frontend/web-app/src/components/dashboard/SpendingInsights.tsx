@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, TrendingUp, ShoppingCart, Utensils, Home, Car, Smartphone, HeartPulse } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+
+import { TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

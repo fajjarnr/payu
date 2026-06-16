@@ -605,7 +605,53 @@ settlements:
 1. **"Defaults are fallback, not supplements"** — if a config loader has a fallback path, never rely on it coexisting with primary config. Either populate primary config fully, or implement a proper merge.
 2. **Config loaders should log which source provided each route/entry**. `RouteRegistry.loadRoutes()` should log "Loaded 45 routes from YAML + 0 from defaults" or "Loaded 0 routes from YAML, using 12 defaults". This makes it obvious when defaults are bypassed.
 3. **Add startup assertion**: fail fast if critical routes are missing. E.g., `RouteRegistry.verifyCriticalRoutes()` throws if `/api/v1/payments`, `/api/v1/accounts`, etc. are not registered at startup. Catches config drift in CI before users see 404s in production.
-4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
+ 4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
+
+## L-055: Next.js 16 + Turbopack SSR ESM/CJS Interop — Isomorphic-Dompurify Pre-Render Crash (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: JavaScript / Next.js 16 / Turbopack / ESM-CJS interop / XSS sanitization
+**Context**: `next build` crashed during SSR pre-rendering of `/[locale]` with `Error: ERR_REQUIRE_ESM: require() of ES Module @exodus/bytes/encoding-lite.js from html-encoding-sniffer (CJS)`. The build had been working on Next 15 + Webpack; upgrading to Next 16 + Turbopack surfaced the bug because Turbopack doesn't apply the `transpilePackages` workaround the way Webpack did.
+
+**Root cause (per context7/vercel/next.js + Node.js docs)**:
+- `isomorphic-dompurify:3.3.0` bundles `html-encoding-sniffer:6.0.0` (CommonJS) which uses `require("@exodus/bytes/encoding-lite.js")` at module top level
+- `@exodus/bytes:1.15.0` is now **pure ESM** (`"type": "module"`, `export { ... }`)
+- Node.js ≥22 (and Turbopack by default) refuses to `require()` an ESM module synchronously
+- Webpack 5 used `transpilePackages` to convert the chain to one consistent module type; Turbopack doesn't yet (as of 16.1.4)
+- The crash only happens during **pre-rendering of pages that import the broken module**, not during client bundling (which uses esbuild with ESM defaults)
+
+**Pattern (production-ready fix)** — replace server-side DOMPurify with a minimal client-only sanitizer:
+```ts
+// 1. Remove isomorphic-dompurify from package.json + lockfile
+// 2. Replace import + usage in client component
+// Before:
+import DOMPurify from 'isomorphic-dompurify';
+<span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.raw('heroTitle')) }} />
+
+// After (client-only, no SSR crash):
+const [safeHeroTitle, setSafeHeroTitle] = useState('');
+const [trackedLocale, setTrackedLocale] = useState(locale);
+if (trackedLocale !== locale) {
+  setTrackedLocale(locale);
+  const raw = t.raw('heroTitle') as string;
+  setSafeHeroTitle(
+    raw
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+  );
+}
+<span dangerouslySetInnerHTML={{ __html: safeHeroTitle }} />
+```
+
+**Lesson**:
+1. **Don't trust `transpilePackages` as a universal fix for ESM/CJS interop on Next 16**. It works for Webpack but not always for Turbopack. When a transitive dep is the offender, replacing it is safer than configuring around it.
+2. **The build was BROKEN but `mvn -T 1C test` was green** (per L-042 / L-048 pattern). This is a third axis: **client-side SSR pre-render runtime**. JavaScript ecosystem has 3: (1) compile, (2) test runtime, (3) production SSR pre-render. All 3 must be green.
+3. **isomorphic-dompurify is a footgun in modern Next.js**. Any package that ships a "isomorphic-*" variant of a browser-only library tends to break in SSR environments. Prefer:
+   - `dompurify` + `isomorphic-dompurify` (split: use dompurify in client, noop or simple regex in server)
+   - Sanitize on the server using a non-DOM-dependent sanitizer (e.g., `xss` package)
+   - Use Next.js's built-in `<SafeHtml>` from a UI library
+4. **The simple regex strip (`<script>` + `javascript:`) is sufficient for trusted i18n content**. i18n message files are part of the deployment, not user input. Defense-in-depth regex is appropriate; full DOMPurify overkill.
+5. **Future-proofing**: When adding new deps, check for `"type": "module"` in transitive deps + any CJS files that `require()` them. The conflict usually surfaces at build time, not test time. Use `madge` or `eslint-plugin-import` to catch cycles + ESM/CJS mismatches before commit.
 
 ## L-054: HttpRequestMethodNotSupportedException → Always Map to 405, Not the Generic 500 Handler (2026-06-15)
 
