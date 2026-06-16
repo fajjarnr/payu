@@ -4,6 +4,199 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-064: Testcontainers `@ServiceConnection` Bypass — `@ActiveProfiles("container")` Excludes Custom DataSource (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Spring Boot Testing / Testcontainers / Hexagonal Architecture
+**Context**: Closed READY-055 (cms-service ContentRepositoryIntegrationTest, 21 tests) in iter 28. 3 prior attempts failed: (a) @DynamicPropertySource only, (b) @ServiceConnection + spring-boot-testcontainers, (c) drop @AutoConfigureTestEntityManager. All failed with "jdbcUrl is required".
+
+**Root cause**: cms-service has a custom `DataSourceConfiguration` with `@Profile("!container")` and `@ConfigurationProperties(prefix = "spring.datasource.primary.hikari")`. When test uses `@ActiveProfiles("test")` (not "container"), this custom config is active, providing its OWN DataSource bean that bypasses Spring Boot's auto-config + @DynamicPropertySource. The custom DataSource has no URL set.
+
+**Pattern (3 steps to fix)**:
+```java
+// 1. Add spring-boot-testcontainers dep to service pom (needed for @ServiceConnection)
+// <dependency>
+//     <groupId>org.springframework.boot</groupId>
+//     <artifactId>spring-boot-testcontainers</artifactId>
+//     <scope>test</scope>
+// </dependency>
+
+// 2. Test class — use @ActiveProfiles("container") to exclude custom DataSource
+@TestSpringBoot
+@Testcontainers
+@ActiveProfiles("container")  // ← excludes @Profile("!container") DataSourceConfiguration
+@Tag("integration")
+class ContentRepositoryIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("cms_test").withUsername("test").withPassword("test");
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        // BUG: also need spring.flyway.url — @DynamicPropertySource sets spring.datasource.url
+        // but Flyway reads spring.flyway.url. Set both.
+        registry.add("spring.flyway.url", postgres::getJdbcUrl);
+    }
+}
+```
+
+**Production fix (per L-039 pattern)**: For `@JdbcTypeCode` to work with native Postgres enum types:
+```java
+// WRONG (works on H2 with ddl-auto=create-drop, fails on Postgres content_status enum type)
+@Enumerated(EnumType.STRING)
+@Column(name = "status", nullable = false, length = 20)
+private ContentStatus status;
+
+// RIGHT (works on both H2 + Postgres native enum)
+@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+@Column(name = "status", nullable = false)
+private ContentStatus status;
+```
+
+**Lesson**:
+1. **Custom DataSource beans in main code override @TestPropertySource + @DynamicPropertySource**. If a service has a `@Configuration` class that provides its own `DataSource` bean, the test profile must use `@ActiveProfiles` to EXCLUDE that config. Otherwise the custom config wins and the test fails.
+2. **Detection**: `rg -l '@Bean.*DataSource' backend/*/src/main` → list of services with custom DataSource. For each, check `@Profile` annotations to determine what profile excludes it.
+3. **`@ServiceConnection` is NOT a silver bullet**: it auto-wires spring.datasource.* but only if Spring Boot's auto-config DataSource is the active one. If a custom `@Bean DataSource` exists, `@ServiceConnection` is ignored.
+4. **Spring Boot 4.1+ migration to @JdbcTypeCode(SqlTypes.NAMED_ENUM)**: required for native Postgres enum types like `content_status`, `kyc_status`, `disbursement_status`. The `@Enumerated(EnumType.STRING)` + `length=20` pattern works on H2 (DDL auto-creates VARCHAR) but fails on Postgres (column is `content_status` enum type, Hibernate tries to insert as VARCHAR → cast error).
+5. **Flyway needs `spring.flyway.url` separately**: `@DynamicPropertySource` setting `spring.datasource.url` is NOT picked up by Flyway. Need to also set `spring.flyway.url` (or just set `spring.flyway.url` and let spring.datasource.* follow).
+
+**Cascade effect**: Same pattern applies to ANY service that has both:
+- A custom `@Configuration` class providing a `DataSource` bean
+- A native Postgres enum type in the schema
+The fix combo: `@ActiveProfiles("container")` + `@JdbcTypeCode(NAMED_ENUM)` + dual `spring.datasource.*` + `spring.flyway.*` properties.
+
+---
+
+## L-065: Camel Kafka URI Missing `?brokers=` Causes Test Failure — Add System.getenv Fallback (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Apache Camel / Test Infrastructure
+**Context**: Closed READY-054 (integration-service WireMockIntegrationTest + MessageProcessingIntegrationTest, 4 tests) in iter 29. Camel routes using `kafka:topic-name` (without `?brokers=...`) failed to start with "URL to the Kafka brokers must be configured with the brokers option" even when `camel.component.kafka.brokers=localhost:9092` is set as property.
+
+**Root cause**: `camel.component.kafka.brokers` is the component-level default. Camel-Kafka 4.x requires the brokers to be specified in the URI or as a component default. When a route uses `kafka:topic-name` (no `?brokers=`), Camel tries to read from the component default BUT the property is not being picked up by the test profile due to Spring property source ordering.
+
+**Pattern (production fix)**:
+```java
+// WRONG: route URI without brokers — fails in test, works in prod if app.yml default
+.to("kafka:payu.integration.ojk-errors.v1");
+
+// RIGHT: include brokers in URI with env var fallback
+.to(String.format("kafka:payu.integration.ojk-errors.v1?brokers=%s",
+        System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")));
+```
+
+**Test fix (avoid changing production)**:
+```java
+@SpringBootTest(properties = {
+    "spring.autoconfigure.exclude=id.payu.outbox.config.OutboxAutoConfiguration,org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration",
+    "spring.flyway.enabled=false"
+})
+@ActiveProfiles("test")
+class WireMockIntegrationTest {
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("camel.component.kafka.brokers", () -> "localhost:9092");
+    }
+
+    @MockitoBean
+    private OutboxService outboxService;  // bypass outbox table dep
+}
+```
+
+**Lesson**:
+1. **Camel Kafka route URIs should always include `?brokers=...`** for portability across envs. Use `System.getenv("KAFKA_BOOTSTRAP", "default")` for env-based config with safe fallback.
+2. **`@MockitoBean OutboxService` bypasses outbox dependency** when outbox table isn't available. Combined with `spring.autoconfigure.exclude=...OutboxAutoConfiguration` + `spring.flyway.enabled=false`, this lets Camel-only tests work without full Spring context.
+3. **HTTP client GZIP issue in tests**: Camel HTTP client auto-adds `Accept-Encoding: gzip`. Test stubs that return plain text get decompressed as GZIP → "Not in GZIP format" error. Add `Accept-Encoding: identity` to test request headers to disable.
+4. **Camel routes with `throwExceptionOnFailure=true`** throw exception on non-2xx responses. Test that expects response body (not exception) needs the route to be reconfigured OR the test to catch the exception.
+
+**Files changed (3 production URIs)**:
+- `OjkRouteBuilder.java:226`: `kafka:payu.integration.ojk-errors.v1` → `kafka:payu.integration.ojk-errors.v1?brokers=${KAFKA_BOOTSTRAP:localhost:9092}`
+- `SwiftRouteBuilder.java:99`: `kafka:payu.integration.swift-processed.v1` → with `?brokers=`
+- `SwiftRouteBuilder.java:131`: `kafka:payu.integration.swift-errors.v1` → with `?brokers=`
+
+---
+
+## L-066: MockMvc Conversion Pattern for RestAssured/Java 25 — `webAppContextSetup` + `springSecurity()` (2026-06-16)
+
+**Date**: 2026-06-16
+**Domain**: Java / Spring Boot Testing / RestAssured / MockMvc
+**Context**: Applied across iter 27-28 to 4 support-service + 4 promotion-service = 8 files (49 tests re-enabled). RestAssured 5.5.x Groovy 3.x HTTPBuilder NPE on Java 25 is unfixable at library level (5.5.0 → 5.5.2 upgrade no help, `--add-opens` flags no help). Per L-064: `webAppContextSetup` is the right pattern when you need Spring Security filter chain (vs standalone MockMvc which has no security).
+
+**Pattern (3 steps)**:
+```java
+// 1. Add spring-security-test dep to service pom
+// <dependency>
+//     <groupId>org.springframework.security</groupId>
+//     <artifactId>spring-security-test</artifactId>
+//     <scope>test</scope>
+// </dependency>
+
+// 2. Test class — use @SpringBootTest (MOCK web env) + webAppContextSetup
+@SpringBootTest
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
+class MyRestTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())  // ← preserves Spring Security filter chain
+                .build();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    @Test
+    void myTest() throws Exception {
+        mockMvc.perform(post("/api/v1/endpoint")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.field").value("value"));
+    }
+}
+```
+
+**vs Standalone MockMvc (L-063)**:
+| Use Case | Standalone MockMvc | webAppContextSetup + springSecurity() |
+|----------|--------------------|--------------------------------------|
+| Pure controller logic test | ✅ Best (fast, no context) | ❌ Slower (full context) |
+| Spring Security filter chain | ❌ No security | ✅ Preserves security |
+| 401/403 auth testing | ❌ Can't test | ✅ Can test |
+| @WithMockUser | ❌ Doesn't work | ✅ Works |
+| csrf() post-processor | ❌ Disabled by default | ✅ Works |
+
+**Lesson**:
+1. **Use standalone MockMvc** (L-063) when testing pure controller logic without security (validation, request/response shapes, exception handlers, async dispatch).
+2. **Use `webAppContextSetup + springSecurity()`** when you need to test:
+   - Auth behavior (401, 403, @PreAuthorize)
+   - Filter chains (CORS, rate limit, correlation ID)
+   - Exception handlers that depend on SecurityContext
+3. **RestAssured is dead on Java 25** for this project. Don't waste time on lib upgrades (5.5.2 has the same Groovy 3.x HTTPBuilder that NPEs). Convert to MockMvc.
+4. **Conversion pattern is mechanical**: 
+   - `given().body(req)` → `objectMapper.writeValueAsString(req)` + `.content(...)`
+   - `given().when().get(URL)` → `mockMvc.perform(get(URL))`
+   - `pathParam` → URI template `get(URL, param)`
+   - `extract().path("X")` → `MvcResult + objectMapper.readTree().path("X")`
+   - `RestAssured.basePath` → manual URL prefix in MockMvc calls
+5. **Time cost**: ~30 min per test file rewrite (medium-complexity). For 8 files: ~4 hours. Saved by reusing the same template.
+
+**Files converted (8 test files, 49 tests re-enabled)**:
+- support-service: SupportResourceTest (9), SupportServiceExceptionHandlerTest (2), AgentManagementIntegrationTest (9), TrainingModuleIntegrationTest (3)
+- promotion-service: CashbackResourceTest (8), LoyaltyPointsResourceTest (9), ReferralResourceTest (13), PromotionIntegrationTest (7)
+
+---
+
 ## L-063: `@WebMvcTest` Blocked by `@EnableJpaRepositories` — Standalone MockMvc Workaround (2026-06-16)
 
 **Date**: 2026-06-16
