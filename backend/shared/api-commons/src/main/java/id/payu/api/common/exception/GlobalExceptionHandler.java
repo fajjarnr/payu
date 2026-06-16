@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -196,6 +197,31 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("NOT_FOUND", "The requested resource was not found"));
+    }
+
+    /**
+     * Handles HTTP method not allowed (e.g., POST to a GET-only endpoint).
+     * Returns 405 METHOD_NOT_ALLOWED with the allowed methods in the response body.
+     * Per RFC 7231, the Allow header should list the methods that the resource supports.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request
+    ) {
+        log.info("Method not allowed for {}: requested={} allowed={}",
+                request.getRequestURI(),
+                ex.getMethod(),
+                ex.getSupportedHttpMethods() != null ? ex.getSupportedHttpMethods() : "unknown");
+        String supportedMethods = ex.getSupportedHttpMethods() != null
+                ? ex.getSupportedHttpMethods().stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "))
+                : "unknown";
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .header("Allow", supportedMethods)
+                .body(ApiResponse.error("METHOD_NOT_ALLOWED",
+                        "Method " + ex.getMethod() + " not allowed. Supported: " + supportedMethods));
     }
 
     /**

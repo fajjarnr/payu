@@ -607,6 +607,40 @@ settlements:
 3. **Add startup assertion**: fail fast if critical routes are missing. E.g., `RouteRegistry.verifyCriticalRoutes()` throws if `/api/v1/payments`, `/api/v1/accounts`, etc. are not registered at startup. Catches config drift in CI before users see 404s in production.
 4. **The "fallback defaults" pattern is a common anti-pattern in config loaders** — Spring `@ConditionalOnMissingBean`, Quarkus `@UnlessBuildProperty`, and 12-factor config all share this footgun. Always check whether the fallback fires at runtime, not just in unit tests.
 
+## L-054: HttpRequestMethodNotSupportedException → Always Map to 405, Not the Generic 500 Handler (2026-06-15)
+
+**Date**: 2026-06-15
+**Domain**: Java / Spring Boot / Exception Handling
+**Context**: During READY-073 fix, `wallet-service` local `GlobalExceptionHandler` didn't handle `HttpRequestMethodNotSupportedException`. When client POSTs to an endpoint that only has GET (e.g., `POST /api/v1/wallets` when controller has only `POST /api/v1/wallets/{accountId}/reserve`), Spring throws the exception but it falls through to the generic `@ExceptionHandler(Exception.class)` which returns 500 `INTERNAL_ERROR`. The user sees a misleading "internal error" for what is actually a client bug.
+
+**Root cause (per context7/spring-projects/spring-boot docs)**: When a `@RestControllerAdvice` bean is present in the context, Spring's default `ResponseEntityExceptionHandler` is NOT auto-applied. The default `ResponseEntityExceptionHandler` does handle `HttpRequestMethodNotSupportedException` → 405. But as soon as you add your own `@RestControllerAdvice`, you must explicitly add the handlers for all standard Spring MVC exceptions, OR extend `ResponseEntityExceptionHandler`.
+
+**Pattern (production-ready fix)**:
+```java
+@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(
+        HttpRequestMethodNotSupportedException ex,
+        HttpServletRequest request) {
+    String supportedMethods = ex.getSupportedHttpMethods() != null
+            ? ex.getSupportedHttpMethods().stream()
+                    .map(Object::toString).collect(Collectors.joining(", "))
+            : "unknown";
+    log.info("Method not allowed for {}: requested={} allowed={}",
+            request.getRequestURI(), ex.getMethod(), supportedMethods);
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+            .header("Allow", supportedMethods)
+            .body(ApiResponse.error("METHOD_NOT_ALLOWED",
+                    "Method " + ex.getMethod() + " not allowed. Supported: " + supportedMethods));
+}
+```
+
+**Lesson**:
+1. **Always extend `ResponseEntityExceptionHandler`** (Spring's base) instead of writing a `@RestControllerAdvice` from scratch. You get all standard Spring MVC exception → HTTP status mappings (404, 405, 415, 422, etc.) for free + can override specific ones.
+2. **If you must write a custom advice**, audit each Spring MVC exception type: `HttpRequestMethodNotSupportedException`, `HttpMediaTypeNotSupportedException`, `HttpMessageNotReadableException`, `MethodArgumentNotValidException`, `MissingServletRequestParameterException`, `NoHandlerFoundException`, `NoResourceFoundException`, `ConversionFailedException`, `TypeMismatchException`, etc.
+3. **Add the handler to BOTH shared `api-commons` AND local service `GlobalExceptionHandler`** — they may not share the same advice (services often define their own local advice for PII masking or different error formats).
+4. **The 405 response MUST include the `Allow` header** per RFC 7231 §6.5.5. Clients use this to determine which methods to retry with. The body should also include `supportedMethods` field for machine-readable parsing.
+5. **Test with curl `-X POST` on a GET-only endpoint** to catch the bug. A test that only uses correct methods will never expose a missing 405 handler.
+
 ---
 
 *Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*

@@ -40,6 +40,11 @@
 | READY-070 | P1 | promotion-service | `/promotions` 500 (same root cause as READY-069). Added empty-list `@GetMapping`. | 🟢 Closed | iter 18 (1.8.51) |
 | READY-071 | P1 | transaction-service | `GET /split-bills/account/{id}` 500 (LazyInitializationException). `@EntityGraph(attributePaths = {"participants"})` on `findByCreatorAccountId`. | 🟢 Closed | iter 18 (1.8.52) |
 | READY-072 | P1 | transaction-service | Scheduled-transfer same as READY-063. Same 4-step fix pattern applied. | 🟢 Closed | iter 19 (1.8.54) |
+| READY-073 | P1 | wallet-service | `POST /api/v1/wallets` (no method) returns 500 INTERNAL_ERROR (should be 405). Missing `HttpRequestMethodNotSupportedException` handler in local `GlobalExceptionHandler`. Per L-054, added handler returning 405 with `supportedMethods` + `Allow` header. Applied to BOTH shared `api-commons` + local wallet. | 🟢 Closed | iter 20 (1.8.55) |
+| READY-074 | P1 | gateway-service | `DELETE /api/v1/wallets/{id}/savings-goals/{id}` returns 405 (gateway). `wallets` route yaml missing DELETE method. Added DELETE to methods list: `["GET", "POST", "PUT", "DELETE"]`. | 🟢 Closed | iter 20 (1.8.44) |
+| KAFKA-CONSOLE-001 | P3 | payu-dev cluster | AMQ Streams Kafka console (Strimzi Console) was deployed 2d7h ago but OIDC config in manifest had wrong schema (`clientSecret: string` + `scopes: [array]`). Fixed to use proper object/string format. Now applied via `oc apply -k infrastructure/platform/data/base/`. UI at `https://payu-kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id`. | 🟢 Closed | iter 20 |
+
+**L-051/052/053/054 (NEW)**: Quarkus RESTeasy Reactive `@Path` conflict + Spring Data JPA `isNew()` detection + Gateway yaml-vs-defaults + HttpRequestMethodNotSupportedException → 405.
 
 **L-051/052/053 (NEW)**: Quarkus RESTeasy Reactive `@Path` conflict + Spring Data JPA `isNew()` detection + Gateway yaml-vs-defaults precedence.
 

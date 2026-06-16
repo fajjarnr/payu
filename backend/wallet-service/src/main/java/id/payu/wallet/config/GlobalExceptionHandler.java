@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +25,26 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
         return buildResponse(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Insufficient permissions");
+    }
+
+    /**
+     * Handles HTTP method not supported (e.g., POST to GET-only endpoint).
+     * Returns 405 METHOD_NOT_ALLOWED with supported methods in the response.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        String supportedMethods = ex.getSupportedHttpMethods() != null
+                ? ex.getSupportedHttpMethods().stream().map(Object::toString).collect(Collectors.joining(", "))
+                : "unknown";
+        log.info("Method not allowed: requested={} supported={}", ex.getMethod(), supportedMethods);
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .header("Allow", supportedMethods)
+                .body(Map.of(
+                        "error", "METHOD_NOT_ALLOWED",
+                        "message", "Method " + ex.getMethod() + " not allowed. Supported: " + supportedMethods,
+                        "timestamp", Instant.now().toString(),
+                        "supportedMethods", supportedMethods
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
