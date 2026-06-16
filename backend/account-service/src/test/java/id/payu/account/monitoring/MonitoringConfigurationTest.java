@@ -4,7 +4,6 @@ import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.micrometer.metrics.autoconfigure.export.prometheus.PrometheusMetricsExportAutoConfiguration;
@@ -31,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Uses mock beans for shared library dependencies that require external infrastructure.
  * Includes TestConfiguration to set up PrometheusMeterRegistry for /actuator/prometheus endpoint.
  */
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix unblocked execution. See: READY-045 (account web-slice), READY-047 (Micrometer asserts), READY-053 (web-slice JPA bootstrap), READY-054 (integration Camel WireMock), READY-055 (Testcontainers Docker required)")
 @SpringBootTest(
     properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
@@ -51,7 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser
 @Import({
     MetricsAutoConfiguration.class,
-    PrometheusMetricsExportAutoConfiguration.class
+    PrometheusMetricsExportAutoConfiguration.class,
+    id.payu.account.config.TestSecurityConfig.class
 })
 @DisplayName("Monitoring Configuration Tests")
 class MonitoringConfigurationTest {

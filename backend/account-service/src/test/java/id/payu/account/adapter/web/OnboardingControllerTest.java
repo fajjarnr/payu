@@ -6,18 +6,20 @@ import id.payu.account.domain.model.User;
 import id.payu.account.domain.model.UserStatus;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
-import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,9 +34,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix unblocked execution. See: READY-045 (account web-slice), READY-047 (Micrometer asserts), READY-053 (web-slice JPA bootstrap), READY-054 (integration Camel WireMock), READY-055 (Testcontainers Docker required)")
-@WebMvcTest(controllers = OnboardingController.class)
-@ImportAutoConfiguration({DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@Disabled("READY-045 web-slice JPA bootstrap issue: AccountServiceApplication @EnableJpaRepositories forces JPA bootstrap even with auto-config excludes. Needs test-specific @ContextConfiguration without @EnableJpaRepositories. Re-enable in future sprint.")
+@SpringBootTest(
+    properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration,"
+                + "org.springframework.boot.data.jpa.autoconfigure.JpaRepositoriesAutoConfiguration,"
+                + "org.springframework.cloud.vault.core.VaultAutoConfiguration,"
+                + "id.payu.outbox.config.OutboxAutoConfiguration"
+    }
+)
+@AutoConfigureMockMvc
+@Import(id.payu.account.config.TestSecurityConfig.class)
 @ActiveProfiles("test")
 @DisplayName("OnboardingController")
 class OnboardingControllerTest {
@@ -47,6 +59,21 @@ class OnboardingControllerTest {
 
     @MockitoBean
     private RegisterUserUseCase registerUserUseCase;
+
+    // Mock security beans
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    // Mock shared library dependencies
+    @MockitoBean(name = "cacheInvalidationPublisher")
+    private Object cacheInvalidationPublisher;
+
+    // Mock KafkaTemplate + OutboxService for outbox-based KafkaUserEventPublisherAdapter
+    @MockitoBean
+    private KafkaTemplate<Object, Object> kafkaTemplate;
+
+    @MockitoBean
+    private OutboxService outboxService;
 
     private RegisterUserRequest validRequest;
     private User registeredUser;

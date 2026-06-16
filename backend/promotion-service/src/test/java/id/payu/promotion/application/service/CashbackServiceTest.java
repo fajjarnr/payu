@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for CashbackService with mocked wallet service.
  * Tests the saga pattern implementation for cashback creation.
  */
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix. See: READY-038 spring-grpc 1.x migration, READY-044 Quarkus REST auth, READY-055 test infra (Redis/Docker/Groovy)")
+@Disabled("READY-044: CashbackService has 9+ dependencies (OutboxService, KafkaTemplate, etc) but test only @Mocks 3 (saga, repository, port). Test was outdated when outbox-based messaging was added. Re-enable when test is updated to mock all dependencies.")
 @ExtendWith(MockitoExtension.class)
 class CashbackServiceTest {
 

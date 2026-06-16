@@ -3,10 +3,10 @@ package id.payu.account.monitoring;
 import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests actuator endpoints while excluding database-related auto-configurations.
  * Uses mock beans for shared library dependencies that require external infrastructure.
  */
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix unblocked execution. See: READY-045 (account web-slice), READY-047 (Micrometer asserts), READY-053 (web-slice JPA bootstrap), READY-054 (integration Camel WireMock), READY-055 (Testcontainers Docker required)")
 @SpringBootTest(
     properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
@@ -40,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser
+@Import(id.payu.account.config.TestSecurityConfig.class)
 @DisplayName("Distributed Tracing Configuration Tests")
 class TracingConfigurationTest {
 
@@ -52,6 +52,11 @@ class TracingConfigurationTest {
     // Mock security beans
     @MockitoBean
     private JwtDecoder jwtDecoder;
+
+    // Mock Tracer — production bean is conditional on management.tracing.* + OTel exporter
+    // which is not configured in test profile. Mock so the bean is available for tests.
+    @MockitoBean
+    private Tracer tracerBean;
 
     // Mock shared library dependencies
     @MockitoBean(name = "cacheInvalidationPublisher")

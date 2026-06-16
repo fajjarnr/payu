@@ -19,7 +19,6 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_budget_user_id", columnList = "user_id"),
                 @Index(name = "idx_budget_category", columnList = "category"),
-                @Index(name = "idx_budget_status", columnList = "status"),
                 @Index(name = "idx_budget_reset_date", columnList = "reset_date"),
                 @Index(name = "idx_budget_user_category", columnList = "user_id, category")
         })

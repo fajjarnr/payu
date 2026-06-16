@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import id.payu.integration.config.TestSecurityConfig;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration test verifying Camel HTTP route integration using WireMock.
  * Stubs external HTTP endpoints and validates the outbound Camel route behavior.
  */
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix unblocked execution. See: READY-045 (account web-slice), READY-047 (Micrometer asserts), READY-053 (web-slice JPA bootstrap), READY-054 (integration Camel WireMock), READY-055 (Testcontainers Docker required)")
+@Disabled("READY-054: Camel route Kafka brokers URL + H2 JSONB type + OUTBOX_EVENTS table. Needs test profile with Testcontainers Kafka + Postgres, OR Camel route Kafka disabled + H2-compatible migrations + outbox mock. Re-enable in future sprint with proper test infrastructure.")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
