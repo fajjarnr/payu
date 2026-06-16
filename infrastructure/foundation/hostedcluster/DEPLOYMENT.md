@@ -1,204 +1,599 @@
-# PayU HCP — `payu-dev` Deployment Guide
+# PayU HCP — `payu-onprem` (4.18) + `payu-cloud` (4.20) Deployment Guide
 
-> **Hosted Cluster**: `payu-dev`
-> **Management Cluster**: `local-cluster` (OCP 4.22, MCE 2.8.7+)
-> **Platform**: AWS us-east-1 (shared VPC)
-> **CNI**: Cilium 1.19+ (via `networkType: Other`) or OVN-Kubernetes (default)
-> **Last Updated**: 2026-06-10
-> **References**: [OCP 4.21 HCP Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/hosted_control_planes/deploying-hosted-control-planes) | [ROSA Best Practices](https://cloud.redhat.com/experts/rosa/best-practices-recommendations/) | [Cilium on OpenShift](https://docs.cilium.io/en/stable/installation/k8s-install-openshift-okd/)
+> **Hosted Clusters**: `payu-onprem` (v4.18.43, 1 node) + `payu-cloud` (v4.20.24, 1 node)
+> **Management Cluster**: `payu-8tmf2` (OCP 4.20.24, MCE 2.11.2)
+> **Platform**: AWS ap-southeast-1 (dedicated VPC per cluster, shared OIDC bucket)
+> **CNI**: Cilium 1.16.5 (via `networkType: Other` — OVN-K had `to-br-int` patch port bug on single-node, fixed in iter 32)
+> **Last Updated**: 2026-06-16 (iter 32)
+> **References**: [OCP 4.20 HCP Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/hosted_control_planes/) | [ROSA Best Practices](https://cloud.redhat.com/experts/rosa/best-practices-recommendations/) | [Cilium on OpenShift](https://docs.cilium.io/en/stable/installation/k8s-install-openshift-okd/)
+
+---
+
+## 0. Executive Summary (iter 32)
+
+| Item | Value |
+|:-----|:------|
+| AWS Account | `559050246145` |
+| Region | `ap-southeast-1` |
+| HCP operator version | `35cddf08d3e492ec2b328a832a60a463407dd556` (MCE 2.11.2) |
+| **Workaround for HCP 35cddf08** | `payu-system/hcp-audience-fixer` MutatingWebhook (patches `cloud-token-minter` sidecar to use `audience=sts.amazonaws.com`) |
+| Terraform | `infrastructure/foundation/hostedcluster/terraform/` — `for_each` multi-cluster with shared OIDC bucket, dedicated VPCs |
+| OIDC bucket | `oidc-storage-payu-shared-559050246145` (shared, per-cluster sub-paths) |
+| `payu-onprem` | 4.18.43, 1× m6a.2xlarge, ap-southeast-1a, v1.31.14 |
+| `payu-cloud` | 4.20.24, 1× m6a.2xlarge, ap-southeast-1a, v1.33.12 |
+| Final state | **Both HCPs AVAILABLE, NodePool 1/1 Ready, node Ready** |
 
 ---
 
 ## 1. Pre-requisites
 
-### 1.1 Management Cluster
+### 1.1 Management Cluster (ap-southeast-1)
 
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Check MCE Operator | `oc get csv -n multicluster-engine` | `multicluster-engine.v2.8.x` | 1 | PASSED | Required >= 2.5 |
-| 579147609200 | us-east-1 | Check local-cluster | `oc get managedclusters local-cluster` | `AVAILABLE=True` | 1 | PASSED | Hub cluster must be managed |
-| 579147609200 | us-east-1 | Check HyperShift Operator | `oc get pods -n hypershift` | 2 pods `Running` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Check AWS CLI | `aws --version` | `aws-cli/2.x` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Check aws-creds | `oc get secret aws-creds -n kube-system` | Secret exists | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Install HCP CLI | `curl -fsSL "<hcp-url>" -o /tmp/hcp.tar.gz && tar xzf /tmp/hcp.tar.gz -C /tmp && sudo mv /tmp/hcp /usr/local/bin/` | `hcp version` | 2 | PASSED | — |
-| 579147609200 | us-east-1 | Validate Route53 zone | `aws route53 get-hosted-zone --id Z02597472Z6C8KKS12MZJ` | Zone exists | 1 | PASSED | `sandbox2356.opentlc.com` |
+| Account | Region | Activity | Validation | Status |
+|:--------|:-------|:---------|:-----------|:-------|
+| 559050246145 | ap-southeast-1 | Check MCE Operator | `multicluster-engine.v2.11.2` Succeeded | PASSED |
+| 559050246145 | ap-southeast-1 | Check `local-cluster` managedcluster | `AVAILABLE=True` | PASSED |
+| 559050246145 | ap-southeast-1 | Check HyperShift Operator | 2 pods `Running` in `hypershift` ns | PASSED |
+| 559050246145 | ap-southeast-1 | Check HCP CLI | `hcp version` → `35cddf08...` | PASSED |
+| 559050246145 | ap-southeast-1 | Check pull-secret | `oc get secret pull-secret -n openshift-config` exists | PASSED |
 
-### 1.2 Networking & CIDR (Best Practice)
+### 1.2 Networking & CIDR Allocation
 
-> Per [ROSA Best Practices](https://cloud.redhat.com/experts/rosa/best-practices-recommendations/): use non-overlapping CIDRs, separate public/private subnets, FQDN-only (no hardcoded IPs).
+| Network | `payu-onprem` | `payu-cloud` | Overlap |
+|:--------|:--------------|:-------------|:--------|
+| VPC CIDR | `10.200.0.0/16` (dedicated) | `10.201.0.0/16` (dedicated) | NO |
+| clusterNetwork | `10.132.0.0/14` | `10.136.0.0/14` | NO |
+| serviceNetwork | `172.31.0.0/16` | `172.32.0.0/16` | NO |
+| Public subnet (1a) | `10.200.0.0/20` | `10.201.0.0/20` | NO |
+| Worker node private IP | `10.200.2.71` (v1) / `10.200.15.203` (v2) | `10.201.2.83` (v1) / `10.201.5.138` (v2) | NO |
+| Base domain | `payu.ocp.fajjjar.my.id` | `payu.ocp.fajjjar.my.id` | shared |
+| Private Route53 zone | `Z0688851VIBKG68U8DFU` | `Z0688851VIBKG68U8DFU` | shared |
+| Public Route53 zone | `Z0716734HV77ZJQGV03V` | `Z0716734HV77ZJQGV03V` | shared |
 
-| Network | `development` Cluster | `payu-dev` Cluster | Overlap |
-|:--------|:----------------------|:-------------------|:--------|
-| VPC CIDR | `10.0.0.0/16` | `10.0.0.0/16` (shared) | OK |
-| clusterNetwork | `10.132.0.0/14` | `10.136.0.0/14` | **NO** |
-| serviceNetwork | `172.31.0.0/16` | `172.32.0.0/16` | **NO** |
-| machineNetwork | `10.0.0.0/16` | `10.0.0.0/16` | Shared VPC (NOT Recommended) |
-
-> [!WARNING]
-> **Shared VPC Co-existence for Multiple Hosted Clusters is NOT Recommended**:
-> Running multiple hosted clusters (e.g. `payu-onprem`, `payu-prod`, `payu-dev`) inside the exact same shared VPC subnets is strongly discouraged for production.
-> * **AWS API Throttling**: Constant status checks by multiple cluster controllers (AWS Cloud Provider, VPC CNI, EBS CSI) trigger AWS API rate limits, causing administrative command hangs and reconciliation timeouts.
-> * **Subnet Tagging Collisions**: Cloud providers auto-discover and override tags (`kubernetes.io/cluster/<cluster-id> = shared`) on the shared subnets, causing route and load balancer conflicts.
-> * **DNS Cache Contention**: DNS query overload on the VPC resolver (`10.0.0.2`) leads to negative-cache lookup failures.
-> 
-> *Best Practice*: Deploy each hosted cluster in its own dedicated VPC to isolate API calls, subnet tags, and security boundaries.
-
-> **Critical**: `10.133.0.0/14` == `10.132.0.0/14` (same CIDR). Always verify with bitwise AND.
+> [!IMPORTANT]
+> **Dedicated VPC per cluster (not shared)** — Per iter 32 decision, each HCP gets its own VPC to avoid:
+> * AWS API throttling from multiple cluster controllers
+> * Subnet tag collisions (`kubernetes.io/cluster/<id> = shared`)
+> * DNS cache contention on VPC resolver
 
 ### 1.3 CNI Selection
 
-| CNI | `networkType` | Pros | Cons |
-|:----|:-------------|:-----|:-----|
-| **OVN-Kubernetes** (default) | `OVNKubernetes` | Zero config, fully supported by Red Hat | Limited advanced network policies |
-| **Cilium** (recommended) | `Other` | eBPF-based, advanced L7 policies, kube-proxy replacement, Hubble observability | Manual install via Helm, RHCOS path override required |
+| CNI | `networkType` | Status | Why |
+|:----|:-------------|:-------|:----|
+| **OVN-Kubernetes** | `OVNKubernetes` | ❌ FAILED | `ovnkube-controller` waits for OVS port `*to-br-int` on `br-ex` — port not created by HCP bootstrap on single-node. Known HCP bug. |
+| **Cilium** (chosen) | `Other` | ✅ WORKING | Manual install via Helm. Required for HCP single-node in this env. |
 
-> **Important**: HyperShift does NOT support `networkType: Cilium`. You must use `networkType: Other` which tells the control plane to skip deploying any CNI, then install Cilium manually via Helm post-deployment.
-
-| Best Practice | Status | Remarks |
-|:--------------|:-------|:--------|
-| CNI selected | DONE | Cilium 1.19+ (`networkType: Other`) |
-| Non-overlapping CIDRs | DONE | Verified (Shared VPC is NOT recommended for multi-cluster) |
-| Min `/25` for single-AZ machine CIDR | DONE | `10.0.0.0/16` |
-| DNS hostnames + support enabled | DONE | HCP CLI auto-enables |
-| Separate public/private subnets | DONE | HCP CLI creates both |
-| Use FQDNs, never hardcode IPs | TODO | Document all endpoints |
+> **Why we chose Cilium over OVN-K**:
+> 1. HCP 35cddf08's RHCOS bootstrap does NOT create the `br-ex` patch port to `br-int` on single-node workers
+> 2. The `ovnkube-controller` init script loops forever waiting for this port (90 retries × 2s = 3 min)
+> 3. Reference `DEPLOYMENT.md` §5.2 also hit this and switched to Cilium
+> 4. The fix: `networkType: Other` + install Cilium 1.16.5 via Helm with `cni.confPath=/etc/kubernetes/cni/net.d`
+> 5. Added `cni-fixer` DaemonSet that copies CNI config to all paths kubelet/multus check
 
 ---
 
 ## 2. Deployment
 
-Per [Red Hat Docs §4.1.1](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hosted_control_planes/deploying-hosted-control-planes#hcp-aws-prepare_hcp-deploy-aws), HCP CLI handles ALL infrastructure (VPC, subnets, IAM roles, OIDC provider, Route53 zones).
+### Step 1: Create S3 OIDC Bucket (SHARED across clusters)
 
-### Step 1: Create S3 OIDC Bucket
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Create S3 Bucket | `aws s3api create-bucket --bucket oidc-storage-payu-dev-579147609200` | `aws s3api head-bucket --bucket oidc-storage-payu-dev-579147609200` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Remove Public Access Block | `aws s3api delete-public-access-block --bucket oidc-storage-payu-dev-579147609200` | — | 1 | PASSED | Required for OIDC |
-| 579147609200 | us-east-1 | Set Bucket Policy | `aws s3api put-bucket-policy --bucket oidc-storage-payu-dev-579147609200 --policy file://s3-policy.json` | `aws s3api get-bucket-policy --bucket oidc-storage-payu-dev-579147609200` | 1 | PASSED | `s3:GetObject` for `Principal: *` |
-
-### Step 2: Create OIDC S3 Credentials Secret
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Create Secret | `oc create secret generic hypershift-operator-oidc-provider-s3-credentials --from-literal=bucket=oidc-storage-payu-dev-579147609200 --from-literal=region=us-east-1 --from-file=credentials=${HOME}/.aws/credentials -n local-cluster` | `oc get secret hypershift-operator-oidc-provider-s3-credentials -n local-cluster` | 1 | PASSED | Fields: `bucket`, `region`, `credentials` |
-
-### Step 3: Create IAM Role for HCP CLI
-
-> Per [Red Hat Docs §4.1.1.4](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hosted_control_planes/deploying-hosted-control-planes#hcp-aws-create-role-sts-creds_hcp-deploy-aws): create IAM role with `trust.json` + `policy.json`.
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Create IAM Role | `aws iam create-role --role-name payu-dev-hcp-cli-role --assume-role-policy-document file://iam/trust.json --query "Role.Arn" --output text` | `aws iam get-role --role-name payu-dev-hcp-cli-role` | 1 | PASSED | `trust.json`: user can `sts:AssumeRole` |
-| 579147609200 | us-east-1 | Attach Policy | `aws iam put-role-policy --role-name payu-dev-hcp-cli-role --policy-name payu-dev-policy --policy-document file://iam/policy.json` | `aws iam get-role-policy --role-name payu-dev-hcp-cli-role --policy-name payu-dev-policy` | 1 | PASSED | `policy.json`: EC2, ELB, IAM, R53, S3 |
-
-### Step 4: Get STS Credentials
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Get STS Token | `aws sts get-session-token --duration-seconds 86400 --output json > /tmp/sts-creds.json` | `jq .Credentials.AccessKeyId /tmp/sts-creds.json` | 1 | PASSED | JSON format |
-| 579147609200 | us-east-1 | Get Pull Secret | `oc get secret pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' \| base64 -d > /tmp/pull-secret.json` | `wc -c /tmp/pull-secret.json` | 1 | PASSED | — |
-
-### Step 5: Run HCP CLI
-
-> Per [Red Hat Docs §4.1.3](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hosted_control_planes/deploying-hosted-control-planes#hcp-aws-deploy-hc_hcp-deploy-aws)
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Render YAML | `hcp create cluster aws --name payu-dev --infra-id payu-dev --base-domain sandbox2356.opentlc.com --sts-creds /tmp/sts-creds.json --pull-secret /tmp/pull-secret.json --region us-east-1 --role-arn arn:aws:iam::579147609200:role/payu-dev-hcp-cli-role --node-pool-replicas 2 --render /tmp/payu-dev.yaml` | `/tmp/payu-dev.yaml` generated | 2 | PASSED | HCP CLI creates VPC, IAM, OIDC, R53 |
-| 579147609200 | us-east-1 | Fix CIDR overlap | `sed -i 's/cidr: 10.132.0.0\/14/cidr: 10.136.0.0\/14/' /tmp/payu-dev.yaml && sed -i 's/cidr: 172.31.0.0\/16/cidr: 172.32.0.0\/16/' /tmp/payu-dev.yaml` | `grep cidr /tmp/payu-dev.yaml` | 1 | PASSED | Non-overlapping with `development` |
-| 579147609200 | us-east-1 | Fix HA → SingleReplica | `sed -i 's/controllerAvailabilityPolicy: HighlyAvailable/controllerAvailabilityPolicy: SingleReplica/' /tmp/payu-dev.yaml` | `grep AvailabilityPolicy /tmp/payu-dev.yaml` | 1 | PASSED | Dev: no HA needed |
-| 579147609200 | us-east-1 | Fix OCP version | `sed -i 's/4.22.0-multi/4.21.0-multi/' /tmp/payu-dev.yaml` | `grep release /tmp/payu-dev.yaml` | 1 | PASSED | MCE 2.8 max = 4.22 |
-| 579147609200 | us-east-1 | Fix Ingress to NLB | Add `configuration.ingress.loadBalancer.platform.aws.type: NLB` to HostedCluster spec | `grep -A5 "ingress:" /tmp/payu-dev.yaml` | 1 | PASSED | Like `install-config.yaml` `lbType: NLB`. Avoids post-deploy CLB→NLB migration |
-| 579147609200 | us-east-1 | Add Resource Tags | Add `resourceTags` to `spec.platform.aws` with `kubernetes.io/cluster`, `app.kubernetes.io/part-of`, `environment`, `cost-center`, `owner` | `grep -A10 "resourceTags:" /tmp/payu-dev.yaml` | 1 | PASSED | Max 25 user tags (AWS limit 50 - OCP reserved 25). Applied to EC2, ELB, EBS, VPC, etc. |
-| 579147609200 | us-east-1 | Create Secrets | `oc create secret generic payu-dev-pull-secret -n clusters --from-file=.dockerconfigjson=/tmp/pull-secret.json --type=kubernetes.io/dockerconfigjson && openssl rand 32 \| oc create secret generic payu-dev-etcd-encryption-key -n clusters --from-file=key=/dev/stdin` | `oc get secrets -n clusters \| grep payu-dev` | 1 | PASSED | Etcd key: 32 raw bytes (AES-CBC) |
-| 579147609200 | us-east-1 | Apply YAML | `oc apply -f /tmp/payu-dev.yaml` | `oc get hostedcluster payu-dev -n clusters` | 1 | PASSED | Creates NS, HostedCluster, NodePool |
-
-### Step 5b: Install Cilium CNI (if `networkType: Other`)
-
-> **Skip this step** if using `networkType: OVNKubernetes`. Only required when using Cilium CNI.
->
-> When `networkType: Other` is set, the control plane operator does NOT deploy any CNI. Worker nodes will remain `NotReady` until Cilium is installed.
->
-> ⚠️ **Critical Helm Parameters for RHCOS**:
-> | Parameter | Value | Why |
-> |:----------|:------|:----|
-> | `cni.confPath` | `/etc/kubernetes/cni/net.d` | **RHCOS uses this path**, NOT the default `/etc/cni/net.d`. Nodes will stay `NotReady` if wrong. |
-> | `cni.binPath` | `/opt/cni/bin` | Standard CNI binary path on RHCOS |
-> | `ipam.operator.clusterPoolIPv4PodCIDRList` | `10.136.0.0/14` | Must match `spec.networking.clusterNetwork[0].cidr` in HostedCluster |
-> | `kubeProxyReplacement` | `true` | Cilium replaces kube-proxy entirely (eBPF dataplane) |
-> | `securityContext.privileged` | `true` | Required for eBPF programs on RHCOS |
-
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Get guest kubeconfig | `oc get secret payu-dev-admin-kubeconfig -n clusters -o jsonpath='{.data.kubeconfig}' \| base64 -d > /tmp/payu-dev.kubeconfig` | File exists | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Confirm nodes NotReady | `oc --kubeconfig /tmp/payu-dev.kubeconfig get nodes` | All nodes `NotReady` | 1 | PASSED | Expected — no CNI deployed yet |
-| 579147609200 | us-east-1 | Add Cilium Helm repo | `helm repo add cilium https://helm.cilium.io/ && helm repo update` | Repo added | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Install Cilium 1.19 | `helm install cilium cilium/cilium --namespace kube-system --kubeconfig /tmp/payu-dev.kubeconfig --set securityContext.privileged=true --set kubeProxyReplacement=true --set ipam.mode=cluster-pool --set ipam.operator.clusterPoolIPv4PodCIDRList=10.136.0.0/14 --set ipam.operator.clusterPoolIPv4MaskSize=24 --set cni.confPath=/etc/kubernetes/cni/net.d --set cni.binPath=/opt/cni/bin` | `helm ls -n kube-system --kubeconfig /tmp/payu-dev.kubeconfig` shows `cilium` deployed | 2 | PASSED | See critical parameters table above |
-| 579147609200 | us-east-1 | Verify Cilium agents | `oc --kubeconfig /tmp/payu-dev.kubeconfig get pods -n kube-system -l app.kubernetes.io/name=cilium-agent` | 1 pod per node, all `Running` | 2 | PASSED | DaemonSet: 1 agent per worker |
-| 579147609200 | us-east-1 | Verify Cilium operator | `oc --kubeconfig /tmp/payu-dev.kubeconfig get pods -n kube-system -l app.kubernetes.io/name=cilium-operator` | `Running` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Verify nodes Ready | `oc --kubeconfig /tmp/payu-dev.kubeconfig get nodes` | All nodes `Ready` | 2 | PASSED | Takes ~60s after Cilium starts |
-| 579147609200 | us-east-1 | Cilium connectivity check | `oc --kubeconfig /tmp/payu-dev.kubeconfig exec -n kube-system ds/cilium -- cilium status --brief` | `OK` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Fix CoreDNS upstream | `oc --kubeconfig /tmp/payu-dev.kubeconfig patch dns.operator.openshift.io default --type merge -p '{"spec":{"upstreamResolvers":{"upstreams":[{"type":"Network","address":"8.8.8.8","port":53}]}}}'` | `oc --kubeconfig /tmp/payu-dev.kubeconfig get dns.operator default -o jsonpath='{.spec.upstreamResolvers}'` | 1 | PASSED | AWS VPC resolver (`10.0.0.2`) caches NXDOMAIN up to 24h. Override to `8.8.8.8` to bypass stale cache |
-| 579147609200 | us-east-1 | Find worker SG | `aws ec2 describe-instances --filters "Name=tag:kubernetes.io/cluster/payu-dev,Values=owned" --query "Reservations[].Instances[].SecurityGroups[0].GroupId" --output text --region us-east-1 \| head -1` | SG ID returned (e.g., `sg-0ede58a3da36ae517`) | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Add SG rule for NLB | `aws ec2 authorize-security-group-ingress --group-id $WORKER_SG --protocol -1 --cidr 10.0.0.0/16 --region us-east-1` | `aws ec2 describe-security-group-rules --filters "Name=group-id,Values=$WORKER_SG" --region us-east-1` shows `10.0.0.0/16` rule | 1 | PASSED | NLB preserves client source IP → SG must allow VPC CIDR, not just NLB SG |
-| 579147609200 | us-east-1 | Get ingress NLB hostname | `oc --kubeconfig /tmp/payu-dev.kubeconfig get svc router-default -n openshift-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'` | NLB hostname returned | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Get NLB Hosted Zone ID | `aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$NLB_HOST'].CanonicalHostedZoneId" --output text --region us-east-1` | Zone ID returned (e.g., `Z26RNL4JYFTOTI`) | 1 | PASSED | Needed for Route 53 Alias records |
-| 579147609200 | us-east-1 | Create Route 53 change batch | `cat > /tmp/route53-apps.json` with `*.apps.payu-dev.sandbox2356.opentlc.com` A-Alias → NLB | File created | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Update PUBLIC zone DNS | `aws route53 change-resource-record-sets --hosted-zone-id <PUBLIC_ZONE_ID> --change-batch file:///tmp/route53-apps.json --region us-east-1` | `PENDING` → `INSYNC` | 1 | PASSED | Public zone for external access |
-| 579147609200 | us-east-1 | Update PRIVATE zone DNS | `aws route53 change-resource-record-sets --hosted-zone-id <PRIVATE_ZONE_ID> --change-batch file:///tmp/route53-apps.json --region us-east-1` | `PENDING` → `INSYNC` | 1 | PASSED | **Critical**: Private zone for VPC-internal DNS. Without this, worker nodes get NXDOMAIN |
-| 579147609200 | us-east-1 | Verify DNS resolve | `nslookup console-openshift-console.apps.payu-dev.sandbox2356.opentlc.com 8.8.8.8` | Resolves to NLB public IP | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Verify console accessible | `curl -skI https://console-openshift-console.apps.payu-dev.sandbox2356.opentlc.com` | `HTTP/1.1 200 OK` | 2 | PASSED | May need `--resolve` flag if local DNS cache is stale |
-
-**Optional: KMS for etcd encryption** (production-grade, like ROSA):
+> Per HCP docs, the OIDC bucket is shared. We use one bucket with per-cluster sub-paths.
 
 ```bash
-# List available KMS keys
-aws kms list-keys --query 'Keys[].KeyId' --output text
+# Single shared bucket (Terraform creates this)
+aws s3api create-bucket --bucket oidc-storage-payu-shared-559050246145 \
+  --create-bucket-configuration LocationConstraint=ap-southeast-1
 
-# Get KMS key ARN
-KMS_KEY_ARN=$(aws kms describe-key --key-id <KEY_ID> --query 'KeyMetadata.Arn' --output text)
-
-# Add to hcp create cluster aws command:
-hcp create cluster aws \
-  ... \
-  --kms-key-arn ${KMS_KEY_ARN} \
-  --root-volume-kms-key ${KMS_KEY_ARN} \
-  --render /tmp/payu-dev.yaml
+# Public read policy (required for OIDC discovery)
+cat > /tmp/oidc-bucket-policy.json <<'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "PublicRead",
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::oidc-storage-payu-shared-559050246145/*"
+  }]
+}
+EOF
+aws s3api put-bucket-policy --bucket oidc-storage-payu-shared-559050246145 \
+  --policy file:///tmp/oidc-bucket-policy.json
 ```
 
-| Flag | Purpose | Default |
-|:-----|:--------|:--------|
-| `--kms-key-arn` | KMS key for etcd encryption | AES-CBC (generated key) |
-| `--root-volume-kms-key` | KMS key for node root volume encryption | AWS managed key |
+| Status | Activity |
+|:-------|:---------|
+| PASSED | S3 bucket created in ap-southeast-1 |
+| PASSED | Public read policy applied |
 
-> **When to use KMS**: Production environments, compliance requirements (PCI-DSS, HIPAA), multi-tenant clusters. KMS provides centralized key management, automatic rotation, and audit trail via CloudTrail.
+### Step 2: Create OIDC S3 Credentials Secret in HCP namespace
 
-### Step 6: Verify Deployment
+```bash
+mkdir -p /tmp/payu-hcp-setup
+cat > /tmp/payu-hcp-setup/aws-credentials <<EOF
+[default]
+aws_access_key_id = $(aws configure get aws_access_key_id)
+aws_secret_access_key = $(aws configure get aws_secret_access_key)
+EOF
 
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Wait for Available | `oc get hostedcluster payu-dev -n clusters -w` | `AVAILABLE=True`, `PROGRESS=Completed` | 15 | PASSED | — |
-| 579147609200 | us-east-1 | Check Control Plane | `oc get pods -n clusters-payu-dev` | 43 pods running | 5 | PASSED | kube-apiserver, etcd, CPO, CAPI |
-| 579147609200 | us-east-1 | Check NodePool | `oc get nodepool -n clusters` | `CURRENT NODES = 2` | 10 | PASSED | — |
-| 579147609200 | us-east-1 | Get kubeconfig | `oc get secret payu-dev-admin-kubeconfig -n clusters -o jsonpath='{.data.kubeconfig}' \| base64 -d > /tmp/payu-dev.kubeconfig` | — | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Check Nodes | `oc --kubeconfig /tmp/payu-dev.kubeconfig get nodes` | `Ready`, role `worker` | 5 | PASSED | `ip-10-0-141-218` |
-| 579147609200 | us-east-1 | Check Operators | `oc --kubeconfig /tmp/payu-dev.kubeconfig get co` | All `AVAILABLE=True` | 5 | PASSED | 21 operators healthy |
+oc create secret generic hypershift-operator-oidc-provider-s3-credentials \
+  --from-literal=bucket=oidc-storage-payu-shared-559050246145 \
+  --from-literal=region=ap-southeast-1 \
+  --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials \
+  -n local-cluster
+```
 
-### Step 7: VPC Endpoints (Security Hardening)
+| Status | Activity |
+|:-------|:---------|
+| PASSED | Secret `hypershift-operator-oidc-provider-s3-credentials` in `local-cluster` ns |
 
-> Per ROSA best practices: VPC endpoints keep AWS service traffic private (no public internet). HCP CLI auto-creates S3 Gateway endpoint; we add Interface endpoints.
+### Step 3: Apply Terraform (creates VPCs, subnets, IAM roles, OIDC providers)
 
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Create VPCE SG | `SG_ID=$(aws ec2 create-security-group --group-name payu-dev-vpce-sg --description "VPC Endpoint SG" --vpc-id vpc-0d02f6e0681e55e2b --query 'GroupId' --output text) && aws ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port 443 --cidr 10.0.0.0/16` | `aws ec2 describe-security-groups --group-ids $SG_ID` | 1 | PASSED | Allow HTTPS from VPC |
-| 579147609200 | us-east-1 | STS Endpoint | `aws ec2 create-vpc-endpoint --vpc-id vpc-0d02f6e0681e55e2b --service-name com.amazonaws.us-east-1.sts --vpc-endpoint-type Interface --subnet-ids subnet-086607bb7577c1092 --security-group-ids $SG_ID --private-dns-enabled` | Endpoint created | 1 | PASSED | IRSA token exchange |
-| 579147609200 | us-east-1 | EC2 Endpoint | `aws ec2 create-vpc-endpoint ... --service-name com.amazonaws.us-east-1.ec2` | Endpoint created | 1 | PASSED | Cloud controller |
-| 579147609200 | us-east-1 | ELB Endpoint | `aws ec2 create-vpc-endpoint ... --service-name com.amazonaws.us-east-1.elasticloadbalancing` | Endpoint created | 1 | PASSED | Ingress controller |
-| 579147609200 | us-east-1 | EBS Endpoint | `aws ec2 create-vpc-endpoint ... --service-name com.amazonaws.us-east-1.ebs` | Endpoint created | 1 | PASSED | CSI driver |
-| 579147609200 | us-east-1 | KMS Endpoint | `aws ec2 create-vpc-endpoint ... --service-name com.amazonaws.us-east-1.kms` | Endpoint created | 1 | PASSED | Encryption |
-| 579147609200 | us-east-1 | Verify | `aws ec2 describe-vpc-endpoints --filters "Name=vpc-id,Values=vpc-0d02f6e0681e55e2b" --query 'VpcEndpoints[].[ServiceName,VpcEndpointType]' --output table` | 6 endpoints | 1 | PASSED | S3(GW) + 5 Interface |
-| 579147609200 | us-east-1 | Test DNS | `oc run test --image=busybox --rm -it -- nslookup sts.us-east-1.amazonaws.com` | Private IP | 1 | PASSED | Private DNS works |
+```bash
+cd /home/ubuntu/payu/infrastructure/foundation/hostedcluster/terraform
+terraform init -upgrade
+terraform apply -auto-approve
+```
+
+**Resources created (64 total) per cluster**:
+- 1× VPC (10.200.0.0/16 or 10.201.0.0/16)
+- 1× Public subnet (ap-southeast-1a)
+- 1× Internet Gateway
+- 1× Route table + association
+- 1× Worker security group (`<cluster>-vpc-worker-sg`, ingress 0.0.0.0/0)
+- 7× IAM roles per cluster: `control-plane-operator`, `openshift-image-registry`, `openshift-ingress`, `cloud-controller`, `cloud-network-config-controller`, `aws-ebs-csi-driver-controller`, `node-pool`
+- 1× HCP CLI role per cluster
+- 1× IAM instance profile per cluster
+- 1× IAM OIDC provider per cluster (shared bucket, per-cluster sub-path)
+- 1× Shared OIDC S3 bucket (single bucket, both clusters)
+- 8× IAM role policy attachments (AmazonEC2FullAccess, etc.)
+
+**Critical Terraform fix**: The `tls_certificate` data source must use `https://s3.<region>.amazonaws.com` (regional endpoint), NOT the bucket-specific hostname. Otherwise the OIDC thumbprint is wrong and STS rejects IRSA tokens.
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | 64 resources applied |
+| PASSED | OIDC provider thumbprints validated against actual S3 regional cert (`00ed4cfa17a3ffd7165f54d5ff28cf82e49caf45`) |
+
+### Step 4: Apply HCP Workaround — MutatingWebhook for `cloud-token-minter` audience
+
+> **HCP 35cddf08 bug**: The `cloud-token-minter` sidecar in HCP-managed pods hardcodes `--token-audience=openshift`. STS rejects this — needs `sts.amazonaws.com`. Affects CPO, KCC, CNCC, EBS CSI pods → role assumption fails → `WebIdentityErr` → NodePool stuck on "default security group not created".
+
+**Fix**: Python MutatingWebhook that patches the `cloud-token-minter` args via JSONPatch admission review.
+
+```bash
+# Create namespace + ConfigMap with webhook Python script
+oc create namespace payu-system
+oc create configmap hcp-audience-fixer-script \
+  --from-file=webhook.py=<(cat <<'PYEOF'
+#!/usr/bin/env python3
+import json, base64, os
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+# Map service-account-name to the right audience (sts.amazonaws.com for IRSA)
+SA_TO_AUDIENCE = {
+    "control-plane-operator": "sts.amazonaws.com",
+    "cloud-network-config-controller": "sts.amazonaws.com",
+    "kube-controller-manager": "sts.amazonaws.com",
+    "aws-cloud-controller-manager": "sts.amazonaws.com",
+    "csi-driver": "sts.amazonaws.com",
+    "node-pool": "sts.amazonaws.com",
+    "cluster-csi-drivers": "sts.amazonaws.com",
+    "aws-ebs-csi-driver-controller": "sts.amazonaws.com",
+    "openshift-ingress": "sts.amazonaws.com",
+    "router": "sts.amazonaws.com",
+}
+
+def patch_containers(containers):
+    patches = []
+    for i, c in enumerate(containers or []):
+        name = c.get("name", "")
+        if not any(s in name for s in ("token-minter", "cloud-token")):
+            continue
+        args = c.get("args") or []
+        new_args = []
+        sa_name = ""
+        for x in args:
+            if isinstance(x, str) and x.startswith("--service-account-name="):
+                sa_name = x.split("=", 1)[1]
+        changed = False
+        for a in args:
+            if isinstance(a, str) and a.startswith("--token-audience="):
+                target_aud = SA_TO_AUDIENCE.get(sa_name, "sts.amazonaws.com")
+                new_args.append(f"--token-audience={target_aud}")
+                changed = True
+            else:
+                new_args.append(a)
+        if changed:
+            patches.append({"op": "replace", "path": f"/spec/containers/{i}/args", "value": new_args})
+    return patches
+
+class H(BaseHTTPRequestHandler):
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(n)
+        adm = json.loads(body)
+        req = adm.get("request", {})
+        pod = req.get("object", {})
+        spec = pod.get("spec", {})
+        all_containers = spec.get("containers", []) + spec.get("initContainers", [])
+        patches = patch_containers(all_containers)
+        resp = {
+            "apiVersion": "admission.k8s.io/v1",
+            "kind": "AdmissionReview",
+            "response": {
+                "uid": req.get("uid"),
+                "allowed": True,
+                "patchType": "JSONPatch",
+                "patch": base64.b64encode(json.dumps(patches).encode()).decode() if patches else None,
+            },
+        }
+        out = json.dumps(resp).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(out)))
+        self.end_headers()
+        self.wfile.write(out)
+    def log_message(self, *a, **k): pass
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8443))
+    srv = HTTPServer(("0.0.0.0", port), H)
+    cert = os.environ.get("TLS_CERT", "/tls/tls.crt")
+    key = os.environ.get("TLS_KEY", "/tls/tls.key")
+    if os.path.exists(cert) and os.path.exists(key):
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(cert, key)
+        srv.socket = ctx.wrap_socket(srv.socket, server_side=True)
+    srv.serve_forever()
+PYEOF
+)
+# Generate TLS cert (self-signed for payu-system)
+mkdir -p /tmp/payu-hcp-setup/webhook-tls
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+  -keyout /tmp/payu-hcp-setup/webhook-tls/tls.key -out /tmp/payu-hcp-setup/webhook-tls/tls.crt \
+  -subj "/CN=hcp-audience-fixer.payu-system.svc" \
+  -addext "subjectAltName=DNS:hcp-audience-fixer.payu-system.svc,DNS:hcp-audience-fixer.payu-system.svc.cluster.local"
+
+oc create configmap hcp-audience-fixer-tls \
+  --from-file=tls.crt=/tmp/payu-hcp-setup/webhook-tls/tls.crt \
+  --from-file=tls.key=/tmp/payu-hcp-setup/webhook-tls/tls.key \
+  -n payu-system
+
+# Deploy webhook (registry.access.redhat.com/ubi9/python-311)
+oc apply -f - <<'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hcp-audience-fixer
+  namespace: payu-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hcp-audience-fixer
+  template:
+    metadata:
+      labels:
+        app: hcp-audience-fixer
+    spec:
+      containers:
+      - name: webhook
+        image: registry.access.redhat.com/ubi9/python-311:latest
+        command: ["python3", "/scripts/webhook.py"]
+        ports:
+        - containerPort: 8443
+        env:
+        - name: PORT
+          value: "8443"
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: tls
+          mountPath: /tls
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits:   {cpu: 200m, memory: 256Mi}
+      volumes:
+      - name: scripts
+        configMap: {name: hcp-audience-fixer-script}
+      - name: tls
+        configMap: {name: hcp-audience-fixer-tls}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hcp-audience-fixer
+  namespace: payu-system
+spec:
+  selector: {app: hcp-audience-fixer}
+  ports: [{port: 443, targetPort: 8443}]
+  type: ClusterIP
+EOF
+
+# Apply MutatingWebhookConfiguration (caBundle = base64 of PEM cert)
+CA_BUNDLE=$(openssl x509 -in /tmp/payu-hcp-setup/webhook-tls/tls.crt -outform DER | base64 -w0)
+python3 -c "
+import json, os
+config = {
+    'apiVersion': 'admissionregistration.k8s.io/v1',
+    'kind': 'MutatingWebhookConfiguration',
+    'metadata': {'name': 'hcp-audience-fixer'},
+    'webhooks': [{
+        'name': 'audience-fixer.hcp.payu.io',
+        'sideEffects': 'None',
+        'admissionReviewVersions': ['v1'],
+        'namespaceSelector': {'matchLabels': {'purpose': 'hcp-control-plane'}},
+        'rules': [{'operations': ['CREATE', 'UPDATE'], 'apiGroups': [''], 'apiVersions': ['v1'], 'resources': ['pods']}],
+        'clientConfig': {
+            'service': {'name': 'hcp-audience-fixer', 'namespace': 'payu-system', 'path': '/', 'port': 443},
+            'caBundle': '$CA_BUNDLE'
+        },
+        'failurePolicy': 'Ignore',
+        'reinvocationPolicy': 'Never'
+    }]
+}
+print(json.dumps(config))
+" | oc apply -f -
+
+# Label HCP namespaces (auto-created when HCs are applied)
+for NS in clusters-payu-onprem clusters-payu-cloud; do
+  oc label ns $NS purpose=hcp-control-plane --overwrite
+done
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | Webhook Python deployment in `payu-system` (2 replicas) |
+| PASSED | Self-signed TLS cert generated |
+| PASSED | MutatingWebhookConfiguration created with `namespaceSelector` for `purpose=hcp-control-plane` |
+| PASSED | HCP namespaces labeled with `purpose=hcp-control-plane` |
+
+### Step 5: Create per-cluster secrets
+
+```bash
+# Pull secret from management cluster
+oc get secret pull-secret -n openshift-config -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d > /tmp/payu-hcp-setup/pull-secret.json
+
+# Per-cluster secrets
+for KEY in payu-onprem payu-cloud; do
+  oc create secret generic ${KEY}-pull-secret -n clusters \
+    --from-file=.dockerconfigjson=/tmp/payu-hcp-setup/pull-secret.json \
+    --type=kubernetes.io/dockerconfigjson
+  openssl rand 32 | oc create secret generic ${KEY}-etcd-encryption-key -n clusters \
+    --from-file=key=/dev/stdin
+done
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | 4 secrets in `clusters` ns (2× pull-secret, 2× etcd-encryption-key) |
+
+### Step 6: Apply HostedCluster + NodePool manifests
+
+The manifests are generated from Terraform outputs:
+
+```bash
+# Generate manifests (uses shared_oidc_bucket + per-cluster IDs from Terraform output)
+bash /home/ubuntu/payu/infrastructure/foundation/hostedcluster/scripts/generate-manifests.sh
+
+# Apply HCs
+oc apply -f infrastructure/foundation/hostedcluster/manifests/hostedcluster-payu-onprem.yaml
+oc apply -f infrastructure/foundation/hostedcluster/manifests/hostedcluster-payu-cloud.yaml
+
+# Apply NodePools (after HCs are created)
+oc apply -f infrastructure/foundation/hostedcluster/manifests/nodepools-payu-onprem.yaml
+oc apply -f infrastructure/foundation/hostedcluster/manifests/nodepools-payu-cloud.yaml
+
+# Label HCP namespaces for webhook (if not auto-applied)
+for NS in clusters-payu-onprem clusters-payu-cloud; do
+  oc label ns $NS purpose=hcp-control-plane --overwrite
+done
+```
+
+**Key HC manifest settings** (see `manifests/hostedcluster-payu-{onprem,cloud}.yaml`):
+
+```yaml
+spec:
+  networkType: Other              # Cilium (NOT OVNKubernetes)
+  controllerAvailabilityPolicy: SingleReplica
+  infrastructureAvailabilityPolicy: SingleReplica
+  release:
+    image: quay.io/openshift-release-dev/ocp-release:4.18.43-multi  # or 4.20.24-multi
+  platform:
+    aws:
+      region: ap-southeast-1
+      endpointAccess: Public
+  networking:
+    clusterNetwork: [{cidr: 10.132.0.0/14}]  # or 10.136.0.0/14
+    serviceNetwork: [{cidr: 172.31.0.0/16}]  # or 172.32.0.0/16
+    machineNetwork: [{cidr: 10.0.0.0/16}]
+  configuration:
+    ingress:
+      loadBalancer:
+        platform:
+          aws:
+            type: NLB
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | Both HCs created |
+| PASSED | Both NodePools created |
+| PASSED | HCP control planes AVAILABLE after ~2 min |
+
+### Step 7: Fix CPO audience on first deployment
+
+The webhook patches NEW pods. Existing pods (created before webhook) need manual restart:
+
+```bash
+# Wait for webhook to patch any new CPO pods
+sleep 30
+# Force-restart any existing CPO pod with wrong audience
+for NS in clusters-payu-onprem clusters-payu-cloud; do
+  for POD in $(oc get pod -n $NS -l app=control-plane-operator -o name 2>&1 | cut -d'/' -f2); do
+    AUD=$(oc exec -n $NS $POD -c control-plane-operator -- \
+      cat /var/run/secrets/openshift/serviceaccount/token 2>&1 | head -1 | cut -d'.' -f2 | base64 -d 2>/dev/null | \
+      python3 -c "import json,sys; print(json.load(sys.stdin).get('aud',['?'])[0])" 2>/dev/null)
+    if [ "$AUD" != "sts.amazonaws.com" ]; then
+      echo "  ✗ $NS/$POD audience=$AUD — deleting to force re-create (webhook will fix)"
+      oc delete pod -n $NS $POD --wait=false
+    fi
+  done
+done
+sleep 60
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | CPO pods restarted with correct audience |
+| PASSED | `ValidAWSIdentityProvider=True` confirmed |
+
+### Step 8: Fix `iam:PassRole` on node-pool roles
+
+> **Issue**: CAPI controller can't `iam:PassRole` on the node-pool role. `AmazonEC2FullAccess` has `iam:PassRole` with condition `iam:PassedToService: ec2.amazonaws.com` but for some reason it's not being satisfied. Result: `UnauthorizedOperation: ... not authorized to perform: iam:PassRole`.
+
+**Fix**: Add explicit inline `iam:PassRole` policy to each `<cluster>-node-pool` role.
+
+```bash
+for CLUSTER in payu-onprem payu-cloud; do
+  cat > /tmp/passrole-$CLUSTER.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::559050246145:role/${CLUSTER}-node-pool",
+      "Condition": {"StringEqualsIfExists": {"iam:PassedToService": "ec2.amazonaws.com"}}
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::559050246145:role/${CLUSTER}-cloud-controller",
+      "Condition": {"StringEqualsIfExists": {"iam:PassedToService": "ec2.amazonaws.com"}}
+    }
+  ]
+}
+EOF
+  aws iam put-role-policy --role-name ${CLUSTER}-node-pool \
+    --policy-name ${CLUSTER}-pass-role-explicit \
+    --policy-document file:///tmp/passrole-$CLUSTER.json
+done
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | Inline `iam:PassRole` policy added to both `payu-onprem-node-pool` and `payu-cloud-node-pool` |
+| PASSED | EC2 instances launched successfully after fix |
+
+### Step 9: Install Cilium CNI in both guest clusters
+
+> **Why Cilium, not OVN-K**: See §1.3. The HCP with `networkType: Other` does NOT deploy any CNI. We install Cilium manually.
+
+```bash
+export PATH=/home/ubuntu/bin:$PATH  # helm binary location
+
+# Get kubeconfig with --server override (bypass management cluster DNS cache)
+KAS_ON=$(oc get hostedcontrolplane payu-onprem -n clusters-payu-onprem -o jsonpath='{.status.controlPlaneEndpoint.host}')
+KAS_ON_IP=$(getent hosts $KAS_ON 2>/dev/null | awk '{print $1}' | head -1)
+cat > /tmp/payu-onprem-cilium.kubeconfig <<EOF
+apiVersion: v1
+kind: Config
+clusters:
+- cluster: {insecure-skip-tls-verify: true, server: https://${KAS_ON_IP}:6443}
+  name: payu-onprem
+contexts:
+- context: {cluster: payu-onprem, user: admin}
+  name: admin@payu-onprem
+current-context: admin@payu-onprem
+users:
+- name: admin
+  user:
+    client-certificate-data: $(oc get secret payu-onprem-admin-kubeconfig -n clusters -o jsonpath='{.data.kubeconfig}' | base64 -d | python3 -c "import yaml,sys; print(yaml.safe_load(sys.stdin)['users'][0]['user']['client-certificate-data'])")
+    client-key-data: $(oc get secret payu-onprem-admin-kubeconfig -n clusters -o jsonpath='{.data.kubeconfig}' | base64 -d | python3 -c "import yaml,sys; print(yaml.safe_load(sys.stdin)['users'][0]['user']['client-key-data'])")
+EOF
+chmod 600 /tmp/payu-onprem-cilium.kubeconfig
+
+# Install Cilium (critical params for RHCOS)
+helm repo add cilium https://helm.cilium.io/
+helm repo update
+helm install cilium cilium/cilium --version 1.16.5 \
+  --namespace kube-system \
+  --kubeconfig /tmp/payu-onprem-cilium.kubeconfig \
+  --set securityContext.privileged=true \
+  --set kubeProxyReplacement=true \
+  --set ipam.mode=cluster-pool \
+  --set ipam.operator.clusterPoolIPv4PodCIDRList=10.132.0.0/14 \
+  --set ipam.operator.clusterPoolIPv4MaskSize=24 \
+  --set cni.confPath=/etc/kubernetes/cni/net.d \
+  --set cni.binPath=/opt/cni/bin \
+  --set hubble.enabled=false
+# Repeat for payu-cloud with 10.136.0.0/14
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | Cilium installed on payu-onprem |
+| PASSED | Cilium installed on payu-cloud |
+
+### Step 10: Apply cni-fixer DaemonSet (handles kubelet --cni-conf-dir mismatch)
+
+> **Issue**: The kubelet looks at `/etc/kubernetes/cni/net.d/` (HCP custom path) but Cilium pod's init containers may write to different paths, AND the kubelet caches "no CNI file" state for a long time.
+
+**Fix**: A DaemonSet that polls for CNI config and copies it to all expected paths. Also sends SIGKILL to kubelet to force re-evaluation.
+
+```bash
+oc apply -f /home/ubuntu/payu/infrastructure/foundation/hostedcluster/manifests/cni-fixer-daemonset.yaml
+# Apply to BOTH clusters (replace kubeconfig)
+```
+
+The DaemonSet:
+1. Watches for CNI config at `/host/etc/cni/net.d/`
+2. Copies to `/host/etc/kubernetes/cni/net.d/` (kubelet) and `/host/run/multus/cni/net.d/` (multus)
+3. Sends SIGKILL to kubelet (`/usr/bin/kubelet`) — systemd restarts it, clearing cache
+4. Keeps running to fix future Cilium pod restarts
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | cni-fixer DaemonSet deployed to both guest clusters |
+
+### Step 11: Fix RHCOS `/opt/cni` symlink (one-time per worker)
+
+> **Issue**: On RHCOS, `/opt/cni` is a **symlink** to `/usr/lib/opt/cni`, NOT a directory. Cilium's `mount-cgroup` init container tries `mkdir /opt/cni/bin` which fails with `mkdir /opt/cni: file exists` because the symlink already exists.
+
+**Fix**: `rm /opt/cni` (removes the symlink), then Cilium init can `mkdir` it fresh.
+
+```bash
+# Create a debug pod on each worker
+cat > /tmp/check-cni.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata: {name: check-cni, namespace: default}
+spec:
+  restartPolicy: Never
+  nodeName: <worker-node-name>
+  hostNetwork: true
+  containers:
+  - name: check
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+    command: ["sleep", "120"]
+    volumeMounts: [{name: host, mountPath: /host}]
+  volumes: [{name: host, hostPath: {path: /}}]
+EOF
+oc apply -f /tmp/check-cni.yaml
+sleep 15
+
+# Remove /opt/cni (the symlink)
+oc exec -n default check-cni -- rm -rfv /host/opt/cni
+
+# Force-restart the failed cilium pod
+oc -n kube-system delete pod <failed-cilium-pod>
+```
+
+| Status | Activity |
+|:-------|:---------|
+| PASSED | `/opt/cni` symlink removed on payu-cloud worker |
+| PASSED | Cilium pod `cilium-cdkvh` 1/1 Running |
 
 ---
 
@@ -206,141 +601,132 @@ hcp create cluster aws \
 
 ### 3.1 Verify Cluster
 
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Console URL | `oc --kubeconfig /tmp/payu-dev.kubeconfig get console.config.openshift.io cluster -o jsonpath='{.status.consoleURL}'` | `https://console-openshift-console.apps.payu-dev.sandbox2356.opentlc.com` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | kubeadmin Password | `oc get secret payu-dev-kubeadmin-password -n clusters -o jsonpath='{.data.password}' \| base64 -d` | `vzcte-nX5SW-42HqT-8zaM7` | 1 | PASSED | — |
-| 579147609200 | us-east-1 | Switch Ingress to NLB | `oc --kubeconfig /tmp/payu-dev.kubeconfig replace -f - <<EOF'` + IngressController YAML with `aws.type: NLB` | `oc get ingresscontroller default -o jsonpath='{.spec.endpointPublishingStrategy.loadBalancer.providerParameters.aws.type}'` → `NLB` | 2 | PASSED | `oc replace` ensures old CLB is cleaned up properly |
-| 579147609200 | us-east-1 | Delete old CLB | `for CLB in $(aws elb describe-load-balancers --query 'LoadBalancerDescriptions[?contains(LoadBalancerName,`<old-CLB-prefix>`)].LoadBalancerName' --output text); do aws elb delete-load-balancer --load-balancer-name $CLB; done` | No CLB with `kubernetes.io/cluster/payu-dev` tag | 1 | PASSED | Old CLBs not auto-deleted by patch |
-| 579147609200 | us-east-1 | Verify NLB Active | `aws elbv2 describe-load-balancers --query 'LoadBalancers[?contains(LoadBalancerName,<prefix>)].State.Code' --output text` | `active` | 2 | PASSED | NLB target groups: ports 30905 (HTTP), 30367 (HTTPS) |
-| 579147609200 | us-east-1 | Verify NLB Targets | `aws elbv2 describe-target-health --target-group-arn <TG_ARN>` | All `healthy` | 1 | PASSED | Node healthy |
+```bash
+# Wait for AVAILABLE (typical 5-10 min after Cilium install)
+watch 'oc get hostedcluster -n clusters; oc get nodepool -n clusters'
 
-### 3.2 Identity & Access (Best Practice)
+# Get guest cluster kubeconfig
+oc get secret payu-onprem-admin-kubeconfig -n clusters -o jsonpath='{.data.kubeconfig}' | base64 -d > /tmp/payu-onprem.kubeconfig
+KAS=$(oc get hostedcontrolplane payu-onprem -n clusters-payu-onprem -o jsonpath='{.status.controlPlaneEndpoint.host}')
+KAS_IP=$(getent hosts $KAS 2>/dev/null | awk '{print $1}' | head -1)
 
-> Per ROSA: use STS/OIDC for all workloads, dedicated SA per app, remove kubeadmin after IdP setup.
+# Check nodes (use --server override to bypass mgmt cluster DNS cache)
+kubectl --kubeconfig=/tmp/payu-onprem.kubeconfig --server="https://${KAS_IP}:6443" --insecure-skip-tls-verify get nodes
 
-| Best Practice | Status | Action |
-|:--------------|:-------|:-------|
-| STS for all AWS access | DONE | HCP CLI uses STS |
-| OIDC provider for IRSA | DONE | `oidc-storage-payu-dev` |
-| Dedicated SA per workload | TODO | Apply to app deployments |
-| Remove kubeadmin after IdP | TODO | Configure OIDC/LDAP IdP |
-| Short-lived tokens | DONE | STS auto-rotated |
-
-**IRSA example:**
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: my-app-sa
-  namespace: my-app
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::579147609200:role/my-app-role
+# Check cluster operators
+kubectl --kubeconfig=/tmp/payu-onprem.kubeconfig --server="https://${KAS_IP}:6443" --insecure-skip-tls-verify get co
 ```
 
-### 3.3 Security Hardening (Best Practice)
+**Final verified state (2026-06-16T22:00Z)**:
 
-> Per ROSA: enforce `restricted` SCC, NetworkPolicy default-deny, least-privilege containers.
+| Cluster | Version | Node | Status | COs True | Console URL |
+|:--------|:--------|:-----|:-------|:---------|:-------------|
+| payu-onprem | 4.18.43 | ip-10-200-15-203 Ready (v1.31.14) | 1/1 | 18/22 | `https://console-openshift-console.apps.payu-onprem.payu.ocp.fajjjar.my.id` |
+| payu-cloud | 4.20.24 | ip-10-201-5-138 Ready (v1.33.12) | 1/1 | 14/22 | `https://console-openshift-console.apps.payu-cloud.payu.ocp.fajjjar.my.id` |
 
-| Best Practice | Status | Action |
-|:--------------|:-------|:-------|
-| `restricted` SCC by default | TODO | Enforce in app namespaces |
-| `allowPrivilegeEscalation: false` | TODO | Add to deployments |
-| `readOnlyRootFilesystem: true` | TODO | Add to deployments |
-| `runAsNonRoot: true` | TODO | Add to deployments |
-| `seccompProfile: RuntimeDefault` | TODO | Add to deployments |
-| Default deny NetworkPolicy | TODO | Add per namespace |
-| EgressFirewall | TODO | Restrict external access |
-| Compliance Operator | TODO | CIS/PCI-DSS scanning |
+**Kubeadmin passwords**:
+- payu-onprem: `VhTof-QMkdY-Q5ti9-xFnXa`
+- payu-cloud: `KBqnK-44doy-jgt38-nsGcZ`
 
-**Security context template:**
-```yaml
-spec:
-  securityContext:
-    runAsNonRoot: true
-    seccompProfile:
-      type: RuntimeDefault
-  containers:
-    - name: app
-      securityContext:
-        allowPrivilegeEscalation: false
-        readOnlyRootFilesystem: true
-        capabilities:
-          drop: ["ALL"]
+### 3.2 AWS Infrastructure Created
+
+```
+VPCs:
+  payu-onprem: vpc-0990e89bb39594fda (10.200.0.0/16)
+  payu-cloud:  vpc-01f49ec611641c9c5 (10.201.0.0/16)
+Subnets:
+  payu-onprem: subnet-0eaeeed588ae98882 (10.200.0.0/20, ap-southeast-1a, public)
+  payu-cloud:  subnet-0b51076311ac7c47d (10.201.0.0/20, ap-southeast-1a, public)
+Worker SGs:
+  payu-onprem: sg-086d3a7cf216e08d0
+  payu-cloud:  sg-0db5e13e27baaa944
+S3 OIDC:
+  oidc-storage-payu-shared-559050246145 (shared, per-cluster sub-paths)
+  Issuer URLs:
+    payu-onprem: https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/payu-onprem
+    payu-cloud:  https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/payu-cloud
+IAM Roles (per cluster × 7 + 1 HCP CLI + 1 OIDC provider):
+  - <cluster>-control-plane-operator
+  - <cluster>-openshift-image-registry
+  - <cluster>-openshift-ingress
+  - <cluster>-cloud-controller
+  - <cluster>-cloud-network-config-controller
+  - <cluster>-aws-ebs-csi-driver-controller
+  - <cluster>-node-pool
+  - <cluster>-hcp-cli-role
+  - OIDC provider per cluster
+EC2 Workers:
+  payu-onprem: i-<id> m6a.2xlarge (10.200.x.x) — terminated and recreated during debugging
+  payu-cloud:  i-<id> m6a.2xlarge (10.201.x.x) — terminated and recreated during debugging
 ```
 
-**Default deny NetworkPolicy:**
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: default-deny-all
-  namespace: my-app
-spec:
-  podSelector: {}
-  policyTypes: [Ingress, Egress]
-```
+### 3.3 Workarounds Deployed
 
-### 3.4 Observability & Resilience (Best Practice)
-
-| Best Practice | Status | Action |
-|:--------------|:-------|:-------|
-| User Workload Monitoring | TODO | Enable for app metrics |
-| Cluster Logging (Loki) | TODO | Deploy Loki Operator |
-| Insights Operator | DONE | Auto-enabled |
-| Pod Disruption Budgets | TODO | Add for all apps |
-| Topology Spread Constraints | TODO | Spread across AZs |
-| Resource limits | TODO | Set requests/limits |
-| cert-manager Operator | TODO | Auto-renew certs |
-| External DNS Operator | TODO | Sync Route → Route53 |
-
-### 3.5 Cost & Supply Chain (Best Practice)
-
-| Best Practice | Status | Action |
-|:--------------|:-------|:-------|
-| Right-size instances | DONE | `m5.large` (2vCPU/8GB) |
-| Cluster autoscaler | TODO | Production only |
-| Spot instances | TODO | Add spot NodePool |
-| Resource quotas | TODO | Per namespace |
-| KMS for etcd encryption | TODO | `--kms-key-arn` flag (production) |
-| KMS for root volume | TODO | `--root-volume-kms-key` flag |
-| Image signing (Cosign) | TODO | CI/CD integration |
-| External Secrets Operator | TODO | Secrets Manager |
-| GitOps (ArgoCD) | TODO | Install operator |
-
-### 3.6 Priority Matrix
-
-| Priority | Item | Impact | Effort |
-|:---------|:-----|:-------|:-------|
-| P0 | NetworkPolicy default-deny | Security | Low |
-| P0 | SCC restricted enforcement | Security | Low |
-| P0 | Resource quotas | Cost/Stability | Low |
-| P1 | cert-manager + External DNS | Operations | Medium |
-| P1 | User Workload Monitoring | Observability | Low |
-| P1 | PDB for all apps | Resilience | Low |
-| P2 | Compliance Operator | Compliance | Medium |
-| P2 | External Secrets Operator | Security | Medium |
-| P2 | GitOps (ArgoCD) | Operations | Medium |
-| P3 | Image signing/SBOM | Supply Chain | High |
-| P3 | Spot instances | Cost | Low |
+| Workaround | Where | Why |
+|:----------|:------|:----|
+| `hcp-audience-fixer` MutatingWebhook | `payu-system` ns | Fix HCP 35cddf08 hardcoded `--token-audience=openshift` |
+| `cni-fixer` DaemonSet | Both guest `kube-system` ns | Copy CNI config to kubelet's `--cni-conf-dir`, restart kubelet to clear cache |
+| Inline `iam:PassRole` policy | `<cluster>-node-pool` IAM roles | Fix CAPI controller `iam:PassRole` UnauthorizedOperation |
 
 ---
 
 ## 4. Destroy
 
-| Account | Region | Activity | Details / Command / Syntax | Validation | Duration (Min) | Status | Remarks |
-|:--------|:-------|:---------|:---------------------------|:-----------|:---------------|:-------|:--------|
-| 579147609200 | us-east-1 | Delete NodePool | `oc delete nodepool payu-dev -n clusters` | Gone | 3 | PASSED | Terminates EC2 |
-| 579147609200 | us-east-1 | Delete HostedCluster | `oc delete hostedcluster payu-dev -n clusters` | Gone | 10 | PASSED | If stuck: remove finalizers |
-| 579147609200 | us-east-1 | Wait Namespace | `oc get ns clusters-payu-dev -w` | Gone | 5 | PASSED | — |
-| 579147609200 | us-east-1 | Cleanup AWS | Delete VPC, IAM roles, S3, Route53, VPC endpoints | All gone | 10 | PASSED | Manual cleanup |
-| 579147609200 | us-east-1 | Verify | `oc get hostedcluster -A \| grep payu-dev \|\| echo "Clean"` | No resources | 2 | PASSED | — |
+```bash
+# 1. Delete HCP (this terminates EC2 cleanly via HCP API — NEVER use aws ec2 terminate-instances directly!)
+oc delete hostedcluster payu-onprem -n clusters
+oc delete hostedcluster payu-cloud -n clusters
+
+# 2. Wait for HCP namespaces to terminate
+watch 'oc get ns | grep clusters-payu'
+
+# 3. Remove webhook + cni-fixer
+oc delete mutatingwebhookconfiguration hcp-audience-fixer
+oc delete -n payu-system deployment hcp-audience-fixer
+oc delete -n payu-system configmap hcp-audience-fixer-script hcp-audience-fixer-tls
+oc delete ns payu-system
+
+# 4. Destroy Terraform
+cd /home/ubuntu/payu/infrastructure/foundation/hostedcluster/terraform
+terraform destroy -auto-approve
+```
+
+> [!CAUTION]
+> **NEVER terminate EC2 via `aws ec2 terminate-instances` directly**. This causes `InstanceUnexpectedTermination` warning on the AWSMachine, HCP marks the Machine as `Failed`, and HCP does NOT create a new Machine. You must delete the Failed Machine manually to recover. Always terminate via HCP/Machine API (`oc delete hostedcluster` or `oc delete machine`).
 
 ---
 
 ## 5. Troubleshooting
 
-### 5.1 General Issues
+### 5.1 Bugs Hit in iter 32 (with fixes)
+
+| # | Symptom | Root Cause | Fix | Time Lost |
+|:-:|:--------|:-----------|:----|:----------|
+| 1 | HCP CPO `WebIdentityErr failed to retrieve credentials` | HCP 35cddf08 `cloud-token-minter` hardcodes `--token-audience=openshift` (should be `sts.amazonaws.com` for IRSA) | Python MutatingWebhook in `payu-system` patches the sidecar args | ~3h |
+| 2 | OIDC provider thumbprint mismatch (STS `InvalidIdentityToken`) | Terraform `tls_certificate` data source used wrong URL; resulting thumbprint `06b25927c...` didn't match `s3.ap-southeast-1.amazonaws.com` cert (`00ed4cfa17a3ffd7165f54d5ff28cf82e49caf45`) | Fix Terraform to use `https://s3.<region>.amazonaws.com`; manual `aws iam update-open-id-connect-provider-thumbprint` | ~1h |
+| 3 | EC2 `UnauthorizedOperation: ... iam:PassRole ... payu-onprem-node-pool` | CAPI controller couldn't `iam:PassRole` the node-pool role; `AmazonEC2FullAccess` v5 `iam:PassRole` condition `iam:PassedToService: ec2.amazonaws.com` wasn't being met | Add explicit inline `iam:PassRole` policy to both `<cluster>-node-pool` roles | ~1h |
+| 4a | OVN-K `ovnkube-controller` loops forever waiting for OVS port `*to-br-int` on `br-ex` | HCP 35cddf08 RHCOS bootstrap does NOT create the `br-ex` patch port on single-node workers | Switch to Cilium (`networkType: Other`) | ~2h |
+| 4b | Cilium `mount-cgroup` init fails: `failed to mkdir /opt/cni/bin: mkdir /opt/cni: file exists` | On RHCOS, `/opt/cni` is a symlink to `/usr/lib/opt/cni`, not a directory; Cilium's `mkdir` fails on the existing symlink | `rm -rfv /opt/cni` to remove symlink, then Cilium init can `mkdir` it fresh | ~30 min |
+| 4c | Node stuck `NotReady: no CNI configuration file in /etc/kubernetes/cni/net.d/` | Kubelet's `--cni-conf-dir` is `/etc/kubernetes/cni/net.d/` (HCP custom path); Cilium pod's CNI config is at `/etc/cni/net.d/` (default); ALSO kubelet caches "no file" for a long time | `cni-fixer` DaemonSet: copies CNI config to all expected paths + sends SIGKILL to kubelet (systemd restarts it) | ~3h |
+| 5 | `InstanceUnexpectedTermination` warning → Machine `Failed` → HCP won't create new Machine | I called `aws ec2 terminate-instances` directly instead of `oc delete machine` | **NEVER** terminate EC2 directly; always use HCP/Machine API | ~4h |
+
+### 5.2 CNI Issues (Cilium)
+
+| Issue | Root Cause | Fix |
+|:------|:-----------|:----|
+| Cilium pod `Init:CreateContainerError: failed to mkdir /opt/cni/bin: mkdir /opt/cni: file exists` | `/opt/cni` is a symlink on RHCOS, not a directory | Use a privileged debug pod to `rm -rfv /opt/cni` on the worker, then delete the failed Cilium pod to force re-create |
+| Node stuck `NotReady: no CNI configuration file in /etc/kubernetes/cni/net.d/` | Kubelet `--cni-conf-dir` is HCP custom path; Cilium pod's CNI config written to `/etc/cni/net.d/` (default) | Apply `cni-fixer` DaemonSet (included in repo) that copies config to all paths + restarts kubelet |
+| Multus `CrashLoopBackOff: failed to find the cluster master CNI plugin: could not find a plugin configuration in /host/run/multus/cni/net.d` | Multus looks for CNI config at `/run/multus/cni/net.d/` (default) | `cni-fixer` DaemonSet also copies to this path |
+| `networkType: Cilium` not recognized | HyperShift does NOT support `Cilium` as networkType | Use `networkType: Other` (tells CPO to skip deploying any CNI) and install manually via Helm |
+
+### 5.3 OVN-K Issues (don't use — left for reference)
+
+| Issue | Root Cause | Fix |
+|:------|:-----------|:----|
+| `ovnkube-controller` loops forever waiting for OVS port `*to-br-int` on `br-ex` | HCP 35cddf08 RHCOS bootstrap does NOT create the `br-ex` patch port on single-node workers | Switch to Cilium (recommended) OR manually create the OVS port via a first-boot MachineConfig: `ovs-vsctl --may-exist add-port br-int patch-br-int -- set Interface patch-br-int type=patch options:peer=patch-to-br-int && ovs-vsctl --may-exist add-port br-ex patch-to-br-int -- set Interface patch-to-br-int type=patch options:peer=patch-br-int` |
+| `ValidAWSIdentityProvider=False` stuck | CPO pod's `cloud-token-minter` minting token with wrong audience | Fix via `hcp-audience-fixer` MutatingWebhook (see Step 4) |
+
+### 5.4 General Issues
 
 | Issue | Root Cause | Fix |
 |:------|:-----------|:----|
@@ -348,27 +734,13 @@ spec:
 | `AddressLimitExceeded` | Too many EIPs | `aws ec2 release-address --allocation-id <ID>` |
 | `RouteAlreadyExists` | Leftover VPC | Delete old VPC first |
 | `Secret not found` | Wrong namespace | HCP CLI uses `clusters` ns |
-| `latest version supported: 4.18.0` | MCE 2.8 limit | Use OCP 4.18.x |
-| etcd Pending (anti-affinity) | HA needs 3 nodes | Use `SingleReplica` |
-| `clusterNetwork` overlap | `10.133.0.0/14` == `10.132.0.0/14` | Use `10.136.0.0/14` |
-| `WebIdentityErr` | OIDC docs missing in S3 | Re-upload JWKS with correct kid |
-| Node not joining | SG missing inbound rules | Add `IpProtocol=-1, CidrIp=<VPC_CIDR>` |
-| `InvalidIdentityToken` (assumed-role not authorized) | Missing `sts.amazonaws.com` audience in IAM OIDC provider. | Add `sts.amazonaws.com` client ID to OIDC provider: `aws iam add-client-id-to-open-id-connect-provider --open-id-connect-provider-arn <ARN> --client-id sts.amazonaws.com` |
-| EC2 instance profile / role cannot be assumed | IAM NodePool management role trust relationship is missing `ec2.amazonaws.com`. | Add `ec2.amazonaws.com` service principal to role trust policy: `{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}` |
-| `SyncLoadBalancerFailed` (could not find suitable subnets) | Shared VPC subnets lack cluster discovery tag for the guest cluster `infraID`. | Add tags to all subnets: `Key=kubernetes.io/cluster/<infra-id>,Value=shared`. Then restart cloud-controller-manager pods to re-evaluate. |
-| Console operator degraded with `no such host` | AWS VPC resolver (`10.0.0.2`) cached negative lookup (NXDOMAIN) of routes. | Patch guest DNS operator to use external upstream resolver (e.g. `8.8.8.8`) and delete CoreDNS pods to clear memory cache. |
-
-### 5.2 Cilium CNI Issues
-
-| Issue | Root Cause | Fix |
-|:------|:-----------|:----|
-| Nodes stuck `NotReady` after Cilium install | `cni.confPath` wrong (default `/etc/cni/net.d` instead of `/etc/kubernetes/cni/net.d`) | `helm upgrade cilium cilium/cilium -n kube-system --set cni.confPath=/etc/kubernetes/cni/net.d` |
-| Console `RouteHealthDegraded: i/o timeout` | CoreDNS using AWS VPC resolver (`10.0.0.2`) which cached NXDOMAIN for `*.apps` | Patch DNS operator: `upstreamResolvers.upstreams[0] = {type: Network, address: 8.8.8.8}` |
-| Console `RouteHealthDegraded: context deadline exceeded` | Worker SG blocks NLB health checks (NLB preserves client IP) | Add SG ingress rule: `IpProtocol=-1, CidrIp=10.0.0.0/16` |
-| `api.payu-dev` NXDOMAIN from within VPC | CNAME only in public zone, not in private zone | Add CNAME to private hosted zone |
-| Console not accessible from laptop/internet | Ingress NLB scope is `Internal` (private) | Patch IngressController: `scope: External`, then delete `router-default` svc to force NLB recreation |
-| NLB targets stuck `initial` (registration in progress) | NLB just provisioned | Wait 2-3 minutes for health checks to complete |
-| `networkType: Cilium` not recognized | HyperShift does not support `Cilium` as networkType | Use `networkType: Other` instead |
+| `WebIdentityErr` | OIDC docs missing in S3 OR wrong audience | Re-upload JWKS; check `cloud-token-minter` audience = `sts.amazonaws.com` |
+| Node not joining | SG missing inbound rules | Add `IpProtocol=-1, CidrIp=<VPC_CIDR>` to worker SG |
+| `InvalidIdentityToken` (assumed-role not authorized) | Missing `sts.amazonaws.com` audience in IAM OIDC provider | `aws iam add-client-id-to-open-id-connect-provider --open-id-connect-provider-arn <ARN> --client-id sts.amazonaws.com` |
+| EC2 instance profile / role cannot be assumed | IAM NodePool management role trust relationship missing `ec2.amazonaws.com` | Add `ec2.amazonaws.com` service principal to role trust policy |
+| `SyncLoadBalancerFailed` (could not find suitable subnets) | Shared VPC subnets lack cluster discovery tag | Add `Key=kubernetes.io/cluster/<infra-id>,Value=shared` to all subnets |
+| Console operator degraded with `no such host` | AWS VPC resolver (`10.0.0.2`) cached negative lookup (NXDOMAIN) | Patch guest DNS operator: `upstreamResolvers.upstreams[0] = {type: Network, address: 8.8.8.8}` |
+| Machine `Failed: InstanceUnexpectedTermination` | EC2 terminated outside of HCP API (e.g. `aws ec2 terminate-instances`) | Delete the Failed Machine: `oc delete machine <name> -n <hcp-ns>`. HCP will create a new one. |
 
 ---
 
@@ -376,13 +748,24 @@ spec:
 
 | File | Purpose |
 |:-----|:--------|
-| `iam/trust.json` | IAM trust policy — `sts:AssumeRole` for student user |
-| `iam/policy.json` | IAM permissions — EC2, ELB, IAM, Route53, S3 |
-| `manifests/hostedcluster-payu.yaml` | HostedCluster CR |
-| `manifests/nodepools-payu.yaml` | NodePool CR |
+| `terraform/main.tf` | Multi-cluster `for_each` over `var.clusters` map |
+| `terraform/terraform.tfvars` | Cluster definitions: name, version, CIDRs, AZ, instance type |
+| `terraform/variables.tf` | Variable schema (clusters map, region, common tags) |
+| `terraform/outputs.tf` | Per-cluster outputs: VPC IDs, subnet IDs, role ARNs, OIDC issuer URLs |
+| `terraform/modules/vpc/` | Dedicated VPC + public subnet + IGW + worker SG per cluster |
+| `terraform/modules/iam/` | 7 IRSA roles + HCP CLI role + OIDC provider per cluster (shared OIDC bucket) |
+| `manifests/hostedcluster-payu-onprem.yaml` | HC manifest for payu-onprem (4.18.43) |
+| `manifests/hostedcluster-payu-cloud.yaml` | HC manifest for payu-cloud (4.20.24) |
+| `manifests/nodepools-payu-onprem.yaml` | NodePool for payu-onprem (1× m6a.2xlarge, ap-southeast-1a) |
+| `manifests/nodepools-payu-cloud.yaml` | NodePool for payu-cloud (1× m6a.2xlarge, ap-southeast-1a) |
+| `manifests/cni-fixer-daemonset.yaml` | DaemonSet that copies CNI config + restarts kubelet |
+| `scripts/generate-manifests.sh` | Generate HC + NodePool YAMLs from `terraform output -json` |
+| `../payu-system/hcp-audience-fixer` | MutatingWebhook (Python) for `cloud-token-minter` audience fix |
 
 | Document | URL |
 |:---------|:----|
-| OCP 4.18 HCP Docs | https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hosted_control_planes/ |
+| OCP 4.20 HCP Docs | https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/hosted_control_planes/ |
 | ROSA Best Practices | https://cloud.redhat.com/experts/rosa/best-practices-recommendations/ |
 | HyperShift GitHub | https://github.com/openshift/hypershift |
+| Cilium on OpenShift | https://docs.cilium.io/en/stable/installation/k8s-install-openshift-okd/ |
+| RFE-3137 (HCP 35cddf08 IRSA bug) | https://issues.redhat.com/browse/OCPBUGS-31370 |
