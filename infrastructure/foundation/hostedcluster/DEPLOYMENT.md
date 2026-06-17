@@ -97,6 +97,8 @@ This provisions:
 - Shared S3 OIDC bucket (`oidc-storage-payu-shared-559050246145`).
 - Per-cluster IAM roles (CPO, registry, ingress, KCC, CNCC, EBS CSI, NodePool).
 - OIDC providers pointing to regional endpoints.
+  > [!NOTE]
+  > The OIDC Provider `client_id_list` in Terraform must include both `sts.amazonaws.com` and `openshift`. This ensures tokens projected by the guest cluster `registry` pod (using the `openshift` audience) are accepted by AWS STS when accessing S3 bucket storage.
 
 ### Step 3: Deploy MutatingWebhook for Token Audience Fix
 
@@ -271,7 +273,15 @@ terraform destroy -auto-approve
 
 * **Symptom**: Ingress operator or other pods fail with `WebIdentityErr: failed to retrieve credentials` due to `Incorrect token audience` on OCP 4.15.
   * **Root Cause**: On OCP 4.15 (e.g. `payu-onprem`), the default template for the `ingress-operator`'s `token-minter` container does not define the `--token-audience` argument at all, causing it to fall back to `openshift`.
-  * **Fix**: Use the updated webhook logic (`hcp-audience-fixer-script` configmap updated via `patch-cm-complete.py`) which automatically appends `--token-audience=sts.amazonaws.com` if it's missing, and restart the `ingress-operator` pod.
+  * **Fix**: Use the updated webhook logic (`hcp-audience-fixer-script` configmap updated via `deploy-webhook.sh`/`patch-cm-complete.py`) which automatically appends `--token-audience=sts.amazonaws.com` if it's missing, and restart the `ingress-operator` pod.
+
+* **Symptom**: `image-registry` Cluster Operator stuck in `Available=False` on guest clusters (`payu-onprem` / `payu-cloud`).
+  * **Root Cause**:
+    1. The mutating webhook originally forced `--token-audience=sts.amazonaws.com` on all `token-minter` containers, including `client-token-minter` / `apiserver-token-minter`. These containers need to authenticate to the guest API server using the OIDC token audience, so forcing the AWS audience caused `Unauthorized` errors on the guest API server.
+    2. The AWS IAM OIDC Provider client ID list in Terraform lacked the `openshift` audience, causing AWS STS to reject OIDC tokens projected by the `registry` pod inside the guest cluster when trying to write to the shared S3 storage bucket.
+  * **Fix**:
+    1. Update the webhook logic to only mutate AWS STS token-minters (e.g. `token-minter`, `cloud-token-minter`), leaving `client-token` or `apiserver` token-minters alone. This is handled dynamically by checking if the container name contains `client-token` or `apiserver`.
+    2. Ensure the Terraform OIDC config includes the `openshift` client ID (audience) and re-apply Terraform.
 
 ### 5.2 AWS STS Authentication Issues
 

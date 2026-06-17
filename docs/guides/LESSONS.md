@@ -4,6 +4,46 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-067: HyperShift Image Registry Token Audience and AWS OIDC Client ID Separation (2026-06-17)
+
+**Date**: 2026-06-17
+**Domain**: Infrastructure / OpenShift Hosted Control Planes (HCP) / AWS OIDC / Webhooks
+**Context**: Resolved the `image-registry` Cluster Operator stuck in `Available=False` on both `payu-onprem` (v4.15) and `payu-cloud` (v4.20) guest clusters. The operator had authentication errors contacting the guest API Server and the shared AWS S3 registry bucket.
+
+**Root cause**:
+1. **Dual-Purpose Token Minters**: The `cluster-image-registry-operator` pod uses two token-minter sidecar containers.
+   - `client-token-minter` or `apiserver-token-minter`: Authenticates the operator to the guest API server (requires guest OIDC provider audience).
+   - `token-minter` or `cloud-token-minter`: Authenticates the operator to AWS STS to manage S3 bucket storage (requires `sts.amazonaws.com` audience).
+   - The mutating webhook originally forced `--token-audience=sts.amazonaws.com` on *all* token-minters. This caused `Unauthorized` errors on the guest API server for the client/apiserver minters, blocking internal image registry operations.
+2. **Missing OIDC Audience in Terraform**: OCP's `registry` pod inside the guest cluster projects tokens with the `openshift` audience. If the AWS IAM OIDC Provider's `client_id_list` in Terraform only lists `sts.amazonaws.com`, AWS STS will reject these registry tokens, preventing S3 storage access.
+
+**Pattern (production fix)**:
+1. **Update Mutating Webhook**: Differentiate containers by name. If the container name contains `client-token` or `apiserver`, do NOT force `sts.amazonaws.com` or overwrite the audience.
+   ```python
+   # Inside the webhook script (patched in ConfigMap)
+   container_name = container.get("name", "")
+   if "client-token" in container_name or "apiserver" in container_name:
+       # Keep dynamic guest OIDC provider URL
+       continue
+   else:
+       # Safely patch token audience to sts.amazonaws.com for AWS IAM Role assumption
+       patch_audience(container)
+   ```
+2. **Terraform OIDC Provider configuration**: Add `"openshift"` explicitly to the `client_id_list` of the OpenID Connect Providers:
+   ```hcl
+   resource "aws_iam_openid_connect_provider" "default" {
+     url             = var.oidc_provider_url
+     client_id_list  = ["sts.amazonaws.com", "openshift"]
+     thumbprint_list = [var.oidc_provider_thumbprint]
+   }
+   ```
+
+**Lesson**:
+1. **Always trace individual token purposes in dual-token architectures**. Multiple sidecars inside the same pod can perform completely different functions; do not apply blanket webhook mutations based solely on image name or general container patterns.
+2. **Configure both audiences on IAM OIDC providers**. For OpenShift guest clusters on AWS, both `sts.amazonaws.com` (for general AWS STS operations) and `openshift` (for the internal image registry) must be registered in the provider's `client_id_list` to prevent token validation failures.
+
+---
+
 ## L-064: Testcontainers `@ServiceConnection` Bypass — `@ActiveProfiles("container")` Excludes Custom DataSource (2026-06-16)
 
 **Date**: 2026-06-16
@@ -1438,4 +1478,4 @@ public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(
 
 ---
 
-*Last Updated: June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*
+*Last Updated: June 17, 2026 — Added L-067 (HyperShift Image Registry Token Audience and AWS OIDC Client ID Separation). June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*
