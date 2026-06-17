@@ -82,6 +82,8 @@ public class SoapRouteBuilder extends RouteBuilder {
                 exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "text/xml;charset=UTF-8");
                 exchange.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
                 exchange.getIn().setHeader(Exchange.HTTP_URI, endpoint);
+                // L-065/069: disable gzip — Camel HTTP client auto-decompresses otherwise
+                exchange.getIn().setHeader("Accept-Encoding", "identity");
             })
             .toD("${header.SoapEndpoint}?throwExceptionOnFailure=true")
             .log(LoggingLevel.INFO, "SOAP response received")

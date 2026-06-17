@@ -74,7 +74,6 @@ class MessageProcessingIntegrationTest {
     }
 
     @Test
-    @Disabled("Pre-existing test bug: endpoint returns 500 instead of 404 for non-existent messageId. Likely NPE in service when no record found. Not infrastructure.")
     @Order(3)
     @DisplayName("Should return 404 for non-existent message status")
     void testGetNonExistentMessageStatus() throws Exception {
