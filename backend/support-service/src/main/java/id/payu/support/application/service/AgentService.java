@@ -9,6 +9,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,6 +117,11 @@ public class AgentService {
     }
 
     private AgentResponse createAgentFallback(CreateAgentRequest request, Exception ex) {
+        // Rethrow business exceptions so GlobalExceptionHandler can map them
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createAgent: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }

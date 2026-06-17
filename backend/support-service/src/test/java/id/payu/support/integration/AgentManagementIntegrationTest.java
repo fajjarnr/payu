@@ -168,7 +168,6 @@ class AgentManagementIntegrationTest {
     }
 
     @Test
-    @Disabled("Pre-existing test bug: validation response status differs (test expected 400/422 but got different). Not MockMvc-related.")
     @Order(9)
     @DisplayName("Should validate required fields")
     void testValidation() throws Exception {

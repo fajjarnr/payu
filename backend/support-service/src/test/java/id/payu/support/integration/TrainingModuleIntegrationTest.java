@@ -46,16 +46,17 @@ class TrainingModuleIntegrationTest {
     }
 
     @Test
-    @Disabled("Pre-existing test bug: request body field isMandatory doesn't match DTO field mandatory → 500. Not MockMvc-related.")
     @Order(1)
     @DisplayName("Should create a new training module successfully")
     void testCreateTrainingModule() throws Exception {
         String requestBody = """
             {
+                "code": "INT-TEST-001",
                 "title": "Integration Test Module",
                 "description": "Module for integration testing",
+                "category": "PRODUCT_KNOWLEDGE",
                 "durationMinutes": 60,
-                "isMandatory": true
+                "mandatory": true
             }
             """;
 
@@ -86,10 +87,35 @@ class TrainingModuleIntegrationTest {
     }
 
     @Test
-    @Disabled("Depends on testCreateTrainingModule which is @Disabled. Cascading skip.")
     @Order(3)
     @DisplayName("Should retrieve all mandatory modules")
     void testGetMandatoryModules() throws Exception {
+        // Create + activate a mandatory module for this test
+        String createBody = """
+            {
+                "code": "INT-TEST-MAND-001",
+                "title": "Mandatory Module",
+                "description": "Module mandatory for all agents",
+                "category": "COMPLIANCE",
+                "durationMinutes": 30,
+                "mandatory": true
+            }
+            """;
+        MvcResult createResult = mockMvc.perform(post("/api/v1/support/modules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+        Long newModuleId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .path("data").path("id").asLong();
+
+        // Activate the module (mandatory filter requires status=ACTIVE)
+        mockMvc.perform(patch("/api/v1/support/modules/{id}/status", newModuleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("status", "ACTIVE"))))
+                .andExpect(status().isOk());
+
+        // Now query mandatory modules
         mockMvc.perform(get("/api/v1/support/modules/mandatory"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isNotEmpty());

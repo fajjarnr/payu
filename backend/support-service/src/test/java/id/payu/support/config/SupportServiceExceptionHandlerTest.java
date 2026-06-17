@@ -3,13 +3,13 @@ package id.payu.support.config;
 import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -74,7 +74,7 @@ class SupportServiceExceptionHandlerTest {
     }
 
     @Test
-    @Disabled("Pre-existing: @PreAuthorize blocks POST without valid JWT. Requires OAuth2 test fixture (mock JWT decoder) to exercise duplicate employee flow.")
+    @WithMockUser(roles = "SUPPORT_MANAGER")
     @DisplayName("Should return 409 on duplicate employee ID")
     void testHandleDataIntegrityViolation() throws Exception {
         String agentJson = """

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,15 @@ public class SupportServiceExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
         log.warn("Constraint violation: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, "SUP_400", ex.getMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        String message = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : "Malformed JSON request";
+        log.warn("Malformed request body: {}", message);
+        return buildResponse(HttpStatus.BAD_REQUEST, "SUP_400", message);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
