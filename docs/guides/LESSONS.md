@@ -1478,4 +1478,59 @@ public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(
 
 ---
 
-*Last Updated: June 17, 2026 — Added L-067 (HyperShift Image Registry Token Audience and AWS OIDC Client ID Separation). June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*
+## L-068: Resilience4j @CircuitBreaker Fallback MUST Rethrow Business Exceptions — Don't Wrap as RuntimeException (2026-06-17)
+
+**Date**: 2026-06-17
+**Domain**: Java / Spring Boot / Resilience4j / Exception Handling
+**Context**: During READY-046 fix in `support-service`, the `AgentService.createAgentFallback` method caught ALL exceptions from the `@CircuitBreaker` + `@Retry` and wrapped them in `RuntimeException("Support service temporarily unavailable", ex)`. When the underlying service threw `DataIntegrityViolationException` (e.g., duplicate `employee_id`), the original exception type was lost. `GlobalExceptionHandler` saw a generic `RuntimeException`, fell through to the `@ExceptionHandler(Exception.class)` handler, and returned **500 INTERNAL_ERROR** instead of the proper **409 CONFLICT**. The test `testHandleDataIntegrityViolation` was disabled for this reason (plus `@PreAuthorize` blocking the POST without JWT).
+
+**Root cause (per Resilience4j Spring Boot docs + Java exception handling semantics)**:
+- Resilience4j's `@CircuitBreaker(fallbackMethod = "X")` requires the fallback to have the same return type as the protected method + a `Throwable` last parameter. The fallback receives the original exception.
+- A naive fallback pattern is `throw new RuntimeException("...", ex)` — this **destroys the exception type chain** at runtime. The wrapping `RuntimeException` is what propagates up to `@RestControllerAdvice`, not the original.
+- Java doesn't allow `throw ex` directly when `ex` is typed as `Exception` (the fallback's parameter type) because `Exception` is a checked class. Solution: `throw (RuntimeException) ex` after an `instanceof` check (works for any unchecked subclass).
+
+**Pattern (production-ready fix)**:
+```java
+@CircuitBreaker(name = "support", fallbackMethod = "createAgentFallback")
+@Retry(name = "support")
+@Transactional
+public AgentResponse createAgent(CreateAgentRequest request) {
+    // ... business logic that may throw DataIntegrityViolationException, etc.
+}
+
+private AgentResponse createAgentFallback(CreateAgentRequest request, Exception ex) {
+    // Rethrow business exceptions so GlobalExceptionHandler can map them to proper HTTP status
+    if (ex instanceof DataIntegrityViolationException
+            || ex instanceof IllegalArgumentException
+            || ex instanceof ConstraintViolationException
+            || ex instanceof HttpMessageNotReadableException) {
+        throw (RuntimeException) ex;  // unchecked cast, preserves original type
+    }
+    // Only wrap INFRASTRUCTURE failures (DB down, network, circuit open)
+    log.error("Fallback for createAgent: {}", ex.getMessage());
+    throw new RuntimeException("Support service temporarily unavailable", ex);
+}
+```
+
+**Why this works**:
+1. `DataIntegrityViolationException`, `IllegalArgumentException`, `ConstraintViolationException`, `HttpMessageNotReadableException` are all `RuntimeException` subclasses. The cast `(RuntimeException) ex` is safe and preserves the exact runtime type.
+2. `@ExceptionHandler(DataIntegrityViolationException.class)` in `GlobalExceptionHandler` now sees the original exception and maps to 409.
+3. Real infrastructure failures (DB connection refused, Kafka timeout, circuit breaker OPEN) still get the generic 503 with the wrapped message.
+
+**Lesson**:
+1. **The "wrap all exceptions in RuntimeException" fallback pattern is a platform-wide footgun**. Scan detected 30+ services in PayU with `@CircuitBreaker(fallbackMethod = ...)` — most use this pattern. Follow-up ticket: sweep all services and add the `instanceof` rethrow block per service. Per-service change is mechanical (5-10 lines per fallback).
+2. **Identify "business" vs "infrastructure" exceptions per service**:
+   - Business (rethrow): `DataIntegrityViolationException`, `ConstraintViolationException`, `IllegalArgumentException`, `HttpMessageNotReadableException`, `MethodArgumentNotValidException`, `BusinessException` (custom), `NotFoundException` (custom), `OptimisticLockingFailureException`
+   - Infrastructure (wrap as 503): `org.springframework.dao.DataAccessResourceFailureException` (DB connection), `org.springframework.web.client.ResourceAccessException` (HTTP timeout), `org.springframework.kafka.KafkaException`, `io.github.resilience4j.circuitbreaker.CallNotPermittedException` (circuit OPEN)
+3. **Java's `throw ex` doesn't work for `Exception` parameter** — the compiler complains "unreported exception java.lang.Exception; must be caught or declared to be thrown". The cast `(RuntimeException) ex` is the only safe way to rethrow without `throws Exception` declaration.
+4. **Detection script** (one-liner): `rg -l 'fallbackMethod' backend/ --include='*.java' | xargs rg -L 'throw.*\(RuntimeException\)' || true` — find services with fallback methods that don't yet have the rethrow pattern.
+5. **Test the fallback path explicitly**: a test that creates a `DataIntegrityViolationException` (e.g., duplicate key) and expects 409 will fail with 500 if the fallback swallows the exception. The test for `testHandleDataIntegrityViolation` is the canonical regression guard.
+
+**Affected services (30+ candidates, 1 fixed so far)**:
+- ✅ `support-service/AgentService.java` (iter 32, this lesson)
+- ⏳ `integration-service`, `statement-service`, `transaction-service`, `lending-service`, `fx-service`, `account-service` (3 adapters), `dispute-service`, `auth-service`, `backoffice-service`, `billing-service`, `investment-service`, `promotion-service`, `cms-service`, `compliance-service` — same pattern, not yet swept
+- Per-service change: 5-10 lines per fallback method. Total estimated: ~200 lines across 14 services. Mechanical, 1 dev day.
+
+---
+
+*Last Updated: June 17, 2026 — Added L-068 (Resilience4j fallback rethrow pattern). June 17: L-067 (HyperShift Image Registry Token Audience and AWS OIDC Client ID Separation). June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*

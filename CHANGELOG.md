@@ -19,6 +19,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 32: 4 Support @Disabled Tests Re-Enabled + 2 Production Bugs Fixed (2026-06-17)
+
+**Cluster admin context**: All work done in management cluster (`payu-8tmf2`) — no HCP deploy. JDK 25 + Maven 3.8.7 toolchain installed (was missing from env).
+
+### READY-046 closed
+4 support-service @Disabled tests re-enabled. 47/47 PASS (was 47/47 with 6 skipped).
+
+#### Production fixes (2 bugs)
+1. **`SupportServiceExceptionHandler`** — added `@ExceptionHandler(HttpMessageNotReadableException.class)` returning 400. Jackson 3 (`tools.jackson`) throws this for invalid enum values / malformed JSON; previously fell through to generic `Exception` handler → 500.
+2. **`AgentService.createAgentFallback`** — rethrow `DataIntegrityViolationException` + `IllegalArgumentException` instead of wrapping as `RuntimeException`. Resilience4j fallback was swallowing the original exception type, so `GlobalExceptionHandler` saw `RuntimeException("Support service temporarily unavailable")` instead of the actual 409-worthy constraint violation.
+
+#### Test fixes
+- `TrainingModuleIntegrationTest.testCreateTrainingModule` — request body was missing `code` field (required by `@NotBlank`), had wrong field name `isMandatory` (DTO is `mandatory`), missing `category` (DB column is NOT NULL). Removed `@Disabled`.
+- `TrainingModuleIntegrationTest.testGetMandatoryModules` — depends on `findByStatusAndMandatoryTrue(ACTIVE)` so the module must be `ACTIVE` not `DRAFT`. Made self-contained: creates + activates its own module before querying. Removed `@Disabled` (was cascading skip).
+- `AgentManagementIntegrationTest.testValidation` — was disabled because test expected 400/422 but got 500. Now passes 400 via the new `HttpMessageNotReadableException` handler. Removed `@Disabled`.
+- `SupportServiceExceptionHandlerTest.testHandleDataIntegrityViolation` — `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` on POST /agents required real auth. Added `@WithMockUser(roles = "SUPPORT_MANAGER")`. Then the test still failed 500 (fallback swallowed `DataIntegrityViolationException`) — fixed by the production fix above. Removed `@Disabled`.
+
+### READY-037 verified
+`account-service/Profile.java` `additionalData` field already migrated to `@JdbcTypeCode(SqlTypes.JSON)` in commit 9ec09d6f (READY-036 cascade). TODO 0% was stale. Verified via `grep -r 'JsonType|hypersistence' backend/` → 0 remaining main-code refs.
+
+### READY-034 runtime verified
+30/30 modules SUCCESS, 0 failures, 0 errors. 1640+ tests pass across shared starters + simulators + services. Jackson 3 unblocking (L-041) confirmed end-to-end: saga-starter 146/146, outbox-starter 83/83, all 16 services green (excl. transaction-service with pre-existing H2/JSONB issue from iter 29).
+
+### L-068 captured
+**Resilience4j @CircuitBreaker fallback methods MUST rethrow business exceptions** (`DataIntegrityViolationException`, `IllegalArgumentException`, `ConstraintViolationException`) instead of wrapping as generic `RuntimeException`. Otherwise the original exception type is lost and `GlobalExceptionHandler` cannot map it to the proper HTTP status (e.g. 409 Conflict vs 500 Internal). Pattern: `if (ex instanceof DataIntegrityViolationException) throw (RuntimeException) ex;`. Cast to RuntimeException is required because Java doesn't allow throwing a checked `Exception` parameter directly. Documented separately as L-068.
+
+### Files changed (5)
+- `backend/support-service/src/main/java/id/payu/support/application/service/AgentService.java` (AgentService.java: +7 lines, rethrow business exceptions)
+- `backend/support-service/src/main/java/id/payu/support/config/SupportServiceExceptionHandler.java` (+12 lines, HttpMessageNotReadableException handler)
+- `backend/support-service/src/test/java/id/payu/support/config/SupportServiceExceptionHandlerTest.java` (+ @WithMockUser)
+- `backend/support-service/src/test/java/id/payu/support/integration/AgentManagementIntegrationTest.java` (- @Disabled)
+- `backend/support-service/src/test/java/id/payu/support/integration/TrainingModuleIntegrationTest.java` (fixed request bodies, self-contained test)
+
+### Cluster state (iter 32)
+- 0 HCP changes (work in mgmt cluster only)
+- 30/30 backend modules SUCCESS in `mvn -T 1C test`
+- 47/47 support-service tests pass (was 41/47 with 6 @Disabled)
+
+---
+
 ### Iteration 31: Two HostedClusters Provisioned — payu-onprem (4.18) + payu-cloud (4.20) (2026-06-16)
 
 Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8tmf2 management cluster (OCP 4.20.24, MCE 2.11.2, HyperShift operator in `hypershift` ns).
