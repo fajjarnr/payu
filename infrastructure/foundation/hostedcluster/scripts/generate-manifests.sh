@@ -3,11 +3,12 @@
 set -euo pipefail
 
 TF_OUTPUTS=/tmp/tf-outputs.json
-MANIFESTS_DIR=/home/ubuntu/payu/infrastructure/foundation/hostedcluster/manifests
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANIFESTS_DIR="${SCRIPT_DIR}/../manifests"
 mkdir -p "$MANIFESTS_DIR"
 
 # Refresh outputs JSON
-cd /home/ubuntu/payu/infrastructure/foundation/hostedcluster/terraform
+cd "${SCRIPT_DIR}/../terraform"
 terraform output -json > $TF_OUTPUTS
 
 SHARED_BUCKET=$(jq -r '.shared_oidc_bucket.value' $TF_OUTPUTS)
@@ -29,8 +30,8 @@ for KEY in payu-onprem payu-cloud; do
   EBS=$(jq -r --arg k $KEY '.cluster_ids.value[$k].aws_ebs_csi_driver_controller' $TF_OUTPUTS)
 
   if [ "$KEY" = "payu-onprem" ]; then
-    OCP_VERSION="4.18.43-multi"
-    CHANNEL="stable-4.18"
+    OCP_VERSION="4.15.59-multi"
+    CHANNEL="stable-4.15"
     ENV="onprem"
     CLUSTER_CIDR="10.132.0.0/14"
     SERVICE_CIDR="172.31.0.0/16"
@@ -43,8 +44,8 @@ for KEY in payu-onprem payu-cloud; do
   fi
 
   ZONE="ap-southeast-1a"
-  INSTANCE_TYPE="m6a.2xlarge"
-  REPLICAS=1
+  INSTANCE_TYPE="m6a.4xlarge"
+  REPLICAS=2
   ROOT_VOL=120
 
   cat > $MANIFESTS_DIR/hostedcluster-$KEY.yaml <<YAML

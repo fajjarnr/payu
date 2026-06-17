@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: payu
     environment: onprem
 spec:
-  channel: stable-4.18
+  channel: stable-4.15
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.18.43-multi
+    image: quay.io/openshift-release-dev/ocp-release:4.15.59-multi
   dns:
     baseDomain: payu.ocp.fajjjar.my.id
     privateZoneID: Z0688851VIBKG68U8DFU
@@ -21,8 +21,8 @@ spec:
       multiArch: false
       cloudProviderConfig:
         subnet:
-          id: subnet-0eaeeed588ae98882
-        vpc: vpc-0990e89bb39594fda
+          id: subnet-01c05cd3ccb615f35
+        vpc: vpc-01d724da7649a72d2
         zone: ap-southeast-1a
       rolesRef:
         controlPlaneOperatorARN: arn:aws:iam::559050246145:role/payu-onprem-control-plane-operator
@@ -49,7 +49,7 @@ spec:
       - cidr: 10.132.0.0/14
     machineNetwork:
       - cidr: 10.0.0.0/16
-    networkType: Other
+    networkType: OVNKubernetes
     serviceNetwork:
       - cidr: 172.31.0.0/16
   infraID: payu-onprem

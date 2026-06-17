@@ -21,8 +21,8 @@ spec:
       multiArch: false
       cloudProviderConfig:
         subnet:
-          id: subnet-0b51076311ac7c47d
-        vpc: vpc-01f49ec611641c9c5
+          id: subnet-0e0634928bffd75af
+        vpc: vpc-08ec38d0b86319ec1
         zone: ap-southeast-1a
       rolesRef:
         controlPlaneOperatorARN: arn:aws:iam::559050246145:role/payu-cloud-control-plane-operator
@@ -49,7 +49,7 @@ spec:
       - cidr: 10.136.0.0/14
     machineNetwork:
       - cidr: 10.0.0.0/16
-    networkType: Other
+    networkType: OVNKubernetes
     serviceNetwork:
       - cidr: 172.32.0.0/16
   infraID: payu-cloud

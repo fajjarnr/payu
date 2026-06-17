@@ -171,6 +171,31 @@ resource "aws_iam_role_policy_attachment" "node_pool_ec2" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
 }
 
+# Allow NodePool management operator to pass the NodePool role and Cloud Controller role to EC2 instances
+resource "aws_iam_role_policy" "node_pool_pass_role" {
+  name = "${var.infra_id}-node-pool-pass-role"
+  role = aws_iam_role.node_pool.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = [
+          aws_iam_role.node_pool.arn,
+          aws_iam_role.cloud_controller.arn
+        ]
+        Condition = {
+          "StringEqualsIfExists" = {
+            "iam:PassedToService" = "ec2.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
 # Instance Profile for EC2 Worker Nodes
 resource "aws_iam_instance_profile" "worker" {
   name = "${var.infra_id}-worker"

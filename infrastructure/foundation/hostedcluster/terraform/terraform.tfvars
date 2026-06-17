@@ -23,7 +23,7 @@ clusters = {
   payu-onprem = {
     name            = "payu-onprem"
     infra_id        = "payu-onprem"
-    ocp_version     = "4.18.43-multi"
+    ocp_version     = "4.15.59-multi"
     base_domain     = "payu.ocp.fajjjar.my.id"
     private_zone_id = "Z0688851VIBKG68U8DFU"
     public_zone_id  = "Z0716734HV77ZJQGV03V"
@@ -41,7 +41,7 @@ clusters = {
     node_root_volume_size = 120
     environment           = "onprem"
     extra_tags = {
-      "channel" = "stable-4.18"
+      "channel" = "stable-4.15"
     }
   }
 
