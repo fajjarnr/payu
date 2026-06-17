@@ -6,8 +6,12 @@ import id.payu.support.dto.TrainingModuleResponse;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,21 +105,49 @@ public class TrainingModuleService {
     // ═══════════════════════════════════════════════════════
 
     private List<TrainingModuleResponse> getAllTrainingModulesFallback(Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getAllTrainingModules: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private TrainingModuleResponse getModuleByIdFallback(Long id, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getModuleById: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private TrainingModuleResponse createModuleFallback(CreateTrainingModuleRequest request, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createModule: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private TrainingModuleResponse updateModuleStatusFallback(Long id, TrainingStatus status, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for updateModuleStatus: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }

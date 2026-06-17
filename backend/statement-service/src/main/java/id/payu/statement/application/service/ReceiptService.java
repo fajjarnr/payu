@@ -19,6 +19,10 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -227,16 +231,37 @@ public class ReceiptService {
     // ═══════════════════════════════════════════════════════
 
     private ReceiptResponse generateReceiptFallback(ReceiptGenerationRequest request, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for generateReceipt: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private ReceiptResponse getReceiptFallback(UUID receiptId, String customerId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getReceipt: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private byte[] generatePdfFallback(UUID receiptId, String customerId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for generatePdf: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }

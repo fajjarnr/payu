@@ -9,8 +9,13 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -170,6 +175,13 @@ public class DisputeService implements DisputeUseCase {
     private Dispute openDisputeFallback(UUID transactionId, UUID customerId, UUID merchantId,
                                         BigDecimal disputedAmount, String currency, String reason,
                                         Throwable ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Circuit breaker triggered for openDispute [transactionId={}]: {}",
                 transactionId, ex.getMessage());
         throw new IllegalStateException("Dispute service temporarily unavailable. Please retry later.", ex);

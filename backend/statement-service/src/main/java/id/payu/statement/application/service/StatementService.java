@@ -19,6 +19,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import id.payu.outbox.service.OutboxService;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -239,21 +243,49 @@ public class StatementService {
     // ═══════════════════════════════════════════════════════
 
     private StatementResponse getStatementFallback(UUID statementId, String customerId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getStatement: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private Page<StatementResponse> listStatementsFallback(String customerId, Pageable pageable, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for listStatements: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private Optional<StatementResponse> getLatestStatementFallback(String customerId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getLatestStatement: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }
 
     private byte[] getStatementPdfFallback(UUID statementId, String customerId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getStatementPdf: {}", ex.getMessage());
         throw new RuntimeException("StatementEntity service temporarily unavailable", ex);
     }

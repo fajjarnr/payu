@@ -8,9 +8,14 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -155,6 +160,13 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     private DataAccessAuditEntity logDataAccessFallback(String userId, String accessedBy, String serviceName,
                                                    String resourceType, String resourceId,
                                                    DataOperationType operationType, String purpose, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for logDataAccess: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
@@ -164,16 +176,37 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
                                                       DataOperationType operationType, String purpose,
                                                       String ipAddress, String userAgent, boolean success,
                                                       String errorMessage, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for logDataAccess: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private DataAccessAuditEntity getDataAccessAuditFallback(UUID auditId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getDataAccessAudit: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private Page<DataAccessAuditEntity> getUserDataAccessHistoryFallback(String userId, Pageable pageable, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getUserDataAccessHistory: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
@@ -181,6 +214,13 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     private Page<DataAccessAuditEntity> searchDataAccessAuditFallback(String userId, String accessedBy, String serviceName,
                                                                  DataOperationType operationType, LocalDateTime startDate,
                                                                  LocalDateTime endDate, Pageable pageable, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for searchDataAccessAudit: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }

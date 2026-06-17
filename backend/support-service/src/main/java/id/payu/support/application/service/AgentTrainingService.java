@@ -10,8 +10,12 @@ import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -159,21 +163,53 @@ public class AgentTrainingService {
     // ═══════════════════════════════════════════════════════
 
     private List<AgentTrainingResponse> getAllAgentTrainingsFallback(Exception ex) {
+        // L-068: rethrow business exceptions so GlobalExceptionHandler maps them
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getAllAgentTrainings: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private List<AgentTrainingResponse> getTrainingsByAgentFallback(Long agentId, Exception ex) {
+        // L-068: rethrow business exceptions so GlobalExceptionHandler maps them
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getTrainingsByAgent: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private List<AgentTrainingResponse> getTrainingsByModuleFallback(Long moduleId, Exception ex) {
+        // L-068: rethrow business exceptions so GlobalExceptionHandler maps them
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getTrainingsByModule: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }
 
     private AgentTrainingResponse assignTrainingFallback(AssignTrainingRequest request, Exception ex) {
+        // L-068: rethrow business exceptions so GlobalExceptionHandler maps them
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for assignTraining: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);
     }

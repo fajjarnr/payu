@@ -9,6 +9,10 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -214,26 +218,61 @@ public class IntegrationService implements IntegrationUseCase {
     // ═══════════════════════════════════════════════════════
 
     private String processSwiftMessageFallback(String swiftMessage, String messageType, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for processSwiftMessage: {}", ex.getMessage());
         throw new RuntimeException("Integration service temporarily unavailable", ex);
     }
 
     private String generateOjkReportFallback(String reportType, LocalDate date, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for generateOjkReport: {}", ex.getMessage());
         throw new RuntimeException("Integration service temporarily unavailable", ex);
     }
 
     private String sendSoapRequestFallback(String endpoint, String operation, String payload, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for sendSoapRequest: {}", ex.getMessage());
         throw new RuntimeException("Integration service temporarily unavailable", ex);
     }
 
     private String sendHttpRequestFallback(String url, String method, Map<String, String> headers, String body, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for sendHttpRequest: {}", ex.getMessage());
         throw new RuntimeException("Integration service temporarily unavailable", ex);
     }
 
     private boolean retryMessageFallback(String messageId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for retryMessage: {}", ex.getMessage());
         throw new RuntimeException("Integration service temporarily unavailable", ex);
     }

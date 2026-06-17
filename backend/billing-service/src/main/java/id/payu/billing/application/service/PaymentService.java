@@ -13,8 +13,12 @@ import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.TopUpRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -232,21 +236,49 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     }
 
     private BillPaymentEntity createPaymentFallback(CreatePaymentRequest request, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createPayment: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private BillPaymentEntity createTopUpFallback(TopUpRequest request, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createTopUp: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private Optional<BillPaymentEntity> getPaymentFallback(UUID id, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getPayment: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private Optional<BillPaymentEntity> getPaymentByReferenceFallback(String referenceNumber, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getPaymentByReference: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }

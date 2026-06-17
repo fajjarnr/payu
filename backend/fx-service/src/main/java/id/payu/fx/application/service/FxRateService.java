@@ -7,8 +7,12 @@ import id.payu.fx.domain.port.out.FxRateProviderPort;
 import id.payu.fx.domain.port.out.FxRateRepositoryPort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -137,11 +141,25 @@ public class FxRateService implements FxRateUseCase {
     // ═══════════════════════════════════════════════════════
 
     private FxRate getCurrentRateFallback(String fromCurrency, String toCurrency, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getCurrentRate: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private FxRate saveRateFallback(FxRate fxRate, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for saveRate: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
@@ -151,11 +169,25 @@ public class FxRateService implements FxRateUseCase {
     }
 
     private List<FxRate> getAllRatesFallback(Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getAllRates: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private FxConversion convertCurrencyFallback(String accountId, String fromCurrency, String toCurrency, BigDecimal amount, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for convertCurrency: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }

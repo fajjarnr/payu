@@ -8,9 +8,14 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -122,6 +127,13 @@ public class CustomerCaseService {
     // ─── Fallback methods ──────────────────────────────────────────────────────
 
     private CustomerCaseEntity createFallback(CustomerCaseRequest request, Throwable ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Circuit breaker triggered for CustomerCaseService.create [userId={}]: {}",
                 request.userId(), ex.getMessage());
         throw new IllegalStateException("Backoffice service temporarily unavailable. Please retry later.", ex);

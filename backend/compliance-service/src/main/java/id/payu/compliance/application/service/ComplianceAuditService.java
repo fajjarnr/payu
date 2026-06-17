@@ -10,8 +10,13 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -94,26 +99,61 @@ public class ComplianceAuditService implements AuditReportUseCase {
     }
 
     private AuditReportEntity createAuditReportFallback(UUID transactionId, String merchantId, ComplianceStandard standard, List<ComplianceCheck> checks, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private AuditReportEntity getAuditReportFallback(UUID reportId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private Optional<AuditReportEntity> findAuditReportFallback(UUID reportId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for findAuditReport: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private List<AuditReportEntity> getReportsByTransactionFallback(UUID transactionId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getReportsByTransaction: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }
 
     private List<AuditReportEntity> getReportsByMerchantFallback(String merchantId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getReportsByMerchant: {}", ex.getMessage());
         throw new RuntimeException("Compliance service temporarily unavailable", ex);
     }

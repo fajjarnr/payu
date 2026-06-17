@@ -14,9 +14,14 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -271,16 +276,37 @@ public class SubscriptionService implements SubscriptionUseCase {
     private SubscriptionPlanEntity createPlanFallback(String partnerId, String planName, String description,
                                                 BillingInterval interval, BigDecimal price, String currency,
                                                 int trialDays, int gracePeriodDays, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createPlan: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private SubscriptionEntity subscribeFallback(String accountId, UUID planId, String externalReferenceId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for subscribe: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
     private SubscriptionEntity cancelSubscriptionFallback(UUID subscriptionId, String reason, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for cancelSubscription: {}", ex.getMessage());
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }

@@ -8,7 +8,11 @@ import id.payu.fx.domain.port.out.FxConversionRepositoryPort;
 import id.payu.fx.domain.port.out.WalletServicePort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -153,21 +157,49 @@ public class FxConversionService implements FxConversionUseCase {
     // ═══════════════════════════════════════════════════════
 
     private FxConversion createConversionFallback(FxConversion conversion, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for createConversion: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private FxConversion getConversionFallback(UUID conversionId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getConversion: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private List<FxConversion> getConversionsByAccountFallback(String accountId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for getConversionsByAccount: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
 
     private void reverseConversionFallback(UUID conversionId, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException
+                || ex instanceof IllegalArgumentException
+                || ex instanceof ConstraintViolationException
+                || ex instanceof HttpMessageNotReadableException
+                || ex instanceof AccessDeniedException) {
+            throw (RuntimeException) ex;
+        }
         log.error("Fallback for reverseConversion: {}", ex.getMessage());
         throw new RuntimeException("FX service temporarily unavailable", ex);
     }
