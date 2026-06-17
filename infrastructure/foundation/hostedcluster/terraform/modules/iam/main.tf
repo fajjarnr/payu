@@ -15,7 +15,7 @@ data "tls_certificate" "oidc" {
 # IAM OIDC Identity Provider for THIS cluster
 resource "aws_iam_openid_connect_provider" "oidc" {
   url             = "https://${var.shared_oidc_bucket}.s3.${var.aws_region}.amazonaws.com/${var.infra_id}"
-  client_id_list  = ["sts.amazonaws.com"]
+  client_id_list  = ["sts.amazonaws.com", "openshift"]
   thumbprint_list = [data.tls_certificate.oidc.certificates[0].sha1_fingerprint]
 }
 

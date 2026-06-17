@@ -1,0 +1,41 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: hcp-audience-fixer
+webhooks:
+- name: audience-fixer.hcp.payu.io
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: hcp-audience-fixer
+      namespace: payu-system
+      path: /
+      port: 443
+    caBundle: ${CA_BUNDLE}
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  sideEffects: None
+  timeoutSeconds: 10
+  reinvocationPolicy: Never
+  namespaceSelector:
+    matchExpressions:
+    - key: purpose
+      operator: In
+      values:
+      - hcp-control-plane
+    - key: hypershift.openshift.io/hosted-control-plane
+      operator: In
+      values:
+      - "true"
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods
+    scope: '*'
