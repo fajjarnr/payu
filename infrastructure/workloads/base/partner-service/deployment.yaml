@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.59
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.60
         ports:
         - containerPort: 8080
           name: http

@@ -7,7 +7,7 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
-  name: payu-kafka-controller
+  name: controller
   labels:
     app.kubernetes.io/name: kafka
     app.kubernetes.io/part-of: payu
@@ -34,7 +34,7 @@ spec:
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
-  name: payu-kafka-broker
+  name: broker
   labels:
     app.kubernetes.io/name: kafka
     app.kubernetes.io/part-of: payu

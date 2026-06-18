@@ -9,11 +9,10 @@ metadata:
     app.kubernetes.io/component: database
 spec:
   # READY-027 HA: 3 instances (1 primary + 2 replicas) with streaming replication.
-  # Migration from the legacy StatefulSet `payu-postgres-0` (single pod) is
-  # documented in docs/operations/PG_HA_MIGRATION.md.
+  # Currently 1 instance (instance1) due to test env constraints.
   instances:
-    - name: pgha
-      replicas: 3
+    - name: instance1
+      replicas: 1
       dataVolumeClaimSpec:
         accessModes: [ReadWriteOnce]
         storageClassName: gp3-csi
@@ -27,32 +26,12 @@ spec:
         requests:
           cpu: 500m
           memory: 1Gi
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    postgres-operator.crunchydata.com/cluster: payu-postgres
-                    postgres-operator.crunchydata.com/instance-set: pgha
-                topologyKey: kubernetes.io/hostname
-                namespaces: [payu-dev]
-    - name: pgbackrest
-      replicas: 1
-      dataVolumeClaimSpec:
-        accessModes: [ReadWriteOnce]
-        storageClassName: gp3-csi
-        resources:
-          requests:
-            storage: 20Gi
 
   postgresVersion: 16
 
-  # Backup config (pgBackRest) for PITR + replica WAL shipping
   backups:
     pgbackrest:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.50.1
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.51.1
       repos:
         - name: repo1
           volume:
@@ -62,62 +41,35 @@ spec:
               resources:
                 requests:
                   storage: 20Gi
-          schedules:
-            full: "0 1 * * 0"
-            incremental: "0 1 * * 1-6"
-          retention: 7d
 
-  # Users (must match current StatefuSet user names so app configs work)
+  pgBouncer:
+    image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.23-1
+    replicas: 2
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  monitoring:
+    exporter:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.3.0
+
+  # Users (payu is the main user for app services; payu_* are per-service schemas)
   users:
     - name: postgres
       options: SUPERUSER
     - name: payu
-    - name: payu_account
-    - name: payu_auth
-    - name: payu_transaction
-    - name: payu_wallet
-    - name: payu_notification
-    - name: payu_sonarqube
+    - name: payu-account
+    - name: payu-auth
+    - name: payu-transaction
+    - name: payu-wallet
+    - name: payu-notification
+    - name: payu-sonarqube
 
-  # Databases
-  databases:
-    - name: payu
-      owner: payu
-    - name: payu_account
-      owner: payu_account
-    - name: payu_auth
-      owner: payu_auth
-    - name: payu_transaction
-      owner: payu_transaction
-    - name: payu_wallet
-      owner: payu_wallet
-    - name: payu_notification
-      owner: payu_notification
-    - name: payu_sonarqube
-      owner: payu_sonarqube
-
-  # Proxy (PgBouncer) — pool connections from microservices
   proxy:
     pgBouncer:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.22.1
       replicas: 2
-      resources:
-        limits:
-          cpu: 500m
-          memory: 512Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
 
-  # Patroni-managed monitoring
-  monitoring:
-    pgmonitor:
-      exporter:
-        image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.4.0
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 50m
-            memory: 64Mi
