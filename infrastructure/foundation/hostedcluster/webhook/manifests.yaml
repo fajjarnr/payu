@@ -16,6 +16,7 @@ data:
 
     SA_TO_AUDIENCE = {
         "capi-provider": "sts.amazonaws.com",
+        "capa-controller-manager": "sts.amazonaws.com",
         "control-plane-operator": "sts.amazonaws.com",
         "cloud-network-config-controller": "sts.amazonaws.com",
         "kube-controller-manager": "sts.amazonaws.com",
