@@ -49,18 +49,10 @@ public class SoapRouteBuilder extends RouteBuilder {
 
                 // Create message record if not exists
                 if (messageId == null) {
-                    IntegrationMessage message = IntegrationMessage.builder()
-                            .messageId(UUID.randomUUID().toString())
-                            .type(MessageType.SOAP)
-                            .direction(MessageDirection.OUTBOUND)
-                            .sourceSystem("PAYU_CORE")
-                            .targetSystem(extractHost(endpoint))
-                            .rawPayload(payload)
-                            .businessReference(operation)
-                            .status(MessageStatus.SENDING)
-                            .build();
-
-                    messageProcessingService.createMessage(
+                    // Use the persisted entity's messageId from createMessage (it generates
+                    // its own UUID — the local builder above is not persisted and would
+                    // cause markSent/markFailed to fail with "Message not found").
+                    IntegrationMessage created = messageProcessingService.createMessage(
                             MessageType.SOAP,
                             MessageDirection.OUTBOUND,
                             "PAYU_CORE",
@@ -70,7 +62,7 @@ public class SoapRouteBuilder extends RouteBuilder {
                             operation
                     );
 
-                    exchange.getIn().setHeader("MessageId", message.getMessageId());
+                    exchange.getIn().setHeader("MessageId", created.getMessageId());
                 }
 
                 // Wrap payload in SOAP envelope if needed
@@ -173,7 +165,7 @@ public class SoapRouteBuilder extends RouteBuilder {
                     headers.forEach((key, value) -> exchange.getIn().setHeader(key, value));
                 }
             })
-            .toD("${header.HttpUrl}?throwExceptionOnFailure=true")
+            .toD("${header.HttpUrl}?throwExceptionOnFailure=false")
             .log(LoggingLevel.INFO, "HTTP response received with status: ${header.CamelHttpResponseCode}");
     }
 

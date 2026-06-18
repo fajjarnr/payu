@@ -126,7 +126,6 @@ class WireMockIntegrationTest {
     }
 
     @Test
-    @Disabled("Pre-existing test bug: throwExceptionOnFailure=true on route throws HttpOperationFailedException. Test expects response body, not exception. Needs route config change OR test exception handler. Not infrastructure.")
     @Order(3)
     @DisplayName("Should handle WireMock 503 response gracefully through Camel route")
     void testHttpErrorResponse() {
@@ -154,7 +153,6 @@ class WireMockIntegrationTest {
     }
 
     @Test
-    @Disabled("Pre-existing test bug: SoapRouteBuilder GZIP fixed (iter 34) but transaction timing issue with markFailed. Soap request flow creates message in first process block, but second process block fires before transaction commits. Needs route refactor to use synchronous process exchange. Deferred to future sprint.")
     @Order(4)
     @DisplayName("Should create integration message record when triggering SOAP route")
     void testSoapRouteCreatesMessageRecord() {
