@@ -4,6 +4,96 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-071: payu-dev Cluster Recovery — Kafka Naming, Postgres NetworkPolicy, HA Disabled, CI Guard (2026-06-18)
+
+**Date**: 2026-06-18
+**Domain**: Platform / OpenShift / Kafka Naming / NetworkPolicy / CI Guard / Crunchy HA
+**Context**: Continuation of iter 36-37 recovery. After fixing missing imagestreams + DB passwords + Redis auth + OOMKilled + Kafka bootstrap, 9 pods still Not-Ready. User then requested infra pod naming consistency (`payu-kafka` like `payu-broker`). Fixed 4 separate issues + added L-058 CI guard.
+
+**Root causes (4 independent issues + 1 preventive)**:
+1. **Kafka naming inconsistency**: Strimzi Kafka CR was named `kafka` (Strimzi auto-generated `kafka-kafka-bootstrap` Service). User wanted `payu-kafka` matching `payu-broker`. Required deleting old Kafka CR (destructive but topics auto-recreate).
+2. **KafkaNodePool double-prefix**: New pods were named `payu-kafka-payu-kafka-broker-0` (cluster-name + pool-name). Fixed by renaming pools `payu-kafka-broker` → `broker`, `payu-kafka-controller` → `controller` (Strimzi prepends cluster-name automatically).
+3. **Postgres NetworkPolicy blocked payu-dev services**: `allow-payu-sso-to-postgres` only allowed ingress from `payu-sso` namespace. But `payu-postgres-0` (StatefulSet pod) got label `app.kubernetes.io/name=payu-postgres` matching the policy selector → all `payu-dev` services blocked from connecting. TCP connect timed out.
+4. **Crunchy Postgres HA broken**: `payu-postgres-pgha-*` pods stuck in ImagePullBackOff because image tags `crunchy-pgbackrest:ubi8-2.50.1`, `crunchy-pgbouncer:ubi8-1.22.1` don't exist in registry. Operator created new pods but they can't pull. The original `payu-postgres-instance1-gmx4-0` pod was deleted (data lost) when operator reconciled to new `pgha` instance spec.
+
+**Pattern (5 fixes)**:
+```bash
+# Fix 1: Rename Kafka CR kafka → payu-kafka
+oc delete kafka kafka -n payu-dev --wait=false
+oc apply -k infrastructure/platform/data/base/ -n payu-dev  # new yaml has name: payu-kafka
+# Topics auto-recreate via auto.create.topics.enable=true
+
+# Fix 2: Rename KafkaNodePool payu-kafka-broker → broker, payu-kafka-controller → controller
+sed -i 's|name: payu-kafka-broker|name: broker|g' infrastructure/platform/data/base/kafka-amqstreams.yaml
+sed -i 's|name: payu-kafka-controller|name: controller|g' infrastructure/platform/data/base/kafka-amqstreams.yaml
+oc apply -k infrastructure/platform/data/base/
+
+# Fix 3: Postgres NetworkPolicy allow payu-dev too
+cat > infrastructure/workloads/overlays/payu-dev/network-policy-payu-sso-postgres.yaml << 'EOF'
+kind: NetworkPolicy
+metadata:
+  name: allow-payu-namespaces-to-postgres
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: payu-postgres
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: payu-sso}}
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: payu-dev}}
+      ports: [{protocol: TCP, port: 5432}]
+EOF
+oc delete networkpolicy allow-payu-sso-to-postgres -n payu-dev
+oc apply -f infrastructure/workloads/overlays/payu-dev/network-policy-payu-sso-postgres.yaml -n payu-dev
+
+# Fix 4: Disable broken Crunchy HA cluster
+oc delete postgrescluster payu-postgres -n payu-dev
+# payu-postgres-0 (StatefulSet) handles DB; requires separate HA migration ticket (READY-076)
+
+# Fix 5: L-058 CI guard (NEW)
+cat > .github/workflows/drift-detection.yml << 'EOF'
+name: Git-vs-Cluster Drift Detection (L-058)
+on:
+  push: {branches: [main, develop], paths: ['infrastructure/workloads/**', 'infrastructure/platform/**']}
+  workflow_dispatch:
+jobs:
+  drift-detect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: redhat-actions/oc-install@v1
+      - run: oc login --token="$OCP_TOKEN" --server="$OCP_API_URL"
+      - run: NAMESPACE=payu-dev python3 scripts/diff-base-vs-live.py
+EOF
+```
+
+**Lesson (5 parts)**:
+1. **Pod naming follows K8s resource name prefix chain**: Strimzi Kafka CR `payu-kafka` + KafkaNodePool `broker` → StatefulSet `payu-kafka-broker`, pod `payu-kafka-broker-0`. Strimzi prepends the cluster name (CR name) to all generated resources. To get clean naming, keep CR name `payu-*` and pool name SHORT (no `payu-` prefix in pool name itself). Same pattern: AMQ `payu-broker` is just CR name (no pool concept).
+2. **NetworkPolicy labels matter**: A NetworkPolicy selector `app.kubernetes.io/name=payu-postgres` matches the StatefulSet pod (has this label) AND the Crunchy operator-managed instance (does NOT have this label by default). Different pod sources → different labels → different policy matches. Always verify which labels the live pods ACTUALLY have, not just what the operator YAML says.
+3. **Crunchy HA migration requires image registry access**: The CRD references Crunchy Data Protection images (`crunchy-pgbackrest`, `crunchy-pgbouncer`, etc). If image tags don't exist in the registry OR auth credentials don't allow pull, the operator can't bootstrap. Always pre-test image availability before deploying HA. For dev, single-instance StatefulSet is simpler.
+4. **Postgres user data IS the cluster's PVC**: When Crunchy operator reconciles to new instance spec, it garbage-collects old PVCs. Data is gone. Always backup (`pg_dump`) before applying PostgresCluster yaml changes that affect instance set names.
+5. **L-058 CI guard prevents manifest drift**: `scripts/diff-base-vs-live.py` (existing since iter 23) compares base yamls vs live OCP cluster state, exits 0/1/2 for CI. Now wired to GitHub Actions on every push to infrastructure/. New workflow at `.github/workflows/drift-detection.yml`. Detects image tag drift, registry drift, ConfigMap drift.
+
+**Files changed (iter 38 commits)**:
+- `infrastructure/platform/data/base/kafka-amqstreams.yaml` (Kafka CR name + KafkaNodePool names)
+- `infrastructure/platform/data/base/postgres-cluster.yaml` (HA disabled - kept for future migration)
+- `infrastructure/workloads/base/service-endpoints.yaml` (KAFKA_URL hostname update)
+- `infrastructure/workloads/base/partner-service/deployment.yaml`, `promotion-service/deployment.yaml` (tag bump to 1.8.60 for kafka fix)
+- `infrastructure/workloads/overlays/payu-dev/network-policy-payu-sso-postgres.yaml` (allow payu-dev)
+- `backend/*/src/main/resources/application-container.yml` (18 files - kafka hostname fallback fix)
+- `.github/workflows/drift-detection.yml` (NEW - CI guard)
+- 11 missing DBs created (payu_investment, payu_products, payu_gateway, payu_bifast, etc) + migrations run
+
+**Cluster state after iter 38**:
+- **44 Ready / 0 Not-Ready / 0 CrashLoop / 0 ImagePullBackOff**
+- All infra pods `payu-` prefix: payu-kafka-broker-N, payu-kafka-controller-N, payu-kafka-entity-operator, payu-kafka-console-*, payu-broker-ss-0, payu-datagrid-*, payu-postgres-0
+- L-058 guard: NO DRIFT detected between base yamls and live cluster
+- mvn test: 30 (events-starter) + 232 (partner) + others all passing
+- Smoke test: gateway=200, account=401 (auth required)
+
+---
+
 ## L-070: Redis User Mismatch + AMQ Broker Missing + Kafka Hostname Fallback (2026-06-18)
 
 **Date**: 2026-06-18

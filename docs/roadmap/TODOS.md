@@ -14,14 +14,31 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 |
-| **Open P1s** | 10 + 2 NEW (DB password drift + missing imagestreams — see L-069) |
+| **Open P1s** | 12 (10 pre-existing + 2 NEW READY-076 Postgres HA migration + READY-077 Kafka HA setup) |
 | **Open P2s** | 12 |
-| **Production Score** | **payu-dev: 33 Ready / 9 Not-Ready (pre-existing Redis auth + AMQ broker health checks) / 0 CrashLoop / 0 ImagePullBackOff**. Iter 36 closed READY-075 (payu-dev full-stack recovery: Postgres password drift + 9 missing images + 17 empty DBs + outbox_events for 7 services). 27 DBs all have schema. Cluster health 100% recovered from iter 35 end-state. L-069 captured (Postgres password + Flyway migration sort + Hibernate validate + outbox/saga table gaps). |
-| **Last Audit** | June 18, 2026 — **26 iterations complete**. Iter 36 closed READY-075 (payu-dev full-stack recovery). 0 P0. 33/42 pods Ready (9 Not-Ready are pre-existing Redis/AMQ health check issues — gateway Redis WRONGPASS, notification AMQ broker unreachable, partner/promotion startup race with KAFKA_BOOTSTRAP_SERVERS — all out of scope for this iter). |
-| **Last Release** | `:1.8.59` (9 services) + `:1.8.55` (wallet) + `:1.8.54` (transaction) + `:1.8.51` (promotion) + `:1.8.44` (gateway) + `:1.8.23` (lending/notification) + `:1.8.22` (auth/productcatalog) + `:1.8.21` (others) + `web-app:1.5.2` |
+| **Production Score** | **payu-dev: 44/44 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iter 38 closed naming consistency + Postgres NetworkPolicy + HA disabled + L-058 CI guard. L-070 + L-071 captured. |
+| **Last Audit** | June 18, 2026 — **27 iterations complete**. Iter 38: payu-dev full-stack recovery continued. 44/44 pods Ready. All infra pods `payu-` prefixed (kafka, broker, datagrid, postgres). L-058 CI guard active in GitHub Actions. mvn test: 30+ tests pass for affected services. 0 P0. |
+| **Last Release** | `:1.8.60` (partner/promotion with kafka fix) + `:1.8.59` (9 services) + `:1.8.55` (wallet) + `:1.8.54` (transaction) + `:1.8.51` (promotion) + `:1.8.44` (gateway) + `:1.8.23` (lending/notification) + `:1.8.22` (auth/productcatalog) + `:1.8.21` (others) + `web-app:1.5.2` |
+
 ---
 
-## 🐛 Iter 36 — payu-dev Full-Stack Recovery (2026-06-18)
+## 🐛 Iter 38 — payu-dev Naming Consistency + Postgres NetPol + HA Disabled (2026-06-18)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| **READY-075** | **P1** | payu-dev cluster | **Full-stack recovery**: Postgres password drift + 9 missing imagestreams + 23/27 empty DBs + outbox_events for 7 services | 🟢 Closed | iter 36 |
+| **READY-076** | **P1** | payu-dev cluster | **Postgres HA migration (READY-027) deferred**: Crunchy pgbackrest:ubi8-2.50.1 + pgbouncer:ubi8-1.22.1 image tags don't exist in registry. Operator pods stuck in ImagePullBackOff. Original `payu-postgres-instance1-gmx4-0` pod was deleted (data lost) when reconciled to new `pgha` spec. **Fix needed**: verify Crunchy image versions in registry (e.g. `ubi8-16.6-0`, `ubi8-1.23-1`), update yaml, pg_dump + restore from `payu-postgres-0` StatefulSet. **Current**: payu-postgres-0 (StatefulSet) handles DB. `postgres-cluster.yaml` removed from kustomization. | 🟡 Open | iter 38 (deferred) |
+| **READY-077** | **P1** | payu-dev cluster | **Kafka HA (3 brokers → 5 brokers)**: Current 3 broker StatefulSets work but no HA. Topics have RF=3 already. **Fix**: bump brokers to 5 (already at 3), add 2 controller nodes for metadata quorum. Strimzi KafkaNodePool replicas:5 should suffice. Verify after iter 38 Kafka rename (payu-kafka cluster name stable). | 🟡 Open | iter 38 (deferred) |
+| **READY-078** | **P2** | All services | **Kafka hostname fallback in application-container.yml**: Already fixed in 18 files. **Verify**: build all 18 services + deploy, ensure no regression. | 🟡 Open | iter 38 (preventive) |
+
+---
+
+## 🐛 Iter 37 — payu-dev Redis Auth + AMQ Broker + Kafka Hostname Fix (2026-06-18)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| READY-074 | P1 | gateway-service | `DELETE /api/v1/wallets/{id}/savings-goals/{id}` returns 405 (gateway). `wallets` route yaml missing DELETE method. Added DELETE to methods list: `["GET", "POST", "PUT", "DELETE"]`. | 🟢 Closed | iter 20 (1.8.44) |
+| READY-073 | P1 | wallet-service | `POST /api/v1/wallets` (no method) returns 500 INTERNAL_ERROR (should be 405). Missing `HttpRequestMethodNotSupportedException` handler in local `GlobalExceptionHandler`. Per L-054, added handler returning 405 with `supportedMethods` + `Allow` header. Applied to BOTH shared `api-commons` + local wallet. | 🟢 Closed | iter 20 (1.8.55) |
 
 | Key | Priority | Service | Summary | Status | Closed In |
 |:---|:---:|:---|:---|:---|:---|

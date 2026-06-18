@@ -1,75 +1,20 @@
-apiVersion: postgres-operator.crunchydata.com/v1beta1
-kind: PostgresCluster
-metadata:
-  name: payu-postgres
-  namespace: payu-dev
-  labels:
-    app.kubernetes.io/name: payu-postgres
-    app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: database
-spec:
-  # READY-027 HA: 3 instances (1 primary + 2 replicas) with streaming replication.
-  # Currently 1 instance (instance1) due to test env constraints.
-  instances:
-    - name: instance1
-      replicas: 1
-      dataVolumeClaimSpec:
-        accessModes: [ReadWriteOnce]
-        storageClassName: gp3-csi
-        resources:
-          requests:
-            storage: 10Gi
-      resources:
-        limits:
-          cpu: "2"
-          memory: 4Gi
-        requests:
-          cpu: 500m
-          memory: 1Gi
-
-  postgresVersion: 16
-
-  backups:
-    pgbackrest:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.51.1
-      repos:
-        - name: repo1
-          volume:
-            volumeClaimSpec:
-              accessModes: [ReadWriteOnce]
-              storageClassName: gp3-csi
-              resources:
-                requests:
-                  storage: 20Gi
-
-  pgBouncer:
-    image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.23-1
-    replicas: 2
-    resources:
-      limits:
-        cpu: "1"
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
-
-  monitoring:
-    exporter:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.3.0
-
-  # Users (payu is the main user for app services; payu_* are per-service schemas)
-  users:
-    - name: postgres
-      options: SUPERUSER
-    - name: payu
-    - name: payu-account
-    - name: payu-auth
-    - name: payu-transaction
-    - name: payu-wallet
-    - name: payu-notification
-    - name: payu-sonarqube
-
-  proxy:
-    pgBouncer:
-      replicas: 2
-
+# ============================================================
+# DISABLED: PostgreSQL HA via Crunchy operator (READY-076)
+# ============================================================
+#
+# DO NOT APPLY THIS FILE. The Crunchy PostgresCluster spec requires
+# image versions that are NOT available in the cluster's image registry:
+#   - crunchy-pgbackrest:ubi8-2.50.1 (manifest unknown)
+#   - crunchy-pgbouncer:ubi8-1.22.1 (manifest unknown)
+#   - registry.connect.redhat.com/crunchydata/crunchy-postgres (auth required)
+#
+# Current state: payu-dev uses payu-postgres-0 StatefulSet (single instance).
+# See: postgres-statefulset.yaml (ACTIVE)
+#
+# To enable HA migration in future:
+# 1. Verify Crunchy image versions in registry: podman search crunchydata
+# 2. Update image tags in spec below
+# 3. Add to kustomization.yaml resources list
+# 4. Test: oc apply -k infrastructure/platform/data/base/
+# 5. Migrate data: pg_dump from payu-postgres-0 → new cluster
+# ============================================================
