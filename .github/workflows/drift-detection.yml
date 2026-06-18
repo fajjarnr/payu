@@ -1,0 +1,44 @@
+name: Git-vs-Cluster Drift Detection (L-058)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'infrastructure/workloads/**'
+      - 'infrastructure/platform/**'
+      - 'scripts/diff-base-vs-live.py'
+  workflow_dispatch:
+
+jobs:
+  drift-detect:
+    name: Detect manifest drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install oc CLI
+        uses: redhat-actions/oc-install@v1
+        with:
+          oc_version: '4.16'
+
+      - name: Login to OCP
+        env:
+          OCP_API_URL: ${{ secrets.OCP_API_URL }}
+          OCP_TOKEN: ${{ secrets.OCP_TOKEN }}
+        run: |
+          oc login --token="$OCP_TOKEN" --server="$OCP_API_URL"
+
+      - name: Detect drift (payu-dev)
+        run: |
+          NAMESPACE=payu-dev python3 scripts/diff-base-vs-live.py
+
+      - name: Detect drift (payu-prod)
+        if: env.OCP_PROD_ENABLED == 'true'
+        env:
+          OCP_API_URL: ${{ secrets.OCP_PROD_API_URL }}
+          OCP_TOKEN: ${{ secrets.OCP_PROD_TOKEN }}
+        run: |
+          oc login --token="$OCP_TOKEN" --server="$OCP_API_URL"
+          NAMESPACE=payu-prod python3 scripts/diff-base-vs-live.py
