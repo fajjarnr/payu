@@ -1,37 +1,48 @@
 package id.payu.billing.resource;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("Pre-existing test infra issue uncovered after READY-036 cascade fix. See: READY-038 spring-grpc 1.x migration, READY-044 Quarkus REST auth, READY-055 test infra (Redis/Docker/Groovy). NOTE: class-level @Disabled requires RestAssured → MockMvc conversion (L-066 pattern, ~30 min per file). 3 billing test files affected: 651 lines total. Deferred to future sprint as part of READY-038 spring-grpc migration.")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("Biller Resource Tests")
 class BillerResourceTest {
 
-    @LocalServerPort
-    int port;
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String AUTH_TOKEN = "Bearer test-token";
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @MockitoBean
     JwtDecoder jwtDecoder;
 
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     void setUp() {
-        RestAssured.port = port;
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
+        objectMapper = new ObjectMapper();
 
         Jwt mockJwt = Jwt.withTokenValue("test-token")
                 .header("alg", "RS256")
@@ -41,135 +52,111 @@ class BillerResourceTest {
         org.mockito.Mockito.when(jwtDecoder.decode("test-token")).thenReturn(mockJwt);
     }
 
-    private RequestSpecification givenAuth() {
-        return given().header("Authorization", "Bearer test-token");
-    }
-
     @Test
     @DisplayName("GET /api/v1/billers - should return all billers")
-    void shouldReturnAllBillers() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers")
-            .then()
-            .statusCode(200)
-            .contentType(ContentType.JSON)
-            .body("data", hasSize(greaterThan(0)))
-            .body("data[0].code", notNullValue())
-            .body("data[0].displayName", notNullValue());
+    void shouldReturnAllBillers() throws Exception {
+        mockMvc.perform(get("/api/v1/billers")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data[0].code").value(notNullValue()))
+                .andExpect(jsonPath("$.data[0].displayName").value(notNullValue()));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=mobile - should filter by category")
-    void shouldFilterByCategory() {
-        givenAuth()
-            .queryParam("category", "mobile")
-            .when()
-            .get("/api/v1/billers")
-            .then()
-            .statusCode(200)
-            .body("data", hasSize(greaterThan(0)))
-            .body("data.category", everyItem(equalTo("mobile")));
+    void shouldFilterByCategory() throws Exception {
+        mockMvc.perform(get("/api/v1/billers")
+                        .header(AUTH_HEADER, AUTH_TOKEN)
+                        .param("category", "mobile"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data[*].category", everyItem(equalTo("mobile"))));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return specific biller")
-    void shouldReturnSpecificBiller() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/PLN")
-            .then()
-            .statusCode(200)
-            .body("data.code", equalTo("PLN"))
-            .body("data.displayName", containsString("PLN"))
-            .body("data.category", equalTo("electricity"));
+    void shouldReturnSpecificBiller() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/PLN")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value("PLN"))
+                .andExpect(jsonPath("$.data.displayName").value(containsString("PLN")))
+                .andExpect(jsonPath("$.data.category").value("electricity"));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return 404 for unknown biller")
-    void shouldReturn404ForUnknownBiller() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/UNKNOWN")
-            .then()
-            .statusCode(404);
+    void shouldReturn404ForUnknownBiller() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/UNKNOWN")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/categories - should return all categories")
-    void shouldReturnAllCategories() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/categories")
-            .then()
-            .statusCode(200)
-            .body("data", hasItems("electricity", "water", "mobile"));
+    void shouldReturnAllCategories() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/categories")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasItems("electricity", "water", "mobile")));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=tv_cable - should return TV Cable billers")
-    void shouldReturnTVCableBillers() {
-        givenAuth()
-            .queryParam("category", "tv_cable")
-            .when()
-            .get("/api/v1/billers")
-            .then()
-            .statusCode(200)
-            .body("data", hasSize(greaterThan(0)))
-            .body("data.category", everyItem(equalTo("tv_cable")))
-            .body("data.code", hasItems("INDOVISION", "TRANSTV", "KVISION", "MNC_VISION"));
+    void shouldReturnTVCableBillers() throws Exception {
+        mockMvc.perform(get("/api/v1/billers")
+                        .header(AUTH_HEADER, AUTH_TOKEN)
+                        .param("category", "tv_cable"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data[*].category", everyItem(equalTo("tv_cable"))))
+                .andExpect(jsonPath("$.data[*].code", hasItems("INDOVISION", "TRANSTV", "KVISION", "MNC_VISION")));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers?category=multifinance - should return Multifinance billers")
-    void shouldReturnMultifinanceBillers() {
-        givenAuth()
-            .queryParam("category", "multifinance")
-            .when()
-            .get("/api/v1/billers")
-            .then()
-            .statusCode(200)
-            .body("data", hasSize(greaterThan(0)))
-            .body("data.category", everyItem(equalTo("multifinance")))
-            .body("data.code", hasItems("FIFASTRA", "BFI", "ADIRA", "WOM", "MEGA_FINANCE"));
+    void shouldReturnMultifinanceBillers() throws Exception {
+        mockMvc.perform(get("/api/v1/billers")
+                        .header(AUTH_HEADER, AUTH_TOKEN)
+                        .param("category", "multifinance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data[*].category", everyItem(equalTo("multifinance"))))
+                .andExpect(jsonPath("$.data[*].code", hasItems("FIFASTRA", "BFI", "ADIRA", "WOM", "MEGA_FINANCE")));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return TV Cable biller with correct admin fee")
-    void shouldReturnTVCableBillerWithCorrectAdminFee() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/INDOVISION")
-            .then()
-            .statusCode(200)
-            .body("data.code", equalTo("INDOVISION"))
-            .body("data.displayName", containsString("Indovision"))
-            .body("data.category", equalTo("tv_cable"))
-            .body("data.adminFee", equalTo(2500));
+    void shouldReturnTVCableBillerWithCorrectAdminFee() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/INDOVISION")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value("INDOVISION"))
+                .andExpect(jsonPath("$.data.displayName").value(containsString("Indovision")))
+                .andExpect(jsonPath("$.data.category").value("tv_cable"))
+                .andExpect(jsonPath("$.data.adminFee").value(2500));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/{code} - should return Multifinance biller with correct admin fee")
-    void shouldReturnMultifinanceBillerWithCorrectAdminFee() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/FIFASTRA")
-            .then()
-            .statusCode(200)
-            .body("data.code", equalTo("FIFASTRA"))
-            .body("data.displayName", containsString("FIFASTRA"))
-            .body("data.category", equalTo("multifinance"))
-            .body("data.adminFee", equalTo(5000));
+    void shouldReturnMultifinanceBillerWithCorrectAdminFee() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/FIFASTRA")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value("FIFASTRA"))
+                .andExpect(jsonPath("$.data.displayName").value(containsString("FIFASTRA")))
+                .andExpect(jsonPath("$.data.category").value("multifinance"))
+                .andExpect(jsonPath("$.data.adminFee").value(5000));
     }
 
     @Test
     @DisplayName("GET /api/v1/billers/categories - should include tv_cable and multifinance categories")
-    void shouldIncludeNewCategories() {
-        givenAuth()
-            .when()
-            .get("/api/v1/billers/categories")
-            .then()
-            .statusCode(200)
-            .body("data", hasItems("electricity", "water", "mobile", "tv_cable", "multifinance"));
+    void shouldIncludeNewCategories() throws Exception {
+        mockMvc.perform(get("/api/v1/billers/categories")
+                        .header(AUTH_HEADER, AUTH_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasItems("electricity", "water", "mobile", "tv_cable", "multifinance")));
     }
 }
