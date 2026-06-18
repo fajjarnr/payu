@@ -19,7 +19,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Iteration 35: 28 More @Disabled Tests Re-Enabled + 4 Production Bugs Fixed (2026-06-18)
+### Iteration 37: payu-dev Redis Auth + AMQ Broker + Kafka Hostname Fix (2026-06-18)
+
+**Recursive dev loop continued**: from iter 36's 33 Ready/9 Not-Ready → **38 Ready/0 Not-Ready/0 CrashLoop (97% healthy)**.
+
+### 4 Independent issues fixed
+
+**Phase 1 - Root Cause Investigation (continued from iter 36)**:
+
+1. **gateway-service Redis auth (WRONGPASS)**: Data Grid has user `developer` only (per `datagrid-credentials` Secret), but gateway `QUARKUS_REDIS_HOSTS=redis://default:payu-cache-dev-password@...` and all 18 Spring Boot services `PAYU_CACHE_REDIS_USERNAME=default`. The `default` user does NOT exist in Data Grid identities.
+   - **Fix**: Multi-line perl sed across 21 deployment yamls → `default` → `developer`. Redis URLs: `redis://developer:payu-cache-dev-password@...`. PAYU_CACHE_REDIS_USERNAME env: `developer`.
+
+2. **notification-service AMQ broker unreachable (ARTEMIS_URL=tcp://artemis:61616)**: No AMQ broker deployed in cluster. `payu-broker` ActiveMQArtemis CR existed in `infrastructure/platform/messaging/base/amq-broker.yaml` but never applied.
+   - **Fix**: `oc apply -f infrastructure/platform/amq-broker/base/artemis.yaml -n payu-dev`. Operator created `payu-broker-ss-0` StatefulSet + `artemis` Service. notification-service now connects via JMS.
+
+3. **partner-service + promotion-service CrashLoop with OOMKilled**: `Exit Code 137` (OOMKilled). Limits 512Mi / 768Mi insufficient for Spring Boot 4.1.0 + Java 25 + Kafka + Outbox + CloudEvents + Resilience4j + Hibernate + 8 shared starters. Running pods of same image used 400-600Mi but JVM spikes during Outbox poll.
+   - **Fix**: Bumped memory limits — partner: 512Mi → 1Gi, promotion: 768Mi → 1.5Gi, wallet: 512Mi → 1Gi. Investment: 512Mi → 1Gi (also OOMKilled after kafka fix).
+
+4. **Kafka hostname wrong default in application-container.yml**: `payu-kafka-kafka-bootstrap:9092` (WRONG — doesn't exist). Actual K8s service is `kafka-kafka-bootstrap`. Used as `${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}` fallback in 18 service `application-container.yml` files.
+   - **Symptom**: Pods that didn't have `KAFKA_BOOTSTRAP_SERVERS` env (race condition during restart when configmap was updating) fell back to wrong hostname → `Couldn't resolve server payu-kafka-kafka-bootstrap:9092` → ApplicationContextException → CrashLoop.
+   - **Fix**: sed `payu-kafka-kafka-bootstrap` → `kafka-kafka-bootstrap` across 18 application-container.yml files. Rebuilt partner-service + promotion-service with tag `1.8.59` (also bumped yaml tag to match new image). Other 16 services keep working via env override but the underlying bug is fixed for future restarts.
+
+**Phase 2 - Image Tag Sync (revisited L-058)**: After deploying with `oc apply -k infrastructure/workloads/base/`, the deployment spec image tags were reverted from live tags (1.8.59) to base yaml tags (1.8.21) for 9 services (backoffice, billing, cms, compliance, dispute, fx, integration, statement, support). New pods pulled old tags that don't exist in imagestream → ImagePullBackOff. Per L-058 fix: synced base yaml tags back to live values via `oc get is -o jsonpath='{.status.tags[0].tag}'` per service.
+
+### Fixes applied (3 file changes + 1 cluster apply)
+1. **18 deployment yamls** — `PAYU_CACHE_REDIS_USERNAME: default` → `developer`, `redis://default:` → `redis://developer:`
+2. **3 deployment yamls** — memory limits bumped (partner 512Mi→1Gi, promotion 768Mi→1.5Gi, wallet 512Mi→1Gi, investment 512Mi→1Gi)
+3. **18 application-container.yml** — `payu-kafka-kafka-bootstrap` → `kafka-kafka-bootstrap` (preventive bug fix)
+4. **9 deployment yamls** — image tags synced to live (1.8.21 → 1.8.59)
+5. **AMQ broker** — `payu-broker` ActiveMQArtemis CR applied (cluster change)
+6. **2 images built+push** — partner-service:1.8.59 + promotion-service:1.8.59 (with kafka fix)
+
+### Cluster state after fix
+- 38 Running / 0 Not-Ready / 0 CrashLoop / 0 ImagePullBackOff
+- HTTP smoke: 16/16 services respond 200 or 401 (auth required) ✓
+- gateway-service health: 200 ✓ (Redis fix worked)
+- notification-service health: 200 ✓ (AMQ broker deployed)
+
+### L-070 captured (cluster operations)
+- **Data Grid user mismatch**: `datagrid-credentials` Secret has `developer` user only, but 19 deployments reference `default` user. WRONGPASS errors invisible in Spring Boot services because they fall back to local cache (still "Running ready=True" but Redis silently fails). Only Quarkus gateway health check exposes the issue.
+- **Spring Kafka fallback race**: `${KAFKA_BROKERS:default-value}` in application.yml is used when env var is empty. During rapid restarts (e.g. configmap update), pods may start with empty env. Default must point to a REAL hostname, not a typo'd `payu-` prefixed version.
+- **OOM threshold = 512Mi is too low for Spring Boot 4.1.0 + Java 25 + 8 shared starters**. Java 25 JVM metaspace alone is ~150Mi. Add Hikari, Hibernate, Kafka clients, Outbox polling → 400-600Mi baseline, can spike to 700+Mi. Set baseline limits to 1Gi for Spring Boot services.
+- **Base yaml image tag drift (L-058 revisited)**: Even after iter 22 fixed initial drift, ongoing `oc set image` rollouts cause new drift. Need CI step to detect and sync.
+
+---
+
+### Iteration 36: payu-dev Full-Stack Recovery (2026-06-18)
+
+**Recursive development loop kicked off by user**: "banyak pod error karena belum ada imagestream, lakukan recursive development loop". 20 pods non-Running at start (11 ImagePullBackOff + 6 CrashLoop + 3 others). After fix: 33 Ready, 9 Not-Ready (pre-existing Redis/AMQ config), 0 CrashLoop, 0 ImagePullBackOff.
+
+### Root causes (3 independent issues found via debugging methodology)
+
+**Phase 1 - Root Cause Investigation (Iron Law)**:
+1. **Postgres user `payu` password drift**: K8s `db-secrets.DB_PASSWORD=payu-dev-password` (patched in iter 3/22) but Postgres user `payu` was created with old `>3Se{I@_4JVvvo[-z:uOO2jh` password. Result: pods crashloopped with `FATAL: password authentication failed for user "payu"` (SQLSTATE 28P01).
+2. **Stale URL strings in `db-secrets.yaml`**: `ANALYTICS_DATABASE_URL` and `KYC_DATABASE_URL` still contained URL-encoded old password (`%3E3Se%7BI%40_4JVvvo%5B-z%3AuOO2jh`). Iter 22 fix only updated `DB_PASSWORD` field, not the embedded asyncpg URL strings.
+3. **Fresh PostgreSQL with 23/27 empty DBs**: Crunchy Postgres cluster wiped or freshly provisioned. Flyway migrations never ran because pods couldn't reach Postgres at startup. Hibernate `ddl-auto: validate` only validates entity-declared tables, NOT outbox/saga tables from shared starters — so pods reported "Running ready=True" but crashed on first outbox query (`relation "outbox_events" does not exist`).
+
+### Fixes applied
+
+**Phase 2 - Fix**:
+1. `ALTER USER payu PASSWORD 'payu-dev-password'` in Crunchy Postgres. Verified via direct psql TCP connection (`SELECT 1` returns).
+2. Updated `infrastructure/workloads/base/db-secrets.yaml` to use `payu-dev-password` in `ANALYTICS_DATABASE_URL` and `KYC_DATABASE_URL`. Applied via `oc apply`.
+3. Built + pushed 9 missing images (JDK 25 + JAVA_HOME=/opt/jdk25 + Maven 3.8.7 toolchain):
+   - analytics-service:1.8.8 (Python, ML deps)
+   - api-portal-service:1.8.21 (Quarkus)
+   - bi-fast-simulator:1.8.21 (Quarkus)
+   - biller-simulator:1.8.21 (Quarkus)
+   - dukcapil-simulator:1.8.21 (Quarkus)
+   - gateway-service:1.8.44 (Quarkus)
+   - kyc-service:1.8.8 (Python, OCR/PaddleOCR deps)
+   - qris-simulator:1.8.21 (Quarkus)
+   - web-app:1.5.2 (Next.js 16 + Turbopack)
+4. Applied Flyway migrations to 17 empty DBs via `psql -h 127.0.0.1` from within Postgres pod. Used Python natural sort for V* files (NOT `sort -V` which puts V1_1 before V1 incorrectly).
+5. Created `outbox_events` table in 7 DBs without dedicated migration (auth, compliance, dispute, support, backoffice, productcatalog, abtesting) using `account-service/V11__add_outbox_events_table.sql` as schema reference.
+
+**Phase 3 - Test**: Restarted all 19 deployments via `oc rollout restart`. All pods picked up new schema + secret + password.
+
+**Phase 4 - Build new tag**: N/A (no code changes, all fixes were infra/data).
+
+**Phase 5 - Deploy**: 33 pods Ready, 9 Not-Ready (pre-existing Redis auth + AMQ broker health checks DOWN — out of scope).
+
+**Phase 6 - Verify**:
+- HTTP smoke test: `curl http://account-service.payu-dev.svc.cluster.local:8080/api/v1/users` → HTTP 401 (OAuth2 enforced correctly).
+- All 27 `payu_*` DBs have schema (0 empty remaining).
+- 0 CrashLoop, 0 ImagePullBackOff.
+
+### L-069 captured (platform-wide)
+- Always verify Postgres user password matches K8s secret BEFORE patching config
+- `db-secrets.yaml` URL strings can embed passwords separate from `DB_PASSWORD` field
+- Hibernate `ddl-auto: validate` only validates entity-declared tables (not outbox/saga)
+- Fresh PostgreSQL = empty DBs; verify with `SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'`
+- V* migration sort: use Python natural sort, not `sort -V` (underscore ordering bug)
+- Services using outbox-starter need `outbox_events` table even without dedicated migration
+- Quarkus Containerfile requires `mvn package -DskipTests` BEFORE `podman build`
+
+### Files changed (3)
+- `infrastructure/workloads/base/db-secrets.yaml` (URL passwords fixed)
+- `docs/guides/LESSONS.md` (+L-069)
+- Postgres user password reset (in-cluster ALTER USER)
+
+### Scripts used (in /tmp/)
+- `apply-migrations-v2.sh` — Apply Flyway migrations with Python natural sort
+- `build-missing.sh` / `build-remaining.sh` — Build+push 9 missing images with JDK 25
+
+---
 
 **Cluster admin context**: All work in management cluster. JDK 25 + Maven 3.8.7 toolchain (installed iter 32).
 

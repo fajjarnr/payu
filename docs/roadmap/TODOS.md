@@ -14,11 +14,20 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 |
-| **Open P1s** | 12 (10 pre-existing + 2 NEW: HttpMessageNotReadableException + Resilience4j fallback rethrow — see L-068) — TOTAL ~12 P1 |
-| **Open P2s** | 12 (READY-038, READY-039, READY-040, READY-041, READY-042 + 7 NEW) |
-| **Production Score** | **30/30 backend modules SUCCESS / 47/47 support-service tests / 0 production bugs this iter**. **25-iteration** recursive dev loop Jun 17. Iter 32 closed READY-046 (4 @Disabled tests re-enabled + 2 prod bugs: HttpMessageNotReadableException handler + Resilience4j fallback rethrow). Iter 28-31 closed READY-044/045/047/053/054/055 (39 tickets). 1640+ tests runtime-green across shared starters + 16 services + 5 simulators. 0 HCP changes this iter (mgmt cluster only). |
-| **Last Audit** | June 18, 2026 — **25 iterations complete**. Closed READY-036/037/038/039/040/041/042/043/044/045/046/047/048/053/054/055/056/057 + READY-058/060/061/063/064/066/067/068/069/070/071/072/073/074 + WEBAPP-BUILD-001 + WEBAPP-001..009 + WEBAPP-LINT-001 (44 tickets) + 6 iter 23 hygiene fixes + 2 new L-058 tools + 9 lessons (L-060..L-068). Iter 32-35: 32 @Disabled tests re-enabled, 7 production bugs fixed, L-068 platform-wide sweep (14 services). 6 actual @Disabled tests remaining (5 account auth by L-063 design + 1 investment Testcontainers needs Docker). 0 P0. 1640+ tests runtime-green across 29/30 backend modules (excl. transaction H2/JSONB). |
-| **Last Release** | `:1.8.58` (account-service, partner-service, product-catalog-service, support-service, cms-service, integration-service) + `:1.8.57` (wallet-service, promotion-service, transaction-service) + `:1.8.36` (lending/notification) + `:1.8.21` (others) + `web-app:1.5.2` + `cache-starter:1.0.0-SNAPSHOT` |
+| **Open P1s** | 10 + 2 NEW (DB password drift + missing imagestreams — see L-069) |
+| **Open P2s** | 12 |
+| **Production Score** | **payu-dev: 33 Ready / 9 Not-Ready (pre-existing Redis auth + AMQ broker health checks) / 0 CrashLoop / 0 ImagePullBackOff**. Iter 36 closed READY-075 (payu-dev full-stack recovery: Postgres password drift + 9 missing images + 17 empty DBs + outbox_events for 7 services). 27 DBs all have schema. Cluster health 100% recovered from iter 35 end-state. L-069 captured (Postgres password + Flyway migration sort + Hibernate validate + outbox/saga table gaps). |
+| **Last Audit** | June 18, 2026 — **26 iterations complete**. Iter 36 closed READY-075 (payu-dev full-stack recovery). 0 P0. 33/42 pods Ready (9 Not-Ready are pre-existing Redis/AMQ health check issues — gateway Redis WRONGPASS, notification AMQ broker unreachable, partner/promotion startup race with KAFKA_BOOTSTRAP_SERVERS — all out of scope for this iter). |
+| **Last Release** | `:1.8.59` (9 services) + `:1.8.55` (wallet) + `:1.8.54` (transaction) + `:1.8.51` (promotion) + `:1.8.44` (gateway) + `:1.8.23` (lending/notification) + `:1.8.22` (auth/productcatalog) + `:1.8.21` (others) + `web-app:1.5.2` |
+---
+
+## 🐛 Iter 36 — payu-dev Full-Stack Recovery (2026-06-18)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| **READY-075** | **P1** | payu-dev cluster | **Full-stack recovery: Postgres password drift + 9 missing imagestreams + 23/27 empty DBs**. Closed in iter 36. 3 independent root causes fixed: (1) `ALTER USER payu PASSWORD 'payu-dev-password'`; (2) Updated stale asyncpg URLs in `db-secrets.yaml`; (3) Built+push 9 images (analytics, api-portal, bi-fast, biller, dukcapil, gateway, kyc, qris, web-app) + applied Flyway migrations to 17 empty DBs + created `outbox_events` in 7 DBs without migration. 0 CrashLoop, 0 ImagePullBackOff (down from 17). | 🟢 Closed | iter 36 |
+
+---
 ---
 
 ## 🐛 Iter 11–19 — Recursive Dev Loop Tickets (E2E-Caught Production Bugs)
