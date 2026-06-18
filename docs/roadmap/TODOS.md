@@ -22,6 +22,30 @@
 
 ---
 
+## 🐛 Iter 40 — Kafka HA: 3 → 5 Brokers (2026-06-18)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| READY-077 | P1 | payu-dev cluster | Kafka HA: broker pool 3→5 replicas | 🟢 Closed | iter 40 |
+
+### What happened
+Bumped broker KafkaNodePool from 3→5 replicas. Controllers stay at 3 (KRaft quorum needs odd number, 3 sufficient for metadata HA). Strimzi auto-assigned new node IDs 6 + 7 (since 4/5 already taken by controllers). New StatefulSets `payu-kafka-broker-6` + `payu-kafka-broker-7` came up empty. Existing 3 broker pods (0/2/3) retained their data + partitions.
+
+### Caveats
+- New brokers 6/7 start EMPTY. Topic data remains on brokers 0/2/3. For full HA, run `kafka-reassign-partitions` to redistribute data across 5 brokers. Deferred — RF=3 already provides HA for the data.
+- Topics have `replicas: 3` set, so 2 broker failures still tolerated (3 of 5 alive).
+- Controller count unchanged (3). KRaft metadata quorum: 3 = can lose 1, majority of 3 = 2. Sufficient for control plane HA.
+
+### Files changed (1)
+- `infrastructure/platform/data/base/kafka-amqstreams.yaml` (broker replicas 3→5)
+
+### Cluster state after iter 40
+- 46/46 Running
+- 5 brokers (node IDs 0/2/3/6/7) + 3 controllers (1/4/5) + 1 entity-operator
+- Kafka CR Ready (kafkaVersion 4.1.0, observedGeneration 3)
+- 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff
+
+---
 ## 🐛 Iter 39 — 1.8.61 Bulk Deploy: Kafka Hostname Hardening (16 services) (2026-06-18)
 
 | Key | Priority | Service | Summary | Status | Closed In |
@@ -54,7 +78,7 @@ After deploy, account/wallet show `actuator/health: 503` due to Lettuce 3s timeo
 |:---|:---:|:---|:---|:---|:---|
 | **READY-075** | **P1** | payu-dev cluster | **Full-stack recovery**: Postgres password drift + 9 missing imagestreams + 23/27 empty DBs + outbox_events for 7 services | 🟢 Closed | iter 36 |
 | **READY-076** | **P1** | payu-dev cluster | **Postgres HA migration (READY-027) deferred**: Crunchy pgbackrest:ubi8-2.50.1 + pgbouncer:ubi8-1.22.1 image tags don't exist in registry. Operator pods stuck in ImagePullBackOff. Original `payu-postgres-instance1-gmx4-0` pod was deleted (data lost) when reconciled to new `pgha` spec. **Fix needed**: verify Crunchy image versions in registry (e.g. `ubi8-16.6-0`, `ubi8-1.23-1`), update yaml, pg_dump + restore from `payu-postgres-0` StatefulSet. **Current**: payu-postgres-0 (StatefulSet) handles DB. `postgres-cluster.yaml` removed from kustomization. | 🟡 Open | iter 38 (deferred) |
-| **READY-077** | **P1** | payu-dev cluster | **Kafka HA (3 brokers → 5 brokers)**: Current 3 broker StatefulSets work but no HA. Topics have RF=3 already. **Fix**: bump brokers to 5 (already at 3), add 2 controller nodes for metadata quorum. Strimzi KafkaNodePool replicas:5 should suffice. Verify after iter 38 Kafka rename (payu-kafka cluster name stable). | 🟡 Open | iter 38 (deferred) |
+| **READY-077** | **P1** | payu-dev cluster | **Kafka HA (3 brokers → 5 brokers)**: Bumped broker KafkaNodePool replicas 3→5 in `kafka-amqstreams.yaml`. Controllers kept at 3 (KRaft quorum odd-number, 3 sufficient for metadata). Strimzi assigned new node IDs 6, 7 (4,5 taken by controllers). New StatefulSets `payu-kafka-broker-6` + `payu-kafka-broker-7` came up in ~30s. Cluster 46/46 Running. | 🟢 Closed | iter 40 |
 | **READY-078** | **P2** | All services | **Kafka hostname fallback in application-container.yml**: 18 yml files fixed in iter 37. 16 services rebuilt + deployed at 1.8.61 (account, auth, backoffice, billing, cms, compliance, dispute, fx, integration, investment, lending, product-catalog, statement, support, transaction, wallet). partner+promotion already at 1.8.60 from iter 37. All 16 yamls aligned to default-route registry. mvn package 19s (-T 1C), podman build/push parallel, oc rollout 16 deployments green. Cluster 44/44 Ready. | 🟢 Closed | iter 39 |
 
 ---

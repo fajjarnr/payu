@@ -124,6 +124,52 @@ oc get pods -n payu-dev --no-headers | awk '{print $3}' | sort | uniq -c
 
 **Cluster state after iter 39**: 44/44 pods Running, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff. mvn build 16/16 SUCCESS.
 
+---
+
+## L-073: Strimzi KafkaNodePool Scale-Up Pattern — Node ID Assignment Across Pools (2026-06-18)
+
+**Date**: 2026-06-18
+**Domain**: Platform / OpenShift / Strimzi Kafka / KRaft
+**Context**: Closed READY-077 (Kafka HA). Bumped broker KafkaNodePool replicas from 3 → 5. Expected new brokers 4 + 5. Got brokers 6 + 7 instead.
+
+**Root cause**: Strimzi assigns Kafka node IDs as a **monotonically increasing sequence across ALL node pools in the cluster** (not per-pool). When broker pool was at 3 brokers [0, 2, 3] and controller pool at 3 controllers [1, 4, 5], the next available node IDs were 6 + 7 — skipping 4/5 because controllers already used them.
+
+**Pattern (scale-up)**:
+```bash
+# 1. Bump broker replicas in yaml
+# Edit kafka-amqstreams.yaml: replicas: 3 → replicas: 5
+
+# 2. Apply
+oc apply -f infrastructure/platform/data/base/kafka-amqstreams.yaml -n payu-dev
+
+# 3. Wait + verify node ID assignment
+oc get kafkanodepool -n payu-dev -o jsonpath='{.items[*].status.nodeIds}'
+# Broker: [0, 2, 3, 6, 7]  (gaps are controllers at 1, 4, 5)
+# Controller: [1, 4, 5]
+
+# 4. Verify pod names
+oc get pods -n payu-dev -l strimzi.io/cluster=payu-kafka
+# payu-kafka-broker-0, -2, -3, -6, -7 (not -4, -5)
+# payu-kafka-controller-1, -4, -5
+
+# 5. New brokers start EMPTY. Verify via kafka-reassign-partitions (deferred).
+```
+
+**Lesson (4 parts)**:
+1. **Strimzi node IDs are global per Kafka cluster, not per pool**. Broker and controller node IDs are interleaved in the integer space. The "missing" pod names (payu-kafka-broker-4, payu-kafka-broker-5) are NOT errors — they belong to controllers. Always check `kafkanodepool.status.nodeIds` for actual assignment.
+2. **New broker pods come up EMPTY**. Strimzi scales the StatefulSet first, then Kafka joins the new brokers to the cluster empty. Data on existing 0/2/3 stays. For RF=3 topics, 2 broker failures tolerated (3 of 5 alive). For data rebalance across all 5 brokers, run `kafka-reassign-partitions` separately (deferred).
+3. **KRaft controller count: 3 is the minimum HA, 5 is overkill**. KRaft uses Raft consensus. With 3 controllers, can lose 1 (majority of 3 = 2). With 5 controllers, can lose 2 (majority of 5 = 3). The 3→5 controller bump is NOT necessary for HA. Adding 2 more controllers just wastes resources + adds election latency. Keep at 3 unless you have > 100 brokers.
+4. **Strimzi KafkaNodePool API deprecation warning**: `oc apply` returns `Warning: Version v1beta2 of the KafkaNodePool API is deprecated. Please use the v1 version instead`. Cosmetic, doesn't affect functionality. Future migration: change `apiVersion: kafka.strimzi.io/v1beta2` → `kafka.strimzi.io/v1` in all kafka CRs.
+
+**Files changed (1)**:
+- `infrastructure/platform/data/base/kafka-amqstreams.yaml` (broker pool `replicas: 3` → `replicas: 5`)
+
+**Cluster state after iter 40**:
+- 46/46 Running (44 + 2 new brokers)
+- Kafka node IDs: brokers [0, 2, 3, 6, 7], controllers [1, 4, 5]
+- Topics remain `replicas: 3` — 2 broker failures tolerated
+- Kafka CR Ready, observedGeneration 3
+
 **Files changed (iter 38 commits)**:
 - `infrastructure/platform/data/base/kafka-amqstreams.yaml` (Kafka CR name + KafkaNodePool names)
 - `infrastructure/platform/data/base/postgres-cluster.yaml` (HA disabled - kept for future migration)

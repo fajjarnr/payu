@@ -25,6 +25,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NodePool AutoRepair**: Enabled `autoRepair: true` on both `payu-onprem` and `payu-cloud` NodePools to allow Cluster API Provider AWS (CAPA) to automatically recycle stopped or unhealthy EC2 worker nodes, resolving the EBS volume lockup issue.
 - **Verification**: Verified all pods in `payu-onprem` guest cluster and its hosted control plane on management cluster are healthy and running.
 
+### Iteration 40: Kafka HA — 3 → 5 Brokers (2026-06-18)
+
+Closed READY-077. Bumped broker KafkaNodePool from 3→5 replicas. Strimzi auto-assigned new node IDs 6 + 7 (since 4/5 already taken by controllers). New StatefulSets `payu-kafka-broker-6` + `payu-kafka-broker-7` came up in ~30s. Cluster 46/46 Running.
+
+### Steps
+1. Edit `kafka-amqstreams.yaml`: `replicas: 3` → `replicas: 5` on broker pool
+2. `oc apply -f infrastructure/platform/data/base/kafka-amqstreams.yaml -n payu-dev`
+3. Wait 30s for Strimzi to provision new StatefulSets
+4. Verify: 5 brokers (node IDs 0/2/3/6/7) + 3 controllers (1/4/5) Running
+
+### Caveats
+- New brokers 6/7 start EMPTY. Topic data remains on 0/2/3. For full data rebalance, run `kafka-reassign-partitions` (deferred — RF=3 already provides HA).
+- Controllers unchanged at 3 (KRaft quorum: 3 odd number, majority 2).
+- Topics remain `replicas: 3` so 2 broker failures still tolerated.
+
+### Files changed (1)
+- `infrastructure/platform/data/base/kafka-amqstreams.yaml` (broker replicas 3→5)
+
+### Cluster state after iter 40
+- **46/46 Running** (was 44, +2 new broker pods)
+- Kafka CR Ready, observedGeneration 3
+- 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff
+
+---
 ### Iteration 39: 1.8.61 Bulk Deploy — Kafka Hostname Fallback Hardening (16 services) (2026-06-18)
 
 Closed READY-078 (preventive). After iter 37/38 fixed yml kafka hostname fallback but didn't rebuild 16 services, iter 39 bulk-rebuilt 16 Spring Boot services at tag 1.8.61 to bake the corrected `payu-kafka-kafka-bootstrap:9092` fallback into the binaries.

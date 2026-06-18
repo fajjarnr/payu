@@ -30,7 +30,7 @@ spec:
       cpu: "500m"
 
 ---
-# KafkaNodePool - Broker nodes (data handling) — READY-026 HA: 3 brokers
+# KafkaNodePool - Broker nodes (data handling) — READY-026/077 HA: 5 brokers
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
@@ -41,7 +41,7 @@ metadata:
     app.kubernetes.io/component: messaging
     strimzi.io/cluster: payu-kafka
 spec:
-  replicas: 3
+  replicas: 5
   roles:
     - broker
   storage:
