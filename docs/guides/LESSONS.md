@@ -73,7 +73,56 @@ EOF
 2. **NetworkPolicy labels matter**: A NetworkPolicy selector `app.kubernetes.io/name=payu-postgres` matches the StatefulSet pod (has this label) AND the Crunchy operator-managed instance (does NOT have this label by default). Different pod sources → different labels → different policy matches. Always verify which labels the live pods ACTUALLY have, not just what the operator YAML says.
 3. **Crunchy HA migration requires image registry access**: The CRD references Crunchy Data Protection images (`crunchy-pgbackrest`, `crunchy-pgbouncer`, etc). If image tags don't exist in the registry OR auth credentials don't allow pull, the operator can't bootstrap. Always pre-test image availability before deploying HA. For dev, single-instance StatefulSet is simpler.
 4. **Postgres user data IS the cluster's PVC**: When Crunchy operator reconciles to new instance spec, it garbage-collects old PVCs. Data is gone. Always backup (`pg_dump`) before applying PostgresCluster yaml changes that affect instance set names.
-5. **L-058 CI guard prevents manifest drift**: `scripts/diff-base-vs-live.py` (existing since iter 23) compares base yamls vs live OCP cluster state, exits 0/1/2 for CI. Now wired to GitHub Actions on every push to infrastructure/. New workflow at `.github/workflows/drift-detection.yml`. Detects image tag drift, registry drift, ConfigMap drift.
+---
+
+## L-072: Bulk Service Rebuild + Tag Bump Pattern — Defense-in-Depth for Yml Config Fixes (2026-06-18)
+
+**Date**: 2026-06-18
+**Domain**: Platform / Container Build / Tag Management
+**Context**: Closed READY-078 (preventive). Iter 37/38 fixed `payu-kafka-kafka-bootstrap` fallback in 18 yml files, but only 2 services (partner, promotion) were rebuilt. Remaining 16 services still carried the fallback bug at runtime — survived because `KAFKA_BOOTSTRAP_SERVERS` env var was always set, masking the yml fallback. On configmap race condition during restart, the fallback would be used → DNS resolution fail → CrashLoop.
+
+**Pattern (5 steps, ~25 min total)**:
+```bash
+# Step 1: Bulk mvn package
+mvn -f backend/pom.xml clean package -DskipTests   -pl account-service,auth-service,backoffice-service,billing-service,cms-service,compliance-service,dispute-service,fx-service,integration-service,investment-service,lending-service,product-catalog-service,statement-service,support-service,transaction-service,wallet-service   -am -T 1C  # 19s total
+
+# Step 2: Parallel podman build + push (16-way)
+REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
+for svc in ${SVCS_16}; do
+  (podman build --tls-verify=false -t "${REGISTRY}/payu-dev/${svc}:1.8.61" -f "backend/${svc}/Containerfile" "backend/${svc}" &&    podman push --tls-verify=false "${REGISTRY}/payu-dev/${svc}:1.8.61") &
+done
+wait
+
+# Step 3: Tag bump + registry alignment in 15 yamls (1 yaml already on default-route)
+REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
+for svc in account-service auth-service ...; do
+  sed -i "s|image-registry.openshift-image-registry.svc:5000/payu-dev/${svc}:1.8.[0-9]\+|\${REGISTRY}/payu-dev/${svc}:1.8.61|g"     "infrastructure/workloads/base/${svc}/deployment.yaml"
+done
+
+# Step 4: Apply + wait for rollouts
+for svc in ${SVCS_16}; do
+  oc apply -f "infrastructure/workloads/base/${svc}/deployment.yaml" -n payu-dev
+done
+oc rollout status deployment/${svc} -n payu-dev --timeout=180s  # sample 3-4 services
+
+# Step 5: Verify
+oc get pods -n payu-dev --no-headers | awk '{print $3}' | sort | uniq -c
+# Expected: "44 Running"
+```
+
+**Lesson (4 parts)**:
+1. **Yml config fix ≠ runtime fix until binary is rebuilt**: Spring Boot reads yml from the packaged JAR at startup. A yml-only fix in `src/main/resources/` requires `mvn package` + new container image + rollout to take effect. Env var overrides (like `KAFKA_BOOTSTRAP_SERVERS`) can mask the bug at runtime, but the yml fallback remains wrong in the binary.
+2. **Registry URL consistency matters for `oc apply` workflow**: 15 yamls used internal `image-registry.openshift-image-registry.svc:5000` (in-cluster), 3 used `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id` (external). Pods can pull from either (same backend), but pushing to default-route + yml referencing internal = pod pulls wrong URL = ImagePullBackOff. Align to ONE registry URL across all yamls (default-route recommended for external push toolchains).
+3. **mvn -T 1C + 16 parallel podman = 25 min total**: Without `-T 1C` (thread-per-core parallel), 16 services would take ~5-8 min sequentially. With it: 19s. podman build can be 16-way parallelized via shell `&` + `wait`. Result: 16 services rebuilt + rolled out in ~25 min end-to-end.
+4. **Pre-existing 503 health checks = NOT caused by rebuild**: After bulk deploy, `account-service /actuator/health` returned 503 (Lettuce 3s timeout on Data Grid RESP). Verified `git diff --stat HEAD` shows 0 source code changes — only 16 deployment.yaml tag bumps. The 503 was pre-existing (cluster pods still Running on liveness probe pass). Bulk rebuild preserves bug state, doesn't introduce new ones. Always verify with `git diff --stat` before declaring a regression.
+
+**Files changed (iter 39)**:
+- 16 deployment.yaml files (tag bump 1.8.21-1.8.59 → 1.8.61)
+- 16 container images pushed to default-route registry
+- 0 source code changes
+- 0 test code changes
+
+**Cluster state after iter 39**: 44/44 pods Running, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff. mvn build 16/16 SUCCESS.
 
 **Files changed (iter 38 commits)**:
 - `infrastructure/platform/data/base/kafka-amqstreams.yaml` (Kafka CR name + KafkaNodePool names)

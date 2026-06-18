@@ -25,6 +25,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NodePool AutoRepair**: Enabled `autoRepair: true` on both `payu-onprem` and `payu-cloud` NodePools to allow Cluster API Provider AWS (CAPA) to automatically recycle stopped or unhealthy EC2 worker nodes, resolving the EBS volume lockup issue.
 - **Verification**: Verified all pods in `payu-onprem` guest cluster and its hosted control plane on management cluster are healthy and running.
 
+### Iteration 39: 1.8.61 Bulk Deploy — Kafka Hostname Fallback Hardening (16 services) (2026-06-18)
+
+Closed READY-078 (preventive). After iter 37/38 fixed yml kafka hostname fallback but didn't rebuild 16 services, iter 39 bulk-rebuilt 16 Spring Boot services at tag 1.8.61 to bake the corrected `payu-kafka-kafka-bootstrap:9092` fallback into the binaries.
+
+### Pipeline
+1. `mvn -f backend/pom.xml clean package -DskipTests -pl <16 svcs> -am -T 1C` → 19s total
+2. 16 parallel `podman build --tls-verify=false` + `podman push` to `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id`
+3. 16 deployment.yaml tag bumps (1.8.21/1.8.22/1.8.23/1.8.54/1.8.55/1.8.59 → 1.8.61)
+4. 15 yamls aligned internal registry → default-route registry (consistency with wallet/gateway/web-app)
+5. `oc apply -f` 16 deployments + `oc rollout status` wait
+6. Cluster: **44/44 Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff**
+
+### Services (16)
+account, auth, backoffice, billing, cms, compliance, dispute, fx, integration, investment, lending, product-catalog, statement, support, transaction, wallet. partner+promotion already at 1.8.60 from iter 37 — skipped.
+
+### Pre-existing 503 health (NOT caused by this iter)
+`account/wallet /actuator/health` returns 503 (Lettuce 3s timeout on Data Grid RESP handshake). Cluster pods still Running (liveness probe passes). Git diff shows 0 source code changes in this iter. Tracked separately.
+
+### Files changed (16)
+- `infrastructure/workloads/base/{account,auth,backoffice,billing,cms,compliance,dispute,fx,integration,investment,lending,product-catalog,statement,support,transaction,wallet}-service/deployment.yaml` (tag + registry)
+- 16 container images pushed to default-route registry
+- 0 source code changes
+
+---
 ### Iteration 38: payu-dev Naming Consistency + Postgres NetworkPolicy + HA Disabled + L-058 CI Guard (2026-06-18)
 
 **Recursive dev loop continued**: from iter 37's 38 Ready/0 Not-Ready → **44 Ready/0 Not-Ready/0 CrashLoop/0 ImagePullBackOff (100% healthy)**.

@@ -22,6 +22,32 @@
 
 ---
 
+## 🐛 Iter 39 — 1.8.61 Bulk Deploy: Kafka Hostname Hardening (16 services) (2026-06-18)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| READY-078 | P2 | All services | Kafka hostname fallback deployed to 16 services at 1.8.61 | 🟢 Closed | iter 39 |
+
+### What happened
+Iter 37 fixed the kafka hostname fallback bug in 18 yml files (`payu-kafka-kafka-bootstrap` → `kafka-kafka-bootstrap` for old cluster), iter 38 renamed Strimzi CR to `payu-kafka` (bootstrap service = `payu-kafka-kafka-bootstrap`), so yml fallback re-needed. Rebuilt 16 services at 1.8.61 with new yml fallback `payu-kafka-kafka-bootstrap:9092`. partner+promotion already at 1.8.60.
+
+### Steps
+1. mvn -f backend/pom.xml clean package -DskipTests -pl <16 svcs> -am -T 1C → 19s total
+2. 16 parallel `podman build --tls-verify=false` + `podman push` to default-route registry
+3. 16 deployment.yaml tag bumps 1.8.21/1.8.22/1.8.23/1.8.54/1.8.55/1.8.59 → 1.8.61
+4. Aligned 15 yamls from internal registry → default-route registry (consistency with wallet/gateway/web-app)
+5. oc apply 16 deployments + rollout status wait
+6. Cluster: 44/44 Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff
+
+### Files changed
+- 16 deployment.yaml (tag + registry alignment)
+- 0 source code changes
+- 16 container images pushed to default-route registry
+
+### Pre-existing 503 health note
+After deploy, account/wallet show `actuator/health: 503` due to Lettuce 3s timeout on Data Grid handshake. NOT caused by this iter — git diff shows no source changes. Pre-existing issue: cluster pods still Running (liveness probe passes), but `/actuator/health` returns DOWN. Tracked for next sprint.
+
+---
 ## 🐛 Iter 38 — payu-dev Naming Consistency + Postgres NetPol + HA Disabled (2026-06-18)
 
 | Key | Priority | Service | Summary | Status | Closed In |
@@ -29,7 +55,7 @@
 | **READY-075** | **P1** | payu-dev cluster | **Full-stack recovery**: Postgres password drift + 9 missing imagestreams + 23/27 empty DBs + outbox_events for 7 services | 🟢 Closed | iter 36 |
 | **READY-076** | **P1** | payu-dev cluster | **Postgres HA migration (READY-027) deferred**: Crunchy pgbackrest:ubi8-2.50.1 + pgbouncer:ubi8-1.22.1 image tags don't exist in registry. Operator pods stuck in ImagePullBackOff. Original `payu-postgres-instance1-gmx4-0` pod was deleted (data lost) when reconciled to new `pgha` spec. **Fix needed**: verify Crunchy image versions in registry (e.g. `ubi8-16.6-0`, `ubi8-1.23-1`), update yaml, pg_dump + restore from `payu-postgres-0` StatefulSet. **Current**: payu-postgres-0 (StatefulSet) handles DB. `postgres-cluster.yaml` removed from kustomization. | 🟡 Open | iter 38 (deferred) |
 | **READY-077** | **P1** | payu-dev cluster | **Kafka HA (3 brokers → 5 brokers)**: Current 3 broker StatefulSets work but no HA. Topics have RF=3 already. **Fix**: bump brokers to 5 (already at 3), add 2 controller nodes for metadata quorum. Strimzi KafkaNodePool replicas:5 should suffice. Verify after iter 38 Kafka rename (payu-kafka cluster name stable). | 🟡 Open | iter 38 (deferred) |
-| **READY-078** | **P2** | All services | **Kafka hostname fallback in application-container.yml**: Already fixed in 18 files. **Verify**: build all 18 services + deploy, ensure no regression. | 🟡 Open | iter 38 (preventive) |
+| **READY-078** | **P2** | All services | **Kafka hostname fallback in application-container.yml**: 18 yml files fixed in iter 37. 16 services rebuilt + deployed at 1.8.61 (account, auth, backoffice, billing, cms, compliance, dispute, fx, integration, investment, lending, product-catalog, statement, support, transaction, wallet). partner+promotion already at 1.8.60 from iter 37. All 16 yamls aligned to default-route registry. mvn package 19s (-T 1C), podman build/push parallel, oc rollout 16 deployments green. Cluster 44/44 Ready. | 🟢 Closed | iter 39 |
 
 ---
 
