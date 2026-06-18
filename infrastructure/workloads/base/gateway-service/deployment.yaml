@@ -104,7 +104,7 @@ spec:
               name: service-endpoints
               key: KAFKA_URL
         - name: QUARKUS_REDIS_HOSTS
-          value: redis://default:payu-cache-dev-password@payu-datagrid.payu-dev.svc.cluster.local:11222
+          value: redis://developer:payu-cache-dev-password@payu-datagrid.payu-dev.svc.cluster.local:11222
         - name: REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL

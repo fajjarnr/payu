@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.21
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.59
         ports:
         - containerPort: 8080
           name: http
@@ -107,7 +107,7 @@ spec:
         - name: PAYU_CACHE_REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: default
+          value: developer
         - name: REDIS_HOST
           value: payu-datagrid.payu-dev.svc.cluster.local
         - name: REDIS_PORT
