@@ -33,7 +33,7 @@ spring:
     validate-on-migrate: true
   
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}
+    bootstrap-servers: ${KAFKA_BROKERS:kafka-kafka-bootstrap:9092}
     producer:
       properties:
         interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor

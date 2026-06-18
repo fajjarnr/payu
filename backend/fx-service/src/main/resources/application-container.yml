@@ -35,7 +35,7 @@ spring:
     validate-on-migrate: true
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-kafka-bootstrap:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-kafka-bootstrap:9092}
     consumer:
       auto-startup: true
       group-id: fx-service-container

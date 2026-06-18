@@ -38,7 +38,7 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}
+    bootstrap-servers: ${KAFKA_BROKERS:kafka-kafka-bootstrap:9092}
     consumer:
       auto-startup: true
       group-id: integration-service-container
