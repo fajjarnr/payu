@@ -2099,6 +2099,72 @@ private AgentResponse createAgentFallback(CreateAgentRequest request, Exception 
 
 ---
 
+## L-079: ArchUnit 1.2.1 + Java 25 = Silent Empty Import (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: Testing / ArchUnit / Java 25
+**Context**: Iter 50 — wanted to add an ArchUnit rule "no method should be both `@Async` and `@Transactional`" (BUG-BE-049 lesson). Wrote the rule using `methods().that().areAnnotatedWith(Async.class).should().notBeAnnotatedWith(Transactional.class)`. Ran the test — it **passed** despite `WebhookDispatcherService.dispatch()` having both annotations. Confirmed the bug existed via `javap -v` (showed both annotation classes in the bytecode).
+
+**Root cause**:
+- ArchUnit 1.2.1 uses ASM 9.x bundled at compile time
+- Java 25 generates class files with newer bytecode version that ASM 9.x can't fully parse
+- `importPackages("id.payu.partner")` returns an empty collection (silent — no exception)
+- `methods()` over an empty collection = 0 methods to check = trivially passes `allowEmptyShould(true)`
+- **The 118 .class files in partner-service all emit "Couldn't import class" warnings** that get lost in test output noise
+
+**Detection signals** (the test passes but the bug exists):
+- `oc -Dtest=ArchitectureTest` runs in <1s for 6 tests (suspiciously fast)
+- `Couldn't import class` warnings in surefire output
+- `importedClasses.size() == 0` after importPackages() call
+- Test passes for ANY ArchUnit rule (even deliberately wrong ones) if no classes are loaded
+
+**Workaround (per-service reflection-based test)**:
+```java
+@Test
+@DisplayName("BUG-X: @Async methods should not be @Transactional")
+void asyncMethodsShouldNotBeTransactional() {
+    java.util.List<String> violations = new java.util.ArrayList<>();
+    String[] targetClasses = { "id.payu.partner.application.service.WebhookDispatcherService" };
+    for (String className : targetClasses) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
+                boolean hasAsync = method.isAnnotationPresent(Async.class);
+                boolean hasTx = method.isAnnotationPresent(Transactional.class);
+                if (hasAsync && hasTx) {
+                    violations.add(String.format(
+                        "Method %s.%s is @Async AND @Transactional",
+                        className, method.getName()));
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            violations.add("Class not found: " + className);
+        }
+    }
+    org.junit.jupiter.api.Assertions.assertTrue(violations.isEmpty(),
+        "Found @Async + @Transactional methods:\n  " + String.join("\n  ", violations));
+}
+```
+
+**Tradeoffs**:
+- ✅ Works on Java 25 with current ArchUnit
+- ✅ Trivial to understand
+- ❌ Requires explicit list of target classes (not automatic like ArchUnit's package scan)
+- ❌ Bypasses ArchUnit's DSL for layered architecture rules
+- ❌ Each service needs its own copy of the test (no shared library)
+
+**Pattern (apply to any service)**:
+1. Add a `@Test` method to existing `ArchitectureTest` class
+2. Use `Class.forName()` + `getDeclaredMethods()` instead of ArchUnit's `methods()`
+3. Mark with `// CALIBRATION 2026-06-19: ArchUnit 1.2.1 + Java 25 incompatibility`
+4. Document the rule purpose in the test javadoc
+
+**Future fix**: Upgrade to ArchUnit 1.3+ which uses ASM 10+ that supports Java 25 bytecode. Track as a project-wide dependency upgrade task. Re-enable proper ArchUnit DSL after upgrade.
+
+**Affected services** (any service with `ArchitectureTest.java` + Java 25): all 14 services with `archunit-junit5` test dep.
+
+---
+
 ## L-078: Kustomize Overlay `images[].newTag` OVERRIDES Base Deployment — Must Apply via `-k` (2026-06-19)
 
 **Date**: 2026-06-19

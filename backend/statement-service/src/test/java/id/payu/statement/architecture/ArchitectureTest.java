@@ -4,8 +4,13 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @AnalyzeClasses(packages = "id.payu.statement")
 public class ArchitectureTest {
@@ -83,4 +88,40 @@ public class ArchitectureTest {
                     .and().resideInAPackage("..domain.model..")
                     .should().haveOnlyFinalFields()
                     .allowEmptyShould(true);
+
+    @Test
+    @DisplayName("BUG-STMT-ASYNC-001: @Async methods should not be @Transactional")
+    void asyncMethodsShouldNotBeTransactional() {
+        // BUG-BE-049 lesson: @Transactional on @Async method is a no-op.
+        // @Async runs in a different thread; Spring's @Transactional proxy
+        // is only applied at the call site, not on the async thread.
+        // The transaction context is not propagated. Each repository.save()
+        // call runs in its own implicit transaction.
+        //
+        // CALIBRATION 2026-06-19: ArchUnit 1.2.1 can't parse Java 25 bytecode
+        // (ASM incompatibility — @AnalyzeClasses returns empty). Use Java
+        // reflection on explicitly-known class instead.
+        java.util.List<String> violations = new java.util.ArrayList<>();
+        String[] targetClasses = {
+            "id.payu.statement.application.service.StatementService",
+        };
+        for (String className : targetClasses) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                for (java.lang.reflect.Method method : clazz.getDeclaredMethods()) {
+                    boolean hasAsync = method.isAnnotationPresent(Async.class);
+                    boolean hasTx = method.isAnnotationPresent(Transactional.class);
+                    if (hasAsync && hasTx) {
+                        violations.add(String.format(
+                            "Method %s.%s is @Async AND @Transactional (BUG-BE-049 no-op)",
+                            className, method.getName()));
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                violations.add("Class not found: " + className);
+            }
+        }
+        assertTrue(violations.isEmpty(),
+            "Found @Async + @Transactional methods (BUG-BE-049 no-op):\n  " + String.join("\n  ", violations));
+    }
 }

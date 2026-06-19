@@ -80,9 +80,14 @@ public class WebhookDispatcherService {
 
     /**
      * Dispatch an event with explicit event ID (for idempotency).
+     *
+     * <p>BUG-WEBHOOK-ASYNC-001: Removed {@code @Transactional} from this {@code @Async} method.
+     * Per BUG-BE-049 lesson: {@code @Transactional} is a no-op on {@code @Async} methods because
+     * the proxy is only applied at the call site, not on the async thread. Each {@code repository.save()}
+     * runs in its own implicit transaction. Multiple {@code deliveryRepository.save()} calls in the
+     * subscription loop below would NOT be rolled back together on failure (partial state).
      */
     @Async
-    @Transactional
     public void dispatch(String eventType, String eventId, Map<String, Object> payload) {
         List<WebhookSubscriptionEntity> subscriptions =
                 subscriptionRepository.findActiveByEventType(eventType);

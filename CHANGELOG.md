@@ -52,6 +52,40 @@ Backlog of bug fixes shipped in same day, not yet entered in CHANGELOG:
 - **Iter 47 (BUG-WALLET-NPE-001)**: Fixed 14 `nullable.equals()` patterns across `wallet-service` + `transaction-service` controllers using `Objects.equals()`. Deployed `wallet-service:1.8.63`, `transaction-service:1.8.64`.
 - **Iter 48 (BUG-NPE-002)**: Fixed 11 more `nullable.equals()` across 5 services (account, auth, billing, lending, partner). Deployed `lending-service:1.8.62`, `account-service:1.8.63`, `partner-service:1.8.62`, `billing-service:1.8.62`, `auth-service:1.8.62`.
 
+### Iteration 50: BUG-WEBHOOK-ASYNC-001 + BUG-STMT-ASYNC-001 — @Async + @Transactional No-Op Sweep (2026-06-19)
+
+Closed two latent bugs where `@Transactional` was paired with `@Async`, making `@Transactional` a silent no-op (per BUG-BE-049 lesson — Spring's `@Transactional` proxy is only applied at the call site, not on the async thread, so transaction context is not propagated). Each `repository.save()` runs in its own implicit transaction; multi-write methods can leave partial state on failure.
+
+**Bugs fixed**:
+1. **`partner-service.WebhookDispatcherService.dispatch(eventType, eventId, payload)`** — had `@Async + @Transactional`. The for-loop iterates over `WebhookSubscriptionEntity` list and saves `WebhookDeliveryEntity` for each. If a save fails mid-loop, earlier deliveries are NOT rolled back (inconsistent partial state).
+2. **`statement-service.StatementService.regenerateStatement(UUID)`** — same pattern. (Note: `generateStatement` was already fixed per BUG-BE-049; this is the matching `regenerateStatement` admin method.)
+
+**Fix**: Removed `@Transactional` from both methods. Each `repository.save()` now runs in its own implicit transaction (auto-commit), matching Spring's default behavior. The 2-3 ops per call are independent and don't need cross-write atomicity at the SQL level (compensation can be added if cross-call atomicity is required later).
+
+**TDD approach** (per ArchUnit Java 25 limitation):
+- Wrote failing test using **Java reflection** (ArchUnit 1.2.1 can't parse Java 25 bytecode — `importPackages()` returns empty due to ASM incompatibility)
+- Test scans declared methods of `WebhookDispatcherService` / `StatementService`, fails if any method has both `@Async` and `@Transactional`
+- Initially the test failed (Red), confirming both bugs; after removing `@Transactional`, test passes (Green)
+- Test placed in each service's `ArchitectureTest` for regression guard
+
+**Deployed**:
+- `partner-service:1.8.63` (was 1.8.62)
+- `statement-service:1.8.64` (was 1.8.63)
+- Bumped BOTH `infrastructure/workloads/base/<svc>/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (L-078 lesson)
+- Applied via `oc apply -k infrastructure/workloads/overlays/payu-dev/`
+- Verified `/actuator/health` returns `UP` for both via port-forward
+
+**Lesson captured (L-079)**: ArchUnit 1.2.1 + Java 25 = silent empty import. `importPackages()` and `@AnalyzeClasses` return empty collections (118 partner-service .class files all fail import). Workaround: use `Class.forName()` + `getDeclaredMethods()` + `isAnnotationPresent()` for annotation-based rules. Mark with `// CALIBRATION` comment for future ArchUnit upgrade.
+
+**Affected services (other candidates NOT yet swept)**:
+- ✅ `statement-service.StatementService.generateStatement` (BUG-BE-049 already fixed in prior iter)
+- ✅ `statement-service.StatementService.regenerateStatement` (this iter)
+- ✅ `partner-service.WebhookDispatcherService.dispatch` (this iter)
+- ⏳ `account-service.NikVerificationService.verifyNikFallback` (returns `CompletableFuture` — `@Async` was removed in BUG-BE-049 fix; verify still clean)
+- ⏳ `investment-service.InvestmentApplicationService.buyDeposit/buyMutualFund` (`@Async` was removed in BUG-LOGIC-006 fix; `@Transactional` + `CompletableFuture` return type — needs separate check whether transaction still applies for CompletableFuture return path)
+
+### Iter 48 (BUG-NPE-002)
+
 ### Iteration 39: Recreated payu-onprem with v4.15.43 & Enabled NodePool AutoRepair (2026-06-19)
 
 - **Downgrade & Recreate**: Recreated the `payu-onprem` HostedCluster using OpenShift version `4.15.43` to resolve guest cluster node stability and control plane container permission errors.

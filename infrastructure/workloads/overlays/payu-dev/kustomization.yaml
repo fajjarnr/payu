@@ -56,7 +56,7 @@ images:
   newTag: "1.8.23"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-  newTag: "1.8.21"
+  newTag: "1.8.63"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service:1.8.22
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newTag: "1.8.22"
@@ -65,7 +65,7 @@ images:
   newTag: "1.8.51"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-  newTag: "1.8.59"
+  newTag: "1.8.64"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newTag: "1.8.59"

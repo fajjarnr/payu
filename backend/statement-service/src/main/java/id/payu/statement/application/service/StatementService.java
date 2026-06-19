@@ -208,9 +208,12 @@ public class StatementService {
 
     /**
      * Regenerate statement (admin function)
+     *
+     * <p>BUG-STMT-ASYNC-001: Removed {@code @Transactional} from this {@code @Async} method
+     * (paired with iter 49 fix to {@code generateStatement} per BUG-BE-049).
+     * Per BUG-BE-049: {@code @Transactional} is a no-op on {@code @Async} methods.
      */
     @Async
-    @Transactional
     public void regenerateStatement(UUID statementId) {
         StatementEntity statement = statementRepository.findById(statementId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
