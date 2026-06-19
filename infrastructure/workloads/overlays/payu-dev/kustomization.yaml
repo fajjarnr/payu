@@ -71,7 +71,7 @@ images:
   newTag: "1.8.62"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.54
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newTag: "1.8.68"
+  newTag: "1.8.70"
 - name: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/wallet-service:1.8.55
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.65"
