@@ -67,7 +67,7 @@ public class ContentService {
             .status(ContentStatus.DRAFT)
             .targetingRules(request.getTargetingRules())
             .metadata(request.getMetadata())
-            .version(1)
+            .version(1L)
             .createdBy(createdBy)
             .updatedBy(createdBy)
             .build();

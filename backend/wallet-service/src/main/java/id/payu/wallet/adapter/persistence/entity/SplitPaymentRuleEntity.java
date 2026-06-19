@@ -46,6 +46,9 @@ public class SplitPaymentRuleEntity {
     @OneToMany(mappedBy = "splitRule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<SplitRecipientEntity> recipients = new ArrayList<>();
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

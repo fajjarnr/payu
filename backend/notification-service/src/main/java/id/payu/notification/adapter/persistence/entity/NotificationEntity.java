@@ -64,6 +64,9 @@ public class NotificationEntity extends PanacheEntityBase {
     /** IDEM-003: Client-supplied idempotency key to prevent duplicate sends */
     @Column(length = 255)
     public String idempotencyKey;
+    @Version
+    private Long version;
+
 
     @PrePersist
     void onCreate() {

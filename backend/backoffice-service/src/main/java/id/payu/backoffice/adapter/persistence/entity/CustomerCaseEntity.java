@@ -65,6 +65,9 @@ public class CustomerCaseEntity {
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
+    @Version
+    private Long version;
+
 
     // Manual accessors for stability
     public UUID getId() { return id; }

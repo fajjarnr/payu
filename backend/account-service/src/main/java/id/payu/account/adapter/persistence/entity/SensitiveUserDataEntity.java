@@ -80,6 +80,9 @@ public class SensitiveUserDataEntity {
 
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
+    @Version
+    private Long version;
+
 
     @PrePersist
     protected void onCreate() {

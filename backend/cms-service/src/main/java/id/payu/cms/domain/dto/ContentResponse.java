@@ -64,7 +64,7 @@ public class ContentResponse {
     private Map<String, Object> metadata;
 
     @Schema(description = "Content version", example = "1")
-    private Integer version;
+    private Long version;
 
     @Schema(description = "Creation timestamp", example = "2026-01-24T10:30:00")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

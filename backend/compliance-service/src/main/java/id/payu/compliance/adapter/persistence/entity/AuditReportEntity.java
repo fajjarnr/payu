@@ -55,4 +55,7 @@ public class AuditReportEntity {
 
     @Column(name = "created_by")
     private String createdBy;
+    @Version
+    private Long version;
+
 }

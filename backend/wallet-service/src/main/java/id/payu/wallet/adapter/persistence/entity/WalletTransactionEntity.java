@@ -44,6 +44,9 @@ public class WalletTransactionEntity implements Persistable<UUID> {
     @Column(length = 500)
     private String description;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

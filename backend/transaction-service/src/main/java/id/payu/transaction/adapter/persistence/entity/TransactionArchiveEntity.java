@@ -288,6 +288,12 @@ public class TransactionArchiveEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * ITER-52: Optimistic locking version.
+     */
+    @Version
+    private Long version;
+
     @Column(name = "reference_number", nullable = false, length = 50)
     private String referenceNumber;
 

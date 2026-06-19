@@ -2165,6 +2165,63 @@ void asyncMethodsShouldNotBeTransactional() {
 
 ---
 
+## L-080: @Version Additions Need Flyway Migration + `flyway_schema_history` Check (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: JPA / Database Migration / DevOps
+**Context**: ITER-52 added `@Version` to 79 JPA entities across 17 services. After deploy, lending, investment, support pods went into CrashLoop with "missing column [version] in table [X]" errors despite the Flyway migration being in the JAR.
+
+**Root cause**:
+- The affected services (lending, investment, support, and others) had no `flyway_schema_history` table in their production DB. The tables were created earlier by `ddl-auto=create-drop` in dev or by manual SQL scripts, NOT by Flyway.
+- When the new pod started, Flyway saw no `flyway_schema_history` table. With `baseline-on-migrate: true`, Flyway should have baselined and run pending migrations. But Hibernate's `ddl-auto=validate` runs FIRST in some scenarios (or simultaneously with Flyway init), and validates the entity schema against the DB schema. Hibernate sees the @Version field but no version column in DB → fail.
+- Result: CrashLoop, repeated restarts, manual intervention needed.
+
+**Detection signals** (the pod CrashLoop pattern):
+- Pod log: `Schema validation: missing column [version] in table [X]`
+- `flyway_schema_history` table does NOT exist in the service's DB
+- `\\dt` shows entity tables but no Flyway metadata table
+- Service was previously deployed with `ddl-auto=create-drop` or manual SQL (NOT via Flyway)
+
+**Workaround (per-service)**:
+```bash
+# 1. Port-forward the postgres service
+oc port-forward svc/payu-postgres 5432:5432 -n payu-dev &
+
+# 2. Manually apply the V_NN__add_version_to_<service>_entities.sql
+podman run --rm -i --network host docker.io/library/postgres:16-alpine \
+  sh -c "PGPASSWORD=payu-dev-password psql -h 127.0.0.1 -p 5432 -U payu -d payu_<service> -f -" \
+  < backend/<service>-service/src/main/resources/db/migration/V_NN__add_version_to_<service>_entities.sql
+
+# 3. Restart the pod
+oc delete pod -n payu-dev -l app.kubernetes.io/name=<service>-service
+```
+
+**Pattern (apply to any @Version addition)**:
+1. Add `@Version private Long version;` to the entity class (after `@Id`, before timestamp fields)
+2. Add Flyway migration `V_NN__add_version_to_<service>_entities.sql` with `ALTER TABLE x ADD COLUMN version BIGINT NOT NULL DEFAULT 0;`
+3. **BEFORE deploying**: verify `flyway_schema_history` table exists in the service's DB. If not, the migration won't auto-run.
+4. For orphaned DBs (no `flyway_schema_history`): apply the migration manually first, then deploy.
+5. Restart the pod, verify schema validation passes.
+
+**Anti-pattern (what NOT to do)**:
+- ❌ Adding `@Version` to all entities and deploying without checking the DB state
+- ❌ Assuming Flyway will "just work" — it needs the schema_history table to exist
+- ❌ Editing the entity without a corresponding Flyway migration (Hibernate validate will fail)
+
+**Affected services** (all in iter 52):
+- All 17 services had @Version additions, but only 4-5 hit the orphaned-DB issue
+- Services hit: lending, investment, support, dispute, fx, statement, account, wallet, billing, partner, auth, promotion, backoffice, transaction (14 of 17)
+- Services NOT hit: cms (had schema_history), notification (had schema_history)
+
+**Future fix**:
+- Standardize: every service's first deployment to a new DB must be via Flyway. Never use `ddl-auto=create-drop` in production paths.
+- Add CI check: `oc exec <pod> -- mysql/psql -e "SELECT COUNT(*) FROM flyway_schema_history"` must return > 0 before allowing @Version additions to deploy.
+- Consider Flyway's `repair` command for orphaned DBs: `flyway repair` recreates the schema_history table.
+
+**Lesson**: When adding JPA @Version (or any DB schema change), ALWAYS verify the migration will run. The bug is in the gap between "migration exists" and "migration actually runs".
+
+---
+
 ## L-078: Kustomize Overlay `images[].newTag` OVERRIDES Base Deployment — Must Apply via `-k` (2026-06-19)
 
 **Date**: 2026-06-19

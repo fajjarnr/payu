@@ -51,6 +51,9 @@ public class SegmentMembershipEntity {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    @Version
+    private Long version;
+
 
     @PrePersist
     protected void onCreate() {

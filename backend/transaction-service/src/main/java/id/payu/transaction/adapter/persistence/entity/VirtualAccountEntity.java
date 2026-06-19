@@ -350,6 +350,12 @@ public class VirtualAccountEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * ITER-52: Optimistic locking version.
+     */
+    @Version
+    private Long version;
+
     @Column(name = "va_number", nullable = false, unique = true, length = 30)
     private String vaNumber;
 

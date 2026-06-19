@@ -97,6 +97,9 @@ public class MerchantEntity {
     @Column(name = "tenant_id", length = 64)
     private String tenantId;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

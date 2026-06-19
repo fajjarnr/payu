@@ -121,7 +121,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.ACTIVE)
                 .targetingRules(targetingAll)
                 .metadata(metadata)
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -139,7 +139,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.ACTIVE)
                 .targetingRules(targetingPremium)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("editor")
                 .updatedBy("editor")
                 .build();
@@ -157,7 +157,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.ACTIVE)
                 .targetingRules(targetingAll)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -173,7 +173,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.SCHEDULED)
                 .targetingRules(targetingAll)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -190,7 +190,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.ACTIVE)
                 .targetingRules(targetingAll)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -206,7 +206,7 @@ class ContentRepositoryIntegrationTest {
                 .status(ContentStatus.DRAFT)
                 .targetingRules(targetingAll)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -240,7 +240,7 @@ class ContentRepositoryIntegrationTest {
         ContentEntity content = contentRepository.findById(banner1.getId()).orElseThrow();
         content.setTitle("Updated Banner Title");
         content.setPriority(200);
-        content.setVersion(2);
+        content.setVersion(2L);
         contentRepository.saveAndFlush(content);
 
         ContentEntity updated = contentRepository.findById(banner1.getId()).orElseThrow();
@@ -411,7 +411,7 @@ class ContentRepositoryIntegrationTest {
                 .actionType("DISMISS")
                 .priority(0)
                 .status(ContentStatus.DRAFT)
-                .version(1)
+                .version(1L)
                 .build();
         ContentEntity saved = contentRepository.saveAndFlush(content);
         ContentEntity found = contentRepository.findById(saved.getId()).orElseThrow();
@@ -428,7 +428,7 @@ class ContentRepositoryIntegrationTest {
                 .actionType("DISMISS")
                 .priority(0)
                 .status(ContentStatus.DRAFT)
-                .version(1)
+                .version(1L)
                 .createdBy("test")
                 .updatedBy("test")
                 .build();

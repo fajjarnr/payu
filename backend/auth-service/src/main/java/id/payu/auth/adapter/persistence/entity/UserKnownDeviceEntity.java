@@ -32,6 +32,9 @@ public class UserKnownDeviceEntity {
     @ToString.Include
     private String deviceId;
 
+    @Version
+    private Long version;
+
     @UpdateTimestamp
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;

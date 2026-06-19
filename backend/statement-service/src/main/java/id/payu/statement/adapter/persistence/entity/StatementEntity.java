@@ -93,6 +93,9 @@ public class StatementEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @Version
+    private Long version;
+
 
     /**
      * Increment access count and update last accessed timestamp

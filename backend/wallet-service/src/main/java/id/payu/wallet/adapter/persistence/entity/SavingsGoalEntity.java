@@ -50,6 +50,9 @@ public class SavingsGoalEntity {
     @Column(length = 7)
     private String color;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

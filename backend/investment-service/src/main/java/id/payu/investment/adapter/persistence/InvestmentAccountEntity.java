@@ -48,6 +48,9 @@ public class InvestmentAccountEntity implements Persistable<UUID> {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+    @Version
+    private Long version;
+
 
     @Transient
     @Builder.Default

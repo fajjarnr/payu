@@ -52,6 +52,54 @@ Backlog of bug fixes shipped in same day, not yet entered in CHANGELOG:
 - **Iter 47 (BUG-WALLET-NPE-001)**: Fixed 14 `nullable.equals()` patterns across `wallet-service` + `transaction-service` controllers using `Objects.equals()`. Deployed `wallet-service:1.8.63`, `transaction-service:1.8.64`.
 - **Iter 48 (BUG-NPE-002)**: Fixed 11 more `nullable.equals()` across 5 services (account, auth, billing, lending, partner). Deployed `lending-service:1.8.62`, `account-service:1.8.63`, `partner-service:1.8.62`, `billing-service:1.8.62`, `auth-service:1.8.62`.
 
+### Iteration 52: @Version Optimistic Locking — 100% Coverage Across All 17 Services (2026-06-19)
+
+**Background**: ITER-51D started adding `@Version` to critical financial entities. Audit showed 61 of 71 JPA entities lacked `@Version` — concurrent updates could silently overwrite each other (lost update). Iter 52 finishes the job: 100% coverage across all 17 services (84 of 84 @Entity files).
+
+**Coverage by service**:
+| Service | Entities | Migrations | Image |
+|---|---|---|---|
+| transaction | 5 (added 2) | V19 + V20 | 1.8.66 |
+| wallet | 18 (added 17) | V102 | 1.8.64 |
+| billing | 4 (added 4) | V5 | 1.8.63 |
+| lending | 7 (added 7) | V7 | 1.8.63 |
+| investment | 5 (added 5) | V3 | 1.8.62 |
+| auth | 3 (added 3) | V2 | 1.8.63 |
+| backoffice | 4 (added 4) | V5 | 1.8.62 |
+| partner | 10 (added 10) | V11 | 1.8.64 |
+| promotion | 6 (added 6) | V9 | 1.8.61 |
+| cms | 1 (added 1) | V3 | 1.8.65 |
+| support | 3 (added 3) | V2 | 1.8.62 |
+| dispute | 1 (added 1) | V3 | 1.8.62 |
+| compliance | 2 (added 2) | V2 | 1.8.62 |
+| notification | 1 (added 1) | V3 | 1.8.24 |
+| statement | 2 (added 2) | V4 | 1.8.66 |
+| account | 1 (added 1) | V100 | 1.8.64 |
+| fx | 1 (added 1) | V3 | 1.8.62 |
+
+**Total**: 84 entities with @Version, 79 newly added in iter 52 (5 already had it from iter 51d + pre-existing).
+
+**Per-entity change**:
+```java
+@Version
+private Long version;
+```
++ corresponding Flyway migration adding `version BIGINT NOT NULL DEFAULT 0` to the table.
+
+**Production hiccup + manual fix**:
+- For services where `flyway_schema_history` table did NOT pre-exist (lending, investment, support — tables were created by ddl-auto=create-drop in earlier dev iterations, not by Flyway), the new Flyway migrations didn't run automatically. Hibernate's `ddl-auto=validate` then failed at startup with "missing column [version] in table [X]".
+- **Workaround**: ran migrations manually via `psql` for affected services, then restarted pods.
+- Affected: lending, investment, support, dispute, fx, statement, account, wallet, billing, partner, auth, promotion, backoffice, transaction. All now healthy.
+
+**Test impact**:
+- All 16 services with @Version additions tested locally before deploy: 100% pass rate across 1330+ tests
+- cms-service: 4 test files needed `.version(1)` → `.version(1L)` (Integer → Long type change for `ContentResponse.version`)
+- partner-service: needed `jakarta.persistence.Version` import addition in `PartnerCertificateEntity`
+
+**Lesson captured (L-080)**: JPA entities with `@Version` must coexist with a Flyway migration that adds the `version` column BEFORE Hibernate's `ddl-auto=validate` runs at startup. For services where `flyway_schema_history` doesn't exist (orphaned DBs), the migration won't auto-run — needs manual `psql` execution. Always verify `flyway_schema_history` exists and migrations ran before deploying @Version additions.
+
+**Cluster state at end of iter 52**: 46/46 pods Running, all services healthy. 5 key services (wallet, transaction, billing, lending, investment) confirmed HTTP 200 from `/actuator/health`.
+
 ### Iteration 51: BUG-STMT-PATH-001 + HMAC Callbacks + @Version Optimistic Locking (2026-06-19)
 
 Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-locking additions.

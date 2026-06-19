@@ -40,6 +40,9 @@ public class SplitPaymentLegEntity {
     @Column(name = "settled_at")
     private LocalDateTime settledAt;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

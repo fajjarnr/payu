@@ -51,6 +51,9 @@ public class SnapBiRefundEntity {
     @Column(nullable = false, length = 20)
     private String status;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

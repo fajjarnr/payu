@@ -58,6 +58,9 @@ public class LedgerEntryEntity implements Persistable<UUID> {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    @Version
+    private Long version;
+
 
     public LedgerEntryEntity() {
     }

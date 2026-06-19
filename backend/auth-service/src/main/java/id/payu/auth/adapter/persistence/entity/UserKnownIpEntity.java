@@ -32,6 +32,9 @@ public class UserKnownIpEntity {
     @ToString.Include
     private String ipAddress;
 
+    @Version
+    private Long version;
+
     @UpdateTimestamp
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;

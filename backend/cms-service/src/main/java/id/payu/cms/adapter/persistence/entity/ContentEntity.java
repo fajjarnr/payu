@@ -83,10 +83,6 @@ public class ContentEntity {
     @Column(name = "metadata", columnDefinition = "JSONB")
     private Map<String, Object> metadata; // Custom fields — may contain user data
 
-    @Column(name = "version")
-    @Builder.Default
-    private Integer version = 1;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -100,6 +96,15 @@ public class ContentEntity {
 
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
+
+    /**
+     * ITER-52: Optimistic locking version (JPA-managed).
+     * Replaces the previous Integer "version" field (which was a content revision number,
+     * not JPA optimistic lock). The DB column type changes from INT to BIGINT via V_NN migration.
+     */
+    @Version
+    private Long version;
+
 
     /**
      * Check if content is currently active based on dates

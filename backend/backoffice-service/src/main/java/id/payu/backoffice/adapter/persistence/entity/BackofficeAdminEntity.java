@@ -60,6 +60,9 @@ public class BackofficeAdminEntity {
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
+    @Version
+    private Long version;
+
 
     private LocalDateTime lastLoginAt;
 

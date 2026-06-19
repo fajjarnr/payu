@@ -48,4 +48,7 @@ public class DisputeEvidenceEntity {
 
     @Column(name = "uploaded_at", nullable = false)
     private Instant uploadedAt;
+    @Version
+    private Long version;
+
 }

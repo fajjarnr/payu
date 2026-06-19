@@ -65,6 +65,9 @@ public class CreditScoreEntity {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
+    @Version
+    private Long version;
+
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

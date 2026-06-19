@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/statement-service:1.8.65
+        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/statement-service:1.8.66
         ports:
         - containerPort: 8080
           name: http

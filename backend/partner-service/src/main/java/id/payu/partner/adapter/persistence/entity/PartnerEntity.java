@@ -70,6 +70,9 @@ public class PartnerEntity {
     @Column(name = "tenant_id", length = 64)
     private String tenantId;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

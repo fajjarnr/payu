@@ -74,6 +74,9 @@ public class BillPaymentEntity {
 
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
+    @Version
+    private Long version;
+
 
     // Constructors
     public BillPaymentEntity() {

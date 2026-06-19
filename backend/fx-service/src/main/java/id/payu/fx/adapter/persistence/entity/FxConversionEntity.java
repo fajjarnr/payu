@@ -50,6 +50,9 @@ public class FxConversionEntity {
     @Column(name = "status", length = 20, nullable = false)
     private ConversionStatus status;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

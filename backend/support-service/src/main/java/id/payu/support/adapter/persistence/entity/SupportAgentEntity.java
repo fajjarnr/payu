@@ -55,6 +55,9 @@ public class SupportAgentEntity {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    @Version
+    private Long version;
+
 
     @LastModifiedDate
     private LocalDateTime updatedAt;

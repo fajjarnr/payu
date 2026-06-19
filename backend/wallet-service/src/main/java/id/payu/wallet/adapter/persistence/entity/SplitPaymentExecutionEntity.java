@@ -59,6 +59,9 @@ public class SplitPaymentExecutionEntity {
     @OneToMany(mappedBy = "execution", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<SplitPaymentLegEntity> legs = new ArrayList<>();
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

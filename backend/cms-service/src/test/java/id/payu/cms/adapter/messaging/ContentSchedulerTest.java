@@ -65,7 +65,7 @@ class ContentSchedulerTest {
                 .status(ContentStatus.SCHEDULED)
                 .targetingRules(targeting)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -82,7 +82,7 @@ class ContentSchedulerTest {
                 .status(ContentStatus.ACTIVE)
                 .targetingRules(targeting)
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdBy("admin")
                 .updatedBy("admin")
                 .build();
@@ -139,7 +139,7 @@ class ContentSchedulerTest {
                 .endDate(LocalDate.now().plusDays(15))
                 .priority(80)
                 .status(ContentStatus.SCHEDULED)
-                .version(1)
+                .version(1L)
                 .build();
 
         when(contentService.getScheduledContentToActivate())
@@ -204,7 +204,7 @@ class ContentSchedulerTest {
                 .endDate(LocalDate.now().minusDays(2))
                 .priority(30)
                 .status(ContentStatus.ACTIVE)
-                .version(1)
+                .version(1L)
                 .build();
 
         when(contentService.getExpiredActiveContent())

@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -51,6 +52,9 @@ public class PartnerCertificateEntity {
     private String issuer;
 
     private String subject;
+
+    @Version
+    private Long version;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -33,6 +33,9 @@ public class UserRiskProfileEntity {
     @Column(name = "failed_attempts")
     private int failedAttempts;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

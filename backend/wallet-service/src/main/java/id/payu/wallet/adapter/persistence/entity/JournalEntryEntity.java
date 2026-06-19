@@ -44,6 +44,9 @@ public class JournalEntryEntity {
     @Column(name = "posted_at")
     private LocalDateTime postedAt;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

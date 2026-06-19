@@ -53,6 +53,9 @@ public class ChartOfAccountEntity {
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "IDR";
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

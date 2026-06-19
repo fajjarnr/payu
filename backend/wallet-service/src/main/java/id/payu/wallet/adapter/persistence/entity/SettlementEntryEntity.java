@@ -51,6 +51,9 @@ public class SettlementEntryEntity {
     @Column(nullable = false, length = 16)
     private EntryStatus status;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -36,6 +36,9 @@ public class PocketEntity {
     @Column(name = "status", length = 20, nullable = false)
     private id.payu.wallet.domain.model.PocketStatus status;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

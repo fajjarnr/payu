@@ -61,6 +61,9 @@ public class CustomerSegmentEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @Version
+    private Long version;
+
 
     @PrePersist
     protected void onCreate() {

@@ -91,7 +91,7 @@ class ContentControllerTest {
                 .status("DRAFT")
                 .targetingRules(new HashMap<>())
                 .metadata(new HashMap<>())
-                .version(1)
+                .version(1L)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .createdBy("admin")

@@ -84,6 +84,9 @@ public class WebhookDeliveryEntity {
     @Column(name = "error_message", length = 1024)
     private String errorMessage;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -73,7 +73,7 @@ class ContentServiceTest {
             .status(ContentStatus.DRAFT)
             .targetingRules(new HashMap<>())
             .metadata(new HashMap<>())
-            .version(1)
+            .version(1L)
             .createdBy("admin")
             .build();
     }

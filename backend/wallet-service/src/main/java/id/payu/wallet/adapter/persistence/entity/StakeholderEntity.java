@@ -40,6 +40,9 @@ public class StakeholderEntity {
     @Column(nullable = false)
     private int priority;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
