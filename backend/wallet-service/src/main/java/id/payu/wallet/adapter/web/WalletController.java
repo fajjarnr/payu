@@ -22,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
 import org.slf4j.Logger;
@@ -72,7 +74,7 @@ public class WalletController extends BaseController {
      */
     private void verifyAccountOwnership(String accountId) {
         String userId = extractUserId();
-        if (!accountId.equals(userId)) {
+        if (!Objects.equals(accountId, userId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
     }

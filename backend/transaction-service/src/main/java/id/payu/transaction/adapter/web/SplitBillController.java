@@ -21,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -96,7 +98,7 @@ public class SplitBillController {
 
         // BUG-BE-149: Verify caller owns the account
         String userId = extractUserId();
-        if (!accountId.toString().equals(userId)) {
+        if (!Objects.equals(accountId == null ? null : accountId.toString(), userId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
 

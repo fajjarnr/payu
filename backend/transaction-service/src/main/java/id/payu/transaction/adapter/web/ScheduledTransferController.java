@@ -22,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -56,7 +58,7 @@ public class ScheduledTransferController {
     private ScheduledTransferResponse verifyOwnership(UUID transferId) {
         String userId = extractUserId();
         ScheduledTransferResponse response = scheduledTransferUseCase.getScheduledTransfer(transferId);
-        if (!response.getSenderAccountId().toString().equals(userId)) {
+        if (!Objects.equals(response.getSenderAccountId() == null ? null : response.getSenderAccountId().toString(), userId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
         return response;
@@ -100,7 +102,7 @@ public class ScheduledTransferController {
             @Valid @RequestBody CreateScheduledTransferRequest request) {
         // BUG-BE-148: Validate caller owns the sender account
         String userId = extractUserId();
-        if (!UUID.fromString(userId).equals(request.getSenderAccountId())) {
+        if (!Objects.equals(UUID.fromString(userId), request.getSenderAccountId())) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
 
@@ -164,7 +166,7 @@ public class ScheduledTransferController {
             @PathVariable UUID accountId) {
         // BUG-BE-148: Verify caller owns the account
         String userId = extractUserId();
-        if (!accountId.toString().equals(userId)) {
+        if (!Objects.equals(accountId == null ? null : accountId.toString(), userId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
 

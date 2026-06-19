@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +69,7 @@ public class CardController extends BaseController {
             @Valid @RequestBody CreateCardRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         String authenticatedAccountId = extractAccountId(jwt);
-        if (!authenticatedAccountId.equals(request.accountId())) {
+        if (!Objects.equals(authenticatedAccountId, request.accountId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to create card for this account"));
         }
@@ -89,7 +91,7 @@ public class CardController extends BaseController {
             @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
             @AuthenticationPrincipal Jwt jwt) {
         String authenticatedAccountId = extractAccountId(jwt);
-        if (!authenticatedAccountId.equals(accountId)) {
+        if (!Objects.equals(authenticatedAccountId, accountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to access cards for this account"));
         }
@@ -113,7 +115,7 @@ public class CardController extends BaseController {
         String authenticatedAccountId = extractAccountId(jwt);
         return cardUseCase.getCardById(cardId)
                 .map(card -> {
-                    if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+                    if (!Objects.equals(authenticatedAccountId, getCardOwnerAccountId(card))) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .<ApiResponse<CardResponse>>body(ApiResponse.error("CARD_403", "Not authorized to access this card"));
                     }
@@ -135,7 +137,7 @@ public class CardController extends BaseController {
         String authenticatedAccountId = extractAccountId(jwt);
         Card card = cardUseCase.getCardById(cardId)
                 .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
-        if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+        if (!Objects.equals(authenticatedAccountId, getCardOwnerAccountId(card))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to freeze this card"));
         }
@@ -156,7 +158,7 @@ public class CardController extends BaseController {
         String authenticatedAccountId = extractAccountId(jwt);
         Card card = cardUseCase.getCardById(cardId)
                 .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
-        if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+        if (!Objects.equals(authenticatedAccountId, getCardOwnerAccountId(card))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to unfreeze this card"));
         }
