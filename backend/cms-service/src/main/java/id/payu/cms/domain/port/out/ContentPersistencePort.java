@@ -35,5 +35,9 @@ public interface ContentPersistencePort {
 
     List<ContentEntity> findActiveToArchive(LocalDate currentDate);
 
+    List<ContentEntity> findByCreatedBy(String createdBy);
+
+    void deleteByStatus(ContentStatus status);
+
     void deleteById(UUID id);
 }

@@ -1,11 +1,10 @@
-package id.payu.cms.domain.repository;
+package id.payu.cms.adapter.persistence;
 
 import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,10 +15,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Repository interface for Content entity
+ * Spring Data JPA repository for Content entity. Adapter-layer concern.
+ * Domain code should depend on {@link id.payu.cms.domain.port.out.ContentPersistencePort}
+ * instead of this interface directly.
+ *
+ * <p>BUG-CMS-HEX-001 Fix (iter 45): Moved from {@code domain/repository/} to
+ * {@code adapter/persistence/} — Spring Data JPA is an adapter concern, not domain.
+ * Renamed to {@code ContentJpaRepository} to reflect the JPA-specific nature.</p>
  */
-@Repository
-public interface ContentRepository extends JpaRepository<ContentEntity, UUID> {
+public interface ContentJpaRepository extends JpaRepository<ContentEntity, UUID> {
 
     /**
      * Find active content by type

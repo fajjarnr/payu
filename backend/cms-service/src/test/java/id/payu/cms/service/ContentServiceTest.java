@@ -4,7 +4,7 @@ import id.payu.cms.application.service.ContentService;
 import id.payu.cms.domain.dto.ContentRequest;
 import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
-import id.payu.cms.domain.repository.ContentRepository;
+import id.payu.cms.domain.port.out.ContentPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,9 +21,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,7 +35,7 @@ import static org.mockito.Mockito.*;
 class ContentServiceTest {
 
     @Mock
-    private ContentRepository contentRepository;
+    private ContentPersistencePort contentRepository;
 
     @InjectMocks
     private ContentService contentService;
@@ -392,13 +389,9 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get all content with pagination")
     void shouldGetAllContentWithPagination() {
-        // Given
-        Page<ContentEntity> contentPage = new PageImpl<>(
-            List.of(content),
-            PageRequest.of(0, 20),
-            1
-        );
-        when(contentRepository.findAll(any(PageRequest.class))).thenReturn(contentPage);
+        // Given (BUG-CMS-HEX-001: port signature is findAll(int,int,String,String))
+        when(contentRepository.findAll(0, 20, "createdAt", "desc"))
+            .thenReturn(List.of(content));
 
         // When
         var result = contentService.getAllContent(0, 20, "createdAt", "desc");
@@ -417,9 +410,9 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get all content with ascending sort")
     void shouldGetAllContentWithAscendingSort() {
-        // Given
-        Page<ContentEntity> contentPage = new PageImpl<>(List.of(content));
-        when(contentRepository.findAll(any(PageRequest.class))).thenReturn(contentPage);
+        // Given (BUG-CMS-HEX-001: port signature is findAll(int,int,String,String))
+        when(contentRepository.findAll(0, 10, "title", "asc"))
+            .thenReturn(List.of(content));
 
         // When
         var result = contentService.getAllContent(0, 10, "title", "asc");

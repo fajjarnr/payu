@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * Content Management Service for banners, promotions, alerts, and popups.
  * Supports scheduled publishing, targeting rules, and A/B test integration.
  */
-@EnableJpaRepositories(basePackages = "id.payu.cms.domain.repository")
+@EnableJpaRepositories(basePackages = "id.payu.cms.adapter.persistence")
 @EntityScan(basePackages = "id.payu.cms.adapter.persistence.entity")
 @SpringBootApplication
 @EnableJpaAuditing

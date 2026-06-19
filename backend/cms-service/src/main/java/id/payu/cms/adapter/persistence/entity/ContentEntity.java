@@ -3,6 +3,8 @@ package id.payu.cms.adapter.persistence.entity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.cms.domain.entity.ContentStatus;
+import id.payu.security.annotation.Sensitive;
+import id.payu.security.annotation.SensitivityLevel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,12 +74,14 @@ public class ContentEntity {
     private ContentStatus status = ContentStatus.DRAFT;
 
     @JdbcTypeCode(SqlTypes.JSON)
+    @Sensitive(SensitivityLevel.STANDARD)
     @Column(name = "targeting_rules", columnDefinition = "JSONB")
-    private Map<String, Object> targetingRules; // User segment, location, device
+    private Map<String, Object> targetingRules; // User segment, location, device — may contain user identifiers
 
     @JdbcTypeCode(SqlTypes.JSON)
+    @Sensitive(SensitivityLevel.STANDARD)
     @Column(name = "metadata", columnDefinition = "JSONB")
-    private Map<String, Object> metadata; // Custom fields
+    private Map<String, Object> metadata; // Custom fields — may contain user data
 
     @Column(name = "version")
     @Builder.Default

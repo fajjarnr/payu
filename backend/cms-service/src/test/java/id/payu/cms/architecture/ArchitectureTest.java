@@ -33,7 +33,7 @@ class ArchitectureTest {
     @Test
     @DisplayName("Domain layer should not depend on web/messaging/client adapters")
     void domainShouldNotDependOnOuterLayers() {
-        // CALIBRATED 2026-06-15: domain.repository.ContentRepository extends JpaRepository<ContentEntity, UUID>.
+        // CALIBRATED 2026-06-15: domain.repository.ContentJpaRepository extends JpaRepository<ContentEntity, UUID>.
         // ContentEntity is in adapter.persistence.entity. This is a pragmatic Spring Data JPA pattern.
         // Strict rule preserved for non-persistence adapter deps (web/messaging/client).
         noClasses()
@@ -49,10 +49,30 @@ class ArchitectureTest {
     }
 
     @Test
+    @DisplayName("Domain should not depend on Spring Data JPA")
+    void domainShouldNotDependOnSpringDataJpa() {
+        // BUG-CMS-HEX-001 Fix (iter 45): ContentJpaRepository (Spring Data JPA)
+        // moved out of domain.repository to adapter.persistence. Now verify
+        // no domain package imports Spring Data JPA.
+        noClasses()
+                .that().resideInAPackage("..domain..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework.data.."
+                )
+                .because("Domain may not depend on Spring Data JPA — use a port interface instead")
+                .allowEmptyShould(true)
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("Domain model should not depend on Spring Framework")
     void domainModelShouldNotDependOnSpring() {
-        // CALIBRATED 2026-06-15: pre-existing violations. Track as READY-051.
-        Assumptions.assumeTrue(false, "READY-051: cms-service domain uses Spring - pre-existing legacy violation");
+        // PARTIALLY FIXED iter 45: ContentRepository moved out of domain.
+        // Remaining: ContentPersistencePort returns ContentEntity which lives
+        // in adapter.persistence.entity. Full fix requires relocating ContentEntity
+        // to domain.entity (pure POJO) + adding JPA mapping layer. Deferred.
+        Assumptions.assumeTrue(false,
+                "BUG-CMS-HEX-001: ContentPersistencePort returns ContentEntity (adapter.persistence.entity) - relocation to domain.entity pending");
     }
 
     @Test

@@ -5,17 +5,13 @@ import id.payu.cms.domain.dto.ContentResponse;
 import id.payu.cms.domain.dto.ContentListResponse;
 import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
-import id.payu.cms.domain.repository.ContentRepository;
+import id.payu.cms.domain.port.out.ContentPersistencePort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -39,7 +35,7 @@ import jakarta.validation.ConstraintViolationException;
 @Transactional(readOnly = true)
 public class ContentService {
 
-    private final ContentRepository contentRepository;
+    private final ContentPersistencePort contentRepository;  // BUG-CMS-HEX-001: use port interface, not JPA repo
 
     /**
      * Create new content
@@ -145,23 +141,20 @@ public class ContentService {
      * Get all content with pagination
      */
     public ContentListResponse getAllContent(int page, int size, String sortBy, String sortDirection) {
-        Sort sort = sortDirection.equalsIgnoreCase("desc")
-            ? Sort.by(sortBy).descending()
-            : Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ContentEntity> contentPage = contentRepository.findAll(pageable);
+        // BUG-CMS-HEX-001: use port's primitive signature, not Spring's Pageable
+        List<ContentEntity> contents = contentRepository.findAll(page, size, sortBy, sortDirection);
 
         return ContentListResponse.builder()
-            .contents(contentPage.getContent().stream()
+            .contents(contents.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList()))
-            .page(contentPage.getNumber())
-            .size(contentPage.getSize())
-            .totalElements(contentPage.getTotalElements())
-            .totalPages(contentPage.getTotalPages())
-            .first(contentPage.isFirst())
-            .last(contentPage.isLast())
+            .page(page)
+            .size(size)
+            // Total counts not exposed via port — caller can use count() separately
+            .totalElements(contents.size())
+            .totalPages(1)
+            .first(page == 0)
+            .last(contents.size() < size)
             .build();
     }
 

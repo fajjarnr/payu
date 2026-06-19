@@ -2,7 +2,7 @@ package id.payu.cms.repository;
 
 import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
-import id.payu.cms.domain.repository.ContentRepository;
+import id.payu.cms.adapter.persistence.ContentJpaRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for ContentRepository using Testcontainers PostgreSQL.
+ * Integration tests for ContentJpaRepository using Testcontainers PostgreSQL.
  *
  * Migration note: @DataJpaTest and @AutoConfigureTestDatabase were
  * REMOVED in Spring Boot 4.0+. Replaced with @SpringBootTest +
@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @ActiveProfiles("container")  // Excludes DataSourceConfiguration custom beans (profile=!container)
 @Tag("integration")
-@DisplayName("ContentRepository Integration Tests")
+@DisplayName("ContentJpaRepository Integration Tests")
 class ContentRepositoryIntegrationTest {
 
     @Container
@@ -73,7 +73,7 @@ class ContentRepositoryIntegrationTest {
     }
 
     @Autowired
-    private ContentRepository contentRepository;
+    private ContentJpaRepository contentRepository;
 
     private ContentEntity banner1;
     private ContentEntity banner2;
