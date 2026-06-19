@@ -10,10 +10,10 @@ spec:
   clusterName: payu-onprem
   arch: amd64
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.15.59-multi
+    image: quay.io/openshift-release-dev/ocp-release:4.15.43-multi
   replicas: 2
   management:
-    autoRepair: false
+    autoRepair: true
     upgradeType: Replace
   platform:
     aws:

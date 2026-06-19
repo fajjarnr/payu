@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 39: Recreated payu-onprem with v4.15.43 & Enabled NodePool AutoRepair (2026-06-19)
+
+- **Downgrade & Recreate**: Recreated the `payu-onprem` HostedCluster using OpenShift version `4.15.43` to resolve guest cluster node stability and control plane container permission errors.
+- **NodePool AutoRepair**: Enabled `autoRepair: true` on both `payu-onprem` and `payu-cloud` NodePools to allow Cluster API Provider AWS (CAPA) to automatically recycle stopped or unhealthy EC2 worker nodes, resolving the EBS volume lockup issue.
+- **Verification**: Verified all pods in `payu-onprem` guest cluster and its hosted control plane on management cluster are healthy and running.
+
 ### Iteration 38: payu-dev Naming Consistency + Postgres NetworkPolicy + HA Disabled + L-058 CI Guard (2026-06-18)
 
 **Recursive dev loop continued**: from iter 37's 38 Ready/0 Not-Ready → **44 Ready/0 Not-Ready/0 CrashLoop/0 ImagePullBackOff (100% healthy)**.

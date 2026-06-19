@@ -13,7 +13,7 @@ spec:
     image: quay.io/openshift-release-dev/ocp-release:4.20.24-multi
   replicas: 2
   management:
-    autoRepair: false
+    autoRepair: true
     upgradeType: Replace
   platform:
     aws:

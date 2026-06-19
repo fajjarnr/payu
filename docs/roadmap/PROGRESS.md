@@ -13,7 +13,7 @@
 | Services Deployed        | 🟢 23/23 + 4 simulators + web-app      | All running on OpenShift payu-dev (Jun 8)       |
 | Total Pods               | 🟢 39/39                                | 39 pods Running on OCP 4.20+ sandbox (Jun 13)   |
 | OpenShift Cluster        | 🟢 Active                                | Sandbox cluster (RT7ZF), ap-southeast-1         |
-| HCP Clusters (Multi-Env) | 🟢 Running                               | Deployed payu-onprem (OCP 4.18.43) and payu-prod (OCP 4.20.24) sharing VPC with NLB ingress (Jun 12) |
+| HCP Clusters (Multi-Env) | 🟢 Running                               | Deployed payu-onprem (OCP 4.15.43) and payu-prod (OCP 4.20.24) sharing VPC with NLB ingress (Jun 18) |
 | Operators Installed      | 🟢 20/20                                 | AMQ Streams, Crunchy PG, DataGrid, Pipelines, GitOps, RHBK, ACS, etc. |
 | Data Services            | 🟢 PostgreSQL + DataGrid + Kafka         | StatefulSet PG16, Infinispan RESP, AMQ Streams KRaft |
 | Identity (Keycloak)      | 🟢 Running in payu-sso                   | Keycloak 26 + realm `payu` created (Jun 8)     |

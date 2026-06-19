@@ -9,7 +9,7 @@ metadata:
 spec:
   channel: stable-4.15
   release:
-    image: quay.io/openshift-release-dev/ocp-release:4.15.59-multi
+    image: quay.io/openshift-release-dev/ocp-release:4.15.43-multi
   dns:
     baseDomain: payu.ocp.fajjjar.my.id
     privateZoneID: Z0688851VIBKG68U8DFU

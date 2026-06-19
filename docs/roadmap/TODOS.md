@@ -520,7 +520,7 @@ Both HCPs provisioned, NodePool 1/1 Ready, node Ready, kubeadmin passwords retri
 ### Final Infra State
 | Component | Status |
 |:----------|:-------|
-| HCP payu-onprem 4.18.43 (v1.31.14) | ✅ AVAILABLE, 1/1 node Ready |
+| HCP payu-onprem 4.15.43 (v1.28.15) | ✅ AVAILABLE, 2/2 nodes Ready |
 | HCP payu-cloud 4.20.24 (v1.33.12) | ✅ AVAILABLE, 1/1 node Ready |
 | Terraform (2× VPC, 2× S3 OIDC bucket, 16× IAM roles) | ✅ applied |
 | MutatingWebhook (hcp-audience-fixer) | ✅ deployed payu-system/ |
