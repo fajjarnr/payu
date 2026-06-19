@@ -156,7 +156,7 @@ public class RiskEvaluationService {
         if (profile.getKnownDevices() == null) return true;
         
         return profile.getKnownDevices().stream()
-                .noneMatch(d -> d.getDeviceId().equals(deviceId));
+                .noneMatch(d -> Objects.equals(d.getDeviceId(), deviceId));
     }
 
     private boolean isNewIpAddress(UserRiskProfileEntity profile, String ipAddress) {
@@ -164,7 +164,7 @@ public class RiskEvaluationService {
         if (profile.getKnownIps() == null) return true;
         
         return profile.getKnownIps().stream()
-                .noneMatch(ip -> ip.getIpAddress().equals(ipAddress));
+                .noneMatch(ip -> Objects.equals(ip.getIpAddress(), ipAddress));
     }
 
     private boolean isUnusualLoginTime(Long timestamp) {

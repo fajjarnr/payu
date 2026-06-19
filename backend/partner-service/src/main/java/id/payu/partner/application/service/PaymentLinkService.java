@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import id.payu.outbox.service.OutboxService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -113,7 +115,7 @@ public class PaymentLinkService {
         PaymentLinkEntity paymentLink = paymentLinkRepository.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + linkId));
 
-        if (!paymentLink.getPartner().getId().equals(partnerId)) {
+        if (!Objects.equals(paymentLink.getPartner() != null ? paymentLink.getPartner().getId() : null, partnerId)) {
             throw new IllegalArgumentException("Payment link does not belong to partner: " + partnerId);
         }
 
@@ -160,7 +162,7 @@ public class PaymentLinkService {
         PaymentLinkEntity paymentLink = paymentLinkRepository.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + linkId));
 
-        if (!paymentLink.getPartner().getId().equals(partnerId)) {
+        if (!Objects.equals(paymentLink.getPartner() != null ? paymentLink.getPartner().getId() : null, partnerId)) {
             throw new IllegalArgumentException("Payment link does not belong to partner: " + partnerId);
         }
 

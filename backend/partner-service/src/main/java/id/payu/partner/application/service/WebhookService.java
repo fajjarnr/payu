@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -170,7 +172,7 @@ public class WebhookService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Webhook subscription not found: " + subscriptionId));
 
-        if (!subscription.getPartner().getId().equals(partnerId)) {
+        if (!Objects.equals(subscription.getPartner() != null ? subscription.getPartner().getId() : null, partnerId)) {
             throw new IllegalArgumentException(
                     "Webhook subscription " + subscriptionId + " does not belong to partner " + partnerId);
         }

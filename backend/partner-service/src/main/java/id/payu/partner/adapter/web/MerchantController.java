@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 import id.payu.security.annotation.AuditOperation;
 
 /**
@@ -111,7 +113,7 @@ public class MerchantController extends BaseController {
         if (authenticatedAccountId == null) {
             authenticatedAccountId = jwt.getSubject();
         }
-        if (!authenticatedAccountId.equals(payerAccountId)) {
+        if (!Objects.equals(authenticatedAccountId, payerAccountId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Cannot initiate QR payment for another user's account");
         }

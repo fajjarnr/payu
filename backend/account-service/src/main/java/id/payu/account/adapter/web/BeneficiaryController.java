@@ -21,6 +21,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -141,7 +143,7 @@ public class BeneficiaryController {
         log.info("Updating beneficiary: {} for account: {}", beneficiaryId, accountId);
 
         Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
-        if (beneficiary == null || !beneficiary.getUser().getId().equals(accountId)) {
+        if (beneficiary == null || beneficiary.getUser() == null || !Objects.equals(beneficiary.getUser().getId(), accountId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
         }
@@ -164,7 +166,7 @@ public class BeneficiaryController {
         log.info("Deleting beneficiary: {} for account: {}", beneficiaryId, accountId);
 
         Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
-        if (beneficiary == null || !beneficiary.getUser().getId().equals(accountId)) {
+        if (beneficiary == null || beneficiary.getUser() == null || !Objects.equals(beneficiary.getUser().getId(), accountId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
         }

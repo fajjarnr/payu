@@ -27,6 +27,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.util.List;
 import java.util.UUID;
 import id.payu.security.annotation.AuditOperation;
@@ -137,7 +139,7 @@ public class SubscriptionController {
         SubscriptionEntity sub = subscriptionService.getSubscription(subscriptionId);
         // BUG-SECURITY-002 FIX: Validate authenticated user owns this subscription
         String userId = extractUserId();
-        if (userId != null && sub.getAccountId() != null && !sub.getAccountId().equals(userId)) {
+        if (userId != null && sub.getAccountId() != null && !Objects.equals(sub.getAccountId(), userId)) {
             throw new IllegalArgumentException("SubscriptionEntity not found");
         }
         return ApiResponse.success(SubscriptionResponse.from(sub));
@@ -150,7 +152,7 @@ public class SubscriptionController {
             @Parameter(description = "Account ID") @PathVariable String accountId) {
         // BUG-SECURITY-002 FIX: Validate authenticated user is requesting their own account
         String userId = extractUserId();
-        if (userId != null && !accountId.equals(userId)) {
+        if (!Objects.equals(accountId, userId)) {
             throw new IllegalArgumentException("Not authorized to access subscriptions for this account");
         }
         List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByAccount(accountId)

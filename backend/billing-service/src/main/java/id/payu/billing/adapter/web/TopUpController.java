@@ -24,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -59,7 +61,7 @@ public class TopUpController {
     private void validateOwnership(BillPaymentEntity payment) {
         String userId = extractUserId();
         if (userId != null && payment.getAccountId() != null
-                && !payment.getAccountId().equals(userId)) {
+                && !Objects.equals(payment.getAccountId(), userId)) {
             throw new TopUpNotFoundException("Top-up not found");
         }
     }

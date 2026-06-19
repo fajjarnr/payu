@@ -32,6 +32,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
@@ -217,7 +219,7 @@ public class LendingController extends BaseController {
             java.security.Principal principal) {
         // BUG-BE-191 FIX: Verify userId matches authenticated user
         UUID authenticatedUserId = UUID.fromString(principal.getName());
-        if (!authenticatedUserId.equals(userId)) {
+        if (!Objects.equals(authenticatedUserId, userId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Cannot activate PayLater for another user");
         }
@@ -349,7 +351,7 @@ public class LendingController extends BaseController {
             java.security.Principal principal) {
         // BUG-BE-192 FIX: Extract authenticated userId from JWT instead of trusting client-submitted value
         UUID authenticatedUserId = UUID.fromString(principal.getName());
-        if (!authenticatedUserId.equals(userId)) {
+        if (!Objects.equals(authenticatedUserId, userId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Cannot calculate credit score for another user");
         }

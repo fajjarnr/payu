@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -75,7 +76,7 @@ public class AccountSecurityService {
             // Check if any of the user's accounts match the requested accountId
             List<Account> accounts = accountRepository.findByUserId(user.getId());
             boolean isOwner = accounts.stream()
-                    .anyMatch(account -> account.getId().equals(accountId));
+                    .anyMatch(account -> Objects.equals(account.getId(), accountId));
 
             if (!isOwner) {
                 log.warn("Account ownership denied: user {} does not own account {}",

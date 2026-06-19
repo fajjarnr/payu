@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -227,7 +229,7 @@ public class ApiKeyService {
     private ApiKeyEntity findKeyForPartner(Long partnerId, Long keyId) {
         ApiKeyEntity key = apiKeyRepository.findById(keyId)
                 .orElseThrow(() -> new IllegalArgumentException("API key not found: " + keyId));
-        if (!key.getPartner().getId().equals(partnerId)) {
+        if (!Objects.equals(key.getPartner() != null ? key.getPartner().getId() : null, partnerId)) {
             throw new IllegalArgumentException(
                     "API key " + keyId + " does not belong to partner " + partnerId);
         }
