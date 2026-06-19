@@ -54,7 +54,6 @@ public class KycReviewService {
     }
 
     public List<KycReviewEntity> listByStatus(KycStatus status, int page, int size) {
-        // BUG-BE-043: Use DB-level pagination instead of ignoring page/size
         return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
     }
 

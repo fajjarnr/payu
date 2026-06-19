@@ -14,7 +14,6 @@ import id.payu.backoffice.domain.KycStatus;
 @Repository
 public interface KycReviewRepository extends JpaRepository<KycReviewEntity, UUID> {
     List<KycReviewEntity> findByStatus(KycStatus status);
-    // BUG-BE-043: Pageable version
     Page<KycReviewEntity> findByStatus(KycStatus status, Pageable pageable);
     List<KycReviewEntity> findByUserId(String userId);
     List<KycReviewEntity> findByUserIdOrderByCreatedAtDesc(String userId);

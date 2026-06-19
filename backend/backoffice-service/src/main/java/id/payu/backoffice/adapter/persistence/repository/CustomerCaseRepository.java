@@ -15,7 +15,6 @@ import id.payu.backoffice.domain.CustomerCaseStatus;
 public interface CustomerCaseRepository extends JpaRepository<CustomerCaseEntity, UUID> {
     List<CustomerCaseEntity> findByUserId(String userId);
     List<CustomerCaseEntity> findByStatus(CustomerCaseStatus status);
-    // BUG-BE-043: Pageable version
     Page<CustomerCaseEntity> findByStatus(CustomerCaseStatus status, Pageable pageable);
     List<CustomerCaseEntity> findByAssignedTo(String assignedTo);
 

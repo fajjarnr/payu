@@ -15,7 +15,6 @@ import id.payu.backoffice.domain.FraudCaseStatus;
 public interface FraudCaseRepository extends JpaRepository<FraudCaseEntity, UUID> {
     List<FraudCaseEntity> findByUserId(String userId);
     List<FraudCaseEntity> findByStatus(FraudCaseStatus status);
-    // BUG-BE-043: Pageable version for DB-level pagination
     Page<FraudCaseEntity> findByStatus(FraudCaseStatus status, Pageable pageable);
 
     // Search methods
