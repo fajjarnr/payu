@@ -31,7 +31,19 @@
 | **WEBAPP-014** | **P2** | web-app | Add i18n schema validation (Zod) + key coverage check script to CI per L-057. **CLOSED in iter 42**: created `frontend/web-app/scripts/check-i18n-coverage.mjs` — flattens en.json + id.json to dot-path sets, exits 0 if match / 1 if mismatch / 2 on JSON parse error. Added `npm run check:i18n` script. 515 keys × 2 locales parity OK. | 🟢 Closed | iter 42 |
 | **WEBAPP-LINT-003** | **P3** | web-app | 8 pre-existing errors in test files (`display-name` + `Function` type). **CLOSED in iter 42**: 3 files `(fn: Function)` → `(fn: (...args: unknown[]) => void)`. 5 files `Wrapper.displayName` + eslint-disable. | 🟢 Closed | iter 42 |
 
-### Iter 43 cleanup work
+## 🐛 Iter 44-49 — Hexagonal Refactors + NPE Sweep + Kustomize Lesson (2026-06-19)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| **BUG-TXN-ASYNC-001** | **P1** | 3 services | `@Async` annotation no-op (no `@EnableAsync`). Self-invocation bypasses AOP proxy. **CLOSED in iter 44**: added `@EnableAsync` to `account/statement/transaction-service` Application + extracted `AsyncDisbursementProcessorService` separate bean. | 🟢 Closed | iter 44 |
+| **BUG-CMS-HEX-001** | **P1** | cms-service | `ContentRepository` (Spring Data JPA) in `domain/repository/` — domain depended on JPA. **CLOSED in iter 45**: moved to `adapter/persistence/ContentJpaRepository` + created `ContentPersistenceAdapter` implementing port. `ContentService` now depends on `ContentPersistencePort`. `@EnableJpaRepositories(basePackages = "id.payu.cms.adapter.persistence")`. New `domainShouldNotDependOnSpringDataJpa` arch test. 2 `@Sensitive` annotations added. | 🟢 Closed | iter 45 |
+| **BUG-INT-HEX-001** | **P1** | integration-service | `MessageProcessingService` in `domain/service/`, `IntegrationService` used `ProducerTemplate` directly. **CLOSED in iter 46**: moved to `application/service/`, added `routeInternal()` to `MessagePublisherPort`, updated `IntegrationService` to use port. Re-enabled 2 ArchUnit rules. | 🟢 Closed | iter 46 |
+| **BUG-WALLET-NPE-001** | **P1** | wallet, transaction | 14 `nullable.equals()` patterns → NPE risk. **CLOSED in iter 47**: replaced with `Objects.equals()` in `Wallet/Card/SavingsGoalController` + transaction controllers. | 🟢 Closed | iter 47 |
+| **BUG-NPE-002** | **P1** | 5 services | 11 more `nullable.equals()` patterns. **CLOSED in iter 48**: replaced in account, auth, billing, lending, partner services. | 🟢 Closed | iter 48 |
+| **BUG-CMS-NPE-002** | **P2** | cms-service | `ContentEntity.matchesTargeting()` throws NPE when map has null value or user input is null. **CLOSED in iter 49**: extracted `matchesRule(key, userValue)` helper. Treats null as wildcard. 3 TDD tests written first (Red→Green). Deployed `cms-service:1.8.64`. | 🟢 Closed | iter 49 |
+| **L-078** | **P3** | docs/lessons | Kustomize overlay `images[].newTag` OVERRIDES base deployment image. Editing base only = silent no-op. **CLOSED in iter 49**: lesson captured. Pattern: edit BOTH base + overlay, apply via `oc apply -k overlays/<env>/`, NOT `oc apply -f base/`. | 🟢 Closed | iter 49 |
+
+### Iter 44-48 cleanup work
 - **Removed 11 stale TODO comments** (5 BUG-ARCH-001 + 6 BUG-BE-043)
 - **Deleted 422-line orphan Python file** misnamed as `.sql` in analytics-service
 - **Added 3scale API Management Section 7.3** to ARCHITECTURE.md (136 lines, 2-tier partner gateway)

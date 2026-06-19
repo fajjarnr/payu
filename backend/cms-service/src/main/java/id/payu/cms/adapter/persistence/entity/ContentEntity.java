@@ -120,31 +120,27 @@ public class ContentEntity {
     }
 
     /**
-     * Check if content matches targeting criteria
+     * Check if content matches targeting criteria.
+     * Treats null rule values and null user inputs as wildcards (no constraint).
+     * BUG-CMS-NPE-002: was throwing NPE on `targetingRules.get(key).equals()` when value was null.
      */
     public boolean matchesTargeting(String userSegment, String userLocation, String deviceType) {
         if (targetingRules == null || targetingRules.isEmpty()) {
             return true;
         }
+        return matchesRule("segment", userSegment)
+                && matchesRule("location", userLocation)
+                && matchesRule("device", deviceType);
+    }
 
-        // Check user segment
-        if (targetingRules.containsKey("segment") &&
-            !targetingRules.get("segment").equals(userSegment)) {
-            return false;
+    private boolean matchesRule(String key, String userValue) {
+        if (!targetingRules.containsKey(key)) {
+            return true;
         }
-
-        // Check location
-        if (targetingRules.containsKey("location") &&
-            !targetingRules.get("location").equals(userLocation)) {
-            return false;
+        Object ruleValue = targetingRules.get(key);
+        if (ruleValue == null || userValue == null) {
+            return true;
         }
-
-        // Check device
-        if (targetingRules.containsKey("device") &&
-            !targetingRules.get("device").equals(deviceType)) {
-            return false;
-        }
-
-        return true;
+        return ruleValue.equals(userValue);
     }
 }

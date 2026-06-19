@@ -19,6 +19,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
+
+Closed latent NPE bug in `cms-service` content targeting logic. `ContentEntity.matchesTargeting()` used `targetingRules.get(key).equals(userValue)` which throws NPE when:
+- Map has key with null value (e.g., `{"segment": null}` from JSON parse)
+- User input is null (anonymous user, no segment/location/device context)
+
+**Fix**: Extracted private `matchesRule(key, userValue)` helper. Treats both null rule value and null user value as wildcards (no constraint). If both are null, match. If both non-null, require equality.
+
+**TDD**: Wrote 3 failing tests first:
+1. `shouldNotThrowNpeWhenTargetingRuleValueIsNull` — map `{"segment": null}` + user `"PREMIUM"` → expect match
+2. `shouldNotThrowNpeWhenUserInputIsNull` — rule `{"segment":"PREMIUM","location":"JAKARTA","device":"MOBILE"}` + user all null → expect match
+3. `shouldHandleMixedNullValues` — mixed null rule + mismatching user → expect non-match
+
+All 3 failed with NPE/assertion fail. Fix applied → all 6 matchesTargeting tests green. Full cms-service suite: 82 run, 0 fail, 25 skip (testcontainer, known).
+
+**Deployment**: 
+- `cms-service:1.8.64` built via `mvn package -DskipTests` + `podman build` 
+- Bumped BOTH `infrastructure/workloads/base/cms-service/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (overlay overrides base)
+- Applied via `oc apply -k infrastructure/workloads/overlays/payu-dev/` (NOT `oc apply -f base/` — overlay's image override would rewrite tag)
+- Verified `/actuator/health` + `/liveness` + `/readiness` all UP via port-forward
+
+**Lesson captured (L-078)**: Kustomize overlay `images[].newTag` OVERRIDES base `deployment.yaml` image. Editing base only is a no-op. Must update BOTH and apply via `oc apply -k overlays/<env>/` for changes to land.
+
+### Iterations 44–48 (2026-06-19, summary)
+
+Backlog of bug fixes shipped in same day, not yet entered in CHANGELOG:
+
+- **Iter 44 (BUG-TXN-ASYNC-001)**: 3 services (`account-service`, `statement-service`, `transaction-service`) had `@Async` methods without `@EnableAsync` → annotation was a no-op. Added `@EnableAsync` to all 3 main classes + extracted `AsyncDisbursementProcessorService` (separate bean — self-invocation bypasses AOP proxy). Deployed: `transaction-service:1.8.63`, `statement-service:1.8.63`, `account-service:1.8.62`.
+- **Iter 45 (BUG-CMS-HEX-001)**: `ContentRepository` (Spring Data JPA) was in `domain/repository/`. Moved to `adapter/persistence/ContentJpaRepository` + created `ContentPersistenceAdapter` implementing `ContentPersistencePort`. `ContentService` now depends on port (not JPA). `@EnableJpaRepositories(basePackages = "id.payu.cms.adapter.persistence")` + `@EntityScan(basePackages = "id.payu.cms.adapter.persistence.entity")`. Added 2 `@Sensitive` annotations on `targetingRules` + `metadata`. New `domainShouldNotDependOnSpringDataJpa` arch test. Deployed `cms-service:1.8.63`.
+- **Iter 46 (BUG-INT-HEX-001)**: `MessageProcessingService` was in `domain/service/`. Moved to `application/service/`. Added `routeInternal()` to `MessagePublisherPort`. Updated `IntegrationService` to use port (removed `ProducerTemplate` import). Re-enabled 2 ArchUnit rules (`domainShouldNotDependOnSpring`, `applicationShouldOnlyDependOnDomain`). Deployed `integration-service:1.8.62`.
+- **Iter 47 (BUG-WALLET-NPE-001)**: Fixed 14 `nullable.equals()` patterns across `wallet-service` + `transaction-service` controllers using `Objects.equals()`. Deployed `wallet-service:1.8.63`, `transaction-service:1.8.64`.
+- **Iter 48 (BUG-NPE-002)**: Fixed 11 more `nullable.equals()` across 5 services (account, auth, billing, lending, partner). Deployed `lending-service:1.8.62`, `account-service:1.8.63`, `partner-service:1.8.62`, `billing-service:1.8.62`, `auth-service:1.8.62`.
+
 ### Iteration 39: Recreated payu-onprem with v4.15.43 & Enabled NodePool AutoRepair (2026-06-19)
 
 - **Downgrade & Recreate**: Recreated the `payu-onprem` HostedCluster using OpenShift version `4.15.43` to resolve guest cluster node stability and control plane container permission errors.

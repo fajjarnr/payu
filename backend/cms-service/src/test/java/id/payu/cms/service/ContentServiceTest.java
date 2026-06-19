@@ -243,6 +243,50 @@ class ContentServiceTest {
     }
 
     @Test
+    @DisplayName("BUG-CMS-NPE-002: should not throw NPE when targeting rule value is null")
+    void shouldNotThrowNpeWhenTargetingRuleValueIsNull() {
+        // Given — map contains "segment" key with explicit null value
+        HashMap<String, Object> rules = new HashMap<>();
+        rules.put("segment", null);
+        content.setTargetingRules(rules);
+
+        // When + Then — must not throw NullPointerException
+        boolean matches = content.matchesTargeting("PREMIUM", "JAKARTA", "MOBILE");
+        assertThat(matches).isTrue();
+    }
+
+    @Test
+    @DisplayName("BUG-CMS-NPE-002: should not throw NPE when user input is null")
+    void shouldNotThrowNpeWhenUserInputIsNull() {
+        // Given — rule is set
+        HashMap<String, Object> rules = new HashMap<>();
+        rules.put("segment", "PREMIUM");
+        rules.put("location", "JAKARTA");
+        rules.put("device", "MOBILE");
+        content.setTargetingRules(rules);
+
+        // When + Then — null inputs must not throw NPE
+        boolean matches = content.matchesTargeting(null, null, null);
+        assertThat(matches).isTrue();
+    }
+
+    @Test
+    @DisplayName("BUG-CMS-NPE-002: should handle mixed null rule values and null inputs")
+    void shouldHandleMixedNullValues() {
+        // Given — segment rule is null in map, user passed valid value
+        HashMap<String, Object> rules = new HashMap<>();
+        rules.put("segment", null);
+        rules.put("location", "JAKARTA");
+        content.setTargetingRules(rules);
+
+        // When
+        boolean matches = content.matchesTargeting("PREMIUM", "BANDUNG", "MOBILE");
+
+        // Then — null rule value should be treated as wildcard (match), then location mismatch
+        assertThat(matches).isFalse();
+    }
+
+    @Test
     @DisplayName("Should update content successfully")
     void shouldUpdateContentSuccessfully() {
         // Given

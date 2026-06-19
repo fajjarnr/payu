@@ -2099,4 +2099,68 @@ private AgentResponse createAgentFallback(CreateAgentRequest request, Exception 
 
 ---
 
-*Last Updated: June 17, 2026 — Added L-068 (Resilience4j fallback rethrow pattern). June 17: L-067 (HyperShift Image Registry Token Audience and AWS OIDC Client ID Separation). June 15, 2026 — L-041 corrected (Jackson 2.21 ADD, not 2.18 removal). L-043 (Resilience4j 2.4 + SB 4.1 cascade), L-044 (Spring Cloud 5.0 + service-local overrides), L-045 (spring-boot-jackson2), L-046 (Jackson 3 SerializationFeature enum binding), L-047 (Camel 4.20 SB 4.1 compat), L-048 (test green ≠ runtime healthy), L-049 (cluster infra cleanup during migration), L-050 (3scale backend cache restart) added.*
+## L-078: Kustomize Overlay `images[].newTag` OVERRIDES Base Deployment — Must Apply via `-k` (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: GitOps / Deployment / Kustomize
+**Context**: Iter 49 — bumped `cms-service:1.8.63 → 1.8.64` in `infrastructure/workloads/base/cms-service/deployment.yaml`, ran `podman build` + `podman push`, then `oc apply -f infrastructure/workloads/base/cms-service/deployment.yaml`. Got `deployment.apps/cms-service created` (suspicious — expected `configured`). New pod started but crashed with `No qualifying bean of type 'id.payu.cms.adapter.persistence.ContentJpaRepository'`. Live cluster image still showed `1.8.63`. **The base yaml edit was silently overridden.**
+
+**Root cause**:
+- `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` has an `images:` block that rewrites the image:
+  ```yaml
+  images:
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.21
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
+    newTag: "1.8.59"  # was 1.8.59
+  ```
+- This entry matches by the `name: <old-image>:<old-tag>` tuple and replaces BOTH `newName` and `newTag`. Editing the base yaml's image has no effect on what the overlay produces.
+- `oc apply -f base/deployment.yaml` applies the raw base, bypassing the overlay → the cluster's deployment controller reconciles AGAINST the overlay's view (via ArgoCD / GitOps controller) and reverts the change.
+- The "created" output was misleading: oc actually deleted+recreated because the `kubectl.kubernetes.io/last-applied-configuration` annotation diverged from the live state. New pod ran 1.8.63 briefly, then reverted when the overlay's reconcile ran.
+
+**Pattern (3-step kustomize deployment)**:
+```bash
+# Step 1: Edit BOTH the base yaml AND the overlay kustomization.yaml newTag
+sed -i 's|cms-service:1.8.63|cms-service:1.8.64|g' \
+  infrastructure/workloads/base/cms-service/deployment.yaml
+python3 -c "..."  # bump overlay newTag to 1.8.64
+
+# Step 2: Build + push image to default-route registry
+mvn -f backend/cms-service/pom.xml clean package -DskipTests -q
+podman build -t default-route-openshift-image-registry.../cms-service:1.8.64 -f Containerfile .
+podman push --tls-verify=false default-route-openshift-image-registry.../cms-service:1.8.64
+
+# Step 3: Apply via kustomize (NOT raw base yaml)
+oc apply -k infrastructure/workloads/overlays/payu-dev/
+# Output: deployment.apps/cms-service configured
+oc rollout status deployment/cms-service -n payu-dev --timeout=90s
+```
+
+**Detection signals** (the misleading "created" + bean not found):
+- `oc apply -f base/deployment.yaml` returns `created` when deployment already exists → expect this is a revert, not an upgrade
+- Live image after `apply` differs from base yaml's image → overlay is winning
+- New pod fails with "No qualifying bean of type X" when X is defined in base + jar + same path → likely cached image or rollback
+- `oc get deployment -o jsonpath='{.spec.template.spec.containers[0].image}'` is the truth, not the yaml
+
+**Anti-pattern (what NOT to do)**:
+- ❌ `oc apply -f infrastructure/workloads/base/<svc>/deployment.yaml` — overlay rewrites it
+- ❌ `oc patch deployment <svc> -p '{"spec":{"template":{"spec":{"containers":[{"image":"...:1.8.64"}]}}}}'` — per user directive
+- ❌ `oc set image deployment/<svc> app=...:1.8.64` — same as oc patch under the hood, also gets reverted on next overlay reconcile
+- ❌ Editing only the base yaml — silent no-op
+
+**Correct pattern**:
+- ✅ Edit BOTH base + overlay
+- ✅ `oc apply -k infrastructure/workloads/overlays/<env>/`
+- ✅ Verify `oc get deployment -o jsonpath='{.spec.template.spec.containers[0].image}'` matches expected tag BEFORE waiting for rollout
+
+**Generalization**: Every service in `infrastructure/workloads/base/<svc>/` has a corresponding entry in `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` with the old internal registry URL + 1.8.21 placeholder. The convention is to use the overlay's `newTag` as the single source of truth for the deployed image tag.
+
+**Affected iters** (historical pre-L-078):
+- Iter 39 (1.8.61 bulk deploy 16 services) — likely used `oc set image` on each, not kustomize
+- Iter 41 (503 health Redis fix) — yaml edits to env vars (not image) survived because overlay doesn't override env
+- Iter 44-48 — image bumps done via `oc set image` (worked but verbose + bypasses GitOps)
+
+**Next step**: Update all future iters to use the kustomize `oc apply -k` pattern. Consider adding a CI check that fails if `base/.../deployment.yaml` and `overlays/.../kustomization.yaml` tags diverge.
+
+---
+
+*Last Updated: June 19, 2026 — Added L-078 (Kustomize overlay image override).*
