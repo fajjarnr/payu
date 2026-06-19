@@ -66,7 +66,6 @@ public class SubscriptionPlanEntity {
     public SubscriptionPlanEntity() {
     }
 
-    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
 
     @PrePersist
     protected void onCreate() {

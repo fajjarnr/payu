@@ -454,7 +454,5 @@ public class TransactionEntity implements Persistable<UUID> {
         this.isNew = false;
     }
 
-    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
 
-    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
 }

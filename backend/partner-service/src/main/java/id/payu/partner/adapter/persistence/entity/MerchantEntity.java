@@ -29,9 +29,7 @@ import id.payu.security.annotation.SensitivityLevel;
 @EntityListeners(TenantEntityListener.class)
 public class MerchantEntity {
 
-    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
 
-    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
