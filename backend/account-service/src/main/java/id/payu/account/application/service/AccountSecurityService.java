@@ -1,9 +1,11 @@
 package id.payu.account.application.service;
 
+import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.adapter.persistence.repository.UserRepository;
-import id.payu.account.entity.Account;
-import id.payu.account.entity.User;
-import id.payu.account.repository.AccountRepository;
+import id.payu.account.domain.model.Account;
+import id.payu.account.domain.model.User;
+import id.payu.account.domain.port.out.AccountPersistencePort;
+import id.payu.account.adapter.persistence.repository.AccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -28,13 +30,13 @@ public class AccountSecurityService {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSecurityService.class);
 
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
+    private final AccountPersistencePort accountPersistencePort;
+    private final UserPersistencePort userPersistencePort;
 
-    public AccountSecurityService(AccountRepository accountRepository,
-                                  UserRepository userRepository) {
-        this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
+    public AccountSecurityService(AccountPersistencePort accountPersistencePort,
+                                  UserPersistencePort userPersistencePort) {
+        this.accountPersistencePort = accountPersistencePort;
+        this.userPersistencePort = userPersistencePort;
     }
 
     /**
@@ -65,7 +67,7 @@ public class AccountSecurityService {
             }
 
             // Find the internal User by Keycloak externalId
-            Optional<User> userOpt = userRepository.findByExternalId(externalId);
+            Optional<User> userOpt = userPersistencePort.findByExternalId(externalId);
             if (userOpt.isEmpty()) {
                 log.warn("Account ownership check failed: no user found for externalId={}", externalId);
                 return false;
@@ -74,9 +76,9 @@ public class AccountSecurityService {
             User user = userOpt.get();
 
             // Check if any of the user's accounts match the requested accountId
-            List<Account> accounts = accountRepository.findByUserId(user.getId());
-            boolean isOwner = accounts.stream()
-                    .anyMatch(account -> Objects.equals(account.getId(), accountId));
+            List<UUID> accountIds = userPersistencePort.findAccountIdsByUserId(user.getId());
+        boolean isOwner = accountIds.contains(accountId);
+            
 
             if (!isOwner) {
                 log.warn("Account ownership denied: user {} does not own account {}",

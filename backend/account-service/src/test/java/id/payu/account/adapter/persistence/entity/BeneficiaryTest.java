@@ -1,4 +1,4 @@
-package id.payu.account.entity;
+package id.payu.account.adapter.persistence.entity;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +15,9 @@ class BeneficiaryTest {
         String bankCode = "BCA";
         String accountNumber = "1234567890";
         String accountName = "John Doe";
-        String nickname = "My BCA Account";
+        String nickname = "My BCA AccountEntity";
 
-        Beneficiary beneficiary = Beneficiary.builder()
+        BeneficiaryEntity beneficiary = BeneficiaryEntity.builder()
                 .id(id)
                 .bankCode(bankCode)
                 .accountNumber(accountNumber)
@@ -36,7 +36,7 @@ class BeneficiaryTest {
 
     @Test
     void shouldAllowNullNickname() {
-        Beneficiary beneficiary = Beneficiary.builder()
+        BeneficiaryEntity beneficiary = BeneficiaryEntity.builder()
                 .bankCode("BCA")
                 .accountNumber("1234567890")
                 .accountName("John Doe")
@@ -50,7 +50,7 @@ class BeneficiaryTest {
     void shouldSetVerifiedAt() {
         LocalDateTime verifiedAt = LocalDateTime.now();
 
-        Beneficiary beneficiary = Beneficiary.builder()
+        BeneficiaryEntity beneficiary = BeneficiaryEntity.builder()
                 .bankCode("BCA")
                 .accountNumber("1234567890")
                 .accountName("John Doe")

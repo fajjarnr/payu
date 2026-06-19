@@ -2,8 +2,8 @@ package id.payu.account.adapter.web;
 
 import id.payu.account.dto.BeneficiaryRequest;
 import id.payu.account.dto.BeneficiaryResponse;
-import id.payu.account.entity.Beneficiary;
-import id.payu.account.repository.BeneficiaryRepository;
+import id.payu.account.adapter.persistence.entity.BeneficiaryEntity;
+import id.payu.account.adapter.persistence.repository.BeneficiaryRepository;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
@@ -27,13 +27,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import id.payu.account.entity.BeneficiaryStatus;
+import id.payu.account.adapter.persistence.entity.BeneficiaryStatus;
 
 @RestController
 @RequestMapping("/api/v1/accounts/{accountId}/beneficiaries")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Beneficiaries", description = "Beneficiary management endpoints")
+@Tag(name = "Beneficiaries", description = "BeneficiaryEntity management endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class BeneficiaryController {
 
@@ -46,22 +46,22 @@ public class BeneficiaryController {
     @Operation(summary = "Get all beneficiaries for account")
     @PreAuthorize("hasAuthority('read:account')")
     public ResponseEntity<ApiResponse<List<BeneficiaryResponse>>> getBeneficiaries(
-            @Parameter(description = "Account ID", required = true)
+            @Parameter(description = "AccountEntity ID", required = true)
             @PathVariable UUID accountId,
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting beneficiaries for account: {}", accountId);
 
-        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal User UUID
-        // JWT sub = Keycloak externalId, accountId path var = internal User UUID in this controller
+        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal UserEntity UUID
+        // JWT sub = Keycloak externalId, accountId path var = internal UserEntity UUID in this controller
         String externalId = jwt.getSubject();
         var userOpt = userRepository.findByExternalId(externalId);
         if (userOpt.isEmpty() || !userOpt.get().getId().equals(accountId)) {
-            log.warn("User externalId={} attempted to access beneficiaries for account {}", externalId, accountId);
+            log.warn("UserEntity externalId={} attempted to access beneficiaries for account {}", externalId, accountId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
         }
 
-        List<Beneficiary> beneficiaries = beneficiaryRepository.findActiveByUserId(accountId);
+        List<BeneficiaryEntity> beneficiaries = beneficiaryRepository.findActiveByUserId(accountId);
         List<BeneficiaryResponse> responses = beneficiaries.stream()
                 .map(BeneficiaryResponse::from)
                 .collect(Collectors.toList());
@@ -74,17 +74,17 @@ public class BeneficiaryController {
     @Operation(summary = "Add a new beneficiary")
     @PreAuthorize("hasAuthority('write:account')")
     public ResponseEntity<ApiResponse<BeneficiaryResponse>> createBeneficiary(
-            @Parameter(description = "Account ID", required = true)
+            @Parameter(description = "AccountEntity ID", required = true)
             @PathVariable UUID accountId,
             @Valid @RequestBody BeneficiaryRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating beneficiary for account: {}", accountId);
 
-        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal User UUID
+        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal UserEntity UUID
         String externalId = jwt.getSubject();
         var userOpt2 = userRepository.findByExternalId(externalId);
         if (userOpt2.isEmpty() || !userOpt2.get().getId().equals(accountId)) {
-            log.warn("User externalId={} attempted to create beneficiary for account {}", externalId, accountId);
+            log.warn("UserEntity externalId={} attempted to create beneficiary for account {}", externalId, accountId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
         }
@@ -100,21 +100,21 @@ public class BeneficiaryController {
         if (beneficiaryRepository.existsByUserIdAndBankCodeAndAccountNumber(
                 accountId, request.getBankCode(), request.getAccountNumber())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error("BEN_002", "Beneficiary already exists"));
+                    .body(ApiResponse.error("BEN_002", "BeneficiaryEntity already exists"));
         }
 
         // Get user
         var user = userRepository.findById(accountId).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("ACC_001", "Account not found"));
+                    .body(ApiResponse.error("ACC_001", "AccountEntity not found"));
         }
 
         // TODO: Validate account via BI-FAST inquiry (IMP-035 requirement)
         // For now, we'll set a placeholder account name
-        String accountName = request.getNickname() != null ? request.getNickname() : "Account Holder";
+        String accountName = request.getNickname() != null ? request.getNickname() : "AccountEntity Holder";
 
-        Beneficiary beneficiary = Beneficiary.builder()
+        BeneficiaryEntity beneficiary = BeneficiaryEntity.builder()
                 .user(user)
                 .tenantId(user.getTenantId())
                 .bankCode(request.getBankCode())
@@ -125,7 +125,7 @@ public class BeneficiaryController {
                 .verifiedAt(LocalDateTime.now())
                 .build();
 
-        Beneficiary saved = beneficiaryRepository.save(beneficiary);
+        BeneficiaryEntity saved = beneficiaryRepository.save(beneficiary);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(BeneficiaryResponse.from(saved)));
     }
@@ -135,23 +135,23 @@ public class BeneficiaryController {
     @Operation(summary = "Update beneficiary nickname")
     @PreAuthorize("hasAuthority('write:account')")
     public ResponseEntity<ApiResponse<BeneficiaryResponse>> updateBeneficiary(
-            @Parameter(description = "Account ID", required = true)
+            @Parameter(description = "AccountEntity ID", required = true)
             @PathVariable UUID accountId,
-            @Parameter(description = "Beneficiary ID", required = true)
+            @Parameter(description = "BeneficiaryEntity ID", required = true)
             @PathVariable UUID beneficiaryId,
             @Valid @RequestBody BeneficiaryRequest request) {
         log.info("Updating beneficiary: {} for account: {}", beneficiaryId, accountId);
 
-        Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
+        BeneficiaryEntity beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
         if (beneficiary == null || beneficiary.getUser() == null || !Objects.equals(beneficiary.getUser().getId(), accountId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
+                    .body(ApiResponse.error("BEN_003", "BeneficiaryEntity not found"));
         }
 
         beneficiary.setNickname(request.getNickname());
         beneficiary.setUpdatedAt(LocalDateTime.now());
 
-        Beneficiary saved = beneficiaryRepository.save(beneficiary);
+        BeneficiaryEntity saved = beneficiaryRepository.save(beneficiary);
         return ResponseEntity.ok(ApiResponse.success(BeneficiaryResponse.from(saved)));
     }
 
@@ -159,16 +159,16 @@ public class BeneficiaryController {
     @Operation(summary = "Delete a beneficiary")
     @PreAuthorize("hasAuthority('write:account')")
     public ResponseEntity<ApiResponse<Void>> deleteBeneficiary(
-            @Parameter(description = "Account ID", required = true)
+            @Parameter(description = "AccountEntity ID", required = true)
             @PathVariable UUID accountId,
-            @Parameter(description = "Beneficiary ID", required = true)
+            @Parameter(description = "BeneficiaryEntity ID", required = true)
             @PathVariable UUID beneficiaryId) {
         log.info("Deleting beneficiary: {} for account: {}", beneficiaryId, accountId);
 
-        Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
+        BeneficiaryEntity beneficiary = beneficiaryRepository.findById(beneficiaryId).orElse(null);
         if (beneficiary == null || beneficiary.getUser() == null || !Objects.equals(beneficiary.getUser().getId(), accountId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
+                    .body(ApiResponse.error("BEN_003", "BeneficiaryEntity not found"));
         }
 
         beneficiary.setStatus(BeneficiaryStatus.DELETED);

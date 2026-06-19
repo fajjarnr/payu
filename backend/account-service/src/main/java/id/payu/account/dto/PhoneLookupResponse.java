@@ -21,7 +21,7 @@ public class PhoneLookupResponse {
                 .accountName(accountName)
                 .maskedAccountNumber(maskedAccountNumber)
                 .found(true)
-                .message("Account found")
+                .message("AccountEntity found")
                 .build();
     }
 
@@ -30,7 +30,7 @@ public class PhoneLookupResponse {
                 .accountName(null)
                 .maskedAccountNumber(null)
                 .found(false)
-                .message("Account not found for this phone number")
+                .message("AccountEntity not found for this phone number")
                 .build();
     }
 }

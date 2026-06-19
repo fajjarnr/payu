@@ -2,8 +2,8 @@ package id.payu.account.adapter.persistence;
 
 import id.payu.account.domain.model.Budget;
 import id.payu.account.domain.port.out.BudgetRepositoryPort;
-import id.payu.account.entity.BudgetEntity;
-import id.payu.account.repository.BudgetJpaRepository;
+import id.payu.account.adapter.persistence.entity.BudgetEntity;
+import id.payu.account.adapter.persistence.repository.BudgetJpaRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;

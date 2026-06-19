@@ -1,4 +1,4 @@
-package id.payu.account.entity;
+package id.payu.account.adapter.persistence.entity;
 
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "beneficiaries")
 @TenantAware
 @EntityListeners(TenantEntityListener.class)
-public class Beneficiary {
+public class BeneficiaryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,7 +24,7 @@ public class Beneficiary {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @Column(name = "bank_code", nullable = false, length = 10)
     private String bankCode;
@@ -53,10 +53,10 @@ public class Beneficiary {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Beneficiary() {
+    public BeneficiaryEntity() {
     }
 
-    public Beneficiary(UUID id, String tenantId, User user, String bankCode, String accountNumber,
+    public BeneficiaryEntity(UUID id, String tenantId, UserEntity user, String bankCode, String accountNumber,
                        String accountName, String nickname, BeneficiaryStatus status,
                        LocalDateTime verifiedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -89,11 +89,11 @@ public class Beneficiary {
         this.tenantId = tenantId;
     }
 
-    public User getUser() {
+    public UserEntity getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(UserEntity user) {
         this.user = user;
     }
 
@@ -169,7 +169,7 @@ public class Beneficiary {
     public static class Builder {
         private UUID id;
         private String tenantId;
-        private User user;
+        private UserEntity user;
         private String bankCode;
         private String accountNumber;
         private String accountName;
@@ -189,7 +189,7 @@ public class Beneficiary {
             return this;
         }
 
-        public Builder user(User user) {
+        public Builder user(UserEntity user) {
             this.user = user;
             return this;
         }
@@ -234,8 +234,8 @@ public class Beneficiary {
             return this;
         }
 
-        public Beneficiary build() {
-            return new Beneficiary(id, tenantId, user, bankCode, accountNumber, accountName,
+        public BeneficiaryEntity build() {
+            return new BeneficiaryEntity(id, tenantId, user, bankCode, accountNumber, accountName,
                     nickname, status, verifiedAt, createdAt, updatedAt);
         }
     }

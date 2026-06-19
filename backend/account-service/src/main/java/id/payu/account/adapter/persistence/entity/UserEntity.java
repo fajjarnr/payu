@@ -1,4 +1,4 @@
-package id.payu.account.entity;
+package id.payu.account.adapter.persistence.entity;
 
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.annotation.Sensitive;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @Table(name = "users")
 @TenantAware
 @EntityListeners(TenantEntityListener.class)
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -57,10 +57,10 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User() {
+    public UserEntity() {
     }
 
-    public User(UUID id, String tenantId, String externalId, String username,
+    public UserEntity(UUID id, String tenantId, String externalId, String username,
                 String email, String phoneNumber, UserStatus status, KycStatus kycStatus,
                 LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -223,8 +223,8 @@ public class User {
             return this;
         }
 
-        public User build() {
-            return new User(id, tenantId, externalId, username, email, phoneNumber,
+        public UserEntity build() {
+            return new UserEntity(id, tenantId, externalId, username, email, phoneNumber,
                     status, kycStatus, createdAt, updatedAt);
         }
     }

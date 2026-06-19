@@ -1,17 +1,18 @@
 package id.payu.account.adapter.persistence;
 
+import id.payu.account.adapter.persistence.repository.AccountRepository;
 import id.payu.account.adapter.persistence.repository.ProfileRepository;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.UserPersistencePort;
-import id.payu.account.entity.Profile;
+import id.payu.account.adapter.persistence.entity.ProfileEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
-import id.payu.account.entity.KycStatus;
-import id.payu.account.entity.UserStatus;
+import id.payu.account.adapter.persistence.entity.KycStatus;
+import id.payu.account.adapter.persistence.entity.UserStatus;
 
 @Component
 @RequiredArgsConstructor
@@ -19,16 +20,17 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final AccountRepository accountRepository;
 
     @Override
     public User save(User user) {
-        id.payu.account.entity.User userEntity = toEntity(user);
-        id.payu.account.entity.User savedEntity = userRepository.save(userEntity);
+        id.payu.account.adapter.persistence.entity.UserEntity userEntity = toEntity(user);
+        id.payu.account.adapter.persistence.entity.UserEntity savedEntity = userRepository.save(userEntity);
         
-        // Save Profile if needed
+        // Save ProfileEntity if needed
         if (user.getFullName() != null || user.getNik() != null) {
-            Profile profile = profileRepository.findById(savedEntity.getId())
-                    .orElse(Profile.builder().user(savedEntity).build());
+            ProfileEntity profile = profileRepository.findById(savedEntity.getId())
+                    .orElse(ProfileEntity.builder().user(savedEntity).build());
             
             profile.setFullName(user.getFullName());
             profile.setNik(user.getNik());
@@ -58,8 +60,21 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         return userRepository.existsByUsername(username);
     }
 
-    private User toDomain(id.payu.account.entity.User entity) {
-        Optional<Profile> profileOpt = profileRepository.findById(entity.getId());
+    @Override
+    public Optional<User> findByExternalId(String externalId) {
+        return userRepository.findByExternalId(externalId).map(this::toDomain);
+    }
+
+    @Override
+    public java.util.List<UUID> findAccountIdsByUserId(UUID userId) {
+        return accountRepository.findByUserId(userId).stream()
+                .map(id.payu.account.adapter.persistence.entity.AccountEntity::getId)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+
+    private User toDomain(id.payu.account.adapter.persistence.entity.UserEntity entity) {
+        Optional<ProfileEntity> profileOpt = profileRepository.findById(entity.getId());
         
         return User.builder()
                 .id(entity.getId())
@@ -67,8 +82,8 @@ public class UserPersistenceAdapter implements UserPersistencePort {
                 .username(entity.getUsername())
                 .email(entity.getEmail())
                 .phoneNumber(entity.getPhoneNumber())
-                .fullName(profileOpt.map(Profile::getFullName).orElse(null))
-                .nik(profileOpt.map(Profile::getNik).orElse(null))
+                .fullName(profileOpt.map(ProfileEntity::getFullName).orElse(null))
+                .nik(profileOpt.map(ProfileEntity::getNik).orElse(null))
                 .status(id.payu.account.domain.model.UserStatus.valueOf(entity.getStatus().name()))
                 .kycStatus(id.payu.account.domain.model.KycStatus.valueOf(entity.getKycStatus().name()))
                 .createdAt(entity.getCreatedAt())
@@ -76,15 +91,15 @@ public class UserPersistenceAdapter implements UserPersistencePort {
                 .build();
     }
 
-    private id.payu.account.entity.User toEntity(User domain) {
-        return id.payu.account.entity.User.builder()
+    private id.payu.account.adapter.persistence.entity.UserEntity toEntity(User domain) {
+        return id.payu.account.adapter.persistence.entity.UserEntity.builder()
                 .id(domain.getId())
                 .externalId(domain.getExternalId())
                 .username(domain.getUsername())
                 .email(domain.getEmail())
                 .phoneNumber(domain.getPhoneNumber())
-                .status(id.payu.account.entity.UserStatus.valueOf(domain.getStatus().name()))
-                .kycStatus(id.payu.account.entity.KycStatus.valueOf(domain.getKycStatus().name()))
+                .status(id.payu.account.adapter.persistence.entity.UserStatus.valueOf(domain.getStatus().name()))
+                .kycStatus(id.payu.account.adapter.persistence.entity.KycStatus.valueOf(domain.getKycStatus().name()))
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();

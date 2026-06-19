@@ -2,8 +2,8 @@ package id.payu.account.adapter.web;
 
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.dto.PhoneLookupResponse;
-import id.payu.account.entity.User;
-import id.payu.account.repository.AccountRepository;
+import id.payu.account.adapter.persistence.entity.UserEntity;
+import id.payu.account.adapter.persistence.repository.AccountRepository;
 import id.payu.api.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Account Lookup", description = "P2P account lookup endpoints")
+@Tag(name = "AccountEntity Lookup", description = "P2P account lookup endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class AccountLookupController {
 
@@ -38,7 +38,7 @@ public class AccountLookupController {
         log.info("Looking up account by phone: {}", phone != null && phone.length() > 6 ? phone.substring(0, 3) + "****" + phone.substring(phone.length() - 3) : "***");
 
         // Find user by phone number
-        User user = userRepository.findByPhoneNumber(phone).orElse(null);
+        UserEntity user = userRepository.findByPhoneNumber(phone).orElse(null);
         if (user == null) {
             return ResponseEntity.ok(ApiResponse.success(PhoneLookupResponse.notFound()));
         }

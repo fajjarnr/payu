@@ -71,7 +71,7 @@ class OnboardingIntegrationTest {
                 "integration-user",
                 "integration@payu.fajjjar.my.id",
                 "+628123456789",
-                "Integration Test User",
+                "Integration Test UserEntity",
                 "3201234567890001",
                 "SecureP@ss123"
         );
@@ -81,7 +81,7 @@ class OnboardingIntegrationTest {
                         UUID.randomUUID().toString(),
                         request.nik(),
                         true,
-                        "Integration Test User",
+                        "Integration Test UserEntity",
                         "Jakarta",
                         LocalDate.of(1990, 1, 1),
                         "MALE",
@@ -99,7 +99,7 @@ class OnboardingIntegrationTest {
         assertThat(savedUser.getId()).isNotNull();
 
         // Verify direct DB persistence
-        id.payu.account.entity.User userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
+        id.payu.account.adapter.persistence.entity.UserEntity userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
         assertThat(userFromDb.getUsername()).isEqualTo("integration-user");
         assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.fajjjar.my.id");
         assertThat(userFromDb.getKycStatus().name()).isEqualTo(KycStatus.APPROVED.name());

@@ -1,6 +1,6 @@
-package id.payu.account.repository;
+package id.payu.account.adapter.persistence.repository;
 
-import id.payu.account.entity.BudgetEntity;
+import id.payu.account.adapter.persistence.entity.BudgetEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

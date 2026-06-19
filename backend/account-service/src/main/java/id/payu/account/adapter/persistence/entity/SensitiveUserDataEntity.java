@@ -1,6 +1,6 @@
 package id.payu.account.adapter.persistence.entity;
 
-import id.payu.account.domain.model.AddressDataConverter;
+import id.payu.account.adapter.persistence.AddressDataConverter;
 import jakarta.persistence.*;
 import jakarta.persistence.Convert;
 import org.hibernate.annotations.ColumnTransformer;

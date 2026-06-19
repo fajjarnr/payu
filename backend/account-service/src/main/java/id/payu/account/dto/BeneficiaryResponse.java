@@ -1,6 +1,6 @@
 package id.payu.account.dto;
 
-import id.payu.account.entity.Beneficiary;
+import id.payu.account.adapter.persistence.entity.BeneficiaryEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +24,7 @@ public class BeneficiaryResponse {
     private LocalDateTime verifiedAt;
     private LocalDateTime createdAt;
 
-    public static BeneficiaryResponse from(Beneficiary beneficiary) {
+    public static BeneficiaryResponse from(BeneficiaryEntity beneficiary) {
         if (beneficiary == null) {
             return null;
         }

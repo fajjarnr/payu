@@ -1,4 +1,4 @@
-package id.payu.account.entity;
+package id.payu.account.adapter.persistence.entity;
 
 import id.payu.account.domain.model.BudgetPeriod;
 import id.payu.account.domain.model.BudgetStatus;

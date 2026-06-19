@@ -1,4 +1,4 @@
-package id.payu.account.domain.model;
+package id.payu.account.adapter.persistence;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

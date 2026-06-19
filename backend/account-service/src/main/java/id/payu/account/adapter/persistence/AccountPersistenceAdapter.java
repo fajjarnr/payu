@@ -1,7 +1,7 @@
 package id.payu.account.adapter.persistence;
 
 import id.payu.account.domain.port.out.AccountPersistencePort;
-import id.payu.account.repository.AccountRepository;
+import id.payu.account.adapter.persistence.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,11 +10,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import id.payu.account.entity.AccountStatus;
-import id.payu.account.entity.AccountType;
+import id.payu.account.adapter.persistence.entity.AccountStatus;
+import id.payu.account.adapter.persistence.entity.AccountType;
 
 /**
- * Adapter implementation for Account persistence operations.
+ * Adapter implementation for AccountEntity persistence operations.
  * Converts between domain model and JPA entity.
  */
 @Component
@@ -26,8 +26,8 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
     @Override
     @Transactional
     public id.payu.account.domain.model.Account save(id.payu.account.domain.model.Account account) {
-        id.payu.account.entity.Account entity = toEntity(account);
-        id.payu.account.entity.Account savedEntity = accountRepository.save(entity);
+        id.payu.account.adapter.persistence.entity.AccountEntity entity = toEntity(account);
+        id.payu.account.adapter.persistence.entity.AccountEntity savedEntity = accountRepository.save(entity);
         return toDomain(savedEntity);
     }
 
@@ -49,7 +49,7 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
         return accountRepository.existsByAccountNumber(accountNumber);
     }
 
-    private id.payu.account.domain.model.Account toDomain(id.payu.account.entity.Account entity) {
+    private id.payu.account.domain.model.Account toDomain(id.payu.account.adapter.persistence.entity.AccountEntity entity) {
         return id.payu.account.domain.model.Account.builder()
                 .id(entity.getId())
                 .userId(entity.getUser() != null ? entity.getUser().getId() : null)
@@ -63,8 +63,8 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
                 .build();
     }
 
-    private id.payu.account.entity.Account toEntity(id.payu.account.domain.model.Account domain) {
-        return id.payu.account.entity.Account.builder()
+    private id.payu.account.adapter.persistence.entity.AccountEntity toEntity(id.payu.account.domain.model.Account domain) {
+        return id.payu.account.adapter.persistence.entity.AccountEntity.builder()
                 .id(domain.getId())
                 .accountNumber(domain.getAccountNumber())
                 .type(mapAccountType(domain.getAccountType()))
@@ -76,7 +76,7 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
                 .build();
     }
 
-    private id.payu.account.domain.model.AccountStatus mapStatus(id.payu.account.entity.AccountStatus entityStatus) {
+    private id.payu.account.domain.model.AccountStatus mapStatus(id.payu.account.adapter.persistence.entity.AccountStatus entityStatus) {
         if (entityStatus == null) {
             return id.payu.account.domain.model.AccountStatus.PENDING_VERIFICATION;
         }
@@ -87,25 +87,25 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
         };
     }
 
-    private id.payu.account.entity.AccountStatus mapAccountStatus(id.payu.account.domain.model.AccountStatus domainStatus) {
+    private id.payu.account.adapter.persistence.entity.AccountStatus mapAccountStatus(id.payu.account.domain.model.AccountStatus domainStatus) {
         if (domainStatus == null) {
-            return id.payu.account.entity.AccountStatus.DORMANT;
+            return id.payu.account.adapter.persistence.entity.AccountStatus.DORMANT;
         }
         return switch (domainStatus) {
-            case ACTIVE -> id.payu.account.entity.AccountStatus.ACTIVE;
-            case CLOSED -> id.payu.account.entity.AccountStatus.CLOSED;
-            case FROZEN, PENDING_VERIFICATION -> id.payu.account.entity.AccountStatus.BLOCKED;
+            case ACTIVE -> id.payu.account.adapter.persistence.entity.AccountStatus.ACTIVE;
+            case CLOSED -> id.payu.account.adapter.persistence.entity.AccountStatus.CLOSED;
+            case FROZEN, PENDING_VERIFICATION -> id.payu.account.adapter.persistence.entity.AccountStatus.BLOCKED;
         };
     }
 
-    private id.payu.account.entity.AccountType mapAccountType(String accountType) {
+    private id.payu.account.adapter.persistence.entity.AccountType mapAccountType(String accountType) {
         if (accountType == null) {
-            return id.payu.account.entity.AccountType.POCKET;
+            return id.payu.account.adapter.persistence.entity.AccountType.POCKET;
         }
         try {
-            return id.payu.account.entity.AccountType.valueOf(accountType);
+            return id.payu.account.adapter.persistence.entity.AccountType.valueOf(accountType);
         } catch (IllegalArgumentException e) {
-            return id.payu.account.entity.AccountType.POCKET;
+            return id.payu.account.adapter.persistence.entity.AccountType.POCKET;
         }
     }
 }

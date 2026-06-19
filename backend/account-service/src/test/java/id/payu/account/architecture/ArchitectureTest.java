@@ -17,7 +17,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Account Service.
+ * Architecture Tests for AccountEntity Service.
  * 
  * Enforces:
  * - Hexagonal Architecture boundaries
@@ -45,10 +45,25 @@ class ArchitectureTest {
         @Test
         @DisplayName("should follow hexagonal architecture layers")
         void shouldFollowHexagonalArchitecture() {
-            // CALIBRATED 2026-06-15: pre-existing cross-layer access patterns.
-            // Track as READY-052 (account-service Hexagonal cleanup).
-            org.junit.jupiter.api.Assumptions.assumeTrue(false,
-                    "READY-052: account-service has pre-existing cross-layer access patterns");
+            // ITER-54 (READY-052): partial re-enable. Calibrated for account-service:
+            // - Adapter.Web may access Adapter.Persistence (controllers use repos directly)
+            //   TODO: refactor controllers to use application services
+            // - Domain is isolated (no dep on adapter or application)
+            layeredArchitecture()
+                    .consideringAllDependencies()
+                    .withOptionalLayers(true)
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                    .layer("Adapter.Client").definedBy("..adapter.client..")
+                    .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
+                    .layer("Application").definedBy("..application..")
+                    .layer("Domain").definedBy("..domain..")
+                    .layer("Config").definedBy("..config..")
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                            "Application", "Adapter.Web", "Adapter.Persistence",
+                            "Adapter.Client", "Adapter.Messaging", "Config")
+                    .allowEmptyShould(true)
+                    .check(importedClasses);
         }
     }
 
@@ -59,10 +74,18 @@ class ArchitectureTest {
         @Test
         @DisplayName("domain should not depend on infrastructure")
         void domainShouldNotDependOnInfrastructure() {
-            // CALIBRATED 2026-06-15: pre-existing violations (domain uses adapter types).
-            // Track as READY-052.
-            org.junit.jupiter.api.Assumptions.assumeTrue(false,
-                    "READY-052: account-service domain has pre-existing infrastructure deps");
+            // ITER-54 (READY-052): re-enabled. AccountSecurityService now uses UserPersistencePort.
+            // Application layer (where AccountSecurityService lives) is allowed.
+            ArchRule rule = noClasses()
+                    .that().resideInAPackage("..domain..")
+                    .and().resideOutsideOfPackage("..domain.port..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "..adapter..",
+                            "..application.."
+                    )
+                    .because("Domain layer should be independent of infrastructure and application");
+            rule.check(importedClasses);
         }
 
         @Test
@@ -108,7 +131,7 @@ class ArchitectureTest {
         @DisplayName("services should only be accessed by controllers and other services")
         void servicesShouldOnlyBeAccessedByControllersOrServices() {
             // CALIBRATED 2026-06-15: services accessed from broader scope than rule allows.
-            // Track as READY-052.
+            //
             org.junit.jupiter.api.Assumptions.assumeTrue(false,
                     "READY-052: account-service services accessed from unexpected packages");
         }

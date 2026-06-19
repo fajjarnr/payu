@@ -1,9 +1,9 @@
 package id.payu.account.adapter.web;
 
 import id.payu.account.adapter.persistence.repository.UserRepository;
-import id.payu.account.entity.Account;
-import id.payu.account.entity.User;
-import id.payu.account.repository.AccountRepository;
+import id.payu.account.adapter.persistence.entity.AccountEntity;
+import id.payu.account.adapter.persistence.entity.UserEntity;
+import id.payu.account.adapter.persistence.repository.AccountRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/accounts/users")
-@Tag(name = "User Accounts", description = "Inter-service account resolution endpoints")
+@Tag(name = "UserEntity Accounts", description = "Inter-service account resolution endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class UserAccountController {
 
@@ -61,19 +61,19 @@ public class UserAccountController {
 
         log.debug("Looking up account IDs for user externalId={}", userId);
 
-        // Find internal User by Keycloak externalId
-        Optional<User> userOpt = userRepository.findByExternalId(userId);
+        // Find internal UserEntity by Keycloak externalId
+        Optional<UserEntity> userOpt = userRepository.findByExternalId(userId);
         if (userOpt.isEmpty()) {
             log.debug("No user found for externalId={}, returning empty list", userId);
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        User user = userOpt.get();
+        UserEntity user = userOpt.get();
 
         // Get all accounts for this user and extract their IDs
         List<UUID> accountIds = accountRepository.findByUserId(user.getId())
                 .stream()
-                .map(Account::getId)
+                .map(AccountEntity::getId)
                 .toList();
 
         log.debug("Found {} accounts for user externalId={}", accountIds.size(), userId);

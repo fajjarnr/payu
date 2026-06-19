@@ -10,8 +10,8 @@ import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableJpaRepositories(basePackages = {"id.payu.account.adapter.persistence.repository", "id.payu.account.repository"})
-@EntityScan(basePackages = {"id.payu.account.adapter.persistence.entity", "id.payu.account.entity"})
+@EnableJpaRepositories(basePackages = "id.payu.account.adapter.persistence.repository")
+@EntityScan(basePackages = "id.payu.account.adapter.persistence.entity")
 @SpringBootApplication(exclude = {OAuth2ResourceServerAutoConfiguration.class})
 @EnableFeignClients
 @EnableAsync

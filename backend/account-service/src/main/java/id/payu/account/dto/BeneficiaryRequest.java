@@ -18,9 +18,9 @@ public class BeneficiaryRequest {
     @Size(max = 10, message = "Bank code must not exceed 10 characters")
     private String bankCode;
 
-    @NotBlank(message = "Account number is required")
-    @Size(min = 10, max = 20, message = "Account number must be between 10 and 20 characters")
-    @Pattern(regexp = "^[0-9]+$", message = "Account number must contain only digits")
+    @NotBlank(message = "AccountEntity number is required")
+    @Size(min = 10, max = 20, message = "AccountEntity number must be between 10 and 20 characters")
+    @Pattern(regexp = "^[0-9]+$", message = "AccountEntity number must contain only digits")
     private String accountNumber;
 
     @Size(max = 100, message = "Nickname must not exceed 100 characters")

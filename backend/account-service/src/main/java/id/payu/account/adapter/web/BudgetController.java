@@ -58,7 +58,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> createBudget(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId,
             @Valid @RequestBody CreateBudgetRequest request) {
         log.info("Creating budget for account={}", accountId);
 
@@ -84,7 +84,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<List<Budget>>> getBudgets(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId) {
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId) {
         log.debug("Getting budgets for account={}", accountId);
 
         List<Budget> budgets = budgetService.getUserBudgets(accountId);
@@ -105,7 +105,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> getBudget(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId,
             @Parameter(description = "Budget ID", required = true) @PathVariable UUID budgetId) {
         log.debug("Getting budget {} for account={}", budgetId, accountId);
 
@@ -129,7 +129,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> updateBudget(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId,
             @Parameter(description = "Budget ID", required = true) @PathVariable UUID budgetId,
             @Valid @RequestBody UpdateBudgetRequest request) {
         log.info("Updating budget {} for account={}", budgetId, accountId);
@@ -157,7 +157,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Void>> deleteBudget(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId,
             @Parameter(description = "Budget ID", required = true) @PathVariable UUID budgetId) {
         log.info("Deleting budget {} for account={}", budgetId, accountId);
 
@@ -177,7 +177,7 @@ public class BudgetController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<List<BudgetStatusInfo>>> getBudgetStatus(
-            @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId) {
+            @Parameter(description = "AccountEntity ID", required = true) @PathVariable UUID accountId) {
         log.debug("Getting budget status for account={}", accountId);
 
         List<BudgetStatusInfo> status = budgetService.getAllBudgetStatus(accountId);

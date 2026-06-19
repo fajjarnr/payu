@@ -73,13 +73,13 @@ class VaultConfigurationTest {
 
     // Mock remaining JPA repositories to avoid EntityManagerFactory creation
     @MockitoBean
-    private id.payu.account.repository.AccountRepository accountRepository;
+    private id.payu.account.adapter.persistence.repository.AccountRepository accountRepository;
 
     @MockitoBean
-    private id.payu.account.repository.BudgetJpaRepository budgetJpaRepository;
+    private id.payu.account.adapter.persistence.repository.BudgetJpaRepository budgetJpaRepository;
 
     @MockitoBean
-    private id.payu.account.repository.BeneficiaryRepository beneficiaryRepository;
+    private id.payu.account.adapter.persistence.repository.BeneficiaryRepository beneficiaryRepository;
 
     // Mock cache-starter dependencies
     @MockitoBean

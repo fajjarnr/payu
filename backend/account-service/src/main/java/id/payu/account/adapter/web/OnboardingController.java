@@ -34,7 +34,7 @@ public class OnboardingController {
     private final RegisterUserUseCase registerUserUseCase;
 
     @GetMapping
-    @Operation(summary = "Account service status", description = "Returns account service health and available endpoints")
+    @Operation(summary = "AccountEntity service status", description = "Returns account service health and available endpoints")
     public ResponseEntity<id.payu.api.common.response.ApiResponse<Map<String, Object>>> getAccountStatus() {
         return ResponseEntity.ok(id.payu.api.common.response.ApiResponse.success(Map.of(
                 "service", "account-service",

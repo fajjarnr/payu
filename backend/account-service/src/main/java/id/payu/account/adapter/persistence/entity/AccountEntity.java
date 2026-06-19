@@ -1,4 +1,4 @@
-package id.payu.account.entity;
+package id.payu.account.adapter.persistence.entity;
 
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Table(name = "accounts")
 @TenantAware
 @EntityListeners(TenantEntityListener.class)
-public class Account {
+public class AccountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,7 +25,7 @@ public class Account {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @Column(name = "account_number", unique = true, nullable = false)
     private String accountNumber;
@@ -58,10 +58,10 @@ public class Account {
     @Column(name = "qr_code_hash", length = 64)
     private String qrCodeHash;
 
-    public Account() {
+    public AccountEntity() {
     }
 
-    public Account(UUID id, String tenantId, User user, String accountNumber,
+    public AccountEntity(UUID id, String tenantId, UserEntity user, String accountNumber,
                    AccountType type, AccountStatus status, String currency,
                    BigDecimal balance, LocalDateTime createdAt, LocalDateTime updatedAt,
                    Boolean allowPhoneLookup, String qrCodeHash) {
@@ -96,11 +96,11 @@ public class Account {
         this.tenantId = tenantId;
     }
 
-    public User getUser() {
+    public UserEntity getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(UserEntity user) {
         this.user = user;
     }
 
@@ -184,7 +184,7 @@ public class Account {
     public static class Builder {
         private UUID id;
         private String tenantId;
-        private User user;
+        private UserEntity user;
         private String accountNumber;
         private AccountType type;
         private AccountStatus status;
@@ -205,7 +205,7 @@ public class Account {
             return this;
         }
 
-        public Builder user(User user) {
+        public Builder user(UserEntity user) {
             this.user = user;
             return this;
         }
@@ -255,8 +255,8 @@ public class Account {
             return this;
         }
 
-        public Account build() {
-            return new Account(id, tenantId, user, accountNumber, type, status,
+        public AccountEntity build() {
+            return new AccountEntity(id, tenantId, user, accountNumber, type, status,
                     currency, balance, createdAt, updatedAt, allowPhoneLookup, qrCodeHash);
         }
     }
