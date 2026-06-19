@@ -3,12 +3,11 @@ package id.payu.integration.application.service;
 import id.payu.integration.application.port.in.IntegrationUseCase;
 import id.payu.integration.application.port.out.MessagePublisherPort;
 import id.payu.integration.domain.model.*;
-import id.payu.integration.domain.service.MessageProcessingService;
+import id.payu.integration.application.service.MessageProcessingService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.ProducerTemplate;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -33,7 +32,7 @@ public class IntegrationService implements IntegrationUseCase {
 
     private final MessageProcessingService messageProcessingService;
     private final MessagePublisherPort messagePublisherPort;
-    private final ProducerTemplate producerTemplate;
+    // BUG-INT-HEX-001: ProducerTemplate moved to MessagePublisherAdapter. App uses port only.
 
     @Override
     @CircuitBreaker(name = "integration", fallbackMethod = "processSwiftMessageFallback")
@@ -56,7 +55,7 @@ public class IntegrationService implements IntegrationUseCase {
 
         try {
             // Send to Camel route for processing
-            producerTemplate.sendBody("direct:swift-inbound", message);
+            messagePublisherPort.routeInternal("direct:swift-inbound", message, java.util.Map.of());
             return message.getMessageId();
         } catch (Exception e) {
             log.error("Failed to process SWIFT message", e);
@@ -87,7 +86,7 @@ public class IntegrationService implements IntegrationUseCase {
 
         try {
             String route = type == MessageType.OJK_XML ? "direct:ojk-xml-report" : "direct:ojk-csv-report";
-            producerTemplate.sendBodyAndHeader(route, message, "reportDate", date.toString());
+            messagePublisherPort.routeInternal(route, message, java.util.Map.of("reportDate", date.toString()));
             return message.getMessageId();
         } catch (Exception e) {
             log.error("Failed to generate OJK report", e);
@@ -114,15 +113,14 @@ public class IntegrationService implements IntegrationUseCase {
         );
 
         try {
-            String response = producerTemplate.requestBodyAndHeaders(
+            String response = messagePublisherPort.routeInternal(
                     "direct:soap-request",
-                    payload,
+                    message,
                     Map.of(
                             "SoapEndpoint", endpoint,
                             "SoapOperation", operation,
                             "MessageId", message.getMessageId()
-                    ),
-                    String.class
+                    )
             );
 
             messageProcessingService.markSent(message.getMessageId());
@@ -152,16 +150,15 @@ public class IntegrationService implements IntegrationUseCase {
         );
 
         try {
-            String response = producerTemplate.requestBodyAndHeaders(
+            String response = messagePublisherPort.routeInternal(
                     "direct:http-request",
-                    body,
+                    message,
                     Map.of(
                             "HttpUrl", url,
                             "HttpMethod", method,
                             "HttpHeaders", headers,
                             "MessageId", message.getMessageId()
-                    ),
-                    String.class
+                    )
             );
 
             messageProcessingService.markSent(message.getMessageId());

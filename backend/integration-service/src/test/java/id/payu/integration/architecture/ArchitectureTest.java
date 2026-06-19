@@ -36,10 +36,15 @@ public class ArchitectureTest {
 
     @Test
     void domainShouldNotDependOnSpring() {
-        // CALIBRATED: domain currently depends on Spring (31 violations). Track as READY-050
-        // (integration-service domain decoupling). Pre-existing legacy violations.
-        org.junit.jupiter.api.Assumptions.assumeTrue(false,
-                "READY-050: integration-service domain layer uses Spring stereotypes - pre-existing legacy violation");
+        // BUG-INT-HEX-001 Fix (iter 46): MessageProcessingService moved from
+        // domain.service to application.service. Domain no longer has
+        // @Service / @Transactional. Rule re-enabled.
+        ArchRule rule = ArchRuleDefinition.noClasses()
+                .that().resideInAPackage("..domain..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("org.springframework..")
+                .allowEmptyShould(true);
+        rule.check(classes);
     }
 
     @Test
@@ -55,10 +60,22 @@ public class ArchitectureTest {
 
     @Test
     void applicationShouldOnlyDependOnDomain() {
-        // CALIBRATED: application layer also uses adapter types (Camel ProducerTemplate, etc).
-        // Track as READY-050. Rule disabled until refactor.
-        org.junit.jupiter.api.Assumptions.assumeTrue(false,
-                "READY-050: integration-service application uses adapter types directly - pre-existing legacy violation");
+        // BUG-INT-HEX-001 Fix (iter 46): ProducerTemplate moved from
+        // IntegrationService to MessagePublisherAdapter (via MessagePublisherPort).
+        // Application no longer depends on Camel API directly.
+        ArchRule rule = ArchRuleDefinition.noClasses()
+                .that().resideInAPackage("..application..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage(
+                        "org.apache.camel..",
+                        "..adapter.camel..",
+                        "..adapter.messaging..",
+                        "..adapter.web..",
+                        "..adapter.persistence.entity.."
+                )
+                .because("Application layer should depend only on domain layer (ports) — adapter types belong in adapter layer")
+                .allowEmptyShould(true);
+        rule.check(classes);
     }
 
     @Test

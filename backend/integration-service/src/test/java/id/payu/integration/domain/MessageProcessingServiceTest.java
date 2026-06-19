@@ -5,7 +5,7 @@ import id.payu.integration.domain.model.MessageDirection;
 import id.payu.integration.domain.model.MessageStatus;
 import id.payu.integration.domain.model.MessageType;
 import id.payu.integration.domain.repository.IntegrationMessageRepository;
-import id.payu.integration.domain.service.MessageProcessingService;
+import id.payu.integration.application.service.MessageProcessingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

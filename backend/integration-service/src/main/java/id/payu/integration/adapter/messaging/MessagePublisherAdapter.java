@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.apache.camel.ProducerTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
 
     private final OutboxService outboxService;
     private final RestTemplate restTemplate;
+    private final ProducerTemplate producerTemplate;
 
     @Override
     public void publishToKafka(String topic, IntegrationMessage message) {
@@ -64,6 +66,20 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
         } catch (Exception e) {
             log.error("HTTP request failed", e);
             throw new MessagePublishException("HTTP request failed", e);
+        }
+    }
+
+    @Override
+    public String routeInternal(String routeId, IntegrationMessage message, Map<String, Object> headers) {
+        log.debug("Routing message {} to internal route: {}", message.getMessageId(), routeId);
+        try {
+            if (headers == null || headers.isEmpty()) {
+                return producerTemplate.requestBody(routeId, message, String.class);
+            }
+            return producerTemplate.requestBodyAndHeaders(routeId, message, headers, String.class);
+        } catch (Exception e) {
+            log.error("Internal route {} dispatch failed for message {}", routeId, message.getMessageId(), e);
+            throw new MessagePublishException("Internal route dispatch failed: " + routeId, e);
         }
     }
 

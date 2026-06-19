@@ -1,4 +1,4 @@
-package id.payu.integration.domain.service;
+package id.payu.integration.application.service;
 
 import id.payu.integration.domain.model.IntegrationMessage;
 import id.payu.integration.domain.model.MessageDirection;
