@@ -17,7 +17,7 @@ import { axe } from 'jest-axe';
 const KeyboardNavigableForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted');
+    // No-op for test; real handler would log/track
   };
 
   return (
