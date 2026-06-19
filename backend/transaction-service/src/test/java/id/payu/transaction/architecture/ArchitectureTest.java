@@ -2,6 +2,7 @@ package id.payu.transaction.architecture;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -10,9 +11,20 @@ import jakarta.persistence.Entity;
 
 import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(packages = "id.payu.transaction", importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
+
+    private static com.tngtech.archunit.core.domain.JavaClasses importedClasses;
+
+    @org.junit.jupiter.api.BeforeAll
+    static void setupClasses() {
+        importedClasses = new com.tngtech.archunit.core.importer.ClassFileImporter()
+                .withImportOption(com.tngtech.archunit.core.importer.ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("id.payu.transaction");
+    }
+
 
     // CALIBRATED 2026-06-15: 5 rules disabled (87+ violations from legacy refactor).
     // Track as READY-049 (transaction-service Hexagonal cleanup) — requires:
@@ -88,4 +100,21 @@ public class ArchitectureTest {
             "Critical financial entities missing @Version (optimistic locking):\n  "
                 + String.join("\n  ", missingVersion));
     }
+
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("ITER-55: domain layer should not depend on JPA")
+    void domainShouldNotDependOnJpa() {
+        // Domain must be JPA-free (entities live in adapter/persistence/entity/)
+        ArchRule rule = noClasses()
+                .that().resideInAPackage("..domain..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage(
+                        "jakarta.persistence..",
+                        "org.hibernate.."
+                )
+                .because("Domain must be JPA-free (entities live in adapter/persistence/entity/)")
+                .allowEmptyShould(true);
+        rule.check(importedClasses);
+    }
+
 }
