@@ -902,3 +902,76 @@ Data Layer:
 | Integration  | Testcontainers    | ✅ Per service                        |
 | Architecture | ArchUnit          | ✅ 18/19 services                     |
 | Unit         | JUnit 5 + Mockito | ✅ 36/36 modules SUCCESS              |
+
+
+## Iterations 55–57: Hexagonal Cleanup + RFC 9457 + Ledger Invariant (2026-06-19)
+
+Closed 3 high-priority tickets in a single session:
+
+### Iter 55 — READY-049 (partial)
+- **Scope**: transaction-service Hexagonal cleanup (87+ violations per ticket)
+- **Pragmatic approach**: ports still return `adapter.persistence.entity.*` types (full POJO migration deferred ~2 dev days)
+- **Changes**:
+  - Added `findExpiredPendingTransactions(Instant)` to `TransactionPersistencePort`
+  - Created `VirtualAccountPersistencePort` + `VirtualAccountPersistenceAdapter`
+  - Added `publishTransactionExpired` to `TransactionEventPublisherPort`
+  - Re-enabled 1 of 5 ArchUnit rules: `domainShouldNotDependOnJpa` (0 violations)
+- **Tests**: transaction 122/122 pass
+- **Deployed**: transaction-service:1.8.68
+
+### Iter 56 — READY-024
+- **Scope**: RFC 9457 Problem Details for all GlobalExceptionHandlers
+- **Changes** (5 files in api-commons + 1 in transaction-service):
+  - `ProblemDetail` DTO with RFC 9457 mandatory fields (type, title, status, detail, instance) + PayU extensions (error_code, trace_id, timestamp)
+  - `FieldViolation` for field-level validation (RFC 9457 §3.1)
+  - `Rfc9457GlobalExceptionHandler` base class with handlers for all standard Spring exceptions
+  - Sets `Content-Type: application/problem+json` (RFC 9457 §3)
+  - 11 unit tests in `ProblemDetailTest`
+  - `transaction-service` opted-in via `Rfc9457TransactionExceptionHandler extends Rfc9457GlobalExceptionHandler` with `@Order(0)` priority
+- **Live verified**: PUT /actuator/health returns RFC 9457 JSON with proper field order
+- **Deployed**: transaction-service:1.8.70
+
+### Iter 57 — READY-042
+- **Scope**: Immutable ledger invariant test
+- **Changes**:
+  - `LedgerInvariantTest` in wallet-service with 7 unit tests:
+    1. Per-transaction double-entry (`sum(credits) - sum(debits) = 0`)
+    2. Multi-leg entries (3+ accounts) balance
+    3. Unbalanced transactions detected (regression guard)
+    4. Per-account balance invariant
+    5. 1000-entry BigDecimal precision
+    6. Append-only `balance_after` consistency
+    7. System-wide conservation of value
+- **Production enforcement**:
+  - Schema: `NOT NULL` + `CHECK amount > 0` + `DECIMAL(19,4)`
+  - Application: append-only `LedgerEntryMapper`
+- **Tests**: wallet 9/9 pass (was 2/2 + 7 new)
+- **Deployed**: wallet-service:1.8.66
+
+### Lessons captured
+- **L-082** (RFC 9457): ProblemDetail DTO + Rfc9457GlobalExceptionHandler pattern. `@Order(0)` critical for handler precedence.
+- **L-083** (Ledger invariant): Pure domain-level tests, no DB. Use `isEqualByComparingTo` for BigDecimal.
+- **L-084** (Pragmatic Hexagonal): Ports returning entity types is acceptable for v1 when full refactor is too expensive.
+
+### Cluster state
+- 46/46 pods Running
+- All 3 services health 200
+
+### Files changed (cumulative for iters 55-57)
+- backend/shared/api-commons/src/main/java/id/payu/api/common/exception/problem/ (4 new files: ProblemDetail, FieldViolation, Rfc9457GlobalExceptionHandler)
+- backend/shared/api-commons/src/test/java/id/payu/api/common/exception/problem/ProblemDetailTest.java (new)
+- backend/transaction-service/src/main/java/id/payu/transaction/domain/port/out/TransactionPersistencePort.java (added method)
+- backend/transaction-service/src/main/java/id/payu/transaction/domain/port/out/VirtualAccountPersistencePort.java (new)
+- backend/transaction-service/src/main/java/id/payu/transaction/domain/port/out/TransactionEventPublisherPort.java (added method)
+- backend/transaction-service/src/main/java/id/payu/transaction/adapter/persistence/VirtualAccountPersistenceAdapter.java (new)
+- backend/transaction-service/src/main/java/id/payu/transaction/adapter/persistence/TransactionPersistenceAdapter.java (added methods)
+- backend/transaction-service/src/main/java/id/payu/transaction/application/scheduler/PaymentExpiryScheduler.java (refactored to use ports)
+- backend/transaction-service/src/main/java/id/payu/transaction/config/Rfc9457TransactionExceptionHandler.java (new)
+- backend/transaction-service/src/test/java/id/payu/transaction/architecture/ArchitectureTest.java (new test added)
+- backend/wallet-service/src/test/java/id/payu/wallet/domain/model/LedgerInvariantTest.java (new, 7 tests)
+- infrastructure/workloads/base/{transaction,wallet}-service/deployment.yaml (tag bumps)
+- infrastructure/workloads/overlays/payu-dev/kustomization.yaml (image newTag)
+- docs/roadmap/TODOS.md (READY-024, READY-042, READY-049 closed)
+- docs/guides/LESSONS.md (+L-082, L-083, L-084)
+- CHANGELOG.md (iter 55, 56, 57 entries)
+
