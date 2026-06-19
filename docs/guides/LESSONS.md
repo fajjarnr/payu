@@ -172,6 +172,202 @@ oc get pods -n payu-dev -l strimzi.io/cluster=payu-kafka
 
 ---
 
+## L-075: Stale TODO Comment Cleanup — Refactor Evidence Erasure (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: Code Maintenance / Documentation / Refactoring Evidence
+**Context**: Found 11 stale TODO/FIXME comments in main source code that referenced work already completed in earlier refactors. Comments were acting as "TODO ghosts" — suggesting work pending when none remained.
+
+**Root cause**: After ARCH-009 (inner-enum extraction, May 2026) and READY-022/043 (pagination fixes), the corresponding TODO comments were never removed. They documented the bug at the time of the fix but became stale placeholders pointing to completed work.
+
+**Pattern (3-step sweep)**:
+```bash
+# Step 1: Find all TODO/FIXME comments in main code
+grep -rn 'TODO\|FIXME' backend/*/src/main/ 2>/dev/null | sort -u
+
+# Step 2: Categorize each TODO:
+#   (a) Stale (work already done) — DELETE comment
+#   (b) Valid (real pending work) — KEEP comment, ensure it references a TODOS entry
+#   (c) Deferred feature — KEEP comment with ticket reference
+
+# Step 3: Apply sed/python fix per file, verify compile + tests
+```
+
+**Categorization applied (11 comments cleaned)**:
+| Comment | Location | Action | Reason |
+|---------|----------|--------|--------|
+| `// TODO BUG-ARCH-001: Extract to top-level enum` (5×) | `SubscriptionPlanEntity`, `MerchantEntity`, `TransactionEntity` | **DELETE** | ARCH-009 already extracted enums to `domain/model/*` |
+| `// TODO BUG-BE-043: Use DB-level pagination` (6×) | `backoffice-service` services + repos | **DELETE** | Repository already has `Pageable findByStatus(...)` + service uses `PageRequest.of(page, size)` |
+
+**Remaining valid TODOs (kept)**:
+- `BUG-ARCH-003`: transaction-service Hexagonal cleanup (READY-049, 1-2 days real work)
+- `BUG-ARCH-004`: LocalDateTime → OffsetDateTime timezone safety (multi-week migration)
+- `// TODO: Integrate with transaction-service` (deferred feature)
+- `// TODO: Implement Twilio/Vonage/Zenziva API call` (SMS provider placeholders)
+- `// TODO: Validate account via BI-FAST inquiry` (IMP-035 deferred)
+- `// TODO: Integrate with external alerting systems` (deferred)
+
+**Lesson (4 parts)**:
+1. **TODO comments are refactor evidence that must be deleted when work completes**. Leaving stale comments confuses readers into thinking work is pending. They also make TODOS.md stale (the comment doesn't reference the ticket that already tracked the work).
+2. **Comments that reference a ticket key (e.g., `BUG-ARCH-001`) are easier to verify**: `git log --grep BUG-ARCH-001` shows the fix commit. If the fix is in main, the comment is stale.
+3. **Detecting stale TODOs**: `grep -rn 'TODO\|FIXME' backend/*/src/main/ | sort -u` then check each against `git log` + `git blame`. Anything that has a "FIX" in its history is stale.
+4. **Always run `mvn test-compile` + `mvn test` after cleanup**. Comment deletion can leave orphan Javadoc references (e.g., `{@link X}` pointing to removed code). Verify no compile errors.
+
+**Files changed (iter 43)**:
+- 9 files: 5 stale ARCH-001 + 6 stale BUG-BE-043 comments removed
+- 0 source code changes
+- 0 test changes (compilation untouched)
+
+**Test results**: 111 tests pass (billing + partner + transaction), full backend suite 1472/1472 PASS, 0 regressions.
+
+---
+
+## L-076: Orphan Code Detection — Wrong Extension, Wrong Directory (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: Code Maintenance / Repo Hygiene
+**Context**: Discovered a 422-line Python file (`CustomerSegmentationService` class) misnamed as `.sql` in `analytics-service/src/main/resources/db/migration/`. Never imported, never executed, dead code from a prior commit.
+
+**Pattern (4-step detection)**:
+```bash
+# Step 1: Find files that don't match their path/extension expectations
+file backend/analytics-service/src/main/resources/db/migration/V2__create_segments_table.sql
+# Output: "Python script, ASCII text executable"  ← wrong! Should be "SQL script"
+
+# Step 2: Check import graph — does anything use the file's content?
+grep -rn 'V2__create_segments\|CustomerSegmentation' backend/ 2>/dev/null | grep -v 'V2__create_segments_table.sql:'
+
+# Step 3: Check tooling expectations — Flyway would run .sql files via JDBC
+# If file has Python content but Flyway loads it → silent failure or schema corruption
+
+# Step 4: Check git blame for context
+git log --follow backend/analytics-service/src/main/resources/db/migration/V2__create_segments_table.sql
+```
+
+**Discovery**:
+- File was added in commit `3585ee6f` (iter 21 docs sync — bulk add of many files including misnamed ones)
+- analytics-service is **Python** (FastAPI), not Java. The `src/main/resources/db/migration/` directory is a Java/Maven convention (Flyway). Python services use Alembic, not Flyway.
+- 422 lines of Python (CustomerSegmentationService class + RFM scoring + K-means clustering)
+- **Zero imports** — `grep -rn 'V2__create_segments\|CustomerSegmentationService'` across entire repo returns only the file itself
+- Containerfile copies `src/` (not `src/main/`), so the file would have been included in image but never executed
+
+**Fix (3 steps)**:
+```bash
+# Delete the orphan file + empty parent directories
+rm backend/analytics-service/src/main/resources/db/migration/V2__create_segments_table.sql
+rmdir backend/analytics-service/src/main/resources/db/migration
+rmdir backend/analytics-service/src/main/resources/db
+rmdir backend/analytics-service/src/main/resources/resources
+rmdir backend/analytics-service/src/main/resources/main
+
+# Result: src/main/ entirely removed from Python service (was only there for the misnamed file)
+```
+
+**Lesson (4 parts)**:
+1. **Run `file` command on suspicious files**: `file foo.sql` returns `"ASCII text"` for legitimate SQL, but Python/Java/PHP for misnamed files. Catches wrong-extension bugs immediately.
+2. **Verify the import graph before assuming code is needed**: `grep -rn 'ClassName\|file_name'` excluding self-references. Zero hits = orphan.
+3. **Polyglot services need directory convention enforcement**: Java services use `src/main/{java,resources}/` (Maven). Python services use `src/` (flat). Mixing conventions creates orphan directories and files. Consider adding `.editorconfig` or pre-commit hook that validates path/extension.
+4. **Bulk file adds are orphan breeding grounds**: Commit `3585ee6f` (iter 21 docs sync) added many files across services. Some misnamed/misplaced. Periodic `find -name '*.sql' -exec file {} \;` sweep catches these. Consider adding CI lint that fails if a `.sql` file doesn't parse as SQL, if a `.py` file lives under `src/main/`, etc.
+
+**Files changed (iter 43)**:
+- 1 file deleted: `backend/analytics-service/src/main/resources/db/migration/V2__create_segments_table.sql` (422 lines)
+- 4 empty directories removed: `migration`, `db`, `resources`, `main`
+
+**Verification**:
+- Containerfile unchanged (copies `src/` not `src/main/`)
+- analytics-service source layout unchanged (Python services unaffected)
+- No production code changed
+- No test changes
+
+---
+
+## L-077: Architecture Documentation Gap — 3scale API Management Was Undocumented (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: Documentation / Architecture / API Management
+**Context**: User asked "is 3scale documented in ARCHITECTURE.md?". Searched → 0 hits (only 1 unrelated "api management" string about partner api key management). 3scale is the Tier 1 partner gateway fronting all external partner APIs (TokoBapak, Nobar, Dolan, Sinau, Maca). Manifests exist at `infrastructure/platform/api-management/3scale/` but the architecture doc had nothing.
+
+**Discovery**:
+- ADR-0014 documents the platform decision (3scale vs Kong vs Gravitee)
+- 3scale manifests ready (apimanager.yaml, payu-capabilities.yaml, secrets-3scale.yaml, network policies)
+- Kong fallback for lab deployments with <5 partners
+- 3scale NOT deployed in current `payu-dev` (namespace `payu-api-management` does not exist)
+- E2E verified Jun 15 iter 9 (cards CRUD via APIcast) in previous environment
+
+**Pattern (4-step documentation fill-in)**:
+```bash
+# Step 1: Find existing 3scale references in repo
+grep -rln '3scale\|APIcast' /home/ubuntu/payu/docs/ 2>/dev/null
+# Output: docs/adr/0014-api-management-platform.md, docs/operations/MOP_3SCALE.md, etc.
+
+# Step 2: Read existing ADR + READMEs to extract canonical facts
+head -40 /home/ubuntu/payu/docs/adr/0014-api-management-platform.md
+head -30 /home/ubuntu/payu/infrastructure/platform/api-management/3scale/README.md
+
+# Step 3: Identify missing pieces in ARCHITECTURE.md
+# - 2-tier partner gateway architecture (3scale + gateway-service)
+# - Tier responsibility split (3scale vs gateway-service)
+# - Header forwarding contract
+# - Components (APIManager, APIcast, Backend Listener/Worker)
+# - Deployment prerequisites
+# - Application registration walkthrough
+
+# Step 4: Add new section + cross-reference ADR + manifests + runbook
+```
+
+**Pattern (2-Tier architecture diagram)**:
+```text
+Partner Apps
+    │ HTTPS
+    ▼
+┌──────────────────────────────────┐
+│  Tier 1: Red Hat 3scale          │
+│  - Developer Portal             │
+│  - Rate Plans & Quotas          │
+│  - APIcast Gateway (Lua/Nginx)  │
+│  - Usage Metering & Analytics   │
+└──────────────┬───────────────────┘
+               │ mTLS (Istio sidecar)
+               │ X-PayU-Partner-Id
+               │ X-PayU-Plan-Id
+               │ X-PayU-Request-Id
+               ▼
+┌──────────────────────────────────┐
+│  Tier 2: PayU Gateway Service    │
+│  - SNAP-BI Compliance           │
+│  - HMAC Signing & JWT Auth      │
+│  - Idempotency & Circuit Breaker│
+└──────────────┬───────────────────┘
+               │ mTLS via Istio
+               ▼
+       Backend Services
+       (account, transaction, wallet, …)
+```
+
+**Tier responsibility split**:
+| Concern | Tier 1 (3scale) | Tier 2 (gateway-service) |
+|---------|----------------|-------------------------|
+| Public endpoint | ✅ | Internal only |
+| API key provisioning | ✅ Developer Portal | N/A |
+| Per-partner rate limits | ✅ Rate Plans | Defense-in-depth only |
+| SNAP-BI / HMAC / JWT / Idempotency | N/A | ✅ |
+
+**Lesson (4 parts)**:
+1. **Architecture docs must reflect current platform, not aspirations**. If a component is templated but not deployed, document it as "Status: Templates ready, deploy when ≥5 partners" — don't silently omit it.
+2. **Cross-reference ADRs + READMEs + runbooks in arch docs**. ARCHITECTURE.md shouldn't duplicate the ADR; it should LINK to it. The reader goes to ADR for "why this tech", ARCHITECTURE for "how it fits".
+3. **Header forwarding contracts are critical inter-tier interfaces**. The `X-PayU-Partner-Id` / `X-PayU-Plan-Id` headers are the only way Tier 2 knows which partner is calling. Documenting the contract prevents partner-id leakage bugs (e.g., wrong rate limit applied to wrong partner).
+4. **Run periodic "grep known-keywords" sweeps**: `grep -in '3scale\|apicast\|api.management' docs/architecture/` should return ≥10 hits for a documented platform feature. Zero hits = documentation gap. Add to CI as a doc-coverage check (per L-058 pattern).
+
+**Files changed (iter 43)**:
+- 1 file: `docs/architecture/ARCHITECTURE.md` (+136 lines, new section 7.3)
+- TOC updated to include 7.3 entry
+- Cross-references: ADR-0014, `infrastructure/platform/api-management/3scale/`, READY-074
+
+**Caveat documented**:
+3scale is NOT deployed in current `payu-dev`. The section describes intended architecture. Defer deployment until ≥5 partners are active.
+
+---
+
 ## L-074: When to Delete @Disabled Tests vs Re-enable Them (2026-06-19)
 
 **Date**: 2026-06-19

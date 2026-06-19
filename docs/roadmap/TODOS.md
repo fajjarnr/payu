@@ -24,6 +24,29 @@
 
 ## 🐛 Iter 40 — Kafka HA: 3 → 5 Brokers (2026-06-18)
 
+## 🐛 Iter 42-43 — Stale TODO Cleanup + Orphan File Removal + 3scale Docs (2026-06-19)
+
+| Key | Priority | Service | Summary | Status | Closed In |
+|:---|:---:|:---|:---|:---|:---|
+| **WEBAPP-014** | **P2** | web-app | Add i18n schema validation (Zod) + key coverage check script to CI per L-057. **CLOSED in iter 42**: created `frontend/web-app/scripts/check-i18n-coverage.mjs` — flattens en.json + id.json to dot-path sets, exits 0 if match / 1 if mismatch / 2 on JSON parse error. Added `npm run check:i18n` script. 515 keys × 2 locales parity OK. | 🟢 Closed | iter 42 |
+| **WEBAPP-LINT-003** | **P3** | web-app | 8 pre-existing errors in test files (`display-name` + `Function` type). **CLOSED in iter 42**: 3 files `(fn: Function)` → `(fn: (...args: unknown[]) => void)`. 5 files `Wrapper.displayName` + eslint-disable. | 🟢 Closed | iter 42 |
+
+### Iter 43 cleanup work
+- **Removed 11 stale TODO comments** (5 BUG-ARCH-001 + 6 BUG-BE-043)
+- **Deleted 422-line orphan Python file** misnamed as `.sql` in analytics-service
+- **Added 3scale API Management Section 7.3** to ARCHITECTURE.md (136 lines, 2-tier partner gateway)
+- Captured L-075 (stale TODO pattern), L-076 (orphan code detection), L-077 (docs gap fix)
+
+### Remaining open TODOS (2)
+- **READY-076** Postgres HA — image registry blocked (Crunchy `ubi8-2.50.1` etc missing)
+- **WEBAPP-LINT-002** 134 web-app lint warnings — manual cleanup needed
+
+### Test status
+- Full backend suite: 1472 tests, 0 failures, 0 errors, 169 skipped
+- Frontend i18n check: 515 keys × 2 locales parity OK
+
+---
+
 | Key | Priority | Service | Summary | Status | Closed In |
 |:---|:---:|:---|:---|:---|:---|
 | READY-077 | P1 | payu-dev cluster | Kafka HA: broker pool 3→5 replicas | 🟢 Closed | iter 40 |
