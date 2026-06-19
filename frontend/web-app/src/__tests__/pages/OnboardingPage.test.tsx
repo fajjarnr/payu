@@ -42,7 +42,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
     register: () => ({}),
-    handleSubmit: (fn: Function) => (e: Event) => { e?.preventDefault?.(); fn({}); },
+    handleSubmit: (fn: (...args: unknown[]) => void) => (e: Event) => { e?.preventDefault?.(); fn({}); },
     formState: { errors: {} },
     watch: () => '',
     setValue: vi.fn(),

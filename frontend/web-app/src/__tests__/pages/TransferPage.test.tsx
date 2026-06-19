@@ -38,7 +38,7 @@ vi.mock('@/hooks/useTransactions', () => ({
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
     register: () => ({}),
-    handleSubmit: (fn: Function) => (e: Event) => { e?.preventDefault?.(); fn({}); },
+    handleSubmit: (fn: (...args: unknown[]) => void) => (e: Event) => { e?.preventDefault?.(); fn({}); },
     formState: { errors: {}, isSubmitting: false },
     watch: () => '',
     setValue: vi.fn(),
