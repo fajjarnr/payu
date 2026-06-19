@@ -1,6 +1,7 @@
 package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
+import id.payu.transaction.application.service.AsyncDisbursementProcessorService;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 public class DisbursementController {
 
     private final DisbursementUseCase disbursementUseCase;
+    private final AsyncDisbursementProcessorService asyncDisbursementProcessor;
     private final AuthorizationService authorizationService;
 
     @PostMapping
@@ -71,15 +73,11 @@ public class DisbursementController {
                 idempotencyKey != null ? idempotencyKey : request.getIdempotencyKey()
         );
 
-        // Process asynchronously via Spring @Async equivalent (best-effort).
+        // Dispatch BI-FAST processing to async thread (returns 201 immediately).
         // Synchronous call would hold the request hostage and risk optimistic-lock races
-        // when the BI-FAST callback updates the row mid-flight. Failures are logged.
-        try {
-            disbursementUseCase.processDisbursement(disbursement.getId());
-        } catch (Exception e) {
-            log.warn("processDisbursement failed for {}, will be retried by async worker: {}",
-                    disbursement.getId(), e.getMessage());
-        }
+        // when the BI-FAST callback updates the row mid-flight. AsyncDisbursementProcessorService
+        // logs errors; failures are retried by the outbox async worker.
+        asyncDisbursementProcessor.processDisbursementAsync(disbursement.getId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(DisbursementResponse.fromEntity(disbursement));
