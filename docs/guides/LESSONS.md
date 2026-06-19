@@ -2405,3 +2405,39 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 ---
 
 *Last Updated: June 19, 2026 — Added L-081 (ShedLock distributed lock pattern).*
+### L-082 — RFC 9457 Problem Details pattern (2026-06-19, iter 56)
+
+- Use `ProblemDetail` DTO with `application/problem+json` media type
+- Mandatory RFC 9457 fields: `type, title, status, detail, instance`
+- PayU extensions: `error_code, trace_id, timestamp` (snake_case via @JsonProperty)
+- Trace ID resolution: `X-Trace-Id` header → `X-Correlation-ID` fallback → random UUID
+- For opt-in: provide `Rfc9457GlobalExceptionHandler` base + per-service subclass with `@Order(0)`
+- `@Order(0)` is critical: without it, legacy `GlobalExceptionHandler` wins (Spring picks first @RestControllerAdvice found)
+- Field order matters for client compatibility: type → title → status → detail → instance → error_code → trace_id → timestamp
+- Use `URI.create("https://payu.id/problems/{slug}")` for non-generic types, `"about:blank"` for default
+- Always test content-type AND JSON fields in unit tests (Curl `-i` flag for live verify)
+- Live-verify: PUT to a known-public endpoint (e.g. `/actuator/health`) to trigger MethodNotSupported → 405 in RFC 9457 format
+
+### L-083 — Ledger invariant test pattern (2026-06-19, iter 57)
+
+- Pure domain-level tests (no DB) for fast execution: build entry objects, compute sum, assert invariant
+- Three invariants to test in order of complexity:
+  1. Per-transaction: `sum(credits) - sum(debits) = 0` (double-entry)
+  2. Per-account: `current_balance = running sum(credits) - sum(debits)` at each row
+  3. System-wide: `sum(all debits) == sum(all credits)` (conservation of value)
+- BigDecimal arithmetic: use `isEqualByComparingTo` not `isEqualTo` (avoids scale mismatches `10.00` vs `10.0000`)
+- Always test edge case: unbalanced transaction detection (regression guard for bugs)
+- Test precision: 1000 entries of `0.01` = `10.00` exactly (BigDecimal, not float — proves no precision loss)
+- Production layer: schema enforces `CHECK (amount > 0)` + `DECIMAL(19,4)`; application enforces append-only
+- Negative test: detect imbalance by computing `sum(credits) - sum(debits) != 0` (the bug detection test)
+
+### L-084 — Pragmatic Hexagonal port-returning-entity pattern (2026-06-19, iter 55)
+
+- For large services (87+ violations), full Hexagonal refactor is ~2 dev days (POJOs + mappers for ~30 entities)
+- Pragmatic compromise: ports return `adapter.persistence.entity.*` types (acceptable for v1)
+- Focus refactor on high-impact patterns:
+  - Application layer schedulers (use ports, not repos directly)
+  - New methods on existing ports (not new entity types)
+- ArchUnit calibration: 1 of 5 rules re-enabled (domain JPA-free) is a 100% pass
+- Test pattern: `domainShouldNotDependOnJpa` rule with `resideInAnyPackage("jakarta.persistence..", "org.hibernate..")` as the prohibited set
+- Use `ClassFileImporter` + `@BeforeAll` for `@Test` methods that need to test rules (since `@ArchTest` static fields don't expose the imported classes to instance methods)

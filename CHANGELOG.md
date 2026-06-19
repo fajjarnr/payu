@@ -19,7 +19,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
+### iter-55 — 2026-06-19
+
+**feat(architecture)**: READY-049 — transaction-service Hexagonal cleanup (partial)
+
+- Added `findExpiredPendingTransactions(Instant)` to `TransactionPersistencePort`
+- Created `VirtualAccountPersistencePort` + `VirtualAccountPersistenceAdapter`
+- Added `publishTransactionExpired` to `TransactionEventPublisherPort` (new method for scheduler event publishing)
+- Re-enabled 1 of 5 ArchUnit rules in `ArchitectureTest`: `domainShouldNotDependOnJpa` (0 violations)
+- Added `noClasses` import + `ClassFileImporter` setup with `@BeforeAll`
+- **Remaining**: 17 application-layer files still access `adapter.persistence.repository.*` directly (deferred)
+- Tests: 122/122 transaction-service tests pass
+- Deployed: transaction-service:1.8.68
+
+### iter-56 — 2026-06-19
+
+**feat(error-handling)**: READY-024 — RFC 9457 Problem Details support
+
+- Created `ProblemDetail` class in api-commons with RFC 9457 mandatory fields (type, title, status, detail, instance) + PayU extensions (error_code, trace_id, timestamp)
+- Created `FieldViolation` for field-level validation errors (RFC 9457 §3.1 extension member)
+- Created `Rfc9457GlobalExceptionHandler` base class with handlers for all standard Spring exceptions
+- Sets `Content-Type: application/problem+json` (RFC 9457 §3 media type)
+- Added 11 unit tests in `ProblemDetailTest` (api-commons)
+- `transaction-service` opted-in via `Rfc9457TransactionExceptionHandler` with `@Order(0)` priority
+- **Live verified**: PUT /actuator/health returns RFC 9457 JSON with proper field order
+- Deployed: transaction-service:1.8.70
+
+### iter-57 — 2026-06-19
+
+**feat(compliance)**: READY-042 — Immutable ledger invariant test
+
+- Created `LedgerInvariantTest` in wallet-service with 7 unit tests:
+  1. Per-transaction double-entry (`sum(credits) - sum(debits) = 0`)
+  2. Multi-leg entries (3+ accounts) balance
+  3. Unbalanced transactions detected (regression guard)
+  4. Per-account balance invariant (`current_balance = sum(credits) - sum(debits)`)
+  5. 1000-entry BigDecimal precision (`1000 * 0.01 = 10.00` exactly)
+  6. Append-only `balance_after` consistency
+  7. System-wide conservation of value
+- Production invariants enforced at schema level (`NOT NULL` + `CHECK amount > 0` + `DECIMAL(19,4)`) + application layer (append-only `LedgerEntryMapper`)
+- Wallet test count: 9/9 (was 2/2 + 7 new)
+- Deployed: wallet-service:1.8.66
+## Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
 
 Closed latent NPE bug in `cms-service` content targeting logic. `ContentEntity.matchesTargeting()` used `targetingRules.get(key).equals(userValue)` which throws NPE when:
 - Map has key with null value (e.g., `{"segment": null}` from JSON parse)
