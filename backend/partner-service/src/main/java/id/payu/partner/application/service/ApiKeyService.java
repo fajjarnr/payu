@@ -9,6 +9,7 @@ import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.ApiKeyDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -194,7 +195,7 @@ public class ApiKeyService {
      * Expire rotated keys past their grace period.
      * Runs every hour.
      */
-    @Scheduled(fixedDelay = 3600000)
+    @SchedulerLock(name = "ApiKeyService_expireRotatedKeys", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(fixedDelay = 3600000)
     @Transactional
     public void expireRotatedKeys() {
         List<ApiKeyEntity> expired =

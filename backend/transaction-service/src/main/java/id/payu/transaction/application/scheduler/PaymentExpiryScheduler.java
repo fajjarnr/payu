@@ -6,6 +6,7 @@ import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.outbox.service.OutboxService;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +59,9 @@ public class PaymentExpiryScheduler {
     /**
      * Expire pending transactions that have passed their expiresAt timestamp.
      * Releases reserved balance and publishes payment.expired Kafka event.
+     * ITER-53: ShedLock prevents double-execution on multi-replica deployment.
      */
+    @SchedulerLock(name = "PaymentExpiryScheduler_expirePendingTransactions", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expirePendingTransactions() {
@@ -83,7 +86,9 @@ public class PaymentExpiryScheduler {
     /**
      * Expire pending Virtual Accounts that have passed their TTL.
      * Publishes payment.expired Kafka event.
+     * ITER-53: ShedLock prevents double-execution.
      */
+    @SchedulerLock(name = "PaymentExpiryScheduler_expireVirtualAccounts", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {

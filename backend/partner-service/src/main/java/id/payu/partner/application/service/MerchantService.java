@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import id.payu.outbox.service.OutboxService;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -353,7 +354,7 @@ public class MerchantService {
      * Scheduled job to expire pending QR payments past their expiry.
      * Runs every 2 minutes.
      */
-    @Scheduled(fixedRate = 120000)
+    @SchedulerLock(name = "MerchantService_expireQrPayments", lockAtLeastFor = "PT1S", lockAtMostFor = "PT2M")@Scheduled(fixedRate = 120000)
     public void expireQrPayments() {
         List<MerchantQrPaymentEntity> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
         if (!expired.isEmpty()) {

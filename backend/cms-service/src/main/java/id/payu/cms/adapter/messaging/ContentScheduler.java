@@ -5,6 +5,7 @@ import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,7 @@ public class ContentScheduler {
      * Activate scheduled content
      * Runs every hour at the top of the hour
      */
-    @Scheduled(cron = "0 0 * * * *")
+    @SchedulerLock(name = "ContentScheduler_activateScheduledContent", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(cron = "0 0 * * * *")
     public void activateScheduledContent() {
         log.info("Checking for scheduled content to activate");
 
@@ -56,7 +57,7 @@ public class ContentScheduler {
      * Archive expired content
      * Runs every hour at 30 minutes past the hour
      */
-    @Scheduled(cron = "0 30 * * * *")
+    @SchedulerLock(name = "ContentScheduler_archiveExpiredContent", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(cron = "0 30 * * * *")
     public void archiveExpiredContent() {
         log.info("Checking for expired content to archive");
 

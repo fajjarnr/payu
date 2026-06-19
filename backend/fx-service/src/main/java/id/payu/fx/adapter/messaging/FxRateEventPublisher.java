@@ -6,6 +6,7 @@ import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class FxRateEventPublisher {
     /**
      * Publish FX rates every minute to keep consumers updated.
      */
-    @Scheduled(fixedRate = 60000)
+    @SchedulerLock(name = "FxRateEventPublisher_publishFxRates", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedRate = 60000)
     @Transactional
     public void publishFxRates() {
         if (!enabled) {

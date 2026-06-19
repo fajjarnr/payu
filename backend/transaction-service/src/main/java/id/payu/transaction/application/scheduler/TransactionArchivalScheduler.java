@@ -3,6 +3,7 @@ package id.payu.transaction.application.scheduler;
 import id.payu.transaction.application.service.dto.ArchivalResult;
 import id.payu.transaction.application.service.TransactionArchivalService;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,8 @@ public class TransactionArchivalScheduler {
         this.archivalService = archivalService;
     }
 
+    @SchedulerLock(name = "TransactionArchivalScheduler_archiveOldTransactions",
+            lockAtLeastFor = "PT1S", lockAtMostFor = "PT4H")
     @Scheduled(cron = "${archival.schedule.cron:0 0 2 * * ?}")
     public void archiveOldTransactions() {
         log.info("Starting scheduled transaction archival");

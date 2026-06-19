@@ -4,6 +4,7 @@ import id.payu.account.domain.model.Budget;
 import id.payu.account.domain.model.BudgetPeriod;
 import id.payu.account.domain.model.BudgetStatus;
 import id.payu.account.domain.port.out.BudgetRepositoryPort;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -239,6 +240,7 @@ public class BudgetService {
      * Scheduled job to reset budgets when their period elapses.
      * Runs daily at midnight.
      */
+    @SchedulerLock(name = "BudgetService_resetBudgets", lockAtLeastFor = "PT1S", lockAtMostFor = "PT4H")
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void resetBudgets() {

@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
@@ -127,7 +128,7 @@ public class SnapBiTokenService {
         }
     }
 
-    @Scheduled(fixedRate = 60000)
+    @SchedulerLock(name = "SnapBiTokenService_cleanupExpiredTokens", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedRate = 60000)
     public void cleanupExpiredTokens() {
         Date now = new Date();
         Set<String> keys = redisTemplate.keys(TOKEN_KEY_PREFIX + "*");

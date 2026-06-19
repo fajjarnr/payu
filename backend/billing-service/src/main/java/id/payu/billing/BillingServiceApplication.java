@@ -1,5 +1,6 @@
 package id.payu.billing;
 
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +23,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableCaching
 @EnableAsync
 @EnableScheduling
+// ITER-53: ShedLock distributed locking for @Scheduled methods.
+@EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")
 public class BillingServiceApplication {
 
     public static void main(String[] args) {

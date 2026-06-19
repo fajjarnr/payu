@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -199,7 +200,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "processDueSubscriptionsFallback")
     @Retry(name = "billing")
-    @Scheduled(fixedDelayString = "${payu.billing.subscription.charge-interval-ms:300000}")
+    @SchedulerLock(name = "SubscriptionService_processDueSubscriptions", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")@Scheduled(fixedDelayString = "${payu.billing.subscription.charge-interval-ms:300000}")
     @Transactional
     public int processDueSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
@@ -233,7 +234,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "processExpiredTrialsFallback")
     @Retry(name = "billing")
-    @Scheduled(fixedDelayString = "${payu.billing.subscription.trial-check-interval-ms:600000}")
+    @SchedulerLock(name = "SubscriptionService_processExpiredTrials", lockAtLeastFor = "PT1S", lockAtMostFor = "PT10M")@Scheduled(fixedDelayString = "${payu.billing.subscription.trial-check-interval-ms:600000}")
     @Transactional
     public int processExpiredTrials() {
         LocalDateTime now = LocalDateTime.now();

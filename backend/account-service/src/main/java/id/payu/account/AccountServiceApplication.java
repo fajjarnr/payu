@@ -6,13 +6,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableJpaRepositories(basePackages = {"id.payu.account.adapter.persistence.repository", "id.payu.account.repository"})
 @EntityScan(basePackages = {"id.payu.account.adapter.persistence.entity", "id.payu.account.entity"})
 @SpringBootApplication(exclude = {OAuth2ResourceServerAutoConfiguration.class})
 @EnableFeignClients
 @EnableAsync
+@EnableScheduling
+// ITER-53: ShedLock distributed locking for @Scheduled methods.
+@EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")
 public class AccountServiceApplication {
 
     public static void main(String[] args) {

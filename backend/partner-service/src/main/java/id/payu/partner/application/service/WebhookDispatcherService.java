@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,7 +120,7 @@ public class WebhookDispatcherService {
      * Retry failed deliveries that are due for retry.
      * Scheduled every 30 seconds.
      */
-    @Scheduled(fixedDelay = 30000)
+    @SchedulerLock(name = "WebhookDispatcherService_retryFailedDeliveries", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedDelay = 30000)
     @Transactional
     public void retryFailedDeliveries() {
         List<WebhookDeliveryEntity> retryable =
@@ -145,7 +146,7 @@ public class WebhookDispatcherService {
      * Clean up old delivery records (90 day retention).
      * Runs daily at 3 AM.
      */
-    @Scheduled(cron = "0 0 3 * * *")
+    @SchedulerLock(name = "WebhookDispatcherService_cleanupOldDeliveries", lockAtLeastFor = "PT1S", lockAtMostFor = "PT4H")@Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupOldDeliveries() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(90);

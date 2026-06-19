@@ -6,6 +6,7 @@ import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.SettlementPersistencePort;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -334,7 +335,7 @@ public class SettlementService implements SettlementUseCase {
     /**
      * Scheduled job to process daily settlements (runs at 2 AM daily).
      */
-    @Scheduled(cron = "0 0 2 * * ?")
+    @SchedulerLock(name = "SettlementService_scheduledDailySettlement", lockAtLeastFor = "PT1S", lockAtMostFor = "PT4H")@Scheduled(cron = "0 0 2 * * ?")
     @Transactional
     public void scheduledDailySettlement() {
         log.info("Running scheduled daily settlement job");

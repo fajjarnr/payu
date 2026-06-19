@@ -8,6 +8,7 @@ import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.EscrowPersistencePort;
 import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -225,7 +226,7 @@ public class EscrowService implements EscrowUseCase {
 
     @Override
     @Transactional
-    @Scheduled(fixedDelayString = "${escrow.expiry-check-interval-ms:300000}")
+    @SchedulerLock(name = "EscrowService_processExpiredEscrows", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")@Scheduled(fixedDelayString = "${escrow.expiry-check-interval-ms:300000}")
     public void processExpiredEscrows() {
         List<EscrowTransaction> expired = escrowPersistencePort.findExpiredHeldEscrows(LocalDateTime.now());
         if (expired.isEmpty()) {
