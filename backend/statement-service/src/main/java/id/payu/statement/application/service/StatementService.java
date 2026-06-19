@@ -198,6 +198,11 @@ public class StatementService {
         }
 
         try {
+            // BUG-STMT-PATH-001: guard against null storagePath (edge case: statement marked
+            // COMPLETED but storage path not yet persisted, or data migration bug).
+            if (statement.getStoragePath() == null) {
+                throw new StatementException("STATEMENT_005", "StatementEntity has no storage path");
+            }
             Path filePath = Paths.get(statement.getStoragePath());
             return Files.readAllBytes(filePath);
         } catch (IOException e) {

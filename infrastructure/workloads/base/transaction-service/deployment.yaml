@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/transaction-service:1.8.64
+        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/transaction-service:1.8.65
         ports:
         - containerPort: 8080
           name: http
@@ -147,6 +147,12 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        # BUG-TRANS-CALLBACK-001 + BUG-VA-CALLBACK-001: HMAC signature secret for callback
+        # endpoints. SHARED with BI-FAST / bank VA clients. In production this should
+        # be in a Kubernetes Secret (e.g. callback-secrets), not literal in deployment.
+        # Dev placeholder: any-non-empty-string allows callbacks through filter.
+        - name: PAYU_CALLBACK_SIGNATURE_SECRET
+          value: "dev-callback-secret-change-in-prod-9f8e7d6c5b4a3210"
         # Services URL config (read by id.payu.transaction.adapter.client.* adapters)
         # Code reads these via @Value("${services.<name>.url}") which Spring resolves
         # from env var SERVICES_<NAME>_URL (uppercase, dots->underscores).

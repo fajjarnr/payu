@@ -35,7 +35,8 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+                                                   JwtAuthenticationConverter jwtAuthenticationConverter,
+                                                   id.payu.transaction.adapter.filter.CallbackSignatureFilter callbackSignatureFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -47,6 +48,11 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
+                        // BUG-TRANS-CALLBACK-001 + BUG-VA-CALLBACK-001: callback endpoints
+                        // authenticated by HMAC signature (see CallbackSignatureFilter),
+                        // not by user JWT.
+                        .requestMatchers("/api/v1/disbursements/callback").permitAll()
+                        .requestMatchers("/api/v1/virtual-accounts/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -54,7 +60,10 @@ public class SecurityConfig {
                             .jwtAuthenticationConverter(jwtAuthenticationConverter)
                         )
                 )
-                .addFilterBefore(securityHeadersFilter(), SecurityContextHolderFilter.class);
+                .addFilterBefore(securityHeadersFilter(), SecurityContextHolderFilter.class)
+                // HMAC signature filter must run BEFORE security filter chain so unauthenticated
+                // callbacks can be verified by signature.
+                .addFilterBefore(callbackSignatureFilter, SecurityContextHolderFilter.class);
         return http.build();
     }
 

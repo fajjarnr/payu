@@ -65,13 +65,13 @@ images:
   newTag: "1.8.51"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-  newTag: "1.8.64"
+  newTag: "1.8.65"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newTag: "1.8.59"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.54
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newTag: "1.8.54"
+  newTag: "1.8.65"
 - name: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/wallet-service:1.8.55
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.55"

@@ -52,6 +52,49 @@ Backlog of bug fixes shipped in same day, not yet entered in CHANGELOG:
 - **Iter 47 (BUG-WALLET-NPE-001)**: Fixed 14 `nullable.equals()` patterns across `wallet-service` + `transaction-service` controllers using `Objects.equals()`. Deployed `wallet-service:1.8.63`, `transaction-service:1.8.64`.
 - **Iter 48 (BUG-NPE-002)**: Fixed 11 more `nullable.equals()` across 5 services (account, auth, billing, lending, partner). Deployed `lending-service:1.8.62`, `account-service:1.8.63`, `partner-service:1.8.62`, `billing-service:1.8.62`, `auth-service:1.8.62`.
 
+### Iteration 51: BUG-STMT-PATH-001 + HMAC Callbacks + @Version Optimistic Locking (2026-06-19)
+
+Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-locking additions.
+
+**1. BUG-STMT-PATH-001** (statement-service)
+- `StatementService.getStatementPdf()` called `Paths.get(statement.getStoragePath())` without null check. If `storagePath` is null (data migration edge case, statement marked COMPLETED but path not yet persisted), `Paths.get(null)` throws NPE that leaks through to the user.
+- TDD: 1 failing test (`shouldThrowExceptionWhenStoragePathIsNull`) → fix (explicit null check + new `STATEMENT_005` error code) → test green.
+- Deployed: `statement-service:1.8.64 → 1.8.65`
+
+**2. BUG-TRANS-CALLBACK-001 + BUG-VA-CALLBACK-001** (transaction-service)
+- `DisbursementController.handleCallback()` (POST `/api/v1/disbursements/callback`) and `VirtualAccountController.bankCallback()` (POST `/api/v1/virtual-accounts/callback`) were protected only by SecurityConfig's `.anyRequest().authenticated()`. ANY valid JWT (including regular user tokens) could:
+  - Mark a disbursement as COMPLETED with arbitrary `bankReference`
+  - Mark a VA payment as received with arbitrary amount
+- Severity: CRITICAL — financial state mutation by any authenticated user.
+- **Fix**: New `CallbackSignatureFilter` (HMAC-SHA256) + SecurityConfig `permitAll` for callback paths + filter registered before security chain. Signature scheme:
+  ```
+  stringToSign = unixTimestamp + "\n" + body
+  signature    = hex(HMAC-SHA256(secret, stringToSign))
+  ```
+  Required headers: `X-Signature`, `X-Timestamp` (5-min tolerance, configurable).
+- Configuration via `payu.callback.signature.*` properties + `PAYU_CALLBACK_SIGNATURE_SECRET` env var (deployment yaml updated with dev placeholder, production needs proper Kubernetes Secret).
+- 9 unit tests in `CallbackSignatureFilterTest` (TDD: reject missing/invalid/expired signatures, allow valid, bypass for unprotected paths, etc).
+- **Live cluster verification**: 3 curl tests confirmed — no signature → 401, missing X-Signature → 401 + `MISSING_SIGNATURE` error, valid HMAC → 200 (or business 4xx, but filter accepts).
+- Deployed: `transaction-service:1.8.64 → 1.8.65`
+
+**3. ITER-51D: @Version Optimistic Locking** (transaction-service)
+- 3 critical JPA entities lacked `@Version` field, allowing lost-update on concurrent writes (e.g., async disbursement + admin status change overwrite each other silently).
+- Added `@Version private Long version` to: `TransactionEntity`, `ScheduledTransferEntity`, `BatchDisbursementEntity`. (Pre-existing: `DisbursementEntity`, `SplitBillEntity`.)
+- New Flyway migration `V19__add_version_to_critical_entities.sql` adds `version BIGINT NOT NULL DEFAULT 0` to the 3 tables + backfills existing rows.
+- New regression test `criticalEntitiesShouldHaveVersion` in `ArchitectureTest.java` (reflection-based, L-079 workaround) verifies the 5 critical entities have `@Version`.
+- Migration ran successfully on cluster startup (no CrashLoop).
+- Deployed: same `transaction-service:1.8.65` (HMAC + @Version in same image)
+- **Deferred** (out of scope for this iter): 58 other JPA entities across 14 services still lack @Version. Prioritized financial entities first.
+
+**Skipped** (per scope triage):
+- BUG-AUTH-LOCKOUT-001: `KeycloakService.LoginAttempt.increment()` non-atomic `count++` — investigated, found wrapped in `synchronized (key.intern())` per-user lock. NOT a bug (false positive).
+- BUG-GATEWAY-ANALYTICS-001: `ApiMetrics.record()` non-atomic `count++` — investigated, found inside `ConcurrentHashMap.compute()` lambda. NOT a bug (atomic per-key, false positive).
+- ShedLock for 20 `@Scheduled` methods — deferred. Most services run with 1 replica, so no concurrent execution risk today. Add when scaling to >1 replica.
+
+**Net deployed in iter 51**:
+- `transaction-service:1.8.64 → 1.8.65` (HMAC + @Version)
+- `statement-service:1.8.64 → 1.8.65` (BUG-STMT-PATH-001)
+
 ### Iteration 50: BUG-WEBHOOK-ASYNC-001 + BUG-STMT-ASYNC-001 — @Async + @Transactional No-Op Sweep (2026-06-19)
 
 Closed two latent bugs where `@Transactional` was paired with `@Async`, making `@Transactional` a silent no-op (per BUG-BE-049 lesson — Spring's `@Transactional` proxy is only applied at the call site, not on the async thread, so transaction context is not propagated). Each `repository.save()` runs in its own implicit transaction; multi-write methods can leave partial state on failure.

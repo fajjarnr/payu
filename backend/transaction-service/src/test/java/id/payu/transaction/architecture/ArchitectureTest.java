@@ -6,6 +6,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import jakarta.persistence.Entity;
 
 import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
@@ -48,4 +49,43 @@ public class ArchitectureTest {
                     .and().areNotInterfaces()
                     .should().haveSimpleNameEndingWith("Controller")
                     .allowEmptyShould(true);
+
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("ITER-51D: critical JPA entities should have @Version (optimistic locking)")
+    void criticalEntitiesShouldHaveVersion() {
+        // CALIBRATION 2026-06-19: ArchUnit 1.2.1 + Java 25 incompat (see L-079).
+        // Use reflection on explicitly-known critical financial entities.
+        java.util.List<String> missingVersion = new java.util.ArrayList<>();
+        String[] criticalEntities = {
+            "id.payu.transaction.adapter.persistence.entity.TransactionEntity",
+            "id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity",
+            "id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity",
+            "id.payu.transaction.adapter.persistence.entity.DisbursementEntity",
+            "id.payu.transaction.adapter.persistence.entity.SplitBillEntity",
+        };
+        for (String className : criticalEntities) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                if (!clazz.isAnnotationPresent(Entity.class)) {
+                    missingVersion.add(className + " (not @Entity)");
+                    continue;
+                }
+                boolean hasVersion = false;
+                for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
+                    if (field.isAnnotationPresent(jakarta.persistence.Version.class)) {
+                        hasVersion = true;
+                        break;
+                    }
+                }
+                if (!hasVersion) {
+                    missingVersion.add(className + " (no @Version field)");
+                }
+            } catch (ClassNotFoundException e) {
+                missingVersion.add(className + " (NOT FOUND)");
+            }
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(missingVersion.isEmpty(),
+            "Critical financial entities missing @Version (optimistic locking):\n  "
+                + String.join("\n  ", missingVersion));
+    }
 }

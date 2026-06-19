@@ -357,6 +357,15 @@ public class ScheduledTransferEntity {
     @Id
     private UUID id;
 
+    /**
+     * ITER-51D: Optimistic locking version. Hibernate auto-increments on UPDATE.
+     * Prevents lost updates when concurrent jobs modify the same scheduled transfer
+     * (e.g., scheduler marks EXECUTING while user cancels).
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "reference_number", nullable = false, unique = true)
     private String referenceNumber;
 

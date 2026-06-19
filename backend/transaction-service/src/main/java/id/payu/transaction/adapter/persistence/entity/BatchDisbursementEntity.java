@@ -59,6 +59,15 @@ public class BatchDisbursementEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * ITER-51D: Optimistic locking version. Prevents lost updates when concurrent
+     * batch processing updates status (PROCESSING → COMPLETED) and admin updates
+     * metadata at the same time.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "idempotency_key", nullable = false, unique = true, length = 64)
     private String idempotencyKey;
 

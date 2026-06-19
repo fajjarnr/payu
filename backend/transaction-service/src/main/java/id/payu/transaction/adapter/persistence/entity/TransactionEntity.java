@@ -363,6 +363,18 @@ public class TransactionEntity implements Persistable<UUID> {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * ITER-51D: Optimistic locking version. Hibernate auto-increments on UPDATE.
+     * Without this, concurrent async status updates (e.g., webhook + admin action)
+     * can silently overwrite each other — lost update. Throws
+     * {@link org.springframework.orm.ObjectOptimisticLockingFailureException}
+     * on stale version, which the service layer should handle (typically by retry
+     * after re-reading the entity).
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "reference_number", nullable = false, unique = true)
     private String referenceNumber;
 

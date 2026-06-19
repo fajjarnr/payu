@@ -217,6 +217,19 @@ class StatementServiceTest {
                     .isInstanceOf(StatementException.class)
                     .hasMessageContaining("StatementEntity is not ready for download");
         }
+
+        @Test
+        @DisplayName("BUG-STMT-PATH-001: should throw StatementException when storagePath is null")
+        void shouldThrowExceptionWhenStoragePathIsNull() {
+            testStatement.setStatus(StatementStatus.COMPLETED);
+            testStatement.setStoragePath(null);
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
+                    .thenReturn(Optional.of(testStatement));
+
+            assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId.toString()))
+                    .isInstanceOf(StatementException.class)
+                    .hasMessageContaining("storage path");
+        }
     }
 
     @Nested
