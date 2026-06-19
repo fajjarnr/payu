@@ -43,6 +43,9 @@
 5. [Data Architecture](#5-data-architecture)
 6. [Security Architecture](#6-security-architecture)
 7. [API Gateway & Service Mesh](#7-api-gateway--service-mesh)
+   - 7.1 [API Gateway Architecture (C4 Component)](#71-api-gateway-architecture-c4-component)
+   - 7.2 [Istio Service Mesh](#72-istio-service-mesh)
+   - 7.3 [Red Hat 3scale API Management (Tier 1 Partner Gateway)](#73-red-hat-3scale-api-management-tier-1-partner-gateway)
 8. [Infrastructure & DevOps](#8-infrastructure--devops)
 9. [Monitoring & Observability](#9-monitoring--observability)
 10. [TokoBapak Integration](#10-tokobapak-integration)
@@ -1236,6 +1239,139 @@ spec:
       baseEjectionTime: 30s
       maxEjectionPercent: 50
 ```
+
+### 7.3 Red Hat 3scale API Management (Tier 1 Partner Gateway)
+
+> **Status**: Templates ready at `infrastructure/platform/api-management/3scale/`. Deploy when ≥5 partners are active (see [ADR-0014](../adr/0014-api-management-platform.md)).
+
+#### 7.3.1 2-Tier Partner Gateway Architecture
+
+PayU operates as a payment gateway serving multiple external partners (TokoBapak, Nobar, Dolan, Sinau, Maca). Partners consume PayU APIs for escrow, settlement, and payment processing. As the partner count grows, a dedicated API management layer sits **in front** of the PayU gateway-service in a 2-tier architecture:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  Partner Apps (TokoBapak, Nobar, Dolan, Sinau, Maca)       │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTPS (APIcast public endpoint)
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Tier 1: Red Hat 3scale API Management                     │
+│  ┌─────────────┐ ┌──────────────┐ ┌───────────────────────┐│
+│  │ Developer   │ │ Rate Plans   │ │ APIcast Gateway       ││
+│  │ Portal      │ │ & Quotas     │ │ (Nginx + Lua)         ││
+│  │ (API Keys)  │ │ (per partner)│ │                       ││
+│  └─────────────┘ └──────────────┘ └───────────────────────┘│
+│  ┌──────────────────────┐ ┌───────────────────────────────┐ │
+│  │ Analytics & Metering │ │ API Lifecycle Mgmt           │ │
+│  │ (Usage, SLA, billing)│ │ (versioning, deprecation)   │ │
+│  └──────────────────────┘ └───────────────────────────────┘ │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ Internal (mTLS, Istio sidecar)
+                           │ Headers: X-PayU-Partner-Id
+                           │         X-PayU-Plan-Id
+                           │         X-PayU-Request-Id
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Tier 2: PayU Gateway Service (Quarkus, gateway-service)    │
+│  ┌─────────────┐ ┌──────────────┐ ┌───────────────────────┐│
+│  │ SNAP-BI      │ │ HMAC Signing │ │ Idempotency            ││
+│  │ Compliance   │ │ & JWT Auth   │ │ & Circuit Breaker      ││
+│  └─────────────┘ └──────────────┘ └───────────────────────┘│
+└──────────────────────────┬──────────────────────────────────┘
+                           │ mTLS via Istio
+                           ▼
+                  Backend Services
+                  (account, transaction, wallet, …)
+```
+
+#### 7.3.2 Tier Responsibility Split
+
+| Concern                          | Tier 1 (3scale)                | Tier 2 (gateway-service)          |
+| -------------------------------- | ------------------------------- | --------------------------------- |
+| **Public endpoint**              | ✅ `payu-apicast.apps.payu.ocp.fajjjar.my.id` | Internal only |
+| **API key provisioning**         | ✅ Developer Portal, self-service | N/A |
+| **Per-partner rate limits**      | ✅ Rate Plans (e.g., 1000 req/min for TokoBapak) | Per-IP / per-user (defense in depth) |
+| **Usage analytics**              | ✅ Per-partner dashboards | Internal observability |
+| **API versioning & deprecation** | ✅ 3scale API lifecycle | N/A |
+| **SNAP-BI compliance**           | N/A                             | ✅ SNAP-BI headers + body validation |
+| **HMAC request signing**         | N/A                             | ✅ Partner HMAC validation |
+| **JWT auth (Keycloak)**          | N/A                             | ✅ OAuth2 Resource Server |
+| **Idempotency keys**             | N/A                             | ✅ Redis-backed dedup (24h TTL) |
+| **mTLS to backend**              | N/A                             | ✅ Istio STRICT mode |
+
+#### 7.3.3 Header Forwarding Contract
+
+APIcast forwards partner context to the PayU gateway-service via 3 custom headers. The gateway-service reads them and applies per-partner logic (e.g., wallet daily limit, fraud thresholds):
+
+| Header                  | Source              | Purpose                                            |
+| ----------------------- | ------------------- | -------------------------------------------------- |
+| `X-PayU-Partner-Id`     | 3scale application ID | Partner identification (e.g., `tokobapak`) |
+| `X-PayU-Plan-Id`        | 3scale rate plan     | Tier (e.g., `premium`, `standard`)              |
+| `X-PayU-Request-Id`    | APIcast-generated    | Distributed tracing ID (also stored in Loki)   |
+| `X-RateLimit-Limit`     | APIcast              | Quota hint for client-side throttling            |
+| `X-RateLimit-Remaining` | APIcast              | Remaining quota in current window                 |
+
+#### 7.3.4 3scale Components (to deploy)
+
+| Component                | Operator / CRD                     | Purpose                                  |
+| ------------------------ | ---------------------------------- | ---------------------------------------- |
+| **APIManager**           | `apps.3scale.net/v1alpha1`         | Main 3scale system (API + UI + backend) |
+| **APIcast**              | `apps.3scale.net/v1alpha1`         | API gateway (Lua/Nginx-based)            |
+| **Backend Listener**     | Deployment + Redis                 | Authrep (3scale ↔ gateway bridge)      |
+| **Backend Worker**       | Deployment + Sidekiq               | Async analytics + billing               |
+| **Developer Portal**     | 3scale built-in                     | Partner-facing API key onboarding       |
+| **System App**           | 3scale built-in                     | Admin / provider key management         |
+
+Manifests ready at `infrastructure/platform/api-management/3scale/`:
+
+- `apimanager.yaml` — APIManager CR (system + wildcard cluster domain)
+- `payu-capabilities.yaml` — Backend capability (account, transaction, wallet URLs)
+- `apicast-policy.yaml` — NetworkPolicy for APIcast egress
+- `3scale-network-policy.yaml` — NetworkPolicy for 3scale system
+- `secrets-3scale.yaml` — Access tokens (REDHAT_ACCESS_TOKEN, system + backend)
+- `kustomization.yaml` — Composite kustomize entry point
+
+#### 7.3.5 3scale Deployment Prerequisites
+
+1. **License**: Red Hat 3scale license secret in `payu-api-management` namespace (not committed)
+2. **Wildcard DNS**: `*.apps.payu.ocp.fajjjar.my.id` → NLB ingress (private zone `payu.ocp.fajjjar.my.id`)
+3. **Database**: 3scale requires its own PostgreSQL (separate from PayU's `payu-postgres-0`)
+4. **Redis**: Shared with PayU's `payu-cache` (or dedicated) for Backend Listener storage
+5. **Tenant secrets**: `system-seed`, `backend-redis`, `backend-listener-secret`, `backend-worker-secret`
+
+#### 7.3.6 Application Registration (post-deploy)
+
+For each partner (e.g., TokoBapak), register an Application in 3scale Developer Portal:
+
+```bash
+# Create Application via 3scale Admin API
+APICAST_ACCESS_TOKEN=$(oc get secret system-seed -n payu-api-management -o jsonpath='{.data.ACCESS_TOKEN}' | base64 -d)
+curl -X POST "https://payu-admin.apps.payu.ocp.fajjjar.my.id/admin/api/services/{service_id}/applications.json" \
+  -H "Authorization: Bearer ${APICAST_ACCESS_TOKEN}" \
+  -d "access_token=${USER_KEY}&application_id=tokobapak&plan_id=premium"
+```
+
+Application receives a `user_key` (or OAuth client_credentials). Partner includes this in `Authorization: Bearer` header on every API call. APIcast validates the key against the rate plan, attaches `X-PayU-*` headers, and forwards to the PayU gateway-service.
+
+#### 7.3.7 Fallback to Kong (lab/early partners)
+
+For lab deployments with <5 partners, a lightweight Kong deployment can substitute for 3scale to avoid the heavy system deployment. Manifests at `infrastructure/platform/api-management/kong/`. Kong is API-compatible with 3scale's APIcast for basic rate limiting + key validation. When partner count grows ≥5, migrate to full 3scale per ADR-0014.
+
+#### 7.3.8 E2E Verification (cards CRUD via APIcast)
+
+Verified end-to-end via 3scale APIcast on Jun 15 (READY-022, iter 9):
+
+```
+T1 CREATE: HTTP 201 (card 6c70e974-...)
+T2 READ:   HTTP 200 (status=ACTIVE)
+T3 FREEZE: HTTP 200
+T4 UNFREEZE: HTTP 200
+T5 VERIFY: HTTP 200 (status=ACTIVE post-unfreeze)
+```
+
+Full chain proven: APIcast (user_key) → backend authrep (provider_key) → gateway-service → wallet-service → Postgres.
+
+> **Caveat**: As of Jun 2026, 3scale is **not yet deployed** to `payu-dev` (namespace does not exist). The above verification was a pilot run from a previous environment. Current `payu-dev` has APIcast stubs ready but not applied. See [READY-074](../../roadmap/TODOS.md) for re-registration steps.
 
 ---
 
