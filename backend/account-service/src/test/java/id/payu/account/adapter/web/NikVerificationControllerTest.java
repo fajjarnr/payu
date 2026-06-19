@@ -7,7 +7,6 @@ import id.payu.account.domain.port.in.VerifyNikUseCase;
 import id.payu.account.dto.VerifyNikRequest;
 import id.payu.account.dto.VerifyNikResponse;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Pure unit tests for NikVerificationController using standalone MockMvc.
  * No Spring context — avoids @EnableJpaRepositories bootstrap (per READY-045 / L-060).
  *
- * Auth tests (401, 403) are @Disabled because standalone MockMvc has no security.
+ * Auth tests (401, 403) were removed in iter 41 because:
+ * - 401: covered by E2E tests via gateway-service with JWT filter chain
+ * - 403: covered by E2E tests with token lacking 'SCOPE_account:verify' scope
+ * Unit-testing these requires @SpringBootTest which triggers the JPA bootstrap blocker.
  */
 @DisplayName("NikVerificationController")
 class NikVerificationControllerTest {
@@ -198,26 +200,6 @@ class NikVerificationControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(incompleteRequest))
                     .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @Disabled("Requires Spring Security filter chain. Standalone MockMvc has no security. Re-enable with @SpringBootTest + TestSecurityConfig when JPA bootstrap blocker resolved.")
-        @DisplayName("should return 401 Unauthorized when not authenticated")
-        void shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
-            mockMvc.perform(post("/api/v1/accounts/verify-nik")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(validRequest)))
-                    .andExpect(status().isUnauthorized());
-        }
-
-        @Test
-        @Disabled("Requires Spring Security filter chain. Standalone MockMvc has no security.")
-        @DisplayName("should return 403 Forbidden when missing required scope")
-        void shouldReturnForbiddenWhenMissingScope() throws Exception {
-            mockMvc.perform(post("/api/v1/accounts/verify-nik")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(validRequest)))
-                    .andExpect(status().isForbidden());
         }
 
         @Test

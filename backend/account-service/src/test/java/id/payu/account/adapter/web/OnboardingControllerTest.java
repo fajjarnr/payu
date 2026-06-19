@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -32,9 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * No Spring context — avoids @EnableJpaRepositories bootstrap that blocks
  * @WebMvcTest in this project (per READY-045 / L-060).
  *
- * The 403 auth test is @Disabled because standalone MockMvc has no Spring Security
- * filter chain. It can be re-enabled with @SpringBootTest + TestSecurityConfig when
- * the JPA bootstrap blocker is resolved.
+ * Note: /api/v1/accounts/register is configured as `permitAll()` in SecurityConfig
+ * (line 51) so there is no 403 auth path to test. The "should return 403" test
+ * was removed in iter 41 because it tested nonexistent behavior (closed READY-045).
  */
 @DisplayName("OnboardingController")
 class OnboardingControllerTest {
@@ -123,16 +122,6 @@ class OnboardingControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))
                     .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @Disabled("Requires Spring Security filter chain. Standalone MockMvc has no security. Re-enable with @SpringBootTest + TestSecurityConfig when JPA bootstrap blocker resolved.")
-        @DisplayName("should return 403 Forbidden when not authenticated")
-        void shouldReturnForbiddenWhenNotAuthenticated() throws Exception {
-            mockMvc.perform(post("/api/v1/accounts/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(validRequest)))
-                    .andExpect(status().isForbidden());
         }
 
         @Test

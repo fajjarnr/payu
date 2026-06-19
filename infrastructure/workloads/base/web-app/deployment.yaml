@@ -83,7 +83,7 @@ spec:
             memory: 256Mi
           limits:
             cpu: 500m
-            memory: 512Mi
+            memory: 1Gi
         env:
         - name: OIDC_ISSUER
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"

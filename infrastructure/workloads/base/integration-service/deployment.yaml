@@ -101,23 +101,23 @@ spec:
               name: db-secrets
               key: DB_PASSWORD
         - name: PAYU_CACHE_REDIS_HOST
-          value: payu-datagrid.payu-dev.svc.cluster.local
+          value: payu-cache.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT
-          value: '11222'
+          value: '6379'
         - name: PAYU_CACHE_REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: developer
+          value: ""
         - name: REDIS_HOST
-          value: payu-datagrid.payu-dev.svc.cluster.local
+          value: payu-cache.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: '11222'
+          value: '6379'
         - name: REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: SPRING_DATA_REDIS_HOST
-          value: payu-datagrid.payu-dev.svc.cluster.local
+          value: payu-cache.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
-          value: '11222'
+          value: '6379'
         - name: SPRING_DATA_REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
@@ -134,6 +134,16 @@ spec:
             configMapKeyRef:
               name: service-endpoints
               key: ARTEMIS_URL
+
+        - name: ARTEMIS_PORT
+          value: '61616'
+        - name: ARTEMIS_HOST
+          value: artemis
+        - name: ARTEMIS_USERNAME
+          value: admin
+        - name: ARTEMIS_PASSWORD
+          value: admin
+
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
