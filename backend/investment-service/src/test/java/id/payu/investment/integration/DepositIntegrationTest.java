@@ -19,8 +19,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for deposit purchase. Uses MockMvc to avoid
  * RestAssured HTTPBuilder NPE on Java 25 (per L-066).
+ *
+ * Status: still @Disabled. MockMvc conversion done (iter 35). Testcontainers
+ * needs Docker for PostgreSQL. Tried podman socket (per L-062):
+ *   - podman system service -t 0 unix:///tmp/podman.sock
+ *   - DOCKER_HOST=unix:///tmp/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn test
+ * Result: HikariCP "Could not find a valid Docker environment". Testcontainers
+ * Docker client doesn't accept podman socket in this env (Docker API parity
+ * gaps). Test will pass once real Docker available.
  */
-@Disabled("MockMvc conversion done (iter 35) but requires Testcontainers + Docker for PostgreSQL. Per L-062 pattern, podman socket can substitute. No podman installed in this env. Test will pass once Docker/podman available.")
+@Disabled("Requires Docker. Podman socket substitute doesn't work with Testcontainers 2.0.5. MockMvc conversion done (iter 35).")
 @SpringBootTest
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
