@@ -2286,4 +2286,122 @@ oc rollout status deployment/cms-service -n payu-dev --timeout=90s
 
 ---
 
-*Last Updated: June 19, 2026 — Added L-078 (Kustomize overlay image override).*
+*Last Updated: June 19, 2026 — Added L-078, L-079, L-080, L-081.*
+
+---
+
+## L-081: ShedLock Distributed Lock Pattern for `@Scheduled` Methods (2026-06-19)
+
+**Date**: 2026-06-19
+**Domain**: Spring Scheduling / Distributed Locking / High Availability
+**Context**: Iter 53 — added ShedLock (javacrumbs-shedlock 5.16.0) to 7 services covering 16 `@Scheduled` methods. Enables safe multi-replica deployment by ensuring only ONE replica executes a given scheduled method at a time.
+
+**Pattern (4 components per service)**:
+
+1. **Maven dependency** (managed in parent `backend/pom.xml`):
+   ```xml
+   <dependency>
+       <groupId>net.javacrumbs.shedlock</groupId>
+       <artifactId>shedlock-spring</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>net.javacrumbs.shedlock</groupId>
+       <artifactId>shedlock-provider-jdbc-template</artifactId>
+   </dependency>
+   ```
+
+2. **Lock provider bean** (`@Configuration` in `config/ShedLockConfig.java`):
+   ```java
+   @Bean
+   public LockProvider lockProvider(DataSource dataSource) {
+       return new JdbcTemplateLockProvider(
+           JdbcTemplateLockProvider.Configuration.builder()
+               .withJdbcTemplate(new JdbcTemplate(dataSource))
+               .usingDbTime()
+               .build()
+       );
+   }
+   ```
+
+3. **Global enable** on main application class:
+   ```java
+   @EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")
+   public class ServiceApplication { ... }
+   ```
+
+4. **Per-method annotation**:
+   ```java
+   @SchedulerLock(name = "ServiceName_methodName", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
+   @Scheduled(fixedRate = 60000)
+   public void processDueItems() { ... }
+   ```
+
+5. **Database table** (per-service Flyway migration `V_NN__add_shedlock_table.sql`):
+   ```sql
+   CREATE TABLE IF NOT EXISTS shedlock (
+       name       VARCHAR(64)  NOT NULL,
+       lock_until TIMESTAMP    NOT NULL,
+       locked_at  TIMESTAMP    NOT NULL,
+       locked_by  VARCHAR(255) NOT NULL,
+       PRIMARY KEY (name)
+   );
+   ```
+
+**How it works**:
+- `@SchedulerLock` is intercepted by ShedLock AOP advice
+- Before method execution, INSERT INTO shedlock (name, lock_until=now+lockAtMostFor, locked_at, locked_by)
+- If INSERT fails (duplicate key), another replica holds the lock → skip execution
+- If INSERT succeeds, execute method. On completion, lock auto-expires after `lockAtMostFor` (handles crashes)
+- `lockAtLeastFor` prevents clock-skew issues (ensures next replica can't immediately re-acquire)
+- The shedlock table uses DB time (`usingDbTime()`) to avoid clock-skew across pods
+
+**Why @Async + @Scheduled combo is dangerous (do NOT do this)**:
+- `@Async` runs method on a different thread → transaction context lost → `@Transactional` becomes no-op
+- For a single-replica deploy, `@Async` is unnecessary overhead (the method already runs on a Spring-managed scheduler thread)
+- For multi-replica, `@Async` makes things worse (each replica can start a separate async execution, defeating ShedLock's purpose)
+- Use either `@Scheduled` + `@SchedulerLock` OR `@Async` + manual lock, NOT both
+
+**Anti-patterns** (what NOT to do):
+- ❌ `@Async` + `@Scheduled` on same method → races, lost updates
+- ❌ `@Scheduled` without `@SchedulerLock` on multi-replica deploy → duplicate executions
+- ❌ Using in-memory `synchronized` blocks → only protects within single JVM, useless across pods
+- ❌ Redis-based locks with TTL > scheduled interval → clock-skew issues
+- ❌ Manual `stringRedisTemplate.setIfAbsent(lockKey, lockValue, 55s)` patterns (replaced in `ScheduledTransferScheduler` per iter 53) → pollutes codebase with custom lock logic
+
+**Bonus discovery**: `account-service` was MISSING `@EnableScheduling` entirely. `BudgetService.resetBudgets` had `@Scheduled(cron = "0 0 0 * * ?")` but the annotation was being ignored. After adding `@EnableScheduling` + `@EnableSchedulerLock`, the budget reset actually started running. Always verify your scheduler is actually firing (check pod logs for "Started ..." or "Scheduled ..." messages).
+
+**Live verification pattern** (post-deploy):
+```bash
+oc port-forward svc/payu-postgres 5432:5432 -n payu-dev &
+podman run --rm -i --network host docker.io/library/postgres:16-alpine \
+  sh -c "PGPASSWORD=payu-dev-password psql -h 127.0.0.1 -p 5432 -U payu -d payu_partner -c 'SELECT name FROM shedlock LIMIT 5'"
+# Output (iter 53): ApiKeyService_expireRotatedKeys
+```
+
+**Coverage by service (16 schedulers, 7 services, iter 53)**:
+| Service | Schedulers | Image |
+|---|---|---|
+| transaction | 3 (PaymentExpiry, ScheduledTransfer, Archival) | 1.8.67 |
+| billing | 2 (Subscription charge, Trial expiry) | 1.8.64 |
+| wallet | 2 (Escrow, Settlement) | 1.8.65 |
+| partner | 5 (Webhook retry, cleanup, Merchant, SnapBi, ApiKey) | 1.8.65 |
+| cms | 2 (Content activate, archive) | 1.8.66 |
+| fx | 2 (Rate update, publish) | 1.8.63 |
+| account | 1 (Budget reset) | 1.8.65 |
+
+**Affected iters**:
+- Iter 50 originally deferred ShedLock as "low impact (1-replica deploys)". Per user "kerjakan semua" directive, iter 53 implemented it. Future HA scaling to >1 replica is now safe.
+
+**Files changed (iter 53)**:
+- `backend/pom.xml` (added shedlock-spring + shedlock-provider-jdbc-template to dependencyManagement)
+- 7 services × 2 files (pom.xml + ShedLockConfig.java) = 14 files
+- 7 services × N schedulers = 16 @SchedulerLock annotations added
+- 7 Flyway migrations (V3-V102 across services)
+- All 7 main classes got `@EnableSchedulerLock`
+- 4 service main classes also got `@EnableScheduling` (billing, wallet, partner, cms, fx — was missing)
+
+**Cluster state at end of iter 53**: 46/46 pods Running, ShedLock active and verified via `shedlock` table entries.
+
+---
+
+*Last Updated: June 19, 2026 — Added L-081 (ShedLock distributed lock pattern).*

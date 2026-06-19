@@ -100,6 +100,94 @@ private Long version;
 
 **Cluster state at end of iter 52**: 46/46 pods Running, all services healthy. 5 key services (wallet, transaction, billing, lending, investment) confirmed HTTP 200 from `/actuator/health`.
 
+### Iteration 50: BUG-WEBHOOK-ASYNC-001 + BUG-STMT-ASYNC-001 — @Async + @Transactional No-Op Sweep (2026-06-19)
+
+Closed two latent bugs where `@Transactional` was paired with `@Async`, making `@Transactional` a silent no-op (per BUG-BE-049 lesson — Spring's `@Transactional` proxy is only applied at the call site, not on the async thread, so transaction context is not propagated). Each `repository.save()` runs in its own implicit transaction; multi-write methods can leave partial state on failure.
+
+**Bugs fixed**:
+1. **`partner-service.WebhookDispatcherService.dispatch(eventType, eventId, payload)`** — had `@Async + @Transactional`. The for-loop iterates over `WebhookSubscriptionEntity` list and saves `WebhookDeliveryEntity` for each. If a save fails mid-loop, earlier deliveries are NOT rolled back (inconsistent partial state).
+2. **`statement-service.StatementService.regenerateStatement(UUID)`** — same pattern. (Note: `generateStatement` was already fixed per BUG-BE-049; this is the matching `regenerateStatement` admin method.)
+
+**Fix**: Removed `@Transactional` from both methods. Each `repository.save()` now runs in its own implicit transaction (auto-commit), matching Spring's default behavior. The 2-3 ops per call are independent and don't need cross-write atomicity at the SQL level (compensation can be added if cross-call atomicity is required later).
+
+**TDD approach** (per ArchUnit Java 25 limitation):
+- Wrote failing test using **Java reflection** (ArchUnit 1.2.1 can't parse Java 25 bytecode — `importPackages()` returns empty due to ASM incompatibility)
+- Test scans declared methods of `WebhookDispatcherService` / `StatementService`, fails if any method has both `@Async` and `@Transactional`
+- Initially the test failed (Red), confirming both bugs; after removing `@Transactional`, test passes (Green)
+- Test placed in each service's `ArchitectureTest` for regression guard
+
+**Deployed**:
+- `partner-service:1.8.63` (was 1.8.62)
+- `statement-service:1.8.64` (was 1.8.63)
+- Bumped BOTH `infrastructure/workloads/base/<svc>/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (L-078 lesson)
+- Applied via `oc apply -k infrastructure/workloads/overlays/payu-dev/`
+- Verified `/actuator/health` returns `UP` for both via port-forward
+
+**Lesson captured (L-079)**: ArchUnit 1.2.1 + Java 25 = silent empty import. `importPackages()` and `@AnalyzeClasses` return empty collections (118 partner-service .class files all fail import). Workaround: use `Class.forName()` + `getDeclaredMethods()` + `isAnnotationPresent()` for annotation-based rules. Mark with `// CALIBRATION` comment for future ArchUnit upgrade.
+
+### Iteration 53: ShedLock Distributed Lock for 16 `@Scheduled` Methods Across 7 Services (2026-06-19)
+
+**Background**: Closed ShedLock ticket. 20 `@Scheduled` methods across the platform could double-execute on multi-replica deployment (financial impact: duplicate charges, duplicate disbursements, duplicate FX rate updates). Currently most services run 1 replica, but ShedLock enables safe HA scaling.
+
+**Coverage by service** (16 schedulers locked):
+| Service | Schedulers | Image | Schedules |
+|---|---|---|---|
+| transaction | 3 | 1.8.67 | PaymentExpiry (5m), ScheduledTransfer (1m), Archival (cron 2am) |
+| billing | 2 | 1.8.64 | Subscription charge (5m), Trial expiry (10m) |
+| wallet | 2 | 1.8.65 | Escrow expiry (5m), Daily settlement (cron 2am) |
+| partner | 5 | 1.8.65 | Webhook retry (30s), Webhook cleanup (cron 3am), Merchant QR expiry (2m), SnapBi token cleanup (1m), ApiKey rotation (1h) |
+| cms | 2 | 1.8.66 | Content activate (cron top of hour), Content archive (cron :30) |
+| fx | 2 | 1.8.63 | Rate update (cron every 15m), Rate publish (1m) |
+| account | 1 | 1.8.65 | Budget reset (cron midnight) |
+
+**Bonus fix**: `account-service` was missing `@EnableScheduling` — its BudgetService.resetBudgets was not running at all. Fixed in iter 53.
+
+**Cleanup**: `ScheduledTransferScheduler` replaced manual Redis-based lock with ShedLock (removed `StringRedisTemplate` dependency). Cleaner code, no Redis dependency for locking.
+
+**Per-method annotation**:
+```java
+@SchedulerLock(name = "ClassName_methodName", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
+@Scheduled(fixedRate = 60000)
+public void processDueScheduledTransfers() { ... }
+```
+
+**Configuration**: `@EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")` on each main class. `ShedLockConfig` provides `LockProvider` bean using JdbcTemplate against the service's own DB.
+
+**Per-service migration**: New `V_NN__add_shedlock_table.sql` Flyway migration creates the `shedlock` table:
+```sql
+CREATE TABLE IF NOT EXISTS shedlock (
+    name       VARCHAR(64)  NOT NULL,
+    lock_until TIMESTAMP    NOT NULL,
+    locked_at  TIMESTAMP    NOT NULL,
+    locked_by  VARCHAR(255) NOT NULL,
+    PRIMARY KEY (name)
+);
+```
+
+**Production hiccup (L-080 again)**: Services with orphaned DBs (no `flyway_schema_history` table) needed manual `psql` migration. All 7 services now have `shedlock` table. Manual psql:
+```bash
+oc port-forward svc/payu-postgres 5432:5432 -n payu-dev &
+podman run --rm -i --network host docker.io/library/postgres:16-alpine \
+  sh -c "PGPASSWORD=payu-dev-password psql -h 127.0.0.1 -p 5432 -U payu -d payu_<service> -f -" \
+  < backend/<service>-service/src/main/resources/db/migration/V_NN__add_shedlock_table.sql
+```
+
+**Live cluster verification** (after deploy):
+- `payu_partner.shedlock`: `ApiKeyService_expireRotatedKeys` row present (lock acquired, scheduler ran)
+- `payu_transaction.shedlock`: `ScheduledTransferScheduler_processDueScheduledTransfers` row present
+- Other 5 services: empty (schedulers not yet at their fire time)
+
+**Tests**: All 7 services pass tests locally. Test summary:
+- transaction: 121/121 (unchanged)
+- billing: 88/88 (1 skip)
+- wallet: 2/2
+- partner: 233/233
+- cms: 100/100 (25 skip)
+- fx: 54/54
+- account: 120/120 (4 skip)
+
+**Cluster state at end of iter 53**: 46/46 pods Running, all services healthy, ShedLock active and verified.
+
 ### Iteration 51: BUG-STMT-PATH-001 + HMAC Callbacks + @Version Optimistic Locking (2026-06-19)
 
 Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-locking additions.
@@ -142,38 +230,6 @@ Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-lock
 **Net deployed in iter 51**:
 - `transaction-service:1.8.64 → 1.8.65` (HMAC + @Version)
 - `statement-service:1.8.64 → 1.8.65` (BUG-STMT-PATH-001)
-
-### Iteration 50: BUG-WEBHOOK-ASYNC-001 + BUG-STMT-ASYNC-001 — @Async + @Transactional No-Op Sweep (2026-06-19)
-
-Closed two latent bugs where `@Transactional` was paired with `@Async`, making `@Transactional` a silent no-op (per BUG-BE-049 lesson — Spring's `@Transactional` proxy is only applied at the call site, not on the async thread, so transaction context is not propagated). Each `repository.save()` runs in its own implicit transaction; multi-write methods can leave partial state on failure.
-
-**Bugs fixed**:
-1. **`partner-service.WebhookDispatcherService.dispatch(eventType, eventId, payload)`** — had `@Async + @Transactional`. The for-loop iterates over `WebhookSubscriptionEntity` list and saves `WebhookDeliveryEntity` for each. If a save fails mid-loop, earlier deliveries are NOT rolled back (inconsistent partial state).
-2. **`statement-service.StatementService.regenerateStatement(UUID)`** — same pattern. (Note: `generateStatement` was already fixed per BUG-BE-049; this is the matching `regenerateStatement` admin method.)
-
-**Fix**: Removed `@Transactional` from both methods. Each `repository.save()` now runs in its own implicit transaction (auto-commit), matching Spring's default behavior. The 2-3 ops per call are independent and don't need cross-write atomicity at the SQL level (compensation can be added if cross-call atomicity is required later).
-
-**TDD approach** (per ArchUnit Java 25 limitation):
-- Wrote failing test using **Java reflection** (ArchUnit 1.2.1 can't parse Java 25 bytecode — `importPackages()` returns empty due to ASM incompatibility)
-- Test scans declared methods of `WebhookDispatcherService` / `StatementService`, fails if any method has both `@Async` and `@Transactional`
-- Initially the test failed (Red), confirming both bugs; after removing `@Transactional`, test passes (Green)
-- Test placed in each service's `ArchitectureTest` for regression guard
-
-**Deployed**:
-- `partner-service:1.8.63` (was 1.8.62)
-- `statement-service:1.8.64` (was 1.8.63)
-- Bumped BOTH `infrastructure/workloads/base/<svc>/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (L-078 lesson)
-- Applied via `oc apply -k infrastructure/workloads/overlays/payu-dev/`
-- Verified `/actuator/health` returns `UP` for both via port-forward
-
-**Lesson captured (L-079)**: ArchUnit 1.2.1 + Java 25 = silent empty import. `importPackages()` and `@AnalyzeClasses` return empty collections (118 partner-service .class files all fail import). Workaround: use `Class.forName()` + `getDeclaredMethods()` + `isAnnotationPresent()` for annotation-based rules. Mark with `// CALIBRATION` comment for future ArchUnit upgrade.
-
-**Affected services (other candidates NOT yet swept)**:
-- ✅ `statement-service.StatementService.generateStatement` (BUG-BE-049 already fixed in prior iter)
-- ✅ `statement-service.StatementService.regenerateStatement` (this iter)
-- ✅ `partner-service.WebhookDispatcherService.dispatch` (this iter)
-- ⏳ `account-service.NikVerificationService.verifyNikFallback` (returns `CompletableFuture` — `@Async` was removed in BUG-BE-049 fix; verify still clean)
-- ⏳ `investment-service.InvestmentApplicationService.buyDeposit/buyMutualFund` (`@Async` was removed in BUG-LOGIC-006 fix; `@Transactional` + `CompletableFuture` return type — needs separate check whether transaction still applies for CompletableFuture return path)
 
 ### Iter 48 (BUG-NPE-002)
 
