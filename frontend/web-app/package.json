@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:a11y": "vitest --run --reporter=verbose src/__tests__/components/dashboard",
-    "a11y:audit": "tsx scripts/a11y-audit.ts"
+    "a11y:audit": "tsx scripts/a11y-audit.ts",
+    "check:i18n": "node scripts/check-i18n-coverage.mjs"
   },
   "sideEffects": [
     "**/*.css"
