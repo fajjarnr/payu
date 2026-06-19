@@ -2286,7 +2286,7 @@ oc rollout status deployment/cms-service -n payu-dev --timeout=90s
 
 ---
 
-*Last Updated: June 19, 2026 — Added L-078, L-079, L-080, L-081.*
+*Last Updated: June 19, 2026 — Added L-082 (RFC 9457), L-083 (Ledger Invariant), L-084 (Pragmatic Hexagonal).*
 
 ---
 
@@ -2404,7 +2404,7 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 
 ---
 
-*Last Updated: June 19, 2026 — Added L-081 (ShedLock distributed lock pattern).*
+*Last Updated: June 19, 2026 — Added L-082 (RFC 9457), L-083 (Ledger Invariant), L-084 (Pragmatic Hexagonal).*
 ### L-082 — RFC 9457 Problem Details pattern (2026-06-19, iter 56)
 
 - Use `ProblemDetail` DTO with `application/problem+json` media type
