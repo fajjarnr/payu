@@ -5,21 +5,21 @@ test('capture landing page and dashboard', async ({ authPage: page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/landing-page.png', fullPage: true });
-    console.log('Landing page screenshot saved.');
+    console.warn('Landing page screenshot saved.');
 
     // 2. Check Dashboard with authentication
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/dashboard-ui.png', fullPage: true });
-    console.log('Dashboard screenshot saved.');
+    console.warn('Dashboard screenshot saved.');
 
     // Check for Dashboard elements
     const welcomeText = page.getByText(/Selamat Datang|Welcome/);
 
     if (await welcomeText.isVisible().catch(() => false)) {
-        console.log('UI Verification: Dashboard is visible.');
+        console.warn('UI Verification: Dashboard is visible.');
     } else {
-        console.log('UI Verification: Dashboard NOT visible. Check if login logic changed.');
+        console.warn('UI Verification: Dashboard NOT visible. Check if login logic changed.');
     }
 });
 

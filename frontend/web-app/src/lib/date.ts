@@ -411,7 +411,7 @@ export function formatDateRange(
     start.getMonth() === end.getMonth() &&
     start.getFullYear() === end.getFullYear()
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _dayFormat = format === 'short' ? 'd MMM' : 'd MMMM';
     return `${start.toLocaleDateString(locale, { day: 'numeric', month: format === 'short' ? 'short' : 'long' })} - ${end.toLocaleDateString(locale, { day: 'numeric', month: format === 'short' ? 'short' : 'long', year: 'numeric' })}`;
   }

@@ -411,7 +411,7 @@ describe('currency.ts - Indonesian Locale Specifics', () => {
 
   it('should handle different locales', () => {
     const idFormat = formatCurrency(1000000, { locale: 'id-ID' });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _usFormat = formatCurrency(1000000, { locale: 'en-US' });
     expect(idFormat).toContain('.');
   });

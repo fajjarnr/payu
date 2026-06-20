@@ -35,14 +35,14 @@ interface AxeResult {
   }>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const _typeCheck: AxeResult = { violations: [], passes: [] };
 
 const OUTPUT_DIR = path.join(process.cwd(), '.a11y-results');
 
-console.log('🔍 PayU Accessibility Audit');
-console.log('=' .repeat(50));
-console.log('');
+console.warn('🔍 PayU Accessibility Audit');
+console.warn('=' .repeat(50));
+console.warn('');
 
 // Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
@@ -56,11 +56,11 @@ if (!fs.existsSync(buildDir)) {
   process.exit(1);
 }
 
-console.log('✅ Build found');
+console.warn('✅ Build found');
 
 // Run axe-core audit using Playwright
-console.log('📊 Running accessibility tests...');
-console.log('');
+console.warn('📊 Running accessibility tests...');
+console.warn('');
 
 try {
   // Run tests with coverage
@@ -69,22 +69,22 @@ try {
     stdio: 'inherit',
   });
 
-  console.log('');
-  console.log('✅ Accessibility tests completed');
-  console.log(`📁 Results saved to: ${OUTPUT_DIR}`);
+  console.warn('');
+  console.warn('✅ Accessibility tests completed');
+  console.warn(`📁 Results saved to: ${OUTPUT_DIR}`);
 
   // Summary
-  console.log('');
-  console.log('Summary:');
-  console.log('-' .repeat(50));
-  console.log('📋 Key areas checked:');
-  console.log('  ✓ Color contrast (WCAG AA: 4.5:1 for normal text)');
-  console.log('  ✓ ARIA labels and roles');
-  console.log('  ✓ Keyboard navigation');
-  console.log('  ✓ Screen reader compatibility');
-  console.log('  ✓ Form accessibility');
-  console.log('  ✓ Focus management');
-  console.log('');
+  console.warn('');
+  console.warn('Summary:');
+  console.warn('-' .repeat(50));
+  console.warn('📋 Key areas checked:');
+  console.warn('  ✓ Color contrast (WCAG AA: 4.5:1 for normal text)');
+  console.warn('  ✓ ARIA labels and roles');
+  console.warn('  ✓ Keyboard navigation');
+  console.warn('  ✓ Screen reader compatibility');
+  console.warn('  ✓ Form accessibility');
+  console.warn('  ✓ Focus management');
+  console.warn('');
 
 } catch {
   console.error('❌ Accessibility audit failed');
@@ -94,9 +94,9 @@ try {
 }
 
 // WCAG AA Compliance Checklist
-console.log('WCAG 2.1 Level AA Compliance Checklist:');
-console.log('-' .repeat(50));
-console.log('');
+console.warn('WCAG 2.1 Level AA Compliance Checklist:');
+console.warn('-' .repeat(50));
+console.warn('');
 
 const checklist = [
   { category: 'Perceivable', items: [
@@ -123,18 +123,18 @@ const checklist = [
 ];
 
 checklist.forEach(({ category, items }) => {
-  console.log(`${category}:`);
+  console.warn(`${category}:`);
   items.forEach((item) => {
-    console.log(`  ${item}`);
+    console.warn(`  ${item}`);
   });
-  console.log('');
+  console.warn('');
 });
 
-console.log('');
-console.log('🎯 Next Steps:');
-console.log('1. Review the generated reports in .a11y-results/');
-console.log('2. Fix any critical or serious violations');
-console.log('3. Run manual testing with screen readers (NVDA, JAWS, VoiceOver)');
-console.log('4. Test keyboard navigation on all interactive elements');
-console.log('');
-console.log('✨ Remember: Accessibility is a continuous process!');
+console.warn('');
+console.warn('🎯 Next Steps:');
+console.warn('1. Review the generated reports in .a11y-results/');
+console.warn('2. Fix any critical or serious violations');
+console.warn('3. Run manual testing with screen readers (NVDA, JAWS, VoiceOver)');
+console.warn('4. Test keyboard navigation on all interactive elements');
+console.warn('');
+console.warn('✨ Remember: Accessibility is a continuous process!');

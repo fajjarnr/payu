@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from 'lucide-react';
 
 export default function QRISPage() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [_isScanning, _setIsScanning] = useState(false);
 
   return (

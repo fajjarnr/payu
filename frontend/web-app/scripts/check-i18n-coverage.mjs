@@ -72,13 +72,13 @@ function main() {
   const enKeys = flatten(en);
   const idKeys = flatten(id);
 
-  console.log(`en.json: ${enKeys.size} keys`);
-  console.log(`id.json: ${idKeys.size} keys`);
+  console.warn(`en.json: ${enKeys.size} keys`);
+  console.warn(`id.json: ${idKeys.size} keys`);
 
   const { ok, missing, extra } = checkParity(enKeys, idKeys);
 
   if (ok) {
-    console.log('OK: key parity maintained across locales');
+    console.warn('OK: key parity maintained across locales');
     process.exit(0);
   }
 

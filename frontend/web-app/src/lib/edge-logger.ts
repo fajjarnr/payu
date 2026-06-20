@@ -28,7 +28,7 @@ function format(
 
 export const edgeLogger = {
   info(message: string, meta?: Record<string, unknown>) {
-    console.log(format("info", message, meta));
+    console.warn(format("info", message, meta));
   },
   warn(message: string, meta?: Record<string, unknown>) {
     console.warn(format("warn", message, meta));
@@ -38,7 +38,7 @@ export const edgeLogger = {
   },
   debug(message: string, meta?: Record<string, unknown>) {
     if (process.env.LOG_LEVEL === "debug") {
-      console.debug(format("debug", message, meta));
+      console.warn(format("debug", message, meta));
     }
   },
 };

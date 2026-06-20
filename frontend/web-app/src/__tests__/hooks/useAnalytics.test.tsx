@@ -70,7 +70,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should set isConnected to true when WebSocket opens', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -91,7 +91,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should set isConnected to false when WebSocket closes', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -119,7 +119,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should update analytics data when BALANCE_UPDATE message is received', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -156,7 +156,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should not update analytics for non-BALANCE_UPDATE messages', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -190,7 +190,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should handle multiple message updates', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -278,7 +278,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should handle connection errors gracefully', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
@@ -298,7 +298,7 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should update connection state correctly through lifecycle', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let capturedOptions: unknown = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {

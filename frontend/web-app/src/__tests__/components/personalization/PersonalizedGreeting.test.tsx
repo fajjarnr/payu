@@ -65,7 +65,7 @@ const createWrapper = () => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  // eslint-disable-next-line react/display-name
+   
   Wrapper.displayName = 'QueryClientWrapper';
   return Wrapper;
 };

@@ -24,7 +24,7 @@ const createWrapper = () => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  // eslint-disable-next-line react/display-name
+   
   Wrapper.displayName = 'QueryClientWrapper';
   return Wrapper;
 };
@@ -45,7 +45,7 @@ describe('Customer Segmentation Hooks', () => {
     });
 
     it('should return VIP status correctly', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const _mockData = {
         memberships: [
           {

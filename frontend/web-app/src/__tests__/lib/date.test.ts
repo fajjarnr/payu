@@ -550,7 +550,7 @@ describe('date.ts - Indonesian Locale Specifics', () => {
   });
 
   it('should use correct Indonesian day names', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const _days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
     for (let i = 0; i < 7; i++) {

@@ -36,7 +36,7 @@ export default function FinancialHealthScore({
   score,
   previousScore,
   factors,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   currency: _currency = 'Rp',
   className = '',
   isLoading = false,
