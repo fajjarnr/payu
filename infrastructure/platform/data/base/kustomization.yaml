@@ -5,13 +5,13 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/data/base/
 
 resources:
-  - postgres-statefulset.yaml  # ACTIVE: single-instance PostgreSQL via StatefulSet
+  - postgres-statefulset.yaml  # ACTIVE: 2-replica PostgreSQL (1 master + 1 replica, native streaming replication, iter 59)
   - redis-statefulset.yaml     # ACTIVE: 2-replica Redis cache
   - kafka-amqstreams.yaml      # ACTIVE: 3-broker Kafka (payu-kafka)
   - network-policy-egress.yaml # allow-all-egress
   - kafka-console.yaml         # AMQ Streams console UI
-  # DISABLED (READY-076 HA migration pending):
-  # - postgres-cluster.yaml  # Crunchy HA — images don't exist in registry (ubi8-2.50.1, etc)
+  # SUPERSEDED (READY-027 → READY-076):
+  # - postgres-cluster.yaml  # Crunchy HA spec kept as future-migration reference only
   # - kyverno-exception-kafka.yaml
   # - kyverno-exception-kafka-deployments.yaml
   # kafka-config is managed by workload overlays per environment
