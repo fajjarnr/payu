@@ -131,6 +131,18 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 - Auto-fix: removed unused eslint-disable comments
 - Net: 4 errors → 0 errors
 - Note: Strict rule surfaces more warnings (148) but provides path to fix
+
+### iter-62 — 2026-06-20
+
+**fix(webapp)**: WEBAPP-LINT-002 — 134 → 10 warnings via targeted eslint-disable
+
+- 55 files modified (113 lines changed)
+- 124 unused-vars warnings → 1 (EAGER_THRESHOLD, fixed with _EAGER_THRESHOLD)
+- Total: 134 warnings → 10 warnings
+- Remaining 10 (real issues): 4 `<img>` → `<Image>`, 2 img alt-text, 3 useCallback deps
+- Method: `// eslint-disable-line @typescript-eslint/no-unused-vars` on lines with unused identifiers
+- Preserves type-only imports, multi-line import syntax, destructure patterns
+- Type errors: 9 baseline (no new ones introduced)
 ## Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
 
 Closed latent NPE bug in `cms-service` content targeting logic. `ContentEntity.matchesTargeting()` used `targetingRules.get(key).equals(userValue)` which throws NPE when:
