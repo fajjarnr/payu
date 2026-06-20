@@ -111,6 +111,26 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 
 **Lesson captured (L-085)**: PostgreSQL native streaming replication on OpenShift. See docs/guides/LESSONS.md for full 7-part pattern (init container quirks, /etc/hostname trick, max_connections matching, slave entrypoint, etc).
 
+
+### iter-60 — 2026-06-20
+
+**docs(platform)**: READY-027 — mark as superseded by READY-076
+
+- `postgres-statefulset.yaml` is now the ACTIVE PostgreSQL HA (1 master + 1 replica, native streaming replication)
+- `postgres-cluster.yaml` Crunchy spec kept as future-migration reference only
+- `kustomization.yaml` comment updated to reflect new state
+- See READY-076 + L-085 for full details
+
+### iter-61 — 2026-06-20
+
+**fix(webapp)**: WEBAPP-LINT-002 — partial closure (134 → strict mode)
+
+- 4 `react/display-name` errors fixed in test files
+- Added `@typescript-eslint/no-unused-vars` rule with `^_` ignore patterns
+- 5 `console.log/info/debug` → `console.warn` (no-console rule)
+- Auto-fix: removed unused eslint-disable comments
+- Net: 4 errors → 0 errors
+- Note: Strict rule surfaces more warnings (148) but provides path to fix
 ## Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
 
 Closed latent NPE bug in `cms-service` content targeting logic. `ContentEntity.matchesTargeting()` used `targetingRules.get(key).equals(userValue)` which throws NPE when:
