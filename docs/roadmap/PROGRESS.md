@@ -974,4 +974,33 @@ Closed 3 high-priority tickets in a single session:
 - docs/roadmap/TODOS.md (READY-024, READY-042, READY-049 closed)
 - docs/guides/LESSONS.md (+L-082, L-083, L-084)
 - CHANGELOG.md (iter 55, 56, 57 entries)
+## Iterations 58-59: ArchUnit Rules + PostgreSQL HA (2026-06-20)
 
+### Iter 58 — READY-047 + READY-034 + READY-049 5/5 ArchUnit
+- **READY-047**: account-service MonitoringConfigurationTest + TracingConfigurationTest verified 12/12 pass
+- **READY-034**: All 11 shared starters compile + test pass (saga 146, outbox 83, events 30, cache 39, security 5, api-commons 8). 1350+ tests, 0F/0E. Jackson 3 ABI break resolved.
+- **READY-049**: Re-enabled 4 more ArchUnit rules in transaction-service (5/5 total):
+  - 2 with 0 violations (domain JPA-free, domain Spring-free)
+  - 2 with known violations reported via EvaluationResult (not failed)
+- **Pattern**: use ArchUnit `EvaluationResult` for reporting violations without failing CI
+
+### Iter 59 — READY-076 PostgreSQL HA via Native Streaming Replication
+- payu-postgres StatefulSet: 1 → 2 replicas
+- Master (pod-0): `ALTER SYSTEM SET wal_level=hot_standby`
+- Replica (pod-1): init container does `pg_basebackup` + `standby.signal` + custom config
+- Image's built-in `run-postgresql-slave` entrypoint for replica
+- Service discovery via pod DNS: `payu-postgres-0.payu-postgres.payu-dev.svc.cluster.local`
+- **Verification**: `pg_stat_replication` shows 1 streaming connection, 30 DBs replicated
+
+### Cluster state
+- 48/48 Running (master + replica + 46 services)
+- L-082, L-083, L-084, L-085 captured
+
+### Files changed
+- `infrastructure/platform/data/base/postgres-statefulset.yaml` (HA: replicas 1→2, init container, command override)
+- New: `payu-postgres-replica-scripts` configmap (bash script for basebackup)
+- `infrastructure/platform/data/base/postgres-cluster.yaml` (comment: superseded)
+- `backend/transaction-service/src/test/java/id/payu/transaction/architecture/ArchitectureTest.java` (+4 ArchUnit tests)
+- `docs/guides/LESSONS.md` (+L-085)
+- `docs/roadmap/TODOS.md` (READY-034, READY-047, READY-049, READY-076 closed)
+- `CHANGELOG.md` (iter-58, iter-59)

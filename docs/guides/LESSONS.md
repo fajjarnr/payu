@@ -2286,7 +2286,7 @@ oc rollout status deployment/cms-service -n payu-dev --timeout=90s
 
 ---
 
-*Last Updated: June 19, 2026 — Added L-082 (RFC 9457), L-083 (Ledger Invariant), L-084 (Pragmatic Hexagonal).*
+*Last Updated: June 20, 2026 — Added L-085 (PostgreSQL Native Streaming Replication).*
 
 ---
 
@@ -2404,7 +2404,7 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 
 ---
 
-*Last Updated: June 19, 2026 — Added L-082 (RFC 9457), L-083 (Ledger Invariant), L-084 (Pragmatic Hexagonal).*
+*Last Updated: June 20, 2026 — Added L-085 (PostgreSQL Native Streaming Replication).*
 ### L-082 — RFC 9457 Problem Details pattern (2026-06-19, iter 56)
 
 - Use `ProblemDetail` DTO with `application/problem+json` media type
@@ -2441,3 +2441,85 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 - ArchUnit calibration: 1 of 5 rules re-enabled (domain JPA-free) is a 100% pass
 - Test pattern: `domainShouldNotDependOnJpa` rule with `resideInAnyPackage("jakarta.persistence..", "org.hibernate..")` as the prohibited set
 - Use `ClassFileImporter` + `@BeforeAll` for `@Test` methods that need to test rules (since `@ArchTest` static fields don't expose the imported classes to instance methods)
+### L-085: PostgreSQL Native Streaming Replication on OpenShift RHEL9 postgresql-16 (2026-06-20)
+
+**Domain**: Platform / OpenShift / PostgreSQL HA / Streaming Replication
+
+**Context**: Closed READY-076. Crunchy Postgres operator unavailable (image tags don't exist in payu-dev registry). Implemented native streaming replication using the same `registry.redhat.io/rhel9/postgresql-16:latest` image.
+
+**Architecture (1 master + 1 replica, async)**:
+```
+payu-postgres-0 (master, RW)  ←→  payu-postgres-1 (replica, RO)
+        ↓                              ↑
+  ALTER SYSTEM                  pg_basebackup from master
+  wal_level=hot_standby         standby.signal
+  max_wal_senders=10            postgresql.auto.conf
+```
+
+**Implementation (6 components)**:
+
+1. **Replicator user** (created manually on master):
+   ```sql
+   CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'payu-replicator-password';
+   ```
+
+2. **Master config** (ALTER SYSTEM on existing pod-0):
+   ```sql
+   ALTER SYSTEM SET wal_level = 'hot_standby';
+   ALTER SYSTEM SET max_wal_senders = '10';
+   ALTER SYSTEM SET wal_keep_size = '6400MB';
+   ALTER SYSTEM SET hot_standby = 'on';
+   ```
+
+3. **StatefulSet bumped to 2 replicas**: `replicas: 1` → `replicas: 2` in `postgres-statefulset.yaml`.
+
+4. **Init container `replica-setup`**: per-pod script via `payu-postgres-replica-scripts` configmap. Detects ordinal via `/etc/hostname`. For pod-N (N>0):
+   - `rm -rf /var/lib/pgsql/data/userdata/*` (wipes any failed initdb leftovers)
+   - `pg_basebackup -h payu-postgres-0.payu-postgres.payu-dev.svc.cluster.local -D /var/lib/pgsql/data/userdata -U replicator -X stream -c fast`
+   - `touch /var/lib/pgsql/data/userdata/standby.signal`
+   - Write `postgresql.auto.conf` with `primary_conninfo`
+   - `sed` postgresql.conf include path → `/var/lib/pgsql/data/userdata/openshift-custom-postgresql.conf` (replica can write to data dir)
+   - Write `openshift-custom-postgresql.conf` with `max_connections=500` (MUST match master)
+
+5. **Main container command override** (per-pod):
+   ```bash
+   if [ "$(cat /etc/hostname | sed 's/.*-//')" = "0" ]; then
+     exec /usr/bin/run-postgresql
+   else
+     export POSTGRESQL_MASTER_IP=payu-postgres-0.payu-postgres.${POD_NAMESPACE}.svc.cluster.local
+     exec /usr/bin/run-postgresql-slave
+   fi
+   ```
+   Uses image's built-in slave entrypoint which does its own `pg_basebackup`. The init container pre-populates data + config to make slave entrypoint work cleanly.
+
+6. **Service discovery**: `payu-postgres` Service is ClusterIP, but K8s adds pod DNS at `payu-postgres-N.payu-postgres.<ns>.svc.cluster.local` for StatefulSet pods. Used by replica to reach master.
+
+**Lesson (7 parts)**:
+
+1. **Crunchy operator needs image registry access**: The CRD references `crunchy-pgbackrest:ubi8-2.50.1` + `crunchy-pgbouncer:ubi8-1.22-1`. If unavailable, fall back to native streaming replication using the same `registry.redhat.io/rhel9/postgresql-16:latest` image. No new image pulls needed.
+
+2. **Init container volume mounts ≠ main container volume mounts**: The init container mounts `pgsql-tmp` at `/var/lib/pgsql` ONLY if explicitly declared. Writing to `/var/lib/pgsql/openshift-custom-postgresql.conf` from init container writes to the init container's root FS (lost on pod restart) UNLESS the volume is mounted. Solution: rewrite the include path in postgresql.conf to point to a file inside the data PVC (writable).
+
+3. **`hostname` command not in minimal UBI images**: The OpenShift RHEL9 postgresql-16 image lacks `/bin/hostname`. Use `cat /etc/hostname` instead. The K8s downward API `metadata.name` IS accessible via the env var `${HOSTNAME}` in some images but maps to the node name (not pod name) in the RHEL9 postgresql image. Use `/etc/hostname` for pod name.
+
+4. **`max_connections` must match master**: PostgreSQL refuses to start as replica if `max_connections` < master's value. Error: `recovery aborted because of insufficient parameter settings`. Set `max_connections=500` (matching master) in the replica's `openshift-custom-postgresql.conf`.
+
+5. **Image's built-in slave entrypoint** (`/usr/bin/run-postgresql-slave`) does its own `pg_basebackup` + sets up `standby.signal` + `postgresql.auto.conf`. The init container pre-populates these to avoid double basebackup. Both work, but the init container is faster (~5s vs ~30s) and gives more control.
+
+6. **The `run-postgresql` entrypoint sources `set_passwords.sh` which does `ALTER ROLE` — fails in read-only transaction on replicas**: That's why command override is needed (slave entrypoint skips these).
+
+7. **OpenShift assigns random UIDs to pods** (e.g., 1000770000): init container runs as this UID. Files created by init container (e.g., basebackup data) inherit this UID. Main container also runs as same UID → no permission issues. But `chmod` on files owned by other UIDs (e.g., 26 = postgres in image) fails with "Operation not permitted" — remove chmod calls.
+
+**Verification**:
+- `pg_stat_replication` on master: `application_name=walreceiver state=streaming sync_state=async` (1 replica connected at 10.130.2.60)
+- `pg_is_in_recovery()` on pod-1: `t` (replica mode)
+- 30 DBs replicated successfully
+- Cluster 48/48 Running
+
+**Files changed**:
+- `infrastructure/platform/data/base/postgres-statefulset.yaml` (replicas 1→2, init container, command override, env vars)
+- `infrastructure/platform/data/base/postgres-cluster.yaml` (updated comment: superseded by postgres-statefulset.yaml)
+- New: `payu-postgres-replica-scripts` configmap with bash script
+
+**Deployed**: payu-postgres master + replica. Async replication. 30 DBs synced.
+
