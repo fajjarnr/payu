@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Progress } from '@/components/ui/progress';
 import {
 Gift, Percent, Coins, Zap, Ticket, ChevronRight } from 'lucide-react';

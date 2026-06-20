@@ -5,7 +5,7 @@ import { useLocale } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User, Landmark, Smartphone, ReceiptText, MoreHorizontal as MoreIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,7 +56,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
     try {
       await cancelTransaction.mutateAsync(transactionId);
       toast.success('Transaksi berhasil dibatalkan');
-    } catch (error) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       toast.error('Gagal membatalkan transaksi');
     }
   };

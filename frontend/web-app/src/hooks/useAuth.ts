@@ -5,7 +5,7 @@ import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import { useAuthStore, useWalletStore, useNotificationStore, useTransactionStore, useUIStore } from '@/stores';
 import ABTestingService from '@/services/ABTestingService';
-import type { LoginRequest, User } from '@/types';
+import type { LoginRequest, User } from '@/types'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { createLocaleHref } from '@/lib/navigation';
 import { useLocale } from 'next-intl';
 

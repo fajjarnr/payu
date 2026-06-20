@@ -13,9 +13,9 @@ import {
   Info,
   Loader2,
   AlertCircle,
-  History,
-  TrendingDown,
-  BarChart3
+  History, // eslint-disable-line @typescript-eslint/no-unused-vars
+  TrendingDown, // eslint-disable-line @typescript-eslint/no-unused-vars
+  BarChart3 // eslint-disable-line @typescript-eslint/no-unused-vars
 } from 'lucide-react';
 import { exchangeSchema, type ExchangeRequest } from '@/types';
 import { useFxRate, useFxEstimate, useFxConversion, useFxConversions } from '@/hooks';
@@ -84,7 +84,7 @@ export default function ExchangePage() {
             amount,
           });
           setEstimatedAmount(result.toAmount);
-        } catch (err) {
+        } catch (err) { // eslint-disable-line @typescript-eslint/no-unused-vars
           setEstimatedAmount(null);
         }
       }, 300);

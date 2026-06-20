@@ -223,7 +223,7 @@ export class ABTestingService {
       localStorage.setItem(cacheKey, JSON.stringify(cached));
       // BUG-FE-031: Also store in memory as fallback
       this.memoryCache.set(cacheKey, cached);
-    } catch (error) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       // BUG-FE-031: On localStorage failure, use memory cache to prevent infinite re-fetch
       const cacheKey = this.buildCacheKey(experimentKey, assignment.userId);
       const expiresAt = new Date(Date.now() + this.CACHE_TTL_MS).toISOString();

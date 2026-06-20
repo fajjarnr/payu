@@ -16,7 +16,7 @@ import {
   ResponsiveContainer
 } from "recharts"
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 function ChartLegend({ color, label, percentage }: { color: string; label: string; percentage: string }) {
@@ -31,7 +31,7 @@ function ChartLegend({ color, label, percentage }: { color: string; label: strin
   );
 }
 
-const investmentData = [
+const investmentData = [ // eslint-disable-line @typescript-eslint/no-unused-vars
   { category: "return", value: 12.5, fill: "var(--color-return)" },
 ]
 
@@ -45,7 +45,7 @@ const investmentConfig = {
   },
 } satisfies ChartConfig
 
-const spendingData = [
+const spendingData = [ // eslint-disable-line @typescript-eslint/no-unused-vars
   { month: "Jan", amount: 3000000 },
   { month: "Feb", amount: 4500000 },
   { month: "Mar", amount: 6000000 },

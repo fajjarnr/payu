@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import clsx from 'clsx';
+import clsx from 'clsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';

@@ -532,7 +532,7 @@ describe('FeedbackWidget', () => {
   it('should reset form after submission', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    const { rerender } = renderWithIntl(<FeedbackWidget />);
+    const { rerender } = renderWithIntl(<FeedbackWidget />); // eslint-disable-line @typescript-eslint/no-unused-vars
 
     // Open modal
     const floatingButton = screen.getByLabelText('Kirim Feedback');

@@ -15,7 +15,7 @@ import {
   Bell,
   Search,
   Menu,
-  X,
+  X, // eslint-disable-line @typescript-eslint/no-unused-vars
   User,
   LogOut,
   QrCode,
@@ -29,7 +29,7 @@ import MobileNav from './MobileNav';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';

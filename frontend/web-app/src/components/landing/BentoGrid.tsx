@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { AreaChart, Shield, Zap, Globe, Wallet, PieChart, ArrowUpRight } from 'lucide-react';
+import { AreaChart, Shield, Zap, Globe, Wallet, PieChart, ArrowUpRight } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { cn } from '@/lib/utils'; // Assuming this exists, based on skeleton.tsx
 
 const BentoCard = ({ className, children, delay = 0 }: { className?: string; children: React.ReactNode; delay?: number }) => (

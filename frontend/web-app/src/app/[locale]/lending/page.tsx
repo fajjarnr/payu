@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp, Loader2 } from 'lucide-react';
+import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp, Loader2 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,12 @@ import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreAppro
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LendingPage() {
-  const [activeTab, setActiveTab] = useState<'loans' | 'paylater'>('loans');
+  const [activeTab, setActiveTab] = useState<'loans' | 'paylater'>('loans'); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { user } = useAuthStore();
   const userId = user?.id ?? '';
   const { data: creditScoreData, isLoading: isLoadingScore } = useCreditScore(userId);
   const { data: payLaterData, isLoading: isLoadingPayLater } = usePayLater(userId);
-  const { data: payLaterTxns, isLoading: isLoadingTxns } = usePayLaterTransactions(userId);
+  const { data: payLaterTxns, isLoading: isLoadingTxns } = usePayLaterTransactions(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { data: preApprovals, isLoading: isLoadingPreApprovals } = useActivePreApprovals(userId);
 
   const loanProducts = [

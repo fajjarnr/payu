@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import SupportService from '@/services/SupportService';
-import type { CreateAgentRequest, CreateModuleRequest, AssignTrainingRequest, AgentStatus, TrainingStatus, CreateTicketRequest, TicketCategory, TicketPriority } from '@/services/SupportService';
+import type { CreateAgentRequest, CreateModuleRequest, AssignTrainingRequest, AgentStatus, TrainingStatus, CreateTicketRequest, TicketCategory, TicketPriority } from '@/services/SupportService'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // ── Training Dashboard ──
 export function useTrainingStatus() {

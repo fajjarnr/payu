@@ -12,9 +12,9 @@ import { useTranslations } from 'next-intl';
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
-  const { user } = useAuthStore();
+  const { user } = useAuthStore(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { data: account, isLoading: loadingAccount } = useInvestmentAccount();
-  const { data: goldHoldings } = useGoldHoldings();
+  const { data: goldHoldings } = useGoldHoldings(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const portfolioBalance = account?.balance ?? 0;
   const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);

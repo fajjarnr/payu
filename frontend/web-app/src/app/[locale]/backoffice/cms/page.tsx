@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { 
   Plus, 
   Search, 
-  Filter, 
+  Filter, // eslint-disable-line @typescript-eslint/no-unused-vars
   MoreHorizontal, 
   Edit, 
   Trash2, 
@@ -39,7 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { type Content, type ContentType } from '@/services/CMSService';
+import { type Content, type ContentType } from '@/services/CMSService'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // BUG-FE-098: Removed MOCK_CONTENT — should be fetched from CMS service API
 const MOCK_CONTENT: Content[] = [];

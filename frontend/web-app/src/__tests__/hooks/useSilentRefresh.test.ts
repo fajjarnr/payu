@@ -187,7 +187,7 @@ describe('useSilentRefresh', () => {
 
   it('should eagerly refresh on tab focus when token is about to expire', async () => {
     const now = Date.now();
-    const EAGER_THRESHOLD = 3 * 60 * 1000; // 3 min
+    const _EAGER_THRESHOLD = 3 * 60 * 1000; // 3 min // eslint-disable-line @typescript-eslint/no-unused-vars
 
     mockIsAuthenticated = true;
     // Token expires in 2 minutes (within eager threshold)

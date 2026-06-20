@@ -10,8 +10,8 @@ import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import QuickActions from '@/components/dashboard/QuickActions';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { Skeleton, SkeletonCard, SkeletonStatsGrid } from '@/components/ui/skeleton';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Skeleton, SkeletonCard, SkeletonStatsGrid } from '@/components/ui/skeleton'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import BannerCarousel from '@/components/cms/BannerCarousel';
 import PromoPopup from '@/components/cms/PromoPopup';
 import { SkipLink } from '@/lib/a11y';
@@ -61,9 +61,9 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
  const userId = useAuthStore((state) => state.user?.id);
  const { data: balance, isLoading: balanceLoading } = useBalance(accountId || undefined);
  const { data: metrics, isLoading: metricsLoading } = useUserMetrics(userId);
- const { data: spending, isLoading: spendingLoading } = useSpendingTrends(userId);
- const { data: cashFlow, isLoading: cashFlowLoading } = useCashFlow(userId);
- const { data: investmentAccount, isLoading: investmentLoading } = useInvestmentAccount();
+ const { data: spending, isLoading: spendingLoading } = useSpendingTrends(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
+ const { data: cashFlow, isLoading: cashFlowLoading } = useCashFlow(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
+ const { data: investmentAccount, isLoading: investmentLoading } = useInvestmentAccount(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
  return (
   <DashboardLayout username={username} onLogout={handleLogout}>

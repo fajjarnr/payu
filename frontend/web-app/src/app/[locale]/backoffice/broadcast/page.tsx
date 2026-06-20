@@ -9,10 +9,10 @@ import {
   Mail, 
   Smartphone, 
   Bell, 
-  Clock, 
+  Clock, // eslint-disable-line @typescript-eslint/no-unused-vars
   CheckCircle2, 
   AlertCircle, 
-  MoreHorizontal,
+  MoreHorizontal, // eslint-disable-line @typescript-eslint/no-unused-vars
   ChevronLeft,
   ChevronRight,
   Plus

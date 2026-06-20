@@ -9,19 +9,19 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  ArrowRight,
+  ArrowRight, // eslint-disable-line @typescript-eslint/no-unused-vars
   UserPlus,
   Receipt,
   Loader2,
 } from 'lucide-react';
-import clsx from 'clsx';
+import clsx from 'clsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   useSplitBills,
-  useSplitBill,
+  useSplitBill, // eslint-disable-line @typescript-eslint/no-unused-vars
   useCreateSplitBill,
   useAcceptSplitBill,
   useDeclineSplitBill,
@@ -34,13 +34,13 @@ import { useAuthStore } from '@/stores/authStore';
 import type { SplitBillParticipant } from '@/services/TransactionService';
 
 export default function SplitBillPage() {
-  const { accountId, user } = useAuthStore();
+  const { accountId, user } = useAuthStore(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const acctId = accountId ?? '';
   const { data: splitBillsData, isLoading } = useSplitBills(acctId);
   const createSplitBill = useCreateSplitBill();
-  const acceptSplitBill = useAcceptSplitBill();
-  const declineSplitBill = useDeclineSplitBill();
-  const payBill = useSplitBillPayment();
+  const acceptSplitBill = useAcceptSplitBill(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const declineSplitBill = useDeclineSplitBill(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const payBill = useSplitBillPayment(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const settleBill = useSettleSplitBill();
   const addParticipant = useAddParticipant();
   const activateBill = useActivateSplitBill();

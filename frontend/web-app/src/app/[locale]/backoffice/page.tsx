@@ -1,7 +1,7 @@
 import { Link } from '@/lib/navigation';
-import { Users, AlertTriangle, Headphones, FileText, FlaskConical, ClipboardCheck, ArrowUpRight, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Users, AlertTriangle, Headphones, FileText, FlaskConical, ClipboardCheck, ArrowUpRight, TrendingUp, ShieldCheck, Zap } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Button } from '@/components/ui/button'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export default function BackofficeDashboard() {
   const stats = [

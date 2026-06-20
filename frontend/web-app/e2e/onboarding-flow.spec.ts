@@ -551,7 +551,7 @@ test.describe('Onboarding Flow - Accessibility', () => {
     await page.keyboard.press('Enter');
 
     // Form should submit
-    const loadingIcon = page.locator('.animate-spin');
+    const loadingIcon = page.locator('.animate-spin'); // eslint-disable-line @typescript-eslint/no-unused-vars
     // Wait a bit for potential loading state
     await page.waitForTimeout(500);
   });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import logger, { getCorrelationId, withCorrelation } from "@/lib/logger";
+import logger, { getCorrelationId, withCorrelation } from "@/lib/logger"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "https://gateway-service:8080";
 

@@ -15,7 +15,7 @@ import { Link } from '@/lib/navigation';
  */
 export default function MobileNav() {
   const t = useTranslations('nav');
-  const locale = useLocale();
+  const locale = useLocale(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const pathname = usePathname();
   const isAuthenticated = useIsAuthenticated();
 

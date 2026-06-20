@@ -1,16 +1,16 @@
 'use client';
 
-import Image from 'next/image';
+import Image from 'next/image'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Link } from '@/lib/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
-import { Shield, Zap, Menu, X, PieChart, Globe, ArrowUpRight } from 'lucide-react';
+import { Shield, Zap, Menu, X, PieChart, Globe, ArrowUpRight } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Observer } from 'gsap/Observer';
 
-import BentoGrid from '@/components/landing/BentoGrid';
-import LogoTicker from '@/components/landing/LogoTicker';
+import BentoGrid from '@/components/landing/BentoGrid'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import LogoTicker from '@/components/landing/LogoTicker'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(Observer);

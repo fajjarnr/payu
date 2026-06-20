@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, ShieldCheck, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 

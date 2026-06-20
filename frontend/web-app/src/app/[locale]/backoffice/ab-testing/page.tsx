@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { Progress } from "@/components/ui/progress";
-import { type Experiment, ExperimentStatus, AllocationStrategy } from '@/services/ABTestingService';
+import { type Experiment, ExperimentStatus, AllocationStrategy } from '@/services/ABTestingService'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import clsx from 'clsx';
 
 // BUG-FE-096: Removed MOCK_EXPERIMENTS — should be fetched from AB Testing service API

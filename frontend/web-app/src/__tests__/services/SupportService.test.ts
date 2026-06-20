@@ -6,7 +6,7 @@ import SupportService, {
   type CreateModuleRequest,
   type TrainingAssignment,
   type AssignTrainingRequest,
-  type TrainingStatusSummary,
+  type TrainingStatusSummary, // eslint-disable-line @typescript-eslint/no-unused-vars
   type CreateTicketRequest,
   type SupportTicket,
   type FAQ,

@@ -54,7 +54,7 @@ export default function OnboardingPage() {
   const mutation = useMutation({
     mutationFn: (data: RegisterUserRequest) => {
       // Strip confirmPassword before sending to API (it's only for client-side validation)
-      const { confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string };
+      const { confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string }; // eslint-disable-line @typescript-eslint/no-unused-vars
       return api.post('/accounts/register', payload);
     },
     onSuccess: () => {

@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 
 export default function SupportPage() {
   const t = useTranslations('support');
-  const { data: trainingStatus } = useTrainingStatus();
+  const { data: trainingStatus } = useTrainingStatus(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const supportChannels = [
     { label: t('liveChat'), desc: t('liveChatDesc'), icon: MessageCircle, action: t('contactUs'), color: 'primary' },

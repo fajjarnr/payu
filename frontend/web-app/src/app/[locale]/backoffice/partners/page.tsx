@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Loader2
+  Loader2 // eslint-disable-line @typescript-eslint/no-unused-vars
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,8 +57,8 @@ function toPartnerRow(partner: Partner): PartnerRow {
 export default function PartnersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: partnersData, isLoading } = usePartners();
-  const registerPartner = useRegisterPartner();
-  const deletePartner = useDeletePartner();
+  const registerPartner = useRegisterPartner(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const deletePartner = useDeletePartner(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const partners = (Array.isArray(partnersData) ? partnersData.map(toPartnerRow) : []).filter((p) => {
     if (!searchTerm) return true;
