@@ -1,5 +1,5 @@
 # ============================================================
-# DISABLED: PostgreSQL HA via Crunchy operator (READY-076)
+# DISABLED: PostgreSQL HA via Crunchy operator (SUPERSEDED by postgres-statefulset.yaml (native streaming replication, iter 59))
 # ============================================================
 #
 # DO NOT APPLY THIS FILE. The Crunchy PostgresCluster spec requires
