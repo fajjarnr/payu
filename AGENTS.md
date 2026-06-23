@@ -45,8 +45,10 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
     - Frontend testing: uji user behavior (React Testing Library), jangan internal state/CSS.
 13. **Git & SemVer**:
     - Conventional Commits: `type(scope): msg`. No force-push ke protected branches.
-    - SemVer `MAJOR.MINOR.PATCH` (MAJOR = breaking, MINOR = feature, PATCH = bugfix).
-    - Image tag wajib matching dengan git tag. No duplicate version entries di CHANGELOG.md. Gunakan format tanggal ISO 8601 (`YYYY-MM-DD`).
+    - SemVer `MAJOR.MINOR.PATCH` (MAJOR = breaking API/DB/event, MINOR = feature/service, PATCH = bugfix/config).
+    - Pre-release: `-alpha.N`, `-beta.N`, `-rc.N` untuk staging.
+    - Image tag wajib matching dengan git tag (contoh: `v1.8.7`).
+    - CHANGELOG: No duplicate version entries, gunakan format tanggal ISO 8601 (`YYYY-MM-DD`).
 
 ## 🧠 AI Working Protocol & Debugging
 
