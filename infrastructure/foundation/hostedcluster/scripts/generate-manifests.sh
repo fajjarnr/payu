@@ -30,7 +30,7 @@ for KEY in payu-onprem payu-cloud; do
   EBS=$(jq -r --arg k $KEY '.cluster_ids.value[$k].aws_ebs_csi_driver_controller' $TF_OUTPUTS)
 
   if [ "$KEY" = "payu-onprem" ]; then
-    OCP_VERSION="4.15.59-multi"
+    OCP_VERSION="4.15.43-multi"
     CHANNEL="stable-4.15"
     ENV="onprem"
     CLUSTER_CIDR="10.132.0.0/14"
@@ -45,7 +45,7 @@ for KEY in payu-onprem payu-cloud; do
 
   ZONE="ap-southeast-1a"
   INSTANCE_TYPE="m6a.4xlarge"
-  REPLICAS=2
+  REPLICAS=1
   ROOT_VOL=120
 
   cat > $MANIFESTS_DIR/hostedcluster-$KEY.yaml <<YAML
@@ -63,8 +63,8 @@ spec:
     image: quay.io/openshift-release-dev/ocp-release:$OCP_VERSION
   dns:
     baseDomain: payu.ocp.fajjjar.my.id
-    privateZoneID: Z0688851VIBKG68U8DFU
-    publicZoneID: Z0716734HV77ZJQGV03V
+    privateZoneID: Z09069013903ZAKGG8DWP
+    publicZoneID: Z01586331DWCIX83XX3FH
   platform:
     aws:
       region: ap-southeast-1
@@ -164,7 +164,7 @@ spec:
     image: quay.io/openshift-release-dev/ocp-release:$OCP_VERSION
   replicas: $REPLICAS
   management:
-    autoRepair: false
+    autoRepair: true
     upgradeType: Replace
   platform:
     aws:

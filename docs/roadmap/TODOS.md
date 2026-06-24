@@ -564,13 +564,13 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 
 | Param | Value |
 |:------|:------|
-| AWS Account | `559050246145` |
+| AWS Account | `955370087474` |
 | Region | `ap-southeast-1` |
 | Management cluster | `payu-8tmf2` (OCP 4.20.24, MCE 2.11.2) |
-| Base domain (private) | `payu.ocp.fajjjar.my.id` → Z0688851VIBKG68U8DFU |
-| Base domain (public) | `ocp.fajjjar.my.id` → Z0716734HV77ZJQGV03V |
+| Base domain (private) | `payu.ocp.fajjjar.my.id` → Z09069013903ZAKGG8DWP |
+| Base domain (public) | `ocp.fajjjar.my.id` → Z01586331DWCIX83XX3FH |
 | Existing dev VPC | `vpc-085524f83905b6043` (10.0.0.0/16) — will NOT reuse |
-| Existing OIDC bucket | `oidc-storage-kvsfs` (mgmt) — will create per-cluster |
+| Existing OIDC bucket | `oidc-storage-payu-shared-955370087474` (shared) |
 
 ### Cluster CIDR Allocation (non-overlapping)
 

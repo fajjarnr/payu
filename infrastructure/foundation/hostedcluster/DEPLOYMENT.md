@@ -1,10 +1,10 @@
 # PayU HCP — `payu-onprem` (4.15) + `payu-cloud` (4.20) Deployment Guide
 
-> **Hosted Clusters**: `payu-onprem` (v4.15.59, 1 node) + `payu-cloud` (v4.20.24, 1 node)
+> **Hosted Clusters**: `payu-onprem` (v4.15.43, 1 node) + `payu-cloud` (v4.20.24, 1 node)
 > **Management Cluster**: `payu-8tmf2` (OCP 4.20.24, MCE 2.11.2)
 > **Platform**: AWS ap-southeast-1 (dedicated VPC per cluster, shared OIDC bucket)
 > **CNI**: OVN-Kubernetes (`networkType: OVNKubernetes` — natively managed, no manual CNI setup required)
-> **Last Updated**: 2026-06-17
+> **Last Updated**: 2026-06-24
 > **References**: [OCP 4.20 HCP Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/hosted_control_planes/) | [ROSA Best Practices](https://cloud.redhat.com/experts/rosa/best-practices-recommendations/)
 
 ---
@@ -13,14 +13,14 @@
 
 | Item | Value |
 |:-----|:------|
-| AWS Account | `559050246145` |
+| AWS Account | `955370087474` |
 | Region | `ap-southeast-1` |
 | HCP operator version | `35cddf08d3e492ec2b328a832a60a463407dd556` (MCE 2.11.2) |
 | **Workaround for HCP 35cddf08** | `payu-system/hcp-audience-fixer` MutatingWebhook (patches `token-minter` to use `--token-audience=sts.amazonaws.com` with PEM cert CA bundle) |
 | Terraform | `infrastructure/foundation/hostedcluster/terraform/` — `for_each` multi-cluster with shared OIDC bucket, dedicated VPCs |
-| OIDC bucket | `oidc-storage-payu-shared-559050246145` (shared, per-cluster sub-paths) |
-| `payu-onprem` | 4.15.59, 2× m6a.4xlarge, ap-southeast-1a, v1.28.15 |
-| `payu-cloud` | 4.20.24, 2× m6a.4xlarge, ap-southeast-1a, v1.33.12 |
+| OIDC bucket | `oidc-storage-payu-shared-955370087474` (shared, per-cluster sub-paths) |
+| `payu-onprem` | 4.15.43, 1× m6a.4xlarge, ap-southeast-1a, autoRepair=true |
+| `payu-cloud` | 4.20.24, 1× m6a.4xlarge, ap-southeast-1a, autoRepair=true |
 | CNI | OVN-Kubernetes (native, automatic node provisioning) |
 | Final state | **Both HCPs AVAILABLE, NodePools Ready, nodes join and register automatically** |
 
@@ -32,11 +32,11 @@
 
 | Account | Region | Activity | Validation | Status |
 |:--------|:-------|:---------|:-----------|:-------|
-| 559050246145 | ap-southeast-1 | Check MCE Operator | `multicluster-engine.v2.11.2` Succeeded | PASSED |
-| 559050246145 | ap-southeast-1 | Check `local-cluster` managedcluster | `AVAILABLE=True` | PASSED |
-| 559050246145 | ap-southeast-1 | Check HyperShift Operator | 2 pods `Running` in `hypershift` ns | PASSED |
-| 559050246145 | ap-southeast-1 | Check HCP CLI | `hcp version` → `35cddf08...` | PASSED |
-| 559050246145 | ap-southeast-1 | Check pull-secret | `oc get secret pull-secret -n openshift-config` exists | PASSED |
+| 955370087474 | ap-southeast-1 | Check MCE Operator | `multicluster-engine.v2.11.2` Succeeded | PASSED |
+| 955370087474 | ap-southeast-1 | Check `local-cluster` managedcluster | `AVAILABLE=True` | PASSED |
+| 955370087474 | ap-southeast-1 | Check HyperShift Operator | 2 pods `Running` in `hypershift` ns | PASSED |
+| 955370087474 | ap-southeast-1 | Check HCP CLI | `hcp version` → `35cddf08...` | PASSED |
+| 955370087474 | ap-southeast-1 | Check pull-secret | `oc get secret pull-secret -n openshift-config` exists | PASSED |
 
 ### 1.2 Networking & CIDR Allocation
 
@@ -47,8 +47,8 @@
 | serviceNetwork | `172.31.0.0/16` | `172.32.0.0/16` | NO |
 | Public subnet (1a) | `10.200.0.0/20` | `10.201.0.0/20` | NO |
 | Base domain | `payu.ocp.fajjjar.my.id` | `payu.ocp.fajjjar.my.id` | shared |
-| Private Route53 zone | `Z0688851VIBKG68U8DFU` | `Z0688851VIBKG68U8DFU` | shared |
-| Public Route53 zone | `Z0716734HV77ZJQGV03V` | `Z0716734HV77ZJQGV03V` | shared |
+| Private Route53 zone | `Z09069013903ZAKGG8DWP` (`payu.ocp.fajjjar.my.id`) | `Z09069013903ZAKGG8DWP` | shared |
+| Public Route53 zone | `Z01586331DWCIX83XX3FH` (`ocp.fajjjar.my.id`) | `Z01586331DWCIX83XX3FH` | shared |
 
 > [!IMPORTANT]
 > **Dedicated VPC per cluster** — Each HCP gets its own VPC to ensure full network isolation during migration simulation and prevent subnet tag collisions (`kubernetes.io/cluster/<id>`).
@@ -77,7 +77,7 @@ EOF
 
 for NS in local-cluster hypershift; do
   oc create secret generic hypershift-operator-oidc-provider-s3-credentials \
-    --from-literal=bucket=oidc-storage-payu-shared-559050246145 \
+    --from-literal=bucket=oidc-storage-payu-shared-955370087474 \
     --from-literal=region=ap-southeast-1 \
     --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials \
     -n ${NS} --insecure-skip-tls-verify=true
@@ -94,7 +94,7 @@ terraform apply -auto-approve
 
 This provisions:
 - VPC and Subnets for `payu-onprem` (`10.200.0.0/16`) and `payu-cloud` (`10.201.0.0/16`).
-- Shared S3 OIDC bucket (`oidc-storage-payu-shared-559050246145`).
+- Shared S3 OIDC bucket (`oidc-storage-payu-shared-955370087474`).
 - Per-cluster IAM roles (CPO, registry, ingress, KCC, CNCC, EBS CSI, NodePool).
 - OIDC providers pointing to regional endpoints.
   > [!NOTE]
@@ -301,8 +301,8 @@ terraform destroy -auto-approve
        aws_access_key_id = \$(aws configure get aws_access_key_id)
        aws_secret_access_key = \$(aws configure get aws_secret_access_key)
        EOF
-       oc create secret generic hypershift-operator-oidc-provider-s3-credentials --from-literal=bucket=oidc-storage-payu-shared-559050246145 --from-literal=region=ap-southeast-1 --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials -n local-cluster --insecure-skip-tls-verify=true
-       oc create secret generic hypershift-operator-oidc-provider-s3-credentials --from-literal=bucket=oidc-storage-payu-shared-559050246145 --from-literal=region=ap-southeast-1 --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials -n hypershift --insecure-skip-tls-verify=true
+       oc create secret generic hypershift-operator-oidc-provider-s3-credentials --from-literal=bucket=oidc-storage-payu-shared-955370087474 --from-literal=region=ap-southeast-1 --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials -n local-cluster --insecure-skip-tls-verify=true
+       oc create secret generic hypershift-operator-oidc-provider-s3-credentials --from-literal=bucket=oidc-storage-payu-shared-955370087474 --from-literal=region=ap-southeast-1 --from-file=credentials=/tmp/payu-hcp-setup/aws-credentials -n hypershift --insecure-skip-tls-verify=true
        rm -rf /tmp/payu-hcp-setup
        ```
     2. Restart the HyperShift operator deployment to clear the cache and force re-reconciliation:

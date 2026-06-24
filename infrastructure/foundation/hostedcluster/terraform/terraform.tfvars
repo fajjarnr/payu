@@ -23,10 +23,10 @@ clusters = {
   payu-onprem = {
     name            = "payu-onprem"
     infra_id        = "payu-onprem"
-    ocp_version     = "4.15.59-multi"
+    ocp_version     = "4.15.43-multi"
     base_domain     = "payu.ocp.fajjjar.my.id"
-    private_zone_id = "Z0688851VIBKG68U8DFU"
-    public_zone_id  = "Z0716734HV77ZJQGV03V"
+    private_zone_id = "Z09069013903ZAKGG8DWP"
+    public_zone_id  = "Z01586331DWCIX83XX3FH"
     vpc_cidr        = "10.200.0.0/16"
     public_subnets = [
       {
@@ -54,8 +54,8 @@ clusters = {
     infra_id        = "payu-cloud"
     ocp_version     = "4.20.24-multi"
     base_domain     = "payu.ocp.fajjjar.my.id"
-    private_zone_id = "Z0688851VIBKG68U8DFU"
-    public_zone_id  = "Z0716734HV77ZJQGV03V"
+    private_zone_id = "Z09069013903ZAKGG8DWP"
+    public_zone_id  = "Z01586331DWCIX83XX3FH"
     vpc_cidr        = "10.201.0.0/16"
     public_subnets = [
       {

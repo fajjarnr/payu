@@ -12,8 +12,8 @@ spec:
     image: quay.io/openshift-release-dev/ocp-release:4.15.43-multi
   dns:
     baseDomain: payu.ocp.fajjjar.my.id
-    privateZoneID: Z0688851VIBKG68U8DFU
-    publicZoneID: Z0716734HV77ZJQGV03V
+    privateZoneID: Z09069013903ZAKGG8DWP
+    publicZoneID: Z01586331DWCIX83XX3FH
   platform:
     aws:
       region: ap-southeast-1
@@ -21,17 +21,17 @@ spec:
       multiArch: false
       cloudProviderConfig:
         subnet:
-          id: subnet-01c05cd3ccb615f35
-        vpc: vpc-01d724da7649a72d2
+          id: subnet-0bf89c3efd4cd2095
+        vpc: vpc-04d2ed28aeeb5c407
         zone: ap-southeast-1a
       rolesRef:
-        controlPlaneOperatorARN: arn:aws:iam::559050246145:role/payu-onprem-control-plane-operator
-        imageRegistryARN: arn:aws:iam::559050246145:role/payu-onprem-openshift-image-registry
-        ingressARN: arn:aws:iam::559050246145:role/payu-onprem-openshift-ingress
-        kubeCloudControllerARN: arn:aws:iam::559050246145:role/payu-onprem-cloud-controller
-        networkARN: arn:aws:iam::559050246145:role/payu-onprem-cloud-network-config-controller
-        nodePoolManagementARN: arn:aws:iam::559050246145:role/payu-onprem-node-pool
-        storageARN: arn:aws:iam::559050246145:role/payu-onprem-aws-ebs-csi-driver-controller
+        controlPlaneOperatorARN: arn:aws:iam::955370087474:role/payu-onprem-control-plane-operator
+        imageRegistryARN: arn:aws:iam::955370087474:role/payu-onprem-openshift-image-registry
+        ingressARN: arn:aws:iam::955370087474:role/payu-onprem-openshift-ingress
+        kubeCloudControllerARN: arn:aws:iam::955370087474:role/payu-onprem-cloud-controller
+        networkARN: arn:aws:iam::955370087474:role/payu-onprem-cloud-network-config-controller
+        nodePoolManagementARN: arn:aws:iam::955370087474:role/payu-onprem-node-pool
+        storageARN: arn:aws:iam::955370087474:role/payu-onprem-aws-ebs-csi-driver-controller
       resourceTags:
         - key: kubernetes.io/cluster/payu-onprem
           value: owned
@@ -54,7 +54,7 @@ spec:
       - cidr: 172.31.0.0/16
   infraID: payu-onprem
   fips: false
-  issuerURL: https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/payu-onprem
+  issuerURL: https://oidc-storage-payu-shared-955370087474.s3.ap-southeast-1.amazonaws.com/payu-onprem
   configuration:
     ingress:
       loadBalancer:

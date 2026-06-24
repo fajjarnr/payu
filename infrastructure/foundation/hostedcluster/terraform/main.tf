@@ -7,6 +7,8 @@
 #     + 1 HCP CLI role + 1 instance profile
 #   - A per-cluster IAM OIDC provider pointing to the SHARED OIDC bucket at
 #     the per-cluster sub-path (s3://<shared-bucket>/<cluster>/...)
+#   - A Route53 private zone association so guest worker nodes can resolve
+#     api-int.<base-domain> (required for MCD bootstrap — see LESSONS.md L-072)
 #
 # The SHARED OIDC S3 bucket itself is created once (not per-cluster), and the
 # HCP operator's `hypershift-operator-oidc-provider-s3-credentials` secret in
@@ -87,4 +89,19 @@ module "iam" {
   tags               = merge(var.common_tags, each.value.extra_tags, { environment = each.value.environment })
   hcp_cli_trust_arn  = var.hcp_cli_trust_arn
   shared_oidc_bucket = local.shared_oidc_bucket_name
+}
+
+# --- Route53 private zone VPC association ------------------------------------
+# CRITICAL: Guest worker nodes live in dedicated VPCs. Without associating
+# those VPCs with the private hosted zone, nodes cannot resolve api-int.<domain>
+# via AWS DNS. The Machine Config Daemon (MCD) uses api-int post-ignition to
+# fetch MachineConfigs. If DNS fails, MCD hangs and nodes never submit CSRs.
+# See: docs/guides/LESSONS.md L-072
+resource "aws_route53_zone_association" "guest_private_dns" {
+  for_each = { for k, v in local.clusters : k => v if v.private_zone_id != "" }
+
+  zone_id = each.value.private_zone_id
+  vpc_id  = module.vpc[each.key].vpc_id
+
+  depends_on = [module.vpc]
 }

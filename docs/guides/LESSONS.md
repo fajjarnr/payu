@@ -4,7 +4,46 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-072: HCP Guest Cluster Node Bootstrap — Private Route53 Zone Must Include Guest VPCs (2026-06-24)
+
+**Date**: 2026-06-24
+**Domain**: Platform / HyperShift / AWS Route53 / Node Bootstrap / MCD
+**Context**: Deploying `payu-onprem` (4.15.43) and `payu-cloud` (4.20.24) guest clusters on management cluster `payu-8tmf2`. Nodes provisioned (`Provisioned` phase) but Machine Config Daemon (MCD) stuck on `Machine Config Daemon Pull` — never completing bootstrap, no CSR submitted, node never joined.
+
+**Root Cause**:
+Private Route53 hosted zone (`payu.ocp.fajjjar.my.id` → `Z09069013903ZAKGG8DWP`) was only **associated with the management cluster VPC** (`vpc-0cb5d8631dfce5eea`, `10.0.0.0/16`). Guest cluster worker nodes in **dedicated VPCs** (`payu-onprem`: `vpc-04d2ed28aeeb5c407`, `payu-cloud`: `vpc-02b42c82cbe43fd77`) could not resolve `api-int.payu.ocp.fajjjar.my.id` via AWS DNS — the private zone was invisible to them. MCD uses `api-int` to fetch MachineConfig from the guest kube-apiserver post-ignition. With DNS failing, MCD hung indefinitely.
+
+**Symptoms**:
+- EC2 console: `Starting Machine Config Daemon Pull...` → stuck, no further output
+- No CSR submitted to guest API server after 10+ minutes
+- Ignition log shows payload served successfully (`/ignition` request received)
+- `oc get csr --kubeconfig=...` returns empty
+- Machine phase stays `Provisioned`, `AllNodesHealthy=False`, reason `WaitingForNodeRef`
+
+**Fix**:
+Associate every guest cluster VPC with the private hosted zone:
+```bash
+# For each guest cluster VPC
+aws route53 associate-vpc-with-hosted-zone \
+  --hosted-zone-id Z09069013903ZAKGG8DWP \
+  --vpc VPCRegion=ap-southeast-1,VPCId=vpc-04d2ed28aeeb5c407  # payu-onprem
+
+aws route53 associate-vpc-with-hosted-zone \
+  --hosted-zone-id Z09069013903ZAKGG8DWP \
+  --vpc VPCRegion=ap-southeast-1,VPCId=vpc-02b42c82cbe43fd77  # payu-cloud
+```
+After ~60s DNS propagation, MCD connected, submitted CSRs, and node joined.
+
+**Prevention**:
+- Add Route53 VPC association step to `generate-manifests.sh` or as a Terraform resource (`aws_route53_zone_association`) for each cluster VPC.
+- Also add to DEPLOYMENT.md as a mandatory post-Terraform step before applying HostedCluster manifests.
+
+**Note on payu-cloud node CSR**: `payu-cloud` node CSR was pending but machine-approver did not auto-approve it. Manual `oc adm certificate approve` was needed. This is expected when machine-approver in the guest cannot verify the machine-to-node mapping (node is from different VPC). After DNS fix, machine-approver should auto-approve subsequent CSRs.
+
+---
+
 ## L-071: payu-dev Cluster Recovery — Kafka Naming, Postgres NetworkPolicy, HA Disabled, CI Guard (2026-06-18)
+
 
 **Date**: 2026-06-18
 **Domain**: Platform / OpenShift / Kafka Naming / NetworkPolicy / CI Guard / Crunchy HA

@@ -56,7 +56,7 @@ data:
             if sa_name in SA_TO_AUDIENCE and not is_client_or_apiserver:
                 target_aud = SA_TO_AUDIENCE[sa_name]
             else:
-                target_aud = f"https://oidc-storage-payu-shared-559050246145.s3.ap-southeast-1.amazonaws.com/{cluster_name}"
+                target_aud = f"https://oidc-storage-payu-shared-955370087474.s3.ap-southeast-1.amazonaws.com/{cluster_name}"
                 
             # Reconstruct args by stripping any existing --token-audience/--token-audience=...
             temp_args = []

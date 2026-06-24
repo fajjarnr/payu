@@ -11,7 +11,7 @@ spec:
   arch: amd64
   release:
     image: quay.io/openshift-release-dev/ocp-release:4.15.43-multi
-  replicas: 2
+  replicas: 1
   management:
     autoRepair: true
     upgradeType: Replace
@@ -23,7 +23,7 @@ spec:
         size: 120
         type: gp3
       subnet:
-        id: subnet-01c05cd3ccb615f35
+        id: subnet-0bf89c3efd4cd2095
       resourceTags:
         - key: kubernetes.io/cluster/payu-onprem
           value: owned
