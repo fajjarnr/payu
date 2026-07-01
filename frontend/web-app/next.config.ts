@@ -12,6 +12,23 @@ const nextConfig: NextConfig = {
   transpilePackages: ['isomorphic-dompurify', 'html-encoding-sniffer', '@exodus/bytes'],
   // Gateway rewrite REMOVED — BFF proxy at /api/v1/[...path] handles forwarding
   // with httpOnly cookie → Bearer token conversion (P0-SEC-001)
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        'payu.fajjjar.my.id',
+        '*.payu.fajjjar.my.id',
+        'payu.ocp.fajjjar.my.id',
+        '*.payu.ocp.fajjjar.my.id',
+        'ocp.fajjjar.my.id',
+        '*.ocp.fajjjar.my.id',
+        'payu.id',
+        '*.payu.id',
+        'payu.co.id',
+        '*.payu.co.id',
+        'localhost:3000'
+      ]
+    }
+  },
   images: {
     remotePatterns: [
       {
