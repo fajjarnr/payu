@@ -144,6 +144,35 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 - Preserves type-only imports, multi-line import syntax, destructure patterns
 - Type errors: 9 baseline (no new ones introduced)
 
+### iter-63 — 2026-07-01
+
+**feat(error-handling)**: READY-024 — RFC 9457 rollout to 15 backend services
+
+- Added `AccessDeniedException` handler + `protected respondWith()` to `Rfc9457GlobalExceptionHandler` base
+- Created 15 `Rfc9457*ExceptionHandler` subclasses across all services:
+  - 8 empty (base covers all handlers): account, auth, compliance, fx, investment, lending, partner, statement
+  - 3 custom error codes: cms (CMS_), dispute (DISP_), promotion (PROMO_)
+  - 4 special handlers: billing (DataIntegrityViolation), wallet (empty), integration (MessageNotFound + INT_* codes), product-catalog (ProductNotFound)
+- Total: 518 insertions, 18 files
+- Gateway handled by READY-025 below
+- Commit: 53304c35
+
+**fix(gateway)**: READY-025 — forward upstream 4xx/5xx verbatim
+
+- `WebApplicationException` → forward original `wae.getResponse()` as-is (status, headers, body preserved)
+- Removed `ApiError` wrapping + error code mapping from `GlobalExceptionHandler`
+- Catastrophic failure (non-WebApplicationException) → 500 with RFC 9457 ProblemDetail JSON
+- Commit: 001ef7a0
+
+**feat(architecture)**: READY-049 — transaction-service Hexagonal cleanup (80% → 100%)
+
+- Added `saveAll` + `findExpiredPendingTransactions` to `TransactionPersistencePort` + adapter
+- Created `VirtualAccountPersistencePort` + `VirtualAccountPersistenceAdapter`
+- Refactored `VirtualAccountService` → inject `VirtualAccountPersistencePort`
+- Refactored `PaymentExpiryScheduler` → inject `TransactionPersistencePort` + `VirtualAccountPersistencePort`
+- `applicationShouldNotDependOnAdapter` ArchUnit rule: 18 violations → 0 (now enforced with `rule.check()`)
+- All 5 ArchUnit rules pass. Commit: 45cd6fa2
+
 ### iter-62 (cont.) — 2026-06-20
 
 **fix(webapp)**: WEBAPP-LINT-002 — 134 → 10 warnings (95% closure)

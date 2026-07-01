@@ -4,6 +4,75 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-083: Gateway Upstream Error Forwarding — WebApplicationException.getResponse() Returns Verbatim (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: Gateway / Error Handling / JAX-RS / ExceptionMapper / READY-025
+**Context**: Rolling out RFC 9457 ProblemDetail format across all backend services (READY-024), the gateway-service uses a different stack (Quarkus JAX-RS `ExceptionMapper<Throwable>`, not Spring `@RestControllerAdvice`). Its `GlobalExceptionHandler` was catching `WebApplicationException` and re-wrapping the upstream response body in a generic `ApiError` DTO.
+
+**Root Cause**:
+The handler was calling `Response.status(response.getStatus()).entity(ApiError.of(...)).build()` — effectively discarding the upstream response body (which was already a proper JSON error from the backend) and replacing it with a generic gateway format. The original status code was preserved, but the body, headers (like `Content-Type: application/problem+json`), and any upstream-specific fields were lost.
+
+**Fix**:
+- For `WebApplicationException`: return `wae.getResponse()` unchanged — preserves upstream status, headers, and body verbatim
+- For catastrophic non-`WebApplicationException` errors: return 500 with RFC 9457 ProblemDetail fields (`type`, `title`, `status`, `detail`, `error_code`, `timestamp`)
+- Removed entire `getErrorCode()` switch block + `ApiError` wrapping
+
+**Code**:
+```java
+if (exception instanceof WebApplicationException wae) {
+    return wae.getResponse();  // forward verbatim
+}
+// Catastrophic → 500 with ProblemDetail
+return Response.status(500).entity(problemDetail(...)).type(APPLICATION_JSON).build();
+```
+
+**Lesson (3 parts)**:
+1. **JAX-RS `ExceptionMapper` vs Spring `@RestControllerAdvice`**: Gateway uses a different framework stack (Quarkus JAX-RS). The RFC 9457 base class (`Rfc9457GlobalExceptionHandler`) is Spring-specific and cannot be reused. Gateway needs its own error handling approach.
+2. **`wae.getResponse()` is the original response**: When Quarkus propagates an upstream error as `WebApplicationException`, the response object already contains the correct status, body, and headers. Rewriting it is destructive. `getResponse()` returns the response as-is.
+3. **Catch-all should use ProblemDetail, not ApiError**: The legacy `ApiError` format was project-specific. Switching to RFC 9457 `application/problem+json` (with `error_code`, `trace_id`, `timestamp`) makes the gateway error format consistent with backend services.
+
+---
+
+## L-082: RFC 9457 Rollout Pattern — AccessDeniedException + protected respondWith() for 15 Services (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: Error Handling / RFC 9457 / READY-024 / Spring Boot
+**Context**: After creating `Rfc9457GlobalExceptionHandler` base class in iter-56, only `transaction-service` had opted in via `Rfc9457TransactionExceptionHandler`. Remaining 15 backend services still used their own `GlobalExceptionHandler` with legacy `ApiResponse` format. All 15 had at minimum an `AccessDeniedException` handler (14 explicit + the base didn't have one). Each service also had its own error code scheme (generic `ACCESS_DENIED` vs service-specific `CMS_403`, `DISP_403`, `PROMO_403`, `INT_403`).
+
+**Fix**:
+1. **Add `AccessDeniedException` handler to base class** — since 14 of 15 services need it, it's universally applicable. Returns `403 FORBIDDEN` with `error_code = "ACCESS_DENIED"`.
+2. **Make `respondWith()` protected** — the base method was `private`, so subclasses couldn't use it for custom error codes. Changing to `protected` enabled reuse.
+3. **Create 15 Rfc9457*ExceptionHandler subclasses**:
+   - 8 empty subclasses (base handles everything): account, auth, compliance, fx, investment, lending, partner, statement
+   - 3 custom error code subclasses (override 6 handlers each): cms (`CMS_*`), dispute (`DISP_*`), promotion (`PROMO_*`)
+   - 4 special subclasses: billing (+`DataIntegrityViolation`→409), wallet (empty — `HttpRequestMethodNotSupported` already in base), integration (`MessageNotFound`+`DataIntegrityViolation`+`INT_*` codes), product-catalog (`ProductNotFound`→404)
+
+**Subclass pattern** (empty):
+```java
+@RestControllerAdvice
+@org.springframework.core.annotation.Order(0)
+public class Rfc9457XxxExceptionHandler extends Rfc9457GlobalExceptionHandler {}
+```
+
+**Subclass pattern** (custom codes):
+```java
+@Override
+@ExceptionHandler(AccessDeniedException.class)
+public ResponseEntity<ProblemDetail> handleAccessDenied(
+        AccessDeniedException ex, HttpServletRequest request) {
+    return respondWith(FORBIDDEN, "Forbidden", "Insufficient permissions", "CMS_403", request);
+}
+```
+
+**Lesson (4 parts)**:
+1. **`AccessDeniedException` is universal** — every service with JWT/OAuth2 security throws it. Handle it once in the base class instead of repeating in every subclass.
+2. **`respondWith()` must be `protected` not `private`** — subclass can't reuse private helpers. The initial design (`private`) prevented custom error code services from using the base helper.
+3. **Custom error codes need 6 handler overrides** — `AccessDeniedException`, `MethodArgumentNotValidException`, `ConstraintViolationException`, `IllegalArgumentException`, `IllegalStateException`, and `Exception` all need overrides to use service-specific codes (e.g., `CMS_400` vs `VALIDATION_ERROR`). The base `@ExceptionHandler` annotations are inherited but Spring picks the most specific handler — which means the base handler runs unless the subclass overrides it.
+4. **`@Order(0)` is critical** — without it, the legacy `GlobalExceptionHandler` (which has `@Order(LOWEST_PRECEDENCE)` default) still wins. The subclass must carry `@Order(0)` to take precedence. Both handlers coexist so the transition is non-breaking.
+
+---
+
 ## L-072: HCP Guest Cluster Node Bootstrap — Private Route53 Zone Must Include Guest VPCs (2026-06-24)
 
 **Date**: 2026-06-24
