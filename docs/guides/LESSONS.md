@@ -51,6 +51,64 @@ void trustAllCertsFieldMustNotExist() {
 
 ---
 
+## L-086: Rule #4 Enforcement, System.getenv Refactor, and ARTEMIS Fail-Fast — Starter Dependency Hygiene + ObjectMapper Test Trap (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: Security / Money / Outbox / Config / Testing
+**Context**: Remediating 4 audits in a single session — AUDIT-059 (ARTEMIS admin fallback), AUDIT-053 (System.getenv anti-pattern), AUDIT-048 (Saga outbox bypass), AUDIT-049 (AuditLog outbox fallback). All four are Rule #4 violations or config hygiene gaps.
+
+**Root Causes and Fixes**:
+
+1. **AUDIT-059 — Container pods starting with default `admin` Artemis password**: yaml placeholders `${ARTEMIS_PASSWORD:admin}` silently fell back to `admin` when env var unset. **Fix**: Add `validatePasswordForProfile()` in `JmsAutoConfiguration` constructor that throws `IllegalStateException` for null/blank/`"admin"` password in `{container, prod, staging}` profiles. Remove `:admin` fallback from 2 container yamls (base yamls keep for local dev).
+
+2. **AUDIT-053 — Raw `System.getenv()` in 8 production paths**: Bypasses Spring externalized config, can't override via `application.yml` or `@TestPropertySource`. **Fix**: Inject `@Value("${payu.security.cors.allowed-origins:default}")` field per SecurityConfig. Pattern: use namespaced Spring property paths (e.g. `payu.security.cors.allowed-origins`) in `@Value`, map env var → Spring property via `application.yml` placeholder. 6 SecurityConfig + 2 Camel routes migrated; 25 new tests across 8 services.
+
+3. **AUDIT-048 — SagaEventPublisher direct Kafka bypass**: `SagaEventPublisher.publishSagaEvent()` called `kafkaTemplate.send()` directly. **Fix**: Inject `OutboxService`, replace with `outboxService.createEvent(aggregateType="Saga", sagaId, eventType, payload, null, topic)`. Added `outbox-starter` dependency to `saga-starter/pom.xml`.
+
+4. **AUDIT-049 — AuditLogPublisher kafkaTemplate fallback**: The class HAD OutboxService wiring (optional 4-arg ctor) BUT `publish()` fell back to `kafkaTemplate.send()` when OutboxService was null. The bug was the fallback path, not missing wiring. **Fix**: Throw `IllegalStateException` at start of `publish()` if `outboxService` is null, remove fallback branch entirely.
+
+**Lessons (6 parts)**:
+
+1. **TDD dep+class+test coherence for shared starter deps**: When adding a starter dependency (e.g. `outbox-starter` to `saga-starter/pom.xml`), must update 3 things in sync: pom.xml dependency + production code constructor signature + test calling new signature. If dep missing → test won't compile (`package id.payu.outbox.service does not exist`). If production code not updated → test fails at runtime (e.g. NoSuchFieldException). Add dep first, then production constructor, then test reference resolves cleanly.
+
+2. **`ObjectMapper.findAndRegisterModules()` required for Instant field serialization in tests**: Bare `new ObjectMapper()` lacks JSR310 module. `objectMapper.convertValue(event, Map.class)` throws when event has `Instant timestamp` field. **Symptom is subtle**: production code's try-catch silently swallows the exception, `outboxService.createEvent` is never called, test verifies outbox was never invoked → confusing test failure pointing at wrong cause. **Fix**: use `new ObjectMapper().findAndRegisterModules()` in tests, or `registerModule(new JavaTimeModule())` explicitly.
+
+3. **Optional wiring + runtime fallback is a latent bug pattern**: `AuditLogPublisher` had `OutboxService` wiring in constructor (4-arg ctor), but `publish()` had `if (outboxService != null) {...} else if (kafkaTemplate != null) {...}` — when outbox was unwired (3-arg ctor), silently fell back to Kafka. Audit logs are compliance-critical (OJK/PCI-DSS); silent bypass = regulatory violation. **Fix**: make OutboxService required, throw `IllegalStateException` at method start if null. Keep legacy constructors for binary compat but make them functionally useless (first publish attempt fails fast).
+
+4. **OutboxService destination topic regex enforcement**: `OutboxService.createEvent(destinationTopic)` validates against `^payu\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.v[0-9]+(?:\.dlq)?$` (GAP-31, enforced since iter-68). Caller must ensure topic matches pattern. **Discovered in this session**: `SagaProperties.eventTopic` default `saga.events` would fail at runtime with `IllegalArgumentException`. Callers must override to pattern-compliant value (e.g. `payu.saga.events.v1`).
+
+5. **`ReflectionTestUtils.setField()` as RED signal in TDD**: When test calls `setField(target, "fieldName", value)` for a field that doesn't exist, throws `IllegalArgumentException` at runtime — valid RED state proving the test depends on the new field being added. **Caveat**: don't use instance-based test methods (e.g. `fieldShouldAcceptSpringPropertyOverride`) on Lombok `@RequiredArgsConstructor` classes with dependencies — instantiating requires mocking all final fields (e.g. `OjkRouteBuilder` needs `OjkValidator`, `OjkTransformer`, `MessageProcessingService` mocks), adds noise. Use only class-level reflection (`Class.getDeclaredField()`).
+
+6. **Per-service @Value pattern for Spring Boot config**: Use namespaced Spring property paths (e.g. `payu.security.cors.allowed-origins`) in `@Value` instead of raw env var names (`CORS_ALLOWED_ORIGINS`). Map env var → Spring property via `application.yml` placeholder:
+   ```yaml
+   payu:
+     security:
+       cors:
+         allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+   ```
+   This decouples Java code from environment variable naming conventions and enables test overrides via `@TestPropertySource("payu.security.cors.allowed-origins=https://test.payu.co.id")`.
+
+**Verification**:
+- `mvn -f backend/shared/jms-starter/pom.xml test` → `Tests run: 6, Failures: 0`
+- `mvn -f backend/wallet-service/pom.xml test` → `Tests run: 12, Failures: 0` (full regression)
+- `mvn -f backend/transaction-service/pom.xml test` → `Tests run: 129, Failures: 0` (full regression)
+- `mvn -f backend/partner-service/pom.xml test` → `Tests run: 236, Failures: 0` (full regression)
+- `mvn -f backend/backoffice-service/pom.xml test` → `Tests run: 110, Failures: 0, Skipped: 29` (existing baseline)
+- `mvn -f backend/fx-service/pom.xml test` → `Tests run: 57, Failures: 0`
+- `mvn -f backend/account-service/pom.xml test` → `Tests run: 125, Failures: 0, Skipped: 2` (existing baseline)
+- `mvn -f backend/integration-service/pom.xml test` → `Tests run: 47, Failures: 0`
+- `mvn -f backend/shared/saga-starter/pom.xml test` → `Tests run: 149, Failures: 0`
+- `mvn -f backend/shared/security-starter/pom.xml test` → `Tests run: 45, Failures: 0`
+- **Total**: 916/916 PASS across 10 modules, 0 regression.
+
+**Commits**:
+- `f3c4354 fix(jms): reject weak ARTEMIS password in prod profiles`
+- `8e6c6f3 refactor(security): replace System.getenv with @Value injection`
+- `264201d feat(saga): route lifecycle events via outbox-starter`
+- `29be779 fix(security): enforce outbox-only audit log publishing`
+
+---
+
 ## L-084: Edge Idempotency Bypass, Container filesystem hardening, and Framework compatibility fixes (2026-07-01)
 
 

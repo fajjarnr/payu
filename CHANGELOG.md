@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.71] - 2026-07-01
+
+### Security
+
+- **AUDIT-049 (P1 CLOSED): Enforce outbox-only audit log publishing (Rule #4)**. `AuditLogPublisher.publish()` now throws `IllegalStateException` at method start if `outboxService` is null, with message referencing AGENTS.md Rule #4. Removed `kafkaTemplate.send()` fallback branch entirely — audit logs are compliance-critical (OJK/PCI-DSS), silent bypass = regulatory violation. Class HAD OutboxService wiring (4-arg ctor) but kept a silent fallback path; the bug was the fallback, not the wiring. New `AuditLogPublisherOutboxTest` (3 cases) — outbox-only path verified, fail-fast when outbox missing verified.
+- **AUDIT-059 (P2 CLOSED): Reject weak ARTEMIS password in production profiles**. Added `Environment` parameter to `JmsAutoConfiguration` constructor; `validatePasswordForProfile()` throws `IllegalStateException` for null/blank/`"admin"` password in `{container, prod, staging}` profiles. Removed `:admin` fallback from `billing/application-container.yml` + `integration/application-container.yml` (base profile yamls retain `:admin` for local dev convenience). Eliminates container pods starting with publicly known Artemis credentials.
+
+### Changed
+
+- **AUDIT-053 (P2 CLOSED): Replace `System.getenv()` with `@Value` injection in 8 production paths**. 6 SecurityConfig classes (account, transaction, partner, wallet, backoffice, fx) + 2 Camel route builders (OjkRouteBuilder, SwiftRouteBuilder) migrated to `@Value` injection with namespaced Spring property paths. Account-service also fixed 2 extra `System.getenv` calls in `jwtDecoder()` for `OIDC_ISSUER` + `OIDC_JWK_SET_URI`. Pattern: env var (`CORS_ALLOWED_ORIGINS`, `OIDC_ISSUER`, `OIDC_JWK_SET_URI`, `KAFKA_BOOTSTRAP`) maps to Spring property (`payu.security.cors.allowed-origins`, etc.) via `application.yml` placeholder — decouples Java code from env var naming conventions and enables test overrides via `@TestPropertySource`.
+
+### Added
+
+- **AUDIT-048 (P1 CLOSED): Route Saga lifecycle events via outbox-starter (Rule #4)**. `SagaEventPublisher` constructor signature changed from `(KafkaTemplate, SagaProperties)` to `(OutboxService, SagaProperties)`. `publishSagaEvent()` now calls `outboxService.createEvent(aggregateType="Saga", sagaId, eventType, payload, null, topic)` instead of direct `kafkaTemplate.send()`. Added `outbox-starter` dependency to `saga-starter/pom.xml`. Saga events now survive Kafka outages and gain replay semantics. New `SagaEventPublisherOutboxTest` (3 cases) RED→GREEN. Note: `SagaProperties.eventTopic` default `saga.events` does NOT match OutboxService regex enforcement — callers must override to `payu.saga.events.v1`.
+
+### Tests
+
+- `JmsAutoConfigurationFailFastTest` (new, jms-starter) — 6 reflection tests verifying null/blank/weak password rejected in container/prod/staging, strong password accepted, dev profile unchanged.
+- `SecurityConfigCorsOriginsTest` (new, 5 services: wallet, transaction, partner, backoffice, fx) — 3 tests each verifying `@Value` annotation exists with `payu.security.cors.allowed-origins` property + default expression preserves localhost fallback + value flows into `CorsConfiguration`.
+- `SecurityConfigCorsOriginsTest` (new, account-service) — 5 tests for 3 `@Value` fields (allowedOrigins + oidcIssuerUri + oidcJwkSetUri).
+- `SagaEventPublisherOutboxTest` (new, saga-starter) — 3 tests verifying outbox called with correct args, kafkaTemplate never touched, events-disabled skip.
+- `AuditLogPublisherOutboxTest` (new, security-starter) — 3 tests verifying outbox-only path, fail-fast when outbox missing, audit-disabled skip.
+- Total: 31 new tests, all GREEN.
+
+### Build
+
+- `mvn -f backend/shared/jms-starter/pom.xml test` → 6/6 PASS
+- `mvn -f backend/shared/saga-starter/pom.xml test` → 149/149 PASS
+- `mvn -f backend/shared/security-starter/pom.xml test` → 45/45 PASS
+- `mvn -f backend/wallet-service/pom.xml test` → 12/12 PASS
+- `mvn -f backend/transaction-service/pom.xml test` → 129/129 PASS
+- `mvn -f backend/partner-service/pom.xml test` → 236/236 PASS
+- `mvn -f backend/backoffice-service/pom.xml test` → 110/110 PASS (29 skip baseline)
+- `mvn -f backend/fx-service/pom.xml test` → 57/57 PASS
+- `mvn -f backend/account-service/pom.xml test` → 125/125 PASS (2 skip baseline)
+- `mvn -f backend/integration-service/pom.xml test` → 47/47 PASS
+- **Total**: 916/916 PASS across 10 modules, 0 regression.
+
+### Lessons
+
+- **L-086**: Rule #4 enforcement + System.getenv refactor + ARTEMIS fail-fast — starter dependency hygiene + ObjectMapper test trap. Covers 6 lessons: TDD dep+class+test coherence, `ObjectMapper.findAndRegisterModules()` required for Instant field serialization in tests, optional wiring + runtime fallback latent bug pattern, OutboxService destination topic regex enforcement, `ReflectionTestUtils.setField()` as RED signal in TDD, per-service `@Value` pattern for Spring Boot config.
+
+---
+
 ## [1.8.70] - 2026-07-01
 
 ### Security
