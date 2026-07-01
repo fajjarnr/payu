@@ -85,4 +85,4 @@ payu:
   jms:
     broker-url: tcp://${ARTEMIS_HOST:artemis}:${ARTEMIS_PORT:61616}
     username: ${ARTEMIS_USERNAME:admin}
-    password: ${ARTEMIS_PASSWORD:admin}
+    password: ${ARTEMIS_PASSWORD}
