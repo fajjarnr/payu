@@ -24,6 +24,7 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,6 +54,9 @@ public class CacheWithTTLAspect {
     // In-flight requests tracker for sync access
     private final ConcurrentReferenceHashMap<String, CompletableFuture<?>> inFlightRequests =
             new ConcurrentReferenceHashMap<>();
+
+    // Per-key monitor objects for stampede protection (GAP-27: kept on caller thread to preserve ThreadLocals)
+    private final ConcurrentHashMap<String, Object> syncLocks = new ConcurrentHashMap<>();
 
     @Around("@annotation(cacheWithTTL)")
     public Object aroundCacheWithTTL(ProceedingJoinPoint joinPoint, CacheWithTTL cacheWithTTL) throws Throwable {
@@ -126,7 +130,7 @@ public class CacheWithTTLAspect {
             long ttlSeconds,
             Class<?> returnType) throws Throwable {
 
-        // Try to get from cache first (fast path, no locking)
+        // Fast path: cache hit without locking
         Object cachedValue = cacheService.get(cacheKey, returnType);
         if (cachedValue != null) {
             Metrics.counter("cache.aspect.hit", "cache", cacheWithTTL.cacheName()).increment();
@@ -137,39 +141,43 @@ public class CacheWithTTLAspect {
         Metrics.counter("cache.aspect.miss", "cache", cacheWithTTL.cacheName()).increment();
         log.debug("Cache miss for key: {}", cacheKey);
 
-        // Use computeIfAbsent for stampede protection — only one thread computes
-        @SuppressWarnings("unchecked")
-        CompletableFuture<Object> future = (CompletableFuture<Object>) inFlightRequests.computeIfAbsent(cacheKey, k ->
-                CompletableFuture.supplyAsync(() -> {
-                    try {
-                        Object result = joinPoint.proceed();
+        // GAP-27: stampede protection via per-key monitor, executed on caller thread.
+        // Previous CompletableFuture.supplyAsync detached execution from the request thread,
+        // stripping SecurityContextHolder, TenantContext, MDC, and @Transactional boundaries.
+        Object lock = syncLocks.computeIfAbsent(cacheKey, k -> new Object());
+        synchronized (lock) {
+            // Double-check: another thread may have populated the cache while we waited for the lock
+            cachedValue = cacheService.get(cacheKey, returnType);
+            if (cachedValue != null) {
+                Metrics.counter("cache.aspect.hit", "cache", cacheWithTTL.cacheName()).increment();
+                log.debug("Cache hit after lock acquisition for key: {}", cacheKey);
+                return cachedValue;
+            }
 
-                        // Check unless condition
-                        if (StringUtils.isNotBlank(cacheWithTTL.unless())) {
-                            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-                            Method method = signature.getMethod();
-                            if (evaluateCondition(cacheWithTTL.unless(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
-                                log.debug("Cache unless condition true, not caching: {}", cacheKey);
-                                return result;
-                            }
-                        }
+            try {
+                Object result = joinPoint.proceed();
 
-                        if (result != null) {
-                            cacheService.put(cacheKey, result, java.time.Duration.ofSeconds(ttlSeconds));
-                            log.debug("Cached result for key: {}", cacheKey);
-                        }
-
+                // Check unless condition
+                if (StringUtils.isNotBlank(cacheWithTTL.unless())) {
+                    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+                    Method method = signature.getMethod();
+                    if (evaluateCondition(cacheWithTTL.unless(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
+                        log.debug("Cache unless condition true, not caching: {}", cacheKey);
                         return result;
-                    } catch (Throwable e) {
-                        log.error("Error executing cached method: {}", e.getMessage());
-                        throw new RuntimeException(e);
-                    } finally {
-                        inFlightRequests.remove(cacheKey);
                     }
-                })
-        );
+                }
 
-        return future.get();
+                if (result != null) {
+                    cacheService.put(cacheKey, result, java.time.Duration.ofSeconds(ttlSeconds));
+                    log.debug("Cached result for key: {}", cacheKey);
+                }
+
+                return result;
+            } catch (Throwable e) {
+                log.error("Error executing cached method: {}", e.getMessage());
+                throw e;
+            }
+        }
     }
 
     private Object handleAsyncCache(
