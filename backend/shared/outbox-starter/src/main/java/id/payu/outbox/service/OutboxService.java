@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Service for creating and managing outbox events.
@@ -63,6 +64,15 @@ import java.util.UUID;
 @Validated
 @RequiredArgsConstructor
 public class OutboxService {
+
+    /**
+     * GAP-31 — Enforces AGENTS.md rule #4: destination topics must match
+     * {@code payu.<domain>.<event-type>.v<n>}, optionally suffixed with {@code .dlq}.
+     * The regex anchors both ends (matches() is full-match) so partial strings cannot leak through.
+     */
+    static final Pattern DESTINATION_TOPIC_PATTERN = Pattern.compile(
+            "^payu\\.[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*\\.v[0-9]+(?:\\.dlq)?$"
+    );
 
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
@@ -134,6 +144,9 @@ public class OutboxService {
         Objects.requireNonNull(aggregateId, "aggregateId must not be null");
         Objects.requireNonNull(eventType, "eventType must not be null");
         Objects.requireNonNull(payload, "payload must not be null");
+
+        // GAP-31: validate destination topic against payu.<domain>.<event>.v<n>[.dlq]
+        validateDestinationTopic(destinationTopic);
 
         OutboxEvent event = OutboxEvent.builder()
                 .aggregateType(aggregateType)
@@ -232,6 +245,25 @@ public class OutboxService {
     public static class OutboxEventCreationException extends RuntimeException {
         public OutboxEventCreationException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    /**
+     * GAP-31 — Reject destination topics that violate the {@code payu.<domain>.<event>.v<n>[.dlq]}
+     * contract from AGENTS.md rule #4. A {@code null} topic is allowed (caller lets the publisher
+     * resolve the default topic from the event-type).
+     *
+     * @throws IllegalArgumentException when the topic is non-null but does not match the pattern
+     */
+    static void validateDestinationTopic(String destinationTopic) {
+        if (destinationTopic == null) {
+            return;
+        }
+        if (!DESTINATION_TOPIC_PATTERN.matcher(destinationTopic).matches()) {
+            throw new IllegalArgumentException(
+                    "destinationTopic '" + destinationTopic + "' violates the required pattern "
+                            + "'payu.<domain>.<event-type>.v<n>' (optional '.dlq' suffix). "
+                            + "See AGENTS.md rule #4 for the topic naming contract.");
         }
     }
 }
