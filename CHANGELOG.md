@@ -43,6 +43,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### iter-69 — 2026-07-01 — Security BLOCKER Sprint (6 of 8 audit gaps closed)
+
+Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP-7/11/12 deferred to infra tickets):
+
+**fix(security)**: GAP-34 — Unsafe class deserialization RCE in `TypedJsonRedisSerializer`
+- Whitelisted class names to `id.payu.*` + minimal JDK packages (`java.util.*`, `java.lang.*`, `java.time.*`, `java.math.*`)
+- Reject any payload whose type header is outside the whitelist, >256 chars, or contains `[` (array descriptor)
+- `Class.forName(name, true, cl)` no longer triggers static initializers for arbitrary classes
+- 5 new tests in `TypedJsonRedisSerializerSecurityTest`: 5/5 PASS
+- Commit: `7b344cf`
+
+**fix(security)**: GAP-21 — Inactive log masking (PII → LokiStack)
+- Wired `id.payu.security.masking.LogbackMaskingFilter` around both `JSON_CONSOLE` and `TEXT_CONSOLE` appenders in `logback-payu-base.xml`
+- NIK, email, phone, card numbers, passwords, tokens, API keys now masked before reaching LokiStack
+- 2 new tests in `LogbackPiiMaskingIntegrationTest`: 2/2 PASS
+- Commit: `d05372f`
+
+**fix(security)**: GAP-23 — Insecure OIDC TLS verification (`none` → `required`)
+- `quarkus.oidc.tls.verification: required` in both `main/resources/application.yaml` and `test/resources/application.yaml`
+- Keycloak CA cert mounted in local quadlet via `Volume=/etc/payu/tls/keycloak-ca.pem`
+- Production OCP deployment yaml (when cluster restored) MUST include equivalent volume + volumeMount
+- 2 new tests in `OidcTlsVerificationTest`: 2/2 PASS
+- Commit: `624a5d7`
+- F3 deferred: 7 pre-existing baseline test errors in unrelated gateway filters (ApiVersionFilter, AuthorizationFilter, etc.) — orthogonal to GAP-23
+
+**fix(security)**: GAP-30 + GAP-28 — Fail-fast on missing encryption password + enable in 16 container profiles
+- `SecurityAutoConfiguration.encryptionService()` now throws `IllegalStateException` in `container`/`prod`/`staging` profiles when `payu.security.encryption.password` (env `ENCRYPTION_KEY`) is unset
+- Dev profile keeps dev-fallback behaviour (warning log + default key) for local development
+- Flipped `encryption-enabled: false` → `true` and added `encryption.password: ${ENCRYPTION_KEY}` mapping in 16× `application-container.yml`
+- 3 new tests in `SecurityAutoConfigurationFailFastTest` (ApplicationContextRunner): 3/3 PASS
+- Commit: `7392b63`
+
+**fix(security)**: GAP-19 — Broken multitenancy (cross-tenant data leakage)
+- Wired `@EntityListeners(TenantEntityListener.class)` on 6 wallet-service entities (the only service where the listener was missing); 31 other entities were already wired at baseline
+- Deleted local `id.payu.account.config.TenantInterceptor` (shadowed shared `id.payu.security.multitenancy.TenantInterceptor`); grep confirmed 0 callers
+- security-starter full suite: 42/42 PASS + BUILD SUCCESS
+- Commit: `c1361e3`
+- F3 deferred: GAP-20 (yml/yaml dedupe in account-service + auth-service) tracked as separate ticket
+
+**fix(security)**: GAP-1 — pgcrypto extension for PII column-level encryption
+- Added `V102__add_pgcrypto_extension.sql` to `account-service/db/migration/`: `CREATE EXTENSION IF NOT EXISTS pgcrypto`
+- Extension is now available for future migrations to use `pgp_sym_encrypt()` / `pgp_sym_decrypt()` on NIK columns with Vault-injected key
+- account-service V6 already expanded `users.email` + `users.phone_number` to VARCHAR(512) for AES-256-GCM ciphertext
+- Commit: `e06988f`
+- F3 deferred: Full column-level encryption migration (pgp_sym_encrypt on NIK + remaining PII columns across kyc/lending/partner/cms) tracked as follow-up ticket
+
+**Deferred (infra-blocked, not in this sprint):**
+- GAP-8 mTLS strict enforcement — requires Istio/ServiceMesh (OCP-007, suspended per TODOS)
+- GAP-7 SIEM (INFRA-011) — separate infra sprint
+- GAP-11 CI/CD security (READY-044/045/046, INFRA-013/014) — separate infra sprint
+- GAP-12 Incident Ops (INFRA-020/022, READY-050/051) — separate infra sprint
+
 ### iter-55 — 2026-06-19
 
 **feat(architecture)**: READY-049 — transaction-service Hexagonal cleanup (partial)
