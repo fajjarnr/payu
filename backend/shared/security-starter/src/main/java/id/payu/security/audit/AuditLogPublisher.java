@@ -42,6 +42,16 @@ public class AuditLogPublisher {
 
     @Async
     public void publish(AuditEvent event) {
+        // AUDIT-049 fail-fast: outbox is REQUIRED for audit log publishing.
+        // Audit logs are compliance-critical (OJK/PCI-DSS) — direct Kafka bypass
+        // is forbidden by AGENTS.md rule #4.
+        if (outboxService == null) {
+            throw new IllegalStateException(
+                "AuditLogPublisher requires OutboxService (AGENTS.md rule #4: outbox-only). "
+                    + "Audit log bypass via direct Kafka is forbidden — audit events are "
+                    + "compliance-critical and must survive broker outages via outbox relay.");
+        }
+
         try {
             if (!properties.getAudit().isEnabled()) {
                 return;
@@ -66,36 +76,19 @@ public class AuditLogPublisher {
             // Standardize topic name to: payu.security.audit-log.v1
             String topic = "payu.security.audit-log.v1";
 
-            if (outboxService != null) {
-                // Publish using outbox for transactional safety
-                @SuppressWarnings("unchecked")
-                Map<String, Object> payload = objectMapper.convertValue(event, Map.class);
-                
-                outboxService.createEvent(
-                    "AuditLog",
-                    event.getEventId(),
-                    event.getEventType(),
-                    payload,
-                    null,
-                    topic
-                );
-                log.debug("Created outbox event for audit: {}", event.getEventId());
-            } else if (kafkaTemplate != null) {
-                // Serialize to JSON
-                String json = objectMapper.writeValueAsString(event);
+            // AUDIT-049 fix: outbox-only path, KafkaTemplate fallback removed.
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = objectMapper.convertValue(event, Map.class);
 
-                // Send to Kafka directly
-                kafkaTemplate.send(topic, event.getEventId(), json)
-                        .whenComplete((result, ex) -> {
-                            if (ex != null) {
-                                log.error("Failed to publish audit event to Kafka: {}", event.getEventId(), ex);
-                            } else {
-                                log.debug("Published audit event directly to Kafka: {}", event.getEventId());
-                            }
-                        });
-            } else {
-                log.warn("No publisher available (both OutboxService and KafkaTemplate are null) for audit event: {}", event.getEventId());
-            }
+            outboxService.createEvent(
+                "AuditLog",
+                event.getEventId(),
+                event.getEventType(),
+                payload,
+                null,
+                topic
+            );
+            log.debug("Created outbox event for audit: {}", event.getEventId());
 
         } catch (Exception e) {
             log.error("Failed to publish/serialize audit event", e);
