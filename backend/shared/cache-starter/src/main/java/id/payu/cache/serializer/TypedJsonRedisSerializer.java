@@ -8,6 +8,7 @@ import org.springframework.data.redis.serializer.SerializationException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Custom {@link RedisSerializer} that preserves the runtime type of cached values,
@@ -51,6 +52,39 @@ public class TypedJsonRedisSerializer implements RedisSerializer<Object> {
     private static final char DELIMITER = '|';
     private static final char ELEMENT_OPEN = '<';
     private static final char ELEMENT_CLOSE = '>';
+
+    // GAP-34 fix: only allow class names from safe package prefixes.
+    // Class.forName(name, true, cl) triggers static initializers → RCE gadget vector.
+    private static final Set<String> ALLOWED_PACKAGE_PREFIXES = Set.of(
+        "id.payu.",
+        "java.util.",
+        "java.lang.",
+        "java.time.",
+        "java.math."
+    );
+
+    private static final int MAX_CLASS_NAME_LENGTH = 256;
+
+    /**
+     * GAP-34: Reject any type header that is not in the allowed package whitelist
+     * and is not overlong. Prevents arbitrary class loading which would trigger
+     * static initializers (RCE) if an attacker can write crafted entries to Redis.
+     */
+    private static void validateClassName(String fqn) {
+        if (fqn == null || fqn.isBlank()) {
+            throw new SerializationException("Empty type header");
+        }
+        if (fqn.length() > MAX_CLASS_NAME_LENGTH) {
+            throw new SerializationException("Type header too long: " + fqn.length() + " chars");
+        }
+        if (fqn.contains("[")) {
+            throw new SerializationException("Array type not allowed in header");
+        }
+        boolean allowed = ALLOWED_PACKAGE_PREFIXES.stream().anyMatch(fqn::startsWith);
+        if (!allowed) {
+            throw new SerializationException("Class not in whitelist: " + fqn);
+        }
+    }
 
     private final ObjectMapper mapper;
 
@@ -111,9 +145,11 @@ public class TypedJsonRedisSerializer implements RedisSerializer<Object> {
             }
 
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            validateClassName(outerTypeName);
             Class<?> outerType = Class.forName(outerTypeName, true, cl);
 
             if (elementTypeName != null && Collection.class.isAssignableFrom(outerType)) {
+                validateClassName(elementTypeName);
                 Class<?> elementType = Class.forName(elementTypeName, true, cl);
                 @SuppressWarnings("unchecked")
                 Class<? extends Collection<?>> collectionType =
