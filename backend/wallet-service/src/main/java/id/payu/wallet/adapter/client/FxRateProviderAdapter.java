@@ -39,7 +39,7 @@ public class FxRateProviderAdapter implements FxRateProviderPort {
         }
 
         // Calculate inverse rate
-        BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_UP);
+        BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN);
 
         FxRateInfo info = new FxRateInfo(
                 UUID.randomUUID(),

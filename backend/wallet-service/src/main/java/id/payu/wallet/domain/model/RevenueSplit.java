@@ -106,9 +106,9 @@ public class RevenueSplit {
             }
 
             if (stakeholder.getPercentage() != null && stakeholder.getPercentage().compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal percentageAmount = totalAmount
+                 BigDecimal percentageAmount = totalAmount
                         .multiply(stakeholder.getPercentage())
-                        .divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
+                        .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_EVEN);
                 amount = amount.add(percentageAmount);
             }
 

@@ -179,7 +179,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
         if (transactionAmount.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return cashbackAmount.divide(transactionAmount, 4, java.math.RoundingMode.HALF_UP)
+        return cashbackAmount.divide(transactionAmount, 4, java.math.RoundingMode.HALF_EVEN)
             .multiply(BigDecimal.valueOf(100));
     }
 

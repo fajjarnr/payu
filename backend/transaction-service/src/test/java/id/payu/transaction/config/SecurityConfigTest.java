@@ -79,144 +79,107 @@ class SecurityConfigTest {
                 .andExpect(status().isOk());
     }
 
-    // Actuator endpoints are publicly accessible (WebSecurityCustomizer ignores /actuator/**)
-
+    // Actuator endpoints - only health and info are public; others require authentication
+ 
     @Test
-    @DisplayName("Should allow public access to actuator metrics endpoint")
-    void shouldAllowPublicAccessToActuatorMetrics() throws Exception {
+    @DisplayName("Should require authentication for actuator metrics endpoint")
+    void shouldRequireAuthenticationForActuatorMetrics() throws Exception {
         mockMvc.perform(get("/actuator/metrics"))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator prometheus endpoint")
-    void shouldAllowPublicAccessToActuatorPrometheus() throws Exception {
+    @DisplayName("Should require authentication for actuator prometheus endpoint")
+    void shouldRequireAuthenticationForActuatorPrometheus() throws Exception {
         mockMvc.perform(get("/actuator/prometheus"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    // Prometheus endpoint may return 200 or 500 depending on setup
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator env endpoint")
-    void shouldAllowPublicAccessToActuatorEnv() throws Exception {
+    @DisplayName("Should require authentication for actuator env endpoint")
+    void shouldRequireAuthenticationForActuatorEnv() throws Exception {
         mockMvc.perform(get("/actuator/env"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator configprops endpoint")
-    void shouldAllowPublicAccessToActuatorConfigProps() throws Exception {
+    @DisplayName("Should require authentication for actuator configprops endpoint")
+    void shouldRequireAuthenticationForActuatorConfigProps() throws Exception {
         mockMvc.perform(get("/actuator/configprops"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator beans endpoint")
-    void shouldAllowPublicAccessToActuatorBeans() throws Exception {
+    @DisplayName("Should require authentication for actuator beans endpoint")
+    void shouldRequireAuthenticationForActuatorBeans() throws Exception {
         mockMvc.perform(get("/actuator/beans"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator mappings endpoint")
-    void shouldAllowPublicAccessToActuatorMappings() throws Exception {
+    @DisplayName("Should require authentication for actuator mappings endpoint")
+    void shouldRequireAuthenticationForActuatorMappings() throws Exception {
         mockMvc.perform(get("/actuator/mappings"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator loggers endpoint")
-    void shouldAllowPublicAccessToActuatorLoggers() throws Exception {
+    @DisplayName("Should require authentication for actuator loggers endpoint")
+    void shouldRequireAuthenticationForActuatorLoggers() throws Exception {
         mockMvc.perform(get("/actuator/loggers"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator threaddump endpoint")
-    void shouldAllowPublicAccessToActuatorThreadDump() throws Exception {
+    @DisplayName("Should require authentication for actuator threaddump endpoint")
+    void shouldRequireAuthenticationForActuatorThreadDump() throws Exception {
         mockMvc.perform(get("/actuator/threaddump"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
-    @DisplayName("Should allow public access to actuator heapdump endpoint")
-    void shouldAllowPublicAccessToActuatorHeapDump() throws Exception {
+    @DisplayName("Should require authentication for actuator heapdump endpoint")
+    void shouldRequireAuthenticationForActuatorHeapDump() throws Exception {
         mockMvc.perform(get("/actuator/heapdump"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
-
+ 
     // API endpoint tests
-
+ 
     @Test
     @DisplayName("Should require authentication for transaction transfer endpoint")
     void shouldRequireAuthenticationForTransferEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/transactions/transfer"))
                 .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
     @DisplayName("Should require authentication for transaction detail endpoint")
     void shouldRequireAuthenticationForTransactionDetail() throws Exception {
         mockMvc.perform(get("/api/v1/transactions/123e4567-e89b-12d3-a456-426614174000"))
                 .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
     @DisplayName("Should require authentication for account transactions endpoint")
     void shouldRequireAuthenticationForAccountTransactions() throws Exception {
         mockMvc.perform(get("/api/v1/transactions/accounts/123e4567-e89b-12d3-a456-426614174000"))
                 .andExpect(status().isUnauthorized());
     }
-
+ 
     @Test
     @DisplayName("Should require authentication for QRIS payment endpoint")
     void shouldRequireAuthenticationForQrisPayment() throws Exception {
         mockMvc.perform(get("/api/v1/transactions/qris/pay"))
                 .andExpect(status().isUnauthorized());
     }
-
-    // Verify wildcard actuator access is not blocked by auth
-
+ 
+    // Verify wildcard actuator access is blocked by auth
+ 
     @Test
-    @DisplayName("Should allow public access to non-existent actuator endpoint")
-    void shouldAllowPublicAccessToNonExistentActuatorEndpoint() throws Exception {
+    @DisplayName("Should require authentication for non-existent actuator endpoint")
+    void shouldRequireAuthenticationForNonExistentActuatorEndpoint() throws Exception {
         mockMvc.perform(get("/actuator/nonexistent"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isNotEqualTo(401);
-                    assertThat(status).isNotEqualTo(403);
-                });
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -56,7 +56,7 @@ public class DisbursementController {
     public ResponseEntity<DisbursementResponse> createDisbursement(
             @Valid @RequestBody CreateDisbursementRequest request,
             @RequestHeader(value = "X-Account-Id", required = false) UUID accountId,
-            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "X-Idempotency-Key", required = true) String idempotencyKey) {
 
         // Use header account ID or extract from authentication, then verify ownership
         UUID sourceAccountId = accountId != null ? accountId : getCurrentAccountId();

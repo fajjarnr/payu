@@ -4,7 +4,55 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-085: Priority 1 Audit Remediation — Actuator Hardening, Idempotency Key, and Banker's Rounding (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: Security / Money / Spring Boot / Testing
+**Context**: Remediating 5 Priority-1 audit items (AUDIT-065, 066, 052, 054, 067) in a single pass across 14 Spring Boot services.
+
+**Root Causes and Fixes**:
+
+1. **AUDIT-065 — Trust-All TLS bypass in gateway**: `AuthorizationFilter.java` had an anonymous `X509TrustManager` accepting all certs, activated by `quarkus.tls.trust-all=true` config flag. Risk: JWKS endpoint MITM → forged JWT bypass. **Fix**: Remove `trustAllCerts` field + bypass code path entirely. `loadJwkSet()` uses standard `JWKSet.load()` only. Add reflection-based regression test to block re-introduction.
+
+2. **AUDIT-052/066 — Actuator wide-open across 14 services**: `permitAll("/actuator/**")` exposed `heapdump`, `env`, `beans`, `configprops` to unauthenticated access. **Fix pattern** (applied to 14 `SecurityConfig.java`):
+```java
+.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+.requestMatchers("/actuator/**").authenticated()
+```
+Remove `WebSecurityCustomizer` bean — it bypassed security filter chain for actuator paths.
+
+3. **Stale test after `WebSecurityCustomizer` removal**: `compliance-service/SecurityConfigTest.java` checked via reflection that `webSecurityCustomizer()` method EXISTS — assertion inverted after hardening. **Fix**: Invert assertion to verify the method does NOT exist (bypass removed per AUDIT-066).
+
+4. **AUDIT-054 — `required=false` on idempotency header**: `DisbursementController` and `BatchDisbursementController` had `@RequestHeader(value = "X-Idempotency-Key", required = false)`. Spring auto-returns `400 Bad Request` when `required = true` and header is absent — no custom code needed.
+
+5. **AUDIT-067/068 — `HALF_UP` / `ROUND_HALF_UP` instead of `HALF_EVEN`**: 37 production files across 8 services used wrong rounding. `BigDecimal.ROUND_HALF_UP` is also deprecated since Java 9 — use `RoundingMode.HALF_EVEN`.
+
+**Lessons (5 parts)**:
+
+1. **`WebSecurityCustomizer` is an actuator bypass vector**: Any bean of type `WebSecurityCustomizer` that calls `web.ignoring().requestMatchers("/actuator/**")` completely excludes those paths from the security filter chain — `SecurityFilterChain` rules are irrelevant. The only safe approach: remove the bean, keep rules inside `filterChain()` only.
+
+2. **Reflection-based tests must be updated when methods are intentionally deleted**: If a test uses `Class.getDeclaredMethod("foo")` to assert `foo` exists, and `foo` is removed as a security fix, the test must be inverted — assert the method does NOT exist. Otherwise the test fails and blocks CI with a false negative.
+
+3. **Regression-guard for removed security code**: Use a reflection-based unit test to prevent re-introduction of removed bypass code. Pattern:
+```java
+@Test
+void trustAllCertsFieldMustNotExist() {
+    boolean found = Arrays.stream(AuthorizationFilter.class.getDeclaredFields())
+        .anyMatch(f -> f.getName().contains("trustAll"));
+    assertFalse(found, "trust-all TLS bypass field must not exist");
+}
+```
+
+4. **`required = true` on `@RequestHeader` is zero-code enforcement**: Spring MVC automatically returns `400 Bad Request` with a descriptive error when a required header is missing. No custom interceptor needed for idempotency key enforcement at the controller level.
+
+5. **`HALF_EVEN` is mandatory for banking (`RoundingMode.HALF_EVEN`, not `HALF_UP`)**: `HALF_UP` introduces systematic bias over large volumes (always rounds away from zero at midpoint). `HALF_EVEN` (banker's rounding) rounds to the nearest even digit at midpoint — statistically unbiased. AGENTS.md Rule #1 mandates `HALF_EVEN`. Also: `BigDecimal.ROUND_HALF_UP` constant is deprecated since Java 9 — always use `RoundingMode.HALF_EVEN` enum.
+
+**Verification**: Full Maven build (`mvn -f backend/pom.xml clean package -DskipTests`) + test suite (`mvn -f backend/pom.xml test`) — **39 modules BUILD SUCCESS**, all tests GREEN.
+
+---
+
 ## L-084: Edge Idempotency Bypass, Container filesystem hardening, and Framework compatibility fixes (2026-07-01)
+
 
 **Date**: 2026-07-01
 **Domain**: Security / Gateway / Container Hardening / Spring Boot / Quarkus

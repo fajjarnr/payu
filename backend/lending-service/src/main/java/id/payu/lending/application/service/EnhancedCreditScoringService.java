@@ -94,7 +94,7 @@ public class EnhancedCreditScoringService {
         Integer totalTransactions = summary.totalTransactions();
         BigDecimal totalAmount = summary.totalAmount();
         BigDecimal successRate = new BigDecimal(summary.successfulTransactions())
-                .divide(new BigDecimal(totalTransactions), 4, RoundingMode.HALF_UP);
+                .divide(new BigDecimal(totalTransactions), 4, RoundingMode.HALF_EVEN);
 
         if (successRate.compareTo(new BigDecimal("0.98")) >= 0) {
             score = score.add(new BigDecimal("30"));

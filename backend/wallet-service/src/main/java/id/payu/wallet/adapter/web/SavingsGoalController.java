@@ -281,7 +281,7 @@ public class SavingsGoalController {
         if (entity.getTargetAmount() != null && entity.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
             progressPercentage = entity.getCurrentAmount()
                     .multiply(BigDecimal.valueOf(100))
-                    .divide(entity.getTargetAmount(), 2, BigDecimal.ROUND_HALF_UP);
+                    .divide(entity.getTargetAmount(), 2, java.math.RoundingMode.HALF_EVEN);
         }
 
         return SavingsGoalResponse.builder()

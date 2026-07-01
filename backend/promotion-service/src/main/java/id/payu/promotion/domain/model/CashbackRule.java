@@ -104,9 +104,9 @@ public class CashbackRule {
 
             case PERCENTAGE:
                 if (cashbackPercentage != null) {
-                    calculatedCashback = transaction.getAmount()
-                            .multiply(BigDecimal.valueOf(cashbackPercentage))
-                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                     calculatedCashback = transaction.getAmount()
+                             .multiply(BigDecimal.valueOf(cashbackPercentage))
+                             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
                 } else {
                     calculatedCashback = BigDecimal.ZERO;
                 }

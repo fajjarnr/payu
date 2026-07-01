@@ -38,7 +38,9 @@ public class SecurityConfig {
                     // Public endpoints - active products only
                     .requestMatchers("/products/**").permitAll()
                     // Health and metrics
-                    .requestMatchers("/actuator/**").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                    .requestMatchers("/product-catalog-service/actuator/health", "/product-catalog-service/actuator/health/**", "/product-catalog-service/actuator/info").permitAll()
+                    .requestMatchers("/actuator/**", "/product-catalog-service/actuator/**").authenticated()
                     // API docs
                     .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v1/public/**", "/api/v1/v1/public/**").permitAll()
                     // Admin endpoints require authentication

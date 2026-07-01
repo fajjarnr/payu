@@ -29,7 +29,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 import java.net.URL;
-import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
@@ -37,10 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * Gateway-level authorization filter that validates JWT tokens
@@ -103,9 +98,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     @ConfigProperty(name = "quarkus.oidc.auth-server-url", defaultValue = "http://localhost:8080/realms/payu")
     String authServerUrl;
 
-    @Inject
-    @ConfigProperty(name = "quarkus.tls.trust-all", defaultValue = "false")
-    boolean trustAllCerts;
+    // AUDIT-065: trust-all TLS bypass REMOVED — use Quarkus TLS registry
+    // (quarkus.tls.<name>.trust-store.*) for custom truststores instead.
 
     @Inject
     GatewayConfig gatewayConfig;
@@ -237,26 +231,15 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     }
 
     /**
-     * Load JWKSet from URL with optional trust-all SSL context for dev environments.
-     * Controlled by quarkus.tls.trust-all configuration property.
+     * Load JWKSet from JWKS endpoint URL.
+     *
+     * AUDIT-065: Trust-all TLS bypass REMOVED (was P0 security vulnerability).
+     * For HTTPS JWKS endpoints with custom CA (e.g., internal Keycloak),
+     * configure truststore via Quarkus TLS registry:
+     *   quarkus.tls.oidc.trust-store.pem.certs=/path/to/keycloak-ca.pem
+     * The JVM will use the configured truststore for certificate validation.
      */
     private JWKSet loadJwkSet(URL url) throws IOException, ParseException {
-        if (url.getProtocol().equals("https") && trustAllCerts) {
-            try {
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, new TrustManager[]{
-                    new X509TrustManager() {
-                        public X509Certificate[] getAcceptedIssuers() { return null; }
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                    }
-                }, new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-                HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-            } catch (Exception e) {
-                Log.warnf(e, "Failed to configure trust-all SSL: %s", e.getMessage());
-            }
-        }
         return JWKSet.load(url);
     }
 

@@ -53,7 +53,7 @@ public class SettlementFxRate {
         fxRate.fromCurrency = fromCurrency;
         fxRate.toCurrency = toCurrency;
         fxRate.rate = rate;
-        fxRate.inverseRate = BigDecimal.ONE.divide(rate, 8, BigDecimal.ROUND_HALF_UP);
+        fxRate.inverseRate = BigDecimal.ONE.divide(rate, 8, java.math.RoundingMode.HALF_EVEN);
         fxRate.lockedAt = LocalDateTime.now();
         fxRate.expiresAt = fxRate.lockedAt.plusMinutes(15);
         fxRate.active = true;
@@ -83,7 +83,7 @@ public class SettlementFxRate {
         if (!isValid()) {
             throw new IllegalStateException("FX rate lock has expired");
         }
-        return amount.multiply(rate).setScale(2, BigDecimal.ROUND_HALF_UP);
+        return amount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_EVEN);
     }
 
     /**

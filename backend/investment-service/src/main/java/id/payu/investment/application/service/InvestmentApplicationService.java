@@ -314,7 +314,7 @@ public class InvestmentApplicationService implements
                 BigDecimal newAveragePrice = gold.getAverageBuyPrice()
                         .multiply(gold.getAmount())
                         .add(currentPrice.multiply(amount.divide(currentPrice, 4, RoundingMode.DOWN)))
-                        .divide(newAmount, 2, RoundingMode.HALF_UP);
+                        .divide(newAmount, 2, RoundingMode.HALF_EVEN);
 
                 gold.setAmount(newAmount);
                 gold.setAverageBuyPrice(newAveragePrice);
@@ -454,7 +454,7 @@ public class InvestmentApplicationService implements
     }
 
     private BigDecimal calculateMaturityAmount(BigDecimal principal, BigDecimal annualRate, int months) {
-        BigDecimal rate = annualRate.multiply(BigDecimal.valueOf(months)).divide(BigDecimal.valueOf(12), 4, RoundingMode.HALF_UP);
+        BigDecimal rate = annualRate.multiply(BigDecimal.valueOf(months)).divide(BigDecimal.valueOf(12), 4, RoundingMode.HALF_EVEN);
         return principal.multiply(BigDecimal.ONE.add(rate));
     }
 

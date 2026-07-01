@@ -28,7 +28,7 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("SecurityConfig should declare filterChain and webSecurityCustomizer beans")
+    @DisplayName("SecurityConfig should declare filterChain bean and NOT declare webSecurityCustomizer bypass")
     void securityConfigShouldDeclareBeanMethods() throws NoSuchMethodException {
         // Verify filterChain bean method exists
         assertThat(SecurityConfig.class.getDeclaredMethod("filterChain",
@@ -36,9 +36,16 @@ class SecurityConfigTest {
                 .as("SecurityConfig must declare a filterChain(HttpSecurity) method")
                 .isNotNull();
 
-        // Verify webSecurityCustomizer bean method exists
-        assertThat(SecurityConfig.class.getDeclaredMethod("webSecurityCustomizer"))
-                .as("SecurityConfig must declare a webSecurityCustomizer() method")
-                .isNotNull();
+        // Verify webSecurityCustomizer bypass was removed (AUDIT-066: actuator hardening)
+        boolean hasWebSecurityCustomizer;
+        try {
+            SecurityConfig.class.getDeclaredMethod("webSecurityCustomizer");
+            hasWebSecurityCustomizer = true;
+        } catch (NoSuchMethodException e) {
+            hasWebSecurityCustomizer = false;
+        }
+        assertThat(hasWebSecurityCustomizer)
+                .as("SecurityConfig must NOT declare webSecurityCustomizer() — actuator bypass removed per AUDIT-066")
+                .isFalse();
     }
 }

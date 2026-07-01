@@ -323,11 +323,11 @@ class LoanAmortizationCalculationTest {
         @Test
         @DisplayName("each interest = outstanding × monthlyRate rounded to 2dp")
         void interestCalculationAccuracy() {
-            BigDecimal monthlyRate = INTEREST_RATE.divide(new BigDecimal("12"), 10, RoundingMode.HALF_UP);
+            BigDecimal monthlyRate = INTEREST_RATE.divide(new BigDecimal("12"), 10, RoundingMode.HALF_EVEN);
             for (RepaymentSchedule s : schedules) {
                 BigDecimal expectedInterest = s.getOutstandingPrincipal()
                         .multiply(monthlyRate)
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .setScale(2, RoundingMode.HALF_EVEN);
                 assertThat(s.getInterestAmount())
                         .as("installment %d interest", s.getInstallmentNumber())
                         .isEqualByComparingTo(expectedInterest);

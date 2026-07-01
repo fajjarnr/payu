@@ -17,17 +17,14 @@ import org.springframework.core.annotation.Order;
 public class SecurityConfig {
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/actuator/**", "/compliance-service/actuator/**");
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                        .requestMatchers("/compliance-service/actuator/health", "/compliance-service/actuator/health/**", "/compliance-service/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**", "/compliance-service/actuator/**").authenticated()
                         .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v1/public/**", "/api/v1/v1/public/**").permitAll()
                         .requestMatchers("/api/v1/compliance/**").hasAnyRole("COMPLIANCE_OFFICER", "ADMIN")
                         .anyRequest().authenticated()

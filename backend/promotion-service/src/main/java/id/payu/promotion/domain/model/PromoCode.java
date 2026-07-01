@@ -105,7 +105,7 @@ public class PromoCode {
 
         if (discountType == DiscountType.PERCENTAGE) {
             discount = amount.multiply(discountValue)
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
         } else {
             discount = discountValue;
         }

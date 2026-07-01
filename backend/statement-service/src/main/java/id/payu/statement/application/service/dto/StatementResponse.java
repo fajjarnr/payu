@@ -83,7 +83,7 @@ public class StatementResponse {
         if (amount == null) {
             return "Rp 0";
         }
-        return "Rp " + amount.setScale(0, java.math.RoundingMode.HALF_UP)
+        return "Rp " + amount.setScale(0, java.math.RoundingMode.HALF_EVEN)
             .toBigInteger()
             .toString()
             .replaceAll("\\B(?=(\\d{3})+(?!\\d))", ".");

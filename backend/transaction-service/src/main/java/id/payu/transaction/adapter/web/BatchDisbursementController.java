@@ -63,7 +63,7 @@ public class BatchDisbursementController {
     @Operation(summary = "Create a new batch", description = "Creates a batch disbursement for bulk payouts")
     public ResponseEntity<BatchResponse> createBatch(
             @Valid @RequestBody CreateBatchRequest request,
-            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "X-Idempotency-Key", required = true) String idempotencyKey) {
 
         // Verify the authenticated user owns the source account
         String userId = extractUserId();

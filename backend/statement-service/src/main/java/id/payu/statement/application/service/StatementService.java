@@ -623,7 +623,7 @@ public class StatementService {
     }
 
     private String formatCurrency(BigDecimal amount) {
-        return "Rp " + amount.setScale(0, RoundingMode.HALF_UP)
+        return "Rp " + amount.setScale(0, RoundingMode.HALF_EVEN)
             .toBigInteger()
             .toString()
             .replaceAll("\\B(?=(\\d{3})+(?!\\d))", ".");

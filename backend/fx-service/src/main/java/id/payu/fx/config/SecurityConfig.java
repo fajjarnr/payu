@@ -21,17 +21,14 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/actuator/**", "/fx-service/actuator/**");
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                .requestMatchers("/fx-service/actuator/health", "/fx-service/actuator/health/**", "/fx-service/actuator/info").permitAll()
+                .requestMatchers("/actuator/**", "/fx-service/actuator/**").authenticated()
                 .requestMatchers("/v1/public/**", "/api/v1/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/v1/rates/**").permitAll()
                 .requestMatchers("/v1/conversions/estimate").permitAll()

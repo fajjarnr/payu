@@ -202,7 +202,7 @@ public class Budget {
         if (limitAmount == null || limitAmount.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return currentSpent.multiply(ONE_HUNDRED).divide(limitAmount, 2, BigDecimal.ROUND_HALF_UP);
+        return currentSpent.multiply(ONE_HUNDRED).divide(limitAmount, 2, java.math.RoundingMode.HALF_EVEN);
     }
 
     /**

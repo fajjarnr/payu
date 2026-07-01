@@ -200,7 +200,7 @@ public class PromotionService {
     private BigDecimal calculateRewardAmount(PromotionEntity promotion, BigDecimal transactionAmount) {
         return switch (promotion.getRewardType()) {
             case PERCENTAGE -> transactionAmount.multiply(promotion.getRewardValue())
-                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_EVEN);
             case FIXED_AMOUNT -> promotion.getRewardValue();
             case POINTS -> promotion.getRewardValue();
         };

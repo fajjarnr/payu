@@ -279,10 +279,10 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private BigDecimal calculateMonthlyInstallment(BigDecimal principal, BigDecimal annualRate, int months) {
-        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("12"), 6, RoundingMode.HALF_UP);
+        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("12"), 6, RoundingMode.HALF_EVEN);
         
         if (monthlyRate.compareTo(BigDecimal.ZERO) == 0) {
-            return principal.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
+            return principal.divide(new BigDecimal(months), 2, RoundingMode.HALF_EVEN);
         }
         
         BigDecimal numerator = monthlyRate.multiply(principal);
@@ -290,7 +290,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
                 BigDecimal.ONE.add(monthlyRate).pow(-months, java.math.MathContext.DECIMAL128)
         );
         
-        return numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+        return numerator.divide(denominator, 2, RoundingMode.HALF_EVEN);
     }
 
     private RiskCategory determineRiskCategory(BigDecimal score) {

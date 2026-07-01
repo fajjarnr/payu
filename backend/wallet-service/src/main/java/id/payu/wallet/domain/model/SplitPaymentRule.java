@@ -125,7 +125,7 @@ public class SplitPaymentRule {
                 amt = total.subtract(allocated);
             } else {
                 amt = total.multiply(r.getPercentage())
-                        .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                        .divide(new BigDecimal("100"), 4, RoundingMode.HALF_EVEN);
             }
             legs.add(new SplitLegAmount(r, amt));
             allocated = allocated.add(amt);

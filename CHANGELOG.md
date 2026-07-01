@@ -9,7 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.70] - 2026-07-01
+
+### Security
+
+- **AUDIT-065 (P0 CLOSED): Remove trust-all TLS bypass from gateway `AuthorizationFilter`**. Deleted anonymous `X509TrustManager` accepting all certificates and `trustAllCerts` field from `AuthorizationFilter.java`. `loadJwkSet()` now uses standard `JWKSet.load()`. Added regression test `AuthorizationFilterTrustAllRemovedTest` (reflection-based, 3 tests) to prevent re-introduction. Eliminates JWKS MITM / forged JWT auth bypass risk.
+- **AUDIT-052 + AUDIT-066 (P1 CLOSED): Lock down actuator endpoints across all 14 Spring Boot services**. Replaced `permitAll("/actuator/**")` with explicit allowlist (`/actuator/health`, `/actuator/health/**`, `/actuator/info` only) and `authenticated()` for all other actuator paths. Removed `WebSecurityCustomizer` bypass beans from all 14 services: wallet, product-catalog, transaction, dispute, compliance, backoffice, billing, investment, lending, partner, promotion, support, fx, cms. Eliminates unauthenticated access to `heapdump`, `env`, `beans`, `configprops`, `metrics`.
+- **AUDIT-054 (P1 CLOSED): Enforce mandatory `X-Idempotency-Key` header on disbursement endpoints** (`transaction-service`). Changed `required = false` → `required = true` in `DisbursementController` and `BatchDisbursementController`. Requests without the header now return `400 Bad Request` automatically via Spring MVC.
+
+### Fixed
+
+- **AUDIT-067 + AUDIT-068 (P1+P2 CLOSED): Replace `HALF_UP` with `HALF_EVEN` (banker's rounding)** across 37 production files in 8 services. Also replaced deprecated `BigDecimal.ROUND_HALF_UP` constant with `RoundingMode.HALF_EVEN` enum (7 files). Affected services: promotion, statement, fx, investment, lending, wallet, account, partner. Complies with AGENTS.md Rule #1.
+- **Stale `SecurityConfigTest` in `compliance-service`**: Inverted `webSecurityCustomizer()` reflection assertion to verify the bypass method does NOT exist (correctly reflects hardened state post AUDIT-066).
+
+### Tests
+
+- `AuthorizationFilterTrustAllRemovedTest` (new, gateway-service) — 3 reflection tests verifying no trust-all field, no bypass code pattern, and standard `JWKSet.load()` usage.
+- `SecurityConfigTest` (compliance-service) — updated to assert `webSecurityCustomizer()` does NOT exist.
+
+### Build
+
+- `mvn -f backend/pom.xml clean package -DskipTests -T 1C` → **BUILD SUCCESS** (39 modules)
+- `mvn -f backend/pom.xml test -T 1C` → **BUILD SUCCESS** (all tests GREEN)
+
+### Lessons
+
+- **L-085**: Priority 1 audit patterns — actuator `WebSecurityCustomizer` bypass, reflection test inversion, `required=true` header enforcement, `HALF_EVEN` mandatory for banking.
+
+---
+
 ## [1.8.69] - 2026-07-01
+
 
 ### Added
 

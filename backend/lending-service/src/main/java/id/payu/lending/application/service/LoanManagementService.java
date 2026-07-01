@@ -101,12 +101,12 @@ public class LoanManagementService implements LoanManagementUseCase {
         List<RepaymentSchedule> schedules = new ArrayList<>();
 
         BigDecimal outstandingPrincipal = loan.getPrincipalAmount();
-        BigDecimal monthlyRate = loan.getInterestRate().divide(new BigDecimal("12"), 10, RoundingMode.HALF_UP);
+        BigDecimal monthlyRate = loan.getInterestRate().divide(new BigDecimal("12"), 10, RoundingMode.HALF_EVEN);
 
         for (int i = 1; i <= loan.getTenureMonths(); i++) {
             BigDecimal interestAmount = outstandingPrincipal
                     .multiply(monthlyRate)
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .setScale(2, RoundingMode.HALF_EVEN);
 
             BigDecimal principalAmount = loan.getMonthlyInstallment().subtract(interestAmount);
 

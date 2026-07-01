@@ -56,7 +56,7 @@ public class SavingsGoal {
             return BigDecimal.ZERO;
         }
         return currentAmount.multiply(BigDecimal.valueOf(100))
-                .divide(targetAmount, 2, RoundingMode.HALF_UP);
+                .divide(targetAmount, 2, RoundingMode.HALF_EVEN);
     }
 
     /**

@@ -49,7 +49,7 @@ public class CashbackSagaContext implements Serializable {
         }
 
         return request.transactionAmount().multiply(percentage)
-            .setScale(2, java.math.RoundingMode.HALF_UP);
+            .setScale(2, java.math.RoundingMode.HALF_EVEN);
     }
 
     // Getters and Setters

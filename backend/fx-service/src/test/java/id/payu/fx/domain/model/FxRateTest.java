@@ -25,7 +25,7 @@ class FxRateTest {
                 .fromCurrency("USD")
                 .toCurrency("IDR")
                 .rate(rate)
-                .inverseRate(BigDecimal.ONE.divide(rate, 10, java.math.RoundingMode.HALF_UP))
+                .inverseRate(BigDecimal.ONE.divide(rate, 10, java.math.RoundingMode.HALF_EVEN))
                 .validFrom(validFrom)
                 .validUntil(validUntil)
                 .version(1L)
