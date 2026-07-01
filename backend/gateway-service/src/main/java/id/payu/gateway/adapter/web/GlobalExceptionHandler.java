@@ -1,62 +1,56 @@
 package id.payu.gateway.adapter.web;
 
-import id.payu.gateway.dto.ApiError;
 import io.quarkus.logging.Log;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Global exception handler for the gateway.
+ *
+ * <p>Forwards upstream 4xx/5xx responses verbatim per READY-025.
+ * Only transforms gateway-native errors (route not found, circuit‑breaker, etc.)
+ * into a consistent RFC 9457 {@code application/problem+json} body.
+ * Catastrophic failures (non‑WebApplicationException) produce a generic 500.
  */
 @Provider
 public class GlobalExceptionHandler implements ExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable exception) {
-        Log.errorf(exception, "Unhandled exception in gateway");
-
+        // WebApplicationException — forward the upstream response verbatim.
+        // The original status code, headers, and body are preserved so the
+        // client sees exactly what the backend service returned.
         if (exception instanceof WebApplicationException wae) {
-            Response response = wae.getResponse();
-            return Response.status(response.getStatus())
-                .entity(ApiError.of(
-                    getErrorCode(response.getStatus()),
-                    exception.getMessage(),
-                    null,
-                    response.getStatus()
-                ))
-                .type("application/json")
-                .build();
+            return wae.getResponse();
         }
 
-        // Default to 500 Internal Server Error
-        return Response.status(500)
-            .entity(ApiError.of(
-                "INTERNAL_SERVER_ERROR",
-                "An unexpected error occurred",
-                null,
-                500
-            ))
-            .type("application/json")
-            .build();
+        // Catastrophic failure (connection error, timeout, etc.) — return
+        // a standardised 500 so the client always gets parseable JSON.
+        Log.errorf(exception, "Catastrophic failure in gateway");
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(problemDetail(500, "Internal server error",
+                        "An unexpected error occurred. Please try again later.",
+                        "INTERNAL_ERROR"))
+                .type(MediaType.APPLICATION_JSON)
+                .build();
     }
 
-    private String getErrorCode(int status) {
-        return switch (status) {
-            case 400 -> "BAD_REQUEST";
-            case 401 -> "UNAUTHORIZED";
-            case 403 -> "FORBIDDEN";
-            case 404 -> "NOT_FOUND";
-            case 405 -> "METHOD_NOT_ALLOWED";
-            case 408 -> "REQUEST_TIMEOUT";
-            case 409 -> "CONFLICT";
-            case 429 -> "TOO_MANY_REQUESTS";
-            case 500 -> "INTERNAL_SERVER_ERROR";
-            case 502 -> "BAD_GATEWAY";
-            case 503 -> "SERVICE_UNAVAILABLE";
-            case 504 -> "GATEWAY_TIMEOUT";
-            default -> "ERROR";
-        };
+    private static Map<String, Object> problemDetail(int status, String title,
+                                                     String detail, String errorCode) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", "about:blank");
+        body.put("title", title);
+        body.put("status", status);
+        body.put("detail", detail);
+        body.put("error_code", errorCode);
+        body.put("timestamp", Instant.now().toString());
+        return body;
     }
 }
