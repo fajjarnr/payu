@@ -21,6 +21,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
@@ -182,6 +183,14 @@ public class Rfc9457GlobalExceptionHandler {
                 detail, "METHOD_NOT_ALLOWED", request);
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("Access denied in {}: {}", request.getRequestURI(), ex.getMessage());
+        return respondWith(HttpStatus.FORBIDDEN, "Forbidden",
+                "Insufficient permissions", "ACCESS_DENIED", request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(
             Exception ex, HttpServletRequest request) {
@@ -197,8 +206,8 @@ public class Rfc9457GlobalExceptionHandler {
 
     // --- helpers ---
 
-    private ResponseEntity<ProblemDetail> respondWith(HttpStatus status, String title, String detail,
-                                                      String errorCode, HttpServletRequest request) {
+    protected ResponseEntity<ProblemDetail> respondWith(HttpStatus status, String title, String detail,
+                                                        String errorCode, HttpServletRequest request) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(ProblemDetail.of(status, title, detail, errorCode, request));

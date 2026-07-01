@@ -121,6 +121,36 @@
 
 ---
 
+## 🛡️ DevSecOps Gaps — Untracked (DEVSECOPS_ARCHITECTURE.md v1.3.0)
+
+> Item di DEVSECOPS_ARCHITECTURE.md v1.3.0 yang **belum masuk backlog** TODOS per audit 2026-06-30.
+> Existing coverage: INFRA-001..022 + READY-044..052 + Phase 1-4 markers di section `🏗️ DevSecOps Architecture` (di atas).
+> Section coverage: §9 DR · §10 FinOps · §13 Network · §14 API Gateway/WAF · §16 Data Residency · §18 Incident · §21 DevEx · §4 Pipeline.
+
+| Key | Priority | § | Summary | Status |
+|:---|:---:|:---:|:---|:---|
+| DEVSECOPS-001 | P1 | §9.2 | Vault Raft auto-snapshot setiap 1 jam → S3 bucket terenkripsi + versioning enabled | ⏳ Open |
+| DEVSECOPS-002 | P1 | §9.2 | Vault auto-unseal via Transit secret engine (self-managed) atau AWS KMS (cloud) | ⏳ Open |
+| DEVSECOPS-003 | P1 | §14.3 | Global rate limit 1000 req/s per IP di edge API Gateway + per-API configurable limit | ⏳ Open |
+| DEVSECOPS-004 | P1 | §14.4 | Enforce API security headers di semua response: HSTS (max-age=31536000), CSP default-src 'none', X-Frame-Options DENY, X-Content-Type-Options nosniff, X-Request-ID | ⏳ Open |
+| DEVSECOPS-005 | P2 | §13.2 | EgressNetworkPolicy + Istio egress gateway untuk production namespace (PCI-DSS Req) — allowlist hanya untuk payment provider, Bank Indonesia API, DNS resolver | ⏳ Open |
+| DEVSECOPS-006 | P2 | §13.3 | DNS query logging di `payu-preprod` + `payu` + CoreDNS policy untuk blok DNS tunneling | ⏳ Open |
+| DEVSECOPS-007 | P2 | §16.2 | LUKS encryption untuk PersistentVolumes di production namespace + Vault-managed DEK rotation 30 hari | ⏳ Open |
+| DEVSECOPS-008 | P2 | §16.3 | Wazuh rule untuk detect + alert data egress ke non-Indonesia IP range (data sovereignty) | ⏳ Open |
+| DEVSECOPS-009 | P2 | §15 / Phase 3 | Schedule quarterly pen test di `payu-preprod` — calendar + scope doc + CAB approval workflow | ⏳ Open |
+| DEVSECOPS-010 | P2 | §9.4 | Dokumentasi DNS failover procedure untuk standby cluster (Route53/CoreDNS health check) | ⏳ Open |
+| DEVSECOPS-011 | P2 | §4.1.4 | Renovate Bot deployment — automated dependency update PR dengan security advisory filtering | ⏳ Open |
+| DEVSECOPS-012 | P2 | §10.2 | Monthly cost report workflow per environment → Engineering Lead (OpenCost + Grafana sudah ada; perlu automation + distribution) | ⏳ Open |
+| DEVSECOPS-013 | P2 | §18.3 | ChatOps Slack/Teams bot commands: `/payu-hotfix`, `/payu-rollback`, `/payu-status` | ⏳ Open |
+| DEVSECOPS-014 | P3 | §21.2 | Local Pipeline Simulation: `tkn pipeline start --dry-run` atau `act` integration untuk testing pipeline logic lokal | ⏳ Open |
+| DEVSECOPS-015 | P3 | §21.2 | Security Findings Dashboard Grafana — open CVE per service, pipeline success rate, MTTR | ⏳ Open |
+| DEVSECOPS-016 | P3 | §21.3 | Service template scaffolder: `make new-service NAME=X LANGUAGE=Y` — secure Dockerfile + pre-configured Semgrep/k6/ZAP tasks + Vault/ESO + ArgoCD manifest | ⏳ Open |
+
+**Cross-reference (already tracked, status refresh)**:
+- INFRA-001 (Trivy registry auth) · INFRA-007 (DR runbook doc) · INFRA-010 (ComplianceOperator CIS) · INFRA-011 (Wazuh SIEM) · INFRA-013 (Tekton Chains SLSA) · INFRA-014 (Tekton Results 365d) · INFRA-015 (Coraza WAF CRS v4) · INFRA-018 (Registry GC) · INFRA-019 (Quay auto-prune) · INFRA-020 (Severity P1-P4) · INFRA-022 (PagerDuty/Opsgenie) · READY-044..052 (CI/CD + Compliance + WAF + SIEM) — semua OPEN, lihat section `🏗️ DevSecOps Architecture` di atas.
+
+---
+
 ## 🎯 Production Readiness Gap Analysis (2026-06-13)
 
 > Snapshot assessment after E2E + cache + Kafka + AMQ proof. Overall: **~45% production ready**.

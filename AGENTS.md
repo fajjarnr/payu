@@ -38,7 +38,7 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
 9. **Frontend**: Next.js maksimalkan Server Components; gunakan `"use client"` seminimal mungkin (hanya leaf components).
 10. **Container Standard**: UBI9, non-root (UID 1001), drop ALL capabilities, read-only FS, port 8080.
 11. **Security**: Mask PII (NIK/PIN) di logs, encrypt di DB. No secrets di code/properties (gunakan Vault). Strict mTLS. No `setenforce 0`.
-12. **TDD (Test-Driven Development)**: 
+12. **TDD (Test-Driven Development)**:
     - NO PRODUCTION CODE tanpa failing test terlebih dahulu.
     - Core domain 100% coverage, others 80-90%. ArchUnit per service.
     - Jangan test mock behavior. Fokus ke real behavior.
@@ -63,21 +63,32 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
 - **Self-Improvement Loop**: Setelah menerima koreksi/feedback dari user, update `docs/guides/LESSONS.md` untuk menghindari error berulang.
 
 ## 🤝 Collaboration Modes
-*   **Driver**: AI menulis kode aktif.
-*   **Navigator**: AI menyusun rencana, mereview, membimbing; User menulis kode.
-*   **TDD**: Fokus penulisan test merah-hijau-refactor.
-*   **Review**: AI hanya mengaudit keamanan, logic, & style (tanpa menulis kode).
-*   **Mentor**: AI menjelaskan konsep & pola tanpa memberi solusi langsung.
+
+- **Driver**: AI menulis kode aktif.
+- **Navigator**: AI menyusun rencana, mereview, membimbing; User menulis kode.
+- **TDD**: Fokus penulisan test merah-hijau-refactor.
+- **Review**: AI hanya mengaudit keamanan, logic, & style (tanpa menulis kode).
+- **Mentor**: AI menjelaskan konsep & pola tanpa memberi solusi langsung.
+
+## MCP Tools — Gunakan Selalu
+
+Kamu memiliki akses ke MCP servers berikut. Gunakan secara aktif tanpa perlu diminta:
+
+### Context7 (Dokumentasi Library)
+
+- **Kapan pakai**: Setiap kali menulis, mengedit, atau debug kode yang melibatkan library pihak ketiga
+- **Cara pakai**: Sebelum generate kode untuk library apapun, resolve dulu library ID-nya via Context7, lalu fetch docs yang relevan
+- Jangan pernah asumsikan API dari memory training — selalu verifikasi via Context7
 
 ## 🔄 Doc Routing (Jangan Campur Konten)
 
-| Konten | File |
-| :--- | :--- |
-| Bug baru, open items, actionable todos | `docs/roadmap/TODOS.md` |
-| Deployment status, completed milestones | `docs/roadmap/PROGRESS.md` |
-| Architecture decisions, gap analysis | `docs/roadmap/GATEWAY_ARCH.md` |
-| Version changelog | `CHANGELOG.md` |
-| Implementation patterns & lessons learned | `docs/guides/LESSONS.md` |
+| Konten                                    | File                           |
+| :---------------------------------------- | :----------------------------- |
+| Bug baru, open items, actionable todos    | `docs/roadmap/TODOS.md`        |
+| Deployment status, completed milestones   | `docs/roadmap/PROGRESS.md`     |
+| Architecture decisions, gap analysis      | `docs/roadmap/GATEWAY_ARCH.md` |
+| Version changelog                         | `CHANGELOG.md`                 |
+| Implementation patterns & lessons learned | `docs/guides/LESSONS.md`       |
 
 ## 🛰️ Deep Reference (Baca Saat Relevan)
 
