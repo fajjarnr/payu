@@ -13,11 +13,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Open P0s** | 0 |
-| **Open P1s** | 11 (9 pre-existing + 2 NEW READY-076 Postgres HA migration + READY-077 Kafka HA setup) |
+| **Open P0s** | **1** (AUDIT-065: gateway `AuthorizationFilter` trust-all TLS bypass — auth bypass → full system compromise) |
+| **Open P1s** | 13 (9 pre-existing + READY-076/077 + AUDIT-048/049/066/067) |
 | **Open P2s** | 12 |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iters 49-53 closed: BUG-CMS-NPE-002, HMAC callback security (CRITICAL), @Version on 84 entities, ShedLock on 16 schedulers. |
-| **Last Audit** | July 1, 2026 — Architecture Audit (payment/banking best practices). 18 gaps identified. Score: **~46% production ready**. 0 P0, 12 P1, 12 P2 open. See §Architecture Audit below. |
+| **Last Audit** | July 1, 2026 — Deep Audit (caveman full-scan). **17 NEW gaps** (AUDIT-048 to 064): 4 outbox bypasses, actuator wide-open, idempotency `required=false`, scheduler gaps, MapStruct outdated, CSP nonce missing, `System.getenv` anti-pattern. Prior: 18+13 gaps. Score: **~46% production ready**. 0 P0, 4 NEW P1, 8 NEW P2, 5 NEW P3. |
 | **Last Release** | `:1.8.67` (transaction with @Version+HMAC+ShedLock) + `:1.8.66` (transaction/statement iter 52) + `:1.8.65` (partner/statement/wallet/account with @Version+HMAC) + `:1.8.64` (cms/wallet/billing/transaction) + `:1.8.63` (auth/billing/cms/partner/lending with @Version) + `:1.8.62` (backoffice/compliance/dispute/fx/investment/lending/support/transaction) + `:1.8.61` (promotion) + `:1.8.60` (partner/promotion) + `:1.8.59` (9 services bulk) + `web-app:1.5.2` |
 
 ---
@@ -617,6 +617,146 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 - Audit date: 2026-07-01
 - Source files scanned: 14 shared starters, 21 backend services + 5 simulators, 2 frontend apps, infrastructure/platform/* (DEVSECOPS_ARCHITECTURE 106KB).
 - Tools: read, grep, context7 (Spring Boot / Quarkus / Spring Kafka / Next.js).
+- Auditor: AI agent (caveman-mode) — sign-off requires human review per AGENTS.md.
+
+---
+
+## 🔬 Deep Audit — 2026-07-01T14:37Z (Caveman Full-Scan)
+
+> Scan scope: 24 backend services, 14 shared starters, frontend web-app, infrastructure, Containerfiles, application configs.
+> Tools: grep, find, context7 (Spring Boot 4.1.0 + Next.js 16), manual code review.
+> Result: **17 NEW findings** (AUDIT-048 to AUDIT-064). 0 P0, 4 P1, 8 P2, 5 P3.
+
+### 🆕 Findings (AUDIT-048 to AUDIT-064)
+
+| # | Key | Sev | Category | Summary |
+|:---:|:---|:---:|:---|:---|
+| 48 | **AUDIT-048** | P1 | Event (Rule #4) | **Saga-starter bypasses outbox** — `SagaAutoConfiguration.SagaEventPublisher` uses `kafkaTemplate.send()` directly at [SagaAutoConfiguration.java:101](file:///home/ubuntu/payu/backend/shared/saga-starter/src/main/java/id/payu/saga/config/SagaAutoConfiguration.java#L101). AGENTS.md Rule #4: "Publish events via `outbox-starter` (bukan direct `kafkaTemplate.send()`)". Risk: saga events lost if Kafka down at publish time, no replay via outbox table. |
+| 49 | **AUDIT-049** | P1 | Event (Rule #4) | **AuditLogPublisher bypasses outbox** — `security-starter` [AuditLogPublisher.java:88](file:///home/ubuntu/payu/backend/shared/security-starter/src/main/java/id/payu/security/audit/AuditLogPublisher.java#L88) sends audit events via `kafkaTemplate.send()`. Audit logs are compliance-critical — loss = regulatory violation. Must route through outbox. |
+| 50 | **AUDIT-050** | P2 | Event (Rule #4) | **CacheInvalidationPublisher bypasses outbox** — `cache-starter` [CacheInvalidationPublisher.java:48](file:///home/ubuntu/payu/backend/shared/cache-starter/src/main/java/id/payu/cache/service/CacheInvalidationPublisher.java#L48) sends directly via `kafkaTemplate.send()`. Lower risk (cache miss ≠ data loss), but inconsistent with platform rule. |
+| 51 | **AUDIT-051** | P2 | Event (Rule #4) | **WebhookProcessor bypasses outbox** — `api-commons` [WebhookProcessor.java:164](file:///home/ubuntu/payu/backend/shared/api-commons/src/main/java/id/payu/api/common/webhook/WebhookProcessor.java#L164) sends webhook events directly via `kafkaTemplate.send()`. Webhook replay on failure impossible without outbox persistence. |
+| 52 | **AUDIT-052** | P1 | Security | **Transaction-service actuator wide-open** — [SecurityConfig.java:45](file:///home/ubuntu/payu/backend/transaction-service/src/main/java/id/payu/transaction/config/SecurityConfig.java#L45) has `permitAll("/actuator/**")` exposing ALL actuator endpoints (env, beans, configprops, heapdump) to unauthenticated access. Account-service correctly restricts to `/actuator/health` + `/actuator/info` only. **5+ other services likely same issue** — need full sweep. |
+| 53 | **AUDIT-053** | P2 | Security | **`System.getenv()` anti-pattern for config** — Multiple SecurityConfig classes (account-service L77-79, transaction-service L73) use raw `System.getenv().getOrDefault()` for OIDC issuer URI and CORS origins instead of `@Value("${...}")` or `@ConfigurationProperties`. Bypasses Spring externalized config, breaks testability, ignores `application.yml` settings. |
+| 54 | **AUDIT-054** | P1 | Idempotency (Rule #3) | **Idempotency-Key `required=false` on payment endpoints** — [DisbursementController.java:59](file:///home/ubuntu/payu/backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/DisbursementController.java#L59) and [BatchDisbursementController.java:66](file:///home/ubuntu/payu/backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/BatchDisbursementController.java#L66) mark `X-Idempotency-Key` as `required = false`. AGENTS.md Rule #3: "Semua endpoint payment/transfer wajib header `X-Idempotency-Key`". Disbursement = payment → must be `required = true` (or reject at controller if missing). |
+| 55 | **AUDIT-055** | P2 | HA/Scheduling | **Multiple `@Scheduled` missing `@SchedulerLock`** — Extends GAP-24 (saga only). Found additional services: (1) `PaymentLinkService.java:179` (partner-service), (2) `CertificateRotationService.java:54` (partner-service), (3) `SagaMonitorService.java:105` (saga-starter), (4) All gateway-service Quarkus `@Scheduled` (different framework, ShedLock N/A — need Quarkus-native distributed lock). Multi-pod concurrent execution risk. |
+| 56 | **AUDIT-056** | P2 | Dependency | **MapStruct 1.5.5.Final outdated** — [pom.xml:47](file:///home/ubuntu/payu/backend/pom.xml#L47) pins MapStruct 1.5.5.Final. Current stable: 1.6.3. 1.6.x adds Spring Boot 4 / Jakarta EE 11 annotation processor fixes, record support improvements. Potential compile issues with Java 25. |
+| 57 | **AUDIT-057** | P2 | Container | **Gateway Containerfile runs `microdnf update` as root before user creation** — [Containerfile:7-8](file:///home/ubuntu/payu/backend/gateway-service/Containerfile#L7-L8) has `USER root` + `RUN microdnf update` then creates user. While functionally OK (switches to 1001 after), best practice: minimize root instruction surface. Also `HEALTHCHECK` uses `curl` which may not be in minimal UBI9 runtime → health check silently fails. |
+| 58 | **AUDIT-058** | P3 | Testing | **Hardcoded test passwords in configs** — `dispute-service/src/test/resources/application-test.yml:5` has `password: payu`. `auth-service/src/test/resources/application-test.yml:45` has `password: admin`. While test-only, these strings could be mistakenly promoted to production via copy-paste. Use `${TEST_DB_PASSWORD:}` or empty string pattern. |
+| 59 | **AUDIT-059** | P2 | Config | **Artemis default password `admin` in billing-service** — [application.yml:160](file:///home/ubuntu/payu/backend/billing-service/src/main/resources/application.yml#L160) has `password: ${ARTEMIS_PASSWORD:admin}` with fallback to `admin`. Same in [application-container.yml:89](file:///home/ubuntu/payu/backend/billing-service/src/main/resources/application-container.yml#L89). Container profile MUST NOT have weak default — use `${ARTEMIS_PASSWORD}` without fallback (fail-fast). |
+| 60 | **AUDIT-060** | P3 | Frontend | **High `"use client"` ratio** — 156/360 TSX/TS files (43%) have `"use client"`. AGENTS.md Rule #9: "Next.js maksimalkan Server Components; gunakan `use client` seminimal mungkin". Target: leaf components only. Audit needed per page — likely many wrapper/layout components unnecessarily client-side. |
+| 61 | **AUDIT-061** | P3 | Config | **`POSTGRES_SSL_MODE=disable`** in [.env.example:78](file:///home/ubuntu/payu/.env.example#L78). While example file says "Use `require` or `verify-full` in production", the default is insecure. For banking platform, default should be `require` with comment "Use `disable` for local dev only". Prevents accidental prod deployment with SSL disabled. |
+| 62 | **AUDIT-062** | P2 | Architecture | **`kyc-service` and `analytics-service` not in Maven reactor** — Python services (expected), but no equivalent CI gate documented. `Makefile` and `scripts/run-all-tests.sh` should explicitly include Python service test commands (`pytest`) to prevent regression blindness. |
+| 63 | **AUDIT-063** | P3 | Next.js | **`serverActions.allowedOrigins` already configured** — Contradicts AUDIT-046 partial assessment. [next.config.ts:17-29](file:///home/ubuntu/payu/frontend/web-app/next.config.ts#L17-L29) already configures allowed origins including `localhost:3000`, `payu.fajjjar.my.id`, `*.payu.id`, etc. AUDIT-046 should note: origins ARE configured, but `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for multi-replica still missing. |
+| 64 | **AUDIT-064** | P2 | Security | **CSP production mode lacks `script-src` nonce/hash** — [next.config.ts:63](file:///home/ubuntu/payu/frontend/web-app/next.config.ts#L63) production CSP is `script-src 'self'` only. If any inline script exists (analytics, error tracking), it breaks silently. Next.js 16 recommends nonce-based CSP via middleware for robust inline script support. Low urgency if no inline scripts used, but no audit confirms zero inline scripts. |
+
+### Context7 verification (new findings)
+
+| Library | Query | Result |
+|:---|:---|:---|
+| Spring Boot 4.1 (`/spring-projects/spring-boot/v4.1.0`) | Actuator endpoint security CORS CSRF | Confirmed: actuator CORS configurable via `management.endpoints.web.cors.*`. CSRF protection default-ON for actuator. `permitAll("/actuator/**")` exposes all endpoints including `heapdump`, `env`, `configprops` → information disclosure. Must restrict to health/info only. |
+| Next.js 16 (`/vercel/next.js/v16.1.6`) | Security headers CSP nonce middleware | Confirmed: Next.js 16 supports nonce-based CSP via `middleware.ts` → `headers()` with crypto-generated nonce per request. Banking app should use nonce pattern for strictest CSP. |
+
+### Summary statistics
+
+| Metric | Value |
+|:---|:---|
+| Total open gaps (all audits) | ~48 unique (many CLOSED) |
+| NEW this scan | 17 (AUDIT-048 to AUDIT-064) |
+| P0 blockers | 0 |
+| P1 critical | 4 (AUDIT-048, 049, 052, 054) |
+| P2 important | 8 (AUDIT-050, 051, 053, 055, 056, 057, 059, 062, 064) |
+| P3 nice-to-have | 5 (AUDIT-058, 060, 061, 063) |
+| Direct Kafka bypass (Rule #4 violations) | 4 shared starters |
+| Actuator wide-open services | ≥1 confirmed, sweep needed |
+| `@Scheduled` without `@SchedulerLock` | 4+ additional instances |
+
+### Recommended priority order
+
+1. **AUDIT-052** (P1): Lock down `actuator/**` → restrict to `/actuator/health`, `/actuator/info` across ALL services. Quick regex find + fix.
+2. **AUDIT-054** (P1): Make `X-Idempotency-Key` required on disbursement endpoints. 1-line change per controller.
+3. **AUDIT-048 + 049** (P1): Route saga events + audit log events through outbox-starter. Architecture change — needs design review.
+4. **AUDIT-055** (P2): Add `@SchedulerLock` to remaining `@Scheduled` methods.
+5. **AUDIT-053** (P2): Replace `System.getenv()` with `@Value` / `@ConfigurationProperties`.
+6. **AUDIT-059** (P2): Remove `admin` fallback from Artemis password in container profile.
+
+### Audit metadata (deep scan)
+
+- Audit date: 2026-07-01T14:37Z
+- Mode: caveman full
+- Source files scanned: `find *.java` across 24 services + 14 starters, `grep` for anti-patterns (float/double, kafkaTemplate.send, System.getenv, permitAll, @Scheduled, required=false, password hardcoded), Containerfile review, next.config.ts, package.json, .env.example.
+- Context7 queries: Spring Boot 4.1 actuator security, Next.js 16 CSP nonce middleware.
+- Auditor: AI agent (caveman-mode) — sign-off requires human review per AGENTS.md.
+---
+
+## 🔬 Deep Audit Round 2 — 2026-07-01T14:43Z (Caveman Full-Scan)
+
+> Round 2 focus: domain logic, security internals, rounding patterns, TLS, javax remnants, multitenancy, clock coupling, auth rate limiting, Tekton pipeline.
+> Tools: grep, view, context7 (Resilience4j, Spring Boot 4.1), manual code review.
+> Result: **13 NEW findings** (AUDIT-065 to AUDIT-077). 1 P0, 3 P1, 6 P2, 3 P3.
+
+### 🆕 Findings (AUDIT-065 to AUDIT-077)
+
+| # | Key | Sev | Category | Summary |
+|:---:|:---|:---:|:---|:---|
+| 65 | **AUDIT-065** | P0 | Security (CRITICAL) | **Gateway `AuthorizationFilter` has trust-all TLS bypass** — [AuthorizationFilter.java:244-251](file:///home/ubuntu/payu/backend/gateway-service/src/main/java/id/payu/gateway/adapter/filter/AuthorizationFilter.java#L244-L251) creates anonymous `X509TrustManager` that accepts ALL certificates (no-op `checkServerTrusted`, returns `null` from `getAcceptedIssuers`). Guarded by `quarkus.tls.trust-all` config — but if set `true` in ANY profile, JWKS endpoint validation can be MITM'd, allowing forged JWTs to bypass auth. Must remove trust-all code path entirely; use proper truststore mount instead. **P0 because auth bypass → full system compromise.** |
+| 66 | **AUDIT-066** | P1 | Security | **Actuator wide-open in 2 more services** — `product-catalog-service` [SecurityConfig.java:41](file:///home/ubuntu/payu/backend/product-catalog-service/src/main/java/id/payu/productcatalog/config/SecurityConfig.java#L41) and `wallet-service` [SecurityConfig.java:42-43](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/config/SecurityConfig.java#L42-L43) still have `permitAll("/actuator/**")`. Exposes heapdump, env, beans, configprops. `integration-service` and `statement-service` already restrict to health/info only (correct pattern). AUDIT-052 partially addressed in transaction-service but wallet + product-catalog missed. |
+| 67 | **AUDIT-067** | P1 | Money (Rule #1) | **`RoundingMode.HALF_UP` used instead of `HALF_EVEN`** — AGENTS.md Rule #1 mandates `HALF_EVEN` (banker's rounding). Found **37 production usages** of `HALF_UP` across `investment-service`, `promotion-service`, `fx-service`, `lending-service`, `statement-service`, `wallet-service`, `partner-service`. The `Money` class in `api-commons` and `transaction-service` correctly uses `HALF_EVEN`, but most services bypass `Money` and do raw `BigDecimal.divide(..., HALF_UP)`. Creates systematic rounding bias in financial calculations. |
+| 68 | **AUDIT-068** | P2 | Money (Rule #1) | **`BigDecimal.ROUND_HALF_UP` deprecated constant** — 7 production usages in [SettlementFxRate.java](file:///home/ubuntu/payu/backend/fx-service/src/main/java/id/payu/fx/domain/model/SettlementFxRate.java), [RateCard.java](file:///home/ubuntu/payu/backend/partner-service/src/main/java/id/payu/partner/domain/RateCard.java), [Budget.java](file:///home/ubuntu/payu/backend/account-service/src/main/java/id/payu/account/domain/model/Budget.java), [SavingsGoalController.java](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/adapter/web/SavingsGoalController.java), [RevenueSplit.java](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/domain/model/RevenueSplit.java). `BigDecimal.ROUND_*` constants deprecated since Java 9 — use `RoundingMode.HALF_EVEN` enum. |
+| 69 | **AUDIT-069** | P1 | Jakarta (ARCH-006) | **50+ `javax.*` imports remain in production code** — Quantified AUDIT-044. Found across 14 services: `javax.sql.DataSource` (12 files — billing, cms, account, transaction, etc.), `javax.crypto.*` (7 files — gateway, security-starter, transaction, api-commons), `javax.xml.*` (6 files — integration-service SoapTransformer), `javax.net.ssl.*` (4 files — gateway AuthorizationFilter). Note: `javax.sql.*`, `javax.crypto.*`, `javax.net.ssl.*`, `javax.xml.*` are JDK packages (NOT Jakarta EE) → they stay. Only `javax.annotation.*` (if any) needs Jakarta migration. **RECLASSIFY**: This is actually NOT a violation — `javax.sql`, `javax.crypto`, `javax.xml` are Java SE packages, not Jakarta EE. AUDIT-044 can be CLOSED as false positive. |
+| 70 | **AUDIT-070** | P2 | Testability | **391 `LocalDateTime.now()` calls in production code** — Direct system clock coupling makes time-dependent logic untestable. Banking best practice: inject `java.time.Clock` via constructor, use `LocalDateTime.now(clock)`. Affected: expiry checks, scheduled transfers, ledger timestamps, statement generation. Refactor needed for `PaymentExpiryScheduler`, `ScheduledTransferService`, `SettlementService` at minimum. |
+| 71 | **AUDIT-071** | P2 | Security | **No login rate limiting on BFF auth routes** — [login/route.ts](file:///home/ubuntu/payu/frontend/web-app/src/app/api/auth/login/route.ts), [refresh/route.ts](file:///home/ubuntu/payu/frontend/web-app/src/app/api/auth/refresh/route.ts) have zero throttling. Brute-force attack vector: attacker can submit unlimited login attempts. Banking standard: 5 attempts per IP per 5 minutes → lock. Gateway `PartnerRateLimitService` exists for partner APIs, but BFF auth has no equivalent. Recommendation: middleware-level rate limit using `Map<IP, {count, resetTime}>` or Redis-backed. |
+| 72 | **AUDIT-072** | P2 | Security | **BFF login does NOT verify JWT signature** — [login/route.ts:10-19](file:///home/ubuntu/payu/frontend/web-app/src/app/api/auth/login/route.ts#L10-L19) `decodeJwtPayload` explicitly says "decode JWT payload without verifying signature". While BFF trusts the gateway response, a compromised gateway or MITM between BFF→gateway could inject forged JWT claims. For banking: verify signature using Keycloak JWKS from a cached public key. Comment says "BFF already trusts the token" — acceptable if BFF→gateway is mTLS. Currently mTLS is NOT enforced (GAP-8 at 0%). |
+| 73 | **AUDIT-073** | P2 | Multitenancy | **@TenantAware entities missing @EntityListeners(TenantEntityListener.class)** — Cross-referenced `@TenantAware` (38 entities) vs `@EntityListeners(TenantEntityListener.class)` (35 entities). Gap: 3 entities have `@TenantAware` but NO `TenantEntityListener`. Services to check: `partner-service` (SnapBiPaymentEntity, SnapBiRefundEntity, MerchantQrPaymentEntity, WebhookDeliveryEntity, PartnerCertificateEntity — not all are @TenantAware). Exact missing entities need line-by-line diff. |
+| 74 | **AUDIT-074** | P3 | Resilience | **`float` used for circuit breaker thresholds** — `ResilienceProperties.java:52` uses `float failureRateThreshold = 50f` and `float slowCallRateThreshold = 80f`. While not money, `float` precision for thresholds can cause unexpected CB state transitions (e.g., 49.99999% vs 50%). Resilience4j API itself uses `float` for these — so this follows library convention. **Low risk but worth noting.** |
+| 75 | **AUDIT-075** | P3 | CI/CD | **Tekton pipeline uses `maven-java21-task.yaml`** — Project runs Java 25 (per `AGENTS.md` + `pom.xml` `<java.version>25</java.version>`). [maven-java21-task.yaml](file:///home/ubuntu/payu/infrastructure/platform/cicd/tekton/tasks/maven-java21-task.yaml) task name suggests Java 21. If task image is `openjdk:21`, builds will fail on Java 25 features. Need to verify task image and rename/update. |
+| 76 | **AUDIT-076** | P2 | Testing | **`LedgerEntryEntity` has mutable `setBalance`/`setAmount` setters** — [LedgerEntryEntity.java:161](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/entity/LedgerEntryEntity.java#L161) has `setAmount()`. AGENTS.md Rule #2: "Immutable ledger: No UPDATE/DELETE data keuangan". While entity immutability is enforced at SQL level (`updatable = false` on some columns), having public setters on `amount`, `entryType`, `balanceAfter` allows application-level mutation. Should be removed or made package-private. |
+| 77 | **AUDIT-077** | P3 | Architecture | **`LedgerEntryEntity.entryType` is `String` not Enum** — [LedgerEntryEntity.java:42](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/entity/LedgerEntryEntity.java#L42) stores entry type as raw `String`. AGENTS.md Rule #8: "Selalu definisikan Enum domain sebagai file top-level". Should be `EntryType` enum (`DEBIT`, `CREDIT`). Prevents invalid values like `"debit"` vs `"DEBIT"` case mismatch. |
+
+### Cross-reference updates
+
+| Prior Gap | Status Update |
+|:---|:---|
+| AUDIT-044 (javax imports) | **RECLASSIFY → CLOSED (false positive)**. All 50+ `javax.*` imports are Java SE packages (`javax.sql`, `javax.crypto`, `javax.net.ssl`, `javax.xml`) — NOT Jakarta EE. These stay in Java 25. No `javax.annotation.*` or `javax.persistence.*` found. |
+| AUDIT-052 (actuator wide-open) | **Expanded scope**: product-catalog + wallet still affected. transaction-service was fixed. Total: 2 remaining. |
+| GAP-8 (mTLS) | **Dependency discovered**: AUDIT-072 (JWT signature non-verification) is safe ONLY if mTLS enforced BFF→gateway. Currently 0%. Elevates mTLS priority. |
+
+### Context7 verification (round 2)
+
+| Library | Query | Result |
+|:---|:---|:---|
+| Resilience4j `/resilience4j/resilience4j` | Circuit breaker `float` threshold precision | Confirmed: Resilience4j `CircuitBreakerConfig.Builder.failureRateThreshold(float)` uses `float` by design. PayU follows library convention. No issue. |
+| Spring Boot 4.1 `/spring-projects/spring-boot/v4.1.0` | Actuator security best practices endpoint exposure | Confirmed: Spring Boot 4.1 recommends `management.endpoints.web.exposure.include=health,info` in production. `permitAll("/actuator/**")` exposes ALL (including `heapdump`, `env`, `shutdown`). **Critical risk.** |
+
+### Summary statistics (round 2)
+
+| Metric | Value |
+|:---|:---|
+| NEW this scan | 13 (AUDIT-065 to AUDIT-077) |
+| P0 blockers | **1** (AUDIT-065 — gateway trust-all TLS) |
+| P1 critical | 3 (AUDIT-066, 067, 069→closed) |
+| P2 important | 6 (AUDIT-068, 070, 071, 072, 073, 076) |
+| P3 nice-to-have | 3 (AUDIT-074, 075, 077) |
+| `HALF_UP` instead of `HALF_EVEN` | 37 production files |
+| `BigDecimal.ROUND_*` deprecated | 7 usages |
+| `LocalDateTime.now()` direct calls | 391 in production |
+| Actuator wide-open services remaining | 2 (wallet, product-catalog) |
+| Prior gap reclassified | AUDIT-044 → CLOSED (false positive) |
+
+### Recommended priority order (round 2)
+
+1. **🔴 AUDIT-065** (P0): **REMOVE trust-all TLS code path** from `AuthorizationFilter.java`. Replace with proper truststore mount. This is a production auth bypass vector. **Sprint 0 — immediate fix.**
+2. **AUDIT-066** (P1): Lock down `actuator/**` in wallet-service + product-catalog-service → `/actuator/health`, `/actuator/info` only.
+3. **AUDIT-067** (P1): Replace 37 `HALF_UP` → `HALF_EVEN` across 7 services. Or better: force all services to use the shared `Money` class from `api-commons`.
+4. **AUDIT-071** (P2): Add login rate limiting to BFF auth routes (5 attempts/5min per IP).
+5. **AUDIT-070** (P2): Inject `Clock` into time-dependent services (start with financial: expiry, settlement, scheduled transfers).
+6. **AUDIT-076** (P2): Remove mutable setters on `LedgerEntryEntity` financial fields.
+
+### Audit metadata (round 2)
+
+- Audit date: 2026-07-01T14:43Z
+- Mode: caveman full — round 2
+- Scanned: domain models, JPA entities (`@TenantAware` vs `@EntityListeners` cross-ref), SecurityConfig (`permitAll actuator`), BigDecimal rounding patterns, `javax.*` import audit (50+ files quantified), `LocalDateTime.now()` coupling (391 prod), BFF auth routes (login/refresh/logout), gateway `AuthorizationFilter` TLS (trust-all X509TrustManager), Tekton pipeline tasks, LedgerEntry immutability.
+- Context7: Resilience4j v2.2.0, Spring Boot 4.1.0.
 - Auditor: AI agent (caveman-mode) — sign-off requires human review per AGENTS.md.
 
 ---
