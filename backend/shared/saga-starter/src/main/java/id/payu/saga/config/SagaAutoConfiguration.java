@@ -1,5 +1,6 @@
 package id.payu.saga.config;
 
+import id.payu.outbox.service.OutboxService;
 import id.payu.saga.repository.SagaRepository;
 import id.payu.saga.service.SagaMonitorService;
 import id.payu.saga.service.SagaRecoveryService;
@@ -17,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.util.Map;
 
 /**
  * Auto-configuration for saga pattern support.
@@ -60,14 +63,14 @@ public class SagaAutoConfiguration {
     }
 
     /**
-     * Saga event publisher bean (if Kafka is available).
+     * Saga event publisher bean (AUDIT-048: routes through outbox-starter, not direct KafkaTemplate.send).
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(KafkaTemplate.class)
     @ConditionalOnProperty(prefix = "payu.saga", name = "events-enabled", havingValue = "true", matchIfMissing = true)
-    public SagaEventPublisher sagaEventPublisher(KafkaTemplate<String, Object> kafkaTemplate) {
-        return new SagaEventPublisher(kafkaTemplate, properties);
+    public SagaEventPublisher sagaEventPublisher(OutboxService outboxService) {
+        return new SagaEventPublisher(outboxService, properties);
     }
 
     /**
@@ -90,15 +93,30 @@ public class SagaAutoConfiguration {
 
     /**
      * Inner class for event publishing.
+     *
+     * <p>AUDIT-048 fix: events are routed through {@link OutboxService} (Rule #4)
+     * so they survive Kafka outages and gain replay semantics. The publisher
+     * is no longer responsible for direct {@code KafkaTemplate.send()} calls.</p>
      */
     @RequiredArgsConstructor
     public static class SagaEventPublisher {
-        private final KafkaTemplate<String, Object> kafkaTemplate;
+        private final OutboxService outboxService;
         private final SagaProperties properties;
 
         public void publishSagaEvent(String sagaId, String eventType, Object payload) {
             if (properties.isEventsEnabled()) {
-                kafkaTemplate.send(properties.getEventTopic(), sagaId, payload);
+                outboxService.createEvent(
+                    "Saga",
+                    sagaId,
+                    eventType,
+                    Map.of(
+                        "sagaId", sagaId,
+                        "eventType", eventType,
+                        "payload", payload
+                    ),
+                    null,
+                    properties.getEventTopic()
+                );
             }
         }
     }
