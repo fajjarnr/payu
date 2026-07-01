@@ -2729,3 +2729,132 @@ done
 - 4 pre-existing display-name errors → 0
 - Pre-existing test failure (DashboardPage data-testid) unrelated to this iter
 
+---
+
+## L-085: Outbox Topic Pattern Validation — `payu.<domain>.<event>.v<n>` + Optional `.dlq` Suffix (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: outbox-starter / Kafka / Topic Naming / GAP-31 / AGENTS.md rule #4
+**Context**: AGENTS.md rule #4 mandates destination topics match `payu.<domain>.<event-type>.v<n>` (DLQ suffix `.dlq`). `OutboxService.createEvent(..., destinationTopic)` accepted any string — developers could publish to `totally-invalid-topic`, `payu.Wallet.credited.v1` (uppercase), `payu.wallet.credited` (no version), etc. No boundary enforcement meant the platform contract could be silently violated by any service.
+
+**Root Cause**:
+The `destinationTopic` parameter was passed straight into `OutboxEvent.builder().destinationTopic(...)` and persisted to the DB. There was no regex check at the service boundary. The naming convention existed only as documentation.
+
+**Fix**:
+- Added `DESTINATION_TOPIC_PATTERN = ^payu\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.v[0-9]+(?:\.dlq)?$` as a `static final Pattern` in `OutboxService`.
+- Added `static void validateDestinationTopic(String destinationTopic)` that throws `IllegalArgumentException` (with the AGENTS.md rule reference in the message) when the topic is non-null and does not match.
+- Called `validateDestinationTopic(destinationTopic)` from the 6-param `createEvent` overload (all other overloads delegate to this one, so the check fires once for every code path).
+- `null` is explicitly allowed — the publisher resolves the default topic from `eventType`.
+
+**Code**:
+```java
+static final Pattern DESTINATION_TOPIC_PATTERN = Pattern.compile(
+    "^payu\\.[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*\\.v[0-9]+(?:\\.dlq)?$"
+);
+
+static void validateDestinationTopic(String destinationTopic) {
+    if (destinationTopic == null) return;
+    if (!DESTINATION_TOPIC_PATTERN.matcher(destinationTopic).matches()) {
+        throw new IllegalArgumentException(
+            "destinationTopic '" + destinationTopic + "' violates the required pattern "
+            + "'payu.<domain>.<event-type>.v<n>' (optional '.dlq' suffix). "
+            + "See AGENTS.md rule #4 for the topic naming contract.");
+    }
+}
+```
+
+**Test (TDD)**:
+- New file `OutboxServiceTopicValidationTest.java` with 19 parameterized cases:
+  - 6 valid: `payu.wallet.credited.v1`, `payu.account.opened.v10`, `payu.transaction.completed.v42`, `payu.dispute.escalated.v1`, `payu.wallet.credited.v1.dlq`, `payu.payment.failed.v3.dlq`
+  - 1 null (allowed)
+  - 12 invalid: no prefix, uppercase segments, missing version, extra segments, empty string, underscores, etc.
+- Red phase: `Tests run: 12, Failures: 12` (all invalid cases fail as expected with current unvalidated code).
+- Green phase: `Tests run: 19, Failures: 0, Errors: 0 — BUILD SUCCESS`.
+
+**Lesson (5 parts)**:
+1. **Validate at the boundary, not at the consumer** — putting the regex check in `OutboxService.createEvent` (where the topic is first accepted) catches the violation before it can be persisted. A check at the `OutboxPublisher` would be too late (DB row already exists, possibly already in another pod's read path).
+2. **Use `Pattern.matches()` (full-match), not `find()` (partial-match)** — the regex is anchored with `^` and `$` so `matches()` and `find()` give the same result, but `matches()` is the intent-preserving choice. New contributors reading the code immediately understand the whole string must conform.
+3. **Anchor patterns with `^...$` even with `matches()`** — defense in depth. If a future refactor swaps to `find()` accidentally, the anchors still prevent partial-match leaks.
+4. **`null` is a valid value when there's a default** — `destinationTopic=null` means "let the publisher pick the default topic". Don't make the parameter required if the system supports a default; instead, validate non-null values against the pattern and document the null-allowed semantics.
+5. **Validation messages must reference the contract** — the exception message explicitly says `"See AGENTS.md rule #4 for the topic naming contract"`. When a developer hits the error, the next step is obvious without leaving the stack trace.
+
+**Files changed**:
+- `backend/shared/outbox-starter/src/main/java/id/payu/outbox/service/OutboxService.java` (4 edits: import Pattern, Pattern constant + Javadoc, validateDestinationTopic() call in createEvent, validateDestinationTopic() static method + Javadoc)
+- `backend/shared/outbox-starter/src/test/java/id/payu/outbox/service/OutboxServiceTopicValidationTest.java` (new, 5472 bytes, 2 nested classes)
+
+**Verification**:
+- `mvn test -Dtest=OutboxServiceTopicValidationTest` → `Tests run: 19, Failures: 0, Errors: 0 — BUILD SUCCESS`
+- `mvn package -DskipTests` → `outbox-starter-1.0.0-SNAPSHOT.jar` (32.9K) produced
+- Dependency chain (events-starter 1.0.0-SNAPSHOT + payu-backend-parent POM) installed to local `~/.m2/repository/` for the build to resolve.
+
+---
+
+## L-084: Cache Sync Stampede Protection — Per-Key Monitor + Double-Checked Locking Beats `CompletableFuture.supplyAsync` (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: cache-starter / Spring AOP / ThreadLocal / Stampede Protection / GAP-27
+**Context**: `CacheWithTTLAspect.handleSyncCache` (the `@CacheWithTTL(sync=true)` path) wraps the protected `joinPoint.proceed()` in `CompletableFuture.supplyAsync(...)` to prevent cache stampede. But `supplyAsync` runs on the common `ForkJoinPool` worker — a different thread from the request. That detached execution strips every `ThreadLocal` binding: `SecurityContextHolder` (audit principal lost), `TenantContext` (cross-tenant query crash or data leak), MDC (log trace-id lost), and active Hibernate transaction (`@Transactional` boundaries broken).
+
+**Root Cause**:
+The intent was "only one thread computes per key". The implementation chose the wrong concurrency primitive: thread-pool dispatch. The correct primitive is a per-key monitor that blocks other threads until the lock holder finishes — without leaving the original request thread.
+
+**Fix**:
+- Added `ConcurrentHashMap<String, Object> syncLocks` field on the aspect.
+- Rewrote `handleSyncCache`:
+  1. Fast path: `cacheService.get(...)` — no lock, return on hit.
+  2. On miss: `Object lock = syncLocks.computeIfAbsent(cacheKey, k -> new Object())`.
+  3. `synchronized (lock) { ... }` — caller thread blocks; other waiters block on the same monitor.
+  4. Inside the synchronized block: re-check `cacheService.get(...)` (double-checked locking — another thread may have populated while we waited).
+  5. Run `joinPoint.proceed()` on the **caller's** thread — ThreadLocals intact.
+  6. Evaluate `unless` condition, `cacheService.put(...)`, return result.
+- Left `inFlightRequests` field in place for now (still referenced by some call paths; removal deferred to a separate cleanup iter to keep this change minimal).
+- Left `handleAsyncCache` (the `sync=false` path) untouched — it was already running on the caller thread; only `handleSyncCache` had the bug.
+
+**Code** (before → after, abridged):
+```java
+// BEFORE — runs on ForkJoinPool.commonPool-worker-N, ThreadLocals stripped
+CompletableFuture<Object> future = (CompletableFuture<Object>) inFlightRequests.computeIfAbsent(cacheKey, k ->
+    CompletableFuture.supplyAsync(() -> {
+        Object result = joinPoint.proceed();  // <-- different thread, ThreadLocals gone
+        // ...
+    })
+);
+return future.get();
+
+// AFTER — caller thread blocks on per-key monitor, ThreadLocals preserved
+Object lock = syncLocks.computeIfAbsent(cacheKey, k -> new Object());
+synchronized (lock) {
+    Object cachedValue = cacheService.get(cacheKey, returnType);  // double-check
+    if (cachedValue != null) return cachedValue;
+    Object result = joinPoint.proceed();  // <-- caller thread, ThreadLocals intact
+    // ... unless check, cacheService.put
+    return result;
+}
+```
+
+**Test (TDD)**:
+- New file `CacheWithTTLAspectThreadLocalTest.java` with `@MockitoSettings(strictness = Strictness.LENIENT)` at class level.
+- Set two `ThreadLocal<String>` (`TENANT`, `PRINCIPAL`) on the caller thread.
+- Mock `joinPoint.proceed()` to capture `Thread.currentThread()` and the ThreadLocal values **as seen from inside proceed()**.
+- Assert: `proceedThread == callerThread`, `proceedTenant == "tenant-bravo"`, `proceedPrincipal == "user-42"`.
+- Red phase: failure message was `Expecting actual: Thread[#52,ForkJoinPool.commonPool-worker-1,...] and: Thread[#3,main,...] to refer to the same object` — bug confirmed.
+- Green phase: `Tests run: 1, Failures: 0, Errors: 0 — BUILD SUCCESS`.
+
+**Lesson (5 parts)**:
+1. **`supplyAsync` for "single-computation-per-key" is the wrong tool** — it solves parallelism, not mutual exclusion. If you don't want parallelism (you want stampede protection), use a monitor. The lock is cheap; thread-pool dispatch is expensive AND leaks ThreadLocals.
+2. **Double-checked locking needs the outer check too** — the fast path (no lock) handles 99% of cache hits cheaply. Without the outer check, every cache hit would acquire a `synchronized` lock — a real perf regression for high-QPS endpoints.
+3. **Per-key monitors need `computeIfAbsent` on a `ConcurrentHashMap`** — using `cacheKey.intern()` would pin interned strings forever (memory leak). Using a single static `Object` would serialize ALL cache misses globally. `new Object()` per key, kept in a bounded `ConcurrentHashMap`, gives the right semantics. Note: the lock objects are never removed (acceptable for moderate key cardinality; for very large cardinality, add a `Caffeine`-backed eviction policy).
+4. **Strictness LENIENT is the right call for AOP tests** — the test stubs vary based on which `@Around` branches fire (fast path, double-check, `unless` branch, `result == null`). Marking class-level `@MockitoSettings(strictness = Strictness.LENIENT)` avoids fighting Mockito's strict-stubbing on stubs that are conditionally exercised. Per-stub `lenient()` is more precise but verbose; class-level LENIENT is the right tradeoff for AOP tests.
+5. **Don't conflate "async" with "concurrent"** — `handleAsyncCache` (the `sync=false` path) was correctly running on the caller thread because it doesn't need stampede protection. The bug was specifically in the `sync=true` path. Reading the original code, the author thought "stampede protection" implied "background thread" — false. Stampede protection is mutual exclusion, which is `synchronized`, not async.
+
+**Files changed**:
+- `backend/shared/cache-starter/src/main/java/id/payu/cache/aspect/CacheWithTTLAspect.java` (4 edits: import `ConcurrentHashMap`, add `syncLocks` field, refactor `handleSyncCache` body, leave `inFlightRequests` + `triggerAsyncRefresh` untouched)
+- `backend/shared/cache-starter/src/test/java/id/payu/cache/aspect/CacheWithTTLAspectThreadLocalTest.java` (new, 5818 bytes, single test method with `thenAnswer` capturing thread identity + ThreadLocals)
+
+**Verification**:
+- `mvn test -Dtest=CacheWithTTLAspectThreadLocalTest` → `Tests run: 1, Failures: 0, Errors: 0 — BUILD SUCCESS`
+- `mvn package -DskipTests` → `cache-starter-1.0.0-SNAPSHOT.jar` (83.5K) produced
+- `handleAsyncCache` (the `sync=false` path) and `triggerAsyncRefresh` (stale-while-revalidate) were left untouched — they already ran on the correct threads.
+
+---
+

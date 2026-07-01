@@ -135,6 +135,7 @@ ios/build/
 # --- Agentic Tools ---
 .opencode/
 .claude/
+.kimchi/
 !.claude/settings.json
 !.claude/settings.local.json
 !.claude/skills

@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.68] - 2026-07-01
+
+### Fixed
+
+- **GAP-27: Cache stampede protection stripped ThreadLocals** (`cache-starter`). `CacheWithTTLAspect.handleSyncCache` wrapped `joinPoint.proceed()` in `CompletableFuture.supplyAsync(...)`, executing on a `ForkJoinPool.commonPool-worker-N` and stripping `SecurityContextHolder`, `TenantContext`, MDC, and Hibernate `@Transactional` boundaries. Replaced with per-key monitor + double-checked locking via `ConcurrentHashMap<String, Object> syncLocks` so `proceed()` runs on the caller's thread. See `L-084`.
+- **GAP-31: Outbox destination topic accepted any string** (`outbox-starter`). `OutboxService.createEvent(destinationTopic, ...)` had no validation, violating AGENTS.md rule #4 (`payu.<domain>.<event-type>.v<n>` with optional `.dlq` suffix). Added `DESTINATION_TOPIC_PATTERN = ^payu\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.v[0-9]+(?:\.dlq)?$` + static `validateDestinationTopic()` called from the 6-param `createEvent` overload. Throws `IllegalArgumentException` with AGENTS.md reference on mismatch; `null` is allowed (default topic). See `L-085`.
+
+### Added
+
+- **L-084** — Cache sync stampede protection pattern: per-key monitor beats `CompletableFuture.supplyAsync` for mutual exclusion.
+- **L-085** — Outbox topic pattern validation: enforce `payu.<domain>.<event>.v<n>[.dlq]` at the service boundary, not at the consumer.
+
+### Tests
+
+- `CacheWithTTLAspectThreadLocalTest` (new, 5818 bytes) — captures `Thread.currentThread()` + 2 ThreadLocals from inside mocked `proceed()`. Red→green verified.
+- `OutboxServiceTopicValidationTest` (new, 5472 bytes, 19 parameterized cases) — 6 valid topics + 1 null + 12 invalid topics. Red→green verified.
+
+### Build artifacts
+
+- `cache-starter-1.0.0-SNAPSHOT.jar` (83.5K)
+- `outbox-starter-1.0.0-SNAPSHOT.jar` (32.9K)
+
+---
+
 ## [1.8.11] - 2026-06-13
 
 ### Spring Security `PatternParseException` Fix & E2E CRUD Verified

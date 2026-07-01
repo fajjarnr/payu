@@ -1035,3 +1035,40 @@ Closed 3 high-priority tickets in a single session:
 - `frontend/web-app/eslint.config.mjs` (added no-unused-vars rule)
 - `frontend/web-app/src/__tests__/pages/{DashboardPage,PocketsPage,RewardsPage,SecurityPage}.test.tsx` (displayName)
 - 55 web-app files with eslint-disable comments
+
+## Iteration 68: GAP-27 + GAP-31 Closure — Recursive Dev Loop (2026-07-01)
+
+### Iter 68.1 — GAP-27: CacheWithTTLAspect Thread-Local Leak (cache-starter)
+- **Bug**: `handleSyncCache` wrapped `joinPoint.proceed()` in `CompletableFuture.supplyAsync(...)`, executing on `ForkJoinPool.commonPool-worker-N` and stripping every `ThreadLocal` (SecurityContext, TenantContext, MDC, Hibernate `@Transactional`).
+- **Fix**: replaced with per-key monitor + double-checked locking via `ConcurrentHashMap<String, Object> syncLocks`; `proceed()` now runs on caller thread.
+- **Test (TDD)**: new `CacheWithTTLAspectThreadLocalTest.java` — captured `Thread.currentThread()` + 2 ThreadLocals (`TENANT`, `PRINCIPAL`) from inside mocked `proceed()`. Red: `ForkJoinPool.commonPool-worker-1 vs main`. Green: `Tests run: 1, Failures: 0`.
+- **Build**: `cache-starter-1.0.0-SNAPSHOT.jar` (83.5K) at `backend/shared/cache-starter/target/`.
+- Lesson captured: **L-084**.
+
+### Iter 68.2 — GAP-31: OutboxService Topic Pattern Validation (outbox-starter)
+- **Bug**: `createEvent(destinationTopic, ...)` accepted any string, violating AGENTS.md rule #4 (`payu.<domain>.<event>.v<n>[.dlq]`).
+- **Fix**: added `DESTINATION_TOPIC_PATTERN = ^payu\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.v[0-9]+(?:\.dlq)?$` + static `validateDestinationTopic()` called from the 6-param `createEvent` overload (all other overloads delegate here).
+- **Test (TDD)**: new `OutboxServiceTopicValidationTest.java` — 19 parameterized cases (6 valid + 1 null + 12 invalid). Red: `Tests run: 12, Failures: 12`. Green: `Tests run: 19, Failures: 0`.
+- **Build**: `outbox-starter-1.0.0-SNAPSHOT.jar` (32.9K) at `backend/shared/outbox-starter/target/`.
+- Lesson captured: **L-085**.
+
+### Iter 68.3 — Toolchain bootstrap
+- Local env had no JDK/Maven. Installed:
+  - **OpenJDK 25** (`/home/ubuntu/.local/jdk`, from `download.java.net` GA build `25+36-3489`)
+  - **Apache Maven 3.8.7** (`/home/ubuntu/.local/maven`, from `repo1.maven.org`)
+  - Exported `JAVA_HOME` + `PATH` in `~/.bashrc`.
+- Installed Maven deps to `~/.m2/repository/`: `payu-backend-parent:pom:1.0.0-SNAPSHOT`, `events-starter:jar:1.0.0-SNAPSHOT` (transitive of outbox-starter).
+
+### Cluster state
+- 46/46 Running (no cluster change — local library work only; no service image rebuild this iter)
+- L-084, L-085 captured
+
+### Files changed (iter 68)
+- `backend/shared/cache-starter/src/main/java/id/payu/cache/aspect/CacheWithTTLAspect.java` (import `ConcurrentHashMap`, add `syncLocks` field, refactor `handleSyncCache` body — leave `inFlightRequests` and `triggerAsyncRefresh` untouched)
+- `backend/shared/cache-starter/src/test/java/id/payu/cache/aspect/CacheWithTTLAspectThreadLocalTest.java` (new, 5818 bytes, `@MockitoSettings(strictness = LENIENT)`)
+- `backend/shared/outbox-starter/src/main/java/id/payu/outbox/service/OutboxService.java` (import `Pattern`, add `DESTINATION_TOPIC_PATTERN` + `validateDestinationTopic()` static method, call from 6-param `createEvent`)
+- `backend/shared/outbox-starter/src/test/java/id/payu/outbox/service/OutboxServiceTopicValidationTest.java` (new, 5472 bytes, 19 parameterized cases)
+- `docs/guides/LESSONS.md` (+L-084, +L-085)
+- `docs/roadmap/PROGRESS.md` (this section)
+- `CHANGELOG.md` ([1.8.68] entry)
+- `docs/roadmap/TODOS.md` (Sprint 1 GAP-27 ✓, Sprint 3 GAP-31 ✓)
