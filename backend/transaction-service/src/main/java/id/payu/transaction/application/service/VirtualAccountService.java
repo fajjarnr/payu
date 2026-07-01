@@ -1,7 +1,7 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
+import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
 import id.payu.transaction.dto.VirtualAccountResponse;
@@ -28,10 +28,10 @@ public class VirtualAccountService {
 
 
 
-    private final VirtualAccountRepository virtualAccountRepository;
+    private final VirtualAccountPersistencePort virtualAccountPersistencePort;
 
-    public VirtualAccountService(VirtualAccountRepository virtualAccountRepository) {
-        this.virtualAccountRepository = virtualAccountRepository;
+    public VirtualAccountService(VirtualAccountPersistencePort virtualAccountPersistencePort) {
+        this.virtualAccountPersistencePort = virtualAccountPersistencePort;
     }
 
     /**
@@ -61,7 +61,7 @@ public class VirtualAccountService {
                 .expiresAt(Instant.now().plus(expiryHours, ChronoUnit.HOURS))
                 .build();
 
-        va = virtualAccountRepository.save(va);
+        va = virtualAccountPersistencePort.save(va);
         log.info("Created VA {} (bank={}, number={}) for partner {}",
                 va.getId(), bank.name(), vaNumber, request.getPartnerId());
 
@@ -73,7 +73,7 @@ public class VirtualAccountService {
      */
     @Transactional(readOnly = true)
     public VirtualAccountResponse getById(UUID vaId) {
-        VirtualAccountEntity va = virtualAccountRepository.findById(vaId)
+        VirtualAccountEntity va = virtualAccountPersistencePort.findById(vaId)
                 .orElseThrow(() -> new IllegalArgumentException("Virtual account not found: " + vaId));
         return toResponse(va);
     }
@@ -83,7 +83,7 @@ public class VirtualAccountService {
      */
     @Transactional(readOnly = true)
     public VirtualAccountResponse getByVaNumber(String vaNumber) {
-        VirtualAccountEntity va = virtualAccountRepository.findByVaNumber(vaNumber)
+        VirtualAccountEntity va = virtualAccountPersistencePort.findByVaNumber(vaNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Virtual account not found: " + vaNumber));
         return toResponse(va);
     }
@@ -93,7 +93,7 @@ public class VirtualAccountService {
      * Called when bank confirms customer has paid to the VA number.
      */
     public VirtualAccountResponse handleBankCallback(VaCallbackRequest callback) {
-        VirtualAccountEntity va = virtualAccountRepository.findByVaNumber(callback.getVaNumber())
+        VirtualAccountEntity va = virtualAccountPersistencePort.findByVaNumber(callback.getVaNumber())
                 .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
 
         if (!va.isPending()) {
@@ -109,7 +109,7 @@ public class VirtualAccountService {
         }
 
         va.markPaid(callback.getAmount(), callback.getPaymentReference());
-        va = virtualAccountRepository.save(va);
+        va = virtualAccountPersistencePort.save(va);
 
         log.info("VA {} paid: amount={}, ref={}", va.getVaNumber(),
                 callback.getAmount(), callback.getPaymentReference());
@@ -122,10 +122,10 @@ public class VirtualAccountService {
      * Called by PaymentExpiryScheduler (not scheduled here to avoid duplication).
      */
     public void expireVirtualAccounts() {
-        List<VirtualAccountEntity> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
+        List<VirtualAccountEntity> expired = virtualAccountPersistencePort.findExpiredPendingVAs(Instant.now());
         if (!expired.isEmpty()) {
             expired.forEach(VirtualAccountEntity::markExpired);
-            virtualAccountRepository.saveAll(expired);
+            virtualAccountPersistencePort.saveAll(expired);
             log.info("Expired {} virtual accounts", expired.size());
         }
     }
@@ -136,7 +136,7 @@ public class VirtualAccountService {
             // Format: bankPrefix + 12 random digits
             long random = ThreadLocalRandom.current().nextLong(100_000_000_000L, 999_999_999_999L);
             vaNumber = bank.getPrefix() + random;
-        } while (virtualAccountRepository.existsByVaNumber(vaNumber));
+        } while (virtualAccountPersistencePort.existsByVaNumber(vaNumber));
         return vaNumber;
     }
 

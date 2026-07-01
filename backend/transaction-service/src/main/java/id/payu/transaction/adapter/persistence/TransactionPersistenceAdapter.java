@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -75,6 +76,20 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
             log.debug("Finding transactions by idempotency key {}", idempotencyKey);
         }
         return transactionJpaRepository.findByIdempotencyKey(idempotencyKey);
+    }
+
+    @Override
+    public List<TransactionEntity> findExpiredPendingTransactions(Instant now) {
+        if (shardingConfig.isEnabled()) {
+            log.debug("Finding expired pending transactions as of {}", now);
+        }
+        return transactionJpaRepository.findExpiredPendingTransactions(now);
+    }
+
+    @Override
+    @Transactional
+    public List<TransactionEntity> saveAll(Iterable<TransactionEntity> transactions) {
+        return transactionJpaRepository.saveAll(transactions);
     }
 
     /**

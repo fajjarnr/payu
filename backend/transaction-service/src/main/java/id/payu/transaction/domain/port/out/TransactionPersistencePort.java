@@ -2,6 +2,7 @@ package id.payu.transaction.domain.port.out;
 
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,4 +14,6 @@ public interface TransactionPersistencePort {
     long countByAccountId(UUID accountId);
     List<TransactionEntity> findByReferenceNumber(String referenceNumber);
     Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey);
+    List<TransactionEntity> findExpiredPendingTransactions(Instant now);
+    List<TransactionEntity> saveAll(Iterable<TransactionEntity> transactions);
 }

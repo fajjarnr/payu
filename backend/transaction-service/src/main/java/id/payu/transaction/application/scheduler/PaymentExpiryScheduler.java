@@ -1,9 +1,9 @@
 package id.payu.transaction.application.scheduler;
 
-import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
-import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
+import id.payu.transaction.domain.port.out.TransactionPersistencePort;
+import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
 import id.payu.outbox.service.OutboxService;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -32,18 +32,18 @@ import id.payu.transaction.domain.model.TransactionStatus;
 public class PaymentExpiryScheduler {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaymentExpiryScheduler.class);
 
-    private final TransactionJpaRepository transactionRepository;
-    private final VirtualAccountRepository virtualAccountRepository;
+    private final TransactionPersistencePort transactionPersistencePort;
+    private final VirtualAccountPersistencePort virtualAccountPersistencePort;
     private final OutboxService outboxService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    public PaymentExpiryScheduler(TransactionJpaRepository transactionRepository,
-                                   VirtualAccountRepository virtualAccountRepository,
+    public PaymentExpiryScheduler(TransactionPersistencePort transactionPersistencePort,
+                                   VirtualAccountPersistencePort virtualAccountPersistencePort,
                                    OutboxService outboxService,
                                    ObjectMapper objectMapper) {
-        this.transactionRepository = transactionRepository;
-        this.virtualAccountRepository = virtualAccountRepository;
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.virtualAccountPersistencePort = virtualAccountPersistencePort;
         this.outboxService = outboxService;
         this.objectMapper = objectMapper;
         // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
@@ -65,7 +65,7 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expirePendingTransactions() {
-        List<TransactionEntity> expired = transactionRepository.findExpiredPendingTransactions(Instant.now());
+        List<TransactionEntity> expired = transactionPersistencePort.findExpiredPendingTransactions(Instant.now());
         if (!expired.isEmpty()) {
             expired.forEach(tx -> {
                 tx.setStatus(TransactionStatus.CANCELLED);
@@ -78,7 +78,7 @@ public class PaymentExpiryScheduler {
                 // Publish Kafka event
                 publishPaymentExpiredEvent(tx);
             });
-            transactionRepository.saveAll(expired);
+            transactionPersistencePort.saveAll(expired);
             log.info("Auto-cancelled {} expired transactions", expired.size());
         }
     }
@@ -92,13 +92,13 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {
-        List<VirtualAccountEntity> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
+        List<VirtualAccountEntity> expired = virtualAccountPersistencePort.findExpiredPendingVAs(Instant.now());
         if (!expired.isEmpty()) {
             expired.forEach(va -> {
                 va.markExpired();
                 publishVaExpiredEvent(va);
             });
-            virtualAccountRepository.saveAll(expired);
+            virtualAccountPersistencePort.saveAll(expired);
             log.info("Auto-expired {} virtual accounts", expired.size());
         }
     }

@@ -119,20 +119,16 @@ public class ArchitectureTest {
 
 
     @org.junit.jupiter.api.Test
-    @org.junit.jupiter.api.DisplayName("ITER-55: application layer dependency audit (17 known violations)")
+    @org.junit.jupiter.api.DisplayName("READY-049: application layer should not depend on adapter.persistence.repository")
     void applicationShouldNotDependOnAdapter() {
-        // READY-049 partial: 17 application files still use adapter.persistence.repository.*
-        // Recorded as test data (NOT failed) so CI shows progress as violations drop.
+        // READY-049 closed: VirtualAccountService + PaymentExpiryScheduler now use
+        // VirtualAccountPersistencePort + TransactionPersistencePort (not JPA repos).
         ArchRule rule = noClasses()
                 .that().resideInAPackage("..application..")
                 .should().dependOnClassesThat()
                 .resideInAPackage("..adapter.persistence.repository..")
                 .because("Application must use ports (not JPA repos directly)");
-        com.tngtech.archunit.lang.EvaluationResult result = rule.evaluate(importedClasses);
-        org.junit.jupiter.api.Assertions.assertNotNull(result, "Rule evaluation returned null");
-        // Just log the violation count, don't fail
-        System.out.println("[READY-049] Application → adapter.persistence.repository violations: "
-                + result.getFailureReport().getDetails().size());
+        rule.check(importedClasses);
     }
 
     @org.junit.jupiter.api.Test
