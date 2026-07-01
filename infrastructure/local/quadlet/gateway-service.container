@@ -43,6 +43,13 @@ MemorySwap=1G
 NoNewPrivileges=true
 RunInit=true
 
+# GAP-23 fix: Mount Keycloak CA cert into truststore so quarkus.oidc.tls.verification=required
+# can validate the Keycloak TLS certificate (was 'none' — MITM exposure).
+# Production OCP deployment (when restored) MUST include equivalent volume + volumeMount
+# + env QUARKUS_OIDC_TLS_TRUST_STORE_FILE=/etc/payu/tls/keycloak-ca.pem
+Volume=/etc/payu/tls/keycloak-ca.pem:/etc/payu/tls/keycloak-ca.pem:ro
+Environment=QUARKUS_OIDC_TLS_TRUST_STORE_FILE=/etc/payu/tls/keycloak-ca.pem
+
 # Logging
 LogDriver=journald
 LogOpt=tag=gateway-service

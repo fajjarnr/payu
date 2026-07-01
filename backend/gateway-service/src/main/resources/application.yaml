@@ -18,7 +18,7 @@ quarkus:
     credentials:
       secret: ${OIDC_CLIENT_SECRET} # pragma: allowlist secret
     tls:
-      verification: none # pragma: allowlist secret
+      verification: required # GAP-23 fix: was 'none' (MITM exposure); Keycloak CA mounted via infra/.
     token:
       issuer: ${OIDC_ISSUER:${OIDC_AUTH_SERVER_URL:http://localhost:8080/realms/payu}}
     # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
