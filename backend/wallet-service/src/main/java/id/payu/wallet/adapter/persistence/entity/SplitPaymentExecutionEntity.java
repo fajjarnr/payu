@@ -1,6 +1,9 @@
 package id.payu.wallet.adapter.persistence.entity;
 
+import jakarta.persistence.EntityListeners;
+
 import id.payu.wallet.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -19,6 +22,7 @@ import java.util.UUID;
     @Index(name = "idx_split_exec_tenant", columnList = "tenant_id")
 }, uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key"))
 @TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class SplitPaymentExecutionEntity {
 
     @Id
