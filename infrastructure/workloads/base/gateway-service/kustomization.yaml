@@ -4,7 +4,6 @@ resources:
 - serviceaccount.yaml
 - deployment.yaml
 - service.yaml
-- route.yaml
 labels:
 - pairs:
     app.kubernetes.io/name: gateway-service

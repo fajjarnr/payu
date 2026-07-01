@@ -1242,7 +1242,7 @@ spec:
 
 ### 7.3 Red Hat 3scale API Management (Tier 1 Partner Gateway)
 
-> **Status**: Templates ready at `infrastructure/platform/api-management/3scale/`. Deploy when ≥5 partners are active (see [ADR-0014](../adr/0014-api-management-platform.md)).
+> **Status**: **ACTIVE & ENFORCED**. The public OpenShift `Route` for `gateway-service` has been removed to eliminate backdoor bypasses of API keys, rate limits, and analytics. All public ingress (such as `/v1/partner/*` and `/api/v1/*`) is routed exclusively through 3scale APIcast, which forwards requests internally to `gateway-service`.
 
 #### 7.3.1 2-Tier Partner Gateway Architecture
 

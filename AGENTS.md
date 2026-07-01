@@ -12,10 +12,11 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
 | :------------- | :------------------------------------------------------- |
 | Build backend  | `mvn -f backend/pom.xml clean package -DskipTests -T 1C` |
 | Run web app    | `cd frontend/web-app && npm run dev`                     |
-| Local infra    | `podman compose up -d`                                   |
+| Local infra    | `cd infrastructure/local/podman && podman compose up -d` |
 | All tests      | `make test`                                              |
 | Single service | `./scripts/test-single-service.sh <service>`             |
 | Check services | `oc get pods` / `podman ps`                              |
+
 
 ## Layout
 

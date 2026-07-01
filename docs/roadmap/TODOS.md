@@ -17,7 +17,7 @@
 | **Open P1s** | 12 (10 pre-existing + 2 NEW READY-076 Postgres HA migration + READY-077 Kafka HA setup) |
 | **Open P2s** | 12 |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iters 49-53 closed: BUG-CMS-NPE-002, HMAC callback security (CRITICAL), @Version on 84 entities, ShedLock on 16 schedulers. |
-| **Last Audit** | June 19, 2026 — **33 iterations complete** (iters 32-53 since last audit). 0 P0, 2 P1 remaining (READY-076 Postgres HA, READY-077 done). Iter 53 deployed 7 services with ShedLock. |
+| **Last Audit** | July 1, 2026 — Architecture Audit (payment/banking best practices). 18 gaps identified. Score: **~46% production ready**. 0 P0, 12 P1, 12 P2 open. See §Architecture Audit below. |
 | **Last Release** | `:1.8.67` (transaction with @Version+HMAC+ShedLock) + `:1.8.66` (transaction/statement iter 52) + `:1.8.65` (partner/statement/wallet/account with @Version+HMAC) + `:1.8.64` (cms/wallet/billing/transaction) + `:1.8.63` (auth/billing/cms/partner/lending with @Version) + `:1.8.62` (backoffice/compliance/dispute/fx/investment/lending/support/transaction) + `:1.8.61` (promotion) + `:1.8.60` (partner/promotion) + `:1.8.59` (9 services bulk) + `web-app:1.5.2` |
 
 ---
@@ -241,14 +241,199 @@
 
 ---
 
-## 🎯 Top 5 Path to 80% Production Ready
+## 🏦 Architecture Audit — Payment/Banking Production Readiness (2026-07-01)
 
-1. **READY-019/020/021** Observability (OTel + Loki + Prom) (P1, 3-4 days)
-2. **READY-026/027/028** HA: Kafka 3-broker + Postgres 3-replica + AMQ pair (P1, 1 week)
-3. **READY-040-043** Compliance: PCI-DSS + UU PDP + ledger invariant + audit trail (P1, 1 week)
-4. **READY-044-049** CI/CD + Security hardening (Tekton Chains, WAF, SIEM) (P1, 1 week)
+> 18 gaps identified across security, observability, compliance, testing.
+> All items cross-reference existing tickets. No new ticket IDs created.
 
-**Total effort**: ~4 weeks with 1 engineer focused, ~2 weeks with 2 engineers.
+### Scorecard
+
+| Category | Score | Key Gaps |
+|:---|:---:|:---|
+| Domain Architecture | 🟢 90% | Solid — Hexagonal + DDD + CQRS + Saga |
+| Data Integrity | 🟢 85% | BigDecimal + double-entry + ledger tests |
+| Event-Driven | 🟢 80% | Outbox + CloudEvents + Idempotency |
+| Resilience | 🟡 70% | CB + ShedLock done. No load test yet |
+| API Standards | 🟢 80% | RFC 9457 + SNAP-BI |
+| **Encryption/PII** | 🔴 **10%** | **No pgcrypto, no Vault Transit** → READY-010, READY-040 |
+| **Observability** | 🔴 **25%** | **Tracing 0%, alerting 30%** → READY-019/020/021 |
+| **Security Infra** | 🔴 **15%** | **No WAF, no SIEM, mTLS not enforced** → INFRA-015, INFRA-011, OCP-007 |
+| **CI/CD Security** | 🔴 **10%** | **No SLSA, no image scan** → READY-044/045/046, INFRA-013/014 |
+| **Compliance** | 🔴 **20%** | **PCI-DSS + UU PDP gaps** → READY-040/041 |
+| DR/HA | 🟡 50% | Kafka 3-broker + Postgres HA done, DR untested → DR-001 |
+| Testing | 🟡 40% | Unit OK. No contract/load/soak → READY-022/023/029/030 |
+| **Incident Ops** | 🔴 **0%** | **No severity def, no alerting, no escalation** → INFRA-020/022 |
+
+### 18 Consolidated Gaps (cross-ref existing tickets)
+
+| # | Gap | Severity | Tickets | Status |
+|:---:|:---|:---:|:---|:---:|
+| 1 | PII encryption at rest (pgcrypto/Vault Transit) | 🔴 BLOCKER | READY-010, P2-READY-040 | 0% |
+| 2 | Distributed tracing (OTel → Tempo) | 🔴 BLOCKER | READY-019 | 0% |
+| 3 | Observability stack (Loki + Prometheus alerts) | 🔴 | READY-020, READY-021 | 30-50% |
+| 4 | Contract tests (Pact/SCC) | 🟠 | READY-023 | 0% |
+| 5 | Load/stress testing (1K users, SOAK 24h) | 🟠 | READY-029, READY-030 | 5% |
+| 6 | WAF (Coraza + OWASP CRS v4) | 🔴 | INFRA-015, P2-READY-047 | 0% |
+| 7 | SIEM (Wazuh manager + agent) | 🔴 | INFRA-011, P2-READY-049 | 0% |
+| 8 | mTLS enforcement (service mesh) | 🔴 | OCP-007 | 0% |
+| 9 | Security headers (HSTS, CSP, X-Frame-Options) | 🟠 | DEVSECOPS-004 | 0% |
+| 10 | Vault E2E verification + auto-unseal + snapshot | 🟠 | READY-010, DEVSECOPS-001/002 | 50% |
+| 11 | CI/CD security (SLSA, Tekton Chains/Results, ArgoCD) | 🟠 | READY-044/045/046, INFRA-013/014 | 0% |
+| 12 | Incident response (severity, alerting, escalation) | 🟠 | INFRA-020/022, P2-READY-050/051 | 0% |
+| 13 | DR live test + runbook | 🟠 | INFRA-007, DR-001, DEVSECOPS-010 | 0% |
+| 14 | UU PDP compliance (retention, erasure, sovereignty) | 🔴 | P2-READY-041, DEVSECOPS-007/008 | 0% |
+| 15 | DLQ path E2E test | 🟡 | READY-016 | 0% |
+| 16 | Kafka topic validation (all patterns) | 🟡 | READY-015 | 25% |
+| 17 | Core domain test coverage 80%+ | 🟡 | READY-022 | 25% |
+| 18 | Egress network policy (PCI-DSS) | 🟡 | DEVSECOPS-005 | 0% |
+| 19 | Broken Multitenancy (cross-tenant data read leakage) | 🔴 BLOCKER | READY-011 | 0% |
+| 20 | Configuration Duplication (duplicate yml/yaml files) | 🟡 | READY-011 | 0% |
+| 21 | Inactive Log Masking (PII leakage in logs) | 🔴 BLOCKER | READY-012 | 0% |
+| 22 | BFF Whitelist Mismatch (blocked core gateway routes) | 🟠 | READY-011 | 0% |
+| 23 | Insecure OIDC TLS Verification (MITM vulnerability) | 🔴 | OCP-007 | 0% |
+| 24 | Missing SchedulerLock on Saga Recovery | 🟡 | READY-022 | 0% |
+| 25 | Database Precision Mismatch (NUMERIC(19,2) vs DECIMAL(19,4)) | 🟠 | READY-022 | 0% |
+| **26** | ~~Python Analytics Service In-Memory Idempotency (cross-pod bypass)~~ | 🔴 BLOCKER | READY-011 | **100%** |
+| 27 | ThreadLocal / Transaction Leakage in Caching Aspect | 🔴 BLOCKER | READY-011 | 0% |
+| 28 | Disabled Database Encryption in Production / Containers | 🔴 BLOCKER | READY-011 | 0% |
+| **29** | ~~Connection Leak in Python KYC Service (Dukcapil HTTP client)~~ | 🔴 BLOCKER | READY-011 | **100%** |
+| 30 | Missing Encryption Password Configuration (risk of data corruption/loss) | 🔴 BLOCKER | READY-011 | 0% |
+| 31 | Missing Topic Name Pattern Validation in Outbox Service | 🟡 | READY-015 | 0% |
+| **32** | ~~IP Whitelist Bypass Vulnerability (X-Bypass-IP-Check)~~ | 🔴 BLOCKER | READY-011 | **100%** |
+| **33** | ~~Direct Public Route to Internal Gateway (monetization/security bypass)~~ | 🔴 BLOCKER | OCP-007 | **100%** |
+| 34 | Unsafe Class Deserialization in TypedJsonRedisSerializer (RCE vulnerability) | 🔴 BLOCKER | READY-011 | 0% |
+
+### 🛑 Hexagonal Architecture Violations (Added 2026-07-01)
+
+- **Adapter-to-Repository Coupling**: Web controllers are directly importing and querying JPA repositories, bypassing application use cases and input ports (e.g., `AccountLookupController` uses `UserRepository`/`AccountRepository`; `SavingsGoalController` uses `SavingsGoalJpaRepository`/`PocketJpaRepository`).
+- **JPA Entity Leakage**: Application services in `transaction-service`, `partner-service`, and `billing-service` import and manipulate persistence entities (`id.payu.[service].adapter.persistence.entity.*`) directly rather than pure domain models.
+- **DTO Placement Violation**: DTOs are defined at root package level `id.payu.[service].dto` instead of the mandated `id.payu.[service].interfaces.dto` package per AGENTS.md rule #5.
+- **Missing ArchUnit Guards**: Lack of automated architecture verification in several key services, most notably `wallet-service`, allowing boundary violations to slip through CI.
+
+### 🛑 Detailed Gap Context & Specifications (GAP-19 to GAP-31) (Added 2026-07-01)
+
+#### 19. Broken Multitenancy (Leakage on Read, Missing Listeners on Write)
+- **Problem**: Tenant isolation is bypassed during database queries. `TenantInterceptor.enableTenantFilter()` in `security-starter` is never invoked in request lifecycle. Additionally, JPA entities (`WalletEntity` in `wallet-service` and `AccountEntity` in `account-service`) lack `@EntityListeners(TenantEntityListener.class)`, so `tenantId` is not automatically set or validated during insertions. Services also shadow multitenancy classes locally rather than using the shared starter.
+- **Scope/Fix**: Consolidate `multitenancy` packages into `security-starter`. Add `@EntityListeners(TenantEntityListener.class)` to all `@TenantAware` entity classes. Ensure `TenantInterceptor.enableTenantFilter()` is active on all database transactions.
+
+#### 20. Configuration Duplication
+- **Problem**: In both `account-service` and `auth-service`, there are duplicate files `application.yml` and `application.yaml` in the classpath. Spring Boot loads both files, creating precedence conflicts and configuration drift.
+- **Scope/Fix**: Merge resources into a single consolidated `application.yml` for both services.
+
+#### 21. Inactive Log Masking
+- **Problem**: `LogbackMaskingFilter` is defined in `security-starter` but never referenced in `logback-payu-base.xml` or individual service logging configurations. Standard `PatternLayoutEncoder` and `LogstashEncoder` are configured without the layout, leaking plaintext PII (NIK, card numbers, passwords) directly to LokiStack container logs.
+- **Scope/Fix**: Update `shared/logging-starter/.../logback-payu-base.xml` to wrap console appenders with `LogbackMaskingFilter` layout.
+
+#### 22. BFF Whitelist Mismatch
+- **Problem**: The Next.js BFF proxy whitelist `ALLOWED_PATH_PREFIXES` in [route.ts](payu/frontend/web-app/src/app/api/v1/%5B...path%5D/route.ts#L11) blocks several core business paths exposed by `gateway-service`: `disbursements`, `qris`, `escrow`, `settlements`, `products`, `integration`, `smart-routing`, and `v1/partner`.
+- **Scope/Fix**: Add missing prefixes to the whitelist array in `route.ts`.
+
+#### 23. Insecure OIDC TLS Verification
+- **Problem**: `quarkus.oidc.tls.verification` is set to `none` globally in the API gateway's `application.yaml`, exposing the gateway to MITM attacks inside the OpenShift cluster when executing token validation calls with Keycloak.
+- **Scope/Fix**: Configure OIDC TLS verification to `required` in container profiles. Mount Keycloak CA cert to gateway truststore in deployment yaml.
+
+#### 24. Missing SchedulerLock on Saga Recovery
+- **Problem**: `SagaRecoveryService.scheduledRecovery()` in `saga-starter` is annotated with `@Scheduled` but lacks `@SchedulerLock`. In a multi-pod setup, all replicas execute the recovery cron concurrently, leading to redundant queries and optimistic locking exceptions (`ObjectOptimisticLockingFailureException`) on the versioned `SagaInstance` entity.
+- **Scope/Fix**: Add `@SchedulerLock` to `scheduledRecovery` in `SagaRecoveryService.java` using ShedLock.
+
+#### 25. Database Precision Mismatch
+- **Problem**: `AGENTS.md` Rule #1 requires `DECIMAL(19,4)` for all currency columns. However, multiple schemas use `NUMERIC(19,2)` or `DECIMAL(19,2)`, specifically:
+  - **`wallet-service`**: `pockets.balance` (in `V3.1__create_pockets_table.sql`), `savings_goals.target_amount` and `savings_goals.current_amount` (in `V11__create_savings_goals_table.sql`).
+  - **`fx-service`**: `fx_conversions.from_amount`, `fx_conversions.to_amount`, and `fx_conversions.fee` (in `V1__create_fx_tables.sql`).
+  - **`lending-service`**: `loans.principal_amount`, `loans.monthly_installment`, `loans.outstanding_balance`, `paylater_accounts.credit_limit`, `paylater_accounts.used_credit`, and `paylater_accounts.available_credit` (in `V1__Create_schema.sql`).
+  - **`billing-service`**: `subscription_plans.price`, `subscriptions.current_price`, and `subscription_charges.amount` (in `V3__create_subscription_tables.sql`).
+  - **`partner-service`**: `payment_links.amount`.
+  This causes rounding drift during wallet-to-pocket transfers, recurring charges, or multi-currency exchange calculations.
+- **Scope/Fix**: Create Flyway database migration scripts to alter column types to `DECIMAL(19,4)` and update corresponding JPA mappings.
+
+#### 26. Python Analytics Service In-Memory Idempotency [CLOSED]
+- **Problem**: The `IdempotencyStore` in `analytics-service` (`src/app/api/idempotency.py`) uses a local python dictionary (`self._store`). In a multi-instance production cluster, duplicate requests routed to different pods bypass the idempotency filter.
+- **Scope/Fix**: Port the Redis-backed idempotency store implementation from `kyc-service` to `analytics-service`. Fixed on 2026-07-01 by deploying the Redis-backed store with fallback support.
+
+#### 27. ThreadLocal / Transaction Leakage in Caching Aspect
+- **Problem**: In `CacheWithTTLAspect.java` (`cache-starter`), the sync cache misses are calculated using `CompletableFuture.supplyAsync()`. This detaches execution from the original request thread, losing all ThreadLocal contexts. As a result, `@Transactional` boundaries are broken, `SecurityContextHolder` is empty, and `TenantContext` is lost, causing cross-tenant queries to crash or leak data.
+- **Scope/Fix**: Replace `CompletableFuture.supplyAsync` with double-checked locking (synchronized block / ReentrantLock) on the original thread.
+
+#### 28. Disabled Database Encryption in Production
+- **Problem**: All services set `payu.security.encryption-enabled: false` in `application-container.yml`, completely disabling database column-level encryption in the production container profile (operating in plaintext pass-through mode).
+- **Scope/Fix**: Set `encryption-enabled: true` in container profiles and ensure keys are injected via Vault.
+
+#### 29. Connection Leak in Python KYC Service [CLOSED]
+- **Problem**: `KycService` instantiates a new `DukcapilClient` on every request, which opens a new `httpx.AsyncClient` connection pool. Since the client is never explicitly closed, it leaks file descriptors and sockets, leading to OS socket exhaustion under load.
+- **Scope/Fix**: Refactor `DukcapilClient` to use a shared global `httpx.AsyncClient` managed via FastAPI's lifetime context. Fixed on 2026-07-01 by implementing global shared client.
+
+#### 30. Missing Encryption Password Configuration
+- **Problem**: Microservices (except `account-service`) do not configure `payu.security.encryption.password` in their configurations. When `encryption-enabled` is activated, they fallback to generating in-memory random keys on startup, which breaks multi-pod scaling and causes data corruption after pod restarts.
+- **Scope/Fix**: Map `payu.security.encryption.password: ${ENCRYPTION_KEY}` in all service configuration files and update `SecurityAutoConfiguration` to fail fast (throw exception) if the password is empty.
+
+#### 31. Missing Topic Name Pattern Validation in Outbox Service
+- **Problem**: `OutboxService.createEvent` in `outbox-starter` accepts any `destinationTopic` string without format validation, allowing developers to publish to topics that violate the standard `payu.<domain>.<event-type>.v<n>` pattern.
+- **Scope/Fix**: Add Regex validation inside `OutboxService` to enforce naming standards before writing to the outbox database table.
+
+#### 32. IP Whitelist Bypass Vulnerability (X-Bypass-IP-Check) [CLOSED]
+- **Problem**: The gateway `IpWhitelistFilter.java` reads `X-Bypass-IP-Check` header and completely skips IP validation if set to `true`. Since `gateway-service` is exposed directly to the internet (especially for integration partners), any attacker can bypass IP restrictions on `/v1/partner/*` or `/api/v1/backoffice/*` by appending `X-Bypass-IP-Check: true`.
+- **Scope/Fix**: Remove `X-Bypass-IP-Check` from `bypass-headers` configuration list in `application.yaml` for production deployment. Fixed on 2026-07-01 by setting `bypass-headers: []`.
+
+#### 33. Direct Public Route to Internal Gateway [CLOSED]
+- **Problem**: OpenShift `Route` resource `gateway-service` exposed the Quarkus gateway service directly to the public internet. This allowed external clients to bypass 3scale API Management (monetization, rate limits, centralized access controls).
+- **Scope/Fix**: Remove the public `Route` resource so `gateway-service` is only accessible inside the cluster network. External traffic must go through 3scale APIcast. Fixed on 2026-07-01 by deleting `route.yaml` and updating base `kustomization.yaml`.
+
+#### 34. Unsafe Class Deserialization in TypedJsonRedisSerializer (RCE vulnerability)
+- **Problem**: `TypedJsonRedisSerializer` in `cache-starter` uses `Class.forName(className, true, cl)` to deserialize arbitrary classes passed in Redis cache headers. If an attacker injects values into Redis, they can trigger arbitrary code execution (RCE) via static initializer blocks of exploit gadget classes.
+- **Scope/Fix**: Add class validation (package whitelisting) inside `TypedJsonRedisSerializer` to block class loading of anything outside allowed packages (`id.payu.*`, `java.util.*`, `java.lang.*`, etc.).
+
+
+
+
+
+
+### 🎯 Sprint Plan — Path to 80% Production Ready
+
+#### Sprint 1 (Week 1-2): Security Foundation — **Regulator Blockers**
+- [ ] **GAP-1**: PII encryption — pgcrypto column-level + Vault Transit for NIK/PIN (READY-010, P2-READY-040)
+- [ ] **GAP-8**: mTLS strict enforcement via service mesh (OCP-007)
+- [ ] **GAP-9**: Security headers on all responses (DEVSECOPS-004)
+- [ ] **GAP-10**: Vault E2E audit + auto-unseal + auto-snapshot (READY-010, DEVSECOPS-001/002)
+- [ ] **GAP-19**: Fix broken multitenancy — consolidate duplicate local multitenancy packages, enforce `@EntityListeners(TenantEntityListener.class)` on all `@TenantAware` entities, and ensure Hibernate `tenantFilter` is enabled on all transactions (READY-011).
+- [ ] **GAP-20**: Consolidate split config files (`application.yml` and `application.yaml`) in `account-service` and `auth-service` to prevent configuration drift and precedence conflicts.
+- [ ] **GAP-21**: Activate `LogbackMaskingFilter` in `logback-payu-base.xml` for both text and JSON console encoders to prevent PII leakage to LokiStack (READY-012).
+- [x] **GAP-26**: Migrate `analytics-service` from in-memory idempotency cache to Redis-backed store (porting fix from `kyc-service`) to prevent multi-instance bypass (READY-011) — **CLOSED**: Ported Redis-backed `idempotency.py` implementation from `kyc-service`.
+- [ ] **GAP-27**: Fix `CacheWithTTLAspect.handleSyncCache` to perform double-checked lock computation on the original thread rather than `CompletableFuture.supplyAsync` to prevent thread-local context loss (Transactions, Security, TenantContext, MDC) (READY-011).
+- [ ] **GAP-28**: Enable database encryption (`payu.security.encryption-enabled: true`) in container profiles (`application-container.yml`) and configure Vault keys injection to prevent plaintext PII storage in prod database (READY-011).
+- [x] **GAP-29**: Fix `DukcapilClient` connection leak in `kyc-service` by sharing a single global `httpx.AsyncClient` instance across requests instead of instantiating a new client on every request (READY-011) — **CLOSED**: Implemented global shared client.
+- [ ] **GAP-30**: Configure `payu.security.encryption.password: ${ENCRYPTION_KEY}` in all microservice config files and refactor `SecurityAutoConfiguration` to fail fast (throw exception) instead of falling back to random in-memory keys when `encryption-enabled` is true (READY-011).
+- [x] **GAP-32**: Remove `X-Bypass-IP-Check` bypass header configuration from `gateway-service`'s `application.yaml` to prevent external clients from bypassing endpoint IP whitelisting in production (READY-011) — **CLOSED**: Changed `bypass-headers` to `[]` in `application.yaml`.
+- [x] **GAP-33**: Remove public Route for `gateway-service` to enforce routing exclusively through 3scale APIcast (OCP-007) — **CLOSED**: Deleted `route.yaml` and removed from `kustomization.yaml`.
+- [ ] **GAP-34**: Implement class name whitelisting in `TypedJsonRedisSerializer` (`cache-starter`) to prevent Remote Code Execution (RCE) via malicious cache payloads injected into Redis/Data Grid (READY-011).
+
+
+#### Sprint 2 (Week 2-3): Observability — **Debugging Blind Without This**
+- [ ] **GAP-2**: OpenTelemetry → Tempo distributed tracing (READY-019)
+- [ ] **GAP-3**: Prometheus alerting rules (p99 latency, error rate) + Loki E2E (READY-020/021)
+- [ ] **GAP-15**: DLQ path E2E test (READY-016)
+- [ ] **GAP-16**: Kafka topic pattern validation (READY-015)
+
+#### Sprint 3 (Week 3-4): Compliance + Testing
+- [ ] **GAP-14**: UU PDP — data retention policy + right-to-erasure endpoints (P2-READY-041, DEVSECOPS-007/008)
+- [ ] **GAP-4**: Contract tests for core services (READY-023)
+- [ ] **GAP-5**: Load test baseline 1K concurrent (READY-029)
+- [ ] **GAP-17**: Core domain test coverage push to 80% (READY-022)
+- [ ] **Hexagonal Architecture Refactoring**: Decouple controllers from JpaRepositories, isolate JPA entities to persistence adapters, relocate DTOs to `interfaces.dto`, and add ArchUnit guards for `wallet-service`.
+- [ ] **GAP-22**: Update `ALLOWED_PATH_PREFIXES` in BFF proxy (`[...path]/route.ts`) to align with all endpoints exposed in `gateway-service` (`disbursements`, `qris`, `escrow`, `settlements`, `products`, `integration`, `smart-routing`, `v1/partner`).
+- [ ] **GAP-24**: Add `@SchedulerLock` to `SagaRecoveryService.scheduledRecovery()` in `saga-starter` to prevent multi-pod execution conflicts and log spam.
+- [ ] **GAP-25**: Upgrade database columns storing monetary values in `fx-service`, `lending-service`, `billing-service`, and `wallet-service` pockets/savings-goals tables from `19,2` to `19,4` to prevent rounding/reconciliation discrepancies with the core ledger.
+- [ ] **GAP-31**: Add runtime Regex validation to `OutboxService.createEvent` in `outbox-starter` to enforce that all custom destination topics strictly match the `payu.<domain>.<event-type>.v<n>` format (READY-015).
+
+#### Sprint 4 (Week 4-5): Security Hardening + Ops
+- [ ] **GAP-6**: WAF deployment — Coraza + OWASP CRS v4 (INFRA-015)
+- [ ] **GAP-7**: SIEM deployment — Wazuh (INFRA-011)
+- [ ] **GAP-23**: Enforce strict OIDC TLS verification (`tls.verification: required`) in `gateway-service` production profile and configure Keycloak CA cert in truststore (OCP-007).
+- [ ] **GAP-11**: CI/CD security — Tekton Chains + Results + ArgoCD (READY-044/045/046)
+- [ ] **GAP-12**: Incident response — severity P1-P4 + PagerDuty (INFRA-020/022)
+- [ ] **GAP-13**: DR runbook + live test (INFRA-007, DR-001)
+
+> **Minimum OJK/PCI-DSS submission**: Sprint 1 + Sprint 2 = **3 weeks**.
+> **Full 80% target**: Sprint 1-4 = **5 weeks** (1 engineer) / **~3 weeks** (2 engineers).
 
 ---
 

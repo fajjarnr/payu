@@ -237,7 +237,9 @@ Yang sudah ada dan relevan untuk payment gateway:
 
 ## 🚀 3scale API Management — Deployment Workflow
 
-The 3scale stack lives in the `payu-api-management` namespace and fronts the `gateway-service` in `payu-dev`. From outside the cluster, every API call hits APIcast (Nginx + Lua) which then proxies to `gateway-service.payu-dev.svc.cluster.local:8080` over plain HTTP inside the cluster.
+The 3scale stack lives in the `payu-api-management` namespace and fronts the `gateway-service` in `payu-dev`. To enforce strict API security, rate limiting, and access control, the public OpenShift `Route` for `gateway-service` has been removed. 
+
+From outside the cluster, all API traffic MUST hit APIcast (Nginx + Lua) via its public OpenShift Routes. APIcast validates client keys/tokens and proxies verified requests internally to `http://gateway-service.payu-dev.svc.cluster.local:8080` (or via private Service Mesh boundaries) over plain HTTP inside the cluster. No direct public ingress to the Quarkus `gateway-service` is allowed.
 
 ### Components
 

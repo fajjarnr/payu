@@ -9,11 +9,15 @@ logger = get_logger(__name__)
 settings = get_settings()
 
 
+# Share a single global AsyncClient instance to prevent connection leaks and socket exhaustion
+_global_client = httpx.AsyncClient(timeout=10.0)
+
+
 class DukcapilClient:
     def __init__(self):
         self.base_url = settings.dukcapil_url
-        self.client = httpx.AsyncClient(timeout=10.0)
-        logger.info("Dukcapil client initialized", base_url=self.base_url)
+        self.client = _global_client
+        logger.debug("Dukcapil client initialized with shared connection pool", base_url=self.base_url)
 
     async def verify_nik(self, nik: str) -> DukcapilVerificationResult:
         try:
@@ -64,4 +68,5 @@ class DukcapilClient:
             )
 
     async def close(self):
-        await self.client.aclose()
+        # Do not close the shared global client
+        pass
