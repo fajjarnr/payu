@@ -1,5 +1,6 @@
 package id.payu.backoffice.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,6 +21,15 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    /**
+     * CORS allowed origins for the backoffice-service API.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix). Default preserves
+     * backoffice-specific production origins.</p>
+     */
+    @Value("${payu.security.cors.allowed-origins:https://backoffice.payu.fajjjar.my.id,https://backoffice.payu.co.id,https://admin.payu.fajjjar.my.id}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,8 +52,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Standardize env-driven origins with backoffice-specific fallback
-        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", 
-                "https://backoffice.payu.fajjjar.my.id,https://backoffice.payu.co.id,https://admin.payu.fajjjar.my.id");
         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Admin-User", "X-Correlation-Id"));

@@ -29,6 +29,18 @@ import java.util.UUID;
 @Slf4j
 public class OjkRouteBuilder extends RouteBuilder {
 
+    /**
+     * Kafka bootstrap servers for outbound Kafka routes (AUDIT-053 fix).
+     *
+     * <p>Driven by Spring {@code @Value} so the value can be overridden via
+     * {@code application.yml}, {@code SPRING_APPLICATION_JSON}, or
+     * {@code @TestPropertySource}. Backward-compatible default preserves the
+     * previous {@code System.getenv("KAFKA_BOOTSTRAP", "localhost:9092")}
+     * behavior.</p>
+     */
+    @Value("${kafka.bootstrap-servers:localhost:9092}")
+    private String kafkaBootstrapServers;
+
     private final OjkValidator ojkValidator;
     private final OjkTransformer ojkTransformer;
     private final MessageProcessingService messageProcessingService;
@@ -224,6 +236,6 @@ public class OjkRouteBuilder extends RouteBuilder {
             })
             .marshal().json()
             .to(String.format("kafka:payu.integration.ojk-errors.v1?brokers=%s",
-                    System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")));
+                    kafkaBootstrapServers));
     }
 }

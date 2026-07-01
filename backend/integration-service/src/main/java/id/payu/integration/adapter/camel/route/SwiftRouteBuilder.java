@@ -14,6 +14,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -26,6 +27,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class SwiftRouteBuilder extends RouteBuilder {
+
+    /**
+     * Kafka bootstrap servers for outbound Kafka routes (AUDIT-053 fix).
+     *
+     * <p>Driven by Spring {@code @Value} so the value can be overridden via
+     * {@code application.yml}, {@code SPRING_APPLICATION_JSON}, or
+     * {@code @TestPropertySource}. Backward-compatible default preserves the
+     * previous {@code System.getenv("KAFKA_BOOTSTRAP", "localhost:9092")}
+     * behavior.</p>
+     */
+    @Value("${kafka.bootstrap-servers:localhost:9092}")
+    private String kafkaBootstrapServers;
 
     private final SwiftValidator swiftValidator;
     private final SwiftTransformer swiftTransformer;
@@ -97,7 +110,7 @@ public class SwiftRouteBuilder extends RouteBuilder {
             })
             .marshal().json(JsonLibrary.Jackson)
             .to(String.format("kafka:payu.integration.swift-processed.v1?brokers=%s",
-                    System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")))
+                    kafkaBootstrapServers))
             .process(exchange -> {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 messageProcessingService.markSent(message.getMessageId());
@@ -130,7 +143,7 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 log.error("SWIFT processing error for message {}: {}", messageId, exception.getMessage());
             })
             .to(String.format("kafka:payu.integration.swift-errors.v1?brokers=%s",
-                    System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092")));
+                    kafkaBootstrapServers));
     }
 
     private MessageType parseMessageType(String messageTypeStr) {

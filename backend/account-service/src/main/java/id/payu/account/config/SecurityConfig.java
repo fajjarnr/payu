@@ -29,6 +29,31 @@ public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
+    /**
+     * CORS allowed origins for the account-service API.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix). Default preserves
+     * localhost dev fallback.</p>
+     */
+    @Value("${payu.security.cors.allowed-origins:http://localhost:3000,http://localhost:8080}")
+    private String allowedOrigins;
+
+    /**
+     * OIDC issuer URI used by the JWT decoder to validate token signatures.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix).</p>
+     */
+    @Value("${payu.security.oauth2.issuer-uri:http://localhost:8080/realms/payu}")
+    private String oidcIssuerUri;
+
+    /**
+     * OIDC JWK set URI used by the JWT decoder to fetch public keys.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix).</p>
+     */
+    @Value("${payu.security.oauth2.jwk-set-uri:http://localhost:8080/realms/payu/protocol/openid-connect/certs}")
+    private String oidcJwkSetUri;
+
 
 
     /**
@@ -74,14 +99,10 @@ public class SecurityConfig {
      */
     @Bean
     public JwtDecoder jwtDecoder() {
-        String issuerUri = System.getenv().getOrDefault("OIDC_ISSUER", "http://localhost:8080/realms/payu");
-        String jwkSetUri = System.getenv().getOrDefault("OIDC_JWK_SET_URI",
-            "http://localhost:8080/realms/payu/protocol/openid-connect/certs");
+        log.info("Configuring JwtDecoder with issuer: {}", oidcIssuerUri);
 
-        log.info("Configuring JwtDecoder with issuer: {}", issuerUri);
-
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(oidcJwkSetUri).build();
+        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(oidcIssuerUri));
 
         return jwtDecoder;
     }
@@ -90,9 +111,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // SECURITY: Restrict CORS to specific origins only
-        // Use environment variable to configure allowed origins for different environments
-        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8080");
-
+        // Use @Value-injected property to configure allowed origins per environment
         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Request-ID", "X-Correlation-ID", "X-Device-ID"));

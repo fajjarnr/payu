@@ -1,5 +1,6 @@
 package id.payu.partner.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -28,6 +29,15 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    /**
+     * CORS allowed origins for the partner-service API.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix). Default preserves
+     * partner-specific production origins.</p>
+     */
+    @Value("${payu.security.cors.allowed-origins:https://payu.co.id,https://partner.payu.co.id}")
+    private String allowedOrigins;
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/v3/api-docs/**",
@@ -63,7 +73,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Standardize env-driven origins with partner-specific fallback
-        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "https://payu.co.id,https://partner.payu.co.id");
         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

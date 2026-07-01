@@ -1,6 +1,7 @@
 package id.payu.transaction.config;
 
 import id.payu.api.common.security.SecurityHeadersFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,6 +22,17 @@ import java.util.Arrays;
 // BUG-BE-170: Required for @PreAuthorize to be enforced
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    /**
+     * CORS allowed origins for the transaction-service API.
+     *
+     * <p>Driven by Spring {@code @Value} (AUDIT-053 fix) so the value can be
+     * overridden via {@code application.yml}, {@code SPRING_APPLICATION_JSON},
+     * or {@code @TestPropertySource}. Backward-compatible default preserves
+     * the previous {@code System.getenv("CORS_ALLOWED_ORIGINS", "...")} behavior.</p>
+     */
+    @Value("${payu.security.cors.allowed-origins:http://localhost:3000,http://localhost:8080}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityHeadersFilter securityHeadersFilter() {
@@ -71,7 +83,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        String allowedOrigins = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8080");
         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Request-ID", "X-Correlation-ID", "X-Device-ID"));
