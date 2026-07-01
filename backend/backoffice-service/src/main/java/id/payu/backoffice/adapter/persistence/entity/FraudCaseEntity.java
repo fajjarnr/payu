@@ -40,8 +40,8 @@ public class FraudCaseEntity {
     @Column(length = 50)
     private String transactionType;
 
-    @Column(precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042: DECIMAL(19,4) per AGENTS.md rule #1
 
     @Column(length = 100)
     private String fraudType;

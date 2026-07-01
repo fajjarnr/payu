@@ -33,8 +33,8 @@ public class SnapBiPaymentEntity {
     @Column(name = "partner_reference_no", length = 64)
     private String partnerReferenceNo;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(nullable = false, length = 3)
     private String currency;

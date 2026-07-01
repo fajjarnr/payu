@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.69] - 2026-07-01
+
+### Added
+
+- **AUDIT-042: Decimal Precision Migration** (Rule #1). Migrated monetary/decimal columns from `DECIMAL/NUMERIC(19,2)` to `DECIMAL(19,4)` in 9 microservices: `dispute`, `backoffice`, `fx`, `partner`, `billing`, `transaction`, `wallet`, `lending`, and `account` services.
+- **ActiveMQ Artemis DLQ Configuration**. Enabled DLQ configurations (`deadLetterAddress=DLQ`, `maxDeliveryAttempts=3`, `autoCreateDeadLetterResources=true`) globally on AMQ Broker. Enabled transactional session on JMS Auto Configuration client, and enabled listener exception rethrow on failure.
+- **AUDIT-038: Enforced API Security Headers in BFF**. Enforced HSTS, CSP, X-Frame-Options, X-Content-Type-Options, and X-Request-ID headers on all response paths in BFF proxy `route.ts`. Verified with 3 new unit tests in `bff-proxy-ssrf.test.ts`.
+- **AUDIT-035: Container Hardening (Non-Root User UID 1001)**. Patched total 35 Containerfiles, Containerfile.runtime, and skeleton templates across all 26 backend microservices and simulators to migrate runtime user from `USER 185` to non-root `USER 1001` (AGENTS.md rule #10).
+- **AUDIT-036: Manifest Runtime Hardening**. Enabled `readOnlyRootFilesystem: true` in deployment manifests for `bi-fast-simulator`, `dukcapil-simulator`, `qris-simulator`, and `biller-simulator`. Provisioned and mounted `emptyDir` `/tmp` volumes for each to prevent read-only root FS errors during startup.
+- **AUDIT-037: Idempotency Filter Path Hardening**. Fixed path mismatch and leading slash mismatch in `IdempotencyFilter.java` (`gateway-service`) that was bypassing idempotency key verification. Added `IdempotencyFilterEnforcedTest.java` to verify mandatory header enforcement on disbursements, SNAP-BI, and other financial endpoints.
+
+
+### Fixed
+
+- **Platform-Level Exception Handler Compilations**. Changed visibility of Lombok `@Slf4j` logger in `Rfc9457GlobalExceptionHandler` from private to `protected static final` logger to resolve compiler issues in subclasses of 15 microservices.
+- **LogbackMaskingFilter Empty Pattern Crash**. Added a default constructor inside `LogbackMaskingFilter` with pattern `"%msg%n"` to prevent Spring context initialization failures due to `Empty or null pattern`.
+- **Quarkus SmallRye Config Validation Failure**. Changed `gateway.ip-whitelist.bypass-headers` from empty list `[]` to `X-Bypass-IP-Check` in `application.yaml` to prevent runtime config parser failures on test startup.
+
 ## [1.8.68] - 2026-07-01
 
 ### Fixed

@@ -14,15 +14,20 @@ USER root
 RUN microdnf install -y curl-minimal && microdnf clean all
 
 # Use non-root user (185 is the default jboss user in UBI images)
-USER 185
+USER root
+RUN useradd -u 1001 payu && \
+    mkdir -p /deployments && \
+    chown -R 1001:0 /deployments
+
+USER 1001
 
 WORKDIR /deployments
 
 # Copy Quarkus fast-jar structure from local build
-COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
-COPY --chown=185 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
-COPY --chown=185 target/quarkus-app/app/ /deployments/app/
-COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --chown=1001 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=1001 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --chown=1001 target/quarkus-app/app/ /deployments/app/
+COPY --chown=1001 target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

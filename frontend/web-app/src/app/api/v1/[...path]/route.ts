@@ -4,6 +4,20 @@ import logger, { getCorrelationId, withCorrelation } from '@/lib/logger'; // esl
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
+const SECURITY_HEADERS = {
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+  'Content-Security-Policy': "default-src 'none'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+};
+
+function getSecurityHeaders(correlationId: string): Record<string, string> {
+  return {
+    ...SECURITY_HEADERS,
+    'X-Request-ID': correlationId,
+  };
+}
+
 /**
  * Whitelist of allowed API path prefixes for SSRF prevention.
  * Only paths starting with these prefixes will be proxied to the backend.
@@ -149,7 +163,10 @@ async function proxyRequest(
 
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid path' },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: getSecurityHeaders(correlationId),
+        },
       );
     }
 
@@ -247,6 +264,9 @@ async function proxyRequest(
             const responseHeaders = new Headers();
             responseHeaders.set('Content-Type', retryRes.headers.get('Content-Type') || 'application/json');
             responseHeaders.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+            for (const [k, v] of Object.entries(getSecurityHeaders(correlationId))) {
+              responseHeaders.set(k, v);
+            }
             for (const cookie of setCookieHeaders) {
               responseHeaders.append('Set-Cookie', cookie);
             }
@@ -272,6 +292,7 @@ async function proxyRequest(
       headers: {
         'Content-Type': res.headers.get('Content-Type') || 'application/json',
         'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        ...getSecurityHeaders(correlationId),
       },
     });
   } catch (error) {
@@ -283,7 +304,10 @@ async function proxyRequest(
       { error: true, _fallback: true, message: 'Service unavailable' },
       {
         status: 503,
-        headers: { 'X-Fallback': 'gateway-offline' },
+        headers: { 
+          'X-Fallback': 'gateway-offline',
+          ...getSecurityHeaders(correlationId),
+        },
       },
     );
   }

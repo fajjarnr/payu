@@ -371,8 +371,8 @@ public class VirtualAccountEntity {
     @Column(name = "external_id", length = 200)
     private String externalId;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(nullable = false, length = 3)
     private String currency;
@@ -396,7 +396,7 @@ public class VirtualAccountEntity {
     @Column(name = "callback_url", length = 500)
     private String callbackUrl;
 
-    @Column(name = "paid_amount", precision = 19, scale = 2)
+    @Column(name = "paid_amount", precision = 19, scale = 4) // AUDIT-042
     private BigDecimal paidAmount;
 
     @Column(name = "paid_at")

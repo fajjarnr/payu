@@ -41,8 +41,8 @@ public class AccountEntity {
     @Column(name = "currency", length = 3, nullable = false)
     private String currency; // Default IDR
 
-    @Column(name = "balance", precision = 19, scale = 2)
-    private BigDecimal balance; // Cached balance, source of truth in Wallet Service
+    @Column(name = "balance", precision = 19, scale = 4)
+    private BigDecimal balance; // Cached balance, source of truth in Wallet Service (AUDIT-042: DECIMAL(19,4))
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

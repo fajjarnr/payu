@@ -24,14 +24,14 @@ public class PayLaterEntity {
     @Column(name = "user_id", unique = true, nullable = false)
     private UUID userId;
 
-    @Column(name = "credit_limit", nullable = false, precision = 19, scale = 2)
-    private BigDecimal creditLimit;
+    @Column(name = "credit_limit", nullable = false, precision = 19, scale = 4)
+    private BigDecimal creditLimit; // AUDIT-042
 
-    @Column(name = "used_credit", nullable = false, precision = 19, scale = 2)
-    private BigDecimal usedCredit;
+    @Column(name = "used_credit", nullable = false, precision = 19, scale = 4)
+    private BigDecimal usedCredit; // AUDIT-042
 
-    @Column(name = "available_credit", nullable = false, precision = 19, scale = 2)
-    private BigDecimal availableCredit;
+    @Column(name = "available_credit", nullable = false, precision = 19, scale = 4)
+    private BigDecimal availableCredit; // AUDIT-042
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

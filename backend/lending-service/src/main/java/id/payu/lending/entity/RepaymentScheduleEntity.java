@@ -24,17 +24,17 @@ public class RepaymentScheduleEntity {
     @Column(name = "installment_number", nullable = false)
     private Integer installmentNumber;
 
-    @Column(name = "installment_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal installmentAmount;
+    @Column(name = "installment_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal installmentAmount; // AUDIT-042
 
-    @Column(name = "principal_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal principalAmount;
+    @Column(name = "principal_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal principalAmount; // AUDIT-042
 
-    @Column(name = "interest_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal interestAmount;
+    @Column(name = "interest_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal interestAmount; // AUDIT-042
 
-    @Column(name = "outstanding_principal", nullable = false, precision = 19, scale = 2)
-    private BigDecimal outstandingPrincipal;
+    @Column(name = "outstanding_principal", nullable = false, precision = 19, scale = 4)
+    private BigDecimal outstandingPrincipal; // AUDIT-042
 
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
@@ -46,8 +46,8 @@ public class RepaymentScheduleEntity {
     @Column(name = "paid_date")
     private LocalDate paidDate;
 
-    @Column(name = "paid_amount", precision = 19, scale = 2)
-    private BigDecimal paidAmount;
+    @Column(name = "paid_amount", precision = 19, scale = 4)
+    private BigDecimal paidAmount; // AUDIT-042
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

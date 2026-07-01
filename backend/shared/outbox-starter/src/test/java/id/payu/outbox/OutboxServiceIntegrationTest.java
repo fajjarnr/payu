@@ -112,7 +112,7 @@ class OutboxServiceIntegrationTest {
                     "correlationId", "corr-123",
                     "traceId", "trace-456"
             );
-            String destinationTopic = "wallet.credits";
+            String destinationTopic = "payu.wallet.credited.v1";
 
             // When
             OutboxEvent savedEvent = outboxService.createEvent(
@@ -131,7 +131,7 @@ class OutboxServiceIntegrationTest {
             // Verify from database
             OutboxEvent retrieved = outboxRepository.findById(savedEvent.getId()).orElseThrow();
             assertThat(retrieved.getHeaders()).containsEntry("correlationId", "corr-123");
-            assertThat(retrieved.getDestinationTopic()).isEqualTo("wallet.credits");
+            assertThat(retrieved.getDestinationTopic()).isEqualTo("payu.wallet.credited.v1");
         }
 
         @Test

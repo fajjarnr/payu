@@ -69,6 +69,7 @@ public class JmsAutoConfiguration {
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
         factory.setPubSubDomain(properties.isPubSubDomain());
+        factory.setSessionTransacted(true);
         return factory;
     }
 

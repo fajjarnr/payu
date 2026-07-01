@@ -4,6 +4,40 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-084: Edge Idempotency Bypass, Container filesystem hardening, and Framework compatibility fixes (2026-07-01)
+
+**Date**: 2026-07-01
+**Domain**: Security / Gateway / Container Hardening / Spring Boot / Quarkus
+**Context**: Upgrading edge idempotency path matching, implementing container hardening (`readOnlyRootFilesystem`), fixing logback masking filter crash, and correcting compilation issues in exception handlers during SNAP-BI and platform hardening.
+
+**Root Cause**:
+1. **Idempotency Filter Bypass**: The gateway `IdempotencyFilter` was configured with paths that did not match actual REST controllers (e.g. `/api/v1/transactions/disbursement` instead of `/api/v1/disbursements`). Furthermore, JAX-RS `getUriInfo().getPath()` returns relative paths without a leading slash by specification (e.g., `api/v1/disbursements`). Matching this against paths with a leading slash in `FINANCIAL_PATHS` resulted in the check always evaluating to `false`, bypassing idempotency checks globally.
+2. **ReadOnlyRootFilesystem Crash**: Enforcing container security context `readOnlyRootFilesystem: true` caused the Quarkus simulator pods to crash at startup because they needed to write transient runtime files and log outputs to `/tmp`.
+3. **LogbackMaskingFilter Init Failure**: In `security-starter`, the logging masking filter lacked a default constructor. Spring failed to bootstrap the context when the filter property was unconfigured, crashing with an `Empty or null pattern` error.
+4. **Exception Handler Compilations**: Private Lombok `@Slf4j` logger in the base `Rfc9457GlobalExceptionHandler` conflicted with subclass-specific logs across 15 microservices.
+
+**Fix**:
+1. Normalized the `path` variable in `IdempotencyFilter.java` by prepending a leading slash if not present:
+```java
+String rawPath = requestContext.getUriInfo().getPath();
+if (!rawPath.startsWith("/")) {
+    rawPath = "/" + rawPath;
+}
+final String path = rawPath;
+```
+And corrected `FINANCIAL_PATHS` to match real endpoints (e.g. `/api/v1/disbursements`, `/api/v1/wallets`, `/v1/partner`, `/api/v1/v1/partner`). Added a test suite `IdempotencyFilterEnforcedTest.java` running on an active idempotency profile.
+2. Hardened deployment manifests for the 4 simulators by enabling `readOnlyRootFilesystem: true` along with `emptyDir` volume mounts for `/tmp`.
+3. Added default constructor in `LogbackMaskingFilter.java` with default pattern `"%msg%n"`.
+4. Changed private `@Slf4j` in the base exception handler class to a manual `protected static final Logger log` declaration.
+
+**Lesson (4 parts)**:
+1. **JAX-RS `UriInfo.getPath()` has no leading slash**: JAX-RS `UriInfo.getPath()` always returns paths relative to the base URI without a leading slash. Prepend a leading slash manually when comparing against absolute paths.
+2. **`readOnlyRootFilesystem` needs `/tmp` emptyDir**: Setting `readOnlyRootFilesystem: true` on containers must always be paired with an `emptyDir` mount for `/tmp` (and any other transient write paths) to prevent runtime writes from crashing the application.
+3. **Lombok `@Slf4j` Subclass Conflicts**: Subclassing REST controllers or exception handlers that share logger names can result in compiler errors if not correctly declared. Declaring a manual `protected static final Logger log` in the base class resolves this cleanly.
+4. **Unit testing filter profiles**: When writing unit tests for filters that rely on configuration parameters (like `idempotency.enabled`), make sure to use a distinct test profile to test both the active/enforced and disabled case, rather than sharing a single profile that disables the feature globally.
+
+---
+
 ## L-083: Gateway Upstream Error Forwarding — WebApplicationException.getResponse() Returns Verbatim (2026-07-01)
 
 **Date**: 2026-07-01

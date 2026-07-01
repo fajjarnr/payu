@@ -23,6 +23,9 @@ spec:
         prometheus.io/path: /q/metrics
         prometheus.io/port: '8080'
     spec:
+      volumes:
+      - name: tmp
+        emptyDir: {}
       containers:
       - name: qris-simulator
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.21
@@ -31,6 +34,9 @@ spec:
         - containerPort: 8080
           name: http
           protocol: TCP
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: QUARKUS_DATASOURCE_JDBC_URL
           valueFrom:
@@ -73,6 +79,7 @@ spec:
           timeoutSeconds: 3
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault

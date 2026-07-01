@@ -44,8 +44,8 @@ public class PaymentLinkEntity {
     private PartnerEntity partner;
 
     @NotNull
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @NotBlank
     @Column(nullable = false, length = 3)

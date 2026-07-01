@@ -112,7 +112,7 @@ class OutboxServiceTest {
         void shouldCreateEventWithHeadersAndTopic() {
             stubSave();
             Map<String, Object> headers = Map.of("correlationId", "corr-123");
-            String topic = "wallet.credits";
+            String topic = "payu.wallet.credited.v1";
 
             OutboxEvent result = outboxService.createEvent(
                     AGGREGATE_TYPE, AGGREGATE_ID, EVENT_TYPE, PAYLOAD, headers, topic);
@@ -215,7 +215,7 @@ class OutboxServiceTest {
                     .thenReturn(Map.of("from", "acc-1", "to", "acc-2", "amount", 100000));
 
             OutboxEvent result = outboxService.createEventFromObject(
-                    "Transfer", "transfer-001", "TransferCompleted", domainEvent, headers, "transfer.events");
+                    "Transfer", "transfer-001", "TransferCompleted", domainEvent, headers, "payu.transfer.completed.v1");
 
             verify(outboxRepository).save(eventCaptor.capture());
             OutboxEvent saved = eventCaptor.getValue();
@@ -223,7 +223,7 @@ class OutboxServiceTest {
             assertThat(saved.getPayload()).containsEntry("from", "acc-1");
             assertThat(saved.getPayload()).containsEntry("to", "acc-2");
             assertThat(saved.getHeaders()).isEqualTo(headers);
-            assertThat(saved.getDestinationTopic()).isEqualTo("transfer.events");
+            assertThat(saved.getDestinationTopic()).isEqualTo("payu.transfer.completed.v1");
         }
 
         @Test

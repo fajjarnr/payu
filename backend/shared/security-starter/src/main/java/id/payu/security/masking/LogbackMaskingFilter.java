@@ -29,6 +29,10 @@ import java.util.regex.Pattern;
  */
 public class LogbackMaskingFilter extends PatternLayout {
 
+    public LogbackMaskingFilter() {
+        setPattern("%msg%n");
+    }
+
     // Patterns for sensitive data
     private static final Pattern NIK_PATTERN = Pattern.compile("(\\d{3})\\d{10}(\\d{3})");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("(\\w{1})[\\w.]+@([\\w.]+)");

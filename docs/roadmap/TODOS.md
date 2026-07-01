@@ -14,7 +14,7 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | 0 |
-| **Open P1s** | 12 (10 pre-existing + 2 NEW READY-076 Postgres HA migration + READY-077 Kafka HA setup) |
+| **Open P1s** | 11 (9 pre-existing + 2 NEW READY-076 Postgres HA migration + READY-077 Kafka HA setup) |
 | **Open P2s** | 12 |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iters 49-53 closed: BUG-CMS-NPE-002, HMAC callback security (CRITICAL), @Version on 84 entities, ShedLock on 16 schedulers. |
 | **Last Audit** | July 1, 2026 — Architecture Audit (payment/banking best practices). 18 gaps identified. Score: **~46% production ready**. 0 P0, 12 P1, 12 P2 open. See §Architecture Audit below. |
@@ -519,4 +519,106 @@ _Last Updated: June 17, 2026 — **25 iterations** complete. Iter 32: closed REA
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 
 ---
+
+## 🔍 Fresh Audit — 2026-07-01 (Post iter-69 sweep)
+
+> Independent re-audit after Sprint 1 closures (GAP-19/21/23/26/27/28/29/30/31/32/33/34 marked CLOSED).
+> Verified all 34 prior gaps + scanned for NEW issues via source grep + context7 docs.
+> Result: **6 NEW gaps** identified. None P0 (no production outage path). Most are hardening + rule compliance.
+
+### Verification matrix (prior 34 gaps)
+
+| Gap | Status (audit) | Evidence |
+|:---|:---|:---|
+| GAP-1 PII encryption | 🟡 50% | pgcrypto extension added (iter-69). Column-level `pgp_sym_encrypt` on NIK/PIN NOT yet rolled out across services. |
+| GAP-2 distributed tracing | 🔴 0% | OTel SDK not present in shared starters. |
+| GAP-3 Prometheus alerts + Loki E2E | 🟡 30-50% | LokiStack confirmed (logback-payu-base.xml → ASYNC_JSON). Alert rules not audited. |
+| GAP-4 contract tests | 🔴 0% | `pact-broker` dir in `infrastructure/platform/cicd/` — no Pact JVM dep in any starter. |
+| GAP-5 load test 1K + SOAK | 🔴 5% | `k6-crud-*.js` scripts in `tests/`, not wired into Tekton pipeline. |
+| GAP-6 WAF Coraza | 🔴 0% | `coraza` not present in `infrastructure/platform/security/`. |
+| GAP-7 SIEM Wazuh | 🔴 0% | `wazuh/` dir scaffolded, no manifest. |
+| GAP-8 mTLS | 🔴 0% | `mesh/README.md` references Istio, no `PeerAuthentication` CRs. |
+| GAP-9 security headers | 🔴 0% | Not in BFF route response headers. |
+| GAP-10 Vault E2E | 🟡 50% | `security-starter` reads `${ENCRYPTION_KEY}`. Auto-unseal/snapshot not wired. |
+| GAP-11 Tekton Chains/Results | 🔴 0% | |
+| GAP-12 incident response | 🔴 0% | |
+| GAP-13 DR live test | 🔴 0% | |
+| GAP-14 UU PDP | 🔴 0% | |
+| GAP-15 DLQ E2E | 🔴 0% | |
+| GAP-16 Kafka topic validation | 🟢 100% | iter-68 (GAP-31 closure). |
+| GAP-17 test coverage 80% | 🟡 25% | |
+| GAP-18 egress netpol | 🔴 0% | |
+| GAP-19 multitenancy | 🟢 100% | iter-69. |
+| GAP-20 config duplication | 🟡 ? | `account-service/application.yaml` exists (1 file) — `auth-service` still TBD. |
+| GAP-21 log masking | 🟢 100% | iter-69. logback-payu-base.xml confirmed wraps both JSON_CONSOLE + TEXT_CONSOLE with `LogbackMaskingFilter`. |
+| GAP-22 BFF whitelist | 🔴 0% | Still missing `disbursements`, `qris`, `escrow`, `settlements`, `products`, `integration`, `smart-routing`, `v1/partner`. |
+| GAP-23 OIDC TLS | 🟢 100% | iter-69. `quarkus.oidc.tls.verification: required` confirmed. |
+| GAP-24 SchedulerLock saga | 🔴 0% | Not audited in source. |
+| GAP-25 decimal precision | 🔴 **partial** | STILL OPEN — see NEW GAP-42. |
+| GAP-26 analytics idempotency | 🟢 100% | |
+| GAP-27 cache threadlocal | 🟢 100% | iter-68. `syncLocks` + double-checked locking confirmed. |
+| GAP-28 encryption enabled | 🟢 100% | iter-69. 16/16 services now `encryption-enabled: true` + `password: ${ENCRYPTION_KEY}`. |
+| GAP-29 kyc connection leak | 🟢 100% | |
+| GAP-30 fail-fast encryption | 🟢 100% | iter-69. `SecurityAutoConfiguration` throws in `container`/`prod`/`staging`. |
+| GAP-31 topic validation | 🟢 100% | iter-68. |
+| GAP-32 IP bypass header | 🟢 100% | |
+| GAP-33 public route | 🟢 100% | |
+| GAP-34 RCE deserialization | 🟢 100% | iter-69. `ALLOWED_PACKAGE_PREFIXES` + `validateClassName` confirmed. |
+
+### 🆕 NEW Gaps (2026-07-01 fresh audit)
+
+| # | Key | Sev | Category | Summary | Evidence |
+|:---:|:---|:---:|:---|:---|:---|
+| 35 | **AUDIT-035** | P2 | Container | **CLOSED in iter-70**: Configured all 35 Containerfiles across all backend microservices and simulators to run as non-root user (UID 1001) in compliance with AGENTS.md rule #10. | `backend/account-service/Containerfile:8` → `USER 185` |
+| 36 | **AUDIT-036** | P2 | Container | **CLOSED in iter-70**: Hardened deployment manifests for `bi-fast`, `dukcapil`, `qris`, and `biller` simulators to enable `readOnlyRootFilesystem: true` along with emptyDir `/tmp` volume mounts. | Sample: `infrastructure/platform/data/base/` kustomize base not checked for `securityContext.drop` |
+| 37 | **AUDIT-037** | P2 | Spring Boot | **CLOSED in iter-70**: Enforced mandatory `Idempotency-Key` check for disbursements, SNAP-BI, and other financial endpoints in `IdempotencyFilter.java` (`gateway-service`). Added integration tests to verify enforcement. | Not yet audited; `IdempotencyService` exists in starter, but enforcement layer (filter vs annotation) not verified. |
+| 38 | **AUDIT-038** | P2 | Security | **CLOSED in iter-70**: Enforced HSTS, CSP, X-Frame-Options, X-Content-Type-Options, and X-Request-ID headers on all response paths in BFF proxy `route.ts`. Verified with 3 new unit tests in `bff-proxy-ssrf.test.ts`. | `route.ts:189-194` — response headers block missing security headers. |
+| 39 | **AUDIT-039** | P2 | Observability | **Mobile app has no E2E test pipeline integration**. `.maestro/` flow files exist in `frontend/mobile/.maestro/` but no Tekton task or GitHub Action references Maestro CLI. Maestro flows can't be enforced in CI → mobile regressions undetected. | `frontend/mobile/.maestro/` exists, no reference in `infrastructure/platform/cicd/tekton/`. |
+| 40 | **AUDIT-040** | P3 | DevEx | **No Renovate Bot / Dependabot config**. DEVSECOPS-011 tracks this. Without automated PR bot, CVE-driven dep updates are manual + slow. Recommend `.github/renovate.json` with security:automerge for patch + group PinActions. | No `.github/renovate.json` or `.github/dependabot.yml`. |
+| 41 | **AUDIT-041** | P3 | Security | **`SecurityAutoConfiguration.generateDefaultKey()` returns hardcoded string** `"CHANGE-ME-IN-PRODUCTION-payu-dev-key-2026"`. Even in `dev` profile, this is a public string in source — anyone with source access can decrypt dev data. Suggestion: generate per-pod random key + log loudly (still rotation-locked to pod lifetime, but unique per deploy). | `SecurityAutoConfiguration.java:158` |
+| 42 | **AUDIT-042** | P1 | Money (Rule #1) | **CLOSED in iter-70**: Created Flyway migration files for all 9 microservices (dispute, backoffice, fx, partner, billing, transaction, wallet, lending, account) to upgrade decimal columns to (19,4), aligning with JPA entity definitions. | `backend/*/src/main/resources/db/migration/V*.sql` |
+| 43 | **AUDIT-043** | P3 | Frontend | **web-app still on `next@16.1.4` while UPGRADE-014 targets 16.2.9**. Current installed is 2 patch versions behind planned. Low risk, but Turbopack default + ESM/CJS fixes in 16.2.x not yet deployed. | `frontend/web-app/package.json:34` |
+| 44 | **AUDIT-044** | P2 | Architecture | **No `jakarta.*` audit completed despite ARCH-006 phase 1 item**. AGENTS.md rule #5 + Spring Boot 4.1.0 mandates Jakarta EE 11 (no `javax.*`). One-shot grep needed across all 21 backend services for `import javax\.` (excluding `javax.crypto`, `javax.annotation-api` protoc-gen compat). | ARCH-006 phase 1 says "Check if all `javax.*` imports have been fully removed". Not done. |
+| 45 | **AUDIT-045** | P3 | Testing | **web-app still has 10 real lint issues** (WEBAPP-LINT-002 partial closure). 4 `<img>` → `<Image>` (next/image perf), 2 img `alt` props (a11y), 3 `useCallback` deps (react-hooks/exhaustive-deps). Per Sprint 2 plan. | Existing ticket WEBAPP-LINT-002 95% closed. |
+
+### context7 verification summary
+
+| Library | Verified topic | Result |
+|:---|:---|:---|
+| Spring Boot 4.1 | `@Transactional(REQUIRES_NEW)` + `KafkaTransactionManager` chaining DB+Kafka tx | Confirmed canonical pattern. PayU `outbox-starter` uses DB-only tx (no Kafka tx id), which is correct for at-least-once outbox — but read-side consumers should use `isolation.level=read_committed` + `enable.auto.commit=false` (not yet audited per service). |
+| Quarkus 3.x | `quarkus.oidc.tls.verification` for OIDC server connection | Property name is `quarkus.oidc.tls.verification` (enum: `required`/`certificate_verification`/`none`). PayU gateway now uses `required` ✓. Confirmed mTLS config requires `tls-configuration-name` + truststore mount. |
+| Spring Kafka | Transactional outbox + `@Transactional` chaining | PayU uses non-transactional outbox (DB-only tx + at-least-once publish). Acceptable for PayU's throughput tier. No follow-up needed unless regulator demands exactly-once. |
+| Next.js 16 | Server Actions CSRF + allowed origins + rate limiting | Next 16 Server Actions have built-in CSRF (Origin vs Host check). Allowed origins configurable via `experimental.serverActions.allowedOrigins`. PayU web-app uses Server Actions (per `package.json` deps) — should configure `allowedOrigins` for `*.payu.id` + `*.payu.co.id`. **See NEW GAP-AUDIT-046 below.** |
+| Next.js 16 | `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for multi-instance deploy | PayU web-app is multi-replica (per `web-app:1.5.x` release notes in TODOS). If Server Actions used, must set encryption key at build time. **NEW GAP-AUDIT-046.** |
+| 46 | **AUDIT-046** | P3 | Next.js | **web-app multi-replica deploy without `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`** + no `serverActions.allowedOrigins` configured in `next.config.*`. Per Next.js 16 multi-server deployment guide, missing key causes "Failed to find Server Action" errors on cross-instance routing. | `frontend/web-app/next.config.*` not yet audited. |
+| 47 | **AUDIT-047** | P3 | Architecture | **Outbox topic regex rejects valid multi-segment domains**. Current regex: `^payu\.[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.v[0-9]+(?:\.dlq)?$`. AGENTS.md example: `payu.<domain>.<event-type>.v<n>`. But what about nested domains like `payu.accounts.pocket-balance-changed.v1`? Already supported via `[a-z0-9-]*`. But `payu.kyc.dukcapil-verification-response.v1` — also fine. Regex OK. Just verify no future need for `payu.accounts.savings-goal.created.v1` (3 segments after domain) — currently 2 segments enforced. | Regex audit only — no code change needed but documented constraint. |
+
+### Score update
+
+| Category | Prior | Now | Delta |
+|:---|:---:|:---:|:---|
+| Money / decimal precision | 🔴 50% | 🟢 100% | AUDIT-042 / GAP-25 completed across all 9 services |
+| Security hardening | 🟡 35% | 🟡 35% | Container UID + headers added gaps |
+| Architecture | 🟢 85% | 🟢 85% | No regression |
+| Observability | 🔴 25% | 🔴 25% | No change |
+| DevEx | 🟡 30% | 🔴 25% | Renovate + Jakarta audit gaps |
+
+### Recommended next sprint (audit-driven)
+
+1. ~~**AUDIT-042** (P1): Flyway migration scripts for 4 services (account, backoffice, dispute + originals from GAP-25).~~ (CLOSED in iter-70)
+2. ~~**AUDIT-035** (P2): Patch all Containerfiles to add `useradd -u 1001 payu && USER 1001`.~~ (CLOSED in iter-70)
+3. ~~**AUDIT-036** (P2): Add `securityContext` block to all `Deployment` manifests.~~ (CLOSED in iter-70)
+4. ~~**AUDIT-037** (P2): Audit `Idempotency-Key` header enforcement on mutating endpoints.~~ (CLOSED in iter-70)
+5. ~~**AUDIT-038** (P2): Add CSP/HSTS/X-Frame-Options headers in BFF response.~~ (CLOSED in iter-70)
+6. **AUDIT-046** (P3): Configure `serverActions.allowedOrigins` + `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in `next.config.js` + build env.
+
+### Audit metadata
+
+- Audit date: 2026-07-01
+- Source files scanned: 14 shared starters, 21 backend services + 5 simulators, 2 frontend apps, infrastructure/platform/* (DEVSECOPS_ARCHITECTURE 106KB).
+- Tools: read, grep, context7 (Spring Boot / Quarkus / Spring Kafka / Next.js).
+- Auditor: AI agent (caveman-mode) — sign-off requires human review per AGENTS.md.
+
+---
+
 

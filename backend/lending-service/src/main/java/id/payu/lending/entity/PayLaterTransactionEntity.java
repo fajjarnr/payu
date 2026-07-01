@@ -29,8 +29,8 @@ public class PayLaterTransactionEntity {
     @Column(name = "type", nullable = false)
     private id.payu.lending.domain.model.TransactionType type;
 
-    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(name = "merchant_name")
     private String merchantName;

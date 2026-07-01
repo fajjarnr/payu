@@ -29,8 +29,8 @@ public class PocketEntity {
     @Column(name = "currency", length = 3, nullable = false)
     private String currency;
 
-    @Column(name = "balance", precision = 19, scale = 2, nullable = false)
-    private BigDecimal balance;
+    @Column(name = "balance", precision = 19, scale = 4, nullable = false)
+    private BigDecimal balance; // AUDIT-042
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)

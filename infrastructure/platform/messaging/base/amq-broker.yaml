@@ -19,6 +19,9 @@ spec:
   adminPassword: admin
   adminUser: admin
   brokerProperties:
+    - 'addressSettings."#".deadLetterAddress=DLQ'
+    - 'addressSettings."#".maxDeliveryAttempts=3'
+    - 'addressSettings."#".autoCreateDeadLetterResources=true'
     - 'addressConfigurations."payu.notification.commands".routingTypes=ANYCAST'
     - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".address="payu.notification.commands"'
     - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".routingType=ANYCAST'

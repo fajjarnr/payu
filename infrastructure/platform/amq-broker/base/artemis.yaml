@@ -48,6 +48,10 @@ spec:
     port: 5672
     protocols: AMQP
   brokerProperties:
+  # DLQ and Redelivery Settings
+  - 'addressSettings."#".deadLetterAddress=DLQ'
+  - 'addressSettings."#".maxDeliveryAttempts=3'
+  - 'addressSettings."#".autoCreateDeadLetterResources=true'
   # payu.notification.commands Queue
   - 'addressConfigurations."payu.notification.commands".routingTypes=ANYCAST'
   - 'addressConfigurations."payu.notification.commands".queueConfigs."payu.notification.commands".address="payu.notification.commands"'

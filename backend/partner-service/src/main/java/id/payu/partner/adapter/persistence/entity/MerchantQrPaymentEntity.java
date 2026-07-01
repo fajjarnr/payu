@@ -34,8 +34,8 @@ public class MerchantQrPaymentEntity {
     @JoinColumn(name = "merchant_id", nullable = false)
     private MerchantEntity merchant;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(nullable = false, length = 3)
     private String currency;

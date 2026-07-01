@@ -29,11 +29,11 @@ public class SavingsGoalEntity {
     @Column(length = 500)
     private String description;
 
-    @Column(name = "target_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal targetAmount;
+    @Column(name = "target_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal targetAmount; // AUDIT-042
 
-    @Column(name = "current_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal currentAmount = BigDecimal.ZERO;
+    @Column(name = "current_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal currentAmount = BigDecimal.ZERO; // AUDIT-042
 
     @Column(nullable = false, length = 3)
     private String currency = "IDR";

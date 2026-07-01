@@ -45,8 +45,9 @@ import java.util.stream.Collectors;
  * @since 1.8.69
  */
 @RestControllerAdvice
-@Slf4j
 public class Rfc9457GlobalExceptionHandler {
+
+    protected static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(Rfc9457GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ProblemDetail> handleBusinessException(

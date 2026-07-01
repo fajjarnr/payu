@@ -39,8 +39,8 @@ public class RefundEntity {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
-    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(name = "currency", nullable = false, length = 3)
     private String currency;

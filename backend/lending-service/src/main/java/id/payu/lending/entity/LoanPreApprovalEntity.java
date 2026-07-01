@@ -28,11 +28,11 @@ public class LoanPreApprovalEntity {
     @Column(name = "loan_type", nullable = false)
     private id.payu.lending.domain.model.LoanType loanType;
 
-    @Column(name = "requested_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal requestedAmount;
+    @Column(name = "requested_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal requestedAmount; // AUDIT-042
 
-    @Column(name = "max_approved_amount", precision = 19, scale = 2)
-    private BigDecimal maxApprovedAmount;
+    @Column(name = "max_approved_amount", precision = 19, scale = 4)
+    private BigDecimal maxApprovedAmount; // AUDIT-042
 
     @Column(name = "min_interest_rate", precision = 5, scale = 4)
     private BigDecimal minInterestRate;
@@ -40,8 +40,8 @@ public class LoanPreApprovalEntity {
     @Column(name = "max_tenure_months")
     private Integer maxTenureMonths;
 
-    @Column(name = "estimated_monthly_payment", precision = 19, scale = 2)
-    private BigDecimal estimatedMonthlyPayment;
+    @Column(name = "estimated_monthly_payment", precision = 19, scale = 4)
+    private BigDecimal estimatedMonthlyPayment; // AUDIT-042
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

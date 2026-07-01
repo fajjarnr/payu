@@ -54,30 +54,21 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         "/v1/transfers",
         "/v1/payments",
 
-        // --- Wallet service: debit/credit, escrow, settlement, split-payment, journals, pockets ---
-        "/api/v1/wallets/debit",
-        "/api/v1/wallets/credit",
-        "/api/v1/wallets/escrow",
-        "/api/v1/wallets/settlement",
-        "/api/v1/wallets/split-payment",
-        "/api/v1/wallets/journal",
-        "/api/v1/wallets/pocket",
-        "/api/v1/wallets/reserve",
+        // --- Wallet service ---
+        "/api/v1/wallets",
 
-        // --- Transaction service: transfers, QRIS, disbursements, split-bill, scheduled, VA ---
-        "/api/v1/transactions/transfer",
-        "/api/v1/transactions/qris",
-        "/api/v1/transactions/disbursement",
-        "/api/v1/transactions/batch-disbursement",
-        "/api/v1/transactions/split-bill",
-        "/api/v1/transactions/scheduled",
-        "/api/v1/transactions/virtual-account",
+        // --- Transaction service ---
+        "/api/v1/transactions",
+        "/api/v1/disbursements",
+        "/api/v1/payments/va",
+        "/api/v1/split-bills",
+        "/api/v1/scheduled-transfers",
 
         // --- Lending service: loans, repayments, PayLater ---
-        "/api/v1/lending/",
+        "/api/v1/lending",
 
         // --- FX service: currency conversions ---
-        "/api/v1/fx/",
+        "/api/v1/fx",
 
         // --- Dispute service: refunds & disputes ---
         "/api/v1/disputes",
@@ -88,10 +79,12 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         "/api/v1/subscriptions",
 
         // --- Investment service: mutual funds, gold, deposits ---
-        "/api/v1/investments/",
+        "/api/v1/investments",
 
-        // --- Partner service: payment links, merchants ---
-        "/api/v1/partners/",
+        // --- Partner service: payment links, merchants, SNAP-BI ---
+        "/api/v1/partners",
+        "/v1/partner",
+        "/api/v1/v1/partner",
 
         // --- Checkout (gateway-native) ---
         "/api/v1/checkout"
@@ -118,7 +111,11 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         }
 
         // Skip health and metrics endpoints
-        String path = requestContext.getUriInfo().getPath();
+        String rawPath = requestContext.getUriInfo().getPath();
+        if (!rawPath.startsWith("/")) {
+            rawPath = "/" + rawPath;
+        }
+        final String path = rawPath;
         if (path.startsWith("/q/") || path.equals("/health")) {
             return;
         }

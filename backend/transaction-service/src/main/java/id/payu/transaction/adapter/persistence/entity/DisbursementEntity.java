@@ -370,8 +370,8 @@ public class DisbursementEntity {
      * Mapped to 'amount' column in database.
      */
     @Deprecated
-    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal amountValue;
+    @Column(name = "amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal amountValue; // AUDIT-042
 
     /**
      * @deprecated Use {@link #getAmount()} instead. This field is kept for JPA compatibility.

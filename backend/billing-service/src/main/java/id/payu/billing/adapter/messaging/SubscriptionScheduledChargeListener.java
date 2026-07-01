@@ -25,6 +25,7 @@ public class SubscriptionScheduledChargeListener {
             subscriptionService.processScheduledCharge(subscriptionId);
         } catch (Exception e) {
             log.error("Failed to process scheduled billing for subscription ID: {}", subscriptionIdStr, e);
+            throw new RuntimeException("Scheduled billing execution failed, rollback to DLQ", e);
         }
     }
 }

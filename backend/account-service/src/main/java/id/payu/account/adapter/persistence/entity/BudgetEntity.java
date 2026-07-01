@@ -34,14 +34,14 @@ public class BudgetEntity {
     @Column(nullable = false, length = 100)
     private String category;
 
-    @Column(name = "limit_amount", nullable = false, precision = 19, scale = 2)
+    @Column(name = "limit_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal limitAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private BudgetPeriod period;
 
-    @Column(name = "current_spent", nullable = false, precision = 19, scale = 2)
+    @Column(name = "current_spent", nullable = false, precision = 19, scale = 4)
     private BigDecimal currentSpent = BigDecimal.ZERO;
 
     @Column(name = "reset_date")

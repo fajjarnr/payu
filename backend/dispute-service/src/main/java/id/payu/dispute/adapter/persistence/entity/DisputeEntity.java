@@ -54,8 +54,8 @@ public class DisputeEntity {
     @Column(name = "merchant_id", nullable = false)
     private UUID merchantId;
 
-    @Column(name = "disputed_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal disputedAmount;
+    @Column(name = "disputed_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal disputedAmount; // AUDIT-042
 
     @Column(name = "currency", nullable = false, length = 3)
     private String currency;

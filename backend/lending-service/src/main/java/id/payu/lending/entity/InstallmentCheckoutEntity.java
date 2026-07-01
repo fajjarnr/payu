@@ -39,8 +39,8 @@ public class InstallmentCheckoutEntity {
     @Column(name = "external_order_id", unique = true, length = 100)
     private String externalOrderId;
 
-    @Column(name = "purchase_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal purchaseAmount;
+    @Column(name = "purchase_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal purchaseAmount; // AUDIT-042
 
     @Column(name = "currency", nullable = false, length = 3)
     private String currency;
@@ -48,8 +48,8 @@ public class InstallmentCheckoutEntity {
     @Column(name = "tenor", nullable = false)
     private int tenor;
 
-    @Column(name = "monthly_payment", nullable = false, precision = 19, scale = 2)
-    private BigDecimal monthlyPayment;
+    @Column(name = "monthly_payment", nullable = false, precision = 19, scale = 4)
+    private BigDecimal monthlyPayment; // AUDIT-042
 
     @Column(name = "interest_rate", precision = 5, scale = 4)
     private BigDecimal interestRate;

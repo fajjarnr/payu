@@ -31,17 +31,17 @@ public class FxConversionEntity {
     @Column(name = "to_currency", length = 3, nullable = false)
     private String toCurrency;
 
-    @Column(name = "from_amount", precision = 19, scale = 2, nullable = false)
-    private BigDecimal fromAmount;
+    @Column(name = "from_amount", precision = 19, scale = 4, nullable = false)
+    private BigDecimal fromAmount; // AUDIT-042
 
-    @Column(name = "to_amount", precision = 19, scale = 2, nullable = false)
-    private BigDecimal toAmount;
+    @Column(name = "to_amount", precision = 19, scale = 4, nullable = false)
+    private BigDecimal toAmount; // AUDIT-042
 
     @Column(name = "exchange_rate", precision = 19, scale = 8, nullable = false)
     private BigDecimal exchangeRate;
 
-    @Column(name = "fee", precision = 19, scale = 2)
-    private BigDecimal fee;
+    @Column(name = "fee", precision = 19, scale = 4)
+    private BigDecimal fee; // AUDIT-042
 
     @Column(name = "conversion_date", nullable = false)
     private LocalDateTime conversionDate;

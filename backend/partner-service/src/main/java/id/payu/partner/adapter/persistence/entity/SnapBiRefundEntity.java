@@ -39,8 +39,8 @@ public class SnapBiRefundEntity {
     @Column(name = "partner_refund_no", length = 64)
     private String partnerRefundNo;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount; // AUDIT-042
 
     @Column(nullable = false, length = 3)
     private String currency;

@@ -136,7 +136,7 @@ class PaymentResourceTest {
                             }
                             """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("Unknown biller")));
+                .andExpect(jsonPath("$.detail").value(containsString("Unknown biller")));
     }
 
     @Test

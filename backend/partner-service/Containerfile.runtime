@@ -19,12 +19,17 @@ LABEL id.payu.compliance.pci-dss="required"
 LABEL id.payu.security.scan-level="high"
 
 # Use non-root user (185 is the default jboss user in UBI images)
-USER 185
+USER root
+RUN useradd -u 1001 payu && \
+    mkdir -p /deployments && \
+    chown -R 1001:0 /deployments
+
+USER 1001
 
 WORKDIR /deployments
 
 # Copy the pre-built Spring Boot JAR
-COPY --chown=185 target/partner-service-1.0.0-SNAPSHOT.jar /deployments/app.jar
+COPY --chown=1001 target/partner-service-1.0.0-SNAPSHOT.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

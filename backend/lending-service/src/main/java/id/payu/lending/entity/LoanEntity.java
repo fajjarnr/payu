@@ -30,8 +30,8 @@ public class LoanEntity {
     @Column(name = "type", nullable = false)
     private id.payu.lending.domain.model.LoanType type;
 
-    @Column(name = "principal_amount", nullable = false, precision = 19, scale = 2)
-    private BigDecimal principalAmount;
+    @Column(name = "principal_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal principalAmount; // AUDIT-042
 
     @Column(name = "interest_rate", precision = 5, scale = 4)
     private BigDecimal interestRate;
@@ -39,11 +39,11 @@ public class LoanEntity {
     @Column(name = "tenure_months")
     private Integer tenureMonths;
 
-    @Column(name = "monthly_installment", precision = 19, scale = 2)
-    private BigDecimal monthlyInstallment;
+    @Column(name = "monthly_installment", precision = 19, scale = 4)
+    private BigDecimal monthlyInstallment; // AUDIT-042
 
-    @Column(name = "outstanding_balance", precision = 19, scale = 2)
-    private BigDecimal outstandingBalance;
+    @Column(name = "outstanding_balance", precision = 19, scale = 4)
+    private BigDecimal outstandingBalance; // AUDIT-042
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
