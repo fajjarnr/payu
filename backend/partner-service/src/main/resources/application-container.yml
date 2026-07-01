@@ -68,4 +68,6 @@ partner:
 
 payu:
   security:
-    encryption-enabled: false
+    encryption-enabled: true
+    encryption:
+      password: ${ENCRYPTION_KEY}

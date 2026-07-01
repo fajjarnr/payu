@@ -44,12 +44,26 @@ public class SecurityAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.security", name = "encryption-enabled", havingValue = "true", matchIfMissing = false)
-    public EncryptionService encryptionService() {
+    public EncryptionService encryptionService(
+            org.springframework.core.env.Environment environment) {
         log.info("Initializing Encryption Service");
 
-        if (properties.getEncryption().getPassword() == null ||
-                properties.getEncryption().getPassword().isEmpty()) {
-            // Generate a default encryption key (not recommended for production)
+        String password = properties.getEncryption().getPassword();
+        boolean isProdProfile = java.util.Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(p -> p.equals("container") || p.equals("prod") || p.equals("staging"));
+
+        if (password == null || password.isEmpty()) {
+            // GAP-30 fix: fail fast in production profiles instead of falling back
+            // to a default key. The default key breaks multi-pod scaling (each pod
+            // derives a different key after restart) and corrupts data after pod
+            // rotation. ENCRYPTION_KEY env var MUST be injected via Vault.
+            if (isProdProfile) {
+                throw new IllegalStateException(
+                    "GAP-30 enforcement: payu.security.encryption.password (ENCRYPTION_KEY env var) "
+                    + "must be configured in production profiles [container, prod, staging]. "
+                    + "Refusing to start with a default key — this would corrupt encrypted data "
+                    + "after pod restart and break multi-pod encryption consistency.");
+            }
             log.warn("Using default encryption key. Please set payu.security.encryption.password for production!");
             return new EncryptionService(generateDefaultKey());
         }
