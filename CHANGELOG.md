@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.77] - 2026-07-02
+
+### Added
+
+- **DEVSECOPS-004: Security headers on all BFF responses**. Added `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-Request-ID` to client-side middleware (`middleware.ts`). BFF API proxy (`route.ts`) already had HSTS+CSP+XFO+XCTO since AUDIT-038.
+- **INFRA-020: Incident Response Framework**. Created `docs/operations/INCIDENT_RESPONSE.md` — severity P1-P4 definitions, escalation path (SRE → Lead → CTO), P1/P2 auto-triggers, postmortem template, on-call rotation spec.
+- **DEVSECOPS-013: ChatOps Slack Bot Spec**. Created `docs/operations/CHATOPS.md` — `/payu-hotfix`, `/payu-rollback`, `/payu-status`, `/payu-incident`, `/payu-rollout` commands, architecture, RBAC, audit trail pattern.
+- **DEVSECOPS-009: Pen Test Schedule**. Created `docs/security/PENTEST_SCHEDULE.md` — quarterly calendar (Q3 2026 → Q2 2027), CAB approval workflow, remediation SLA per severity, pre-test checklist.
+
+### Changed
+
+- **TODOS.md restructured**. All cluster-dependent items consolidated under single "Suspended — Needs OpenShift Cluster" section. Code-actionable items marked complete. READY-033 status updated (ThemeResolver = misdiagnosed, root cause fixed in iter-32).
+
+### Docs
+
+- New: `docs/operations/INCIDENT_RESPONSE.md`, `docs/operations/CHATOPS.md`, `docs/security/PENTEST_SCHEDULE.md`
+
+---
+
 ## [1.8.76] - 2026-07-02
 
 ### Added
