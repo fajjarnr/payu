@@ -28,6 +28,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -377,6 +380,139 @@ class SubscriptionServiceTest {
 
             int processed = subscriptionService.processExpiredTrials();
             assertEquals(0, processed);
+        }
+
+        @Test
+        @DisplayName("should process scheduled charge for ACTIVE subscription")
+        void shouldProcessScheduledChargeForActiveSub() {
+            SubscriptionEntity sub = createActiveSub();
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            subscriptionService.processScheduledCharge(subscriptionId);
+
+            verify(persistencePort).saveCharge(any(SubscriptionChargeEntity.class));
+            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), anyLong());
+        }
+
+        @Test
+        @DisplayName("should process scheduled charge for PAST_DUE subscription with retries left")
+        void shouldProcessScheduledChargeForPastDueWithRetries() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setStatus(SubscriptionStatus.PAST_DUE);
+            sub.setDunningAttempts(1);
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            subscriptionService.processScheduledCharge(subscriptionId);
+
+            verify(persistencePort).saveCharge(any(SubscriptionChargeEntity.class));
+        }
+
+        @Test
+        @DisplayName("should suspend PAST_DUE subscription when dunning exhausted")
+        void shouldSuspendWhenDunningExhaustedOnScheduledCharge() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setStatus(SubscriptionStatus.PAST_DUE);
+            sub.setDunningAttempts(3);
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
+
+            subscriptionService.processScheduledCharge(subscriptionId);
+
+            assertEquals(SubscriptionStatus.SUSPENDED, sub.getStatus());
+            verify(persistencePort).saveSubscription(sub);
+            verify(persistencePort, never()).saveCharge(any(SubscriptionChargeEntity.class));
+        }
+
+        @Test
+        @DisplayName("should skip scheduled charge for CANCELLED subscription")
+        void shouldSkipScheduledChargeForCancelledSub() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setStatus(SubscriptionStatus.CANCELLED);
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
+
+            subscriptionService.processScheduledCharge(subscriptionId);
+
+            verify(persistencePort, never()).saveCharge(any(SubscriptionChargeEntity.class));
+            verify(jmsMessagePublisher, never()).sendWithDelay(anyString(), anyString(), anyLong());
+        }
+
+        @Test
+        @DisplayName("should handle subscription not found for scheduled charge")
+        void shouldHandleSubNotFoundForScheduledCharge() {
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.empty());
+
+            // should not throw
+            assertDoesNotThrow(() -> subscriptionService.processScheduledCharge(subscriptionId));
+            verify(persistencePort, never()).saveCharge(any(SubscriptionChargeEntity.class));
+        }
+
+        @Test
+        @DisplayName("should schedule Artemis charge after successful billing")
+        void shouldScheduleArtemisChargeAfterSuccess() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            subscriptionService.processDueSubscriptions();
+
+            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), anyLong());
+        }
+
+        @Test
+        @DisplayName("should schedule dunning retry via Artemis when charge fails")
+        void shouldScheduleDunningRetryViaArtemis() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            // Throw on first saveSubscription (triggers charge failure), then use default behavior
+            doThrow(new RuntimeException("Wallet unavailable"))
+                    .doAnswer(inv -> {
+                        SubscriptionEntity s = inv.getArgument(0);
+                        if (s.getId() == null) s.setId(UUID.randomUUID());
+                        return s;
+                    })
+                    .when(persistencePort).saveSubscription(any(SubscriptionEntity.class));
+
+            assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
+
+            // Dunning retry should be scheduled with 5 min delay
+            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), eq(300000L));
+        }
+
+        @Test
+        @DisplayName("should continue processing even if Artemis scheduling fails")
+        void shouldContinueProcessingWhenArtemisScheduleFails() {
+            SubscriptionEntity sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            doThrow(new RuntimeException("Artemis unavailable"))
+                    .when(jmsMessagePublisher).sendWithDelay(anyString(), anyString(), anyLong());
+
+            // Should not throw — Artemis is fire-and-forget
+            assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
+
+            verify(persistencePort).saveCharge(any(SubscriptionChargeEntity.class));
+            verify(persistencePort, atLeast(1)).saveSubscription(any(SubscriptionEntity.class));
         }
     }
 

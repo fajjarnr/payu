@@ -139,8 +139,6 @@
 | READY-012 | Security | `@Sensitive` annotation enforced via ArchUnit |
 | READY-013 | Cache | `GenericJackson2JsonRedisSerializer` config platform-wide |
 | READY-014 | Cache | Cache metrics to Prometheus |
-| READY-017 | AMQ | Test dunning/scheduled billing flow |
-| READY-018 | AMQ | `JmsMessagePublisher.sendWithDelay` E2E |
 | READY-019 | Observability | Distributed tracing (OTel → Tempo) |
 | READY-020 | Observability | Loki log shipping verified |
 | READY-021 | Observability | Prometheus scrape config + alerting rules |

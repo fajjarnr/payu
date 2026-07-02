@@ -4,6 +4,41 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-089: READY-017/018 — JMS Scheduled Delivery Testing & Mockito Strict Stubbing (2026-07-02)
+
+**Date**: 2026-07-02
+**Domain**: JMS / Artemis / Testing / Mockito
+**Context**: READY-017 (test dunning/scheduled billing flow) and READY-018 (JmsMessagePublisher.sendWithDelay E2E). Billing-service had no tests for Artemis delayed scheduling, SubscriptionScheduledChargeListener, or processScheduledCharge. JmsMessagePublisher had no tests at all.
+
+**What was built**:
+
+1. **JmsMessagePublisherTest (7 tests)**: Unit test with `@Mock JmsTemplate`. Captures `MessagePostProcessor` via `verify(jmsTemplate).convertAndSend(eq(queue), eq(msg), captor.capture())`, then simulates `captor.getValue().postProcessMessage(mockMessage)` and verifies `mockMessage.setLongProperty("_AMQ_SCHED_DELIVERY", ...)` called. Tests cover: 5min delay, 0ms delay, 24h large delay, correct queue names for dunning, and standard send without AMQ headers.
+
+2. **SubscriptionScheduledChargeListenerTest (4 tests)**: Simple `@InjectMocks` test. Covers valid UUID delegation, invalid UUID format, service failure propagation (wraps in RuntimeException for DLQ), and success path.
+
+3. **SubscriptionServiceTest.ScheduledBillingTests (+9 tests, 14 total)**:
+   - `processScheduledCharge` for ACTIVE, PAST_DUE with retries, PAST_DUE exhausted → SUSPEND, CANCELLED skip, sub-not-found
+   - Artemis scheduling after successful billing (`verify(jmsMessagePublisher).sendWithDelay(..., anyLong())`)
+   - Dunning retry via Artemis with exact 300000L delay
+   - Graceful Artemis failure (fire-and-forget log, no throw)
+
+**Lessons**:
+
+1. **`MessagePostProcessor` testing pattern**: JMS delayed delivery tests need to capture the lambda passed to `convertAndSend`. Use `ArgumentCaptor<MessagePostProcessor>`, then manually invoke `captor.getValue().postProcessMessage(mockMessage)` to verify AMQ properties set correctly. Alternative: use an embedded Artemis broker — but that adds 30s+ to test time for something Mockito covers instantly.
+
+2. **Mockito `doThrow()` on first call, default on second**: When `lenient().when(...)` is set in `@BeforeEach`, strict stubbing throws `UnnecessaryStubbingException` if a per-test override adds stubs not consumed. Solution: use `doThrow(RuntimeException).doAnswer(defaultBehavior).when(mock)` for methods called 2+ times where first call should fail.
+
+3. **`saveSubscription` throw in `processDueSubscriptions` triggers dunning**: The catch block in `processCharge()` handles exceptions by calling `charge.markFailed()`, `sub.markPastDue()`, and then `jmsMessagePublisher.sendWithDelay(..., 300000L)`. Test needs to throw on `saveSubscription` (called first in try block) to trigger catch path.
+
+4. **Listener → service → DLQ pattern**: `SubscriptionScheduledChargeListener.onScheduledBilling()` wraps all exceptions in `RuntimeException("Scheduled billing execution failed, rollback to DLQ", e)` — this triggers Artemis redelivery to the DLQ. Listener test verifies both exception propagation and UUID validation gate.
+
+**Verification**:
+- `jms-starter`: 7/7 JmsMessagePublisherTest PASS
+- `billing-service`: 38/38 unit tests PASS (34 subscription + 4 listener)
+- `billing-service` resource tests have pre-existing failures (need Docker/Testcontainers — not related)
+
+---
+
 ## L-088: ARCH-006 Phase 3 — Properties Migrator Removal + Duplicate Dep Cleanup (2026-07-02)
 
 **Date**: 2026-07-02

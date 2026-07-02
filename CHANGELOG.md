@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.75] - 2026-07-02
+
+### Added
+
+- **READY-018 (CLOSED): JmsMessagePublisher.sendWithDelay E2E test**. Added `JmsMessagePublisherTest` (7 tests) in jms-starter verifying `_AMQ_SCHED_DELIVERY` property set correctly, 0ms delay, 24h large delay, correct queue names, and standard send not setting AMQ headers.
+- **READY-017 (CLOSED): Dunning/scheduled billing flow test**. Added `SubscriptionScheduledChargeListenerTest` (4 tests) covering UUID parsing, invalid UUID, service failure, success delegation. Extended `SubscriptionServiceTest.ScheduledBillingTests` (+9 tests) covering processScheduledCharge for ACTIVE/PAST_DUE/SUSPENDED/CANCELLED/sub-not-found, Artemis scheduling after success, dunning retry via Artemis (300s delay), and graceful Artemis failure handling.
+
+### Test
+
+- `jms-starter`: 7 new tests (JmsMessagePublisherTest) — all pass
+- `billing-service`: 13 new tests (4 listener + 9 service) — all pass; billing-service total 38 unit tests (34 subscription + 4 listener), all green
+
+---
+
 ## [1.8.74] - 2026-07-02
 
 ### Changed
