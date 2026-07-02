@@ -1,5 +1,5 @@
-# Custom Maven Task with JDK 21 for PayU services
-# Replaces the cluster maven task which uses UBI-minimal without JDK 21
+# Custom Maven Task with JDK 25 for PayU services
+# Replaces the cluster maven task which uses UBI-minimal without JDK 25
 # ============================================================
 apiVersion: tekton.dev/v1
 kind: Task
@@ -10,7 +10,7 @@ metadata:
     app: payu
     type: build
 spec:
-  description: Maven build task with JDK 21 support for PayU services.
+  description: Maven build task with JDK 25 support for PayU services.
   params:
     - name: GOALS
       type: array
@@ -28,7 +28,7 @@ spec:
     - name: MAVEN_IMAGE
       type: string
       description: Maven image to use
-      default: docker.io/library/maven:3.9-eclipse-temurin-21
+      default: docker.io/library/maven:3.9-eclipse-temurin-25
   workspaces:
     - name: source
       description: Workspace with source code
