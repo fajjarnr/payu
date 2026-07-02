@@ -544,12 +544,12 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 | GAP-12 incident response | 🔴 0% | |
 | GAP-13 DR live test | 🔴 0% | |
 | GAP-14 UU PDP | 🔴 0% | |
-| GAP-15 DLQ E2E | 🔴 0% | |
+| GAP-15 DLQ E2E | 🟢 100% | Closed via `EventsAutoConfigurationTest` `KafkaErrorHandlerTest`. |
 | GAP-16 Kafka topic validation | 🟢 100% | iter-68 (GAP-31 closure). |
 | GAP-17 test coverage 80% | 🟡 25% | |
 | GAP-18 egress netpol | 🔴 0% | |
 | GAP-19 multitenancy | 🟢 100% | iter-69. |
-| GAP-20 config duplication | 🟢 100% | Consolidated in both `account-service` and `auth-service` (deleted duplicates). |
+| GAP-20 config duplication | 🟢 100% | iter-73: Platform-wide configuration files split and consolidated into env-specific profiles (`local`, `dev`, `sit`, `uat`, `preprod`, `prod`) across all 17 Spring Boot services. |
 | GAP-21 log masking | 🟢 100% | iter-69. logback-payu-base.xml confirmed wraps both JSON_CONSOLE + TEXT_CONSOLE with `LogbackMaskingFilter`. |
 | GAP-22 BFF whitelist | 🟢 100% | Added all 9 missing path prefixes to `ALLOWED_PATH_PREFIXES` in BFF. |
 | GAP-23 OIDC TLS | 🟢 100% | iter-69. `quarkus.oidc.tls.verification: required` confirmed. |
