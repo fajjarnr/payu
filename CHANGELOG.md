@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.74] - 2026-07-02
+
+### Changed
+
+- **ARCH-006 Phase 3 complete: spring-boot-properties-migrator removed**. Deleted `spring-boot-properties-migrator:4.1.0` from parent `<dependencyManagement>` and `statement-service/pom.xml` per Spring Boot 4.1 upgrade guide ("remove after migration complete").
+- **ARCH-006 Phase 3: deprecated API audit clean**. Zero `ApplicationContextAssertProvider` usages found. All `javax.*` imports confirmed as Java SE packages (not Jakarta EE) — false positive resolved.
+- **POM hygiene: duplicate `spring-boot-restclient` declarations fixed** in `statement-service/pom.xml` and `fx-service/pom.xml`. Maven validate now passes with 0 duplicate dependency warnings.
+
+### Build
+
+- `mvn validate` → clean (0 duplicate dep warnings)
+- `mvn test-compile -T 1C` → BUILD SUCCESS across all modules
+
+### Docs
+
+- **L-088**: ARCH-006 Phase 3 lessons documented in `docs/guides/LESSONS.md`
+
+---
+
 ## [1.8.73] - 2026-07-02
 
 ### Added

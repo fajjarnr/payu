@@ -4,6 +4,37 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-088: ARCH-006 Phase 3 — Properties Migrator Removal + Duplicate Dep Cleanup (2026-07-02)
+
+**Date**: 2026-07-02
+**Domain**: Spring Boot 4.1.0 / Maven / Build Hygiene
+**Context**: Spring Boot upgrade guide explicitly states: "Once you finish the migration, please make sure to remove this module from your project's dependencies." Phase 2 added `spring-boot-properties-migrator` to parent depMgmt + statement-service. Phase 3 = remove it.
+
+**Root Causes and Fixes**:
+
+1. **spring-boot-properties-migrator still in classpath**: Parent `<dependencyManagement>` and `statement-service/pom.xml` still declared `spring-boot-properties-migrator:4.1.0` as runtime dependency. Context7 confirms: remove after migration complete, never ship to production. **Fix**: Delete from both POMs.
+
+2. **Duplicate `spring-boot-restclient` declarations in statement-service + fx-service**: Both POMs declared `restclient` in parent-inherited deps AND a second time in their own `<dependencies>` block. Maven flagged `'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique` warnings. **Fix**: Remove duplicate declarations (keep first occurrence in inherited block).
+
+3. **Pre-existing OTel test failures in api-portal-service + va-simulator**: `quarkus.otel.exporter.otlp.endpoint` requires `OTEL_ENDPOINT` env var but tests run without it. Not ARCH-006 related. Not fixed here — separate ticket.
+
+**Lessons**:
+
+1. **`spring-boot-properties-migrator` is a development tool, not a library**: SB docs call it a "tool" and say "remove after migration." It adds startup overhead scanning all `Environment` properties for deprecation diagnostics. Leaving it in production is wasteful at best, dangerous if it auto-converts a property whose behavior changed.
+
+2. **Maven duplicate dependency warnings are early signals**: Duplicate declarations usually happen when someone copies a dependency block without checking the parent POM. Two identical declarations in the same `<dependencies>` block cause Maven to warn about stability. Fix immediately — Maven may refuse to build in future versions.
+
+3. **`mvn validate` catches POM structure issues before compile**: The duplicate `restclient` warnings appeared in `validate` phase — caught before any compilation. Always run validate after POM changes.
+
+**Verification**:
+- `mvn validate` → clean (0 duplicate dep warnings, only JVM-level jansi/Unsafe noise)
+- `mvn test-compile -T 1C` → BUILD SUCCESS across all modules (3 warnings: jansi, Unsafe, restricted method — all JVM noise, not build errors)
+
+**Commits**:
+- (this change) chore(arch-006): remove spring-boot-properties-migrator, fix duplicate restclient deps
+
+---
+
 ## L-085: Priority 1 Audit Remediation — Actuator Hardening, Idempotency Key, and Banker's Rounding (2026-07-01)
 
 **Date**: 2026-07-01

@@ -198,14 +198,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Spring Boot Properties Migrator (ARCH-006: SB 4.1.0 migration aid; remove before production) -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-properties-migrator</artifactId>
-                <version>4.1.0</version>
-                <scope>runtime</scope>
-            </dependency>
-
             <!-- Resilience4j BOM (manages spring6 + spring-boot3 + core artifacts) -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
