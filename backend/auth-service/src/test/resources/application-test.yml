@@ -42,7 +42,7 @@ payu:
     client-secret: test-secret
     admin:
       username: admin
-      password: admin
+      password: ${TEST_KEYCLOAK_ADMIN_PASSWORD:admin}
   security:
     max-login-attempts: 5
     lockout-duration-minutes: 15

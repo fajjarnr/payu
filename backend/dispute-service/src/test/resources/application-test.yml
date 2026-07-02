@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:tc:postgresql:16-alpine:///dispute_service
     username: payu
-    password: payu
+    password: ${TEST_DATABASE_PASSWORD:payu}
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
 
   jpa:
