@@ -411,7 +411,7 @@
 - [ ] **GAP-2**: OpenTelemetry → Tempo distributed tracing (READY-019)
 - [ ] **GAP-3**: Prometheus alerting rules (p99 latency, error rate) + Loki E2E (READY-020/021)
 - [ ] **GAP-15**: DLQ path E2E test (READY-016)
-- [ ] **GAP-16**: Kafka topic pattern validation (READY-015)
+- [x] **GAP-16**: Kafka topic pattern validation (READY-015) (Closed via GAP-31 outbox validation)
 
 #### Sprint 3 (Week 3-4): Compliance + Testing
 - [ ] **GAP-14**: UU PDP — data retention policy + right-to-erasure endpoints (P2-READY-041, DEVSECOPS-007/008)
@@ -487,9 +487,9 @@
 
 ### Phase 1: Audit & Preparation (Current)
 - [x] Maintain baseline on **Java 25** (already active) and ensure Virtual Threads are utilized correctly.
-- [ ] Audit dependencies for Jakarta EE 11 compatibility (Servlet 6.1, JPA 3.2).
-- [ ] Audit Jackson usage (Spring Boot 4.1.0 defaults to Jackson 3).
-- [ ] Check if all `javax.*` imports have been fully removed and replaced with `jakarta.*`.
+- [x] Audit dependencies for Jakarta EE 11 compatibility (Servlet 6.1, JPA 3.2) (Starters and dependencies compile/test green)
+- [x] Audit Jackson usage (Spring Boot 4.1.0 defaults to Jackson 3) (Jackson 3 issues solved on starters)
+- [x] Check if all `javax.*` imports have been fully removed and replaced with `jakarta.*` (Audited: 0 Jakarta EE javax.* imports remain)
 
 ### Phase 2: Migration Execution
 - [ ] Use **OpenRewrite** to run the Jakarta EE 11 / Spring Boot 4.1.0 automated migration recipes.
