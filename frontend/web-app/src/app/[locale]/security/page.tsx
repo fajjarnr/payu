@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { ShieldCheck, Fingerprint, Key, Smartphone, Lock, Monitor, ShieldAlert } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { ShieldCheck, Fingerprint, Key, Smartphone, Lock, Monitor, ShieldAlert } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';

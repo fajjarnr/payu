@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, X, ArrowDownLeft, Trash2, CreditCard as CardIcon, Edit3 } from "lucide-react"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, X, ArrowDownLeft, Trash2 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { BalanceResponse, WalletTransaction, Pocket } from '@/types';
@@ -120,7 +120,7 @@ export default function PocketsPage() {
             setIsCreateModalOpen(false);
             setNewPocketName('');
             setNewPocketTarget('');
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal membuat kantong');
         }
     };
@@ -138,7 +138,7 @@ export default function PocketsPage() {
             setIsCreditModalOpen(false);
             setAmount('');
             setSelectedPocketForAction(null);
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal menambah dana');
         }
     };
@@ -156,7 +156,7 @@ export default function PocketsPage() {
             setIsDebitModalOpen(false);
             setAmount('');
             setSelectedPocketForAction(null);
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal mengambil dana');
         }
     };
@@ -165,7 +165,7 @@ export default function PocketsPage() {
         try {
             await freezePocket.mutateAsync(pocketId);
             toast.success('Kantong berhasil dibekukan');
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal membekukan kantong');
         }
     };
@@ -174,7 +174,7 @@ export default function PocketsPage() {
         try {
             await unfreezePocket.mutateAsync(pocketId);
             toast.success('Kantong berhasil diaktifkan kembali');
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal mengaktifkan kantong');
         }
     };
@@ -187,7 +187,7 @@ export default function PocketsPage() {
             toast.success('Kantong berhasil ditutup');
             setIsCloseModalOpen(false);
             setSelectedPocketForAction(null);
-        } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        } catch {
             toast.error('Gagal menutup kantong');
         }
     };
@@ -263,10 +263,6 @@ export default function PocketsPage() {
             ]
         }
     ];
-
-    const activePocket = selectedPocket // eslint-disable-line @typescript-eslint/no-unused-vars
-        ? sharedPockets.find(p => p.id === selectedPocket)
-        : null;
 
     return (
         <DashboardLayout>

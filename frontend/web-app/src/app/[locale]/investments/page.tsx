@@ -6,15 +6,12 @@ import { TrendingUp, PieChart, Landmark, ArrowUpRight, ShieldCheck, Briefcase, P
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
-import { useInvestmentAccount, useGoldHoldings } from '@/hooks';
-import { useAuthStore } from '@/stores/authStore';
+import { useInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
-  const { user } = useAuthStore(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { data: account, isLoading: loadingAccount } = useInvestmentAccount();
-  const { data: goldHoldings } = useGoldHoldings(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const portfolioBalance = account?.balance ?? 0;
   const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);

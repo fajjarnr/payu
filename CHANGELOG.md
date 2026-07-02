@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Unused Hook Cleanups (AUDIT-110)**: Cleaned up unused hook, variable, state, and icon imports on `SupportPage`, `RewardsPage`, `SplitBillPage`, `BillsPage`, `TransactionsPage`, and `ExchangePage` in `web-app`.
+- **Unused Import Cleanup (PON-033)**: Removed 88 `eslint-disable @typescript-eslint/no-unused-vars` suppression comments across 48 frontend files. Deleted ~200 lines of dead code (unused icons, imports, catch params, data arrays, type-only imports).
 - **SupportPage.test.tsx**: Mocked next-intl to fix missing context error and updated system status assertions to align with real page rendering.
 - **TODOS.md & PROGRESS.md** updated to reflect completed nice-to-have items and iteration stats.
 

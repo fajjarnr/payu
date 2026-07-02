@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';

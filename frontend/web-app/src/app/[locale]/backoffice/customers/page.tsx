@@ -7,7 +7,7 @@ import { Link } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Search, Filter, Headphones, ChevronLeft, ChevronRight, MessageSquare, AlertTriangle, CheckCircle2 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Search, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import clsx from 'clsx';
 

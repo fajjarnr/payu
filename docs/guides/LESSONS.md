@@ -3127,3 +3127,29 @@ synchronized (lock) {
 
 ---
 
+## L-091: Frontend eslint-disable Cleanup — 88 Unused Variables & Imports Removed (2026-07-02)
+
+**Date**: 2026-07-02
+**Domain**: Next.js / TypeScript / React / Linting
+**Context**: Completing Ponytail audit item AUDIT-110 (PON-033) — removing all `// eslint-disable-line @typescript-eslint/no-unused-vars` comments from the frontend web-app. 88 suppression comments across 48 files, ~200 lines of dead code.
+
+**What was cleaned**:
+1. **Icon imports**: Removed unused lucide-react icons (e.g. `CreditCard`, `Star`, `Loader2`, `Bell`, `CheckCircle2`, `Filter`, `Gift`, `ShieldCheck`, `User`, `X`, `Edit3`, etc.) from 20+ page/component files.
+2. **Hook destructures**: Removed unused destructured properties — `useLocale()` result in MobileNav/backoffice layout, `isLoading` where already handled by sibling states, `data:` where only `isLoading:` was used.
+3. **Catch parameters**: Changed `catch (error)` to `catch` in 7 catch blocks where error was deliberately silent.
+4. **Dead data arrays**: Removed unused `investmentData`, `spendingData`, `monthNames` arrays from StatsCharts and statement-downloader.
+5. **Dead imports**: Removed unused `framer-motion` imports (motion/AnimatePresence where already re-exported or unused), `clsx` where `cn()` used instead, `useState` where no state hooks, `useEffect` where no effects.
+6. **Type-only imports**: Removed unused `AllocationStrategy`, `AgentStatus`, `TicketCategory`, `TicketPriority`, `ContentType`, `TrainingStatusSummary`, `FxRate`, `FxConversion`, `User` type imports.
+7. **Supressed variable**: Renamed `confirmPassword` → `_confirmPassword` in onboarding destructure to follow convention for intentionally-unused variables.
+
+**Verification**:
+- `npx tsc --noEmit`: Zero new TypeScript errors. Pre-existing `jest-axe` type declaration issues unchanged.
+- Total: 47 files changed, +51/-122 lines.
+
+**Lesson**:
+1. **Delete dead imports, don't suppress the lint warning**. Each `eslint-disable` comment is a landmine for future readers. A `catch { }` without parameter is cleaner than `catch (error) { // eslint-disable-line }`. An unused icon import wastes bundle bytes and type-checking cycles. Suppression is the lazy option — deletion is the correct one.
+2. **Double-check before deleting**. `AnimatePresence` was imported in `SegmentedOffers.tsx` and `PromoPopup.tsx` but not used — however `motion` WAS used. A bulk "delete the import line" would have broken the build. Each file needs individual verification via grep.
+3. **spendingLoading and investmentLoading were intentionally unused**. In `dashboard/page.tsx`, the `data` fields (`spending`, `cashFlow`, `investmentAccount`) were unused, but `isLoading` destructures were passed as props to child components. Keep the `isLoading:` rename, drop the unused `data:` destructure.
+
+---
+

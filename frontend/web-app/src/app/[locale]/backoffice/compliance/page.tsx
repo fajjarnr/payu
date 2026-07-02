@@ -13,11 +13,9 @@ import {
   Filter,
   Calendar,
   History,
-  MoreVertical, // eslint-disable-line @typescript-eslint/no-unused-vars
   ChevronLeft,
   ChevronRight,
   Settings,
-  Loader2 // eslint-disable-line @typescript-eslint/no-unused-vars
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

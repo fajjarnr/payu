@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import FxService, { type ConvertCurrencyRequest, type FxConversionRequest } from '@/services/FxService';
-import type { FxRate, FxConversion } from '@/types'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export const useFxRate = (fromCurrency: string, toCurrency: string, enabled = true) => {
   return useQuery({

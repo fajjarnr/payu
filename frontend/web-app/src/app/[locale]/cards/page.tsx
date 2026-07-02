@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, Eye, EyeOff, Lock, RefreshCw, Sliders, ShieldCheck, Zap, Plus, Loader2, Trash2, Settings } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Eye, EyeOff, Lock, RefreshCw, Sliders, ShieldCheck, Zap, Plus, Loader2, Trash2, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export default function CardsPage() {
     monthlyLimit: 100000000,
   });
 
-  const { data: cardsData, isLoading: loadingCards } = useCards(authAccountId ?? undefined); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { data: cardsData } = useCards(authAccountId ?? undefined);
   const freezeCard = useFreezeCard();
   const unfreezeCard = useUnfreezeCard();
   const createCard = useCreateCard();

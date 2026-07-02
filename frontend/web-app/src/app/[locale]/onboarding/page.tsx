@@ -7,8 +7,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerUserSchema, RegisterUserRequest } from '@/types';
 import api from '@/lib/api';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import KYCService from '@/services/KYCService'; // Ready for KYC document upload integration (BUG-FE-107)
 import { useRouter } from '@/lib/navigation';
 import { 
   Camera, 
@@ -54,7 +52,7 @@ export default function OnboardingPage() {
   const mutation = useMutation({
     mutationFn: (data: RegisterUserRequest) => {
       // Strip confirmPassword before sending to API (it's only for client-side validation)
-      const { confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string }; // eslint-disable-line @typescript-eslint/no-unused-vars
+      const { confirmPassword: _confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string };
       return api.post('/accounts/register', payload);
     },
     onSuccess: () => {

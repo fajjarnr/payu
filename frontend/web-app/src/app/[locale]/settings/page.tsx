@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';

@@ -2,19 +2,15 @@
 
 import React, { useState } from 'react';
 import { 
-  Bell, // eslint-disable-line @typescript-eslint/no-unused-vars
   Search, 
   Trash2, 
-  CheckCircle2, // eslint-disable-line @typescript-eslint/no-unused-vars
   Clock, 
   MessageSquare, 
   Gift, 
   ShieldAlert, 
   ArrowRight,
-  Filter, // eslint-disable-line @typescript-eslint/no-unused-vars
   MoreVertical,
   Inbox,
-  Loader2 // eslint-disable-line @typescript-eslint/no-unused-vars
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +28,7 @@ export default function NotificationsPage() {
   const userId = user?.id ?? '';
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('ALL');
-  const { data: notificationsData, isLoading } = useNotifications(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { data: notificationsData } = useNotifications(userId);
   const markRead = useMarkNotificationRead();
 
   const rawNotifications = Array.isArray(notificationsData) ? notificationsData : [];

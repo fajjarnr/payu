@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Star, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock, Loader2 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLogin, useLogout, useRefreshToken, useAuth } from '@/hooks/useAuth';
 import AuthService from '@/services/AuthService';

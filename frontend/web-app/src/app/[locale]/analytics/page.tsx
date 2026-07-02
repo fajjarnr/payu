@@ -16,7 +16,6 @@ import {
   PieChart, 
   XAxis, 
   YAxis,
-  ResponsiveContainer // eslint-disable-line @typescript-eslint/no-unused-vars
 } from "recharts"
 import {
   ChartConfig,

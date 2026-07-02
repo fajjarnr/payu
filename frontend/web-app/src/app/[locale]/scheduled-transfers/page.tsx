@@ -45,12 +45,10 @@ import {
   usePauseScheduledTransfer,
   useResumeScheduledTransfer,
 } from '@/hooks';
-import { useAuth } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import type { ScheduledTransfer } from '@/services/TransactionService';
 
 export default function ScheduledTransfersPage() {
-  const { user } = useAuth(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { accountId: storeAccountId } = useAuthStore();
   const accountId = storeAccountId ?? '';
   const locale = useLocale();

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from '@/lib/navigation';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
 import { useIsAuthenticated } from '@/stores';
@@ -15,7 +15,6 @@ import { Link } from '@/lib/navigation';
  */
 export default function MobileNav() {
   const t = useTranslations('nav');
-  const locale = useLocale(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const pathname = usePathname();
   const isAuthenticated = useIsAuthenticated();
 

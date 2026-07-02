@@ -1,4 +1,4 @@
-import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from 'axios'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 
 /**

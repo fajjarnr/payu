@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Download, FileText, Calendar, RefreshCw, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
-import StatementService, { Statement, PeriodType, StatementFormat, StatementStatus } from '@/services/StatementService'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import StatementService, { Statement, PeriodType, StatementStatus } from '@/services/StatementService';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { getA11yProps } from '@/lib/a11y';
 import { useAuthStore } from '@/stores/authStore';
@@ -21,7 +21,6 @@ import { useAuthStore } from '@/stores/authStore';
  */
 export default function StatementDownloader() {
   const t = useTranslations('settings.statements');
-  const { user, accountId } = useAuthStore(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [statements, setStatements] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -37,12 +36,6 @@ export default function StatementDownloader() {
   // Available years for statement generation
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
-
-  // Month names in Indonesian
-  const monthNames = [ // eslint-disable-line @typescript-eslint/no-unused-vars
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
 
   // Load statements from API
   const loadStatements = useCallback(async () => {

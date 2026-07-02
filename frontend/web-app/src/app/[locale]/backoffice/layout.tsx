@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Link } from '@/lib/navigation';
 import { usePathname } from '@/lib/navigation';
 import { 
-  ShieldCheck, // eslint-disable-line @typescript-eslint/no-unused-vars
   Users, 
   AlertTriangle, 
   Headphones, 
@@ -18,13 +17,10 @@ import {
   LayoutDashboard,
   Search,
   Bell,
-  User, // eslint-disable-line @typescript-eslint/no-unused-vars
   Menu,
-  X, // eslint-disable-line @typescript-eslint/no-unused-vars
   ChevronRight
 } from 'lucide-react';
 import clsx from 'clsx';
-import { useLocale } from 'next-intl'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -64,7 +60,7 @@ export default function BackofficeLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [, setIsSidebarOpen] = useState(false);
 
   const navigation = [
     { name: 'Command Center', href: '/backoffice', icon: LayoutDashboard, group: 'CORE' },

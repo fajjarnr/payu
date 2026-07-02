@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState } from 'react'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import React from 'react';
+import { motion } from 'framer-motion';
 import { 
   Plus, 
   AlertTriangle, 
   CheckCircle2, 
   Edit, 
   Trash2,
-  ChevronDown as ChevronDownIcon // eslint-disable-line @typescript-eslint/no-unused-vars
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import clsx from 'clsx';

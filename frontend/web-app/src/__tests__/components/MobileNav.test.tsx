@@ -4,7 +4,6 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import MobileNav from '@/components/MobileNav';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
-import { useAuthStore } from '@/stores'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // Mock next/navigation with a mutable pathname
 let mockPathname = '/';

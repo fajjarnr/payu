@@ -5,13 +5,13 @@ import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useCashFlow, useInvestmentAccount } from '@/hooks';
+import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useInvestmentAccount } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import QuickActions from '@/components/dashboard/QuickActions';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Skeleton, SkeletonCard, SkeletonStatsGrid } from '@/components/ui/skeleton'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { Skeleton } from '@/components/ui/skeleton';
 import BannerCarousel from '@/components/cms/BannerCarousel';
 import PromoPopup from '@/components/cms/PromoPopup';
 import { SkipLink } from '@/lib/a11y';
@@ -61,9 +61,8 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
  const userId = useAuthStore((state) => state.user?.id);
  const { data: balance, isLoading: balanceLoading } = useBalance(accountId || undefined);
  const { data: metrics, isLoading: metricsLoading } = useUserMetrics(userId);
- const { data: spending, isLoading: spendingLoading } = useSpendingTrends(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
- const { data: cashFlow, isLoading: cashFlowLoading } = useCashFlow(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
- const { data: investmentAccount, isLoading: investmentLoading } = useInvestmentAccount(); // eslint-disable-line @typescript-eslint/no-unused-vars
+ const { isLoading: spendingLoading } = useSpendingTrends(userId);
+ const { isLoading: investmentLoading } = useInvestmentAccount();
 
  return (
   <DashboardLayout username={username} onLogout={handleLogout}>
