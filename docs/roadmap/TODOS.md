@@ -708,7 +708,7 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 | 72 | **AUDIT-072** 📝 BY-DESIGN | P2 → Accepted Risk | Security | **BFF login does NOT verify JWT signature** — `decodeJwtPayload` decodes JWT payload without sig verification. **DECISION 2026-07-02**: BFF trusts gateway response — sig verification happens at gateway-service (Quarkus OIDC + Keycloak JWKS). BFF→gateway runs inside cluster network. Duplicating sig verification adds latency + JWKS dependency with zero security gain. Risk accepted; mitigated when mTLS enforced (GAP-8/OCP-007). Decision documented in [login/route.ts](file:///home/ubuntu/payu/frontend/web-app/src/app/api/auth/login/route.ts#L36-L43). |
 | 73 | **AUDIT-073** ✅ CLOSED | ~~P2~~ | Multitenancy | ~~**@TenantAware entities missing @EntityListeners(TenantEntityListener.class)**~~ **FIXED 2026-07-02**: Verified all 37 `@TenantAware` JPA entities have `@EntityListeners(TenantEntityListener.class)` configured (0 missing). |
 | 74 | **AUDIT-074** | P3 | Resilience | **`float` used for circuit breaker thresholds** — `ResilienceProperties.java:52` uses `float failureRateThreshold = 50f` and `float slowCallRateThreshold = 80f`. Resilience4j API itself uses `float` for these — so this follows library convention. |
-| 75 | **AUDIT-075** | P3 | CI/CD | **Tekton pipeline uses `maven-java21-task.yaml`** — Project runs Java 25. |
+| 75 | **AUDIT-075** ✅ CLOSED | ~~P3~~ | CI/CD | **CLOSED 2026-07-02**: Upgraded default Maven builder image to `docker.io/library/maven:3.9-eclipse-temurin-25` in `maven-java21-task.yaml` to ensure pipeline compiles code using JDK 25. | `maven-java21-task.yaml` updated. |
 | 76 | **AUDIT-076** ✅ CLOSED | ~~P2~~ | Testing | ~~**`LedgerEntryEntity` has mutable `setBalance`/`setAmount` setters**~~ **CLOSED**: Kept public setters to allow MapStruct domain-to-entity mapping (with ponytail comments documenting intent), and fully enforced immutability at the DB schema level (`insertable = true, updatable = false` on money columns). |
 | 77 | **AUDIT-077** ✅ CLOSED | ~~P3~~ | Architecture | ~~**`LedgerEntryEntity.entryType` is `String` not Enum**~~ **FIXED 2026-07-02**: Converted `entryType` in `LedgerEntryEntity` and database mappings to `EntryType` enum directly, removing manual string mappings. |
 
@@ -736,7 +736,7 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 | P1 critical | 0 (AUDIT-066 ✅, AUDIT-067 ✅, AUDIT-069→closed) |
 | P1 carried from round 1 | 0 (AUDIT-052 ✅, AUDIT-054 ✅ CLOSED 2026-07-01) |
 | P2 important | 0 (AUDIT-072 → accepted risk/by-design; AUDIT-068 ✅, 070 ✅, 071 ✅, 073 ✅, 076 ✅ CLOSED) |
-| P3 nice-to-have | 2 (AUDIT-074, 075 open; AUDIT-077 ✅ CLOSED) |
+| P3 nice-to-have | 1 (AUDIT-074 open; AUDIT-075 ✅, 077 ✅ CLOSED) |
 | `HALF_UP` instead of `HALF_EVEN` | 37 production files |
 | `BigDecimal.ROUND_*` deprecated | 7 usages |
 | `LocalDateTime.now()` direct calls | 391 in production |
