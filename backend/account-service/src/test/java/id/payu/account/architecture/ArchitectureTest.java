@@ -59,9 +59,10 @@ class ArchitectureTest {
                     .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
                     .layer("Config").definedBy("..config..")
+                    .layer("Dto").definedBy("..dto..")
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers(
                             "Application", "Adapter.Web", "Adapter.Persistence",
-                            "Adapter.Client", "Adapter.Messaging", "Config")
+                            "Adapter.Client", "Adapter.Messaging", "Config", "Dto")
                     .allowEmptyShould(true)
                     .check(importedClasses);
         }

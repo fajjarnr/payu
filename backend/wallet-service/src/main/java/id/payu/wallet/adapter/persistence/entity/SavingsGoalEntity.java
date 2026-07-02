@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.persistence.entity;
 
+import id.payu.wallet.domain.model.SavingsGoalStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

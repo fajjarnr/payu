@@ -2,25 +2,20 @@ package id.payu.cache.service;
 
 import id.payu.cache.model.CacheInvalidationEvent;
 import id.payu.cache.properties.CacheProperties;
+import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Service for publishing cache invalidation events to Kafka.
+ * Service for publishing cache invalidation events to Kafka via Outbox.
  *
- * <p>Features:</p>
- * <ul>
- *   <li>Async event publishing</li>
- *   <li>Error handling and retry</li>
- *   <li>Metrics tracking</li>
- *   <li>Tenant-aware invalidation</li>
- * </ul>
+ * <p>AUDIT-050: Fix CacheInvalidationPublisher to route invalidation events via Outbox
+ * to enforce transactional reliability and avoid direct KafkaTemplate dependency.</p>
  */
 @Slf4j
 @Service
@@ -32,60 +27,66 @@ import java.util.concurrent.CompletableFuture;
 )
 public class CacheInvalidationPublisher {
 
-    private final KafkaTemplate<String, CacheInvalidationEvent> kafkaTemplate;
+    private final OutboxService outboxService;
     private final CacheProperties properties;
 
     /**
      * Publish a cache invalidation event.
      */
-    public CompletableFuture<SendResult<String, CacheInvalidationEvent>> invalidate(
-            CacheInvalidationEvent event) {
+    public void invalidate(CacheInvalidationEvent event) {
         log.debug("Publishing cache invalidation event: cache={}, key={}, type={}",
             event.getCacheName(), event.getKey(), event.getType());
 
-        String key = event.getCacheName() + ":" + event.getKey();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("key", event.getKey());
+        payload.put("cacheName", event.getCacheName());
+        payload.put("service", event.getService());
+        payload.put("tenantId", event.getTenantId());
+        payload.put("type", event.getType() != null ? event.getType().name() : null);
+        payload.put("timestamp", event.getTimestamp() != null ? event.getTimestamp().toString() : null);
+        payload.put("correlationId", event.getCorrelationId());
 
-        return kafkaTemplate.send(properties.getInvalidation().getTopic(), key, event)
-            .whenComplete((result, ex) -> {
-                if (ex != null) {
-                    log.error("Failed to publish cache invalidation event: {}", ex.getMessage());
-                } else {
-                    log.debug("Cache invalidation event published successfully: partition={}, offset={}",
-                        result.getRecordMetadata().partition(),
-                        result.getRecordMetadata().offset());
-                }
-            });
+        String key = event.getCacheName() + ":" + (event.getKey() != null ? event.getKey() : "all");
+
+        outboxService.createEvent(
+            "CacheInvalidation",
+            key,
+            "CacheInvalidated",
+            payload,
+            null,
+            properties.getInvalidation().getTopic()
+        );
     }
 
     /**
      * Invalidate a single cache key.
      */
-    public CompletableFuture<SendResult<String, CacheInvalidationEvent>> invalidateKey(
+    public void invalidateKey(
             String cacheName,
             String key,
             String service) {
         CacheInvalidationEvent event = CacheInvalidationEvent.forKey(cacheName, key, service);
-        return invalidate(event);
+        invalidate(event);
     }
 
     /**
      * Invalidate cache keys matching a pattern.
      */
-    public CompletableFuture<SendResult<String, CacheInvalidationEvent>> invalidatePattern(
+    public void invalidatePattern(
             String cacheName,
             String pattern,
             String service) {
         CacheInvalidationEvent event = CacheInvalidationEvent.forPattern(cacheName, pattern, service);
-        return invalidate(event);
+        invalidate(event);
     }
 
     /**
      * Invalidate all keys in a cache.
      */
-    public CompletableFuture<SendResult<String, CacheInvalidationEvent>> invalidateAll(
+    public void invalidateAll(
             String cacheName,
             String service) {
         CacheInvalidationEvent event = CacheInvalidationEvent.forAll(cacheName, service);
-        return invalidate(event);
+        invalidate(event);
     }
 }

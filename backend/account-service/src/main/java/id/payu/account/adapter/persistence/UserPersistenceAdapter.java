@@ -66,6 +66,11 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     }
 
     @Override
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber).map(this::toDomain);
+    }
+
+    @Override
     public java.util.List<UUID> findAccountIdsByUserId(UUID userId) {
         return accountRepository.findByUserId(userId).stream()
                 .map(id.payu.account.adapter.persistence.entity.AccountEntity::getId)

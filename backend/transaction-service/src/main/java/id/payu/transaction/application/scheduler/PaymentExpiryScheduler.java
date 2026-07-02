@@ -37,15 +37,18 @@ public class PaymentExpiryScheduler {
     private final OutboxService outboxService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final java.time.Clock clock;
 
     public PaymentExpiryScheduler(TransactionPersistencePort transactionPersistencePort,
                                    VirtualAccountPersistencePort virtualAccountPersistencePort,
                                    OutboxService outboxService,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper,
+                                   java.time.Clock clock) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.virtualAccountPersistencePort = virtualAccountPersistencePort;
         this.outboxService = outboxService;
         this.objectMapper = objectMapper;
+        this.clock = clock;
         // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(5000);
@@ -65,12 +68,12 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expirePendingTransactions() {
-        List<TransactionEntity> expired = transactionPersistencePort.findExpiredPendingTransactions(Instant.now());
+        List<TransactionEntity> expired = transactionPersistencePort.findExpiredPendingTransactions(Instant.now(clock));
         if (!expired.isEmpty()) {
             expired.forEach(tx -> {
                 tx.setStatus(TransactionStatus.CANCELLED);
                 tx.setFailureReason("Payment expired");
-                tx.setUpdatedAt(Instant.now());
+                tx.setUpdatedAt(Instant.now(clock));
 
                 // Release reserved balance if any
                 releaseReservedBalance(tx);
@@ -92,7 +95,7 @@ public class PaymentExpiryScheduler {
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {
-        List<VirtualAccountEntity> expired = virtualAccountPersistencePort.findExpiredPendingVAs(Instant.now());
+        List<VirtualAccountEntity> expired = virtualAccountPersistencePort.findExpiredPendingVAs(Instant.now(clock));
         if (!expired.isEmpty()) {
             expired.forEach(va -> {
                 va.markExpired();
@@ -137,7 +140,7 @@ public class PaymentExpiryScheduler {
             event.put("amount", tx.getAmount());
             event.put("currency", tx.getCurrency());
             event.put("sourceAccountId", tx.getSourceAccountId());
-            event.put("expiredAt", Instant.now().toString());
+            event.put("expiredAt", Instant.now(clock).toString());
             event.put("reason", "Payment timeout");
 
             outboxService.createEvent(
@@ -168,7 +171,7 @@ public class PaymentExpiryScheduler {
             event.put("currency", va.getCurrency());
             event.put("partnerId", va.getPartnerId());
             event.put("externalId", va.getExternalId());
-            event.put("expiredAt", Instant.now().toString());
+            event.put("expiredAt", Instant.now(clock).toString());
 
             outboxService.createEvent(
                 "VirtualAccount",

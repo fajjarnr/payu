@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-@ConditionalOnBean({KafkaTemplate.class, StringRedisTemplate.class})
+@ConditionalOnBean({id.payu.outbox.service.OutboxService.class, StringRedisTemplate.class})
 @RequiredArgsConstructor
 public class WebhookProcessor implements DisposableBean {
 
@@ -47,7 +47,7 @@ public class WebhookProcessor implements DisposableBean {
     private static final String ERROR_SUFFIX = ":error";
 
     private final StringRedisTemplate redisTemplate;
-    private final KafkaTemplate<String, WebhookEvent> kafkaTemplate;
+    private final id.payu.outbox.service.OutboxService outboxService;
     private final WebhookConfig config;
 
     // BUG-BE-092: Dedicated scheduler for non-blocking retry delays
@@ -158,23 +158,26 @@ public class WebhookProcessor implements DisposableBean {
      */
     @Async("webhookTaskExecutor")
     public void processAsync(String webhookId, String payload) {
-        WebhookEvent event = new WebhookEvent(webhookId, payload, System.currentTimeMillis());
-
         try {
-            kafkaTemplate.send(config.getKafkaTopic(), webhookId, event)
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            log.error("Failed to publish webhook to Kafka: id={}", webhookId, ex);
-                            markFailed(webhookId, "Kafka publish failed: " + ex.getMessage());
-                        } else {
-                            log.debug("Webhook published to Kafka: id={}, offset={}",
-                                    webhookId, result.getRecordMetadata().offset());
-                        }
-                    });
+            java.util.Map<String, Object> payloadMap = java.util.Map.of(
+                "webhookId", webhookId,
+                "payload", payload,
+                "timestamp", System.currentTimeMillis()
+            );
+
+            outboxService.createEvent(
+                "Webhook",
+                webhookId,
+                "WebhookReceived",
+                payloadMap,
+                null,
+                config.getKafkaTopic()
+            );
+            log.debug("Webhook queued via outbox: id={}", webhookId);
         } catch (Exception e) {
-            log.error("Failed to publish webhook to Kafka: id={}", webhookId, e);
-            markFailed(webhookId, "Kafka publish failed: " + e.getMessage());
-            throw new WebhookProcessingException(webhookId, "Failed to publish to Kafka", e);
+            log.error("Failed to queue webhook via outbox: id={}", webhookId, e);
+            markFailed(webhookId, "Outbox queue failed: " + e.getMessage());
+            throw new WebhookProcessingException(webhookId, "Failed to queue webhook in outbox", e);
         }
     }
 

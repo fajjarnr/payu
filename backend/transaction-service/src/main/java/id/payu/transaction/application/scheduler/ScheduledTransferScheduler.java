@@ -25,18 +25,21 @@ public class ScheduledTransferScheduler {
 
     private final ScheduledTransferPersistencePort persistencePort;
     private final ScheduledTransferService scheduledTransferService;
+    private final java.time.Clock clock;
 
     public ScheduledTransferScheduler(ScheduledTransferPersistencePort persistencePort,
-                                      ScheduledTransferService scheduledTransferService) {
+                                      ScheduledTransferService scheduledTransferService,
+                                      java.time.Clock clock) {
         this.persistencePort = persistencePort;
         this.scheduledTransferService = scheduledTransferService;
+        this.clock = clock;
     }
 
     @SchedulerLock(name = "ScheduledTransferScheduler_processDueScheduledTransfers",
             lockAtLeastFor = "PT1S", lockAtMostFor = "PT55S")
     @Scheduled(fixedRate = 60000)
     public void processDueScheduledTransfers() {
-        Instant now = Instant.now();
+        Instant now = Instant.now(clock);
         List<ScheduledTransferEntity> dueTransfers = persistencePort.findDueScheduledTransfers(now);
 
         if (dueTransfers.isEmpty()) {

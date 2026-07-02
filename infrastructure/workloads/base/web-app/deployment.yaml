@@ -91,3 +91,9 @@ spec:
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
         - name: NODE_ENV
           value: "production"
+        - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: session-secrets
+              key: next-server-actions-encryption-key
+              optional: true

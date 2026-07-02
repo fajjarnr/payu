@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import id.payu.account.adapter.persistence.entity.BeneficiaryStatus;
+import id.payu.account.domain.model.BeneficiaryStatus;
 
 @Repository
 public interface BeneficiaryRepository extends JpaRepository<BeneficiaryEntity, UUID> {

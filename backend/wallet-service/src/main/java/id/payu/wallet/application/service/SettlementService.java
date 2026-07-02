@@ -35,13 +35,16 @@ public class SettlementService implements SettlementUseCase {
     private final SettlementPersistencePort settlementPersistencePort;
     private final JournalPersistencePort journalPersistencePort;
     private final WalletUseCase walletUseCase;
+    private final java.time.Clock clock;
 
     public SettlementService(SettlementPersistencePort settlementPersistencePort,
                              JournalPersistencePort journalPersistencePort,
-                             WalletUseCase walletUseCase) {
+                             WalletUseCase walletUseCase,
+                             java.time.Clock clock) {
         this.settlementPersistencePort = settlementPersistencePort;
         this.journalPersistencePort = journalPersistencePort;
         this.walletUseCase = walletUseCase;
+        this.clock = clock;
     }
 
     @Override
@@ -306,7 +309,7 @@ public class SettlementService implements SettlementUseCase {
         statement.append("Partner ID: ").append(partnerId).append("\n");
         statement.append("Account ID: ").append(accountId).append("\n");
         statement.append("Period: ").append(year).append("-").append(String.format("%02d", month)).append("\n");
-        statement.append("Generated: ").append(LocalDateTime.now()).append("\n\n");
+        statement.append("Generated: ").append(LocalDateTime.now(clock)).append("\n\n");
 
         // Get revenue splits for partner
         List<RevenueSplit> splits = settlementPersistencePort.findRevenueSplitsByPartner(partnerId);
@@ -340,7 +343,7 @@ public class SettlementService implements SettlementUseCase {
     public void scheduledDailySettlement() {
         log.info("Running scheduled daily settlement job");
 
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now(clock).minusDays(1);
 
         // Get all pending batches for yesterday
         List<SettlementBatch> pendingBatches = settlementPersistencePort.findSettlementBatchesByDate(yesterday)

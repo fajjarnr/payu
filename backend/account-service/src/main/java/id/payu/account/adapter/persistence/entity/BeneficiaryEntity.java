@@ -1,5 +1,6 @@
 package id.payu.account.adapter.persistence.entity;
 
+import id.payu.account.domain.model.BeneficiaryStatus;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;

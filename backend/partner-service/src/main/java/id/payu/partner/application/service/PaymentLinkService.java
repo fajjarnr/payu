@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import id.payu.outbox.service.OutboxService;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -176,6 +177,7 @@ public class PaymentLinkService {
      * Runs every 5 minutes.
      * Dispatches webhook notification for each expired link.
      */
+    @SchedulerLock(name = "PaymentLinkService_expirePaymentLinks", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedRate = 300000)
     public void expirePaymentLinks() {
         List<PaymentLinkEntity> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());

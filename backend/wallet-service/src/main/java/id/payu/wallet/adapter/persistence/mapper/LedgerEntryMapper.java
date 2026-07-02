@@ -7,7 +7,6 @@ import id.payu.wallet.adapter.persistence.entity.LedgerEntryEntity;
 import id.payu.wallet.domain.model.LedgerEntry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import id.payu.wallet.domain.model.EntryType;
 
 /**
  * MapStruct mapper for LedgerEntry entity-domain conversion.
@@ -44,7 +43,6 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      */
     @Override
     @Mapping(target = "journalEntry", ignore = true)
-    @Mapping(target = "entryType", expression = "java(mapEntryTypeToEntity(domain.getEntryType()))")
     LedgerEntryEntity toEntity(LedgerEntry domain);
 
     /**
@@ -66,32 +64,6 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      */
     @Override
     @Mapping(target = "journalEntryId", expression = "java(entity.getJournalEntry() != null ? entity.getJournalEntry().getId() : null)")
-    @Mapping(target = "entryType", expression = "java(mapEntryTypeToDomain(entity.getEntryType()))")
     LedgerEntry toDomain(LedgerEntryEntity entity);
-
-    /**
-     * Map EntryType to String for entity.
-     *
-     * @param entryType the domain entry type
-     * @return the entity entry type string
-     */
-    default String mapEntryTypeToEntity(EntryType entryType) {
-        if (entryType == null) {
-            return null;
-        }
-        return entryType.name();
-    }
-
-    /**
-     * Map String to EntryType for domain.
-     *
-     * @param entryType the entity entry type string
-     * @return the domain entry type
-     */
-    default EntryType mapEntryTypeToDomain(String entryType) {
-        if (entryType == null) {
-            return null;
-        }
-        return EntryType.valueOf(entryType);
-    }
 }
+

@@ -49,6 +49,11 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
         return accountRepository.existsByAccountNumber(accountNumber);
     }
 
+    @Override
+    public Optional<id.payu.account.domain.model.Account> findByUserIdAndAllowPhoneLookupTrue(UUID userId) {
+        return accountRepository.findByUserIdAndAllowPhoneLookupTrue(userId).map(this::toDomain);
+    }
+
     private id.payu.account.domain.model.Account toDomain(id.payu.account.adapter.persistence.entity.AccountEntity entity) {
         return id.payu.account.domain.model.Account.builder()
                 .id(entity.getId())

@@ -28,11 +28,14 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
 
     private final ScheduledTransferPersistencePort persistencePort;
     private final TransactionUseCase transactionUseCase;
+    private final java.time.Clock clock;
 
     public ScheduledTransferService(ScheduledTransferPersistencePort persistencePort,
-                                    TransactionUseCase transactionUseCase) {
+                                    TransactionUseCase transactionUseCase,
+                                    java.time.Clock clock) {
         this.persistencePort = persistencePort;
         this.transactionUseCase = transactionUseCase;
+        this.clock = clock;
     }
 
     @Override
@@ -60,8 +63,8 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                 .occurrenceCount(request.getOccurrenceCount())
                 .executedCount(0)
                 .status(ScheduledStatus.ACTIVE)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now(clock))
+                .updatedAt(Instant.now(clock))
                 .build();
 
         // READY-072: Same fix as READY-063 — manual id + @GeneratedValue causes

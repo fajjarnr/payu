@@ -66,6 +66,13 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- ShedLock for distributed scheduler locking (AUDIT-055) -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>

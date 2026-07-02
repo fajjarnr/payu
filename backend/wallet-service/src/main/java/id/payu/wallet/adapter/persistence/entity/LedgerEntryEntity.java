@@ -1,6 +1,7 @@
 package id.payu.wallet.adapter.persistence.entity;
 
 import jakarta.persistence.*;
+import id.payu.wallet.domain.model.EntryType;
 import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
@@ -38,8 +39,9 @@ public class LedgerEntryEntity implements Persistable<UUID> {
     @Column(name = "coa_code", length = 20)
     private String coaCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "entry_type", nullable = false, length = 10)
-    private String entryType;
+    private EntryType entryType;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
@@ -66,7 +68,7 @@ public class LedgerEntryEntity implements Persistable<UUID> {
     }
 
     public LedgerEntryEntity(UUID id, UUID transactionId, String accountId, String coaCode,
-                             String entryType, BigDecimal amount, String currency,
+                             EntryType entryType, BigDecimal amount, String currency,
                              BigDecimal balanceAfter, String referenceType, String referenceId,
                              LocalDateTime createdAt) {
         this.id = id;
@@ -146,11 +148,12 @@ public class LedgerEntryEntity implements Persistable<UUID> {
         this.journalEntry = journalEntry;
     }
 
-    public String getEntryType() {
+    public EntryType getEntryType() {
         return entryType;
     }
 
-    public void setEntryType(String entryType) {
+    // ponytail: setter kept for MapStruct entity population. Immutability enforced at DB level (append-only ledger).
+    public void setEntryType(EntryType entryType) {
         this.entryType = entryType;
     }
 
@@ -208,7 +211,7 @@ public class LedgerEntryEntity implements Persistable<UUID> {
         private JournalEntryEntity journalEntry;
         private String accountId;
         private String coaCode;
-        private String entryType;
+        private EntryType entryType;
         private BigDecimal amount;
         private String currency;
         private BigDecimal balanceAfter;
@@ -244,7 +247,7 @@ public class LedgerEntryEntity implements Persistable<UUID> {
             return this;
         }
 
-        public LedgerEntryEntityBuilder entryType(String entryType) {
+        public LedgerEntryEntityBuilder entryType(EntryType entryType) {
             this.entryType = entryType;
             return this;
         }

@@ -224,6 +224,6 @@ public class WebhookConfig {
          * <p>Default: webhook-events
          */
         @NotBlank(message = "Kafka topic must be configured")
-        private String topic = "webhook-events";
+        private String topic = "payu.webhook.events.v1";
     }
 }

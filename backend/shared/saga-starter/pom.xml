@@ -60,6 +60,13 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- ShedLock for distributed scheduler locking (GAP-24/AUDIT-055) -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- PostgreSQL Driver for JSONB support -->
         <dependency>
             <groupId>org.postgresql</groupId>

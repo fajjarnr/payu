@@ -3,6 +3,36 @@ import logger, { getCorrelationId, withCorrelation } from "@/lib/logger"; // esl
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "https://gateway-service:8080";
 
+// AUDIT-071: Rate limiting for login endpoint (5 attempts per 5 minutes per IP)
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const loginAttempts = new Map<string, { count: number; resetTime: number }>();
+
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (!record || now > record.resetTime) {
+    loginAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  record.count++;
+  return record.count <= RATE_LIMIT_MAX;
+}
+
+// Periodic cleanup to prevent memory growth (every 10 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of loginAttempts) {
+    if (now > record.resetTime) loginAttempts.delete(ip);
+  }
+}, 10 * 60 * 1000);
+
 /**
  * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
  * Extracts user claims from the Keycloak access token.
@@ -31,11 +61,22 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  *   - secure: HTTPS-only in production
  *   - sameSite=lax: allows same-site navigation while preventing CSRF
  *   - PCI-DSS 8.2.4 compliant
+ *   - AUDIT-071: Rate limited (5 attempts/5min per IP)
  */
 export async function POST(request: Request) {
   const correlationId = getCorrelationId(request);
   const log = withCorrelation(correlationId);
   const startTime = Date.now();
+
+  // AUDIT-071: Check rate limit before processing
+  const clientIp = getClientIp(request);
+  if (!checkRateLimit(clientIp)) {
+    log.warn({ action: "login", ip: clientIp }, "Rate limit exceeded");
+    return NextResponse.json(
+      { success: false, message: "Too many login attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": "300" } },
+    );
+  }
 
   try {
     const body = await request.json();

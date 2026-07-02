@@ -112,6 +112,13 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Outbox Starter for transactional event publishing (AUDIT-051) -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>outbox-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Spring Security (optional for global exception handler) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

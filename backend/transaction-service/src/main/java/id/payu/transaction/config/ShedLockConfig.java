@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import org.springframework.context.annotation.Profile;
+
 /**
  * ITER-53: ShedLock configuration. Uses JdbcTemplate-based LockProvider that
  * stores locks in the {@code shedlock} table (created by V21__add_shedlock_table.sql).
@@ -16,6 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Other replicas skip the @Scheduled method and wait for the next tick.
  */
 @Configuration
+@Profile("!test")
 public class ShedLockConfig {
 
     @Bean

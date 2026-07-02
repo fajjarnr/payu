@@ -290,7 +290,7 @@ public class CacheProperties {
         /**
          * Kafka topic for cache invalidation events.
          */
-        private String topic = "cache-invalidation";
+        private String topic = "payu.cache.invalidation.v1";
 
         /**
          * Consumer group for cache invalidation.

@@ -110,15 +110,15 @@ public class CacheAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean(KafkaTemplate.class)
+    @ConditionalOnBean(id.payu.outbox.service.OutboxService.class)
     @ConditionalOnProperty(
         prefix = "payu.cache.invalidation",
         name = "enabled",
         havingValue = "true"
     )
     public CacheInvalidationPublisher cacheInvalidationPublisher(
-            KafkaTemplate<String, id.payu.cache.model.CacheInvalidationEvent> kafkaTemplate) {
-        return new CacheInvalidationPublisher(kafkaTemplate, properties);
+            id.payu.outbox.service.OutboxService outboxService) {
+        return new CacheInvalidationPublisher(outboxService, properties);
     }
 
     @Bean

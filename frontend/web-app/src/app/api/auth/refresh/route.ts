@@ -1,8 +1,38 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import logger from '@/lib/logger';
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'https://gateway-service:8080';
+
+// AUDIT-071: Rate limiting for token refresh endpoint (5 attempts per 5 minutes per IP)
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const refreshAttempts = new Map<string, { count: number; resetTime: number }>();
+
+function getClientIp(reqHeaders: Headers): string {
+  const forwarded = reqHeaders.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return reqHeaders.get("x-real-ip") ?? "unknown";
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = refreshAttempts.get(ip);
+  if (!record || now > record.resetTime) {
+    refreshAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  record.count++;
+  return record.count <= RATE_LIMIT_MAX;
+}
+
+// Periodic cleanup to prevent memory growth (every 10 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of refreshAttempts) {
+    if (now > record.resetTime) refreshAttempts.delete(ip);
+  }
+}, 10 * 60 * 1000);
 
 /**
  * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
@@ -28,6 +58,16 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  */
 export async function POST() {
   const startTime = Date.now();
+  const reqHeaders = await headers();
+  const clientIp = getClientIp(reqHeaders);
+
+  if (!checkRateLimit(clientIp)) {
+    logger.warn({ action: 'refresh', ip: clientIp }, 'Rate limit exceeded');
+    return NextResponse.json(
+      { success: false, message: 'Too many refresh attempts. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': '300' } },
+    );
+  }
   // BUG-AUTH-027: Secure cookie flags
   const isProduction = process.env.NODE_ENV === 'production';
   try {

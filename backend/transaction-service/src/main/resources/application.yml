@@ -263,7 +263,7 @@ payu:
       thread-pool-size: 4
     invalidation:
       enabled: true
-      topic: cache-invalidation
+      topic: payu.cache.invalidation.v1
       consumer-group: transaction-cache-invalidation-group
     local-cache:
       enabled: true

@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,6 +136,7 @@ public class OutboxPublisher {
      * but the failure-reset also runs (unlikely race), vs. the old pattern where
      * duplicates occurred on every DB commit failure.
      */
+    @SchedulerLock(name = "OutboxPublisher_pollAndPublish", lockAtLeastFor = "PT0S", lockAtMostFor = "PT30S")
     @Scheduled(fixedDelayString = "${payu.outbox.publisher.poll-interval-ms:1000}")
     public void pollAndPublish() {
         if (!enabled) {

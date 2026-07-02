@@ -1,9 +1,7 @@
 package id.payu.account.adapter.web;
 
-import id.payu.account.adapter.persistence.repository.UserRepository;
-import id.payu.account.adapter.persistence.entity.AccountEntity;
-import id.payu.account.adapter.persistence.entity.UserEntity;
-import id.payu.account.adapter.persistence.repository.AccountRepository;
+import id.payu.account.domain.model.User;
+import id.payu.account.domain.port.out.UserPersistencePort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,34 +18,24 @@ import java.util.UUID;
 
 /**
  * REST controller for inter-service account queries.
- *
- * <p>This endpoint is consumed by transaction-service's AccountServiceAdapter
- * to resolve which accounts belong to a given user (by Keycloak externalId/sub).
- * Used for authorization checks in transaction processing.</p>
+ * Decoupled from JPA entities and repositories (Hexagonal Architecture).
  */
 @RestController
 @RequestMapping("/api/v1/accounts/users")
-@Tag(name = "UserEntity Accounts", description = "Inter-service account resolution endpoints")
+@Tag(name = "User Accounts", description = "Inter-service account resolution endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class UserAccountController {
 
     private static final Logger log = LoggerFactory.getLogger(UserAccountController.class);
 
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
+    private final UserPersistencePort userPersistencePort;
 
-    public UserAccountController(AccountRepository accountRepository,
-                                 UserRepository userRepository) {
-        this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
+    public UserAccountController(UserPersistencePort userPersistencePort) {
+        this.userPersistencePort = userPersistencePort;
     }
 
     /**
      * Returns the list of account UUIDs owned by a user.
-     *
-     * <p>The userId parameter is the Keycloak subject (externalId), NOT the
-     * internal database user UUID. This matches how transaction-service resolves
-     * account ownership from JWT claims.</p>
      *
      * @param userId Keycloak subject / externalId
      * @return list of account UUIDs belonging to the user
@@ -61,20 +49,14 @@ public class UserAccountController {
 
         log.debug("Looking up account IDs for user externalId={}", userId);
 
-        // Find internal UserEntity by Keycloak externalId
-        Optional<UserEntity> userOpt = userRepository.findByExternalId(userId);
+        Optional<User> userOpt = userPersistencePort.findByExternalId(userId);
         if (userOpt.isEmpty()) {
             log.debug("No user found for externalId={}, returning empty list", userId);
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        UserEntity user = userOpt.get();
-
-        // Get all accounts for this user and extract their IDs
-        List<UUID> accountIds = accountRepository.findByUserId(user.getId())
-                .stream()
-                .map(AccountEntity::getId)
-                .toList();
+        User user = userOpt.get();
+        List<UUID> accountIds = userPersistencePort.findAccountIdsByUserId(user.getId());
 
         log.debug("Found {} accounts for user externalId={}", accountIds.size(), userId);
         return ResponseEntity.ok(accountIds);

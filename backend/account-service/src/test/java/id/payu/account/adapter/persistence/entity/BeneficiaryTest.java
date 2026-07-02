@@ -1,5 +1,7 @@
 package id.payu.account.adapter.persistence.entity;
 
+import id.payu.account.domain.model.BeneficiaryStatus;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

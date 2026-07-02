@@ -5,6 +5,7 @@ import id.payu.outbox.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class OutboxCleanupScheduler {
      * The schedule is configurable via {@code payu.outbox.cleanup.cron}.
      * Default: daily at 2 AM.
      */
+    @SchedulerLock(name = "OutboxCleanupScheduler_cleanupOldEvents", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")
     @Scheduled(cron = "${payu.outbox.cleanup.cron:0 0 2 * * *}")
     @Transactional
     public void cleanupOldEvents() {

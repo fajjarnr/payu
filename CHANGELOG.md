@@ -9,6 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.72] - 2026-07-02
+
+### Security
+
+- **AUDIT-071 (P2 CLOSED): Enforce IP-based rate limiting on BFF auth routes**. Added sliding window rate limiter (5 attempts per 5 minutes per IP) in BFF proxy auth routes: `login/route.ts` and `refresh/route.ts` to prevent brute-force attacks.
+- **AUDIT-055 (P2 CLOSED): Add `@SchedulerLock` to remaining scheduling tasks**. Added distributed locking support to ensure HA/scheduling safety across `PaymentLinkService.expirePaymentLinks()`, `CertificateRotationService.rotate()`, `SagaMonitorService.checkStalledSagas()`, `OutboxCleanupScheduler.cleanupOldEvents()`, and `OutboxPublisher.pollAndPublish()`.
+- **GAP-24 (P2 CLOSED): Add `@SchedulerLock` to SagaRecoveryService**. Added ShedLock to `SagaRecoveryService.scheduledRecovery()` to prevent concurrent multi-pod conflicts.
+
+### Changed
+
+- **Hexagonal Architecture Refactoring (wallet-service & account-service)**: Decoupled `SavingsGoalController` in `wallet-service` from JPA repositories using Hexagonal ports/adapters (`SavingsGoalUseCase`, `SavingsGoalPersistencePort`, `SavingsGoalPersistenceAdapter`). Added ArchUnit rules to `wallet-service` (`ArchitectureTest.java`). Decoupled controllers in `account-service` (`UserAccountController`, `AccountLookupController`, `BeneficiaryController`) from direct JPA repositories using Hexagonal interfaces and ports.
+- **AUDIT-077 (P3 CLOSED): Convert `LedgerEntryEntity.entryType` to Enum**. Converted `entryType` in `LedgerEntryEntity` and DB mappings to `EntryType` enum directly, removing manual string mappings.
+- **AUDIT-076 (P2 CLOSED): Enforce LedgerEntry immutability via DB schema**. Immutability of ledger is fully enforced at DB schema level (`insertable = true, updatable = false` on money columns) while keeping public setters with ponytail comments documenting intent to allow MapStruct domain-to-entity mapping.
+- **GAP-20 (P2 CLOSED): Consolidate split config files**. Merged duplicate config files (`application.yml` and `application.yaml`) in `account-service` and `auth-service` and cleaned up duplicates to avoid config drift.
+- **GAP-22 (P2 CLOSED): Update BFF Allowed Path Prefixes whitelist**. Updated BFF `ALLOWED_PATH_PREFIXES` to match all 9 gateway endpoints.
+- **AUDIT-050 (P2 CLOSED): Route CacheInvalidationPublisher via Outbox**. Updated `CacheInvalidationPublisher` to route invalidation events via `OutboxService` instead of direct `KafkaTemplate` calls.
+- **AUDIT-051 (P2 CLOSED): Route WebhookProcessor via Outbox**. Updated `WebhookProcessor` to route webhook events via `OutboxService` instead of direct `KafkaTemplate` calls.
+- **AUDIT-046 (P3 CLOSED): Next.js multi-replica allowedOrigins and encryption key**. Added server action allowed origins configuration and mapped `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in deployment manifests.
+- **AUDIT-056 (P2 CLOSED): MapStruct version bump**. Bumped MapStruct version to `1.6.3` in the parent POM.
+
+### Fixed
+
+- **AUDIT-070 (P2 CLOSED): Inject Clock into time-dependent services**. Swapped direct `LocalDateTime.now()` calls to constructor-injected `java.time.Clock` + `Instant.now(clock)` / `LocalDate.now(clock)` across `PaymentExpiryScheduler`, `ScheduledTransferScheduler`, `ScheduledTransferService`, and `SettlementService`.
+- **Clock Bean Injector**: Added a local `ClockConfig` in `wallet-service` to always provide the `java.time.Clock` bean during tests and runtime.
+- **ShedLock Test Bypass**: Added a profile-based mock `LockProvider` config (`TestShedLockConfig`) to prevent ShedLock database errors during `transaction-service` tests.
+- **H2 PostgreSQL Compatibility**: Enabled `MODE=PostgreSQL` on the H2 connection URL for `transaction-service` tests.
+- **Linting (WEBAPP-LINT-002)**: Cleaned up all 134 ESLint warnings in the frontend `web-app` (0 warnings/errors remaining).
+
+### Build
+
+- `mvn -f backend/wallet-service/pom.xml test` → 15/15 PASS
+- `mvn -f backend/transaction-service/pom.xml test` → 129/129 PASS
+- `mvn -f backend/pom.xml clean test-compile` → BUILD SUCCESS (all modules compiled)
+- **Total**: 144/144 tests PASS, 0 regression.
+
+---
+
 ## [1.8.71] - 2026-07-01
 
 ### Security

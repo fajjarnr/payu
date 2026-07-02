@@ -60,7 +60,7 @@ export default function StatementDownloader() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Load statements on mount
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function StatementDownloader() {
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedYear, selectedMonth, loadStatements]);
+  }, [selectedYear, selectedMonth, loadStatements, t]);
 
   const handleDownload = useCallback(async (statement: Statement) => {
     if (statement.status !== 'COMPLETED') {
@@ -110,7 +110,7 @@ export default function StatementDownloader() {
     } finally {
       setIsDownloading(null);
     }
-  }, []);
+  }, [t]);
 
   const getStatusIcon = (status: StatementStatus) => {
     switch (status) {

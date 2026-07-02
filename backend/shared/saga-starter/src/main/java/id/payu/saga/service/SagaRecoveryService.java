@@ -6,6 +6,7 @@ import id.payu.saga.model.SagaState;
 import id.payu.saga.repository.SagaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Duration;
@@ -185,6 +186,7 @@ public class SagaRecoveryService {
     /**
      * Scheduled recovery job.
      */
+    @SchedulerLock(name = "SagaRecoveryService_scheduledRecovery", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedDelay = 300000) // Every 5 minutes
     public void scheduledRecovery() {
         if (!properties.isCompensationEnabled()) {

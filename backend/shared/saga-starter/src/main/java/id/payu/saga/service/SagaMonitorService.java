@@ -6,6 +6,7 @@ import id.payu.saga.model.SagaState;
 import id.payu.saga.repository.SagaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Duration;
@@ -102,6 +103,7 @@ public class SagaMonitorService {
     /**
      * Scheduled check for stalled sagas.
      */
+    @SchedulerLock(name = "SagaMonitorService_checkStalledSagas", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")
     @Scheduled(fixedDelay = 60000) // Every minute
     public void checkStalledSagas() {
         if (!properties.isMonitoringEnabled()) {

@@ -26,4 +26,6 @@ public interface UserPersistencePort {
      * ITER-54: Returns list of account IDs owned by the given user.
      */
     List<UUID> findAccountIdsByUserId(UUID userId);
+
+    Optional<User> findByPhoneNumber(String phoneNumber);
 }

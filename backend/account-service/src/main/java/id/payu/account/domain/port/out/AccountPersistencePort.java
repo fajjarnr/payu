@@ -14,4 +14,5 @@ public interface AccountPersistencePort {
     Optional<Account> findById(UUID id);
     Optional<Account> findByExternalId(String externalId);
     boolean existsByAccountNumber(String accountNumber);
+    Optional<Account> findByUserIdAndAllowPhoneLookupTrue(UUID userId);
 }
