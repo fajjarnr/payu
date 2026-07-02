@@ -1,6 +1,7 @@
 # 📋 PayU — Product Backlog
 
 > **Jira-style backlog.** Hanya berisi item yang BELUM selesai dan perlu tindakan.
+> **Aturan Pengembang**: Langsung hapus (delete) task list dari file ini jika sudah selesai dikerjakan (tidak perlu menandainya sebagai `CLOSED`).
 > Item yang sudah selesai dipindahkan ke [`CHANGELOG.md`](../../CHANGELOG.md).
 >
 > 📈 Deployment history & scorecard → [`PROGRESS.md`](./PROGRESS.md)
