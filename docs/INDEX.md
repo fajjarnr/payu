@@ -2,11 +2,18 @@
 
 Welcome to the PayU Developer Documentation. This platform provides comprehensive core banking and payment gateway services for the Indonesian market.
 
-## Quick Start
+## Quick Start & Developer Guides
 
 - [Developer Onboarding](guides/ONBOARDING.md) - Set up your development environment
 - [API Standards](api/API_STANDARDS.md) - REST API design guidelines
 - [Contributing Guide](../CONTRIBUTING.md) - Git workflow and coding standards
+- [Database & Cache Optimization](guides/DATABASE_CACHE_OPTIMIZATION.md) - Best practices for DB & Redis
+- [Java Container Strategy](guides/JAVA_CONTAINER_STRATEGY.md) - Container configurations
+- [HashiCorp Vault Integration](guides/VAULT.md) - Vault integration & secrets
+- [Webhook Handling](guides/WEBHOOK_HANDLING.md) - Integrating and verifying webhooks
+- [TDD Quick Reference](guides/TDD_QUICK_REFERENCE.md) - Unit & Integration testing reference
+- [Agent Skills & Architecture](guides/AGENT_SKILLS_GUIDE.md) - Multi-Engineer AI Ecosystem Guide
+- [Lessons Learned Registry](guides/LESSONS.md) - Post-mortem and optimization registry
 
 ## Architecture
 
@@ -119,6 +126,7 @@ Each service exposes OpenAPI documentation:
 
 - [Security Policy](security/SECURITY.md)
 - [PCI-DSS Compliance](security/PCI-DSS-UU-PDP-AUDIT-REPORT.md)
+- [Penetration Testing Schedule](security/PENTEST_SCHEDULE.md)
 
 ## Support
 

@@ -190,7 +190,6 @@
 | # | Key | Category | Summary |
 |:---:|:---|:---|:---|
 | AUDIT-096 | **PON-019** | arch | ~95 single-implementation hexagonal ports across 21 services (30 inbound + 65 outbound). Interface with exactly 1 adapter — YAGNI ceremony. Consolidate when refactoring |
-| AUDIT-097 | **PON-020** | arch | 7 orphaned ports (zero implementations): `LoginUseCase`, `RiskEvaluationUseCase`, `ContentEventPort`, `KycReviewPersistencePort`, `FraudCasePersistencePort`, `CustomerCasePersistencePort`, `RateCardUseCase` |
 | AUDIT-098 | **PON-021** | dedup | 18 copies of `SecurityConfig.java` (85-127 lines each) across all services. Extract to `security-starter` auto-config |
 | AUDIT-099 | **PON-022** | dedup | 15 copies of `GlobalExceptionHandler.java` (50-65 lines each). Extract to `api-commons` `@RestControllerAdvice` |
 | AUDIT-100 | **PON-023** | dedup | 11 copies of `OpenApiConfig.java`. Move to shared starter with service-name property |
@@ -199,26 +198,23 @@
 | AUDIT-103 | **PON-026** | jms-starter | `JmsMessagePublisher` — 36-line thin wrapper over `JmsTemplate`. Inject `JmsTemplate` directly |
 | AUDIT-104 | **PON-027** | logging | `MdcUtil` wraps `org.slf4j.MDC` stdlib methods. Delete, use `MDC.putCloseable()` (SLF4J 2.x) |
 | AUDIT-105 | **PON-028** | python | `get_logger()` in `logger.py` — 1-line structlog wrapper. Use `structlog.get_logger()` directly |
-| AUDIT-106 | **PON-029** | web-app | `useExperiment.ts` (242 lines) + `ExperimentContext.tsx` (112 lines) — A/B testing infra with zero production usage. Delete |
 | AUDIT-107 | **PON-030** | web-app | `@radix-ui/react-visually-hidden` (devDeps) — never imported anywhere. Remove from package.json |
-| AUDIT-108 | **PON-031** | web-app | `mutation-config.ts` `createMutationOptions` factory — never called. Delete, keep only `MutationPresets` |
-| AUDIT-109 | **PON-032** | web-app | Unused components: `BentoGrid.tsx`, `LogoTicker.tsx` — imported in `page.tsx` but never rendered in JSX |
 | AUDIT-110 | **PON-033** | web-app | ~14 pages with unused hook imports marked `// eslint-disable-line @typescript-eslint/no-unused-vars` |
 
 ### 📊 Audit Stats
 
 | Metric | Count |
 |:---|:---:|
-| Total findings | 33 |
+| Total findings | 29 |
 | P1 (critical) | 5 |
 | P2 (important) | 13 |
-| P3 (nice-to-have) | 15 |
+| P3 (nice-to-have) | 11 |
 | Estimated dead code (web-app) | ~3,000+ lines |
 | Unused npm packages | ~8 (`jest*`, `gsap`, `date-fns`, `@radix-ui/react-visually-hidden`, `@dnd-kit/*` in devDeps) |
 | Duplicate config files (backend) | ~58 across services |
 | Dead barrel exports (web-app) | ~40 |
 | Single-implementation ports (backend) | ~95 |
-| Orphaned ports (backend) | 7 |
+| Orphaned ports (backend) | 3 |
 
 ---
 

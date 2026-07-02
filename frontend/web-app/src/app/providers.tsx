@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
-import { ExperimentProvider } from '@/contexts/ExperimentContext';
 
 const createQueryClient = () => new QueryClient({
  defaultOptions: {
@@ -78,13 +77,11 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        <ExperimentProvider>
-          <SessionBootstrap />
-          <SilentRefreshRunner />
-          <AuthSessionExpiredHandler />
-          {children}
-          <Toaster position="top-right" richColors />
-        </ExperimentProvider>
+        <SessionBootstrap />
+        <SilentRefreshRunner />
+        <AuthSessionExpiredHandler />
+        {children}
+        <Toaster position="top-right" richColors />
       </QueryClientProvider>
     </ThemeProvider>
   );

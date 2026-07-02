@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.8.78] - 2026-07-02
+
+### Added
+
+- **jest-axe** restored to devDependencies to repair the accessibility tests that failed due to missing matchers.
+
+### Removed
+
+- **AUDIT-106 (PON-029): useExperiment / ExperimentContext**. Deleted A/B testing frontend infrastructure from `web-app` (since `ab-testing-service` was deleted from backend).
+- **AUDIT-109 (PON-032): BentoGrid & LogoTicker**. Deleted unused landing page components and replaced `gsap` with CSS vertical scroll snapping.
+- **AUDIT-108 (PON-031): createMutationOptions**. Deleted unused mutation options factory.
+- **AUDIT-097 (PON-020): backoffice-service orphaned ports**. Deleted KycReviewUseCase, CustomerCaseUseCase, FraudCaseUseCase, and UniversalSearchUseCase.
+- **Obsolete Documentation**: Deleted `AB_TESTING_USAGE.md` (obsolete A/B testing guide), `Penetration-Testing-Schedule.md` (duplicate of `PENTEST_SCHEDULE.md`), and duplicate `guides/CONTRIBUTING.md`.
+
+### Changed
+
+- **INDEX.md updated** to register missing developer guides and link the penetration testing schedule.
+- **TODOS.md updated** to remove completed tasks and update findings counts.
+
 ---
 
 ## [1.8.77] - 2026-07-02

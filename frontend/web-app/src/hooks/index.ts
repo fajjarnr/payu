@@ -19,8 +19,6 @@ export {
   useEmergencyAlerts,
   usePopups
 } from './useCMS';
-export { useExperiment } from './useExperiment';
-export type { UseExperimentOptions, UseExperimentResult } from './useExperiment';
 export { useUserSegment, useSegmentDetails, useAllSegments } from './useUserSegment';
 export { useSegmentedOffers, useOffersBySegment, useVIPOffers } from './useSegmentedOffers';
 export { useVIPStatus, type VIPStatus } from './useVIPStatus';

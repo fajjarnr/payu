@@ -1,20 +1,10 @@
 'use client';
 
-import Image from 'next/image'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Link } from '@/lib/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
-import { Shield, Zap, Menu, X, PieChart, Globe, ArrowUpRight } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Shield, Zap, Menu, X, PieChart, Globe } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { Observer } from 'gsap/Observer';
-
-import BentoGrid from '@/components/landing/BentoGrid'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import LogoTicker from '@/components/landing/LogoTicker'; // eslint-disable-line @typescript-eslint/no-unused-vars
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(Observer);
-}
 
 export default function LandingPage() {
   const t = useTranslations('landing');
@@ -22,15 +12,11 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  // Sanitize the i18n hero title on the client only — isomorphic-dompurify
-  // breaks Next 16 + Turbopack SSR because html-encoding-sniffer (CJS) requires
-  // @exodus/bytes/encoding-lite.js which is pure ESM. i18n content is trusted,
-  // but we strip <script> and javascript: URIs as a defense-in-depth measure.
+
+  // Sanitize the i18n hero title on the client only
   const [safeHeroTitle, setSafeHeroTitle] = useState('');
-  // React 19 "adjusting state during render" — re-sanitize when the active
-  // locale changes. Runs during render so no cascading-render warning
-  // from setState-in-effect. Track by locale string (stable + comparable).
   const [trackedLocale, setTrackedLocale] = useState(locale);
+
   if (trackedLocale !== locale) {
     setTrackedLocale(locale);
     const raw = t.raw('heroTitle') as string;
@@ -40,52 +26,70 @@ export default function LandingPage() {
         .replace(/javascript:/gi, '')
     );
   }
+
+  // Set initial safe hero title on mount
+  useEffect(() => {
+    const raw = t.raw('heroTitle') as string;
+    setSafeHeroTitle(
+      raw
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/javascript:/gi, '')
+    );
+  }, [locale, t]);
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const isAnimating = useRef(false);
-  const totalSlides = 4;
   const slideIds = ['hero', 'app', 'about', 'support'];
 
-  // Defined BEFORE the useEffect that uses it so the closure can resolve
-  // the binding (avoids the React 19 "access before declared" lint error).
   const goToSlide = (index: number) => {
-    if (index < 0 || index >= totalSlides) return;
-    isAnimating.current = true;
-    setCurrentSlide(index);
-
-    gsap.to(containerRef.current, {
-      xPercent: -index * 100,
-      duration: 1.2,
-      ease: 'power4.inOut',
-      onComplete: () => {
-        isAnimating.current = false;
-        setScrolled(index > 0);
-      }
-    });
+    const targetId = slideIds[index];
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const ctx = gsap.context(() => {
-      Observer.create({
-        target: window,
-        type: 'wheel,touch,pointer',
-        wheelSpeed: 1,
-        onUp: () => !isAnimating.current && currentSlide > 0 && goToSlide(currentSlide - 1),
-        onDown: () => !isAnimating.current && currentSlide < totalSlides - 1 && goToSlide(currentSlide + 1),
-        tolerance: 10,
-        preventDefault: true
-      });
+    const handleScroll = () => {
+      setScrolled(container.scrollTop > 50);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = slideIds.indexOf(entry.target.id);
+            if (index !== -1) {
+              setCurrentSlide(index);
+            }
+          }
+        });
+      },
+      {
+        root: container,
+        threshold: 0.5,
+      }
+    );
+
+    container.addEventListener('scroll', handleScroll);
+    slideIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
     });
 
-    return () => ctx.revert();
-  }, [currentSlide]);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
+  }, []);
 
   const handleNavClick = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
-    const index = slideIds.indexOf(targetId.replace('#', ''));
-    if (index !== -1) {
-      goToSlide(index);
+    const el = document.getElementById(targetId.replace('#', ''));
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
     }
     setMobileMenuOpen(false);
   };
@@ -142,10 +146,12 @@ export default function LandingPage() {
         )}
       </AnimatePresence>
 
-      <div ref={containerRef} className="h-full w-full flex flex-row transition-none will-change-transform">
+      <div 
+        ref={containerRef} 
+        className="h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth"
+      >
         {/* Slide 1: Hero - The Core Identity */}
-        {/* Slide 1: Hero - The Core Identity */}
-        <section className="h-screen min-w-full relative flex flex-col items-center justify-center text-center overflow-hidden bg-[#050a08]">
+        <section id="hero" className="h-screen w-full snap-start relative flex flex-col items-center justify-center text-center overflow-hidden bg-[#050a08]">
           {/* Bankong-inspired Atmosphere: Deep Green Mist */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(16,185,129,0.15)_0%,rgba(6,78,59,0.4)_40%,rgba(2,6,4,1)_100%)] z-0" />
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay z-0" />
@@ -256,13 +262,13 @@ export default function LandingPage() {
         </section>
 
         {/* Slide 2: Asymmetrical Tech Layout - Filling Space */}
-        <section className="h-screen min-w-full relative flex items-center bg-[#1a2e26] overflow-hidden">
+        <section id="app" className="h-screen w-full snap-start relative flex items-center bg-[#1a2e26] overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
           
           {/* Wayang Silhouette - Left Side */}
           <div className="absolute -left-[5%] top-1/2 -translate-y-1/2 w-[70vh] h-[100vh] opacity-[0.06] select-none pointer-events-none grayscale flex items-center justify-center -rotate-12 mix-blend-color-dodge">
              <svg viewBox="0 0 100 150" fill="currentColor" className="w-full h-full text-emerald-700">
-                 <path d="M50 0 C 50 0 35 30 35 55 C 35 70 20 90 5 100 C 0 105 5 120 20 130 C 30 135 40 145 50 150 C 60 145 70 135 80 130 C 95 120 100 105 95 100 C 80 90 65 70 65 55 C 65 30 50 0 50 0 Z" />
+                  <path d="M50 0 C 50 0 35 30 35 55 C 35 70 20 90 5 100 C 0 105 5 120 20 130 C 30 135 40 145 50 150 C 60 145 70 135 80 130 C 95 120 100 105 95 100 C 80 90 65 70 65 55 C 65 30 50 0 50 0 Z" />
              </svg>
           </div>
 
@@ -306,7 +312,7 @@ export default function LandingPage() {
         </section>
 
         {/* Slide 3: Simple Values - Global Impact */}
-        <section className="h-screen min-w-full relative flex items-center bg-[#1e332b] overflow-hidden">
+        <section id="about" className="h-screen w-full snap-start relative flex items-center bg-[#1e332b] overflow-hidden">
            {/* Architectural Grid Lines */}
            <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
            
@@ -361,7 +367,7 @@ export default function LandingPage() {
         </section>
 
         {/* Slide 4: Simple CTA - Join the Future */}
-        <section className="h-screen min-w-full relative flex flex-col justify-center bg-[#0a1410] overflow-hidden">
+        <section id="support" className="h-screen w-full snap-start relative flex flex-col justify-center bg-[#0a1410] overflow-hidden">
            <div className="max-w-4xl mx-auto px-6 text-center space-y-16">
               <div className="space-y-6">
                   <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">{t('slide4.title')} <br/> <span className="text-emerald-500">{t('slide4.titleHighlight')}</span></h2>
@@ -378,7 +384,7 @@ export default function LandingPage() {
                       <div className="flex gap-8">
                          <Link href={'/terms'} className="hover:text-emerald-500 transition-colors">{t('slide4.terms')}</Link>
                          <Link href={'/privacy'} className="hover:text-emerald-500 transition-colors">{t('slide4.privacy')}</Link>
-                     </div>
+                      </div>
                  </footer>
               </div>
            </div>

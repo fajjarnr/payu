@@ -8,7 +8,7 @@
  * @see providers.tsx - Global default is retry: 0 for all mutations
  */
 
-import type { UseMutationOptions } from '@tanstack/react-query';
+
 
 /**
  * Default retry delay calculation with exponential backoff
@@ -52,32 +52,6 @@ export const readOnlyMutationConfig = {
   retry: 2,
   retryDelay: defaultRetryDelay,
 } as const;
-
-/**
- * Type helper for creating typed mutation options
- */
-export type MutationConfigType =
-  | typeof financialMutationConfig
-  | typeof nonFinancialMutationConfig
-  | typeof readOnlyMutationConfig;
-
-/**
- * Helper to merge mutation configs with custom options
- */
-export function createMutationOptions<
-  TData = unknown,
-  TError = Error,
-  TVariables = void,
-  TContext = unknown,
->(
-  config: MutationConfigType,
-  options?: Partial<UseMutationOptions<TData, TError, TVariables, TContext>>
-): UseMutationOptions<TData, TError, TVariables, TContext> {
-  return {
-    ...config,
-    ...options,
-  } as UseMutationOptions<TData, TError, TVariables, TContext>;
-}
 
 /**
  * Pre-configured mutation options for common use cases
