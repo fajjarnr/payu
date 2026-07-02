@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.cms.adapter.web.rest.ContentController;
 import id.payu.cms.application.service.ContentService;
-import id.payu.cms.config.GlobalExceptionHandler;
+import id.payu.cms.config.Rfc9457CmsExceptionHandler;
 import id.payu.cms.domain.dto.ContentListResponse;
 import id.payu.cms.domain.dto.ContentRequest;
 import id.payu.cms.domain.dto.ContentResponse;
@@ -55,7 +55,7 @@ class ContentControllerTest {
         // Standalone setup - no Spring context needed
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ContentController(contentService))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new Rfc9457CmsExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
     }

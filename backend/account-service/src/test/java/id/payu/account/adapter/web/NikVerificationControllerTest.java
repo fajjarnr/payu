@@ -2,7 +2,7 @@ package id.payu.account.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import id.payu.account.config.GlobalExceptionHandler;
+import id.payu.account.config.Rfc9457AccountExceptionHandler;
 import id.payu.account.domain.port.in.VerifyNikUseCase;
 import id.payu.account.dto.VerifyNikRequest;
 import id.payu.account.dto.VerifyNikResponse;
@@ -56,7 +56,7 @@ class NikVerificationControllerTest {
         validator.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new Rfc9457AccountExceptionHandler())
                 .setValidator(validator)
                 .build();
 

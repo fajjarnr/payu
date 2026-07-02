@@ -3,7 +3,7 @@ package id.payu.productcatalog.adapter.web.publics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.productcatalog.adapter.web.BaseController;
-import id.payu.productcatalog.config.GlobalExceptionHandler;
+import id.payu.productcatalog.config.Rfc9457ProductCatalogExceptionHandler;
 import id.payu.productcatalog.domain.model.ProductDefinition;
 import id.payu.productcatalog.domain.model.ProductType;
 import id.payu.productcatalog.domain.port.in.ProductCatalogUseCase;
@@ -44,7 +44,7 @@ class PublicProductControllerTest {
         PublicProductController controller = new PublicProductController(productCatalogUseCase);
         // BaseController may add security annotations; standalone setup doesn't enforce them
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new Rfc9457ProductCatalogExceptionHandler())
                 .build();
     }
 
