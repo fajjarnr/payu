@@ -86,4 +86,48 @@ class EventsAutoConfigurationTest {
             assertThat(props.getKafka().getBootstrapServers()).isEqualTo("localhost:9092");
         }
     }
+
+    @Nested
+    @DisplayName("Kafka Error Handler configuration")
+    class KafkaErrorHandlerTest {
+
+        @Test
+        @DisplayName("should configure CommonErrorHandler and route to correct DLQ topic")
+        void kafkaErrorHandlerConfigured() {
+            org.springframework.kafka.core.KafkaTemplate<Object, Object> mockKafkaTemplate = 
+                    org.mockito.Mockito.mock(org.springframework.kafka.core.KafkaTemplate.class);
+            
+            java.util.concurrent.CompletableFuture<org.springframework.kafka.support.SendResult<Object, Object>> mockCompletableFuture = 
+                    java.util.concurrent.CompletableFuture.completedFuture(null);
+            
+            org.mockito.Mockito.when(mockKafkaTemplate.send(org.mockito.Mockito.any(org.apache.kafka.clients.producer.ProducerRecord.class)))
+                    .thenReturn(mockCompletableFuture);
+
+            contextRunner
+                    .withBean(org.springframework.kafka.core.KafkaTemplate.class, () -> mockKafkaTemplate)
+                    .run(context -> {
+                        assertThat(context).hasSingleBean(org.springframework.kafka.listener.CommonErrorHandler.class);
+                        var errorHandler = context.getBean(org.springframework.kafka.listener.CommonErrorHandler.class);
+                        assertThat(errorHandler).isInstanceOf(org.springframework.kafka.listener.DefaultErrorHandler.class);
+                        
+                        var defaultErrorHandler = (org.springframework.kafka.listener.DefaultErrorHandler) errorHandler;
+                        Object failureTracker = org.springframework.test.util.ReflectionTestUtils.getField(defaultErrorHandler, "failureTracker");
+                        var recoverer = (org.springframework.kafka.listener.DeadLetterPublishingRecoverer) 
+                                org.springframework.test.util.ReflectionTestUtils.getField(failureTracker, "recoverer");
+                        
+                        org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record = 
+                                new org.apache.kafka.clients.consumer.ConsumerRecord<>("payu.wallet.balance-changed.v1", 0, 123L, "key", "payload");
+                        
+                        recoverer.accept(record, new RuntimeException("Test exception"));
+                        
+                        org.mockito.ArgumentCaptor<org.apache.kafka.clients.producer.ProducerRecord> recordCaptor = 
+                                org.mockito.ArgumentCaptor.forClass(org.apache.kafka.clients.producer.ProducerRecord.class);
+                        
+                        org.mockito.Mockito.verify(mockKafkaTemplate).send(recordCaptor.capture());
+                        
+                        org.apache.kafka.clients.producer.ProducerRecord<?, ?> capturedRecord = recordCaptor.getValue();
+                        assertThat(capturedRecord.topic()).isEqualTo("payu.wallet.balance-changed.v1.dlq");
+                    });
+        }
+    }
 }
