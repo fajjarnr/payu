@@ -4,6 +4,33 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-090: Platform-wide P3 Cleanups — RestTemplateConfig, OpenApiConfig, GlobalExceptionHandler, and Frontend Unused Hooks (2026-07-02)
+
+**Date**: 2026-07-02
+**Domain**: Spring Boot / RestTemplate / OpenAPI / Exception Handling / Frontend Next.js / TypeScript
+**Context**: Executing local dead code and configuration cleanups from the Ponytail audit. De-duplicated shared configurations and deleted redundant classes across all backend microservices, and cleaned up unused hooks and imports in the frontend.
+
+**What was built/rebuilt**:
+1. **RestTemplateConfig Deduplication (AUDIT-102)**: Auto-configured a default `RestTemplate` bean with configurable timeout properties in `rest-client-starter`. Deleted duplicate config files from 6 services.
+2. **JmsMessagePublisher Clean Up (AUDIT-103)**: Removed `JmsMessagePublisher` thin wrapper in favor of direct standard `JmsTemplate`. Refactored `SubscriptionService` in `billing-service` and updated unit tests (34 tests pass).
+3. **Python get_logger wrapper removal (AUDIT-105)**: Deleted redundant custom `get_logger()` from `payu-logging`.
+4. **OpenApiConfig Deduplication (AUDIT-100)**: Auto-configured a default `OpenAPI` bean in `api-commons` with dynamic user-friendly title formatting and configurable properties. Deleted duplicate `OpenApiConfig.java` from 10 Spring Boot services.
+5. **GlobalExceptionHandler Deduplication (AUDIT-099)**: Deleted 16 local copies of legacy `GlobalExceptionHandler.java` in favor of standard shared `Rfc9457GlobalExceptionHandler` subclasses. Updated MockMvc standalone tests in 4 services to use RFC 9457 handlers.
+6. **Frontend Hook Cleanups (AUDIT-110)**: Cleaned up unused hooks, variables, states, and imports from `SupportPage`, `RewardsPage`, `SplitBillPage`, `BillsPage`, `TransactionsPage`, and `ExchangePage`. Fixed `SupportPage.test.tsx` next-intl mock context.
+
+**Lessons**:
+1. **Use namespaced auto-configurations for shared Beans**: Rather than copy-pasting `RestTemplateConfig` or `OpenApiConfig` across services, place them in a shared starter (like `rest-client-starter` or `api-commons`) as auto-configurations. Use `@ConditionalOnMissingBean` to allow services to override the default beans if necessary.
+2. **Formatting application names for API titles**: By using `@Value("${spring.application.name}")` and splitting on `-`, you can dynamically format a technical application name like `billing-service` into a readable title like `Billing Service API` automatically.
+3. **Mockito Standalone ControllerAdvice testing**: In MockMvc standalone unit tests, when deleting a custom controller advice, ensure the test setup `.setControllerAdvice(...)` is updated to instantiate the correct auto-configured or inherited RFC 9457 exception handler.
+4. **Clean parameterless catch blocks in TypeScript**: For catch blocks in React pages where the error parameter is unused, use parameterless catch `try { ... } catch { ... }` instead of `catch (error) { // eslint-disable-line ... }` to keep the code clean and avoid linting overrides.
+
+**Verification**:
+- Backend reactor pom compilation: **BUILD SUCCESS** across all 41 modules.
+- Frontend vitest suite for modified pages: All 20 tests pass.
+- Billing-service unit tests: All 34 tests pass.
+
+---
+
 ## L-089: READY-017/018 — JMS Scheduled Delivery Testing & Mockito Strict Stubbing (2026-07-02)
 
 **Date**: 2026-07-02

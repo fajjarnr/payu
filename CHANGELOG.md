@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.8.79] - 2026-07-02
+
+### Added
+
+- **OpenApiProperties / OpenApiAutoConfiguration** in `api-commons` to dynamically configure OpenAPI/Swagger details for Spring Boot microservices based on application name.
+
+### Removed
+
+- **AUDIT-103 (PON-026): JmsMessagePublisher wrapper**. Deleted redundant thin wrapper class in `jms-starter` in favor of direct standard `JmsTemplate`.
+- **AUDIT-105 (PON-028): get_logger wrapper**. Deleted custom python logger function in `payu-logging`.
+- **AUDIT-099 (PON-022): local GlobalExceptionHandler copies**. Deleted 16 local copies of legacy exception handlers in favor of shared standard `Rfc9457GlobalExceptionHandler` subclasses.
+- **AUDIT-100 (PON-023): local OpenApiConfig copies**. Deleted 10 local copies of OpenAPI configs in favor of shared auto-configured OpenAPI bean in `api-commons`.
+- **AUDIT-102 (PON-025): local RestTemplateConfig copies**. Deleted 6 local copies of RestTemplate configs in favor of shared auto-configured RestTemplate in `rest-client-starter`.
+
+### Changed
+
+- **Unused Hook Cleanups (AUDIT-110)**: Cleaned up unused hook, variable, state, and icon imports on `SupportPage`, `RewardsPage`, `SplitBillPage`, `BillsPage`, `TransactionsPage`, and `ExchangePage` in `web-app`.
+- **SupportPage.test.tsx**: Mocked next-intl to fix missing context error and updated system status assertions to align with real page rendering.
+- **TODOS.md & PROGRESS.md** updated to reflect completed nice-to-have items and iteration stats.
+
+---
+
 ## [1.8.78] - 2026-07-02
 
 ### Added
