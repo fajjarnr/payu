@@ -96,6 +96,12 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
 
+        <!-- Micrometer Prometheus registry for /actuator/prometheus endpoint -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Spring Kafka for cache invalidation -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>

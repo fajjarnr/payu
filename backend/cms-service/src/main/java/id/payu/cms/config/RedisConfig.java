@@ -1,6 +1,8 @@
 package id.payu.cms.config;
 
 import id.payu.cache.serializer.TypedJsonRedisSerializer;
+import id.payu.security.annotation.Sensitive;
+import id.payu.security.annotation.SensitivityLevel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +42,7 @@ public class RedisConfig {
     @Value("${spring.data.redis.username:}")
     private String redisUsername;
 
+    @Sensitive(SensitivityLevel.HIGH)
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 

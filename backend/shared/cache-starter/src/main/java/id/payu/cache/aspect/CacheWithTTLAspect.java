@@ -5,6 +5,7 @@ import id.payu.cache.annotation.CacheWithTTL;
 import id.payu.cache.model.CacheEntry;
 import id.payu.cache.service.CacheService;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -130,10 +131,16 @@ public class CacheWithTTLAspect {
             long ttlSeconds,
             Class<?> returnType) throws Throwable {
 
+        Timer.Sample sample = Timer.start(Metrics.globalRegistry);
+
         // Fast path: cache hit without locking
         Object cachedValue = cacheService.get(cacheKey, returnType);
         if (cachedValue != null) {
             Metrics.counter("cache.aspect.hit", "cache", cacheWithTTL.cacheName()).increment();
+            sample.stop(Timer.builder("cache.aspect.latency")
+                .tag("cache", cacheWithTTL.cacheName())
+                .tag("result", "hit")
+                .register(Metrics.globalRegistry));
             log.debug("Cache hit for key: {}", cacheKey);
             return cachedValue;
         }
@@ -150,6 +157,10 @@ public class CacheWithTTLAspect {
             cachedValue = cacheService.get(cacheKey, returnType);
             if (cachedValue != null) {
                 Metrics.counter("cache.aspect.hit", "cache", cacheWithTTL.cacheName()).increment();
+                sample.stop(Timer.builder("cache.aspect.latency")
+                    .tag("cache", cacheWithTTL.cacheName())
+                    .tag("result", "hit_lock")
+                    .register(Metrics.globalRegistry));
                 log.debug("Cache hit after lock acquisition for key: {}", cacheKey);
                 return cachedValue;
             }
@@ -163,6 +174,10 @@ public class CacheWithTTLAspect {
                     Method method = signature.getMethod();
                     if (evaluateCondition(cacheWithTTL.unless(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
                         log.debug("Cache unless condition true, not caching: {}", cacheKey);
+                        sample.stop(Timer.builder("cache.aspect.latency")
+                            .tag("cache", cacheWithTTL.cacheName())
+                            .tag("result", "miss_unless")
+                            .register(Metrics.globalRegistry));
                         return result;
                     }
                 }
@@ -171,6 +186,11 @@ public class CacheWithTTLAspect {
                     cacheService.put(cacheKey, result, java.time.Duration.ofSeconds(ttlSeconds));
                     log.debug("Cached result for key: {}", cacheKey);
                 }
+
+                sample.stop(Timer.builder("cache.aspect.latency")
+                    .tag("cache", cacheWithTTL.cacheName())
+                    .tag("result", "miss_loaded")
+                    .register(Metrics.globalRegistry));
 
                 return result;
             } catch (Throwable e) {

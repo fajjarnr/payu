@@ -3,6 +3,7 @@ package id.payu.cms.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import id.payu.archunit.SensitiveFieldRules;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,7 +129,7 @@ class ArchitectureTest {
     @Test
     @DisplayName("NEW-006: PII / financial / auth fields must be @Sensitive (READY-012)")
     void sensitiveFieldsMustBeAnnotated() {
-        // CALIBRATED 2026-06-15: existing entity fields missing @Sensitive. Track as READY-012.
-        Assumptions.assumeTrue(false, "READY-012: @Sensitive annotation rollout pending across all entities");
+        SensitiveFieldRules.fieldsMatchingMustBeAnnotated()
+            .check(classes);
     }
 }

@@ -135,10 +135,6 @@
 | Key | Category | Summary |
 |:---|:---|:---|
 | READY-010 | Security | Vault integration verified end-to-end |
-| READY-011 | Security | Pen-test: mTLS strict, CSP headers, secret scan |
-| READY-012 | Security | `@Sensitive` annotation enforced via ArchUnit |
-| READY-013 | Cache | `GenericJackson2JsonRedisSerializer` config platform-wide |
-| READY-014 | Cache | Cache metrics to Prometheus |
 | READY-019 | Observability | Distributed tracing (OTel → Tempo) |
 | READY-020 | Observability | Loki log shipping verified |
 | READY-021 | Observability | Prometheus scrape config + alerting rules |

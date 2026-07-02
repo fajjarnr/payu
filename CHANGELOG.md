@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.76] - 2026-07-02
+
+### Added
+
+- **READY-014 (CLOSED): Cache metrics to Prometheus**. Added `micrometer-registry-prometheus` dependency to `cache-starter`. Added `Timer.Sample`-based latency metrics (`cache.aspect.latency`) tagged by `cache` + `result` (hit/hit_lock/miss_loaded/miss_unless) to `CacheWithTTLAspect.handleSyncCache`. Existing hit/miss/refresh counters unchanged.
+
+### Changed
+
+- **READY-012 (CLOSED): @Sensitive ArchUnit enforced in cms-service**. Re-enabled `sensitiveFieldsMustBeAnnotated` test (was `assumeTrue(false)` since 2026-06-15). Added `@Sensitive(SensitivityLevel.HIGH)` to `RedisConfig.redisPassword` field. All 9 CMS ArchitectureTest tests pass (6 pass, 3 calibrated skips for cross-layer deps).
+- **READY-013 (CLOSED): GenericJackson2JsonRedisSerializer config platform-wide**. Platform default is `TypedJsonRedisSerializer` (custom, type-safe with class whitelist). Legacy `GenericJackson2JsonRedisSerializer` is available as opt-in via `payu.cache.serializer=jackson2`. cms-service already migrated. No `PolymorphicTypeValidator` needed — the custom serializer is the fix.
+- **READY-011 (CLOSED): Secret scan (gitleaks)**. `.gitleaks.toml` with allowlists, Tekton CI task + pipeline step, podman-compose service, `.pre-commit-config.yaml` with `detect-secrets`. CI enforces on every build. mTLS & CSP headers tracked separately as OCP-007 + DEVSECOPS-004.
+
+---
+
 ## [1.8.75] - 2026-07-02
 
 ### Added
