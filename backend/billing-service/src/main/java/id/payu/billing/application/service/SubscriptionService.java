@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import id.payu.jms.publisher.JmsMessagePublisher;
+import org.springframework.jms.core.JmsTemplate;
 
 /**
  * Application service for subscription and recurring billing.
@@ -50,7 +50,7 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     private final SubscriptionPersistencePort persistencePort;
     private final SubscriptionEventPort eventPort;
-    private final JmsMessagePublisher jmsMessagePublisher;
+    private final JmsTemplate jmsTemplate;
 
     // ═══════════════════════════════════════════════════════
     //  Plan Management
@@ -397,7 +397,10 @@ public class SubscriptionService implements SubscriptionUseCase {
                 // Schedule next dunning retry via Artemis (delay 5 mins for dunning retry)
                 log.info("Scheduling dunning retry for subscription {} (dunning attempt {})", sub.getId(), sub.getDunningAttempts());
                 try {
-                    jmsMessagePublisher.sendWithDelay("payu.billing.scheduled", sub.getId().toString(), 300000L);
+                    jmsTemplate.convertAndSend("payu.billing.scheduled", sub.getId().toString(), m -> {
+                        m.setLongProperty("_AMQ_SCHED_DELIVERY", System.currentTimeMillis() + 300000L);
+                        return m;
+                    });
                 } catch (Exception ex) {
                     log.error("Failed to schedule Artemis dunning retry: {}", ex.getMessage());
                 }
@@ -422,12 +425,13 @@ public class SubscriptionService implements SubscriptionUseCase {
         LocalDateTime nextBilling = sub.getNextBillingAt();
         if (nextBilling != null) {
             long delayMs = java.time.Duration.between(LocalDateTime.now(), nextBilling).toMillis();
-            if (delayMs < 0) {
-                delayMs = 0;
-            }
-            log.info("Scheduling charge for subscription {} at {} (delay: {}ms)", sub.getId(), nextBilling, delayMs);
+            final long finalDelayMs = delayMs < 0 ? 0 : delayMs;
+            log.info("Scheduling charge for subscription {} at {} (delay: {}ms)", sub.getId(), nextBilling, finalDelayMs);
             try {
-                jmsMessagePublisher.sendWithDelay("payu.billing.scheduled", sub.getId().toString(), delayMs);
+                jmsTemplate.convertAndSend("payu.billing.scheduled", sub.getId().toString(), m -> {
+                    m.setLongProperty("_AMQ_SCHED_DELIVERY", System.currentTimeMillis() + finalDelayMs);
+                    return m;
+                });
             } catch (Exception e) {
                 log.error("Failed to schedule Artemis charge for subscription: {}", sub.getId(), e);
             }

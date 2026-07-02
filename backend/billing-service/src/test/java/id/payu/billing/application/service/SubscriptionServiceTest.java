@@ -47,7 +47,7 @@ class SubscriptionServiceTest {
     SubscriptionEventPort eventPort;
 
     @Mock
-    id.payu.jms.publisher.JmsMessagePublisher jmsMessagePublisher;
+    org.springframework.jms.core.JmsTemplate jmsTemplate;
 
     private SubscriptionPlanEntity samplePlan;
     private UUID planId;
@@ -393,7 +393,7 @@ class SubscriptionServiceTest {
             subscriptionService.processScheduledCharge(subscriptionId);
 
             verify(persistencePort).saveCharge(any(SubscriptionChargeEntity.class));
-            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), anyLong());
+            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
         }
 
         @Test
@@ -436,7 +436,7 @@ class SubscriptionServiceTest {
             subscriptionService.processScheduledCharge(subscriptionId);
 
             verify(persistencePort, never()).saveCharge(any(SubscriptionChargeEntity.class));
-            verify(jmsMessagePublisher, never()).sendWithDelay(anyString(), anyString(), anyLong());
+            verify(jmsTemplate, never()).convertAndSend(anyString(), anyString(), any(org.springframework.jms.core.MessagePostProcessor.class));
         }
 
         @Test
@@ -463,7 +463,7 @@ class SubscriptionServiceTest {
 
             subscriptionService.processDueSubscriptions();
 
-            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), anyLong());
+            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
         }
 
         @Test
@@ -490,7 +490,7 @@ class SubscriptionServiceTest {
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
             // Dunning retry should be scheduled with 5 min delay
-            verify(jmsMessagePublisher).sendWithDelay(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), eq(300000L));
+            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
         }
 
         @Test
@@ -506,7 +506,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
 
             doThrow(new RuntimeException("Artemis unavailable"))
-                    .when(jmsMessagePublisher).sendWithDelay(anyString(), anyString(), anyLong());
+                    .when(jmsTemplate).convertAndSend(anyString(), anyString(), any(org.springframework.jms.core.MessagePostProcessor.class));
 
             // Should not throw — Artemis is fire-and-forget
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());

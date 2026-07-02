@@ -16,6 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -147,5 +148,19 @@ public class RestClientAutoConfiguration {
         log.info("PayU REST Client initialized with circuit breaker and retry support");
         return new PayuRestClient(payuDefaultRestClient,
                 restClientCircuitBreakerRegistry, restClientRetryRegistry);
+    }
+
+    /**
+     * Auto-configures a standard RestTemplate bean with PayU timeouts.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RestTemplate restTemplate() {
+        log.info("Initializing default RestTemplate with timeouts [connectTimeout={}ms, readTimeout={}ms]",
+                properties.getConnectTimeout(), properties.getReadTimeout());
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(properties.getConnectTimeout());
+        factory.setReadTimeout(properties.getReadTimeout());
+        return new RestTemplate(factory);
     }
 }

@@ -18,7 +18,7 @@ import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 
 import jakarta.jms.ConnectionFactory;
-import id.payu.jms.publisher.JmsMessagePublisher;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -128,11 +128,7 @@ public class JmsAutoConfiguration {
         return converter;
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public JmsMessagePublisher jmsMessagePublisher(JmsTemplate jmsTemplate) {
-        return new JmsMessagePublisher(jmsTemplate);
-    }
+
 
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(org.springframework.boot.health.contributor.HealthIndicator.class)

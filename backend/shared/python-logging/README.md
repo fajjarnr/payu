@@ -25,7 +25,8 @@ pip install -e /path/to/backend/shared/python-logging
 ### Basic Setup
 
 ```python
-from payu_logging import configure_logging, get_logger
+from payu_logging import configure_logging
+from structlog import get_logger
 
 # Configure once at application startup
 configure_logging()
@@ -41,7 +42,8 @@ logger.info("Processing request", user_id="123", amount=1000)
 
 ```python
 from fastapi import FastAPI
-from payu_logging import configure_logging, get_logger, CorrelationIdMiddleware
+from payu_logging import configure_logging, CorrelationIdMiddleware
+from structlog import get_logger
 
 # Configure logging
 configure_logging()
@@ -154,7 +156,8 @@ logger.info(f"User {user_id} logged in")
 ### After
 
 ```python
-from payu_logging import configure_logging, get_logger
+from payu_logging import configure_logging
+from structlog import get_logger
 
 configure_logging()
 logger = get_logger(__name__)
@@ -168,9 +171,7 @@ logger.info("User logged in", user_id=user_id)
 
 Configure structlog with PayU standard settings.
 
-### `get_logger(name=None, **context)`
 
-Get a structured logger instance.
 
 ### `CorrelationIdMiddleware`
 
