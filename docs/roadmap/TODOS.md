@@ -414,30 +414,6 @@
 
 ---
 
-## 📝 Implementation Plan & Task Tracker: ARCH-005 (Phase 1)
-
-### `rules-starter` (New Shared Library)
-- [ ] Scaffold `rules-starter` module
-- [ ] Configure `pom.xml` with Drools dependencies (`drools-engine`, `drools-model-compiler`, `drools-decisiontables`)
-- [ ] Implement `RulesEngineService` and `AutoConfiguration`
-- [ ] Build and test `rules-starter` module locally
-
-### `lending-service` (Credit Scoring)
-- [ ] Add `rules-starter` dependency to `lending-service/pom.xml`
-- [ ] Extract rules from `EnhancedCreditScoringService.java` to `credit_scoring.drl`
-- [ ] Update `CreditScoreFact` or DTO
-- [ ] Update `EnhancedCreditScoringService.java` to use `RulesEngineService`
-- [ ] Run unit tests for `lending-service`
-
-### `analytics-service` (Fraud Detection)
-- [ ] Add `rules-starter` dependency to `analytics-service/pom.xml`
-- [ ] Extract rules (velocity checks, geo-anomaly) to `fraud_detection.drl`
-- [ ] Update `FraudDetectionService` to use `RulesEngineService`
-- [ ] Run unit tests for `analytics-service`
-
-### Verification
-- [ ] Verify rules engine is working as expected
-- [ ] Build backend
 
 ## 📝 Future Implementation Plan: ARCH-005 (Phase 2 & 3 Kogito)
 

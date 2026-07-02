@@ -91,6 +91,13 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- PayU Rules Starter — Drools Rules Engine -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>rules-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>

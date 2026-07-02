@@ -45,6 +45,7 @@
         <lombok.version>1.18.42</lombok.version>
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <drools.version>8.44.0.Final</drools.version>
     </properties>
 
     <modules>
@@ -63,6 +64,7 @@
         <module>shared/rest-client-starter</module>
         <module>shared/quarkus-api-commons</module>
         <module>shared/jms-starter</module>
+        <module>shared/rules-starter</module>
 
         <!-- Simulators -->
         <module>simulators/bi-fast-simulator</module>
