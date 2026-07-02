@@ -136,7 +136,30 @@ export default async function middleware(request: NextRequest) {
   }
 
   // Return the response from rehydration (with Set-Cookie headers) or default intl response
-  return response ?? intlMiddleware(request);
+  const finalResponse = response ?? intlMiddleware(request);
+
+  // AUDIT-064: CSP nonce — generate per-request nonce for script-src
+  const nonce = crypto.randomUUID();
+  const isDev = process.env.NODE_ENV === 'development';
+  const scriptSrc = isDev
+    ? `'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}'`
+    : `'self' 'nonce-${nonce}'`;
+  const csp = [
+    `default-src 'self'`,
+    `script-src ${scriptSrc}`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' blob: data: https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id https://images.unsplash.com`,
+    `font-src 'self'`,
+    `connect-src 'self' https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id`,
+    `frame-ancestors 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+  ].join('; ');
+
+  finalResponse.headers.set('Content-Security-Policy', csp);
+  finalResponse.headers.set('x-nonce', nonce);
+
+  return finalResponse;
 }
 
 export const config = {

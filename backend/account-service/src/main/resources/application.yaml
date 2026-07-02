@@ -23,26 +23,16 @@ spring:
   datasource:
     # Primary datasource for write operations
     primary:
-      jdbc-url: ${DB_URL}
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
       driver-class-name: org.postgresql.Driver
       hikari:
-        # Pool configuration - Formula: cores * 2 + effective_spindle_count
         maximum-pool-size: 20
         minimum-idle: 10
-        # Connection timeout
         connection-timeout: 30000
-        # Idle timeout (10 minutes)
         idle-timeout: 600000
-        # Max lifetime (30 minutes)
         max-lifetime: 1800000
-        # Connection validation
         connection-test-query: SELECT 1
         validation-timeout: 5000
-        # Performance tuning
         auto-commit: false
-        # Leak detection (60 seconds)
         leak-detection-threshold: 60000
         pool-name: primary-pool
     # Read replica datasource for reporting/analytics queries
@@ -53,7 +43,6 @@ spring:
       password: ${READ_REPLICA_PASSWORD}
       driver-class-name: org.postgresql.Driver
       hikari:
-        # Larger pool for reads (typically 2x primary)
         maximum-pool-size: 40
         minimum-idle: 20
         connection-timeout: 30000
@@ -77,13 +66,10 @@ spring:
           batch_size: 20
           order_inserts: true
           order_updates: true
-        # Query optimization
         generate_statistics: false
         use_sql_comments: true
-        # Connection pool optimization
         connection:
           provider_disables_autocommit: true
-        # Second-level cache (optional)
         cache:
           use_second_level_cache: false
           use_query_cache: false
@@ -93,7 +79,6 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: true
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     consumer:
       group-id: account-service-group
       auto-offset-reset: earliest
@@ -111,8 +96,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          jws-algorithm: RS256
   cache:
     redis:
       time-to-live: 300000
@@ -141,14 +125,6 @@ management:
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
-  otlp:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    headers:
-      Authorization:
-  zipkin:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
   metrics:
     export:
       prometheus:
@@ -210,13 +186,9 @@ resilience4j:
       dukcapilService:
         max-concurrent-calls: 50
         max-wait-duration: 2s
-# Application Configuration
 payu:
-  gateway:
-    url: ${GATEWAY_URL:http://localhost:8080}
   kyc:
     auto-approve-score: 80
-  # Resilience Configuration
   resilience:
     enabled: true
     circuit-breaker:
@@ -256,7 +228,6 @@ payu:
           max-attempts: 2
         bulkhead:
           max-concurrent-calls: 10
-  # Security Configuration
   security:
     enabled: true
     encryption-enabled: true
@@ -301,12 +272,9 @@ payu:
         - KYC_REJECT
   cache:
     enabled: true
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      pool-size: 20
-      timeout: 5s
-      command-timeout: 3s
+    pool-size: 20
+    timeout: 5s
+    command-timeout: 3s
     default-ttl: 5m
     cache-warming:
       enabled: true
@@ -334,14 +302,12 @@ payu:
       prefix: cache
       percentiles: true
       histogram: true
-# Logging
 logging:
   level:
     id.payu.account: ${LOG_LEVEL:INFO}
     org.springframework.security: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-# OpenAPI Documentation
 springdoc:
   api-docs:
     path: /api-docs
@@ -349,4 +315,3 @@ springdoc:
     path: /swagger-ui.html
   show-actuator: true
   packages-to-scan: id.payu.account
-

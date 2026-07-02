@@ -2,11 +2,13 @@ server:
   port: ${PORT:8080}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILE:local}
   application:
     name: partner-service
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_partner}
-    username: ${DB_USERNAME:payu}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
@@ -21,10 +23,10 @@ spring:
   # tools.jackson.databind.SerializationFeature enum fails in SB 4.1.0 (would need SCREAMING_SNAKE_CASE).
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: partner-service
       auto-offset-reset: latest

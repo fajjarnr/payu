@@ -2,10 +2,12 @@ server:
   port: ${PORT:8080}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILE:local}
   application:
     name: backoffice-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME:payu_backoffice}}
     username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:payu}}
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
@@ -22,14 +24,14 @@ spring:
     baseline-on-migrate: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
 
 logging:
   level:

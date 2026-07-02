@@ -3,12 +3,13 @@ server:
 
 spring:
   profiles:
+    active: ${SPRING_PROFILE:local}
     include: grpc
 
   # Database Configuration
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/billingdb}
-    username: ${DB_USERNAME:postgres}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:
@@ -26,7 +27,7 @@ spring:
 
   # Kafka Configuration
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -45,8 +46,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
 
   # REST Client for Wallet Service
   web:
@@ -143,7 +144,7 @@ payu:
   grpc:
     clients:
       wallet-service:
-        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
+        address: ${WALLET_GRPC_ADDRESS}
   outbox:
     enabled: true
     publisher:
@@ -195,4 +196,4 @@ spring:
   flyway:
     enabled: false
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092} # Use testcontainers for tests
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS} # Use testcontainers for tests

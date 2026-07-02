@@ -16,7 +16,7 @@ quarkus:
   # Database
   datasource:
     db-kind: postgresql
-    username: ${DB_USERNAME:postgres}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     jdbc:
       url: ${DB_URL:jdbc:postgresql://localhost:5432/bifast_simulator}
@@ -42,7 +42,7 @@ quarkus:
   otel:
     exporter:
       otlp:
-        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+        endpoint: ${OTEL_ENDPOINT}
     resource:
       attributes:
         - service.name=bi-fast-simulator

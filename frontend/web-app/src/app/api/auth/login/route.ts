@@ -34,8 +34,13 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 /**
- * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
- * Extracts user claims from the Keycloak access token.
+ * Decode JWT payload without verifying signature.
+ *
+ * AUDIT-072 DECISION: BFF trusts gateway response — JWT signature verification
+ * happens at gateway-service (Quarkus OIDC filter + Keycloak JWKS). BFF→gateway
+ * runs inside cluster network. When mTLS enforced (GAP-8/OCP-007), this path is
+ * fully secured. Duplicating sig verification here adds latency + JWKS fetch
+ * dependency with zero security gain (BFF never receives tokens from untrusted source).
  */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {

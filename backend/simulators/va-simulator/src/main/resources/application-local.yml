@@ -1,0 +1,46 @@
+# Environment-specific configuration for Local Development
+spring:
+  cloud:
+    vault:
+      enabled: false  # Disabled for local dev by default
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_va-simulators}
+    username: ${DATABASE_USERNAME:payu}
+    password: ${DATABASE_PASSWORD:payu_dev_secret_password_1234}
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_va-simulators}
+      username: ${DB_USERNAME:payu}
+      password: ${DB_PASSWORD:payu_dev_secret_password_1234}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+
+payu:
+  gateway:
+    url: ${GATEWAY_URL:http://localhost:8080}
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    realm: ${KEYCLOAK_REALM:payu}
+    client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-keycloak-dev-client-secret-12345}
+    admin:
+      username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+      password: ${KEYCLOAK_ADMIN_PASSWORD:admin_dev_pass_1234}
+  cache:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans

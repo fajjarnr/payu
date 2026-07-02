@@ -1,0 +1,47 @@
+# Environment-specific configuration for SIT
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://payu-postgres-sit.payu-db-sit.svc.cluster.local:5432/payu_transactions}
+      username: ${DB_USERNAME:payu_sit_app}
+      password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-sit-kafka-bootstrap.payu-messaging-sit.svc.cluster.local:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://payu-keycloak-sit.payu-sso-sit.svc.cluster.local:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://payu-keycloak-sit.payu-sso-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs}
+
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:http://wallet-service-sit:8080}
+  bifast:
+    url: ${SERVICES_BIFAST_URL:http://payu-bifast-simulator.payu-sit.svc:8090}
+  qris:
+    url: ${SERVICES_QRIS_URL:http://payu-qris-simulator.payu-sit.svc:8092}
+  account:
+    url: ${SERVICES_ACCOUNT_URL:http://account-service-sit:8080}
+  rgs:
+    url: ${SERVICES_RGS_URL:http://rgs-service-sit:8080}
+  skn:
+    url: ${SERVICES_SKN_URL:http://skn-service-sit:8080}
+
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service-sit:9090}
+  cache:
+    redis:
+      host: ${REDIS_HOST:payu-redis-sit.payu-cache-sit.svc.cluster.local}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-sit.payu-monitoring-sit.svc.cluster.local:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-sit.payu-monitoring-sit.svc.cluster.local:4317}/v1/spans

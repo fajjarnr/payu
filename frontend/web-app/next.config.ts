@@ -58,10 +58,7 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: `default-src 'self'; script-src 'self'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval' 'unsafe-inline'" : ''}; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id https://images.unsplash.com; font-src 'self'; connect-src 'self' https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`
-          },
+          // AUDIT-064: CSP moved to middleware.ts for per-request nonce support
           {
             key: 'X-Frame-Options',
             value: 'DENY'

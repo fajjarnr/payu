@@ -2,17 +2,19 @@ server:
   port: ${PORT:8080}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILE:local}
   application:
     name: dispute-service
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:dispute_service}}
-    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:payu}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME}}
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
 
@@ -20,8 +22,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
 
   jpa:
     open-in-view: false
@@ -38,7 +40,7 @@ spring:
     enabled: true
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: dispute-service
       auto-offset-reset: earliest
@@ -94,8 +96,8 @@ payu:
   cache:
     enabled: true
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
 # OpenTelemetry
 otel:
@@ -103,7 +105,7 @@ otel:
     name: ${spring.application.name}
   exporter:
     otlp:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+      endpoint: ${OTEL_ENDPOINT}
   resource:
     attributes:
       - service.name=${spring.application.name}

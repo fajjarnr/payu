@@ -5,19 +5,16 @@ spring:
   application:
     name: transaction-service
   profiles:
+    active: ${SPRING_PROFILE:local}
     include: grpc
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          jws-algorithm: RS256
   datasource:
     # Primary datasource for write operations
     primary:
-      jdbc-url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/payu_transactions
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
       driver-class-name: org.postgresql.Driver
       hikari:
         # Pool configuration
@@ -74,7 +71,6 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -100,19 +96,6 @@ spring:
         heartbeat.interval.ms: 10000
         max.poll.interval.ms: 300000
         max.poll.records: 500
-services:
-  wallet:
-    url: ${SERVICES_WALLET_URL:http://wallet-service:8080}
-  bifast:
-    url: ${SERVICES_BIFAST_URL:http://bifast-service:8080}
-  qris:
-    url: ${SERVICES_QRIS_URL:http://qris-service:8080}
-  account:
-    url: ${SERVICES_ACCOUNT_URL:http://account-service:8080}
-  rgs:
-    url: ${SERVICES_RGS_URL:http://rgs-service:8080}
-  skn:
-    url: ${SERVICES_SKN_URL:http://skn-service:8080}
 management:
   endpoints:
     web:
@@ -137,14 +120,6 @@ management:
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
-  otlp:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    headers:
-      Authorization:
-  zipkin:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
   metrics:
     export:
       prometheus:
@@ -218,10 +193,6 @@ resilience4j:
           - java.net.ConnectException
 # PayU Configuration
 payu:
-  grpc:
-    clients:
-      wallet-service:
-        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
   events:
     enabled: true
     kafka:
@@ -249,12 +220,9 @@ payu:
       cron: "0 0 2 * * *"
   cache:
     enabled: true
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      pool-size: 20
-      timeout: 5s
-      command-timeout: 3s
+    pool-size: 20
+    timeout: 5s
+    command-timeout: 3s
     default-ttl: 5m
     cache-warming:
       enabled: true

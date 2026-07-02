@@ -4,10 +4,10 @@ LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-gateway-service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
+# AUDIT-057: Single root block — minimize privileged instruction surface
 USER root
-RUN microdnf update -y && microdnf clean all
-USER root
-RUN useradd -u 1001 payu && \
+RUN microdnf update -y && microdnf clean all && \
+    useradd -u 1001 payu && \
     mkdir -p /deployments && \
     chown -R 1001:0 /deployments
 
@@ -19,5 +19,5 @@ COPY --chown=1001 target/quarkus-app/app/ /deployments/app/
 COPY --chown=1001 target/quarkus-app/quarkus/ /deployments/quarkus/
 EXPOSE 8080
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 CMD curl -sf http://localhost:8080/q/health/live || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 CMD exec 6<>/dev/tcp/localhost/8080 && exec 6>&- || exit 1
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

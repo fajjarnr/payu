@@ -1,0 +1,47 @@
+# Environment-specific configuration for Production
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${DB_URL}  # FAIL-FAST: Must be configured
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
+
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL}
+  bifast:
+    url: ${SERVICES_BIFAST_URL}
+  qris:
+    url: ${SERVICES_QRIS_URL}
+  account:
+    url: ${SERVICES_ACCOUNT_URL}
+  rgs:
+    url: ${SERVICES_RGS_URL}
+  skn:
+    url: ${SERVICES_SKN_URL}
+
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS}
+  cache:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT}/v1/spans

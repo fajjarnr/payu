@@ -1,0 +1,46 @@
+# Environment-specific configuration for Pre-Production
+spring:
+  cloud:
+    vault:
+      enabled: ${VAULT_ENABLED:true}
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://payu-postgres-preprod.payu-db-preprod.svc.cluster.local:5432/payu_api_portal}
+    username: ${DATABASE_USERNAME:payu_preprod_app}
+    password: ${DATABASE_PASSWORD}
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://payu-postgres-preprod.payu-db-preprod.svc.cluster.local:5432/payu_api_portal}
+      username: ${DB_USERNAME:payu_preprod_app}
+      password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-preprod-kafka-bootstrap.payu-messaging-preprod.svc.cluster.local:9092}
+    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-preprod-kafka-bootstrap.payu-messaging-preprod.svc.cluster.local:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:https://sso-preprod.payu.id/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:https://sso-preprod.payu.id/realms/payu/protocol/openid-connect/certs}
+
+payu:
+  gateway:
+    url: ${GATEWAY_URL:https://gateway-preprod.payu.id}
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:https://sso-preprod.payu.id}
+    realm: ${KEYCLOAK_REALM:payu}
+    client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET}
+    admin:
+      username: ${KEYCLOAK_ADMIN_USERNAME}
+      password: ${KEYCLOAK_ADMIN_PASSWORD}
+  cache:
+    redis:
+      host: ${REDIS_HOST:payu-redis-preprod.payu-cache-preprod.svc.cluster.local}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-preprod.payu-monitoring-preprod.svc.cluster.local:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-preprod.payu-monitoring-preprod.svc.cluster.local:4317}/v1/spans

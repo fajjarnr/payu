@@ -11,7 +11,7 @@ quarkus:
           paths: "/public/health,/q/health/*"
           policy: permit
   oidc:
-    auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:payu}
+    auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM}
     client-id: ${OIDC_CLIENT_ID:api-portal-service}
     connection-delay: 30S
     tls:
@@ -53,7 +53,7 @@ quarkus:
       name: api-portal-service
     exporter:
       otlp:
-        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+        endpoint: ${OTEL_ENDPOINT}
     resource:
       attributes:
         - service.name=api-portal-service

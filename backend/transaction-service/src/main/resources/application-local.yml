@@ -1,0 +1,47 @@
+# Environment-specific configuration for Local Development
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_transactions}
+      username: ${DB_USERNAME:payu}
+      password: ${DB_PASSWORD:payu_dev_secret_password_1234}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:http://localhost:8004}
+  bifast:
+    url: ${SERVICES_BIFAST_URL:http://localhost:8090}
+  qris:
+    url: ${SERVICES_QRIS_URL:http://localhost:8092}
+  account:
+    url: ${SERVICES_ACCOUNT_URL:http://localhost:8001}
+  rgs:
+    url: ${SERVICES_RGS_URL:http://localhost:8080}
+  skn:
+    url: ${SERVICES_SKN_URL:http://localhost:8080}
+
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://localhost:9090}
+  cache:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans

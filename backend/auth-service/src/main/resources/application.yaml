@@ -25,14 +25,8 @@ spring:
       resourceserver:
         jwt:
           # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
-          # This mitigates the "none" algorithm attack and ensures asymmetric encryption
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
           jws-algorithm: RS256
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_auth}
-    username: ${DATABASE_USERNAME:payu}
-    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -81,22 +75,7 @@ management:
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
-  otlp:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    headers:
-      Authorization:
-  zipkin:
-    tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
 resilience4j:
-  ratelimiter:
-    instances:
-      loginRateLimiter:
-        limit-for-period: 5
-        limit-refresh-period: 1m
-        timeout-duration: 0s
-        register-health-indicator: true
   circuitbreaker:
     instances:
       keycloakService:
@@ -128,14 +107,6 @@ payu:
   biometric:
     challenge-expiry-seconds: 300
     max-registrations-per-user: 5
-  keycloak:
-    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
-    realm: ${KEYCLOAK_REALM:payu}
-    client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET}
-    admin:
-      username: ${KEYCLOAK_ADMIN_USERNAME}
-      password: ${KEYCLOAK_ADMIN_PASSWORD}
   logging:
     service-name: ${spring.application.name}
     service-version: "1.0.0"
@@ -143,8 +114,6 @@ payu:
   cache:
     enabled: true
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
       pool-size: 20
       timeout: 5s
     default-ttl: 5m
@@ -167,4 +136,3 @@ springdoc:
     path: /swagger-ui.html
   show-actuator: true
   packages-to-scan: id.payu.auth
-

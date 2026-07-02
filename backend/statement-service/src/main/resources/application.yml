@@ -42,7 +42,7 @@ spring:
           jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}/realms/payu/protocol/openid-connect/certs
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -61,8 +61,8 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       timeout: 2000ms
       lettuce:
         pool:
@@ -89,7 +89,7 @@ statement:
 # Service URLs
 services:
   wallet:
-    url: ${SERVICES_WALLET_URL:http://wallet-service:8080}
+    url: ${SERVICES_WALLET_URL}
   transaction:
     url: ${SERVICES_TRANSACTION_URL:http://transaction-service:8080}
 
@@ -98,7 +98,7 @@ payu:
   grpc:
     clients:
       wallet-service:
-        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
+        address: ${WALLET_GRPC_ADDRESS}
 
 # OpenTelemetry Configuration
 management:

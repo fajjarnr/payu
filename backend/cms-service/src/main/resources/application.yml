@@ -14,8 +14,8 @@ spring:
   profiles:
     active: ${SPRING_PROFILE:local}
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_cms}
-    username: ${DATABASE_USERNAME:payu}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -47,8 +47,8 @@ spring:
     validate-on-migrate: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD:}
       timeout: 2000ms
       lettuce:
@@ -64,7 +64,7 @@ spring:
       time-to-live: 600000
       cache-null-values: false
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BROKERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -84,8 +84,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
 
 # Resilience4j Configuration
 resilience4j:
@@ -114,8 +114,8 @@ payu:
   cache:
     enabled: true
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       pool-size: 20
       timeout: 5s
     default-ttl: 5m

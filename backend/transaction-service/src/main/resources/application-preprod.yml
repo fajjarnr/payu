@@ -1,0 +1,47 @@
+# Environment-specific configuration for Pre-Production
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://payu-postgres-preprod.payu-db-preprod.svc.cluster.local:5432/payu_transactions}
+      username: ${DB_USERNAME:payu_preprod_app}
+      password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-preprod-kafka-bootstrap.payu-messaging-preprod.svc.cluster.local:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:https://sso-preprod.payu.id/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:https://sso-preprod.payu.id/realms/payu/protocol/openid-connect/certs}
+
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:https://wallet-service-preprod.payu.id}
+  bifast:
+    url: ${SERVICES_BIFAST_URL:https://api-preprod.bifast.or.id/v1}
+  qris:
+    url: ${SERVICES_QRIS_URL:https://api-preprod.qris-processor.co.id/v1}
+  account:
+    url: ${SERVICES_ACCOUNT_URL:https://account-service-preprod.payu.id}
+  rgs:
+    url: ${SERVICES_RGS_URL:https://rgs-service-preprod.payu.id}
+  skn:
+    url: ${SERVICES_SKN_URL:https://skn-service-preprod.payu.id}
+
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service-preprod.payu.id:9090}
+  cache:
+    redis:
+      host: ${REDIS_HOST:payu-redis-preprod.payu-cache-preprod.svc.cluster.local}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-preprod.payu-monitoring-preprod.svc.cluster.local:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-preprod.payu-monitoring-preprod.svc.cluster.local:4317}/v1/spans

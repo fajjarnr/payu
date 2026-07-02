@@ -3,12 +3,14 @@ server:
   shutdown: graceful
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILE:local}
   application:
     name: product-catalog-service
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/payu_products
-    username: ${DB_USERNAME:postgres}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/payu_products
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -47,7 +49,7 @@ spring:
     validate-on-migrate: true
 
   kafka:
-    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BROKERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -61,8 +63,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER}
+          jwk-set-uri: ${OIDC_JWK_SET_URI}
 
 management:
   endpoints:
@@ -88,7 +90,7 @@ management:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
   otlp:
     tracing:
-      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+      endpoint: ${OTEL_ENDPOINT}
   metrics:
     export:
       prometheus:
@@ -111,8 +113,8 @@ payu:
   cache:
     enabled: true
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       pool-size: 20
       timeout: 5s
       command-timeout: 3s

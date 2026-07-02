@@ -1,0 +1,47 @@
+# Environment-specific configuration for UAT
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://payu-postgres-uat.payu-db-uat.svc.cluster.local:5432/payu_transactions}
+      username: ${DB_USERNAME:payu_uat_app}
+      password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:payu-kafka-uat-kafka-bootstrap.payu-messaging-uat.svc.cluster.local:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:https://sso-uat.payu.id/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:https://sso-uat.payu.id/realms/payu/protocol/openid-connect/certs}
+
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:https://wallet-service-uat.payu.id}
+  bifast:
+    url: ${SERVICES_BIFAST_URL:https://api-sandbox.bifast.or.id/v1}
+  qris:
+    url: ${SERVICES_QRIS_URL:https://api-sandbox.qris-processor.co.id/v1}
+  account:
+    url: ${SERVICES_ACCOUNT_URL:https://account-service-uat.payu.id}
+  rgs:
+    url: ${SERVICES_RGS_URL:https://rgs-service-uat.payu.id}
+  skn:
+    url: ${SERVICES_SKN_URL:https://skn-service-uat.payu.id}
+
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service-uat.payu.id:9090}
+  cache:
+    redis:
+      host: ${REDIS_HOST:payu-redis-uat.payu-cache-uat.svc.cluster.local}
+      port: ${REDIS_PORT:6379}
+
+management:
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-uat.payu-monitoring-uat.svc.cluster.local:4317}
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://otel-collector-uat.payu-monitoring-uat.svc.cluster.local:4317}/v1/spans
