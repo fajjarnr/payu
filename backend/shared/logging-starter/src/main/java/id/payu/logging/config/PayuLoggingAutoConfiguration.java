@@ -5,7 +5,6 @@ import id.payu.logging.filter.CorrelationIdWebFilter;
 import id.payu.logging.filter.RequestLoggingFilter;
 import id.payu.logging.filter.TraceIdFilter;
 import id.payu.logging.filter.TraceIdWebFilter;
-import id.payu.logging.util.MdcUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -82,15 +81,6 @@ public class PayuLoggingAutoConfiguration {
         registration.setName("traceIdFilter");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
         return registration;
-    }
-
-    /**
-     * MDC utility bean for programmatic MDC manipulation.
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public MdcUtil mdcUtil() {
-        return new MdcUtil();
     }
 
     /**
