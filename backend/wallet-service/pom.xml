@@ -113,13 +113,6 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- PayU Mapper Starter — MapStruct Entity-Domain Mapping (IMP-069) -->
-        <dependency>
-            <groupId>id.payu</groupId>
-            <artifactId>mapper-starter</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
         <!-- PayU gRPC Starter -->
         <dependency>
             <groupId>id.payu</groupId>

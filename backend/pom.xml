@@ -59,7 +59,6 @@
         <module>shared/outbox-starter</module>
         <module>shared/saga-starter</module>
         <module>shared/archunit-starter</module>
-        <module>shared/mapper-starter</module>
         <module>shared/grpc-starter</module>
         <module>shared/rest-client-starter</module>
         <module>shared/quarkus-api-commons</module>
@@ -143,11 +142,6 @@
             <dependency>
                 <groupId>id.payu</groupId>
                 <artifactId>saga-starter</artifactId>
-                <version>${payu.shared.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>id.payu</groupId>
-                <artifactId>mapper-starter</artifactId>
                 <version>${payu.shared.version}</version>
             </dependency>
             <dependency>
