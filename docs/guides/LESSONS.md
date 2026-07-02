@@ -51,6 +51,42 @@ void trustAllCertsFieldMustNotExist() {
 
 ---
 
+## L-087: ARCH-006 Phase 2 — Platform-Wide Virtual Threads + OpenRewrite Centralization (2026-07-02)
+
+**Date**: 2026-07-02
+**Domain**: Spring Boot 4.1.0 / Jakarta EE 11 / Architecture / Platform
+**Context**: Phase 2 of ARCH-006 (Spring Boot 4.1.0 platform migration). Statement-service pilot complete (51/51 tests, VT enabled). Need to roll VT, OpenRewrite, and props-migrator across all 17 Spring Boot services + template.
+
+**Root Causes and Fixes**:
+
+1. **Virtual Threads only on statement-service**: `spring.threads.virtual.enabled: true` absent from 16 other Spring Boot services and blank-slate account-service/auth-service. **Fix**: Batch-insert VT config into all 17 `application.yml` files under `spring:` block. Account-service + auth-service had no root YAML → created minimal YAMLs with VT only. cms-service had `tomcat.threads` config overlapping → inserted VT above `application.name`, separate from tomcat threads block.
+
+2. **OpenRewrite plugin duplication**: `statement-service/pom.xml` had full rewrite-maven-plugin with recipes, versions, and dependencies inline — 30+ lines that would be duplicated if copied to every service. **Fix**: Move plugin to parent `<pluginManagement>` with `<skip>true</skip>` by default. Services opt-in via `<skip>false</skip>`. statement-service POM de-duplicated from 30 lines to 6.
+
+3. **spring-boot-properties-migrator missing platform-wide**: Only statement-service had it. **Fix**: Add `spring-boot-properties-migrator:4.1.0` to parent `<dependencyManagement>` as runtime scope. Services inherit or declare their own.
+
+4. **Absolute path in configLocation**: Initial parent pluginMgmt used `configLocation` pointing to `/home/ubuntu/payu/backend/rewrite.yml` → breaks multi-machine builds. **Fix**: Inline `<activeRecipes>` directly in parent pluginMgmt; remove the `rewrite.yml` file. Plugin OOTB supports inline recipes — no external file needed.
+
+**Lessons**:
+
+1. **Parent pluginManagement with skip=true is the cleanest opt-in pattern**: Shared plugin config lives in parent, `<skip>true</skip>` prevents accidental activation. Services opt-in with minimal override (`<configuration><skip>false</skip></configuration>`). Centralizes version management without forced execution.
+
+2. **YAML batch insert needs collision awareness**: `sed -i '/^spring:$/a\...'` works for simple cases but breaks when `spring:` appears multiple times or when a service already has `threads:` blocks (e.g. `tomcat.threads`). Manual verification required per service.
+
+3. **Template skeleton should mirror platform defaults**: Updated `.agents/resources/templates/payu-microservice-template/skeleton/src/main/resources/application.yml` to include VT config — new services created from template get VT out of the box.
+
+4. **`mvn test-compile -pl <comma-separated>` is the fastest safety net**: Running `test-compile` (not `test`) on all 17 services in one pass validates compilation across all dependencies without executing test suites — caught classpath issues early.
+
+**Verification**:
+- 17 Spring Boot services + 13 shared starters: `mvn test-compile` → BUILD SUCCESS (all modules)
+- statement-service POM rewritten to use parent-managed plugin → identical behavior
+- Zero production code changes (VT is a YAML-only platform toggle in SB 4.1.0)
+
+**Commits**:
+- `2d1ec619` chore(arch-006): enable Virtual Threads platform-wide, add OpenRewrite + props-migrator to parent
+
+---
+
 ## L-086: Rule #4 Enforcement, System.getenv Refactor, and ARTEMIS Fail-Fast — Starter Dependency Hygiene + ObjectMapper Test Trap (2026-07-01)
 
 **Date**: 2026-07-01

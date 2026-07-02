@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.73] - 2026-07-02
+
+### Added
+
+- **ARCH-006 Phase 2: Virtual Threads platform-wide**. Enabled `spring.threads.virtual.enabled=true` on all 17 Spring Boot services (backoffice, billing, cms, compliance, dispute, fx, integration, investment, lending, partner, product-catalog, promotion, support, transaction, wallet, account, auth) + microservice template skeleton.
+- **OpenRewrite plugin centralized in parent POM**. Moved rewrite-maven-plugin to parent `<pluginManagement>` with `<skip>true</skip>` default; services opt-in by setting `<skip>false</skip>`. Deduplicated statement-service POM.
+- **spring-boot-properties-migrator in parent depMgmt**. Added `spring-boot-properties-migrator:4.1.0` (runtime) to parent `<dependencyManagement>` for SB 4.1.0 deprecated-property analysis during startup.
+
+### Changed
+
+- **ARCH-006 Phase 2 marked complete in TODOS.md**. Phase 2 checklist items (OpenRewrite, parent POM update, props-migrator, Virtual Threads) checked off as done.
+
+### Build
+
+- `mvn test-compile` → BUILD SUCCESS across all 17 Spring Boot services + 13 shared starters + 5 Quarkus simulators (zero regressions)
+
+---
+
 ## [1.8.72] - 2026-07-02
 
 ### Security
