@@ -67,24 +67,6 @@ public class OutboxPublisher {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    /**
-     * Backward-compatible constructor for tests and contexts without explicit
-     * PlatformTransactionManager. Falls back to legacy send-then-mark behavior
-     * since programmatic transaction control is unavailable.
-     *
-     * @deprecated Use the 4-arg constructor with PlatformTransactionManager for
-     *             mark-before-send double-publish prevention (BUG-SHARED-004).
-     */
-    @Deprecated
-    public OutboxPublisher(OutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate,
-                           MeterRegistry meterRegistry) {
-        this.outboxRepository = outboxRepository;
-        this.kafkaTemplate = kafkaTemplate;
-        this.meterRegistry = meterRegistry;
-        this.transactionTemplate = null;
-    }
-
     @Value("${payu.outbox.publisher.batch-size:100}")
     private int batchSize;
 
@@ -145,11 +127,7 @@ public class OutboxPublisher {
         }
 
         try {
-            if (transactionTemplate != null) {
-                pollAndPublishWithMarkBeforeSend();
-            } else {
-                pollAndPublishLegacy();
-            }
+            pollAndPublishWithMarkBeforeSend();
         } catch (Exception e) {
             log.error("Error during outbox polling", e);
             Counter.builder("outbox.poll.errors")
@@ -214,52 +192,6 @@ public class OutboxPublisher {
                 .register(meterRegistry));
 
         log.info("Outbox batch processed: {} succeeded, {} failed", successCount, failureCount);
-    }
-
-    /**
-     * Legacy send-then-mark behavior (used when PlatformTransactionManager is unavailable).
-     * @deprecated Subject to double-publish risk. Use mark-before-send with TransactionManager.
-     */
-    @Deprecated
-    @Transactional
-    private void pollAndPublishLegacy() {
-        List<OutboxEvent> unpublishedEvents = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
-
-        if (unpublishedEvents.isEmpty()) {
-            pendingEventsGauge.set(0);
-            return;
-        }
-
-        pendingEventsGauge.set(unpublishedEvents.size());
-        log.debug("Found {} unpublished outbox events to process (legacy mode)", unpublishedEvents.size());
-
-        Timer.Sample batchTimer = Timer.start(meterRegistry);
-        int successCount = 0;
-        int failureCount = 0;
-
-        for (OutboxEvent event : unpublishedEvents) {
-            try {
-                sendToKafka(event);
-                outboxRepository.markAsPublished(event.getId(), Instant.now());
-                successCount++;
-            } catch (Exception e) {
-                failureCount++;
-                String errorMessage = e.getMessage();
-                if (errorMessage != null && errorMessage.length() > 1000) {
-                    errorMessage = errorMessage.substring(0, 1000);
-                }
-                outboxRepository.incrementRetryCount(event.getId(), errorMessage);
-                log.warn("Failed to publish outbox event {} (retry {}/{}): {}",
-                        event.getId(), event.getRetryCount() + 1, maxRetries, errorMessage);
-            }
-        }
-
-        batchTimer.stop(Timer.builder("outbox.publish.batch")
-                .description("Time taken to process a batch of outbox events")
-                .tag("status", "completed")
-                .register(meterRegistry));
-
-        log.info("Outbox batch processed (legacy): {} succeeded, {} failed", successCount, failureCount);
     }
 
     /**

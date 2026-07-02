@@ -56,7 +56,8 @@ class OutboxPublisherTest {
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry);
+        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry,
+                mock(org.springframework.transaction.PlatformTransactionManager.class));
 
         // Set @Value fields via reflection
         ReflectionTestUtils.setField(publisher, "batchSize", 100);

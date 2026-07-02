@@ -37,16 +37,6 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         # Extract or generate correlation ID
         correlation_id = self._get_correlation_id(request)
 
-        # Add to response headers
-        response = await call_next(request)
-        response.headers[self.header_name] = correlation_id
-
-        return response
-
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Extract or generate correlation ID
-        correlation_id = self._get_correlation_id(request)
-
         # Bind to structlog context for this request
         # This ensures all logs during request processing include correlation_id
         structlog.contextvars.clear_contextvars()

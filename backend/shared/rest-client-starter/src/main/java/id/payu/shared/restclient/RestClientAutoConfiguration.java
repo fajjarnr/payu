@@ -81,8 +81,10 @@ public class RestClientAutoConfiguration {
 
     /**
      * Creates a dedicated {@link CircuitBreakerRegistry} for REST client calls.
-     * This is separate from the general resilience-starter registry to allow
-     * independent tuning for external HTTP calls.
+     * <p>
+     * ponytail: separate registry per downstream protocol. If throughput matters,
+     * consolidate with resilience-starter's global registry and use per-endpoint
+     * config keys (rest-* ) to keep independent tuning. Track as PON-005.
      */
     @Bean
     @ConditionalOnMissingBean(name = "restClientCircuitBreakerRegistry")

@@ -26,7 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *   <li>WebMvc configuration for interceptor registration</li>
  * </ul>
  * <p>
- * Configuration properties (prefix: <code>payu.fajjjar.my.idempotency</code>):
+ * Configuration properties (prefix: <code>payu.idempotency</code>):
  * <pre>
  * payu:
  *   idempotency:
@@ -41,7 +41,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>
  * To disable auto-configuration:
  * <pre>
- * payu.fajjjar.my.idempotency.enabled=false
+ * payu.idempotency.enabled=false
  * </pre>
  *
  * @see IdempotencyProperties
