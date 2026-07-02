@@ -579,7 +579,7 @@ _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 | 42 | **AUDIT-042** | P1 | Money (Rule #1) | **CLOSED in iter-70**: Created Flyway migration files for all 9 microservices (dispute, backoffice, fx, partner, billing, transaction, wallet, lending, account) to upgrade decimal columns to (19,4), aligning with JPA entity definitions. | `backend/*/src/main/resources/db/migration/V*.sql` |
 | 43 | **AUDIT-043** ✅ CLOSED | ~~P3~~ | Frontend | **CLOSED 2026-07-02**: Upgraded web-app Next.js version to `16.2.9` and ran `npm audit fix` to resolve security issues without breaking changes. | `next` bumped to `16.2.9`. |
 | 44 | **AUDIT-044** ✅ CLOSED | ~~P2~~ | Architecture | **CLOSED 2026-07-02**: Audited all 21 backend services. Grep confirmed 0 invalid `javax.*` imports (only standard Java library `javax.sql.DataSource` and compiler `javax.annotation.processing.Generated` remain). Fully Jakarta EE 11 compliant. | ARCH-006 phase 1 says "Check if all `javax.*` imports have been fully removed". Verified. |
-| 45 | **AUDIT-045** | P3 | Testing | **web-app still has 10 real lint issues** (WEBAPP-LINT-002 partial closure). 4 `<img>` → `<Image>` (next/image perf), 2 img `alt` props (a11y), 3 `useCallback` deps (react-hooks/exhaustive-deps). Per Sprint 2 plan. | Existing ticket WEBAPP-LINT-002 95% closed. |
+| 45 | **AUDIT-045** ✅ CLOSED | ~~P3~~ | Testing | **CLOSED 2026-07-02**: Verified that `npm run lint` compiles cleanly with 0 warnings/errors. Production code has 0 `<img>` tags (fully migrated to Next.js `<Image>` components) and all React hooks have correct dependency arrays. | `npm run lint` verified. |
 
 ### context7 verification summary
 
