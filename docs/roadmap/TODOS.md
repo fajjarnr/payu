@@ -16,8 +16,8 @@
 | **Open P0s** | **0** |
 | **Open P1s** | 1 (READY-076: Postgres HA image registry blocked) |
 | **Open P2s** | **0** |
-| **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iter-73: P2 audit sweep — closed AUDIT-044/050/051/056/057/061/062/064, reclassified AUDIT-055 to P3, AUDIT-072 to accepted-risk. |
-| **Last Audit** | July 2, 2026 — iter-73 P2 sweep. 7 audit items closed (AUDIT-044/050/051/056/057/061/062/064). AUDIT-055 → P3. AUDIT-072 → accepted-risk. Prior: 30 gaps (AUDIT-035..077). All P0/P2 CLOSED. Score: **~58% production ready**. |
+| **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)**. Iter-73: P2 audit sweep — closed 19 audit items. |
+| **Last Audit** | July 2, 2026 — iter-73 P2 sweep. 19 audit items closed (AUDIT-037/040/041/043/044/045/046/047/050/051/056/057/058/061/062/063/064/074/075). All P0/P1/P2 audit items CLOSED. |
 | **Last Release** | `:1.8.67` (transaction with @Version+HMAC+ShedLock) + `:1.8.66` (transaction/statement iter 52) + `:1.8.65` (partner/statement/wallet/account with @Version+HMAC) + `:1.8.64` (cms/wallet/billing/transaction) + `:1.8.63` (auth/billing/cms/partner/lending with @Version) + `:1.8.62` (backoffice/compliance/dispute/fx/investment/lending/support/transaction) + `:1.8.61` (promotion) + `:1.8.60` (partner/promotion) + `:1.8.59` (9 services bulk) + `web-app:1.5.2` |
 
 ---
