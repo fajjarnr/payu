@@ -139,14 +139,10 @@
 
 ---
 
-## 📝 Docs Completed (No Cluster Needed)
+## 📝 Docs Backlog (No Cluster Needed)
 
 | Key | Doc | Status |
 |:---|:---|:---|
-| **INFRA-020** | `docs/operations/INCIDENT_RESPONSE.md` — Severity P1-P4 + escalation path + postmortem template + on-call rotation | ✅ Done |
-| **DEVSECOPS-013** | `docs/operations/CHATOPS.md` — Slack bot commands (`/payu-hotfix`, `/payu-rollback`, `/payu-status`, `/payu-incident`, `/payu-rollout`) + architecture + audit trail spec | ✅ Done |
-| **DEVSECOPS-009** | `docs/security/PENTEST_SCHEDULE.md` — Quarterly pen test calendar + CAB approval workflow + remediation SLA + pre-test checklist | ✅ Done |
-| **DEVSECOPS-004** | Security headers di BFF API proxy (`route.ts`) + client middleware (`middleware.ts`) — HSTS, CSP, XFO, XCTO, X-Request-ID | ✅ Done |
 | **DEVSECOPS-010** | ⬜ DNS failover procedure — pending cluster topology confirmation | ⬜ TBD |
 
 ---
