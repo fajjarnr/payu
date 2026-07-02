@@ -410,7 +410,7 @@
 #### Sprint 2 (Week 2-3): Observability — **Debugging Blind Without This**
 - [ ] **GAP-2**: OpenTelemetry → Tempo distributed tracing (READY-019)
 - [ ] **GAP-3**: Prometheus alerting rules (p99 latency, error rate) + Loki E2E (READY-020/021)
-- [ ] **GAP-15**: DLQ path E2E test (READY-016)
+- [x] **GAP-15**: DLQ path E2E test (READY-016) (Closed via EventsAutoConfigurationTest KafkaErrorHandlerTest)
 - [x] **GAP-16**: Kafka topic pattern validation (READY-015) (Closed via GAP-31 outbox validation)
 
 #### Sprint 3 (Week 3-4): Compliance + Testing
