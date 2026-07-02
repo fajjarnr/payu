@@ -158,6 +158,11 @@ export default async function middleware(request: NextRequest) {
 
   finalResponse.headers.set('Content-Security-Policy', csp);
   finalResponse.headers.set('x-nonce', nonce);
+  finalResponse.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  finalResponse.headers.set('X-Frame-Options', 'DENY');
+  finalResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  // ponytail: X-Request-ID on client-side routes mirrors BFF API proxy header
+  finalResponse.headers.set('X-Request-ID', crypto.randomUUID());
 
   return finalResponse;
 }
