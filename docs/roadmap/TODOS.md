@@ -139,8 +139,6 @@
 | READY-012 | Security | `@Sensitive` annotation enforced via ArchUnit |
 | READY-013 | Cache | `GenericJackson2JsonRedisSerializer` config platform-wide |
 | READY-014 | Cache | Cache metrics to Prometheus |
-| READY-015 | Kafka | Validate all `payu.*` topic patterns |
-| READY-016 | Kafka | DLQ path test |
 | READY-017 | AMQ | Test dunning/scheduled billing flow |
 | READY-018 | AMQ | `JmsMessagePublisher.sendWithDelay` E2E |
 | READY-019 | Observability | Distributed tracing (OTel → Tempo) |
