@@ -2,6 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import SupportPage from '@/app/[locale]/support/page';
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const map: Record<string, string> = {
+      title: 'Terminal Bantuan',
+      liveChat: 'Bantuan Langsung',
+      email: 'Protokol Email',
+      phone: 'Panggilan Suara',
+      faqs: 'Repositori Inteligensi',
+    };
+    return map[key] || key;
+  },
+}));
+
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
@@ -59,7 +72,7 @@ describe('SupportPage', () => {
 
   it('should render system status', () => {
     render(<SupportPage />);
-    expect(screen.getByText('Gateway OK')).toBeInTheDocument();
-    expect(screen.getByText('Backend OK')).toBeInTheDocument();
+    expect(screen.getByText('Gateway: —')).toBeInTheDocument();
+    expect(screen.getByText('Backend: —')).toBeInTheDocument();
   });
 });

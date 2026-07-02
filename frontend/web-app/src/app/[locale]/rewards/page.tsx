@@ -1,29 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Star, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock, Loader2 } from 'lucide-react'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useLoyaltyBalance, useLoyaltyPoints, useCashbacks, useReferrals, useReferralSummary, useActivePromotions, useRewardsSummary } from '@/hooks'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { useGamificationSummary, useGamificationStreak, useCheckin } from '@/hooks';
+import { useLoyaltyBalance, useCashbacks, useReferralSummary, useActivePromotions } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import type { LoyaltyBalanceResponse, Cashback, ReferralSummaryResponse, Promotion } from '@/services/PromotionService';
 
 export default function RewardsPage() {
-  const [activeTab, setActiveTab] = useState<'points' | 'cashback' | 'referral'>('points'); // eslint-disable-line @typescript-eslint/no-unused-vars
   const { user, accountId } = useAuthStore();
   const acctId = accountId ?? '';
-  const userId = user?.id ?? '';
   const { data: loyaltyData } = useLoyaltyBalance(acctId);
   const { data: cashbackData } = useCashbacks(acctId);
   const { data: referralData } = useReferralSummary(acctId);
   const { data: promotionsData } = useActivePromotions();
-  const { data: gamificationData } = useGamificationSummary(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const { data: streakData } = useGamificationStreak(userId); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const checkinMutation = useCheckin(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // BUG-FE-023: Use real data with skeleton/empty state instead of hardcoded fake data
   const loyaltyBalance = loyaltyData as LoyaltyBalanceResponse | undefined;

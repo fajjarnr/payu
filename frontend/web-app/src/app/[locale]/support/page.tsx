@@ -6,12 +6,10 @@ import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileTex
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
-import { useTrainingStatus } from '@/hooks';
 import { useTranslations } from 'next-intl';
 
 export default function SupportPage() {
   const t = useTranslations('support');
-  const { data: trainingStatus } = useTrainingStatus(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const supportChannels = [
     { label: t('liveChat'), desc: t('liveChatDesc'), icon: MessageCircle, action: t('contactUs'), color: 'primary' },
