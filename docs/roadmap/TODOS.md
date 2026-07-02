@@ -20,7 +20,7 @@
 | **Open P0s** | **0** |
 | **Open P1s** | 1 (READY-076) |
 | **Open P2s** | 0 |
-| **Open P3s** | 11 (AUDIT-096, 098-105, 107, 110) |
+| **Open P3s** | 9 (AUDIT-096, 098-103, 105, 110) |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)** |
 | **Last Release** | `:1.8.77` — ops framework, security headers, TODOS consolidation |
 | **Last Audit** | July 2, 2026 — Ponytail deep audit. 33 findings (5 P1, 13 P2, 15 P3). ~3,000 lines dead code, ~8 unused npm deps, ~95 single-impl ports, 7 orphaned ports, ~58 duplicate configs. |
@@ -166,19 +166,17 @@
 | AUDIT-101 | **PON-024** | dedup | 8 copies of `DataSourceConfiguration.java`. Extract to shared persistence starter |
 | AUDIT-102 | **PON-025** | dedup | 6 copies of `RestTemplateConfig.java`. Extract to shared HTTP client config |
 | AUDIT-103 | **PON-026** | jms-starter | `JmsMessagePublisher` — 36-line thin wrapper over `JmsTemplate`. Inject `JmsTemplate` directly |
-| AUDIT-104 | **PON-027** | logging | `MdcUtil` wraps `org.slf4j.MDC` stdlib methods. Delete, use `MDC.putCloseable()` (SLF4J 2.x) |
 | AUDIT-105 | **PON-028** | python | `get_logger()` in `logger.py` — 1-line structlog wrapper. Use `structlog.get_logger()` directly |
-| AUDIT-107 | **PON-030** | web-app | `@radix-ui/react-visually-hidden` (devDeps) — never imported anywhere. Remove from package.json |
 | AUDIT-110 | **PON-033** | web-app | ~14 pages with unused hook imports marked `// eslint-disable-line @typescript-eslint/no-unused-vars` |
 
 ### 📊 Audit Stats
 
 | Metric | Count |
 |:---|:---:|
-| Total findings | 11 |
+| Total findings | 9 |
 | P1 (critical) | 0 |
 | P2 (important) | 0 |
-| P3 (nice-to-have) | 11 |
+| P3 (nice-to-have) | 9 |
 | Estimated dead code (web-app) | ~3,000+ lines |
 | Unused npm packages | ~8 (`jest*`, `gsap`, `date-fns`, `@radix-ui/react-visually-hidden`, `@dnd-kit/*` in devDeps) |
 | Duplicate config files (backend) | ~58 across services |
