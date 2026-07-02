@@ -5,6 +5,9 @@ server:
   shutdown: graceful
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: investment-service
   profiles:

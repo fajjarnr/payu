@@ -2,6 +2,9 @@ server:
   port: ${{ values.port }}
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: ${{ values.service_name }}
 

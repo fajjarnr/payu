@@ -2,6 +2,9 @@ server:
   port: ${PORT:8080}
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   profiles:
     active: ${SPRING_PROFILE:local}
     include: grpc
@@ -163,6 +166,9 @@ payu:
 ---
 # Development Profile
 spring:
+  threads:
+    virtual:
+      enabled: true
   config:
     activate:
       on-profile: dev
@@ -176,6 +182,9 @@ spring:
 ---
 # Test Profile
 spring:
+  threads:
+    virtual:
+      enabled: true
   config:
     activate:
       on-profile: test

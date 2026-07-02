@@ -9,6 +9,9 @@ server:
       min-spare: 10
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: cms-service
   profiles:

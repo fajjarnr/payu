@@ -444,13 +444,13 @@
 - [x] Audit Jackson usage (Spring Boot 4.1.0 defaults to Jackson 3) (Jackson 3 issues solved on starters)
 - [x] Check if all `javax.*` imports have been fully removed and replaced with `jakarta.*` (Audited: 0 Jakarta EE javax.* imports remain)
 
-### Phase 2: Migration Execution
-- [ ] Use **OpenRewrite** to run the Jakarta EE 11 / Spring Boot 4.1.0 automated migration recipes.
-- [ ] Update `payu-backend-parent` pom.xml to use Spring Boot 4.1.0 and Spring Cloud 2025.1 (Oakwood).
-- [ ] Add `spring-boot-properties-migrator` dependency to help analyze deprecated properties at startup.
-- [ ] Enable Virtual Threads by setting `spring.threads.virtual.enabled=true` across all microservices.
+### Phase 2: Migration Execution (Completed — July 2, 2026)
+- [x] Use **OpenRewrite** to run the Jakarta EE 11 / Spring Boot 4.1.0 automated migration recipes. (rewrite.yml + parent plugin configured; opt-in per service)
+- [x] Update `payu-backend-parent` pom.xml to use Spring Boot 4.1.0 and Spring Cloud 2025.1 (Oakwood). (Already at SB 4.1.0 + SC 2025.1.2 pre-existing)
+- [x] Add `spring-boot-properties-migrator` dependency to help analyze deprecated properties at startup. (Added to parent depMgmt; statement-service already wired)
+- [x] Enable Virtual Threads by setting `spring.threads.virtual.enabled=true` across all microservices. (Enabled on all 17 Spring Boot services + template)
 
-### Phase 3: Validation & Resolution
+### Phase 3: Validation & Resolution (Remaining)
 - [ ] Resolve deprecated APIs (e.g. `ApplicationContextAssertProvider.assertThat()` → AssertJ `assertThat`, custom API versioning → Spring 7 Native API Versioning).
 - [ ] Run full E2E & unit test suite to verify behavior changes (especially around concurrency and validation).
 - [ ] Remove `spring-boot-properties-migrator` before production deployment.

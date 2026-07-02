@@ -3,6 +3,9 @@ server:
   shutdown: graceful
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   profiles:
     active: ${SPRING_PROFILE:local}
   application:

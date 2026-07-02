@@ -198,6 +198,14 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Spring Boot Properties Migrator (ARCH-006: SB 4.1.0 migration aid; remove before production) -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-properties-migrator</artifactId>
+                <version>4.1.0</version>
+                <scope>runtime</scope>
+            </dependency>
+
             <!-- Resilience4j BOM (manages spring6 + spring-boot3 + core artifacts) -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -444,6 +452,30 @@
                             <param>id.payu.*Application</param>
                         </excludedClasses>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.openrewrite.maven</groupId>
+                    <artifactId>rewrite-maven-plugin</artifactId>
+                    <version>5.43.0</version>
+                    <configuration>
+                        <activeRecipes>
+                            <recipe>org.openrewrite.java.spring.boot3.SpringBoot3BestPractices</recipe>
+                        </activeRecipes>
+                        <failOnDryRunResults>false</failOnDryRunResults>
+                        <skip>true</skip>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.openrewrite.recipe</groupId>
+                            <artifactId>rewrite-spring</artifactId>
+                            <version>5.21.0</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.openrewrite.recipe</groupId>
+                            <artifactId>rewrite-migrate-java</artifactId>
+                            <version>2.27.0</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>

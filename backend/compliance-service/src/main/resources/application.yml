@@ -7,6 +7,9 @@ server:
     context-path: /
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: compliance-service
   profiles:

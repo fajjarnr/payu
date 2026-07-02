@@ -2,6 +2,9 @@ server:
   port: ${PORT:8080}
   shutdown: graceful
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: transaction-service
   profiles:

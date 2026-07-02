@@ -2,6 +2,9 @@ server:
   port: ${PORT:8080}
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   profiles:
     active: ${SPRING_PROFILE:local}
   application:
