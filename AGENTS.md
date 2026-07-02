@@ -62,6 +62,10 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
 - **Skills Usage**: Jika ada skill di `.agents/skills/` yang relevan (misal: `debugging-methodology`), **wajib** dibaca dan diikuti.
 - **No Performative Agreement**: Hindari kalimat basa-basi seperti "You're absolutely right!" atau "Great point!". Cukup acknowledge teknis atau langsung eksekusi.
 - **Self-Improvement Loop**: Setelah menerima koreksi/feedback dari user, update `docs/guides/LESSONS.md` untuk menghindari error berulang.
+- **Simplicity First**: Tulis kode minimum yang menyelesaikan masalah. Tidak boleh menambahkan fitur/abstraksi/konfigurasi yang tidak diminta. Jika 200 baris bisa jadi 50, rewrite. Tanyakan: "Apakah senior engineer akan bilang ini overcomplicated?"
+- **Surgical Changes**: Hanya sentuh kode yang relevan dengan request. Jangan "improve" kode adjacent, komentar, atau formatting yang tidak terkait. Match existing style. Jika perubahan membuat import/variable jadi unused, bersihkan — tapi jangan hapus dead code pre-existing tanpa diminta. Setiap baris yang berubah harus traceable ke request user.
+- **Explicit Assumptions**: Sebelum implementasi, nyatakan asumsi secara eksplisit. Jika ada multiple interpretations, sajikan semua — jangan pilih diam-diam. Jika ada pendekatan lebih sederhana, sampaikan dan push back jika warranted.
+- **Success Criteria Loop**: Transformasi task menjadi goal terverifikasi (contoh: "Add validation" → "Tulis test untuk invalid input, lalu buat pass"). Untuk multi-step task, buat plan dengan verify-check per step. Strong success criteria = bisa loop mandiri. Weak criteria ("make it work") = perlu klarifikasi.
 
 ## 🤝 Collaboration Modes
 
