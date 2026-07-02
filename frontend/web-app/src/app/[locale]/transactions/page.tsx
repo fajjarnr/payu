@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { useLocale } from 'next-intl';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores';
@@ -17,7 +17,6 @@ import {
   MoreHorizontal,
   X,
   RotateCcw,
-  Calendar, // eslint-disable-line @typescript-eslint/no-unused-vars
   Filter
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,7 +101,7 @@ export default function TransactionsPage() {
       toast.success('Transaksi berhasil dibatalkan');
       setIsCancelDialogOpen(false);
       setSelectedTransaction(null);
-    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    } catch {
       toast.error('Gagal membatalkan transaksi');
     }
   };
