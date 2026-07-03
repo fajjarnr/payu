@@ -168,3 +168,17 @@ spec:
           value: "http://rgs-service:8080"
         - name: SERVICES_SKN_URL
           value: "http://skn-service:8080"
+        - name: JAVA_TOOL_OPTIONS
+          value: "--enable-native-access=ALL-UNNAMED"
+        - name: PAYU_SECURITY_ENCRYPTION_SALT
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: ENCRYPTION_SALT
+              optional: true
+        - name: WEBHOOK_SECURITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
+              optional: true

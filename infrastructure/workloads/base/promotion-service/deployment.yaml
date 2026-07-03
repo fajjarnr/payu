@@ -134,3 +134,17 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        - name: JAVA_TOOL_OPTIONS
+          value: "--enable-native-access=ALL-UNNAMED"
+        - name: PAYU_SECURITY_ENCRYPTION_SALT
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: ENCRYPTION_SALT
+              optional: true
+        - name: WEBHOOK_SECURITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
+              optional: true

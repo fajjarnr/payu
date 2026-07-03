@@ -22,27 +22,23 @@
 
     <!-- Console Appender with JSON for production -->
     <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="id.payu.security.masking.LogbackMaskingFilter">
-                <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                    <!-- Include all standard fields -->
-                    <includeContext>true</includeContext>
-                    <includeMdc>true</includeMdc>
-                    <includeStructuredArguments>true</includeStructuredArguments>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Include all standard fields -->
+            <includeContext>true</includeContext>
+            <includeMdc>true</includeMdc>
+            <includeStructuredArguments>true</includeStructuredArguments>
 
-                    <!-- Custom fields for PayU standard — only add fields NOT already in MDC -->
-                    <customFields>{"log_format":"json"}</customFields>
+            <!-- Custom fields for PayU standard -->
+            <customFields>{"log_format":"json"}</customFields>
 
-                    <!-- Field names compatible with Loki -->
-                    <fieldNames>
-                        <timestamp>@timestamp</timestamp>
-                        <message>message</message>
-                        <logger>logger</logger>
-                        <thread>thread</thread>
-                        <level>level</level>
-                    </fieldNames>
-                </encoder>
-            </layout>
+            <!-- Field names compatible with Loki -->
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+            </fieldNames>
         </encoder>
     </appender>
 

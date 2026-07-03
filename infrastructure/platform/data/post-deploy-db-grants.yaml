@@ -1,0 +1,78 @@
+# PayU Platform - Post-Deploy Database Grants Job
+# Runs after initial deployment to grant permissions on tables created by Flyway.
+# Flyway migrations run as postgres → tables owned by postgres, not payu.
+# This Job grants ALL privileges to the payu app user across all databases.
+# ============================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-deploy-db-grants
+  labels:
+    app.kubernetes.io/name: post-deploy-db-grants
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+  annotations:
+    post-deploy: "true"
+    description: "Grants table/sequence/function permissions to app user after Flyway migrations"
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: post-deploy-db-grants
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-grants
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          env:
+            - name: PGHOST
+              value: payu-postgres-ha-primary.payu-dev.svc.cluster.local
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-postgres-ha-pguser-postgres
+                  key: password
+                  optional: true
+            - name: APP_USER
+              value: payu
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+
+              # If superuser secret not found, connect as payu-postgres-ha operator user
+              if [ -z "$PGPASSWORD" ]; then
+                echo "Trying operator user credentials..."
+                export PGPASSWORD="$(cat /etc/postgres-operator/password 2>/dev/null || echo '')"
+                export PGUSER="payu-postgres-ha"
+              fi
+
+              DBS=$(psql -h "$PGHOST" -U "$PGUSER" -d postgres -t -c \
+                "SELECT datname FROM pg_database WHERE datname LIKE 'payu%' OR datname = 'keycloak';")
+
+              for db in $DBS; do
+                echo "=== Granting permissions on database: $db ==="
+                psql -h "$PGHOST" -U "$PGUSER" -d "$db" <<EOF
+              GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${APP_USER};
+              GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${APP_USER};
+              GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO ${APP_USER};
+              ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON TABLES TO ${APP_USER};
+              ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO ${APP_USER};
+              ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${APP_USER};
+              -- Also change ownership of existing tables to payu so Hibernate DDL (alter table) works
+              DO \$\$ DECLARE r RECORD; BEGIN
+                FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tableowner != '${APP_USER}'
+                LOOP EXECUTE 'ALTER TABLE ' || quote_ident(r.tablename) || ' OWNER TO ${APP_USER}'; END LOOP;
+              END \$\$;
+              DO \$\$ DECLARE r RECORD; BEGIN
+                FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' AND sequenceowner != '${APP_USER}'
+                LOOP EXECUTE 'ALTER SEQUENCE ' || quote_ident(r.sequencename) || ' OWNER TO ${APP_USER}'; END LOOP;
+              END \$\$;
+              EOF
+                echo "  Done."
+              done
+              echo "All grants applied successfully."

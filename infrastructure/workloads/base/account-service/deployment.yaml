@@ -157,3 +157,17 @@ spec:
             secretKeyRef:
               name: payu-secrets
               key: JWT_SECRET
+        - name: JAVA_TOOL_OPTIONS
+          value: "--enable-native-access=ALL-UNNAMED"
+        - name: PAYU_SECURITY_ENCRYPTION_SALT
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: ENCRYPTION_SALT
+              optional: true
+        - name: WEBHOOK_SECURITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
+              optional: true

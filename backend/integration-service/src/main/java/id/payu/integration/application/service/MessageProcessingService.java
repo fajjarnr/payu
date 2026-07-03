@@ -27,7 +27,20 @@ public class MessageProcessingService {
     private final IntegrationMessageRepository messageRepository;
 
     /**
-     * Create a new integration message.
+     * Save an already-constructed IntegrationMessage.
+     * Used by Camel routes that build the full message in-processor.
+     */
+    @Transactional
+    public IntegrationMessage createMessage(IntegrationMessage message) {
+        message.setCreatedAt(LocalDateTime.now());
+        if (message.getStatus() == null) {
+            message.setStatus(MessageStatus.RECEIVED);
+        }
+        return messageRepository.save(message);
+    }
+
+    /**
+     * Create a new integration message from individual fields.
      */
     @Transactional
     public IntegrationMessage createMessage(MessageType type,

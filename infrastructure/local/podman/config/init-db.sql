@@ -76,3 +76,18 @@ GRANT ALL PRIVILEGES ON DATABASE payu_integration TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_products TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_gateway TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_api_portal TO payu;
+
+-- =============================================================================
+-- Flyway runs migrations as postgres user → tables owned by postgres.
+-- Without these grants, app user 'payu' gets "permission denied" on ALL tables.
+-- =============================================================================
+
+-- Grant on all existing tables (idempotent — runs after Flyway migrations)
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO payu;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO payu;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO payu;
+
+-- Auto-grant on future tables created by postgres or payu-postgres-ha
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON TABLES TO payu;
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO payu;
+ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO payu;

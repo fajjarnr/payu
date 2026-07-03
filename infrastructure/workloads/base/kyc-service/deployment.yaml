@@ -100,3 +100,25 @@ spec:
               key: secret-key
         - name: ENVIRONMENT
           value: "container"
+        - name: ARTEMIS_HOST
+          value: payu-broker-hdls-svc
+        - name: ARTEMIS_STOMP_PORT
+          value: "61613"
+        - name: ARTEMIS_USERNAME
+          value: admin
+        - name: ARTEMIS_PASSWORD
+          value: payu-dev-artemis-pwd-2026
+        - name: JAVA_TOOL_OPTIONS
+          value: "--enable-native-access=ALL-UNNAMED"
+        - name: PAYU_SECURITY_ENCRYPTION_SALT
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: ENCRYPTION_SALT
+              optional: true
+        - name: WEBHOOK_SECURITY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
+              optional: true
