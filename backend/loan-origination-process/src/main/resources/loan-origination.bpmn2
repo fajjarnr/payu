@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   id="Definitions_1"
+                   targetNamespace="http://payu.id/loan-origination"
+                   xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+
+  <bpmn2:itemDefinition id="_userIdItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_principalAmountItem" structureRef="java.math.BigDecimal"/>
+  <bpmn2:itemDefinition id="_tenureMonthsItem" structureRef="Integer"/>
+  <bpmn2:itemDefinition id="_purposeItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_loanTypeItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_creditScoreItem" structureRef="java.math.BigDecimal"/>
+  <bpmn2:itemDefinition id="_firstLineApprovedItem" structureRef="Boolean"/>
+  <bpmn2:itemDefinition id="_firstLineCommentItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_secondLineApprovedItem" structureRef="Boolean"/>
+  <bpmn2:itemDefinition id="_secondLineCommentItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_disbursementRefItem" structureRef="String"/>
+
+  <bpmn2:process id="loan-origination" name="Loan Origination Process" isExecutable="true" processType="Public">
+
+    <bpmn2:property id="userId" itemSubjectRef="_userIdItem"/>
+    <bpmn2:property id="principalAmount" itemSubjectRef="_principalAmountItem"/>
+    <bpmn2:property id="tenureMonths" itemSubjectRef="_tenureMonthsItem"/>
+    <bpmn2:property id="purpose" itemSubjectRef="_purposeItem"/>
+    <bpmn2:property id="loanType" itemSubjectRef="_loanTypeItem"/>
+    <bpmn2:property id="creditScore" itemSubjectRef="_creditScoreItem"/>
+    <bpmn2:property id="firstLineApproved" itemSubjectRef="_firstLineApprovedItem"/>
+    <bpmn2:property id="firstLineComment" itemSubjectRef="_firstLineCommentItem"/>
+    <bpmn2:property id="secondLineApproved" itemSubjectRef="_secondLineApprovedItem"/>
+    <bpmn2:property id="secondLineComment" itemSubjectRef="_secondLineCommentItem"/>
+    <bpmn2:property id="disbursementRef" itemSubjectRef="_disbursementRefItem"/>
+
+    <!-- Start Event -->
+    <bpmn2:startEvent id="StartEvent_1" name="Loan Application Received">
+      <bpmn2:outgoing>Flow_Start_To_Scoring</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <!-- Service Task: Credit Scoring -->
+    <bpmn2:task id="Task_CreditScoring" name="CreditScoring">
+      <bpmn2:incoming>Flow_Start_To_Scoring</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_Scoring_To_Gateway</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="Task_Scoring_In_amount" name="amount"/>
+        <bpmn2:dataInput id="Task_Scoring_In_tenure" name="tenureMonths"/>
+        <bpmn2:dataOutput id="Task_Scoring_Out_score" name="score"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>Task_Scoring_In_amount</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_Scoring_In_tenure</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>Task_Scoring_Out_score</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>principalAmount</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Scoring_In_amount</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>tenureMonths</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Scoring_In_tenure</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_Scoring_Out_score</bpmn2:sourceRef>
+        <bpmn2:targetRef>creditScore</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+    </bpmn2:task>
+
+    <!-- Exclusive Gateway: Score ≥ 600? -->
+    <bpmn2:exclusiveGateway id="Gateway_ScoreCheck" name="Score ≥ 600?" default="Flow_Reject_LowScore">
+      <bpmn2:incoming>Flow_Scoring_To_Gateway</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_ScoreOk_To_FirstLine</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_Reject_LowScore</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:sequenceFlow id="Flow_Scoring_To_Gateway" sourceRef="Task_CreditScoring" targetRef="Gateway_ScoreCheck"/>
+    <bpmn2:sequenceFlow id="Flow_Start_To_Scoring" sourceRef="StartEvent_1" targetRef="Task_CreditScoring"/>
+
+    <bpmn2:sequenceFlow id="Flow_ScoreOk_To_FirstLine" sourceRef="Gateway_ScoreCheck" targetRef="Task_FirstLineApproval">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return ((java.math.BigDecimal)creditScore).compareTo(new java.math.BigDecimal("600")) >= 0;
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <bpmn2:sequenceFlow id="Flow_Reject_LowScore" sourceRef="Gateway_ScoreCheck" targetRef="EndEvent_Rejected">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return ((java.math.BigDecimal)creditScore).compareTo(new java.math.BigDecimal("600")) < 0;
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <!-- User Task: First Line Approval -->
+    <bpmn2:userTask id="Task_FirstLineApproval" name="First Line Approval">
+      <bpmn2:incoming>Flow_ScoreOk_To_FirstLine</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_FirstLine_To_Gateway</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="Task_FirstLine_In_loanType" name="loanType"/>
+        <bpmn2:dataInput id="Task_FirstLine_In_amount" name="amount"/>
+        <bpmn2:dataInput id="Task_FirstLine_In_score" name="creditScore"/>
+        <bpmn2:dataInput id="Task_FirstLine_In_purpose" name="purpose"/>
+        <bpmn2:dataOutput id="Task_FirstLine_Out_approved" name="approved"/>
+        <bpmn2:dataOutput id="Task_FirstLine_Out_comment" name="comment"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>Task_FirstLine_In_loanType</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_FirstLine_In_amount</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_FirstLine_In_score</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_FirstLine_In_purpose</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>Task_FirstLine_Out_approved</bpmn2:dataOutputRefs>
+          <bpmn2:dataOutputRefs>Task_FirstLine_Out_comment</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>loanType</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_FirstLine_In_loanType</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>principalAmount</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_FirstLine_In_amount</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>creditScore</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_FirstLine_In_score</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>purpose</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_FirstLine_In_purpose</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_FirstLine_Out_approved</bpmn2:sourceRef>
+        <bpmn2:targetRef>firstLineApproved</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_FirstLine_Out_comment</bpmn2:sourceRef>
+        <bpmn2:targetRef>firstLineComment</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:potentialOwner>
+        <bpmn2:resourceAssignmentExpression>
+          <bpmn2:formalExpression>loan-officer</bpmn2:formalExpression>
+        </bpmn2:resourceAssignmentExpression>
+      </bpmn2:potentialOwner>
+    </bpmn2:userTask>
+
+    <!-- Exclusive Gateway: First Line Approved? -->
+    <bpmn2:exclusiveGateway id="Gateway_FirstLineDecision" name="First Line Approved?" default="Flow_Reject_FirstLine">
+      <bpmn2:incoming>Flow_FirstLine_To_Gateway</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_FirstOk_To_SecondLine</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_Reject_FirstLine</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:sequenceFlow id="Flow_FirstLine_To_Gateway" sourceRef="Task_FirstLineApproval" targetRef="Gateway_FirstLineDecision"/>
+
+    <bpmn2:sequenceFlow id="Flow_FirstOk_To_SecondLine" sourceRef="Gateway_FirstLineDecision" targetRef="Task_SecondLineApproval">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return ((Boolean)firstLineApproved).booleanValue();
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <bpmn2:sequenceFlow id="Flow_Reject_FirstLine" sourceRef="Gateway_FirstLineDecision" targetRef="EndEvent_Rejected">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return !((Boolean)firstLineApproved).booleanValue();
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <!-- User Task: Second Line Approval (with 48h SLA boundary timer) -->
+    <bpmn2:userTask id="Task_SecondLineApproval" name="Second Line Approval">
+      <bpmn2:incoming>Flow_FirstOk_To_SecondLine</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_SecondLine_To_Gateway</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="Task_SecondLine_In_amount" name="amount"/>
+        <bpmn2:dataInput id="Task_SecondLine_In_score" name="creditScore"/>
+        <bpmn2:dataOutput id="Task_SecondLine_Out_approved" name="approved"/>
+        <bpmn2:dataOutput id="Task_SecondLine_Out_comment" name="comment"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>Task_SecondLine_In_amount</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_SecondLine_In_score</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>Task_SecondLine_Out_approved</bpmn2:dataOutputRefs>
+          <bpmn2:dataOutputRefs>Task_SecondLine_Out_comment</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>principalAmount</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_SecondLine_In_amount</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>creditScore</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_SecondLine_In_score</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_SecondLine_Out_approved</bpmn2:sourceRef>
+        <bpmn2:targetRef>secondLineApproved</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_SecondLine_Out_comment</bpmn2:sourceRef>
+        <bpmn2:targetRef>secondLineComment</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:potentialOwner>
+        <bpmn2:resourceAssignmentExpression>
+          <bpmn2:formalExpression>risk-manager</bpmn2:formalExpression>
+        </bpmn2:resourceAssignmentExpression>
+      </bpmn2:potentialOwner>
+    </bpmn2:userTask>
+
+    <!-- Boundary Timer: 48h SLA on second-line approval -->
+    <bpmn2:boundaryEvent id="BoundaryEvent_48hSLA" name="48h SLA Expired" attachedToRef="Task_SecondLineApproval">
+      <bpmn2:outgoing>Flow_SLAExpired_To_End</bpmn2:outgoing>
+      <bpmn2:timerEventDefinition>
+        <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression">PT48H</bpmn2:timeDuration>
+      </bpmn2:timerEventDefinition>
+    </bpmn2:boundaryEvent>
+
+    <!-- Exclusive Gateway: Second Line Approved? -->
+    <bpmn2:exclusiveGateway id="Gateway_SecondLineDecision" name="Second Line Approved?" default="Flow_Reject_SecondLine">
+      <bpmn2:incoming>Flow_SecondLine_To_Gateway</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_SecondOk_To_Disbursement</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_Reject_SecondLine</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:sequenceFlow id="Flow_SecondLine_To_Gateway" sourceRef="Task_SecondLineApproval" targetRef="Gateway_SecondLineDecision"/>
+
+    <bpmn2:sequenceFlow id="Flow_SecondOk_To_Disbursement" sourceRef="Gateway_SecondLineDecision" targetRef="Task_Disbursement">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return ((Boolean)secondLineApproved).booleanValue();
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <bpmn2:sequenceFlow id="Flow_Reject_SecondLine" sourceRef="Gateway_SecondLineDecision" targetRef="EndEvent_Rejected">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java">
+        return !((Boolean)secondLineApproved).booleanValue();
+      </bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+
+    <!-- Service Task: Disbursement -->
+    <bpmn2:task id="Task_Disbursement" name="Disbursement">
+      <bpmn2:incoming>Flow_SecondOk_To_Disbursement</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_Disbursement_To_End</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="Task_Disb_In_userId" name="userId"/>
+        <bpmn2:dataInput id="Task_Disb_In_amount" name="amount"/>
+        <bpmn2:dataInput id="Task_Disb_In_loanType" name="loanType"/>
+        <bpmn2:dataInput id="Task_Disb_In_tenure" name="tenureMonths"/>
+        <bpmn2:dataOutput id="Task_Disb_Out_ref" name="reference"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>Task_Disb_In_userId</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_Disb_In_amount</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_Disb_In_loanType</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>Task_Disb_In_tenure</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>Task_Disb_Out_ref</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>userId</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Disb_In_userId</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>principalAmount</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Disb_In_amount</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>loanType</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Disb_In_loanType</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>tenureMonths</bpmn2:sourceRef>
+        <bpmn2:targetRef>Task_Disb_In_tenure</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>Task_Disb_Out_ref</bpmn2:sourceRef>
+        <bpmn2:targetRef>disbursementRef</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+    </bpmn2:task>
+
+    <!-- End Event: Rejected -->
+    <bpmn2:endEvent id="EndEvent_Rejected" name="Rejected">
+      <bpmn2:incoming>Flow_Reject_LowScore</bpmn2:incoming>
+      <bpmn2:incoming>Flow_Reject_FirstLine</bpmn2:incoming>
+      <bpmn2:incoming>Flow_Reject_SecondLine</bpmn2:incoming>
+      <bpmn2:terminateEventDefinition/>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="Flow_Disbursement_To_End" sourceRef="Task_Disbursement" targetRef="EndEvent_Disbursed"/>
+
+    <!-- End Event: Disbursed -->
+    <bpmn2:endEvent id="EndEvent_Disbursed" name="Disbursed">
+      <bpmn2:incoming>Flow_Disbursement_To_End</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="Flow_SLAExpired_To_End" sourceRef="BoundaryEvent_48hSLA" targetRef="EndEvent_Rejected"/>
+
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="loan-origination">
+      <bpmndi:BPMNShape id="shape_StartEvent_1" bpmnElement="StartEvent_1">
+        <dc:Bounds x="100" y="80" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn2:definitions>

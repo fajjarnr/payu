@@ -63,3 +63,8 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+payu:
+  kogito:
+    task-api:
+      url: ${KOGITO_TASK_API_URL:http://loan-origination-process:8080}

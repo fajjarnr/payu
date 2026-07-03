@@ -1,0 +1,43 @@
+apiVersion: rhpam.kiegroup.org/v1
+kind: KogitoRuntime
+metadata:
+  name: loan-origination-process
+  labels:
+    app.kubernetes.io/name: loan-origination-process
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: process-orchestration
+    app.kubernetes.io/version: 1.0.0
+    team: backend
+spec:
+  runtime: springboot
+  replicas: 1
+  image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.0
+  insecureImageRegistry: true
+
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: container
+    - name: SERVER_PORT
+      value: '8080'
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      valueFrom:
+        configMapKeyRef:
+          key: KAFKA_URL
+          name: service-endpoints
+    - name: LENDING_RULES_URL
+      value: http://lending-rules:8080
+
+  probes:
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 15
+    startupProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30

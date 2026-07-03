@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 45/45 pods Ready, OCP 4.21, payu-dev. SSO, Kafka, PostgreSQL HA, Infinispan (DataGrid 8.6), Artemis AMQ 2-node active/passive — all connected. |
-| **Last Release** | `:1.8.82` — cluster recovery: fix 12 CrashLoopBackOff services, EntityScan import, rest-client-starter, Artemis connectivity, DB schema, Infinispan port |
-| **Last Updated** | 2026-07-03 (cluster stable, all services 1/1 Ready) |
+| **Last Release** | `:1.9.0` — loan-origination-process BPMN + backoffice task inbox (KOGITO-001 Phase 1-2) |
+| **Last Updated** | 2026-07-03 (loan-origination-process compiled, full backend BUILD SUCCESS 56/56) |
 
 ---
 

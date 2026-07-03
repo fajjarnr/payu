@@ -16,6 +16,7 @@ resources:
 - ./investment-service
 - ./kyc-service
 - ./lending-service
+- ./loan-origination-process
 - ./notification-service
 - ./partner-service
 - ./product-catalog-service

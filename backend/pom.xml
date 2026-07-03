@@ -46,6 +46,7 @@
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <drools.version>8.44.0.Final</drools.version>
+        <kie.version>10.2.0</kie.version>
     </properties>
 
     <modules>
@@ -82,6 +83,7 @@
         <module>investment-service</module>
         <module>lending-service</module>
         <module>lending-rules</module>
+        <module>loan-origination-process</module>
         <module>statement-service</module>
         <module>billing-service</module>
         <module>notification-service</module>

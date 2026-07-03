@@ -3251,3 +3251,27 @@ synchronized (lock) {
 
 ---
 
+
+## L-093: KIE 10.x Spring Boot BPMN Process Orchestration — Version Split + WorkItemHandler Pitfalls (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: jBPM 10.2.0, KIE, Kogito, BPMN2, Spring Boot 4.1, WorkItemHandler
+**Context**: KOGITO-001 pilot — BPMN process for loan origination multi-step approval (Credit Scoring → First Line → Second Line 48h SLA → Disbursement).
+
+**What was built**:
+1. **loan-origination-process** microservice: Spring Boot 4.1 + jBPM-with-drools 10.2.0 + KIE persistence-jdbc + process-management addons.
+2. **BPMN2 process**: `loan-origination.bpmn2` with 2 Service Tasks (CreditScoring via REST→lending-rules, Disbursement via outbox→Kafka), 2 User Tasks (loan-officer, risk-manager groups), 1 boundary timer (48h SLA), exclusive gateways.
+3. **WorkItemHandlers**: `CreditScoringWorkItemHandler` (calls lending-rules via PayuRestClient) + `DisbursementWorkItemHandler` (publishes `payu.lending.loan-disbursed.v1` via outbox-starter).
+4. **Task Inbox**: Backoffice `TaskInboxController` proxying Kogito task API (`GET /usertasks/instance?user=`, `POST .../transition?user=`).
+
+**What broke**:
+1. **KIE version split**: `jbpm-with-drools-spring-boot-starter` publishes as `org.jbpm:jbpm-with-drools-spring-boot-starter:10.2.0` (KIE 10.x line). The old Kogito addons under `org.kie.kogito:kie-addons-*` only go up to 1.44.0.Final (Kogito 1.x). The new unified KIE 10.x addons use `org.kie:kie-addons-springboot-*:10.2.0`. Drools 8.44.0.Final is a separate product line for rules-only. **Force-fitting 8.44.0.Final version onto KIE 10.x artifacts fails at resolution** — completely different coordinate spaces.
+2. **Two main classes**: Leftover `LoanOriginationProcessApplication.java` alongside `LoanOriginationApplication.java` caused `spring-boot-maven-plugin` rejection. Delete stale scaffolding.
+3. **ApiResponse ambiguity**: Swagger `io.swagger.v3.oas.annotations.responses.ApiResponse` shadowed project `id.payu.backoffice.dto.ApiResponse` in controller return types. Fix: fully-qualify project DTO in controllers with `@ApiResponses`.
+
+**Lessons**:
+1. **KIE 10.x ≠ Drools 8.44.0.Final ≠ Kogito 1.x**. Three separate coordinate spaces. BPMN process: use `org.jbpm:jbpm-with-drools-spring-boot-starter:10.x` + `org.kie:kie-addons-springboot-*:10.x`. Rules-only: use `org.drools:drools-engine:8.44.0.Final` (no BPMN). Never mix.
+2. **jBPM 10.x WorkItemHandler auto-discovery**: `@Component` beans named after BPMN task name (e.g., `@Component("CreditScoring")`) should auto-register. Verify at runtime.
+3. **KogitoRuntime CR with Spring Boot**: CR `runtime: springboot` works for Pod management. `KogitoInfra` fails with Strimzi — bypass via direct `KAFKA_BOOTSTRAP_SERVERS` env var.
+4. **User Task potentialOwner**: BPMN `formalExpression: loan-officer` maps to Kogito group assignment. Verify group names match Keycloak realm roles.
+5. **Backoffice proxy**: Use `PayuRestClient` + resilience4j. Return 502 on Kogito unavailability — graceful degradation over crash-loop.

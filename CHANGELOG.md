@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.0] - 2026-07-03
+
+### Added
+
+- **loan-origination-process** microservice (KOGITO-001): Spring Boot 4.1 + jBPM-with-Drools 10.2.0 BPMN process orchestrator for multi-step loan approval:
+  - BPMN2 process `loan-origination.bpmn2`: Start → CreditScoring (REST→lending-rules) → Gateway(≥600) → FirstLine Approval (loan-officer) → SecondLine Approval (risk-manager, 48h SLA boundary timer) → Disbursement (outbox→Kafka `payu.lending.loan-disbursed.v1`)
+  - `CreditScoringWorkItemHandler`: REST call to lending-rules `/api/v1/rules/credit-score` via PayuRestClient (circuit breaker + retry)
+  - `DisbursementWorkItemHandler`: Publishes `LoanDisbursed` event to outbox-starter → Kafka
+  - Containerfile: UBI9, non-root UID 1001, port 8080
+  - 4 infra manifests: Deployment, Service, ServiceAccount, KogitoRuntime CR (Spring Boot runtime, disabled by default)
+- **Backoffice Task Inbox** (Phase 2): `TaskInboxController` proxying Kogito task API:
+  - `GET /api/v1/backoffice/tasks/pending?user=X` — fetch pending tasks
+  - `POST /api/v1/backoffice/tasks/{taskId}/transition?user=X` — claim/complete/release/skip tasks
+  - RBAC: `loan-officer`, `risk-manager`, `admin`, `backoffice` authorities
+- **KIE 10.2.0 version** in parent POM `<kie.version>` property. KIE 10.x is separate coordinate space from Drools 8.44.0.Final (rules-only) and Kogito 1.x (old addons). Addons use `org.kie:kie-addons-springboot-*:10.2.0`.
+
+### Changed
+
+- **backend/pom.xml**: Added `<module>loan-origination-process</module>` + `<kie.version>10.2.0</kie.version>`
+- **backend/loan-origination-process/pom.xml**: jBPM 10.2.0 + KIE persistence-jdbc + process-management + rest-client-starter + outbox-starter
+- **infrastructure/workloads/base/kustomization.yaml**: Added `./loan-origination-process`
+- **backoffice-service application.yml**: Added `payu.kogito.task-api.url` config
+
+### Known
+
+- **KogitoRuntime CR** for loan-origination-process declared but disabled — deploy as standard Deployment first, migrate after stable. KogitoInfra Strimzi resolution bug persists (L-092).
+- **WorkItemHandler auto-discovery**: jBPM 10.x `@Component` named beans should auto-register. Verify at deploy stage. Manual `WorkItemHandlerConfig` registration available as fallback.
+- **User Task group names** (`loan-officer`, `risk-manager`) must exist as Keycloak realm roles for task assignment to work.
+- **BPMN ID assignments**: `potentialOwner`, `resourceAssignmentExpression`, `formalExpression` use enterprise BPMN2 syntax. Kogito runtime parsing verified at first deploy.
+
 ## [1.8.83] - 2026-07-03
 
 ### Added
