@@ -78,6 +78,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Security Config & Web (for SecurityFilterChain in WebSecurityAutoConfiguration) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Security OAuth2 JWT (optional - for Keycloak JWT converter) -->
         <dependency>
             <groupId>org.springframework.security</groupId>

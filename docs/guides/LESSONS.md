@@ -3153,3 +3153,27 @@ synchronized (lock) {
 
 ---
 
+## L-092: Backend SecurityConfig + DataSourceConfiguration Dedup — 24 Files → 2 Auto-Configs (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: Spring Boot / Spring Security / HikariCP / Auto-Configuration
+**Context**: PON-021 (18 SecurityConfig copies) + PON-024 (8 DataSourceConfiguration copies). Extracted into auto-configured beans.
+
+**What was built**:
+1. **WebSecurityAutoConfiguration** in security-starter — default SecurityFilterChain with OAuth2 JWT, actuator health permitAll, swagger, CORS property-driven. `@ConditionalOnMissingBean` backs off if service defines its own chain.
+2. **SecurityConfigurerCustomizer** functional interface — per-service endpoint customizer.
+3. **datasource-starter** module — `DataSourceAutoConfiguration` with primary/replica HikariCP DataSources via `@ConfigurationProperties`.
+
+**What was deleted**: 16 SecurityConfig.java, 8 DataSourceConfiguration.java, 7 obsolete test files. auth-service + transaction-service retain custom SecurityFilterChains.
+
+**Verification**: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` → BUILD SUCCESS (41/41).
+
+**Lessons**:
+1. **`@ConditionalOnMissingBean(SecurityFilterChain.class)` is the right back-off mechanism**.
+2. **Actuator paths use `/**/actuator/health` Ant matcher** to catch per-service paths.
+3. **SecurityHeadersFilter needs `addFilterBefore`** for correct ordering — wallet-service does this via `configure()`.
+4. **Extract NimbusJwtDecoder into separate config** when deleting SecurityConfig.
+5. **Functional interface handles full complexity** where property-based config can't express role rules or filter chains.
+
+---
+

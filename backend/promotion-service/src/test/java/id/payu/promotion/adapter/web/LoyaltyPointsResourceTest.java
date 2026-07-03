@@ -3,7 +3,7 @@ package id.payu.promotion.adapter.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
-import id.payu.promotion.config.SecurityConfig;
+import id.payu.security.config.WebSecurityAutoConfiguration;
 import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * MockMvc tests for LoyaltyPointsResource. Avoids RestAssured HTTPBuilder NPE on Java 25.
  */
 @SpringBootTest
-@Import(SecurityConfig.class)
+@Import(WebSecurityAutoConfiguration.class)
 @ActiveProfiles("test")
 class LoyaltyPointsResourceTest {
 

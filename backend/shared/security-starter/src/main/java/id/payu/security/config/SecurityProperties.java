@@ -42,6 +42,49 @@ public class SecurityProperties {
      */
     private Audit audit = new Audit();
 
+    /**
+     * CORS configuration
+     */
+    private Cors cors = new Cors();
+
+    @Data
+    public static class Cors {
+        /**
+         * Enable CORS configuration
+         */
+        private boolean enabled = false;
+
+        /**
+         * Allowed origin patterns (comma-separated or YAML list)
+         */
+        private List<String> allowedOrigins;
+
+        /**
+         * Allowed HTTP methods
+         */
+        private List<String> allowedMethods;
+
+        /**
+         * Allowed request headers
+         */
+        private List<String> allowedHeaders;
+
+        /**
+         * Exposed response headers
+         */
+        private List<String> exposedHeaders;
+
+        /**
+         * Allow credentials (cookies, authorization headers)
+         */
+        private boolean allowCredentials = false;
+
+        /**
+         * Preflight cache duration in seconds
+         */
+        private long maxAge = 3600L;
+    }
+
     @Data
     public static class Encryption {
         /**

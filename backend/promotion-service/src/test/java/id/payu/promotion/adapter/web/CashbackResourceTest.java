@@ -2,7 +2,7 @@ package id.payu.promotion.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
-import id.payu.promotion.config.SecurityConfig;
+import id.payu.security.config.WebSecurityAutoConfiguration;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Uses TestSecurityConfig (permitAll) to bypass JWT in test.
  */
 @SpringBootTest
-@Import(SecurityConfig.class)
+@Import(WebSecurityAutoConfiguration.class)
 @ActiveProfiles("test")
 class CashbackResourceTest {
 

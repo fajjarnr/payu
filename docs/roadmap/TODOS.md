@@ -20,11 +20,11 @@
 | **Open P0s** | **0** |
 | **Open P1s** | 1 (READY-076) |
 | **Open P2s** | 0 |
-| **Open P3s** | 4 (AUDIT-096, 098, 101) |
+| **Open P3s** | 1 (AUDIT-096) |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)** |
 | **Last Release** | `:1.8.77` — ops framework, security headers, TODOS consolidation |
 | **Last Audit** | July 2, 2026 — Ponytail deep audit. 33 findings (5 P1, 13 P2, 15 P3). ~3,000 lines dead code, ~8 unused npm deps, ~95 single-impl ports, 7 orphaned ports, ~58 duplicate configs. |
-| **Last Updated** | July 2, 2026 (PON-033 closed) |
+| **Last Updated** | July 3, 2026 (PON-021, PON-024, PON-033 closed) |
 
 ---
 
@@ -160,14 +160,12 @@
 | # | Key | Category | Summary |
 |:---:|:---|:---|:---|
 | AUDIT-096 | **PON-019** | arch | ~95 single-implementation hexagonal ports across 21 services (30 inbound + 65 outbound). Interface with exactly 1 adapter — YAGNI ceremony. Consolidate when refactoring |
-| AUDIT-098 | **PON-021** | dedup | 18 copies of `SecurityConfig.java` (85-127 lines each) across all services. Extract to `security-starter` auto-config |
-| AUDIT-101 | **PON-024** | dedup | 8 copies of `DataSourceConfiguration.java`. Extract to shared persistence starter |
 
 ### 📊 Audit Stats
 
 | Metric | Count |
 |:---|:---:|
-| Total findings | 4 |
+| Total findings | 1 |
 | P1 (critical) | 0 |
 | P2 (important) | 0 |
 | P3 (nice-to-have) | 5 |

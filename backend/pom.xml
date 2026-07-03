@@ -64,6 +64,7 @@
         <module>shared/quarkus-api-commons</module>
         <module>shared/jms-starter</module>
         <module>shared/rules-starter</module>
+        <module>shared/datasource-starter</module>
 
         <!-- Simulators -->
         <module>simulators/bi-fast-simulator</module>
@@ -162,6 +163,11 @@
             <dependency>
                 <groupId>id.payu</groupId>
                 <artifactId>archunit-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>datasource-starter</artifactId>
                 <version>${payu.shared.version}</version>
             </dependency>
 

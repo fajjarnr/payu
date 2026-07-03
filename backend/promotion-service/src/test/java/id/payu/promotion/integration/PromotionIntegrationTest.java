@@ -5,7 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import id.payu.promotion.adapter.persistence.repository.*;
-import id.payu.promotion.config.SecurityConfig;
+import id.payu.security.config.WebSecurityAutoConfiguration;
 import id.payu.promotion.domain.PromotionRewardType;
 import id.payu.promotion.domain.PromotionType;
 import id.payu.promotion.domain.ReferralRewardType;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Pattern: webAppContextSetup + springSecurity() preserves Spring Security filter chain.
  */
 @SpringBootTest
-@Import(SecurityConfig.class)
+@Import(WebSecurityAutoConfiguration.class)
 @ActiveProfiles("test")
 class PromotionIntegrationTest {
 

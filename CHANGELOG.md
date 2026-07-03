@@ -30,6 +30,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.80] - 2026-07-03
+
+### Added
+
+- **WebSecurityAutoConfiguration (PON-021)**: Auto-config in `security-starter` providing shared `SecurityFilterChain` with OAuth2 JWT, actuator health permitAll, swagger, and CORS. De-duplicates 16 service `SecurityConfig.java` files.
+- **SecurityConfigurerCustomizer (PON-021)**: Functional interface for per-service authorization rules and filter customization.
+- **datasource-starter (PON-024)**: New shared module with `DataSourceAutoConfiguration` providing primary/replica HikariCP DataSources via `@ConfigurationProperties`.
+
+### Removed
+
+- **AUDIT-098 (PON-021): local SecurityConfig copies**. Deleted 16 `SecurityConfig.java` across services in favor of `WebSecurityAutoConfiguration`. Auth-service and transaction-service retain custom configs.
+- **AUDIT-101 (PON-024): local DataSourceConfiguration copies**. Deleted 8 `DataSourceConfiguration.java` across services in favor of `datasource-starter` auto-config.
+- **SecurityConfigCorsOriginsTest.java**: Removed 6 obsolete test files that directly referenced now-deleted SecurityConfig classes.
+
+### Changed
+
+- **SecurityProperties (PON-021)**: Added `Cors` inner class with `enabled`, `allowedOrigins`, `allowedMethods`, `allowedHeaders`, `exposedHeaders`, `allowCredentials`, `maxAge` properties.
+- **Per-service SecurityCustomizer beans**: Added 7 customizers (account, cms, compliance, fx, partner, product-catalog, wallet) for service-specific endpoints and filters.
+- **8 service POMs**: Added `datasource-starter` dependency.
+
+---
+
 ## [1.8.78] - 2026-07-02
 
 ### Added
