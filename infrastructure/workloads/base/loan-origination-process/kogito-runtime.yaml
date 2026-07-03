@@ -2,6 +2,7 @@ apiVersion: rhpam.kiegroup.org/v1
 kind: KogitoRuntime
 metadata:
   name: loan-origination-process
+  namespace: payu-dev
   labels:
     app.kubernetes.io/name: loan-origination-process
     app.kubernetes.io/part-of: payu
@@ -25,7 +26,21 @@ spec:
           key: KAFKA_URL
           name: service-endpoints
     - name: LENDING_RULES_URL
-      value: http://lending-rules:8080
+      value: http://lending-rules.payu-dev.svc:8080
+    - name: DATABASE_URL
+      value: jdbc:postgresql://payu-postgres-ha-primary.payu-dev.svc.cluster.local:5432/payu_loan_origination
+    - name: DATABASE_USER
+      valueFrom:
+        secretKeyRef:
+          key: DB_USERNAME
+          name: db-secrets
+          optional: true
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: DB_PASSWORD
+          name: db-secrets
+          optional: true
 
   probes:
     livenessProbe:
@@ -34,6 +49,12 @@ spec:
         port: 8080
       initialDelaySeconds: 60
       periodSeconds: 15
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
     startupProbe:
       httpGet:
         path: /actuator/health/liveness

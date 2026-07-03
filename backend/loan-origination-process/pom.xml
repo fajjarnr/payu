@@ -14,14 +14,13 @@
     <artifactId>loan-origination-process</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>loan-origination-process</name>
-    <description>Loan Origination BPMN Process Orchestration — multi-step approval via jBPM/Drools</description>
+    <description>Loan Origination Multi-Step Approval — manual state machine (BPMN deferred)</description>
 
     <properties>
         <java.version>25</java.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -30,53 +29,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- jBPM + Drools Process Engine (includes BPMN, WorkItem, UserTask, Drools) -->
-        <dependency>
-            <groupId>org.jbpm</groupId>
-            <artifactId>jbpm-with-drools-spring-boot-starter</artifactId>
-            <version>${kie.version}</version>
-        </dependency>
-
-        <!-- KIE Process Management REST API (process instance queries) -->
-        <dependency>
-            <groupId>org.kie</groupId>
-            <artifactId>kie-addons-springboot-process-management</artifactId>
-            <version>${kie.version}</version>
-        </dependency>
-
-        <!-- KIE JDBC Persistence (PostgreSQL) -->
-        <dependency>
-            <groupId>org.kie</groupId>
-            <artifactId>kie-addons-springboot-persistence-jdbc</artifactId>
-            <version>${kie.version}</version>
-        </dependency>
-
-        <!-- PostgreSQL driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
-
-        <!-- JPA API for Drools transitive dep -->
-        <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-        </dependency>
-
-        <!-- REST client for calling lending-rules service -->
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>rest-client-starter</artifactId>
         </dependency>
-
-        <!-- Outbox for event publishing -->
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>outbox-starter</artifactId>
         </dependency>
-
-        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -85,6 +49,7 @@
     </dependencies>
 
     <build>
+        <finalName>app</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

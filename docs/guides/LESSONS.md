@@ -3275,3 +3275,30 @@ synchronized (lock) {
 3. **KogitoRuntime CR with Spring Boot**: CR `runtime: springboot` works for Pod management. `KogitoInfra` fails with Strimzi — bypass via direct `KAFKA_BOOTSTRAP_SERVERS` env var.
 4. **User Task potentialOwner**: BPMN `formalExpression: loan-officer` maps to Kogito group assignment. Verify group names match Keycloak realm roles.
 5. **Backoffice proxy**: Use `PayuRestClient` + resilience4j. Return 502 on Kogito unavailability — graceful degradation over crash-loop.
+
+## L-094: BPMN Engine Ecosystem 2026 — KIE 10.x CDI-Only, Kogito Quarkus 2.x Only (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: jBPM, KIE 10.x, Kogito, Quarkus, Spring Boot, BPMN
+**Context**: KOGITO-001 implementation. Attempted jBPM-with-drools-spring-boot-starter 10.2.0 for BPMN process engine. Failed across 7 iterations.
+
+**What was tried**:
+1. **KIE 10.x Spring Boot**: `org.jbpm:jbpm-with-drools-spring-boot-starter:10.2.0` — has CDI-only wiring (`META-INF/beans.xml`), zero Spring Boot auto-configuration. No `spring.factories`, no `AutoConfiguration.imports`. REST endpoints never auto-generate.
+2. **KIE 10.x addons**: `org.kie:kie-addons-springboot-process-management:10.2.0`, `persistence-jdbc:10.2.0` — same problem, CDI-only.
+3. **Quarkus Kogito**: `org.kie.kogito:kogito-quarkus:1.44.1.Final` (latest stable with BPMN) — requires Quarkus 2.x. Incompatible with Quarkus 3.33.1 (used by notification-service).
+4. **Embedded jBPM via Drools**: `drools-engine:8.44.0.Final` — loads BPMN but throws `Unknown gateway direction: Unspecified` even with `gatewayDirection="Diverging"` on exclusive gateways. jBPM version embedded in drools-engine is outdated/different parser.
+5. **KieHelper from kie-internal**: Works for loading BPMN but fails at the same parsing error.
+6. **External registry push**: `default-route-openshift-image-registry.apps.*` external route — needs `--insecure` flag. Internal `image-registry.openshift-image-registry.svc:5000` unreachable from local machine (DNS resolution fails). Solution: push via external route + `oc import-image --insecure`.
+7. **ImageStream tag staleness**: `oc tag -d` then re-import doesn't always clear the internal manifest. `oc import-image --confirm --insecure` from external route is reliable.
+
+**What works**:
+- **Manual state machine** (same pattern as LendingApplicationService, KycReviewService) — `ConcurrentHashMap` process store, REST endpoints, outbox events. Proven pattern, 0 external dependencies beyond our own starters.
+- **Credit scoring integration**: PayuRestClient wrapping lending-rules REST call. Need robust BigDecimal conversion — lending-rules returns `Integer` for small scores, PayuRestClient generic type erasure returns raw `Map`.
+- **DB provisioning for CrunchyData PGO**: Use `oc exec ... -c database -- psql -U postgres` (local socket superuser). User `payu` has no `createdb` privilege.
+
+**Lessons**:
+1. **KIE 10.x BPMN = Quarkus native only**. Spring Boot support is CDI-only with zero auto-config. Do not use `jbpm-with-drools-spring-boot-starter:10.x` for Spring Boot projects.
+2. **Kogito Quarkus 1.44.1.Final = Quarkus 2.x**. Don't mix with Quarkus 3.x projects (notification-service uses 3.33.1).
+3. **Drools 8.44.0.Final jBPM parser** is incomplete for BPMN2 gateways — use DRL rules only (lending-rules pattern), defer BPMN to Quarkus-native or simpler state machines.
+4. **ImageStream import reliability**: Push via external route, verify digest matches. `oc import-image --confirm --insecure` from external route always works.
+5. **outbox-starter needs DB table**: `outbox_events` table must exist. Outbox starter auto-config pulls JPA → needs datasource. Exclude `DataSourceAutoConfiguration` only if no outbox needed.

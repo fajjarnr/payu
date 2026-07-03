@@ -11,31 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **loan-origination-process** microservice (KOGITO-001): Spring Boot 4.1 + jBPM-with-Drools 10.2.0 BPMN process orchestrator for multi-step loan approval:
-  - BPMN2 process `loan-origination.bpmn2`: Start → CreditScoring (REST→lending-rules) → Gateway(≥600) → FirstLine Approval (loan-officer) → SecondLine Approval (risk-manager, 48h SLA boundary timer) → Disbursement (outbox→Kafka `payu.lending.loan-disbursed.v1`)
-  - `CreditScoringWorkItemHandler`: REST call to lending-rules `/api/v1/rules/credit-score` via PayuRestClient (circuit breaker + retry)
-  - `DisbursementWorkItemHandler`: Publishes `LoanDisbursed` event to outbox-starter → Kafka
+- **loan-origination-process** microservice (KOGITO-001): Spring Boot 4.1 manual state machine for multi-step loan approval:
+  - `POST /api/v1/loan-origination` — credit scoring via lending-rules REST, gateway ≥600
+  - `GET /api/v1/loan-origination/{id}` — process state
+  - `POST /api/v1/loan-origination/{id}/approve?approved=bool` — disbursement via outbox→Kafka `payu.lending.loan-disbursed.v1`
+  - `GET /api/v1/loan-origination` — list active processes
+  - In-memory ConcurrentHashMap store, PayuRestClient resilience wrapping
   - Containerfile: UBI9, non-root UID 1001, port 8080
-  - 4 infra manifests: Deployment, Service, ServiceAccount, KogitoRuntime CR (Spring Boot runtime, disabled by default)
-- **Backoffice Task Inbox** (Phase 2): `TaskInboxController` proxying Kogito task API:
-  - `GET /api/v1/backoffice/tasks/pending?user=X` — fetch pending tasks
-  - `POST /api/v1/backoffice/tasks/{taskId}/transition?user=X` — claim/complete/release/skip tasks
-  - RBAC: `loan-officer`, `risk-manager`, `admin`, `backoffice` authorities
-- **KIE 10.2.0 version** in parent POM `<kie.version>` property. KIE 10.x is separate coordinate space from Drools 8.44.0.Final (rules-only) and Kogito 1.x (old addons). Addons use `org.kie:kie-addons-springboot-*:10.2.0`.
+  - 4 infra manifests: Deployment, Service, ServiceAccount, KogitoRuntime CR placeholder
+  - lending-rules Service created (was missing)
+- **Backoffice Task Inbox** (KOGITO-001 Phase 2): `TaskInboxController` proxying Kogito task API:
+  - `GET /api/v1/backoffice/tasks/pending?user=X`
+  - `POST /api/v1/backoffice/tasks/{taskId}/transition?user=X`
+- **payu_loan_origination** database + outbox_events table created in PGO PostgreSQL HA
 
 ### Changed
 
 - **backend/pom.xml**: Added `<module>loan-origination-process</module>` + `<kie.version>10.2.0</kie.version>`
-- **backend/loan-origination-process/pom.xml**: jBPM 10.2.0 + KIE persistence-jdbc + process-management + rest-client-starter + outbox-starter
-- **infrastructure/workloads/base/kustomization.yaml**: Added `./loan-origination-process`
-- **backoffice-service application.yml**: Added `payu.kogito.task-api.url` config
+- **kustomization.yaml**: Added `./loan-origination-process`, `./lending-rules`
+- **KogitoRuntime**: Archived lending-rules stale CR from `default` namespace. KIE 10.x BPMN = Quarkus CDI-only, not Spring Boot compatible (L-093, L-094)
+- **Manual state machine approach** instead of BPMN engine for Spring Boot — proven pattern matching lending-service
 
 ### Known
 
-- **KogitoRuntime CR** for loan-origination-process declared but disabled — deploy as standard Deployment first, migrate after stable. KogitoInfra Strimzi resolution bug persists (L-092).
-- **WorkItemHandler auto-discovery**: jBPM 10.x `@Component` named beans should auto-register. Verify at deploy stage. Manual `WorkItemHandlerConfig` registration available as fallback.
-- **User Task group names** (`loan-officer`, `risk-manager`) must exist as Keycloak realm roles for task assignment to work.
-- **BPMN ID assignments**: `potentialOwner`, `resourceAssignmentExpression`, `formalExpression` use enterprise BPMN2 syntax. Kogito runtime parsing verified at first deploy.
+- **KogitoRuntime CR**: Declared but disabled. KIE 10.x jBPM Spring Boot starter has no auto-config (CDI-only). Kogito Quarkus 1.44.1 works with Quarkus 2.x only (not 3.x). BPMN deferred to Quarkus-native service or Kogito 2.x when stable.
 
 ## [1.8.83] - 2026-07-03
 
