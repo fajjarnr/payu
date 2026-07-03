@@ -13,12 +13,31 @@
 
 BEGIN;
 
+DROP MATERIALIZED VIEW IF EXISTS mv_account_balance_summary CASCADE;
+
 ALTER TABLE accounts
     ALTER COLUMN balance TYPE DECIMAL(19,4) USING balance::DECIMAL(19,4);
 
 ALTER TABLE budgets
     ALTER COLUMN limit_amount TYPE DECIMAL(19,4) USING limit_amount::DECIMAL(19,4),
     ALTER COLUMN current_spent TYPE DECIMAL(19,4) USING current_spent::DECIMAL(19,4);
+
+CREATE MATERIALIZED VIEW mv_account_balance_summary AS
+SELECT
+    a.id as account_id,
+    date_trunc('day', a.updated_at) as date,
+    COALESCE(a.balance, 0) as total_balance,
+    0 as transaction_count,
+    COALESCE(a.balance, 0) as avg_balance,
+    COALESCE(a.balance, 0) as min_balance,
+    COALESCE(a.balance, 0) as max_balance
+FROM accounts a
+WHERE a.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY a.id, date_trunc('day', a.updated_at);
+
+CREATE INDEX idx_mv_balance_summary_account_date ON mv_account_balance_summary(account_id, date);
+
+COMMENT ON MATERIALIZED VIEW mv_account_balance_summary IS 'Daily balance summaries per account';
 
 COMMIT;
 

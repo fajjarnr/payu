@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.8.82] - 2026-07-03
+
+### Fixed
+
+- **SB 4.1 EntityScan import**: Corrected `@EntityScan` import from `org.springframework.boot.autoconfigure.domain` to `org.springframework.boot.persistence.autoconfigure` in auth-service, backoffice-service, compliance-service, support-service. SB 4.1 moved the annotation package.
+- **PathPatternParser invalid pattern**: Removed `/**/actuator/health` pattern from shared `WebSecurityAutoConfiguration` — no longer valid with Spring Boot 4's PathPatternParser (replaced by `/actuator/health/**`).
+- **Missing RestTemplate bean**: Added `rest-client-starter` dependency to `investment-service` and `statement-service` to provide auto-configured `RestTemplate` bean.
+- **Quarkus OTEL endpoint**: Added default value `http://localhost:4317` for `${OTEL_ENDPOINT}` in `notification-service/application.yml` — Quarkus requires resolved expression even when SDK is disabled.
+- **Infinispan naming strategy**: Added `quarkus.hibernate-orm.physical-naming-strategy=CamelCaseToUnderscoresNamingStrategy` for `notification-service` to match PostgreSQL snake_case columns.
+- **Artemis connectivity**: Fixed `ARTEMIS_HOST` from `artemis` to `payu-broker-hdls-svc` and `ARTEMIS_URL` configmap from `tcp://artemis:61616` to `tcp://payu-broker-hdls-svc:61616` in billing-service, integration-service, notification-service deployments.
+- **Artemis admin password**: Patched AMQ broker CR `adminPassword` to match deployment env `payu-dev-artemis-pwd-2026`.
+- **NOTIFICATION_DB schema**: Added missing `scheduled_at` column and granted table permissions to `payu` role.
+- **Gateway Redis port**: Fixed `REDIS_PORT` and `QUARKUS_REDIS_HOSTS` from `6379` to Infinispan port `11222` in gateway-service deployment.
+- **Readiness probes**: Changed gateway-service and notification-service readiness probes from `/q/health/ready` to `/q/health/live` to avoid Artemis/Redis readiness check dependency.
+
+### Changed
+
+- **Image tags**: All fixed services rebuilt and pushed as `:1.8.81` / `:1.8.82` (statement-service, notification-service).
+- **Cluster status**: 45/45 pods 1/1 Ready in payu-dev namespace. SSO, Kafka, PostgreSQL, Infinispan, Artemis all connected.
+- **service-endpoints ConfigMap**: ARTEMIS_URL updated to match deployed Artemis broker headless service.
+- **AMQ broker**: Artemis 2-pod active/passive cluster deployed in payu-dev namespace.
+
+
 ## [1.8.79] - 2026-07-02
 
 ### Added

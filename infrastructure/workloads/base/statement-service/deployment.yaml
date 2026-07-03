@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/statement-service:1.8.66
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:1.8.82
         ports:
         - containerPort: 8080
           name: http
@@ -133,3 +133,5 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        - name: SERVICES_WALLET_URL
+          value: http://wallet-service:8080

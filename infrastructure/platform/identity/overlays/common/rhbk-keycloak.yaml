@@ -30,7 +30,7 @@ spec:
   # --- Database Configuration (Crunchy PGO) ---
   db:
     vendor: postgres
-    host: payu-postgres
+    host: payu-postgres-ha-primary
     port: 5432
     database: keycloak
     usernameSecret:

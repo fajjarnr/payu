@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/gateway-service:1.8.44
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.8.80
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -57,7 +57,7 @@ spec:
           mountPath: /tmp
         readinessProbe:
           httpGet:
-            path: /q/health/ready
+            path: /q/health/live
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -97,14 +97,14 @@ spec:
         - name: REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: KAFKA_BOOTSTRAP_SERVERS
           valueFrom:
             configMapKeyRef:
               name: service-endpoints
               key: KAFKA_URL
         - name: QUARKUS_REDIS_HOSTS
-          value: redis://:payu-cache-dev-password@payu-cache.payu-dev.svc.cluster.local:6379
+          value: redis://:payu-cache-dev-password@payu-cache.payu-dev.svc.cluster.local:11222
         - name: REDIS_PASSWORD
           value: payu-cache-dev-password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL

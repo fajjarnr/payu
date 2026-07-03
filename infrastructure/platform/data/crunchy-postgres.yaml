@@ -108,7 +108,7 @@ spec:
         - payu_abtesting
         - payu_dispute
         - payu_integration
-        - payu_productcatalog
+        - payu_products
         - payu_biller
         - payu_va
         - keycloak

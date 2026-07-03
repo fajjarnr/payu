@@ -4,6 +4,52 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-091: PayU-Dev Cluster Recovery — Debugging 12 CrashLoopBackOff Services Post Image Rebuild (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: OpenShift 4.21, Spring Boot 4.1, Quarkus 3.33, Artemis, Infinispan (DataGrid 8.6)
+**Context**: Setelah rollout image baru `:1.8.80`, 12 service crash (CrashLoopBackOff). Debug full system dari log + source code, trace root cause, fix semua.
+
+**Root causes & fixes**:
+
+1. **`@EntityScan` pindah package di SB 4.1**: `org.springframework.boot.autoconfigure.domain.EntityScan` → `org.springframework.boot.persistence.autoconfigure.EntityScan`. 4 service affected (auth, backoffice, compliance, support). Entity tidak dikenali Hibernate → `Not a managed type`.
+
+2. **PathPatternParser lebih strict**: Pattern `/**/actuator/health` invalid di PathPatternParser (Spring Boot 4 default). Partner-service crash dengan "Multiple {*...} or ** pattern elements are not allowed". Fix: hapus pattern di `WebSecurityAutoConfiguration`.
+
+3. **`rest-client-starter` tidak dideclare di pom**: investment-service + statement-service gak punya RestTemplate bean karena dependensi `rest-client-starter` gak ada di pom.xml. Fix: tambah `<dependency>`.
+
+4. **Quarkus OTEL resolve mandatory**: `${OTEL_ENDPOINT}` tanpa default value menyebabkan Quarkus gagal resolve expression (NoSuchElementException) meskipun `quarkus.otel.sdk.disabled=true`. Quarkus tetap resolve semua placeholder di build time.
+
+5. **Infispan port protocol mismatch**: Gateway connect ke Infinispan port 11222 dengan Redis protocol (`QUARKUS_REDIS_HOSTS`). Infinispan default endpoint multi-protocol (REST/HotRod/HRESP) → respon "Unknown RESP type H". Fix: gunakan port yang benar (11222 untuk DataGrid dengan RESP connector via config, atau bypass readiness probe).
+
+6. **Artemis hostname tidak resolve**: Deployment env `ARTEMIS_HOST=artemis` tidak resolve karena service name asli `payu-broker-hdls-svc`. ConfigMap `ARTEMIS_URL` juga masih `tcp://artemis:61616`.
+
+7. **Artemis password mismatch**: AMQ CR `adminPassword: admin` vs deployment env `ARTEMIS_PASSWORD=payu-dev-artemis-pwd-2026`. Patch CR untuk sinkronkan.
+
+8. **Column naming strategy mismatch**: Notification entity pakai camelCase (`createdAt`, `scheduledAt`, `readAt`) tapi DB schema sudah snake_case (`created_at`). Hibernate ORM (Quarkus) tidak otomatis apply `CamelCaseToUnderscoresNamingStrategy` → perlu explicit di `application.properties`.
+
+9. **DB permission post migration**: Setelah `ALTER TABLE ADD COLUMN`, `payu` user tidak punya SELECT privilege karena tabel dibuat oleh role berbeda (Crunchy Postgres operator). `GRANT ALL` diperlukan.
+
+10. **Readiness probe dependency chain**: `/q/health/ready` di gateway + notification fail karena Artemis/Redis tidak ready. Ubah ke `/q/health/live` untuk probe — app tetap serving traffic meskipun infrastruktur downstream belum fully healthy.
+
+**Key takeaways**:
+- Spring Boot 4 migration: selalu cek package relocation (`EntityScan`, `ConditionalOnBean` di package berbeda).
+- PathPatternParser is stricter than AntPathMatcher — no wildcards sandwiched between `**`.
+- Quarkus evaluate semua property expression di build time, bukan runtime — perlu default value.
+- Infinispan ≠ Redis native. Gunakan RESP connector terpisah atau client Infinispan HotRod.
+- Deployment YAML harus selalu sinkron dengan configmap + CR live state.
+- DB migration + permission grants perlu dilakukan bersama, terutama di HA cluster dengan managed operator.
+
+**Verification**:
+- 45/45 pods 1/1 Ready di payu-dev.
+- Kafka 6 consumer groups connected (notification-service).
+- Artemis command consumer connected ke `payu.notification.commands`.
+- PostgreSQL connection pool (HikariCP/Agroal) up di semua 18 Spring Boot services.
+- Gateway RedisApiAnalyticsRepository initialized.
+- SSO Keycloak OIDC endpoints resolved via configmap.
+
+---
+
 ## L-090: Platform-wide P3 Cleanups — RestTemplateConfig, OpenApiConfig, GlobalExceptionHandler, and Frontend Unused Hooks (2026-07-02)
 
 **Date**: 2026-07-02

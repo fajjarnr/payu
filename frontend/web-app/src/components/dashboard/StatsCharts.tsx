@@ -41,6 +41,13 @@ const investmentConfig = {
   },
 } satisfies ChartConfig
 
+const spendingConfig = {
+  amount: {
+    label: "Jumlah",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
+
 interface StatsChartsProps {
   className?: string;
   investmentChartData?: { category: string; value: number; fill: string }[];

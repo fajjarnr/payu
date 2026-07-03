@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.24
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.82
         ports:
         - containerPort: 8080
           name: http
@@ -56,7 +56,7 @@ spec:
           mountPath: /tmp
         readinessProbe:
           httpGet:
-            path: /q/health/ready
+            path: /q/health/live
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -139,13 +139,17 @@ spec:
         - name: ARTEMIS_PORT
           value: '61616'
         - name: ARTEMIS_HOST
-          value: artemis
+          value: payu-broker-hdls-svc
         - name: ARTEMIS_USERNAME
           value: admin
         - name: ARTEMIS_PASSWORD
-          value: admin
+          value: payu-dev-artemis-pwd-2026
 
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        - name: OTEL_SDK_DISABLED
+          value: "true"
+        - name: OTEL_ENDPOINT
+          value: http://localhost:4317

@@ -28,7 +28,7 @@ quarkus:
       name: notification-service
     exporter:
       otlp:
-        endpoint: ${OTEL_ENDPOINT}
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
     resource:
       attributes:
         - service.name=notification-service

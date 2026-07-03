@@ -58,6 +58,7 @@ spec:
         - "$(params.GOALS[*])"
         - -Dmaven.repo.local=$(workspaces.source.path)/.m2
         - -Duser.home=/tekton/home
+        - -Dmaven.resolver.transport=wagon
       resources:
         requests:
           memory: "2Gi"

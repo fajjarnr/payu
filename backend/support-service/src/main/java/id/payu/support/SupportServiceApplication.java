@@ -2,6 +2,7 @@ package id.payu.support;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "id.payu.support.adapter.persistence.repository")
+@EntityScan(basePackages = "id.payu.support.adapter.persistence.entity")
 public class SupportServiceApplication {
 
     public static void main(String[] args) {

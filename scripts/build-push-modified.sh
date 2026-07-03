@@ -8,26 +8,14 @@ TAG="1.8.55"
 # List of services that we actually modified and need to rebuild and redeploy
 SERVICES=(
   account-service
-  analytics-service
   auth-service
-  backoffice-service
-  billing-service
   cms-service
   compliance-service
   dispute-service
   fx-service
-  gateway-service
-  integration-service
-  investment-service
-  kyc-service
   lending-service
-  partner-service
-  product-catalog-service
   promotion-service
-  statement-service
   support-service
-  transaction-service
-  wallet-service
 )
 
 get_dir() {
@@ -43,6 +31,22 @@ get_dir() {
   fi
 }
 
+get_tag() {
+  local svc=$1
+  local yaml=""
+  if [ -d "infrastructure/workloads/base/${svc}" ]; then
+    yaml="infrastructure/workloads/base/${svc}/deployment.yaml"
+  elif [ -f "infrastructure/workloads/base/${svc}.yaml" ]; then
+    yaml="infrastructure/workloads/base/${svc}.yaml"
+  fi
+  
+  if [ -f "$yaml" ]; then
+    grep -oP 'image:.*:\K[a-zA-Z0-9.-]+' "$yaml" | head -n 1
+  else
+    echo "latest"
+  fi
+}
+
 echo "Logging podman into OCP registry..."
 podman login -u kubeadmin -p "$(oc whoami -t)" --tls-verify=false "${REGISTRY}"
 
@@ -51,6 +55,11 @@ for svc in "${SERVICES[@]}"; do
   if [ -z "$dir" ]; then
     echo "WARNING: Directory not found for ${svc}, skipping"
     continue
+  fi
+  
+  TAG=$(get_tag "$svc")
+  if [ -z "$TAG" ]; then
+    TAG="latest"
   fi
   
   image="${REGISTRY}/${NAMESPACE}/${svc}:${TAG}"

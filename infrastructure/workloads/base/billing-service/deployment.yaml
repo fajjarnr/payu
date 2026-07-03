@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/billing-service:1.8.64
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.8.81
         ports:
         - containerPort: 8080
           name: http
@@ -148,11 +148,11 @@ spec:
         - name: ARTEMIS_PORT
           value: '61616'
         - name: ARTEMIS_HOST
-          value: artemis
+          value: payu-broker-hdls-svc
         - name: ARTEMIS_USERNAME
           value: admin
         - name: ARTEMIS_PASSWORD
-          value: admin
+          value: payu-dev-artemis-pwd-2026
 
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu

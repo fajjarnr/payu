@@ -18,3 +18,16 @@ ALTER TABLE users DROP CONSTRAINT IF EXISTS users_phone_number_key;
 
 COMMENT ON COLUMN users.email IS 'AES-256-GCM encrypted email address';
 COMMENT ON COLUMN users.phone_number IS 'AES-256-GCM encrypted phone number';
+
+CREATE TABLE IF NOT EXISTS sensitive_user_data (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    nik VARCHAR(512) NOT NULL,
+    tax_id VARCHAR(512),
+    mother_maiden_name VARCHAR(512),
+    address JSONB,
+    phone_primary VARCHAR(512),
+    phone_secondary VARCHAR(512),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);

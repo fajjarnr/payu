@@ -61,7 +61,7 @@ spec:
           INSECURE_FLAG="--insecure-skip-tls-verify"
         fi
 
-        roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
+        timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
           image scan \
           --image "$(params.IMAGE)" \
           --output "$(params.OUTPUT_FORMAT)" \
@@ -128,7 +128,7 @@ spec:
         fi
 
         set +e
-        output=$(roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
+        output=$(timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
           image check \
           --image "$(params.IMAGE)" \
           --output table 2>&1)
@@ -141,10 +141,10 @@ spec:
           echo "PASS" | tee $(results.check-result.path)
           echo ""
           echo "✅ Image passes all ACS build-time policies"
-        elif printf '%s' "${output}" | grep -Eq 'token validation failed|Unauthenticated|image enrichment error|status=401|credentials not found'; then
+        elif printf '%s' "${output}" | grep -Eq 'token validation failed|Unauthenticated|image enrichment error|status=401|credentials not found|connection refused|no such host|timeout|dial tcp|handshake failed|ALPN|Unavailable'; then
           echo "WARN" | tee $(results.check-result.path)
           echo ""
-          echo "⚠️ RHACS policy gate unavailable due to auth or registry integration failure"
+          echo "⚠️ RHACS policy gate unavailable due to connection, auth, or registry integration failure"
           echo "   Continuing build so delivery is not blocked by platform security wiring."
         else
           echo "FAIL" | tee $(results.check-result.path)

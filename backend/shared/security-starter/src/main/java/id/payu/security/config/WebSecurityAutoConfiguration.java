@@ -83,8 +83,7 @@ public class WebSecurityAutoConfiguration {
             .authorizeHttpRequests(auth -> {
                 // Common public endpoints (direct and per-service paths)
                 auth.requestMatchers(
-                        "/actuator/health", "/actuator/health/**", "/actuator/info",
-                        "/**/actuator/health", "/**/actuator/health/**", "/**/actuator/info"
+                        "/actuator/health", "/actuator/health/**", "/actuator/info"
                 ).permitAll();
 
                 auth.requestMatchers("/actuator/**").authenticated();

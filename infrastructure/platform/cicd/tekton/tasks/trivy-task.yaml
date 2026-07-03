@@ -57,7 +57,19 @@ spec:
 
           mkdir -p "$HOME/.docker" "$TRIVY_CACHE_DIR"
 
-          if [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+          image_registry="$(params.IMAGE)"
+          image_registry="${image_registry%%/*}"
+
+          is_openshift=0
+          case "$image_registry" in
+            *openshift-image-registry*) is_openshift=1 ;;
+          esac
+
+          if [ "$is_openshift" -eq 1 ] && [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+            token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+            auth=$(printf 'unused:%s' "$token" | base64 -w0)
+            echo "{\"auths\":{\"$image_registry\":{\"auth\":\"$auth\"}}}" > "$HOME/.docker/config.json"
+          elif [ "$(workspaces.dockerconfig.bound)" = "true" ] && [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
             cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$HOME/.docker/config.json"
           fi
 

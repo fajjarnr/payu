@@ -35,7 +35,7 @@ ALTER TABLE paylater_accounts
     ALTER COLUMN used_credit TYPE DECIMAL(19,4) USING used_credit::DECIMAL(19,4),
     ALTER COLUMN available_credit TYPE DECIMAL(19,4) USING available_credit::DECIMAL(19,4);
 
-ALTER TABLE loan_repayments
+ALTER TABLE repayment_schedules
     ALTER COLUMN installment_amount TYPE DECIMAL(19,4) USING installment_amount::DECIMAL(19,4),
     ALTER COLUMN principal_amount TYPE DECIMAL(19,4) USING principal_amount::DECIMAL(19,4),
     ALTER COLUMN interest_amount TYPE DECIMAL(19,4) USING interest_amount::DECIMAL(19,4),

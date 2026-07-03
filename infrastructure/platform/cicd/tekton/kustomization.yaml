@@ -14,15 +14,19 @@ resources:
   - tasks/litmus-gate-task.yaml
   - tasks/maven-task.yaml
   - tasks/maven-java21-task.yaml
+  - tasks/pact-verify-task.yaml
   - tasks/pytest-task.yaml
   - tasks/rhacs-tasks.yaml
   - tasks/schemathesis-task.yaml
   - tasks/security-scan-task.yaml
+  - tasks/semantic-version-task.yaml
   - tasks/semgrep-task.yaml
   - tasks/syft-task.yaml
   - tasks/trivy-task.yaml
   - tasks/trufflehog-task.yaml
   - tasks/zap-baseline-task.yaml
+  - tasks/zap-full-owasp-task.yaml
+  - tasks/license-compliance-task.yaml
 
   # Pipelines
   - build-pipeline.yaml
