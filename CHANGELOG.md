@@ -52,6 +52,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.81] - 2026-07-03
+
+### Added
+
+- **Postgres HA (READY-076)**: Crunchy Postgres Operator v5.8.8 installed, 3-node PG17 HA cluster (`payu-postgres-ha`) running in payu-dev namespace with Patroni leader election and streaming replication.
+- **date-fns**: Installed missing dependency used in `transfer/page.tsx`.
+
+### Changed
+
+- **UPGRADE-014**: Verified Next.js 16.2.9 already applied. No upgrade needed.
+
+### Removed
+
+- **@tanstack/react-table**: Removed unused dependency (flagged by depcheck, no source imports).
+
+---
+
 ## [1.8.78] - 2026-07-02
 
 ### Added

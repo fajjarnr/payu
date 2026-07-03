@@ -18,19 +18,19 @@
 | Metric | Value |
 |:---|:---|
 | **Open P0s** | **0** |
-| **Open P1s** | 1 (READY-076) |
+| **Open P1s** | 0 (READY-076 closed — 3-node PG17 HA running) |
 | **Open P2s** | 0 |
 | **Open P3s** | 1 (AUDIT-096) |
 | **Production Score** | **payu-dev: 46/46 pods Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff (100% healthy)** |
 | **Last Release** | `:1.8.77` — ops framework, security headers, TODOS consolidation |
 | **Last Audit** | July 2, 2026 — Ponytail deep audit. 33 findings (5 P1, 13 P2, 15 P3). ~3,000 lines dead code, ~8 unused npm deps, ~95 single-impl ports, 7 orphaned ports, ~58 duplicate configs. |
-| **Last Updated** | July 3, 2026 (PON-021, PON-024, PON-033 closed) |
+| **Last Updated** | July 3, 2026 (READY-076 closed, PON-021/024/033 closed) |
 
 ---
 
 ## 🐛 Active Tickets
 
-- **READY-076** Postgres HA — image registry blocked (Crunchy `ubi8-2.50.1` etc missing)
+*No active tickets — READY-076 resolved (PG17 HA 3-node cluster with Crunchy operator).*
 
 ---
 
