@@ -3302,3 +3302,86 @@ synchronized (lock) {
 3. **Drools 8.44.0.Final jBPM parser** is incomplete for BPMN2 gateways — use DRL rules only (lending-rules pattern), defer BPMN to Quarkus-native or simpler state machines.
 4. **ImageStream import reliability**: Push via external route, verify digest matches. `oc import-image --confirm --insecure` from external route always works.
 5. **outbox-starter needs DB table**: `outbox_events` table must exist. Outbox starter auto-config pulls JPA → needs datasource. Exclude `DataSourceAutoConfiguration` only if no outbox needed.
+
+
+## L-095: DB Permission Denied After Flyway — Table Ownership Pattern (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: PostgreSQL, Flyway, Spring Boot, Kubernetes, CNPG, Crunchy
+**Context**: After deploying 23 microservices, all pods hit `ERROR: permission denied for table outbox_events` (HHH000247), `shedlock`, `saga_instances`, `notifications`, etc.
+
+**Root cause**: Flyway migrations run as `postgres` superuser (operator-managed), creating all tables owned by `postgres`. Application connects as `payu` which has no table-level grants. `GRANT ALL PRIVILEGES ON DATABASE` in `init-db.sql` only grants DB-level access, not table-level.
+
+**Fix applied**:
+1. Connected to actual primary pod (not standby) via `pg_is_in_recovery()` check
+2. `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO payu` across 19 DBs with outbox/shedlock tables
+3. `ALTER TABLE ... OWNER TO payu` for all tables owned by `postgres` (required for Hibernate DDL `alter table`)
+4. `ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON TABLES/SEQUENCES TO payu`
+5. Created `post-deploy-db-grants` Job to automate this after future Flyway runs
+
+**Key insight**: PostgreSQL `GRANT ... ON DATABASE` does not cascade to tables. Each table created post-grant has no permissions unless `ALTER DEFAULT PRIVILEGES` was set before table creation. Flyway migrations via operator always create tables as the operator's superuser.
+
+**Prevention**: 
+- Source fix: `init-db.sql` now includes `GRANT ALL ON ALL TABLES/SEQUENCES` + `ALTER DEFAULT PRIVILEGES` at the end
+- Deployment: `post-deploy-db-grants.yaml` Job runs after initial migration
+- Monitoring: `OutboxPublisher` health endpoint exposes pending count — zero pending = grants OK
+
+## L-096: Infinispan DataGrid RESP (Redis) Connector — Operator Complexity (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: Red Hat Data Grid 8.6.1, Infinispan, Redis RESP, OpenShift
+**Context**: All 23 services configured with `REDIS_HOST=payu-cache:6379` using Spring Boot Lettuce (Redis client), but backend was Infinispan DataGrid with RESP connector disabled.
+
+**Root cause**: Data Grid operator v8.6.1 supports RESP (Redis wire protocol) natively, but:
+1. RESP endpoint requires `configMapName` set in Infinispan CR → custom XML merged via config-listener
+2. Config-listener fails to push config without `payu-cache-admin` service (Service 11223 port)
+3. Operator reconciliation always overwrites pod-level config changes
+4. REST admin API requires authentication (BASIC/DIGEST not supported in dev mode)
+5. `endpointAuthentication: false` breaks RESP connector (requires security realm with passwords)
+
+**What worked**: Replaced Infinispan with native Redis 7 StatefulSet (RHEL9 `redis-7` image):
+- 50MB container vs 500MB+ Data Grid JVM
+- Native `redis-cli` probes (no REST API dependency)
+- `requirepass` for auth, `appendonly yes` for persistence
+- Single StatefulSet with PVC — simpler than Infinispan CR + operator + config-listener
+
+**Takeaway**: Use native Redis (or Valkey) for pure Redis use cases. Data Grid is appropriate when you need distributed caching with Infinispan-specific features (clustered caches, HotRod protocol, cross-site replication). RESP connector is a secondary feature of Data Grid, not its primary purpose.
+
+## L-097: CloudNativePG vs Crunchy PostgreSQL — OpenShift Operator Choice (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: CNPG v1.30.0, Crunchy PG v5.8.8, PostgreSQL 16, OpenShift 4.22
+**Context**: Evaluated and migrated from Crunchy PostgreSQL Operator to CloudNativePG for production HA PostgreSQL.
+
+**Comparison**:
+
+| | Crunchy PG (v5.8.8) | CloudNativePG (v1.30.0) |
+|---|---|---|
+| **Architecture** | Operator + Patroni + pgBackRest + pgBouncer | Single operator, no Patroni dependency |
+| **Failover** | Patroni-based, ~30-60s via leader election | Native controller, <10s via lease-based primary election |
+| **Image availability** | Red Hat partner registry — auth required, images pull-failed | GitHub Container Registry + UBI9, direct access |
+| **Complexity** | 3-4 CRDs, multiple sidecars | 1 primary CRD, 1 pod per instance |
+| **Backup** | pgBackRest (best-in-class) | Barman Cloud (S3-compatible) |
+| **SCC compatibility** | `restricted-v2` via operator-managed UIDs | Needs `anyuid` for operator, cluster pods use cluster-configured UID |
+| **Red Hat status** | Acquired by Red Hat 2026 — roadmap unclear | CNCF project, independent, OpenShift-certified operator available |
+| **Operator install** | OLM catalog `postgresoperator` | Manual manifest via server-side apply (CRD annotation too large for OLM) |
+
+**Decision**: CloudNativePG for PayU because:
+1. Crunchy images could not be pulled from Red Hat registry (auth required, manifest unknown for some tags)
+2. CNPG ships as single Go binary operator — lighter, fewer failure modes
+3. Rolling updates for PostgreSQL upgrades (no downtime) — Crunchy requires manual failover for major version upgrades
+4. CNPG failover faster (~5-10s vs Patroni ~30-60s)
+5. Red Hat acquired Crunchy in 2026 — future integration with OpenShift uncertain
+
+**Migration approach**:
+1. Install CNPG operator in `cnpg-system` namespace via `--server-side --force-conflicts`
+2. Apply `cnpg-cluster.yaml` — 3 instances, `payu-database` named cluster
+3. Create 26 application databases via `psql` on primary pod
+4. Update `service-endpoints` ConfigMap: all 21 DB URLs → `payu-database-rw`
+5. Delete Crunchy operator CSV + all StatefulSets + services
+
+**OpenShift-specific notes**:
+- CRD annotation >262KB (OpenShift limit) → must use `--server-side` apply
+- Operator pod needs `anyuid` SCC (UID 10001 incompatible with `restricted-v2`)
+- PostgreSQL cluster pods inherit `restricted-v2` SCC automatically (no manual patch needed)
+- Poolers CRD install fails (CRD annotation too large) — non-critical, just use `payu-database-rw` directly

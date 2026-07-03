@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.1] - 2026-07-03
+
+### Added
+
+- **CloudNativePG v1.30.0** replaces Crunchy PostgreSQL Operator v5.8.8:
+  - `payu-database` 3-instance cluster with synchronous replication + failover quorum
+  - Rolling updates for zero-downtime PostgreSQL upgrades
+  - Automated failover (<10s, no Patroni dependency)
+  - Services: `payu-database-rw` (writes), `payu-database-ro` (read-only), `payu-database-r` (any)
+  - 26 application databases auto-created
+  - Barman Cloud backup-ready (S3-compatible)
+  - SCC compatibility via `anyuid` for operator, UBI9 PostgreSQL 16.8 image
+- **Redis RHEL9 StatefulSet** replaces Infinispan DataGrid:
+  - Native redis-7 with AOF persistence, auth, port 6379
+  - Service: `payu-cache.payu-dev.svc:6379` with `redis` ExternalName alias
+  - Liveness/readiness probes via `redis-cli PING`
+- **dev-env-secrets** Secret: shared `ENCRYPTION_SALT` + `WEBHOOK_SECRET` for dev namespace
+- **post-deploy-db-grants** Job: automated table/sequence grants after Flyway migrations
+- **cnpg-migration** Job: pg_dump/restore from old Crunchy cluster to CNPG
+
+### Changed
+
+- **All 24 deployment YAMLs**: Added `JAVA_TOOL_OPTIONS` (native access), `PAYU_SECURITY_ENCRYPTION_SALT`, `WEBHOOK_SECURITY_SECRET`
+- **service-endpoints ConfigMap**: All 21 DB URLs → `payu-database-rw` (was `payu-postgres-ha-primary`)
+- **db-secrets.yaml**: DB host → `payu-database-rw`, KYC and Analytics URLs updated
+- **gateway-service deployment**: Redis port `11222` → `6379` (Infinispan RESP → native Redis)
+- **loan-origination-process deployment**: DB host fix, removed `optional: true` from creds
+- **kyc-service deployment**: Added Artemis STOMP env vars (`ARTEMIS_HOST`, `ARTEMIS_STOMP_PORT`, etc.)
+- **api-portal-service deployment**: Added `OTEL_ENDPOINT` for Quarkus OTLP
+- **init-db.sql**: Added `GRANT ALL ON ALL TABLES/SEQUENCES` + `ALTER DEFAULT PRIVILEGES`
+- **logback-payu-base.xml**: Fixed JSON_CONSOLE appender — `LogstashEncoder` directly, not nested in `LayoutWrappingEncoder`
+- **DRL file path**: `credit_scoring.drl` moved to `id/payu/lendingrules/rules/` matching package declaration
+
+### Fixed
+
+- **DB permission denied** (HHH000247): All tables owned by `postgres` after Flyway migrations, app user `payu` had no grants. Fixed via `GRANT ALL ON ALL TABLES` + `ALTER DEFAULT PRIVILEGES` across all 26 DBs
+- **Redis RedisConnectionException**: Infinispan DataGrid RESP connector not functional. Replaced with native Redis StatefulSet
+- **Camel OJK Exchange[] error**: `MessageProcessingService.createMessage()` parameter binding mismatch. Added overload accepting `IntegrationMessage`
+- **Logback unknown property [encoder]**: Nested LogstashEncoder inside PatternLayout — invalid XML structure
+- **Default PBKDF2 salt warning**: Set `PAYU_SECURITY_ENCRYPTION_SALT` across all deployments
+- **Webhook secret default warning**: Set `WEBHOOK_SECURITY_SECRET` across all deployments
+- **Native access warning**: Set `JAVA_TOOL_OPTIONS=--enable-native-access=ALL-UNNAMED`
+
+### Removed
+
+- **Crunchy PostgreSQL Operator v5.8.8**: Full operator + all StatefulSets, services, PVCs deleted
+- **Infinispan DataGrid**: CR, StatefulSet, config-listener, admin/resp services all deleted
+- **lending-rules KogitoRuntime CR**: `kogito-infra.yaml`, `kogito-runtime.yaml` deleted (operator archived)
+
 ## [1.9.0] - 2026-07-03
 
 ### Added
