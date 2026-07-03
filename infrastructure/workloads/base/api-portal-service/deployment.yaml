@@ -149,3 +149,7 @@ spec:
               name: dev-env-secrets
               key: WEBHOOK_SECRET
               optional: true
+        - name: OTEL_ENDPOINT
+          value: "http://otel-collector.payu-dev.svc.cluster.local:4317"
+        - name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.payu-dev.svc.cluster.local:4317"

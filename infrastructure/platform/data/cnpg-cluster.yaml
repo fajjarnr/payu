@@ -1,0 +1,127 @@
+# PayU Platform - CloudNativePG PostgreSQL Cluster
+# Replaces: infrastructure/platform/data/base/postgres-statefulset.yaml
+# ============================================================
+# CNPG features:
+#   - Automated HA failover (<10s, no Patroni needed)
+#   - Rolling updates (zero-downtime PostgreSQL upgrades)
+#   - Backup/recovery via Barman Cloud (S3-compatible)
+#   - 3-instance synchronous replication
+#   - Read-write service: payu-database-rw.payu-dev.svc
+#   - Read-only service: payu-database-ro.payu-dev.svc
+#   - Read service: payu-database-r.payu-dev.svc
+# ============================================================
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-database-superuser
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+type: kubernetes.io/basic-auth
+stringData:
+  username: postgres
+  password: payu-database-superuser-pwd-2026
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-database-app
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+type: kubernetes.io/basic-auth
+stringData:
+  username: payu
+  password: payu-dev-password
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: payu-database
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  description: "PayU Platform PostgreSQL 16 Cluster — CloudNativePG managed"
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8
+
+  instances: 3
+
+  bootstrap:
+    initdb:
+      database: payu_account
+      owner: payu
+      secret:
+        name: payu-database-app
+
+  superuserSecret:
+    name: payu-database-superuser
+
+  storage:
+    storageClass: gp3-csi
+    size: 20Gi
+
+  walStorage:
+    storageClass: gp3-csi
+    size: 5Gi
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  postgresql:
+    parameters:
+      max_connections: "300"
+      shared_buffers: "256MB"
+      effective_cache_size: "768MB"
+      work_mem: "8MB"
+      maintenance_work_mem: "128MB"
+      wal_level: "replica"
+      max_wal_size: "2GB"
+      min_wal_size: "512MB"
+      checkpoint_timeout: "10min"
+      checkpoint_completion_target: "0.9"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      autovacuum: "on"
+      autovacuum_max_workers: "4"
+      autovacuum_naptime: "30s"
+      autovacuum_vacuum_scale_factor: "0.05"
+      autovacuum_analyze_scale_factor: "0.02"
+
+    synchronous:
+      method: "any"
+      number: 1
+      failoverQuorum: true
+
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred
+
+  monitoring:
+    enablePodMonitor: true
+    podMonitorAdditionalLabels:
+      release: prometheus
+
+  # Use OpenShift restricted-v2 SCC compatible security context
+  # UID/GID set by OpenShift, not hardcoded
+  podSecurityContext:
+    runAsNonRoot: true
+
+  # Don't try to set runAsUser/runAsGroup — OpenShift SCC handles it
+  # PostgreSQL works with any UID when PGDATA permissions are correct
