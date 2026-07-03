@@ -81,6 +81,7 @@
         <module>transaction-service</module>
         <module>investment-service</module>
         <module>lending-service</module>
+        <module>lending-rules</module>
         <module>statement-service</module>
         <module>billing-service</module>
         <module>notification-service</module>
@@ -511,6 +512,7 @@
                 <module>transaction-service</module>
                 <module>investment-service</module>
                 <module>lending-service</module>
+                <module>lending-rules</module>
                 <module>statement-service</module>
                 <module>billing-service</module>
                 <module>notification-service</module>

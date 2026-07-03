@@ -1,0 +1,22 @@
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
+
+ARG APP_VERSION=1.8.1
+LABEL maintainer="backend-team@payu.fajjjar.my.id"
+LABEL org.opencontainers.image.title="payu-lending-rules"
+LABEL org.opencontainers.image.version="${APP_VERSION}"
+LABEL org.opencontainers.image.vendor="PayU Indonesia"
+
+USER root
+RUN useradd -u 1001 payu && \
+    mkdir -p /deployments && \
+    chown -R 1001:0 /deployments
+
+USER 1001
+WORKDIR /deployments
+COPY --chown=1001 target/app.jar /deployments/app.jar
+EXPOSE 8080
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
+    CMD curl -sf http://localhost:8080/actuator/health/liveness || exit 1
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

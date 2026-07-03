@@ -1,0 +1,109 @@
+package id.payu.lendingrules.rules;
+
+import id.payu.lendingrules.domain.CreditScoringFact;
+import java.math.BigDecimal;
+
+rule "KYC Approved"
+    when
+        $fact : CreditScoringFact(kycStatus != null, kycStatus.equalsIgnoreCase("APPROVED"))
+    then
+        $fact.addScore(new BigDecimal("50"));
+end
+
+rule "KYC Pending"
+    when
+        $fact : CreditScoringFact(kycStatus != null, kycStatus.equalsIgnoreCase("PENDING"))
+    then
+        $fact.addScore(new BigDecimal("25"));
+end
+
+rule "Tenure 36+ Months"
+    when
+        $fact : CreditScoringFact(tenureMonths >= 36)
+    then
+        $fact.addScore(new BigDecimal("40"));
+end
+
+rule "Tenure 24-35 Months"
+    when
+        $fact : CreditScoringFact(tenureMonths >= 24 && tenureMonths < 36)
+    then
+        $fact.addScore(new BigDecimal("30"));
+end
+
+rule "Tenure 12-23 Months"
+    when
+        $fact : CreditScoringFact(tenureMonths >= 12 && tenureMonths < 24)
+    then
+        $fact.addScore(new BigDecimal("20"));
+end
+
+rule "Tenure 6-11 Months"
+    when
+        $fact : CreditScoringFact(tenureMonths >= 6 && tenureMonths < 12)
+    then
+        $fact.addScore(new BigDecimal("10"));
+end
+
+rule "Success Rate 98%+"
+    when
+        $fact : CreditScoringFact(successRate != null, successRate.compareTo(new BigDecimal("0.98")) >= 0)
+    then
+        $fact.addScore(new BigDecimal("30"));
+end
+
+rule "Success Rate 95%-97%"
+    when
+        $fact : CreditScoringFact(successRate != null, successRate.compareTo(new BigDecimal("0.95")) >= 0 && successRate.compareTo(new BigDecimal("0.98")) < 0)
+    then
+        $fact.addScore(new BigDecimal("20"));
+end
+
+rule "Success Rate 90%-94%"
+    when
+        $fact : CreditScoringFact(successRate != null, successRate.compareTo(new BigDecimal("0.90")) >= 0 && successRate.compareTo(new BigDecimal("0.95")) < 0)
+    then
+        $fact.addScore(new BigDecimal("10"));
+end
+
+rule "Success Rate Under 90%"
+    when
+        $fact : CreditScoringFact(successRate != null, successRate.compareTo(new BigDecimal("0.90")) < 0)
+    then
+        $fact.subtractScore(new BigDecimal("20"));
+end
+
+rule "Total Amount Over 100M"
+    when
+        $fact : CreditScoringFact(totalAmount != null, totalAmount.compareTo(new BigDecimal("100000000")) > 0)
+    then
+        $fact.addScore(new BigDecimal("20"));
+end
+
+rule "Total Amount 50M-100M"
+    when
+        $fact : CreditScoringFact(totalAmount != null, totalAmount.compareTo(new BigDecimal("50000000")) > 0 && totalAmount.compareTo(new BigDecimal("100000000")) <= 0)
+    then
+        $fact.addScore(new BigDecimal("15"));
+end
+
+rule "Total Amount 10M-50M"
+    when
+        $fact : CreditScoringFact(totalAmount != null, totalAmount.compareTo(new BigDecimal("10000000")) > 0 && totalAmount.compareTo(new BigDecimal("50000000")) <= 0)
+    then
+        $fact.addScore(new BigDecimal("10"));
+end
+
+rule "Total Transactions Over 100"
+    when
+        $fact : CreditScoringFact(totalTransactions > 100)
+    then
+        $fact.addScore(new BigDecimal("10"));
+end
+
+rule "Total Transactions 51-100"
+    when
+        $fact : CreditScoringFact(totalTransactions > 50 && totalTransactions <= 100)
+    then
+        $fact.addScore(new BigDecimal("5"));
+end

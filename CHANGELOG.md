@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.8.83] - 2026-07-03
+
+### Added
+
+- **lending-rules** microservice: Standalone Drools 8.44 rules engine for credit scoring, deployed as independent Spring Boot service (`/api/v1/rules/credit-score`). Decouples rules from lending-service, enabling independent scaling/updating.
+- **RHPAM Kogito Operator v7.13.5**: Installed cluster-wide (CRDs: KogitoRuntime, KogitoBuild, KogitoInfra, KogitoSupportingService). Operator running in openshift-operators namespace.
+
+### Changed
+
+- **lending-rules** pod Running 1/1 in payu-dev. Verified DRL rules via REST: `POST /api/v1/rules/credit-score` returns correct scoring.
+- **KogitoRuntime CR explored**: Operator deployed, CRDs registered, but embedded-Spring-Boot + KogitoRuntime CR approach infeasible for rules-only service (KogitoRuntime targets full BPMN process + DMN workflow). Standard Deployment pattern used instead for lending-rules. Operator retained for future process-automation (BPMN) use cases.
+
+### Known
+
+- **KogitoInfra** CR can't resolve Strimzi `Kafka` CR for bootstrap URI — operator reconciliation requires specific API version negotiation. Bypassed for now (lending-rules deployed as standard Deployment).
+
+
 ## [1.8.82] - 2026-07-03
 
 ### Fixed

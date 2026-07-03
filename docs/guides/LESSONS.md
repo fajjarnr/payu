@@ -4,6 +4,34 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-092: RHPAM Kogito Operator — CRDs Registered, Embedded Drools as Fallback (2026-07-03)
+
+**Date**: 2026-07-03
+**Domain**: OpenShift 4.21, RHPAM Kogito Operator 7.13.5, Drools 8.44, Spring Boot 4.1
+**Context**: Kogito Operator CSR installed cluster-wide. Goal: deploy microservice rules engine via KogitoRuntime CR. Implemented `lending-rules` service.
+
+**What was built**:
+1. **lending-rules** microservice: Spring Boot + Drools 8.44 + REST controller for credit scoring (`POST /api/v1/rules/credit-score`). DRL rules from `classpath:rules/credit_scoring.drl` — same 15 rules as embedded `rules-starter`.
+2. **KogitoRuntime CR attempted**: Declared `runtime: springboot`, custom image, env vars — operator reconciled but couldn't map `KogitoInfra` to Strimzi Kafka CR. KogitoInfra expected `kafka.strimzi.io/v1beta2` but operator couldn't resolve bootstrap URI.
+3. **Fallback to standard Deployment**: Deployed lending-rules as regular Deploymtent + ServiceAccount — 1/1 Ready, API responding with correct scores.
+
+**Key findings**:
+1. **RHPAM Kogito Operator v7.13 targets process automation (BPMN)** — KogitoRuntime CR designed for DMN + process workflows, not pure rules services. CR expects Kogito infra ecosystem (Data Index, Jobs Service, etc.) fully deployed.
+2. **KogitoInfra Kafka resolution fragile**: Uses env var injection pattern (`KAFKA_BOOTSTRAP_SERVERS`, `QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS`) which conflicts with Strimzi operator's managed status. Operator reconciliation loop won't proceed until Infra status=Ready.
+3. **Embedded Drools via REST is valid pattern**: Separate microservice with same DRL files, exposed via REST, equals KogitoRuntime in functionality (without process orchestration). Drools 8.44 KieContainer API unchanged.
+4. **Image registry path matters**: Internal registry `image-registry.openshift-image-registry.svc:5000` not resolvable from local machine — must push via external route `default-route-openshift-image-registry.apps...` then `oc import-image` to internal ImageStream.
+5. **SB 4.1 + Drools transitively needs `jakarta.persistence-api`** — `security-starter` (via data masking aspect) pulls JPA entities into classpath scan. Drools engine transitively references `jakarta.persistence.AttributeConverter`. Removing `security-starter` from internal rules service avoids JPA dependency.
+
+**Takeaway**: Use Kogito Operator for BPMN/process workflows (loan origination, onboarding flow). For pure rules/decision services, deploy as standard Spring Boot microservice with embedded Drools. RHPAM Kogito Operator infrastructure cost justified only when process orchestration needed.
+
+**Verification**:
+- `lending-rules-89658d4df-tdk66` 1/1 Running, `/actuator/health/liveness` UP
+- `POST /api/v1/rules/credit-score` → `{"score":150}` (APPROVED+40mo+99%+150M+120txn)
+- `POST /api/v1/rules/credit-score` → `{"score":75}` (PENDING+8mo+96%+75M+75txn)
+- DRL rules fire correctly via `KieContainer` bean in `DroolsConfig`
+
+---
+
 ## L-091: PayU-Dev Cluster Recovery — Debugging 12 CrashLoopBackOff Services Post Image Rebuild (2026-07-03)
 
 **Date**: 2026-07-03
