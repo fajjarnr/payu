@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `1.9.2` — production-ready manifest/build sweep after `payu-dev` recovery |
-| **Last Updated** | 2026-07-08 (v1.9.2 docs synced; GitOps ApplicationSet reconciliation and 3scale external dependencies remain) |
+| **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
+| **Last Updated** | 2026-07-08 (INFRA-023 and DEV-105 closed from live cluster evidence; INFRA-025 cache RESP warning remains open) |
 
 ---
 
@@ -33,8 +33,6 @@
 | INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
-| INFRA-023 | P2 | [payu-kafka-entity-operator] Debug HTTP 500 errors in liveness/readiness probes | ⬜ Open |
-| DEV-105 | P2 | [broker] Resolve AMQ332069 ActiveMQ STOMP client connection failures | ⬜ Open |
 | INFRA-025 | P2 | [cache] Resolve Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 | ⬜ Open |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
 | DEVSECOPS-018 | P3 | [scripts] Update test-health-check.sh to support podman as fallback when docker is missing | ⬜ Open |
@@ -80,16 +78,6 @@
 ---
 
 ## 📝 Platform Workload Audit Details
-
-### 🌐 INFRA-023: Probe HTTP 500 warnings (payu-kafka-entity-operator)
-* **Problem**: Pod `payu-kafka-entity-operator` mengalami error liveness/readiness probe: `HTTP probe failed with statuscode: 500`.
-* **Impact**: Operator sewaktu-waktu dapat di-restart paksa oleh Kubernetes karena liveness probe gagal.
-* **Fix**: Selidiki endpoint healthcheck pada Kafka Entity Operator / Topic Operator dan pastikan resource pendukungnya stabil.
-
-### 🔄 DEV-105: AMQ332069 ActiveMQ STOMP client connection failures (broker)
-* **Problem**: Pod `payu-broker-ss-1` mencatat warning `AMQ332069: Sent ERROR frame to STOMP client` dan `Connection failure has been detected: Did not receive data`.
-* **Impact**: Koneksi klien STOMP eksternal/internal terputus atau gagal terhubung dengan broker ActiveMQ.
-* **Fix**: Investigasi durasi keep-alive/heartbeat STOMP client dan perbaiki penanganan timeout koneksi pada client.
 
 ### ⚙️ INFRA-025: Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 (cache)
 * **Problem**: Pod `payu-cache-0` mencatat warning netty SSL negotiation pada port 11222 (`ApplicationProtocolNegotiationHandler`).

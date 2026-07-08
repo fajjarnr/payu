@@ -4,6 +4,25 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-105: Close Cluster Warning Tickets Only From Current Live Evidence (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: OpenShift 4.20, Strimzi, AMQ Broker, Data Grid, Backlog Hygiene
+**Context**: P2 backlog cleanup after `payu-dev` recovery included old warnings for Kafka Entity Operator probes, AMQ Broker STOMP TTL disconnects, and Data Grid cache negotiation/reset warnings. Namespace events still contained rollout-time noise, so stale warnings could not be treated as current failures.
+
+**Lesson**:
+- Use object-scoped evidence before closing cluster tickets: pod conditions, restart counts, involved-object events, and recent `--since` logs are stronger than namespace-wide event history.
+- Kafka Entity Operator probe tickets can be closed when the exact pod is Ready, restart count is `0`, involved events are empty, and both topic/user operator logs show only successful reconciliation.
+- AMQ STOMP disconnect tickets should be checked against broker pod logs after the client heartbeat fix. A clean recent log window is enough to close the operational ticket, while keeping the heartbeat configuration documented.
+- Data Grid RESP/Netty connection-reset warnings are not automatically the same as SSL ALPN negotiation failures. Keep the cache ticket open until the source client is identified or the cluster has a clean observation window.
+
+**Applied evidence**:
+- `payu-kafka-entity-operator-888865b8d-qwp5n`: `2/2 Running`, restart count `0`, `Ready=True`, no involved warning events, topic/user reconciliation logs healthy.
+- `payu-broker-ss-0` and `payu-broker-ss-1`: both Running, and `payu-broker-ss-1 --since=12h` showed no new STOMP TTL warnings after the KYC heartbeat fix.
+- `payu-cache-0`: still logged one RESP/Netty reset/broken pipe sequence at `2026-07-08 13:04:12 UTC`, so INFRA-025 remains open.
+
+---
+
 ## L-104: Database Schema Initialization for Deployed Simulators (2026-07-08)
 
 **Date**: 2026-07-08

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.3] - 2026-07-08
+
+### Fixed
+
+- Verified and resolved Strimzi Kafka Entity Operator liveness/readiness probe warnings (INFRA-023) based on healthy running pod conditions, zero restart counts, and clean periodic topic/user operator reconciliation logs.
+- Verified and resolved ActiveMQ STOMP client connection TTL timeout warnings (DEV-105) inside the AMQ Broker log history, following the KYC client heartbeat keep-alive configuration.
+- Closed operational workload stability tickets from the active backlog using target-scoped live evidence checks.
+
 ## [1.9.2] - 2026-07-08
 
 ### Changed
