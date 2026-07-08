@@ -6,7 +6,7 @@
 # Reference:  https://kubernetes.io/docs/concepts/policy/resource-quotas/
 
 # ─────────────────────────────────────────────────────────
-# payu-dev Quota Budget (requests.cpu: 8, requests.memory: 20Gi, limits.cpu: 36, limits.memory: 48Gi)
+# payu-dev Quota Budget (requests.cpu: 8, requests.memory: 20Gi, limits.cpu: 36, limits.memory: 64Gi)
 # ─────────────────────────────────────────────────────────
 # 23 microservices × typical profile:
 #   requests: 100-150m CPU / 256-384Mi memory

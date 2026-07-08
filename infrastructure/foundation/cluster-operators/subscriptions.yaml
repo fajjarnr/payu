@@ -17,21 +17,19 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 2. Redis Enterprise Operator (external Redis for 3scale only)
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
+# Empty auth config for OLM-generated CNPG Deployment imagePullSecrets.
+# Replace with real registry creds only when using a private mirror.
+apiVersion: v1
+kind: Secret
 metadata:
-  name: redis-enterprise-operator-cert
-  namespace: redis-enterprise
-spec:
-  channel: production
-  name: redis-enterprise-operator-cert
-  source: certified-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
+  name: cnpg-pull-secret
+  namespace: openshift-operators
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: e30=
 
 ---
-# 3. Red Hat Data Grid (application distributed cache)
+# 2. Red Hat Data Grid (application distributed cache)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -45,7 +43,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 4. AMQ Streams (Apache Kafka)
+# 3. AMQ Streams (Apache Kafka)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:

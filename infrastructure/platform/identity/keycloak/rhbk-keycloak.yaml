@@ -48,14 +48,15 @@ spec:
     httpsPort: 8443
 
   # --- Hostname Configuration ---
-  # Override per environment via overlay patch
   hostname:
-    strict: false
+    hostname: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
+    strict: true
     backchannelDynamic: false
 
   # --- Ingress (OpenShift Route) ---
   ingress:
     enabled: true
+    className: openshift-default
 
   # --- Proxy Headers ---
   proxy:
@@ -64,7 +65,7 @@ spec:
   # --- Features ---
   features:
     enabled:
-      - token-exchange
+      - token-exchange-standard
       - admin-fine-grained-authz
 
   # --- Additional Keycloak server options ---

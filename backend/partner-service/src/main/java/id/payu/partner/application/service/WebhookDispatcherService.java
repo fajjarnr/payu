@@ -123,22 +123,26 @@ public class WebhookDispatcherService {
     @SchedulerLock(name = "WebhookDispatcherService_retryFailedDeliveries", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedDelay = 30000)
     @Transactional
     public void retryFailedDeliveries() {
-        List<WebhookDeliveryEntity> retryable =
-                deliveryRepository.findRetryableDeliveries(LocalDateTime.now());
+        try {
+            List<WebhookDeliveryEntity> retryable =
+                    deliveryRepository.findRetryableDeliveries(LocalDateTime.now());
 
-        if (retryable.isEmpty()) return;
+            if (retryable.isEmpty()) return;
 
-        log.info("Retrying {} failed webhook deliveries", retryable.size());
+            log.info("Retrying {} failed webhook deliveries", retryable.size());
 
-        for (WebhookDeliveryEntity delivery : retryable) {
-            WebhookSubscriptionEntity subscription = delivery.getSubscription();
-            if (!subscription.isActive()) {
-                delivery.setStatus(Status.EXHAUSTED);
-                delivery.setErrorMessage("Subscription deactivated");
-                deliveryRepository.save(delivery);
-                continue;
+            for (WebhookDeliveryEntity delivery : retryable) {
+                WebhookSubscriptionEntity subscription = delivery.getSubscription();
+                if (!subscription.isActive()) {
+                    delivery.setStatus(Status.EXHAUSTED);
+                    delivery.setErrorMessage("Subscription deactivated");
+                    deliveryRepository.save(delivery);
+                    continue;
+                }
+                attemptDelivery(delivery, subscription);
             }
-            attemptDelivery(delivery, subscription);
+        } catch (Exception e) {
+            log.error("Unexpected error occurred during webhook retry scheduled task", e);
         }
     }
 
@@ -149,10 +153,14 @@ public class WebhookDispatcherService {
     @SchedulerLock(name = "WebhookDispatcherService_cleanupOldDeliveries", lockAtLeastFor = "PT1S", lockAtMostFor = "PT4H")@Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupOldDeliveries() {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
-        int deleted = deliveryRepository.deleteOldDeliveries(cutoff);
-        if (deleted > 0) {
-            log.info("Cleaned up {} old webhook delivery records (before {})", deleted, cutoff);
+        try {
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
+            int deleted = deliveryRepository.deleteOldDeliveries(cutoff);
+            if (deleted > 0) {
+                log.info("Cleaned up {} old webhook delivery records (before {})", deleted, cutoff);
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error occurred during webhook cleanup scheduled task", e);
         }
     }
 

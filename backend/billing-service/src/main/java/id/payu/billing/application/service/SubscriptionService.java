@@ -202,7 +202,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Retry(name = "billing")
     @SchedulerLock(name = "SubscriptionService_processDueSubscriptions", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")@Scheduled(fixedDelayString = "${payu.billing.subscription.charge-interval-ms:300000}")
     @Transactional
-    public int processDueSubscriptions() {
+    public Integer processDueSubscriptions() {
         LocalDateTime now = LocalDateTime.now();
         List<SubscriptionEntity> dueSubscriptions = persistencePort.findDueSubscriptions(now);
         List<SubscriptionEntity> pastDue = persistencePort.findPastDueSubscriptions();
@@ -236,7 +236,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     @Retry(name = "billing")
     @SchedulerLock(name = "SubscriptionService_processExpiredTrials", lockAtLeastFor = "PT1S", lockAtMostFor = "PT10M")@Scheduled(fixedDelayString = "${payu.billing.subscription.trial-check-interval-ms:600000}")
     @Transactional
-    public int processExpiredTrials() {
+    public Integer processExpiredTrials() {
         LocalDateTime now = LocalDateTime.now();
         List<SubscriptionEntity> expired = persistencePort.findExpiredTrials(now);
 
@@ -312,12 +312,12 @@ public class SubscriptionService implements SubscriptionUseCase {
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private int processDueSubscriptionsFallback(Exception ex) {
+    private Integer processDueSubscriptionsFallback(Exception ex) {
         log.error("Fallback for processDueSubscriptions: {}", ex.getMessage());
         return 0;
     }
 
-    private int processExpiredTrialsFallback(Exception ex) {
+    private Integer processExpiredTrialsFallback(Exception ex) {
         log.error("Fallback for processExpiredTrials: {}", ex.getMessage());
         return 0;
     }

@@ -198,21 +198,25 @@ public class ApiKeyService {
     @SchedulerLock(name = "ApiKeyService_expireRotatedKeys", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(fixedDelay = 3600000)
     @Transactional
     public void expireRotatedKeys() {
-        List<ApiKeyEntity> expired =
-                apiKeyRepository.findExpiredGracePeriodKeys(LocalDateTime.now());
-        for (ApiKeyEntity key : expired) {
-            key.setStatus(KeyStatus.EXPIRED);
-            apiKeyRepository.save(key);
-            log.info("Expired rotated API key {} (partner {})",
-                    key.getId(), key.getPartner().getId());
-        }
+        try {
+            List<ApiKeyEntity> expired =
+                    apiKeyRepository.findExpiredGracePeriodKeys(LocalDateTime.now());
+            for (ApiKeyEntity key : expired) {
+                key.setStatus(KeyStatus.EXPIRED);
+                apiKeyRepository.save(key);
+                log.info("Expired rotated API key {} (partner {})",
+                        key.getId(), key.getPartner().getId());
+            }
 
-        List<ApiKeyEntity> naturallyExpired =
-                apiKeyRepository.findExpiredKeys(LocalDateTime.now());
-        for (ApiKeyEntity key : naturallyExpired) {
-            key.setStatus(KeyStatus.EXPIRED);
-            apiKeyRepository.save(key);
-            log.info("Expired API key {} (partner {})", key.getId(), key.getPartner().getId());
+            List<ApiKeyEntity> naturallyExpired =
+                    apiKeyRepository.findExpiredKeys(LocalDateTime.now());
+            for (ApiKeyEntity key : naturallyExpired) {
+                key.setStatus(KeyStatus.EXPIRED);
+                apiKeyRepository.save(key);
+                log.info("Expired API key {} (partner {})", key.getId(), key.getPartner().getId());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error occurred during API key expiration scheduled task", e);
         }
     }
 

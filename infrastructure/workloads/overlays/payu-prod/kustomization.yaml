@@ -223,8 +223,8 @@ patches:
             - name: PAYU_CACHE_REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
-                  key: REDIS_PASSWORD
+                  name: payu-cache-credentials
+                  key: password
             - name: ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:

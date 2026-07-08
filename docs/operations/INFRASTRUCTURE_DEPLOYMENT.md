@@ -24,13 +24,13 @@ Current state differs from older docs:
 | Area | Current source of truth | Notes |
 |:---|:---|:---|
 | Namespaces | `infrastructure/foundation/namespaces/` | Creates `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |
-| Operators | `infrastructure/foundation/cluster-operators/` | Installs CNPG, Data Grid, AMQ Streams, AMQ Broker, RHBK, 3scale, Redis Enterprise, GitOps, Pipelines, Vault Secrets, Tempo, Compliance |
+| Operators | `infrastructure/foundation/cluster-operators/` | Installs CNPG, Data Grid, AMQ Streams, AMQ Broker, RHBK, 3scale, GitOps, Pipelines, Vault Secrets, Tempo, Compliance |
 | Database | `infrastructure/platform/data/base/current/cnpg-*.yaml` | CloudNativePG `payu-database` in `payu-dev`; not Crunchy |
 | Kafka | `infrastructure/platform/data/base/kafka-amqstreams.yaml` | AMQ Streams `payu-kafka` in `payu-dev` |
-| Cache | `infrastructure/platform/data/base/current/datagrid.yaml` | Infinispan `payu-cache`; Redis-compatible clients use port `11222`, not `6379` |
+| Cache | `infrastructure/platform/data/base/current/datagrid.yaml` | Infinispan `payu-cache`; RESP clients use `payu-cache-resp:11222`, not direct pod port `6379` |
 | AMQ Broker | `infrastructure/platform/amq-broker/base/` | `payu-broker` with CORE, AMQP, and STOMP on `61616` |
 | Identity | `infrastructure/platform/identity/keycloak/` | RHBK `payu-keycloak` in `payu-sso`; verify CR conditions before declaring healthy |
-| API management | `infrastructure/platform/api-management/` | Operator/policy only by default; `APIManager` is gated until external DB/Redis/Vault secrets exist |
+| API management | `infrastructure/platform/api-management/` | Operator/policy only by default; `APIManager` is gated until external backing-store and Vault secrets exist |
 | Workloads | `infrastructure/workloads/overlays/<env>/` | Use environment overlays, not workload base directly |
 
 ## Execution Rules
@@ -40,7 +40,7 @@ Current state differs from older docs:
 3. Render before apply. Every touched Kustomize root must pass `oc kustomize`.
 4. Apply in dependency order: namespaces, operators, data/messaging, identity, API management shell, images, workloads.
 5. Stop the deployment if any infrastructure CR reports `Ready=False`, `HasErrors=True`, CrashLoopBackOff, or recent Warning events.
-6. Do not apply `3scale/apimanager.yaml` until external DB, Redis, storage, and Vault-managed secrets are available.
+6. Do not apply `3scale/apimanager.yaml` until external backing-store, storage, and Vault-managed secrets are available.
 7. Do not enable automated GitOps sync until `INFRA-020` is closed and the live `payu-dev` image tags match the overlay.
 
 ## Environment Map
@@ -62,7 +62,6 @@ Platform namespaces:
 | `payu-cicd` | Tekton pipelines and image build permissions |
 | `payu-sso` | RHBK/Keycloak |
 | `payu-api-management` | 3scale operator and API management |
-| `redis-enterprise` | Redis Enterprise operator for 3scale external Redis option |
 
 ## Preflight Checklist
 
@@ -115,13 +114,13 @@ rtk oc apply --server-side --dry-run=server -k infrastructure/platform/api-manag
 
 ```bash
 rtk oc apply -k infrastructure/foundation/namespaces
-rtk oc get ns | rtk rg 'payu|gitops|operators|redis-enterprise'
+rtk oc get ns | rtk rg 'payu|gitops|operators'
 ```
 
 Expected result:
 
 - `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` exist.
-- Platform namespaces for SSO, API management, GitOps, and Redis Enterprise exist.
+- Platform namespaces for SSO, API management, and GitOps exist.
 - Default-deny NetworkPolicies, LimitRanges, ResourceQuotas, and image-push RoleBindings exist.
 
 ### 2. Install Operators
@@ -135,7 +134,7 @@ rtk oc get csv -A
 Wait for required operators:
 
 ```bash
-rtk oc get csv -A | rtk rg 'cloudnative|datagrid|amq|3scale|keycloak|gitops|pipelines|vault|tempo|compliance|redis'
+rtk oc get csv -A | rtk rg 'cloudnative|datagrid|amq|3scale|keycloak|gitops|pipelines|vault|tempo|compliance'
 ```
 
 Do not proceed until each required CSV is `Succeeded`.
@@ -160,8 +159,8 @@ Expected result:
 
 - CNPG `payu-database` has 3 instances Ready.
 - Kafka `payu-kafka` reports `READY=True`.
-- Infinispan `payu-cache` pods are Running.
-- `redis` service alias points to `payu-cache.payu-dev.svc.cluster.local` on port `11222`.
+- Infinispan `payu-cache` pods are Running and using the custom XML configuration ConfigMap (`payu-cache-custom-config`) to enable the RESP connector.
+- `payu-cache-resp` service points to the Data Grid RESP connector and exposes service port `11222`.
 
 ### 4. Deploy AMQ Broker
 
@@ -251,10 +250,10 @@ This root intentionally excludes:
 - `3scale/apimanager.yaml`
 - `3scale/payu-capabilities.yaml`
 
-Apply the full APIManager only after external 3scale DB, Redis, storage, and Vault-managed secrets exist:
+Apply the full APIManager only after external 3scale backing-store, storage, and Vault-managed secrets exist:
 
 ```bash
-rtk oc get secret system-seed system-database backend-redis system-redis zync apicast-payu-env system-events-hook -n payu-api-management
+rtk oc get secret system-seed system-database zync apicast-payu-env system-events-hook -n payu-api-management
 rtk oc apply -f infrastructure/platform/api-management/3scale/system-storage-pvc.yaml
 rtk oc apply -f infrastructure/platform/api-management/3scale/apimanager.yaml
 ```
@@ -422,7 +421,7 @@ Abort and roll back if any of these conditions occur:
 |:---|:---|
 | CNPG not Ready | `rtk oc describe cluster.postgresql.cnpg.io payu-database -n payu-dev`; check PVC and storage class |
 | Kafka not Ready | `rtk oc describe kafka payu-kafka -n payu-dev`; check AMQ Streams CSV and broker pods |
-| Cache connection fails | Confirm clients use `payu-cache.payu-dev.svc.cluster.local:11222` and `payu-cache-credentials` |
+| Cache connection fails | Confirm clients use `payu-cache-resp.payu-dev.svc.cluster.local:11222` and `payu-cache-credentials` |
 | AMQ STOMP disconnects | Confirm broker acceptor includes `STOMP` on `61616` and clients send heartbeats |
 | Keycloak route works but CR unhealthy | Check `Keycloak` conditions and RHBK operator logs in `payu-sso` |
 | 3scale pods missing | Confirm only operator shell was applied; APIManager is gated by external secrets |
@@ -434,6 +433,6 @@ Abort and roll back if any of these conditions occur:
 | Key | Gate | Status |
 |:---|:---|:---|
 | `INFRA-020` | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | Open |
-| `DEPLOY-010` | Deploy 3scale APIManager after external DB/Redis/Vault secrets exist | Open |
+| `DEPLOY-010` | Deploy 3scale APIManager after external backing-store/Vault secrets exist | Open |
 | `INFRA-021` | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | Open |
 | `SEC-020` | Remediate CIS platform failures | Open |

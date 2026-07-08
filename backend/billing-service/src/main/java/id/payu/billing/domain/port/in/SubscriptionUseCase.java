@@ -46,12 +46,12 @@ public interface SubscriptionUseCase {
      * Retries PAST_DUE subscriptions (dunning).
      * Suspends after 3 failed attempts.
      */
-    int processDueSubscriptions();
+    Integer processDueSubscriptions();
 
     /**
      * Transition trial-expired subscriptions to first charge.
      */
-    int processExpiredTrials();
+    Integer processExpiredTrials();
 
     List<SubscriptionChargeEntity> getChargesBySubscription(UUID subscriptionId);
 }

@@ -95,7 +95,7 @@ spec:
               name: service-endpoints
               key: GATEWAY_DB_URL
         - name: REDIS_HOST
-          value: payu-cache.payu-dev.svc.cluster.local
+          value: payu-cache-resp.payu-dev.svc.cluster.local
         - name: REDIS_PORT
           value: '11222'
         - name: KAFKA_BOOTSTRAP_SERVERS
@@ -104,7 +104,7 @@ spec:
               name: service-endpoints
               key: KAFKA_URL
         - name: QUARKUS_REDIS_HOSTS
-          value: redis://payu-cache.payu-dev.svc.cluster.local:11222
+          value: redis://payu-cache-resp.payu-dev.svc.cluster.local:11222
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:

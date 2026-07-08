@@ -356,11 +356,15 @@ public class MerchantService {
      */
     @SchedulerLock(name = "MerchantService_expireQrPayments", lockAtLeastFor = "PT1S", lockAtMostFor = "PT2M")@Scheduled(fixedRate = 120000)
     public void expireQrPayments() {
-        List<MerchantQrPaymentEntity> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
-        if (!expired.isEmpty()) {
-            expired.forEach(MerchantQrPaymentEntity::markExpired);
-            qrPaymentRepository.saveAll(expired);
-            log.info("Expired {} QR payments", expired.size());
+        try {
+            List<MerchantQrPaymentEntity> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
+            if (!expired.isEmpty()) {
+                expired.forEach(MerchantQrPaymentEntity::markExpired);
+                qrPaymentRepository.saveAll(expired);
+                log.info("Expired {} QR payments", expired.size());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while expiring QR payments", e);
         }
     }
 

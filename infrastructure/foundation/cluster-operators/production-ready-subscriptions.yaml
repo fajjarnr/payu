@@ -12,6 +12,15 @@ spec:
   source: certified-operators
   sourceNamespace: openshift-marketplace
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cnpg-pull-secret
+  namespace: openshift-operators
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: e30=
+---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -82,18 +91,6 @@ spec:
   installPlanApproval: Automatic
   name: tempo-product
   source: redhat-operators
-  sourceNamespace: openshift-marketplace
----
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: redis-enterprise-operator-cert
-  namespace: redis-enterprise
-spec:
-  channel: production
-  installPlanApproval: Automatic
-  name: redis-enterprise-operator-cert
-  source: certified-operators
   sourceNamespace: openshift-marketplace
 ---
 apiVersion: operators.coreos.com/v1alpha1

@@ -138,7 +138,7 @@ public class OjkTransformer {
      * Create report data structure from message.
      */
     public Map<String, Object> createReportData(IntegrationMessage message, String reportType, LocalDate date) {
-        return Map.of(
+        return new java.util.HashMap<>(Map.of(
                 "reportDate", date.format(DATE_FORMATTER),
                 "reportType", reportType,
                 "institutionCode", "PAYU",
@@ -146,7 +146,7 @@ public class OjkTransformer {
                 "totalTransactions", 0,
                 "totalAmount", "0.00",
                 "currency", "IDR"
-        );
+        ));
     }
 
     private String escapeXml(String value) {

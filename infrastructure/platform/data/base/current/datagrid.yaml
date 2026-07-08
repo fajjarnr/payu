@@ -1,11 +1,11 @@
 # PayU Platform - Red Hat Data Grid (Infinispan)
-# Distributed caching with RESP (Redis-compatible) connector
+# Distributed caching with RESP connector
 # Prerequisite: datagrid operator subscription installed
 # ============================================================
 #
 # RESP CONNECTOR SETUP:
-# - Data Grid 8.5+ supports RESP (Redis wire protocol) on the single endpoint.
-# - Spring/Quarkus Redis clients connect to payu-cache:11222 with developer auth.
+# - Data Grid 8.5+ supports RESP on the single endpoint.
+# - Spring/Quarkus RESP clients connect to payu-cache-resp:11222 with developer auth.
 # ============================================================
 
 # Infinispan CR - DataGrid instance
@@ -26,26 +26,80 @@ spec:
   security:
     endpointAuthentication: true
     endpointSecretName: payu-cache-credentials
+    endpointEncryption:
+      type: None
 
   container:
     memory: "512Mi"
 
+  configMapName: payu-cache-custom-config
+
 ---
-# Redis-compatible service alias via ExternalName. Data Grid RESP is served on
-# the single endpoint port (11222); Redis clients connect through this alias.
+# Custom Infinispan configuration with RESP connector
+# RESP listens on the multiplexed socketBinding port (11222).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-cache-custom-config
+  labels:
+    app.kubernetes.io/name: payu-cache-config
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+data:
+  infinispan-config.xml: |
+    <infinispan
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="urn:infinispan:config:14.0 https://infinispan.org/schemas/infinispan-config-14.0.xsd
+                                urn:infinispan:server:14.0 https://infinispan.org/schemas/infinispan-server-14.0.xsd"
+            xmlns="urn:infinispan:config:14.0"
+            xmlns:server="urn:infinispan:server:14.0">
+
+        <cache-container name="default" statistics="true">
+            <security>
+                <authorization/>
+            </security>
+        </cache-container>
+
+        <server xmlns="urn:infinispan:server:14.0">
+            <interfaces>
+                <interface name="public">
+                    <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+                </interface>
+            </interfaces>
+
+            <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+                <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+                <socket-binding name="resp" port="6379"/>
+            </socket-bindings>
+
+            <endpoints>
+                <endpoint socket-binding="default" security-realm="default">
+                    <rest-connector/>
+                    <hotrod-connector/>
+                    <resp-connector socket-binding="resp" security-realm="default"/>
+                </endpoint>
+            </endpoints>
+        </server>
+    </infinispan>
+
+---
+# Data Grid RESP service mapping to the dedicated RESP port on Infinispan pods.
+# Applications connect on service port 11222.
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
+  name: payu-cache-resp
   labels:
-    app.kubernetes.io/name: redis
+    app.kubernetes.io/name: payu-cache-resp
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: cache
     app.kubernetes.io/managed-by: datagrid
 spec:
-  type: ExternalName
-  externalName: payu-cache.payu-dev.svc.cluster.local
+  type: ClusterIP
   ports:
     - name: resp
       port: 11222
-      targetPort: 11222
+      targetPort: 6379
+  selector:
+    app: infinispan-pod
+    clusterName: payu-cache

@@ -70,7 +70,7 @@ public class OjkRouteBuilder extends RouteBuilder {
                 .when(constant(dailyReportEnabled))
                     .log(LoggingLevel.INFO, "Generating OJK daily CSV report")
                     .setHeader("reportType", constant("DAILY_CSV"))
-                    .setHeader("reportDate", () -> LocalDate.now().minusDays(1).toString())
+                    .process(exchange -> exchange.getIn().setHeader("reportDate", LocalDate.now().minusDays(1).toString()))
                     .to("direct:ojk-generate-csv-report")
                 .otherwise()
                     .log(LoggingLevel.DEBUG, "Daily CSV report generation is disabled");
@@ -82,7 +82,7 @@ public class OjkRouteBuilder extends RouteBuilder {
                 .when(constant(monthlyReportEnabled))
                     .log(LoggingLevel.INFO, "Generating OJK monthly XML report")
                     .setHeader("reportType", constant("MONTHLY_XML"))
-                    .setHeader("reportDate", () -> LocalDate.now().minusMonths(1).withDayOfMonth(1).toString())
+                    .process(exchange -> exchange.getIn().setHeader("reportDate", LocalDate.now().minusMonths(1).withDayOfMonth(1).toString()))
                     .to("direct:ojk-generate-xml-report")
                 .otherwise()
                     .log(LoggingLevel.DEBUG, "Monthly XML report generation is disabled");
@@ -150,6 +150,7 @@ public class OjkRouteBuilder extends RouteBuilder {
                 log.info("OJK CSV report saved: {}", fileName);
             })
             .setHeader(Exchange.CONTENT_TYPE, constant("text/csv"))
+            .setHeader("Accept-Encoding", constant("identity"))
             .toD(ojkUploadUrl + "?throwExceptionOnFailure=true")
             .log(LoggingLevel.INFO, "OJK CSV report uploaded successfully");
 
@@ -217,6 +218,7 @@ public class OjkRouteBuilder extends RouteBuilder {
                 log.info("OJK XML report saved: {}", fileName);
             })
             .setHeader(Exchange.CONTENT_TYPE, constant("application/xml"))
+            .setHeader("Accept-Encoding", constant("identity"))
             .toD(ojkUploadUrl + "?throwExceptionOnFailure=true")
             .log(LoggingLevel.INFO, "OJK XML report uploaded successfully");
 
@@ -229,7 +231,7 @@ public class OjkRouteBuilder extends RouteBuilder {
 
                 // Send alert/notification
                 exchange.getIn().setBody(Map.of(
-                        "error", exception.getMessage(),
+                        "error", exception.getMessage() != null ? exception.getMessage() : exception.getClass().getName(),
                         "timestamp", LocalDate.now().toString(),
                         "service", "integration-service"
                 ));

@@ -4,6 +4,59 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-102: ShedLock Distributed Locking Requires Object Wrappers, Not Primitive Types (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: Spring Boot, ShedLock, Transaction Management
+**Context**: Scheduled tasks in `billing-service` (e.g. `processDueSubscriptions`, `processExpiredTrials`) and `partner-service` failed or logged warning fallbacks like `Fallback for processDueSubscriptions: Can not lock method returning primitive...` or bypassed transaction checks.
+
+**Lesson**:
+- Methods annotated with `@SchedulerLock` and `@Scheduled` must return object wrappers (such as `Integer` or `Void`) instead of primitive types (`int` or `void` where proxy wrappers fail). Otherwise, proxy generation fails, throwing exceptions that trigger `@CircuitBreaker` fallback and bypass execution.
+- Internal bean calls to `@Transactional` methods bypass Spring's transaction proxy interceptor (e.g. calling `rotateExpiringCertificates` directly from within the class). Scheduled triggers must be directly annotated with `@Transactional` to establish the transaction boundary properly.
+- Wrapping scheduled method bodies in explicit `try-catch` blocks prevents unhandled exceptions from propagating to Spring's default task scheduler, eliminating `Unexpected error occurred in scheduled task` logs.
+
+**Applied fix**:
+- Changed scheduled methods return types in `billing-service` from `int` to `Integer` on implementation and port interface.
+- Added `@Transactional` directly to the scheduled trigger in `partner-service`'s `CertificateRotationService` and wrapped all scheduled jobs in robust `try-catch` blocks.
+- Resolved unit test context failures by supplying missing Redis, Kafka, and OIDC OIDC_ISSUER/OIDC_JWK_SET_URI properties in `application-test.yml` across both services.
+
+---
+
+## L-101: OJK Camel Route Dates Must Be Processed via Exchange Processors, Not Inline Lambdas (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: Apache Camel, Integration, OJK Reporting
+**Context**: OJK daily report scheduled timer route was throwing `DateTimeParseException` and `UnsupportedOperationException` while uploading reports, causing Kafka DLQ timeouts in tests.
+
+**Lesson**:
+- Setting headers via `.setHeader("reportDate", () -> ...)` evaluates to the constant Java Lambda reference string (e.g. `OjkRouteBuilder$$Lambda$...`) rather than evaluating the output at runtime. It must be set using `.process(exchange -> exchange.getIn().setHeader("reportDate", ...))` to execute correctly.
+- Wrapping `Map.of()` outputs in mutable `HashMap`s allows downstream routes to dynamically update/put data values, avoiding `UnsupportedOperationException` on immutable collections.
+- When calling remote integration endpoints (e.g., OJK upload), setting `Accept-Encoding: identity` avoids Java client warnings/exceptions relating to gzip decompression mismatches.
+- Handled null values in exception messages during error mapping to prevent internal `NullPointerException`s in the global error handler.
+
+**Applied fix**:
+- Refactored `OjkRouteBuilder` and `OjkTransformer` in `integration-service` to use exchange processors, mutable hash map wrapper, and identity encoding.
+- Removed stale security configuration tests and resolved integration test failures with `OjkRouteBuilderIntegrationTest` coverage.
+
+---
+
+## L-100: Data Grid RESP Endpoint Naming Must Not Imply Standalone Redis (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: OpenShift, Red Hat Data Grid, RESP, Spring Data Redis
+**Context**: While fixing cache connectivity, a live alias named `redis` was used for the Data Grid RESP connector. Technically it routed Redis-wire-protocol clients to the Infinispan RESP port, but the name conflicted with the platform rule that PayU cache is Red Hat Data Grid, not standalone Redis.
+
+**Lesson**:
+- Name infrastructure after the managed platform component: use `payu-cache-resp` for the Data Grid RESP service, not `redis`.
+- Keep Spring/Lettuce env var names such as `REDIS_HOST` only because library configuration expects them; their values must point to Data Grid RESP.
+- Before changing cache manifests, check `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md` and Data Grid manifests together so endpoint naming and routing stay consistent.
+
+**Applied fix**:
+- Renamed the RESP service alias to `payu-cache-resp`.
+- Updated workload cache hosts and the infrastructure MOP to reference the Data Grid RESP endpoint explicitly.
+
+---
+
 ## L-099: Infrastructure MOP Drift — Keep Runbooks Bound to Renderable Kustomize Roots (2026-07-08)
 
 **Date**: 2026-07-08

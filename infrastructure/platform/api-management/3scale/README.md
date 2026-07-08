@@ -83,12 +83,12 @@ oc create secret generic system-database \
   -n payu-api-management
 
 oc create secret generic backend-redis \
-  --from-literal=REDIS_STORAGE_URL=redis://:<REDIS_PASSWORD>@datagrid.payu-cache.svc:6379/0 \
-  --from-literal=REDIS_QUEUES_URL=redis://:<REDIS_PASSWORD>@datagrid.payu-cache.svc:6379/1 \
+  --from-literal=REDIS_STORAGE_URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/0 \
+  --from-literal=REDIS_QUEUES_URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/1 \
   -n payu-api-management
 
 oc create secret generic system-redis \
-  --from-literal=URL=redis://:<REDIS_PASSWORD>@datagrid.payu-cache.svc:6379/2 \
+  --from-literal=URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/2 \
   -n payu-api-management
 ```
 

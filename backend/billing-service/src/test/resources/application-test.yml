@@ -1,0 +1,12 @@
+# Test environment placeholders override
+OIDC_ISSUER: http://localhost:8080/realms/payu
+OIDC_JWK_SET_URI: http://localhost:8080/realms/payu/protocol/openid-connect/certs
+WALLET_GRPC_ADDRESS: static://localhost:9090
+DB_USERNAME: sa
+DB_PASSWORD: ""
+KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+
+spring:
+  # Disable Vault for tests
+  autoconfigure:
+    exclude: org.springframework.cloud.vault.core.VaultAutoConfiguration

@@ -5,6 +5,4 @@ resources:
 - namespace.yaml
 - rhbk-operator.yaml
 - rhbk-keycloak.yaml
-- keycloak-service.yaml
 - network-policy.yaml
-- route.yaml

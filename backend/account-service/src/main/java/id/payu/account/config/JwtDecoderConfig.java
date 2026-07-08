@@ -14,10 +14,10 @@ public class JwtDecoderConfig {
 
     private static final Logger log = LoggerFactory.getLogger(JwtDecoderConfig.class);
 
-    @Value("${payu.security.oauth2.issuer-uri:http://localhost:8080/realms/payu}")
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:http://localhost:8080/realms/payu}")
     private String oidcIssuerUri;
 
-    @Value("${payu.security.oauth2.jwk-set-uri:http://localhost:8080/realms/payu/protocol/openid-connect/certs}")
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8080/realms/payu/protocol/openid-connect/certs}")
     private String oidcJwkSetUri;
 
     @Bean

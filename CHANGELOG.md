@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed Data Grid RESP connection endpoint naming mismatch (INFRA-029) by migrating transaction-service, ratelimit-service, and 3scale APIManager docs to use the dedicated multiplexed RESP compatibility service `payu-cache-resp.payu-dev.svc.cluster.local:11222`.
+- Fixed Keycloak OIDC issuer and JWKS URI config properties mismatch (SEC-022) in `account-service` by using standard `spring.security.oauth2.resourceserver.jwt.*` property prefixes.
+- Fixed OJK daily report generation CSV/XML processing error (DEV-101) in `integration-service` by correcting dynamic date header evaluation in Camel routes, adding `Accept-Encoding: identity` headers to prevent decompression exceptions, making the transformer map mutable, and preventing NullPointerException in the global error handler.
+- Fixed USD rate update database persistence identifier error (DEV-102) in `fx-service` by generating random UUID if ID is null and checking if version is null to determine new entity status.
+- Fixed subscription and trial scheduler locking method fallback warning (DEV-104) in `billing-service` by changing the return type of `processDueSubscriptions` and `processExpiredTrials` from primitive `int` to `Integer` object wrapper, allowing ShedLock to successfully proxy the methods. Removed stale `SecurityConfigPatternTest` and resolved OIDC test properties placeholder failures by adding `application-test.yml` overrides.
+- Fixed unexpected errors in Spring scheduled tasks (DEV-103) in `partner-service` by adding transaction management proxy support (via `@Transactional`) to the certificate rotation trigger, wrapping all scheduled and lock-related methods in robust `try-catch` blocks to prevent unhandled runtime exceptions from propagating, and configuring test placeholders in `application-test.yml` to prevent context loading errors.
+- Verified and resolved KRaft quorum DNS resolution warnings (INFRA-024) in `payu-kafka-controller` pods by ensuring the headless service `payu-kafka-kafka-brokers` has `publishNotReadyAddresses: true` configured and active.
+- Fixed database pod liveness/connectivity checks failing on port 8000 due to NetworkPolicy (INFRA-027) by updating the CNPG NetworkPolicy to allow ingress traffic between database pods in the same namespace.
+- Increased namespace memory limits quota in `payu-dev-quota` from 48Gi to 64Gi (INFRA-026) to prevent FailedCreate replica set scaling errors.
 - Fixed Quarkus test dependency names and compiler encoding settings for gateway, notification, and API portal services.
 - Fixed wallet MapStruct update mappings for generated Spring Boot 4 / MapStruct compilation.
 - Removed stale frontend imports and moved Next.js proxy session handling to the Next 16 file convention.

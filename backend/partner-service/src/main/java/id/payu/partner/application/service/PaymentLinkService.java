@@ -180,14 +180,18 @@ public class PaymentLinkService {
     @SchedulerLock(name = "PaymentLinkService_expirePaymentLinks", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedRate = 300000)
     public void expirePaymentLinks() {
-        List<PaymentLinkEntity> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
-        if (!expiredLinks.isEmpty()) {
-            expiredLinks.forEach(link -> {
-                link.markExpired();
-                dispatchPaymentLinkExpiredEvent(link);
-            });
-            paymentLinkRepository.saveAll(expiredLinks);
-            log.info("Expired {} payment links", expiredLinks.size());
+        try {
+            List<PaymentLinkEntity> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
+            if (!expiredLinks.isEmpty()) {
+                expiredLinks.forEach(link -> {
+                    link.markExpired();
+                    dispatchPaymentLinkExpiredEvent(link);
+                });
+                paymentLinkRepository.saveAll(expiredLinks);
+                log.info("Expired {} payment links", expiredLinks.size());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while expiring payment links", e);
         }
     }
 

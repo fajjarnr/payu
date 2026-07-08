@@ -8,12 +8,12 @@ resources:
   - current/cnpg-cluster.yaml
   - current/cnpg-databases.yaml
   - current/cnpg-network-policy.yaml
+  - current/shedlock-bootstrap-job.yaml
   - current/datagrid.yaml
   - kafka-amqstreams.yaml
   - network-policy-egress.yaml
   # SUPERSEDED (READY-027 -> READY-076):
   # - postgres-statefulset.yaml
-  # - redis-statefulset.yaml
   # - postgres-cluster.yaml  # Crunchy HA spec kept as future-migration reference only
   # - kafka-console.yaml
   # - kyverno-exception-kafka.yaml

@@ -130,20 +130,24 @@ public class SnapBiTokenService {
 
     @SchedulerLock(name = "SnapBiTokenService_cleanupExpiredTokens", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedRate = 60000)
     public void cleanupExpiredTokens() {
-        Date now = new Date();
-        Set<String> keys = redisTemplate.keys(TOKEN_KEY_PREFIX + "*");
-        if (keys != null && !keys.isEmpty()) {
-            int removedCount = 0;
-            for (String key : keys) {
-                TokenInfo tokenInfo = valueOps.get(key);
-                if (tokenInfo != null && tokenInfo.expiration.before(now)) {
-                    redisTemplate.delete(key);
-                    removedCount++;
+        try {
+            Date now = new Date();
+            Set<String> keys = redisTemplate.keys(TOKEN_KEY_PREFIX + "*");
+            if (keys != null && !keys.isEmpty()) {
+                int removedCount = 0;
+                for (String key : keys) {
+                    TokenInfo tokenInfo = valueOps.get(key);
+                    if (tokenInfo != null && tokenInfo.expiration.before(now)) {
+                        redisTemplate.delete(key);
+                        removedCount++;
+                    }
+                }
+                if (removedCount > 0) {
+                    LOG.debug("Cleaned up {} expired tokens from Redis", removedCount);
                 }
             }
-            if (removedCount > 0) {
-                LOG.debug("Cleaned up {} expired tokens from Redis", removedCount);
-            }
+        } catch (Exception e) {
+            LOG.error("Unexpected error occurred during expired token cleanup scheduled task", e);
         }
     }
 

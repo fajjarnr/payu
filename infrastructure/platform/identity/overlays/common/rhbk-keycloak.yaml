@@ -48,12 +48,13 @@ spec:
 
   # --- Hostname Configuration ---
   hostname:
-    strict: false
+    strict: true
     backchannelDynamic: false
 
   # --- Ingress (OpenShift Route) ---
   ingress:
     enabled: true
+    className: openshift-default
 
   # --- Proxy Headers ---
   proxy:
@@ -62,7 +63,7 @@ spec:
   # --- Features ---
   features:
     enabled:
-      - token-exchange
+      - token-exchange-standard
       - admin-fine-grained-authz
 
   # --- Additional Keycloak server options ---

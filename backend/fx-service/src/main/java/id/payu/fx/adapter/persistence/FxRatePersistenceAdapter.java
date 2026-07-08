@@ -56,7 +56,7 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
 
     private FxRateEntity toEntity(FxRate fxRate) {
         FxRateEntity entity = new FxRateEntity();
-        entity.setId(fxRate.getId());
+        entity.setId(fxRate.getId() != null ? fxRate.getId() : UUID.randomUUID());
         entity.setFromCurrency(fxRate.getFromCurrency());
         entity.setToCurrency(fxRate.getToCurrency());
         entity.setRate(fxRate.getRate());
@@ -65,7 +65,7 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
         entity.setValidUntil(fxRate.getValidUntil());
         entity.setVersion(fxRate.getVersion());
         entity.setCreatedAt(fxRate.getCreatedAt());
-        entity.setNewEntity(true);
+        entity.setNewEntity(fxRate.getVersion() == null);
         return entity;
     }
 

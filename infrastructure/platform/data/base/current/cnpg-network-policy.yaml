@@ -17,6 +17,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-operators
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: payu-database
       ports:
         - protocol: TCP
           port: 8000

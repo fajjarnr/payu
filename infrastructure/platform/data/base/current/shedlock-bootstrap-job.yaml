@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: shedlock-bootstrap
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: shedlock-bootstrap
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: shedlock-bootstrap
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: database
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: psql
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          env:
+            - name: PGHOST
+              value: payu-database-rw.payu-dev.svc.cluster.local
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: payu-database-superuser
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-database-superuser
+                  key: password
+            - name: APP_USER
+              value: payu
+            - name: DB_LIST
+              value: >-
+                payu_account payu_billing payu_partner payu_transaction
+                payu_wallet payu_fx payu_cms
+          command:
+            - /bin/bash
+            - -ceu
+            - |
+              for db in $DB_LIST; do
+                echo "Ensuring shedlock in ${db}"
+                psql -v ON_ERROR_STOP=1 -d "$db" <<SQL
+              CREATE TABLE IF NOT EXISTS shedlock (
+                  name       VARCHAR(64)  NOT NULL,
+                  lock_until TIMESTAMP    NOT NULL,
+                  locked_at  TIMESTAMP    NOT NULL,
+                  locked_by  VARCHAR(255) NOT NULL,
+                  PRIMARY KEY (name)
+              );
+              GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE shedlock TO ${APP_USER};
+              SQL
+              done

@@ -7,6 +7,7 @@ import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
+import io.lettuce.core.protocol.ProtocolVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -91,7 +92,9 @@ public class RedisCacheConfig {
         return ClientOptions.builder()
                 .socketOptions(socketOptions)
                 .timeoutOptions(timeoutOptions)
+                .protocolVersion(ProtocolVersion.RESP2)
                 .autoReconnect(true)
+                .pingBeforeActivateConnection(false)
                 .build();
     }
 
@@ -159,6 +162,7 @@ public class RedisCacheConfig {
 
         ClusterClientOptions clusterOptions = ClusterClientOptions.builder()
                 .topologyRefreshOptions(topologyOptions)
+                .protocolVersion(ProtocolVersion.RESP2)
                 .autoReconnect(true)
                 .build();
 

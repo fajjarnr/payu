@@ -54,9 +54,14 @@ public class CertificateRotationService {
     // BUG-BE-047: Added scheduled trigger for automatic certificate rotation
     @SchedulerLock(name = "CertificateRotationService_scheduledRotateExpiringCertificates", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")
     @Scheduled(cron = "0 0 8 * * *") // Daily at 8 AM
+    @Transactional
     public void scheduledRotateExpiringCertificates() {
         LOG.info("Running scheduled certificate rotation check...");
-        rotateExpiringCertificates(30);
+        try {
+            rotateExpiringCertificates(30);
+        } catch (Exception e) {
+            LOG.error("Unexpected error occurred during scheduled certificate rotation", e);
+        }
     }
 
     @Transactional
