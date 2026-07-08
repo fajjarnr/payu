@@ -4,12 +4,6 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from structlog import get_logger
 from prometheus_client import make_asgi_app
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -39,6 +33,11 @@ async def lifespan(app: FastAPI):
     startup_logger.info("Starting Analytics Service")
 
     if settings.enable_tracing:
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
         provider = TracerProvider()
         processor = BatchSpanProcessor(
             OTLPSpanExporter(endpoint=settings.otlp_endpoint)
@@ -117,8 +116,13 @@ def create_app() -> FastAPI:
         metrics_app = make_asgi_app()
         app.mount("/metrics", metrics_app)
 
-    FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
-    HTTPXClientInstrumentor().instrument()
+    if settings.enable_tracing:
+        from opentelemetry import trace
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+        FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
+        HTTPXClientInstrumentor().instrument()
 
     @app.middleware("http")
     async def add_request_id(request: Request, call_next):

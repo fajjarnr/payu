@@ -1,9 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 import os
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        protected_namespaces=("settings_",),
+    )
+
     application_name: str = "PayU Analytics Service"
     version: str = "1.0.0"
 
@@ -50,10 +56,6 @@ class Settings(BaseSettings):
     enable_metrics: bool = True
     enable_tracing: bool = True
     otlp_endpoint: str = os.getenv("OTLP_ENDPOINT", "http://localhost:4317")
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 @lru_cache()

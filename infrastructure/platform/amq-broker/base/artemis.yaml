@@ -8,8 +8,6 @@ metadata:
     app.kubernetes.io/component: message-queue
     team: platform
 spec:
-  adminUser: admin
-  adminPassword: admin
   deploymentPlan:
     size: 1
     persistenceEnabled: false
@@ -43,7 +41,7 @@ spec:
   acceptors:
   - name: core
     port: 61616
-    protocols: CORE,AMQP
+    protocols: CORE,AMQP,STOMP
   - name: amqp
     port: 5672
     protocols: AMQP

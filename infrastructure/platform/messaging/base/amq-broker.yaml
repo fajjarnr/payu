@@ -12,12 +12,10 @@ spec:
   acceptors:
     - name: core
       port: 61616
-      protocols: CORE,AMQP
+      protocols: CORE,AMQP,STOMP
     - name: amqp
       port: 5672
       protocols: AMQP
-  adminPassword: admin
-  adminUser: admin
   brokerProperties:
     - 'addressSettings."#".deadLetterAddress=DLQ'
     - 'addressSettings."#".maxDeliveryAttempts=3'

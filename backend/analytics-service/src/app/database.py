@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     Text,
     Boolean,
+    text,
 )
 from datetime import datetime
 
@@ -24,6 +25,12 @@ engine = None
 async_session_maker = None
 
 Base = declarative_base()
+SCHEMA_INIT_LOCK = text(
+    "SELECT pg_advisory_lock(hashtext('analytics-service-schema-init'))"
+)
+SCHEMA_INIT_UNLOCK = text(
+    "SELECT pg_advisory_unlock(hashtext('analytics-service-schema-init'))"
+)
 
 
 class TransactionAnalyticsEntity(Base):
@@ -160,6 +167,13 @@ async def init_db():
         engine, class_=AsyncSession, expire_on_commit=False
     )
 
+    async with engine.begin() as connection:
+        await connection.execute(SCHEMA_INIT_LOCK)
+        try:
+            await connection.run_sync(Base.metadata.create_all)
+        finally:
+            await connection.execute(SCHEMA_INIT_UNLOCK)
+
     await _create_hypertables()
 
     logger.info("Database connection pool created")
@@ -167,33 +181,42 @@ async def init_db():
 
 async def _create_hypertables():
     async with async_session_maker() as session:
-        from sqlalchemy import text
+        timescale_enabled = await session.scalar(
+            text("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb')")
+        )
+        if not timescale_enabled:
+            logger.info("TimescaleDB extension not installed; skipping hypertable setup")
+            return
 
         create_timescale = text(
             """
             SELECT create_hypertable('transaction_analytics', 'timestamp',
-                chunk_time_interval => interval '7 days');
+                chunk_time_interval => interval '7 days',
+                if_not_exists => TRUE);
         """
         )
 
         create_wallet_hypertable = text(
             """
             SELECT create_hypertable('wallet_balance_history', 'timestamp',
-                chunk_time_interval => interval '7 days');
+                chunk_time_interval => interval '7 days',
+                if_not_exists => TRUE);
         """
         )
 
         create_activity_hypertable = text(
             """
             SELECT create_hypertable('user_activity_analytics', 'timestamp',
-                chunk_time_interval => interval '7 days');
+                chunk_time_interval => interval '7 days',
+                if_not_exists => TRUE);
         """
         )
 
         create_fraud_hypertable = text(
             """
             SELECT create_hypertable('fraud_scores', 'scored_at',
-                chunk_time_interval => interval '7 days');
+                chunk_time_interval => interval '7 days',
+                if_not_exists => TRUE);
         """
         )
 

@@ -4,6 +4,43 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-093: PayU-Dev Recovery — Python Service Startup, AMQ STOMP, and GitOps Drift (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: OpenShift 4.20, FastAPI/Uvicorn, SQLAlchemy, CloudNativePG, AMQ Broker, STOMP, GitOps
+**Context**: `payu-dev` had application workloads deployed but multiple services were stale or unstable. Recovery focused on `analytics-service`, `kyc-service`, `investment-service`, `lending-service`, and `support-service`, with final verification from pod logs and events.
+
+**Root causes & fixes**:
+
+1. **GitOps drift vs live Deployment state**: Overlay tags had newer images, but live deployments still ran stale tags. Manual `oc set image` recovered the namespace; GitOps ApplicationSet reconciliation remains the follow-up task.
+
+2. **Analytics DB init was incomplete**: `payu_analytics` database was missing, and `init_db()` did not create SQLAlchemy tables before Timescale hypertable setup. Fix: add the CNPG `Database` CR, create the DB live, run `Base.metadata.create_all`, and make hypertable setup safe when TimescaleDB is absent.
+
+3. **Schema init race under multi-worker Uvicorn**: Four Uvicorn workers tried to create the same tables at startup, causing duplicate PostgreSQL type errors. Fix: serialize schema creation with a PostgreSQL advisory lock. For services with startup DB migration/init, avoid concurrent workers inside one pod.
+
+4. **Background consumers do not belong in multi-worker pods**: Analytics started one Kafka consumer per Uvicorn worker, causing group rebalance warnings. KYC would also duplicate STOMP consumers under multi-worker mode. Fix: force `--workers 1` in Deployment and scale horizontally with Kubernetes replicas.
+
+5. **AMQ Broker STOMP uses the broker acceptor port, not a separate default**: KYC assumed STOMP on `61613`; live AMQ exposed `61616`. Fix: enable `STOMP` in the AMQ acceptor protocols and configure KYC to use `payu-broker-hdls-svc:61616`.
+
+6. **STOMP clients must send heartbeats under broker TTL**: Artemis closed KYC STOMP connection after 60s with `Did not receive data within the 60000ms connection TTL`. Fix: pass `heartbeats=(30000, 30000)` to `stomp.Connection` and expose env knobs for heartbeat tuning.
+
+7. **Disabled tracing should not import tracing instrumentation**: Importing OpenTelemetry instrumentation at module load still emitted startup warnings even when tracing was disabled. Fix: lazy-import and instrument only when `ENABLE_TRACING=true`.
+
+8. **Heavy ML/OCR imports should be endpoint-lazy**: KYC startup imported PaddleOCR even before OCR was used, producing runtime warning noise and slowing startup. Fix: lazy-load `OcrService` only when KTP OCR processing is invoked.
+
+**Operational rule**:
+- For Python services with background consumers or startup schema work, run one application worker per pod and scale with replicas. Multi-worker Uvicorn is only safe when each worker can independently duplicate all startup side effects.
+
+**Verification**:
+- `oc get nodes`: 7/7 Ready.
+- `payu-dev`: 46/46 pods Running, 32/32 deployments Ready.
+- Recovered deployments: `analytics-service:1.8.88`, `kyc-service:1.8.89`, `investment-service:1.8.86`, `lending-service:1.8.86`, `support-service:1.8.86`.
+- Final 75s log scan for the five recovered services had no `error|warn|exception|traceback|failed|unavailable` matches.
+- Current analytics/KYC pod events were Normal only.
+- AMQ broker Ready=True with `CORE,AMQP,STOMP`.
+
+---
+
 ## L-092: RHPAM Kogito Operator — CRDs Registered, Embedded Drools as Fallback (2026-07-03)
 
 **Date**: 2026-07-03

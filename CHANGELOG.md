@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.8.89] - 2026-07-08
+
+### Fixed
+
+- Recovered `payu-dev` workload health: 46/46 pods Running and 32/32 deployments Ready.
+- Fixed `analytics-service` startup by creating SQLAlchemy tables during init, serializing schema init with a PostgreSQL advisory lock, and making Timescale hypertable setup safe when TimescaleDB is absent.
+- Fixed `kyc-service` AMQ connectivity by enabling STOMP on the AMQ acceptor, using port 61616, and adding STOMP heartbeats to avoid Artemis TTL disconnects.
+- Removed Python service startup warning noise by lazy-loading OpenTelemetry instrumentation only when tracing is enabled and lazy-loading KYC OCR dependencies only when OCR is used.
+
+### Changed
+
+- Deployed `analytics-service:1.8.88`, `kyc-service:1.8.89`, and kept `investment-service`, `lending-service`, and `support-service` stable on `1.8.86`.
+- Set analytics and KYC deployments to one Uvicorn worker per pod; scale via Kubernetes replicas to avoid duplicate background consumers.
+- Documented the recovery patterns in `docs/guides/LESSONS.md` as L-093.
+
 ## [1.9.1] - 2026-07-03
 
 ### Added

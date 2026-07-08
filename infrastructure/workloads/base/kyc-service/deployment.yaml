@@ -39,6 +39,18 @@ spec:
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:1.8.8
+        command:
+        - python
+        - -m
+        - uvicorn
+        - app.main:app
+        args:
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+        - --workers
+        - "1"
         ports:
         - containerPort: 8080
           name: http
@@ -100,14 +112,26 @@ spec:
               key: secret-key
         - name: ENVIRONMENT
           value: "container"
+        - name: ENABLE_TRACING
+          value: "false"
         - name: ARTEMIS_HOST
           value: payu-broker-hdls-svc
         - name: ARTEMIS_STOMP_PORT
-          value: "61613"
+          value: "61616"
+        - name: ARTEMIS_HEARTBEAT_SEND_MS
+          value: "30000"
+        - name: ARTEMIS_HEARTBEAT_RECEIVE_MS
+          value: "30000"
         - name: ARTEMIS_USERNAME
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_USER
         - name: ARTEMIS_PASSWORD
-          value: payu-dev-artemis-pwd-2026
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_PASSWORD
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
         - name: PAYU_SECURITY_ENCRYPTION_SALT

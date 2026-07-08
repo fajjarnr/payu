@@ -11,7 +11,7 @@ images:
   newTag: "1.8.80"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.8
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-  newTag: "1.8.80"
+  newTag: "1.8.88"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newTag: "1.8.80"
@@ -44,13 +44,13 @@ images:
   newTag: "1.8.80"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-  newTag: "1.8.80"
+  newTag: "1.8.86"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:1.8.8
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
-  newTag: "1.8.80"
+  newTag: "1.8.89"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.23
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-  newTag: "1.8.80"
+  newTag: "1.8.86"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.23
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newTag: "1.8.80"
@@ -68,7 +68,7 @@ images:
   newTag: "1.8.80"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
-  newTag: "1.8.80"
+  newTag: "1.8.86"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.54
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newTag: "1.8.80"

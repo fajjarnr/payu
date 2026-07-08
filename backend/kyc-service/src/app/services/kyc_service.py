@@ -8,7 +8,6 @@ from structlog import get_logger
 
 from app.database import KycVerificationEntity
 from app.models.schemas import KycVerification, KycStatus, KtpOcrResult, LivenessCheckResult, FaceMatchResult, DukcapilVerificationResult, mask_nik
-from app.ml.ocr_service import OcrService
 from app.ml.liveness_service import LivenessService
 from app.ml.face_service import FaceService
 from app.adapters.dukcapil_client import DukcapilClient
@@ -20,11 +19,19 @@ logger = get_logger(__name__)
 class KycService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.ocr_service = OcrService()
+        self._ocr_service = None
         self.liveness_service = LivenessService()
         self.face_service = FaceService()
         self.dukcapil_client = DukcapilClient()
         self.kafka_producer = KafkaProducerService()
+
+    @property
+    def ocr_service(self):
+        if self._ocr_service is None:
+            from app.ml.ocr_service import OcrService
+
+            self._ocr_service = OcrService()
+        return self._ocr_service
 
     async def create_verification(
         self,

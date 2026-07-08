@@ -1,9 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 import os
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        protected_namespaces=("settings_",),
+    )
+
     application_name: str = "PayU KYC Service"
     version: str = "1.0.0"
 
@@ -25,6 +31,8 @@ class Settings(BaseSettings):
     artemis_username: str = os.getenv("ARTEMIS_USERNAME", "admin")
     artemis_password: str = os.getenv("ARTEMIS_PASSWORD", "admin")
     artemis_kyc_queue: str = "payu.kyc.commands"
+    artemis_heartbeat_send_ms: int = int(os.getenv("ARTEMIS_HEARTBEAT_SEND_MS", "30000"))
+    artemis_heartbeat_receive_ms: int = int(os.getenv("ARTEMIS_HEARTBEAT_RECEIVE_MS", "30000"))
 
     # Dukcapil Simulator
     dukcapil_url: str = os.getenv("DUKCAPIL_URL", "http://localhost:8091/api/v1")
@@ -65,10 +73,6 @@ class Settings(BaseSettings):
     enable_metrics: bool = True
     enable_tracing: bool = True
     otlp_endpoint: str = os.getenv("OTLP_ENDPOINT", "http://localhost:4317")
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 @lru_cache()

@@ -1,0 +1,434 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-account
+  labels:
+    app.kubernetes.io/name: payu-account
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_account
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-api-portal
+  labels:
+    app.kubernetes.io/name: payu-api-portal
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_api_portal
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-analytics
+  labels:
+    app.kubernetes.io/name: payu-analytics
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_analytics
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-auth
+  labels:
+    app.kubernetes.io/name: payu-auth
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_auth
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-backoffice
+  labels:
+    app.kubernetes.io/name: payu-backoffice
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_backoffice
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-bifast
+  labels:
+    app.kubernetes.io/name: payu-bifast
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_bifast
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-biller
+  labels:
+    app.kubernetes.io/name: payu-biller
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_biller
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-billing
+  labels:
+    app.kubernetes.io/name: payu-billing
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_billing
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-cms
+  labels:
+    app.kubernetes.io/name: payu-cms
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_cms
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-compliance
+  labels:
+    app.kubernetes.io/name: payu-compliance
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_compliance
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-dispute
+  labels:
+    app.kubernetes.io/name: payu-dispute
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_dispute
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-dukcapil
+  labels:
+    app.kubernetes.io/name: payu-dukcapil
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_dukcapil
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-fx
+  labels:
+    app.kubernetes.io/name: payu-fx
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_fx
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-gateway
+  labels:
+    app.kubernetes.io/name: payu-gateway
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_gateway
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-integration
+  labels:
+    app.kubernetes.io/name: payu-integration
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_integration
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-investment
+  labels:
+    app.kubernetes.io/name: payu-investment
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_investment
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-keycloak
+  labels:
+    app.kubernetes.io/name: payu-keycloak
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: keycloak
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-kyc
+  labels:
+    app.kubernetes.io/name: payu-kyc
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_kyc
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-lending
+  labels:
+    app.kubernetes.io/name: payu-lending
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_lending
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-loan-origination
+  labels:
+    app.kubernetes.io/name: payu-loan-origination
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_loan_origination
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-notification
+  labels:
+    app.kubernetes.io/name: payu-notification
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_notification
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-partner
+  labels:
+    app.kubernetes.io/name: payu-partner
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_partner
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-products
+  labels:
+    app.kubernetes.io/name: payu-products
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_products
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-promotion
+  labels:
+    app.kubernetes.io/name: payu-promotion
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_promotion
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-qris
+  labels:
+    app.kubernetes.io/name: payu-qris
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_qris
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-statement
+  labels:
+    app.kubernetes.io/name: payu-statement
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_statement
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-support
+  labels:
+    app.kubernetes.io/name: payu-support
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_support
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-transaction
+  labels:
+    app.kubernetes.io/name: payu-transaction
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_transaction
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-wallet
+  labels:
+    app.kubernetes.io/name: payu-wallet
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_wallet
+  owner: payu
+  ensure: present

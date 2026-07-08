@@ -39,6 +39,18 @@ spec:
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.8
+        command:
+        - python
+        - -m
+        - uvicorn
+        - app.main:app
+        args:
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+        - --workers
+        - "1"
         ports:
         - containerPort: 8080
           name: http
@@ -98,6 +110,8 @@ spec:
               key: secret-key
         - name: ENVIRONMENT
           value: "container"
+        - name: ENABLE_TRACING
+          value: "false"
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
         - name: PAYU_SECURITY_ENCRYPTION_SALT

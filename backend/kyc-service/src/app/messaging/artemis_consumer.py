@@ -49,7 +49,13 @@ class ArtemisConsumerService:
     def start(self):
         try:
             loop = asyncio.get_running_loop()
-            self.conn = stomp.Connection([(settings.artemis_host, settings.artemis_stomp_port)])
+            self.conn = stomp.Connection(
+                [(settings.artemis_host, settings.artemis_stomp_port)],
+                heartbeats=(
+                    settings.artemis_heartbeat_send_ms,
+                    settings.artemis_heartbeat_receive_ms,
+                ),
+            )
             self._listener = ArtemisListener(loop)
             self.conn.set_listener('ArtemisListener', self._listener)
             self.conn.connect(settings.artemis_username, settings.artemis_password, wait=True)

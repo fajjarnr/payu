@@ -10,17 +10,21 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 28/28 Running                        | All 23 backend services + 4 simulators + web-app — all 1/1 Ready. CNPG PostgreSQL 3-node, Redis (RHEL9), Artemis AMQ 2-node, Kafka 5-broker KRaft. |
-| Total Pods               | 🟢 43/43                                | 28 app + 3 CNPG + 5 Kafka + 2 Artemis + 1 Redis + 4 simulators |
-| OpenShift Cluster        | 🟢 Active                                | OCP 4.22, 6 nodes (3 master + 3 worker), ap-southeast-1 AWS |
-| Operators Installed      | 🟢 18/18                                 | Tekton, ArgoCD, RHBK (Keycloak 26), AMQ Streams, AMQ Broker, cert-manager, External Secrets, Compliance, ACS, ServiceMesh, Kiali, 3scale, KubeDescheduler, CloudNativePG (v1.30.0). Removed: Crunchy PG, DataGrid. |
-| Data Services            | 🟢 All running                            | **CNPG PostgreSQL 16** 3-instance sync-replication (`payu-database`). **Redis 7** RHEL9 StatefulSet (`payu-cache:6379`). AMQ Streams (Kafka) 5-broker + 3-controller KRaft. Artemis 2-node active/passive. |
-| Identity (Keycloak)      | 🟢 Deployed                               | RHBK 26 operator in payu-sso. Realm `payu` + OIDC clients configured. |
+| Services Deployed        | 🟢 32/32 deployments Ready               | `payu-dev` workloads manually recovered and verified. GitOps ApplicationSet reconciliation remains open. |
+| Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
+| OpenShift Cluster        | 🟢 Active                                | OCP 4.20.26, 7 nodes Ready (3 control-plane + 4 worker). |
+| Operators Installed      | 🟢 Core platform ready                    | OpenShift GitOps 1.21.1, OpenShift Pipelines 1.22.4, 3scale operator 2.16 channel, CNPG 1.30.0, Redis Enterprise 8.0.20-23.0, Vault Secrets 1.4.0, Tempo 0.21.0-2, Compliance 1.9.1. |
+| Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Redis, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
+| Identity (Keycloak)      | 🔴 Not deployed in current cluster        | `payu-sso`/RHBK workload not synced yet. |
 | Maven Build              | 🟢 43/43                                 | BUILD SUCCESS all modules. |
 | Cache                    | 🟢 Redis PONG                             | Native Redis 7 replaces Infinispan Data Grid. AOF persistence, auth, port 6379. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
-| **Production Readiness** | 🟡 88/100                                | All infra connected. Missing: WAF, Observability stack, CI/CD pipelines, DR runbook, Vault auto-unseal. |
-| Last Status Update       | 2026-07-03                               | **v1.9.1**: Migrated from Crunchy PostgreSQL → CloudNativePG, Infinispan DataGrid → Redis, zero permission errors, zero warnings. |
+| **Production Readiness** | 🟠 Bootstrap in progress                  | Cluster healthy and payu-dev recovered; GitOps reconciliation, 3scale external dependencies, and CIS remediation remain. |
+| Last Status Update       | 2026-07-08                               | payu-dev workload recovery verified and documented: analytics-service:1.8.88, kyc-service:1.8.89, investment/lending/support:1.8.86. |
+
+> 🟠 **2026-07-06 — Production bootstrap gate rebuilt**: OCP 4.20.26 cluster is healthy with 6 Ready nodes. Installed OpenShift GitOps 1.21.1, 3scale operator on `threescale-2.16`, CNPG, Redis Enterprise, Vault Secrets, Tempo, and Compliance operators. Applied PayU namespaces with quotas/limits/default-deny NetworkPolicies. Fixed `infrastructure/workloads/overlays/payu-dev` dry-run by restoring missing kustomizations and removing the optional KogitoRuntime CR from the default path. Workload sync is intentionally withheld because `payu-dev` has 0 ImageStreamTags. CIS scan completed: node scans COMPLIANT, platform scan NON-COMPLIANT (9 FAIL, 21 MANUAL, 210 PASS).
+
+> ✅ **2026-07-08 — payu-dev workload recovery documented**: OCP 4.20.26 cluster has 7 Ready nodes. `payu-dev` has 46/46 pods Running and 32/32 deployments Ready. Recovered analytics-service (`1.8.88`) with schema init advisory lock, explicit table creation, Timescale-safe hypertable setup, and tracing disabled until OTel collector exists. Recovered kyc-service (`1.8.89`) with AMQ STOMP on 61616, STOMP heartbeats, lazy OCR import, tracing disabled, and single Uvicorn worker. investment-service, lending-service, and support-service are stable on `1.8.86`. Final 75s log scan found no error/warn matches for the five recovered services; current analytics/KYC pod events are Normal only.
 
 > ✅ **v1.9.1 — CNPG Migration + Zero-Warning Cluster (Jul 3, 2026)**: Migrated from Crunchy PostgreSQL Operator to CloudNativePG v1.30.0 (`payu-database` 3-instance). Replaced Infinispan DataGrid with native Redis 7 StatefulSet. Fixed all DB permission denied errors (HHH000247) via table ownership grants + ALTER DEFAULT PRIVILEGES. Fixed Camel OJK Exchange[] error (MessageProcessingService overload). Fixed logback JSON_CONSOLE warning. Fixed DRL path mismatch. Added warning-fix env vars (JAVA_TOOL_OPTIONS, ENCRYPTION_SALT, WEBHOOK_SECRET) to all 24 deployment YAMLs. Zero errors, zero warnings cluster-wide. Added L-095 (DB ownership), L-096 (Infinispan RESP), L-097 (CNPG vs Crunchy) lessons.
 

@@ -17,9 +17,9 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 45/45 pods Ready, OCP 4.21, payu-dev. SSO, Kafka, PostgreSQL HA, Infinispan (DataGrid 8.6), Artemis AMQ 2-node active/passive — all connected. |
-| **Last Release** | `:1.9.0` — loan-origination-process BPMN + backoffice task inbox (KOGITO-001 Phase 1-2) |
-| **Last Updated** | 2026-07-03 (loan-origination-process compiled, full backend BUILD SUCCESS 56/56) |
+| **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
+| **Last Release** | `:1.8.89` — payu-dev recovery: KYC STOMP heartbeat + analytics schema init fix |
+| **Last Updated** | 2026-07-08 (manual payu-dev workload recovery documented; GitOps ApplicationSet reconciliation remains) |
 
 ---
 
@@ -28,7 +28,9 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⬜ Open |
+| INFRA-020 | P0 | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | ⬜ Open |
 | INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⬜ Open |
+| SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
 
 ---
@@ -37,7 +39,8 @@
 
 | Key | Priority | Category | Summary |
 |:---|:---:|:---|:---|
-| DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + ComplianceOperator CIS scan (INFRA-010) + Wazuh SIEM (INFRA-011) |
+| DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
+| DEPLOY-010 | P1 | API Management | Deploy 3scale APIManager after production external DB/Redis/Vault secrets exist |
 | DEPLOY-007 | P1 | Observability | OTel→Tempo (READY-019) + Loki (READY-020) + Prometheus alerts (READY-021) |
 | DEPLOY-008 | P1 | DR/Security | Vault auto-snapshot (DEVSECOPS-001) + auto-unseal (DEVSECOPS-002) + DR runbook (INFRA-007) |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
