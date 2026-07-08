@@ -27,13 +27,13 @@ spec:
           image: registry.redhat.io/rhel9/postgresql-16:latest
           env:
             - name: PGHOST
-              value: payu-postgres-ha-primary.payu-dev.svc.cluster.local
+              value: payu-database-rw.payu-dev.svc.cluster.local
             - name: PGUSER
               value: postgres
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: payu-postgres-ha-pguser-postgres
+                  name: payu-database-superuser
                   key: password
                   optional: true
             - name: APP_USER

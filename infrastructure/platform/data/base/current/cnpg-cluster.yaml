@@ -24,6 +24,7 @@ metadata:
 spec:
   description: "PayU Platform PostgreSQL 16 Cluster — CloudNativePG managed"
   imageName: ghcr.io/cloudnative-pg/postgresql:16.8
+  enableSuperuserAccess: true
 
   instances: 3
 
