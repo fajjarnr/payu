@@ -4,6 +4,24 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-104: Database Schema Initialization for Deployed Simulators (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: Kubernetes Workloads, CloudNativePG, Database Provisioning
+**Context**: Re-enabling the Virtual Account simulator (`va-simulator`) in GitOps required creating Kustomize manifests. Because the simulator writes/reads from its own dedicated database (`payu_va_simulator`), it was critical to also define the Database CRD resource for CNPG and update the service endpoints.
+
+**Lesson**:
+- When adding a new microservice or simulator that uses a dedicated relational database, always declare the corresponding `Database` resource in the platform database manifests (e.g. `cnpg-databases.yaml` for CNPG). Otherwise, the app pod will crash immediately at startup due to missing database schema.
+- Map the JDBC URL pattern of the new service inside the shared `service-endpoints` ConfigMap (e.g. `VA_SIMULATOR_DB_URL`). Keep environment overrides in deployment manifests clean by referencing this key rather than hardcoding connection strings.
+- Verify the container port configured in the codebase (`application.yml`) to prevent port mapping mismatches in Service targetPort and containerPort (e.g. `va-simulator` runs on port `8085` instead of the standard `8080`).
+
+**Applied fix**:
+- Created Kustomize manifests for `va-simulator` targeting port `8085` with active liveness, readiness, and startup probes.
+- Declared `payu-va-simulator` database in `cnpg-databases.yaml`.
+- Added `VA_SIMULATOR_DB_URL` mapping in `service-endpoints.yaml`.
+
+---
+
 ## L-103: Container Environment Metadata for Logback Logging Context (2026-07-08)
 
 **Date**: 2026-07-08

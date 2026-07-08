@@ -37,7 +37,6 @@
 | DEV-105 | P2 | [broker] Resolve AMQ332069 ActiveMQ STOMP client connection failures | ⬜ Open |
 | INFRA-025 | P2 | [cache] Resolve Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 | ⬜ Open |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
-| INFRA-028 | P2 | [va-simulator] Add deployment and service manifests for va-simulator | ⬜ Open |
 | DEVSECOPS-018 | P3 | [scripts] Update test-health-check.sh to support podman as fallback when docker is missing | ⬜ Open |
 
 
@@ -101,11 +100,6 @@
 * **Problem**: Skrip `./scripts/test-health-check.sh` mengalami error `docker: command not found` di environment lokal yang menggunakan `podman` dan `podman-compose`.
 * **Impact**: Developer workflow terganggu karena skrip pemeriksaan kesehatan environment pengujian gagal dijalankan.
 * **Fix**: Modifikasi skrip agar mendeteksi keberadaan perintah `docker` dan `podman`, lalu secara dinamis menggunakan container command yang tersedia.
-
-### ⚙️ INFRA-028: Missing va-simulator deployment in workloads configurations (va-simulator)
-* **Problem**: Simulator Virtual Account (`va-simulator`) terdaftar sebagai modul Maven aktif di `backend/pom.xml` dan memiliki codebase di `backend/simulators/va-simulator`, namun tidak memiliki manifest Kustomize deployment sama sekali di `infrastructure/workloads/base` dan tidak di-deploy ke cluster `payu-dev`.
-* **Impact**: Pengujian integrasi transaksi Virtual Account terhambat atau tidak dapat disimulasikan secara dinamis di dev cluster.
-* **Fix**: Buat file manifest deployment/service `va-simulator.yaml` di folder `infrastructure/workloads/base/` dan tambahkan entry resource-nya di `base/kustomization.yaml` agar di-deploy otomatis oleh ArgoCD/GitOps.
 
 ### 🔐 SEC-020: Remediate CIS platform failures (platform-security)
 * **Problem**: Hasil pemindaian Compliance Operator untuk profile `ocp4-cis` (non-compliant) mendeteksi 9 temuan kegagalan (FAIL):

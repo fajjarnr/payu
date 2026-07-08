@@ -432,3 +432,18 @@ spec:
   name: payu_wallet
   owner: payu
   ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-va-simulator
+  labels:
+    app.kubernetes.io/name: payu-va-simulator
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_va_simulator
+  owner: payu
+  ensure: present

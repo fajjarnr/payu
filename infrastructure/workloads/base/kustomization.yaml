@@ -34,4 +34,5 @@ resources:
 - ./biller-simulator.yaml
 - ./dukcapil-simulator.yaml
 - ./qris-simulator.yaml
+- ./va-simulator.yaml
 - ./service-endpoints.yaml

@@ -52,3 +52,4 @@ data:
   BILLER_DB_URL: "jdbc:postgresql://payu-database-rw.payu-dev.svc.cluster.local:5432/payu_biller"
   DUKCAPIL_DB_URL: "jdbc:postgresql://payu-database-rw.payu-dev.svc.cluster.local:5432/payu_dukcapil"
   QRIS_DB_URL: "jdbc:postgresql://payu-database-rw.payu-dev.svc.cluster.local:5432/payu_qris"
+  VA_SIMULATOR_DB_URL: "jdbc:postgresql://payu-database-rw.payu-dev.svc.cluster.local:5432/payu_va_simulator"
