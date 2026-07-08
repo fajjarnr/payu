@@ -4,6 +4,22 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-099: Infrastructure MOP Drift — Keep Runbooks Bound to Renderable Kustomize Roots (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: OpenShift 4.20, Kustomize, GitOps, operations documentation
+**Context**: `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md` still described obsolete `infrastructure/openshift/examples/`, Crunchy Postgres, and old cache assumptions after the platform had moved to CNPG, Data Grid/Infinispan, AMQ Broker, and environment overlays.
+
+**Lesson**:
+- Deployment runbooks must name the exact renderable Kustomize roots that operators should apply. If a path no longer renders or is no longer the source of truth, remove it from the runbook instead of leaving it as historical context.
+- MOPs should include gates, abort criteria, and verification commands for live CR conditions. A pod being Running is not enough; operator CRs like RHBK `Keycloak` can still report `HasErrors=True`.
+- Keep API management gated: installing the 3scale operator/policies is safe, but applying `APIManager` must wait for external DB/Redis/storage/Vault secrets.
+
+**Applied fix**:
+- Replaced the obsolete infrastructure deployment guide with a current Method of Procedure covering preflight, apply order, runtime secrets, GitOps handoff, verification, rollback, and known gates.
+
+---
+
 ## L-098: Production-Ready Manifest Sweep — Secret Hygiene, Next Proxy, and Spring Kafka 4 (2026-07-08)
 
 **Date**: 2026-07-08

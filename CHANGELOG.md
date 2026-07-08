@@ -25,10 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Quarkus test dependency names and compiler encoding settings for gateway, notification, and API portal services.
 - Fixed wallet MapStruct update mappings for generated Spring Boot 4 / MapStruct compilation.
 - Removed stale frontend imports and moved Next.js proxy session handling to the Next 16 file convention.
+- Migrated Argo CD image-updater Kustomize labels from deprecated `commonLabels` to `labels`.
 
 ### Documentation
 
 - Documented the v1.9.2 production-ready sweep in `docs/guides/LESSONS.md` and `docs/roadmap`.
+- Replaced the obsolete infrastructure deployment guide with a current MOP covering Kustomize entrypoints, apply order, secret gates, verification, GitOps handoff, rollback, and known deployment gates.
 
 ## [1.8.89] - 2026-07-08
 

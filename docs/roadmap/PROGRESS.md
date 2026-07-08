@@ -15,7 +15,7 @@
 | OpenShift Cluster        | 🟢 Active                                | OCP 4.20.26, 7 nodes Ready (3 control-plane + 4 worker). |
 | Operators Installed      | 🟢 Core platform ready                    | OpenShift GitOps 1.21.1, OpenShift Pipelines 1.22.4, 3scale operator 2.16 channel, CNPG 1.30.0, Redis Enterprise 8.0.20-23.0, Vault Secrets 1.4.0, Tempo 0.21.0-2, Compliance 1.9.1. |
 | Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Redis, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
-| Identity (Keycloak)      | 🔴 Not deployed in current cluster        | `payu-sso`/RHBK workload not synced yet. |
+| Identity (Keycloak)      | 🟠 Pod running, CR unhealthy              | `payu-keycloak-0` is Running in `payu-sso`, but the RHBK `Keycloak` CR reports `HasErrors=True`; see `INFRA-021`. |
 | Maven Build              | 🟢 43/43                                 | BUILD SUCCESS all modules. |
 | Cache                    | 🟢 Redis PONG                             | Native Redis 7 replaces Infinispan Data Grid. AOF persistence, auth, port 6379. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |

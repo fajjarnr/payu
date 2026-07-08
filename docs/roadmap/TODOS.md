@@ -30,6 +30,7 @@
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⬜ Open |
 | INFRA-020 | P0 | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | ⬜ Open |
 | INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⬜ Open |
+| INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
 
