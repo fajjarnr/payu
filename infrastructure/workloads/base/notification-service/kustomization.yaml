@@ -8,6 +8,6 @@ labels:
 - pairs:
     app.kubernetes.io/name: notification-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.8.1
+    app.kubernetes.io/version: 1.8.82
   includeSelectors: false
   includeTemplates: true

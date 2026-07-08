@@ -4,6 +4,24 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-103: Container Environment Metadata for Logback Logging Context (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: Kubernetes Workloads, Spring Boot Logback, Observability
+**Context**: Shared `logback-payu-base.xml` logging starter expects `SPRING_APPLICATION_NAME` and `SERVICE_VERSION` variables from the system environment to correlate logging fields in Loki/Grafana. When these are missing, logs default to `unknown-service` and version `1.0.0`.
+
+**Lesson**:
+- To enable proper trace/log correlation and context tags in log aggregators (e.g. Loki, Elasticsearch), workload deployment manifests must explicitly inject `SPRING_APPLICATION_NAME` and `SERVICE_VERSION` as environment variables matching the service name and the deployed image tag.
+- Reconcile `app.kubernetes.io/version` metadata labels inside deployment, service, and kustomization manifests to match the actual image tag. This ensures consistent query selectors for ArgoCD and image update automation.
+- For heavy JVM/Spring Boot microservices running with tight CPU requests (e.g. `100m`), increase the `startupProbe`'s `initialDelaySeconds` to at least `30` seconds to avoid premature probe failures and redundant `Warning Unhealthy` events during the application initialization phase.
+
+**Applied fix**:
+- Programmatically reconciled all `app.kubernetes.io/version` labels and increased `startupProbe`'s `initialDelaySeconds` to `30` in the workload deployment manifests.
+- Injected `SPRING_APPLICATION_NAME` and `SERVICE_VERSION` environment variables to 15 Spring Boot workload deployments.
+- Validated all manifests build successfully via `oc kustomize`.
+
+---
+
 ## L-102: ShedLock Distributed Locking Requires Object Wrappers, Not Primitive Types (2026-07-08)
 
 **Date**: 2026-07-08

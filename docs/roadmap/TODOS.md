@@ -33,8 +33,6 @@
 | INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
-| DEVSECOPS-017 | P2 | [global] Set SPRING_APPLICATION_NAME & SERVICE_VERSION env to fix "unknown-service" logs | ⬜ Open |
-| INFRA-022 | P2 | [global] Reconcile pod version labels and optimize startup probe delay/CPU resources | ⬜ Open |
 | INFRA-023 | P2 | [payu-kafka-entity-operator] Debug HTTP 500 errors in liveness/readiness probes | ⬜ Open |
 | DEV-105 | P2 | [broker] Resolve AMQ332069 ActiveMQ STOMP client connection failures | ⬜ Open |
 | INFRA-025 | P2 | [cache] Resolve Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 | ⬜ Open |
@@ -83,21 +81,6 @@
 ---
 
 ## 📝 Platform Workload Audit Details
-
-### 🛠️ DEVSECOPS-017: Set SPRING_APPLICATION_NAME and SERVICE_VERSION in env (Global)
-* **Problem**: [logback-payu-base.xml](file:///home/ubuntu/payu/backend/shared/logging-starter/src/main/resources/logback-payu-base.xml) di shared starter membaca log context property `SERVICE_NAME` dari env `SPRING_APPLICATION_NAME` dan `SERVICE_VERSION` dari env `SERVICE_VERSION`. Karena variabel ini tidak di-set pada environment `deployment.yaml` 15 Spring Boot microservices, maka log tercatat dengan nama `"unknown-service"` dan versi `"1.0.0"`.
-  * **Microservices terdampak**: `account-service`, `auth-service`, `backoffice-service`, `billing-service`, `cms-service`, `compliance-service`, `fx-service`, `investment-service`, `lending-service`, `partner-service`, `promotion-service`, `statement-service`, `support-service`, `transaction-service`, `wallet-service`.
-* **Impact**: Sulit melakukan agregasi dan filtrasi log berdasarkan nama service di Loki/Grafana.
-* **Fix**: Tambahkan variabel environment `SPRING_APPLICATION_NAME` (sesuai nama service) dan `SERVICE_VERSION` (sesuai image tag) ke dalam manifest `deployment.yaml` masing-masing microservice.
-
-### ⚙️ INFRA-022: Reconcile pod metadata version labels and optimize startup probes (Global)
-* **Problem**: 
-  1. Label metadata `app.kubernetes.io/version` pada deployment bernilai lama (seperti `1.8.1` atau `1.0.0`) sedangkan image yang ter-deploy adalah versi patch baru (seperti `1.8.80`, `1.8.88`, dll).
-  2. JVM membutuhkan waktu startup lama (~60 detik) karena restriksi resource CPU (`Requests: cpu: 100m`). Startup probe yang menyala terlalu awal (delay=10s) menghasilkan status `Warning Unhealthy` di event list Kubernetes sebanyak ~10 kali sebelum akhirnya berhasil.
-* **Impact**: Menyulitkan tracking rilis GitOps, dan warning startup probe yang berulang mengotori event log Kubernetes.
-* **Fix**:
-  1. Sinkronisasi label `app.kubernetes.io/version` pada deployment agar cocok dengan versi image tag yang di-deploy.
-  2. Tingkatkan nilai `initialDelaySeconds` pada startupProbe di manifest deployment atau optimalkan alokasi request CPU.
 
 ### 🌐 INFRA-023: Probe HTTP 500 warnings (payu-kafka-entity-operator)
 * **Problem**: Pod `payu-kafka-entity-operator` mengalami error liveness/readiness probe: `HTTP probe failed with statuscode: 500`.

@@ -8,6 +8,6 @@ labels:
 - pairs:
     app.kubernetes.io/name: fx-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.8.2
+    app.kubernetes.io/version: 1.8.80
   includeSelectors: false
   includeTemplates: true

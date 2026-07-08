@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: api-portal-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
-    app.kubernetes.io/version: 1.8.1
+    app.kubernetes.io/version: 1.8.80
     team: backend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: api-portal-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
-        app.kubernetes.io/version: 1.8.1
+        app.kubernetes.io/version: 1.8.80
         team: backend
     spec:
       securityContext:
@@ -70,7 +70,7 @@ spec:
           httpGet:
             path: /q/health/live
             port: 8080
-          initialDelaySeconds: 10
+          initialDelaySeconds: 30
           periodSeconds: 5
           failureThreshold: 30
         resources:
