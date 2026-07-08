@@ -4,6 +4,40 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-098: Production-Ready Manifest Sweep — Secret Hygiene, Next Proxy, and Spring Kafka 4 (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: OpenShift 4.20, Kustomize, 3scale, CloudNativePG, DataGrid/Redis, Next.js 16, Spring Boot 4, Spring Kafka 4, Jackson 3
+**Context**: After `payu-dev` recovery, the repo still had production-readiness drift in platform manifests, frontend build settings, and backend dependency/API compatibility. The follow-up sweep focused on making the current Git state renderable, buildable, and safer to sync via GitOps.
+
+**Root causes & fixes**:
+
+1. **Production secrets must not live in Git**: 3scale production secret manifests were replaced with `.example` placeholders, while workloads now reference Kubernetes Secrets instead of inline AMQ/cache credentials.
+
+2. **Next.js 16 uses Proxy instead of Middleware**: `middleware.ts` was renamed to `proxy.ts` and exports `proxy()`. Keep `config.matcher`; do not keep the old filename unless intentionally relying on legacy middleware behavior.
+
+3. **Do not hide frontend build failures**: `ignoreDuringBuilds` was removed from `next.config.ts`; production build must run with lint/type/build validation enabled.
+
+4. **Spring Kafka 4 renamed JSON serializers**: Use `JacksonJsonSerializer` and `JacksonJsonDeserializer`. The old `JsonSerializer` / `JsonDeserializer` class names no longer compile cleanly against the current stack.
+
+5. **Spring Boot 4 + Jackson 3 starter compatibility needs explicit simplification**: Shared cache/JMS starters should prefer framework-provided converters and narrow serializer code instead of carrying custom compatibility layers.
+
+6. **Kustomize render is the minimum GitOps gate**: Before pushing platform manifests, run `oc kustomize` for each base/overlay touched. Render success catches broken resources and path drift before ArgoCD does.
+
+**Verification**:
+- `oc kustomize infrastructure/platform/data/base`
+- `oc kustomize infrastructure/platform/api-management`
+- `oc kustomize infrastructure/foundation/cluster-operators`
+- `oc kustomize infrastructure/workloads/base`
+- `mvn -f backend/pom.xml -T 1C test-compile -DskipTests`
+- `npm ci`, `npm run lint`, `npm run type-check`, `npm run build` in `frontend/web-app`
+- staged secret scan found no real tokens/passwords in the committed changes.
+
+**Operational rule**:
+- Treat production-ready manifest work as code: render, compile, build, scan for secrets, then document the exact remaining GitOps/deployment gates in `docs/roadmap`.
+
+---
+
 ## L-093: PayU-Dev Recovery — Python Service Startup, AMQ STOMP, and GitOps Drift (2026-07-08)
 
 **Date**: 2026-07-08

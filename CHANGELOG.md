@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed wallet MapStruct update mappings for generated Spring Boot 4 / MapStruct compilation.
 - Removed stale frontend imports and moved Next.js proxy session handling to the Next 16 file convention.
 
+### Documentation
+
+- Documented the v1.9.2 production-ready sweep in `docs/guides/LESSONS.md` and `docs/roadmap`.
+
 ## [1.8.89] - 2026-07-08
 
 ### Fixed

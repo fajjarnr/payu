@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `:1.8.89` — payu-dev recovery: KYC STOMP heartbeat + analytics schema init fix |
-| **Last Updated** | 2026-07-08 (manual payu-dev workload recovery documented; GitOps ApplicationSet reconciliation remains) |
+| **Last Release** | `1.9.2` — production-ready manifest/build sweep after `payu-dev` recovery |
+| **Last Updated** | 2026-07-08 (v1.9.2 docs synced; GitOps ApplicationSet reconciliation and 3scale external dependencies remain) |
 
 ---
 
