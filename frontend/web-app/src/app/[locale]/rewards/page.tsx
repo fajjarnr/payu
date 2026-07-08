@@ -12,7 +12,7 @@ import { useAuthStore } from '@/stores/authStore';
 import type { LoyaltyBalanceResponse, Cashback, ReferralSummaryResponse, Promotion } from '@/services/PromotionService';
 
 export default function RewardsPage() {
-  const { user, accountId } = useAuthStore();
+  const { accountId } = useAuthStore();
   const acctId = accountId ?? '';
   const { data: loyaltyData } = useLoyaltyBalance(acctId);
   const { data: cashbackData } = useCashbacks(acctId);

@@ -21,6 +21,8 @@
 
     <properties>
         <zxing.version>3.5.3</zxing.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
 
@@ -149,7 +151,7 @@
         <!-- Testing -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -169,7 +171,7 @@
         <!-- Mockito for unit testing -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
+            <artifactId>quarkus-junit-mockito</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -189,13 +191,7 @@
 
         <!-- WireMock for mocking external services in integration tests -->
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
-            <version>3.0.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
+            <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
             <version>3.0.1</version>
             <scope>test</scope>
@@ -245,6 +241,7 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>25</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <parameters>true</parameters>
                 </configuration>
             </plugin>

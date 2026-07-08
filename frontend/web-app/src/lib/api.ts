@@ -1,4 +1,4 @@
-import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { isAxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 
 /**

@@ -168,7 +168,7 @@ public class PartnerRateLimitService {
 
         return Uni.combine().all()
             .unis(minuteCount, hourCount, dayCount)
-            .combinedWith((min, hour, day) -> {
+            .with((min, hour, day) -> {
                 boolean allowed = true;
                 String limitingWindow = null;
                 long limit = 0;

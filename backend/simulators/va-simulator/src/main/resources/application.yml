@@ -37,6 +37,12 @@ quarkus:
     category:
       "id.payu.simulator.va":
         level: DEBUG
+  otel:
+    enabled: true
+    exporter:
+      otlp:
+        traces:
+          endpoint: ${OTEL_ENDPOINT}
 
 # VA Simulator Configuration
 va:
@@ -45,12 +51,3 @@ va:
       url: ${VA_CALLBACK_URL:http://localhost:8083/api/v1/payments/va/callback}
       timeout: 10
     deterministic: true
-
-# OpenTelemetry
-quarkus:
-  otel:
-    enabled: true
-    exporter:
-      otlp:
-        traces:
-          endpoint: ${OTEL_ENDPOINT}

@@ -5,13 +5,17 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/data/base/
 
 resources:
-  - postgres-statefulset.yaml  # ACTIVE: 2-replica PostgreSQL (1 master + 1 replica, native streaming replication, iter 59)
-  - redis-statefulset.yaml     # ACTIVE: 2-replica Redis cache
-  - kafka-amqstreams.yaml      # ACTIVE: 3-broker Kafka (payu-kafka)
-  - network-policy-egress.yaml # allow-all-egress
-  - kafka-console.yaml         # AMQ Streams console UI
-  # SUPERSEDED (READY-027 → READY-076):
+  - current/cnpg-cluster.yaml
+  - current/cnpg-databases.yaml
+  - current/cnpg-network-policy.yaml
+  - current/datagrid.yaml
+  - kafka-amqstreams.yaml
+  - network-policy-egress.yaml
+  # SUPERSEDED (READY-027 -> READY-076):
+  # - postgres-statefulset.yaml
+  # - redis-statefulset.yaml
   # - postgres-cluster.yaml  # Crunchy HA spec kept as future-migration reference only
+  # - kafka-console.yaml
   # - kyverno-exception-kafka.yaml
   # - kyverno-exception-kafka-deployments.yaml
   # kafka-config is managed by workload overlays per environment

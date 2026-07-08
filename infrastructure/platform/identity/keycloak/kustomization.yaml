@@ -4,9 +4,7 @@ namespace: payu-sso
 resources:
 - namespace.yaml
 - rhbk-operator.yaml
-- rhbk-secrets.yaml
 - rhbk-keycloak.yaml
 - keycloak-service.yaml
-- keycloak-realm-import.yaml
 - network-policy.yaml
 - route.yaml

@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, X, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
+import { Camera, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
 import { a11yUtils } from '@/lib/a11y';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

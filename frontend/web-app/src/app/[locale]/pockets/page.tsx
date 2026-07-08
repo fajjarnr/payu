@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, X, ArrowDownLeft, Trash2 } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { BalanceResponse, WalletTransaction, Pocket } from '@/types';

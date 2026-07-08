@@ -1,11 +1,16 @@
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSetting
 metadata:
-  name: default
-  namespace: openshift-compliance
+  name: payu-cis-weekly
+  namespace: openshift-operators
+autoApplyRemediations: false
+debug: false
 rawResultStorage:
   rotation: 10
-  size: 2Gi
+  size: 20Gi
+  storageClassName: gp3-csi
+  pvAccessModes:
+    - ReadWriteOnce
 roles:
   - worker
   - master
@@ -21,26 +26,23 @@ scanTolerations:
     key: node.kubernetes.io/unreachable
     operator: Exists
     tolerationSeconds: 300
-schedule: "0 1 * * 0"
+schedule: "0 3 * * 1"
 showNotApplicable: false
-strictNodeScan: false
+strictNodeScan: true
 ---
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSettingBinding
 metadata:
-  name: cis-kubernetes
-  namespace: openshift-compliance
+  name: payu-cis-weekly
+  namespace: openshift-operators
 profiles:
   - apiGroup: compliance.openshift.io/v1alpha1
-    kind: TailoredProfile
+    kind: Profile
     name: ocp4-cis-node
-    namespace: openshift-compliance
   - apiGroup: compliance.openshift.io/v1alpha1
-    kind: TailoredProfile
+    kind: Profile
     name: ocp4-cis
-    namespace: openshift-compliance
 settingsRef:
   apiGroup: compliance.openshift.io/v1alpha1
   kind: ScanSetting
-  name: default
-  namespace: openshift-compliance
+  name: payu-cis-weekly

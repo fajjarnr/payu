@@ -6,8 +6,7 @@ LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 # AUDIT-057: Single root block — minimize privileged instruction surface
 USER root
-RUN microdnf update -y && microdnf clean all && \
-    useradd -u 1001 payu && \
+RUN useradd -u 1001 payu && \
     mkdir -p /deployments && \
     chown -R 1001:0 /deployments
 

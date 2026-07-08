@@ -31,6 +31,7 @@ public @interface CacheInvalidate {
      * Name of the cache to invalidate.
      * @deprecated Use {@link #value()} instead.
      */
+    @Deprecated(forRemoval = false)
     @AliasFor("value")
     String cacheName() default "";
 

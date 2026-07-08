@@ -2,7 +2,7 @@
 # Deploys the full 3scale API Management platform on OpenShift via the 3scale Operator.
 #
 # Prerequisites:
-#   - 3scale Operator installed from OperatorHub (threescale-2.14 channel)
+#   - 3scale Operator installed from OperatorHub (threescale-2.16 channel)
 #   - Namespace: payu-api-management
 #   - Secrets: system-seed, system-database, backend-redis, system-redis
 #

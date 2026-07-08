@@ -75,10 +75,7 @@ public class CacheProperties {
      * <p>Default ({@code null} or {@code typed}) uses
      * {@link id.payu.cache.serializer.TypedJsonRedisSerializer} which preserves
      * the runtime class on the wire, including for top-level
-     * {@link java.util.List} payloads. Set to {@code jackson2} to fall back to
-     * {@code GenericJackson2JsonRedisSerializer} with a plain
-     * {@link com.fasterxml.jackson.databind.ObjectMapper} (no polymorphic typing
-     * — flat JSON, type-erased deserialization).</p>
+     * {@link java.util.List} payloads. Other values are ignored.</p>
      */
     private String serializer;
 

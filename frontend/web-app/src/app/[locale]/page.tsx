@@ -2,46 +2,26 @@
 
 import { Link } from '@/lib/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Shield, Zap, Menu, X, PieChart, Globe } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
+const SLIDE_IDS = ['hero', 'app', 'about', 'support'] as const;
+
 export default function LandingPage() {
   const t = useTranslations('landing');
-  const locale = useLocale();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Sanitize the i18n hero title on the client only
-  const [safeHeroTitle, setSafeHeroTitle] = useState('');
-  const [trackedLocale, setTrackedLocale] = useState(locale);
-
-  if (trackedLocale !== locale) {
-    setTrackedLocale(locale);
-    const raw = t.raw('heroTitle') as string;
-    setSafeHeroTitle(
-      raw
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-    );
-  }
-
-  // Set initial safe hero title on mount
-  useEffect(() => {
-    const raw = t.raw('heroTitle') as string;
-    setSafeHeroTitle(
-      raw
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-    );
-  }, [locale, t]);
+  const rawHeroTitle = t.raw('heroTitle') as string;
+  const safeHeroTitle = rawHeroTitle
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '');
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const slideIds = ['hero', 'app', 'about', 'support'];
 
   const goToSlide = (index: number) => {
-    const targetId = slideIds[index];
+    const targetId = SLIDE_IDS[index];
     const el = document.getElementById(targetId);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -60,7 +40,7 @@ export default function LandingPage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const index = slideIds.indexOf(entry.target.id);
+            const index = SLIDE_IDS.indexOf(entry.target.id as (typeof SLIDE_IDS)[number]);
             if (index !== -1) {
               setCurrentSlide(index);
             }
@@ -74,7 +54,7 @@ export default function LandingPage() {
     );
 
     container.addEventListener('scroll', handleScroll);
-    slideIds.forEach((id) => {
+    SLIDE_IDS.forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -396,7 +376,7 @@ export default function LandingPage() {
 
       {/* Slide Indicators - Horizontal at Bottom */}
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-row gap-4">
-        {slideIds.map((_, i) => (
+        {SLIDE_IDS.map((_, i) => (
           <button 
             key={i} 
             onClick={() => goToSlide(i)}

@@ -112,7 +112,17 @@ spec:
             echo "[*] Updating Kustomize image overlay for $(params.service-name) in environment $(params.environment)"
             
             cd $(workspaces.source.path)
-            TARGET_DIR="infrastructure/workloads/overlays/$(params.environment)"
+            case "$(params.environment)" in
+              dev|sit|uat|preprod|prod)
+                OVERLAY_DIR="payu-$(params.environment)"
+                ;;
+              *)
+                echo "[✗] Unsupported environment $(params.environment). Expected one of: dev, sit, uat, preprod, prod"
+                exit 1
+                ;;
+            esac
+
+            TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}"
             
             if [ ! -d "$TARGET_DIR" ]; then
               echo "[✗] Overlay directory $TARGET_DIR not found!"

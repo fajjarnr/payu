@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- serviceaccount.yaml
+- deployment.yaml
+- service.yaml
+# KogitoRuntime is kept as an operator-specific reference, not applied by default.
+# The standard Deployment path avoids requiring rhpam.kiegroup.org CRDs for all workloads.
+labels:
+- pairs:
+    app.kubernetes.io/name: loan-origination-process
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: 1.0.0
+  includeSelectors: false
+  includeTemplates: true

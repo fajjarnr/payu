@@ -110,25 +110,34 @@ spec:
         - name: PAYU_CACHE_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: PAYU_CACHE_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: ""
+          value: developer
         - name: PAYU_CACHE_REDIS_URL
-          value: redis://:payu-cache-dev-password@payu-cache:6379
+          value: redis://developer:$(PAYU_CACHE_REDIS_PASSWORD)@payu-cache:11222
         - name: REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: SPRING_DATA_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
           value: '3'
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
@@ -147,12 +156,11 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
-        # BUG-TRANS-CALLBACK-001 + BUG-VA-CALLBACK-001: HMAC signature secret for callback
-        # endpoints. SHARED with BI-FAST / bank VA clients. In production this should
-        # be in a Kubernetes Secret (e.g. callback-secrets), not literal in deployment.
-        # Dev placeholder: any-non-empty-string allows callbacks through filter.
         - name: PAYU_CALLBACK_SIGNATURE_SECRET
-          value: "dev-callback-secret-change-in-prod-9f8e7d6c5b4a3210"
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
         # Services URL config (read by id.payu.transaction.adapter.client.* adapters)
         # Code reads these via @Value("${services.<name>.url}") which Spring resolves
         # from env var SERVICES_<NAME>_URL (uppercase, dots->underscores).

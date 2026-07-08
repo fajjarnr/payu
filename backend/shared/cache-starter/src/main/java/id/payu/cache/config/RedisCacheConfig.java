@@ -1,7 +1,5 @@
 package id.payu.cache.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.payu.cache.properties.CacheProperties;
 import id.payu.cache.serializer.TypedJsonRedisSerializer;
 import io.lettuce.core.ClientOptions;
@@ -30,7 +28,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -219,21 +216,14 @@ public class RedisCacheConfig {
      * NEW-003: Select the value serializer used by {@link CacheManager} (and therefore
      * every {@code @Cacheable} hit in the service).
      *
-     * <p>Default is the typed serializer introduced for READY-001 / E2E-2026-06-13-06
-     * which preserves the runtime class on the wire, including for top-level
-     * {@link java.util.List} payloads. The legacy {@code GenericJackson2JsonRedisSerializer}
-     * with a plain {@link ObjectMapper} (no polymorphic typing) is still selectable
-     * by setting {@code payu.cache.serializer=jackson2} — useful for services
-     * that intentionally want a flat, non-typed JSON payload.</p>
+     * <p>The typed serializer preserves the runtime class on the wire, including
+     * for top-level {@link java.util.List} payloads.</p>
      */
     static RedisSerializer<Object> buildValueSerializer(CacheProperties properties) {
-        String mode = properties.getSerializer() == null
-            ? TypedJsonRedisSerializer.class.getSimpleName()
-            : properties.getSerializer();
-        if ("jackson2".equalsIgnoreCase(mode) || "GenericJackson2JsonRedisSerializer".equals(mode)) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModules(new JavaTimeModule());
-            return new GenericJackson2JsonRedisSerializer(objectMapper);
+        String mode = properties.getSerializer();
+        if (mode != null && !"typed".equalsIgnoreCase(mode)
+                && !TypedJsonRedisSerializer.class.getSimpleName().equals(mode)) {
+            log.warn("Unsupported payu.cache.serializer '{}'; using typed serializer", mode);
         }
         return new TypedJsonRedisSerializer();
     }

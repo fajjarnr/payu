@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cnpg-operator-to-database
+  labels:
+    app.kubernetes.io/name: allow-cnpg-operator-to-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: payu-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-operators
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-payu-namespaces-to-cnpg
+  labels:
+    app.kubernetes.io/name: allow-payu-namespaces-to-cnpg
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: payu-database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-dev
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-sso
+      ports:
+        - protocol: TCP
+          port: 5432

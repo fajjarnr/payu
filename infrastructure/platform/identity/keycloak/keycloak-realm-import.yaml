@@ -3,7 +3,7 @@
 # Separate from Keycloak CR to allow independent realm updates.
 # Apply after Keycloak CR is running.
 ###############################################################################
-apiVersion: k8s.keycloak.org/v2alpha1
+apiVersion: k8s.keycloak.org/v2beta1
 kind: KeycloakRealmImport
 metadata:
   name: payu-realm-import

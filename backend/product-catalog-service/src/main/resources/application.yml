@@ -55,7 +55,7 @@ spring:
     bootstrap-servers: ${KAFKA_BROKERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       retries: 3
       acks: all
       properties:

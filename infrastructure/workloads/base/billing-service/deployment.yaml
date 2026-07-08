@@ -103,23 +103,32 @@ spec:
         - name: PAYU_CACHE_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: PAYU_CACHE_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: ""
+          value: developer
         - name: REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: SPRING_DATA_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
           value: '3'
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
@@ -150,9 +159,15 @@ spec:
         - name: ARTEMIS_HOST
           value: payu-broker-hdls-svc
         - name: ARTEMIS_USERNAME
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_USER
         - name: ARTEMIS_PASSWORD
-          value: payu-dev-artemis-pwd-2026
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_PASSWORD
 
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu

@@ -155,7 +155,7 @@ spec:
             namespace: payu-cicd
           - name: compliance-operator
             path: infrastructure/platform/security/compliance-operator
-            namespace: openshift-compliance
+            namespace: openshift-operators
           - name: keycloak
             path: infrastructure/platform/identity/keycloak
             namespace: payu-sso
@@ -285,7 +285,7 @@ spec:
       source:
         repoURL: https://github.com/fajjarnr/payu.git
         targetRevision: "{{.head_sha}}"
-        path: infrastructure/workloads/overlays/dev
+        path: infrastructure/workloads/overlays/payu-dev
         kustomize:
           namespace: "payu-dev-pr-{{.number}}"
           commonLabels:

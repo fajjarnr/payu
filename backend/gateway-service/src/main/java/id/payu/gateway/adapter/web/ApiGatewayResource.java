@@ -83,9 +83,8 @@ public class ApiGatewayResource {
     @GET
     @Path("/{path: .*}")
     public Uni<Response> get(@PathParam("path") String path,
-                              String body,
                               @Context HttpHeaders headers) {
-        return dynamicRoute(path, "GET", body, headers);
+        return dynamicRoute(path, "GET", null, headers);
     }
 
     @POST

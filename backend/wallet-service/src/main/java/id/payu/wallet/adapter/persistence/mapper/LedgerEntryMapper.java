@@ -5,8 +5,10 @@ import id.payu.mapper.spi.BaseMapper;
 import id.payu.wallet.adapter.persistence.entity.JournalEntryEntity;
 import id.payu.wallet.adapter.persistence.entity.LedgerEntryEntity;
 import id.payu.wallet.domain.model.LedgerEntry;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 /**
  * MapStruct mapper for LedgerEntry entity-domain conversion.
@@ -42,6 +44,7 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      * @return the LedgerEntryEntity
      */
     @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "journalEntryId")
     @Mapping(target = "journalEntry", ignore = true)
     LedgerEntryEntity toEntity(LedgerEntry domain);
 
@@ -63,7 +66,17 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      * @return the domain LedgerEntry
      */
     @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = {"new", "journalEntry"})
     @Mapping(target = "journalEntryId", expression = "java(entity.getJournalEntry() != null ? entity.getJournalEntry().getId() : null)")
     LedgerEntry toDomain(LedgerEntryEntity entity);
-}
 
+    @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "journalEntryId")
+    @Mapping(target = "journalEntry", ignore = true)
+    void updateEntityFromDomain(LedgerEntry domain, @MappingTarget LedgerEntryEntity entity);
+
+    @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = {"new", "journalEntry"})
+    @Mapping(target = "journalEntryId", expression = "java(entity.getJournalEntry() != null ? entity.getJournalEntry().getId() : null)")
+    void updateDomainFromEntity(LedgerEntryEntity entity, @MappingTarget LedgerEntry domain);
+}

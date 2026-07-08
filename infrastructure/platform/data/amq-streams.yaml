@@ -4,7 +4,7 @@
 # ============================================================
 
 # KafkaNodePool - Controller nodes (KRaft metadata quorum)
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
   name: controller
@@ -21,7 +21,7 @@ spec:
 
 ---
 # KafkaNodePool - Broker nodes (data handling)
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
   name: broker
@@ -38,7 +38,7 @@ spec:
 
 ---
 # Main Kafka cluster (KRaft mode)
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: kafka
@@ -82,7 +82,7 @@ spec:
 
 ---
 # KafkaTopic - account events
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: account-events
@@ -99,7 +99,7 @@ spec:
 
 ---
 # KafkaTopic - transaction events
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:
   name: transaction-events

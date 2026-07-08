@@ -76,7 +76,7 @@ spring:
   kafka:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       # Improved producer settings
       retries: 3
       acks: all
@@ -91,7 +91,7 @@ spring:
     consumer:
       group-id: transaction-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"

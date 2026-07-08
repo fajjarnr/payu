@@ -412,8 +412,6 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-parameters</arg>
-                        <arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
-                        <arg>-Amapstruct.suppressGeneratorVersionInfoComment=true</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

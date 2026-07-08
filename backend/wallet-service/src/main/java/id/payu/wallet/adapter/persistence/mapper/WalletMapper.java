@@ -4,8 +4,10 @@ import id.payu.mapper.config.MappingConfig;
 import id.payu.mapper.spi.BaseMapper;
 import id.payu.wallet.adapter.persistence.entity.WalletEntity;
 import id.payu.wallet.domain.model.Wallet;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import id.payu.wallet.adapter.persistence.entity.WalletStatus;
 
@@ -43,6 +45,7 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
      * @return the WalletEntity
      */
     @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "availableBalance")
     @Mapping(target = "tenantId", ignore = true)
     WalletEntity toEntity(Wallet domain);
 
@@ -53,7 +56,17 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
      * @return the domain Wallet
      */
     @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "tenantId")
     Wallet toDomain(WalletEntity entity);
+
+    @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "availableBalance")
+    @Mapping(target = "tenantId", ignore = true)
+    void updateEntityFromDomain(Wallet domain, @MappingTarget WalletEntity entity);
+
+    @Override
+    @BeanMapping(ignoreUnmappedSourceProperties = "tenantId")
+    void updateDomainFromEntity(WalletEntity entity, @MappingTarget Wallet domain);
 
     /**
      * Map WalletStatus to WalletStatus.

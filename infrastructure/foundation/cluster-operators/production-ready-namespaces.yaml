@@ -1,0 +1,57 @@
+# Namespaces and OperatorGroups for production-ready platform add-ons.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-api-management
+  labels:
+    app.kubernetes.io/component: api-management
+    payu.io/managed-by: platform-team
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: payu-api-management
+  namespace: payu-api-management
+spec:
+  targetNamespaces:
+    - payu-api-management
+  upgradeStrategy: Default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redis-enterprise
+  labels:
+    app.kubernetes.io/component: cache
+    payu.io/managed-by: platform-team
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: redis-enterprise
+  namespace: redis-enterprise
+spec:
+  targetNamespaces:
+    - redis-enterprise
+  upgradeStrategy: Default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-gitops-operator
+  labels:
+    app.kubernetes.io/component: gitops
+    payu.io/managed-by: platform-team
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-gitops-operator-group
+  namespace: openshift-gitops-operator
+spec:
+  upgradeStrategy: Default

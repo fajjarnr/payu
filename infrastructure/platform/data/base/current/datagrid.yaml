@@ -1,0 +1,51 @@
+# PayU Platform - Red Hat Data Grid (Infinispan)
+# Distributed caching with RESP (Redis-compatible) connector
+# Prerequisite: datagrid operator subscription installed
+# ============================================================
+#
+# RESP CONNECTOR SETUP:
+# - Data Grid 8.5+ supports RESP (Redis wire protocol) on the single endpoint.
+# - Spring/Quarkus Redis clients connect to payu-cache:11222 with developer auth.
+# ============================================================
+
+# Infinispan CR - DataGrid instance
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: payu-cache
+  labels:
+    app.kubernetes.io/name: payu-cache
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  replicas: 1
+
+  service:
+    type: DataGrid
+
+  security:
+    endpointAuthentication: true
+    endpointSecretName: payu-cache-credentials
+
+  container:
+    memory: "512Mi"
+
+---
+# Redis-compatible service alias via ExternalName. Data Grid RESP is served on
+# the single endpoint port (11222); Redis clients connect through this alias.
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: datagrid
+spec:
+  type: ExternalName
+  externalName: payu-cache.payu-dev.svc.cluster.local
+  ports:
+    - name: resp
+      port: 11222
+      targetPort: 11222

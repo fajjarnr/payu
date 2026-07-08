@@ -2,14 +2,15 @@
 # Base Image - Red Hat UBI9 Node.js 24
 ####
 FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:2de19f9aed8524187e52c146da60635a80adb06739f23519a5c8a16fda2850e5 AS base
+ARG APP_VERSION=1.5.0
 
 # Metadata labels
 LABEL maintainer="frontend-team@payu.fajjjar.my.id"
 LABEL description="PayU Web App - Digital Banking Next.js Frontend with E2E Testing"
-LABEL version="1.5.0"
+LABEL version="${APP_VERSION}"
 LABEL org.opencontainers.image.title="payu-web-app"
 LABEL org.opencontainers.image.description="PayU Digital Banking Web Application - Next.js 16 with React 19, TypeScript, Tailwind CSS, and Playwright E2E Testing"
-LABEL org.opencontainers.image.version="1.5.0"
+LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.fajjjar.my.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/frontend/web-app"
@@ -38,8 +39,8 @@ RUN dnf install -y python3 make gcc-c++ libX11 libXcomposite libXcursor libXdama
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies with npm ci for reliable, reproducible builds
-RUN npm ci --ignore-scripts
+# Install dependencies with npm ci for reliable, reproducible builds.
+RUN npm ci
 
 ####
 # Stage 2: Builder
@@ -61,10 +62,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # NEXT_PUBLIC_* must be available at build time
 ARG NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
-# Build-time encryption key for Server Actions in multi-instance deployment
-ARG NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
-ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
 
 # Build Next.js application with standalone output for minimal container size
 RUN npm run build

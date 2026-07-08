@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
 import { X } from 'lucide-react';
-import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
 import { usePopups } from '@/hooks';

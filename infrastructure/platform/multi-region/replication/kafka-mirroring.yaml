@@ -4,7 +4,7 @@
 
 ---
 # MirrorMaker2 Configuration
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaMirrorMaker2
 metadata:
   name: kafka-mirror-primary-to-secondary
@@ -89,7 +89,7 @@ spec:
 
 ---
 # MirrorMaker2 Configuration (Reverse for failback)
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaMirrorMaker2
 metadata:
   name: kafka-mirror-secondary-to-primary

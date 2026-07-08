@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import logger, { getCorrelationId, withCorrelation } from "@/lib/logger";
+import { getCorrelationId, withCorrelation } from "@/lib/logger";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "https://gateway-service:8080";
 

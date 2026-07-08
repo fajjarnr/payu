@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.2] - 2026-07-08
+
+### Changed
+
+- Migrated remaining platform manifests toward production-ready OpenShift defaults:
+  - CloudNativePG/DataGrid manifests moved under `infrastructure/platform/data/base/current`
+  - workload Redis/DataGrid and AMQ credentials now reference Kubernetes Secrets instead of inline values
+  - 3scale production secrets removed from Git and replaced with `.example` placeholders
+- Updated frontend to Next.js `16.2.10`, renamed `middleware.ts` to `proxy.ts`, and restored production build validation without ignoring ESLint.
+- Updated Spring Kafka 4 serializer/deserializer class names to `JacksonJsonSerializer` / `JacksonJsonDeserializer` across services.
+- Simplified cache/JMS shared starter compatibility for the Spring Boot 4 / Jackson 3 stack.
+- Added production-ready operator and namespace manifests for CNPG, DataGrid, Redis Enterprise, GitOps, Compliance, Vault Secrets, Tempo, RHBK, and 3scale.
+
+### Fixed
+
+- Fixed Quarkus test dependency names and compiler encoding settings for gateway, notification, and API portal services.
+- Fixed wallet MapStruct update mappings for generated Spring Boot 4 / MapStruct compilation.
+- Removed stale frontend imports and moved Next.js proxy session handling to the Next 16 file convention.
+
 ## [1.8.89] - 2026-07-08
 
 ### Fixed

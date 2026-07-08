@@ -1324,12 +1324,13 @@ APIcast forwards partner context to the PayU gateway-service via 3 custom header
 
 Manifests ready at `infrastructure/platform/api-management/3scale/`:
 
+- `operator-install.yaml` — 3scale Operator Subscription pinned to `threescale-2.16`
 - `apimanager.yaml` — APIManager CR (system + wildcard cluster domain)
 - `payu-capabilities.yaml` — Backend capability (account, transaction, wallet URLs)
-- `apicast-policy.yaml` — NetworkPolicy for APIcast egress
+- `apicast-policy.yaml` — Custom APIcast policy for PayU header forwarding
 - `3scale-network-policy.yaml` — NetworkPolicy for 3scale system
-- `secrets-3scale.yaml` — Access tokens (REDHAT_ACCESS_TOKEN, system + backend)
-- `kustomization.yaml` — Composite kustomize entry point
+- `secrets-3scale.example.yaml` — Example secret shape only; real secrets stay outside Git/Vault-managed
+- `system-storage-pvc.yaml` — APIManager system file-storage PVC
 
 #### 7.3.5 3scale Deployment Prerequisites
 

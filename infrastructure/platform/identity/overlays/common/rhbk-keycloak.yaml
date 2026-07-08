@@ -1,6 +1,6 @@
 ###############################################################################
 # Red Hat Build of Keycloak (RHBK) - Keycloak CR
-# Migrated from RHSSO (keycloak.org/v1alpha1) → RHBK (k8s.keycloak.org/v2alpha1)
+# Migrated from RHSSO (keycloak.org/v1alpha1) → RHBK (k8s.keycloak.org/v2beta1)
 # API Reference: https://www.keycloak.org/operator/basic-deployment
 #
 # IMPORTANT:
@@ -10,7 +10,7 @@
 # 3. payu-keycloak-db secret MUST exist in the target environment namespace.
 # 4. The 'keycloak' database must exist in the PostgresCluster.
 ###############################################################################
-apiVersion: k8s.keycloak.org/v2alpha1
+apiVersion: k8s.keycloak.org/v2beta1
 kind: Keycloak
 metadata:
   name: payu-keycloak
@@ -27,10 +27,10 @@ spec:
     user:
       secret: payu-keycloak-admin
 
-  # --- Database Configuration (Crunchy PGO) ---
+  # --- Database Configuration (CloudNativePG) ---
   db:
     vendor: postgres
-    host: payu-postgres-ha-primary
+    host: payu-database-rw.payu-dev.svc.cluster.local
     port: 5432
     database: keycloak
     usernameSecret:
@@ -79,7 +79,7 @@ spec:
 # Replaces RHSSO's separate KeycloakRealm + KeycloakClient CRs
 # Single CR for realm, roles, users, and clients
 ###############################################################################
-apiVersion: k8s.keycloak.org/v2alpha1
+apiVersion: k8s.keycloak.org/v2beta1
 kind: KeycloakRealmImport
 metadata:
   name: payu-realm-import

@@ -103,3 +103,5 @@ Kamu memiliki akses ke MCP servers berikut. Gunakan secara aktif tanpa perlu dim
 - API & integration (retry/webhook/SNAP-BI) → `docs/architecture/`
 - Frontend / Mobile / Python-ML & Design System (Premium Emerald) standards → `docs/guides/`
 - Skills & workflows → `.agents/skills/` dan `.agents/workflows/`
+
+@RTK.md

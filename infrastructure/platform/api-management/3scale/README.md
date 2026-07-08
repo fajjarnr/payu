@@ -48,7 +48,9 @@ Partner Apps
 
 | File                  | Description                                          |
 | :-------------------- | :--------------------------------------------------- |
+| `operator-install.yaml` | 3scale Operator install pinned to `threescale-2.16` |
 | `apimanager.yaml`     | 3scale APIManager Custom Resource (Operator-managed) |
+| `secrets-3scale.example.yaml` | Example secret shape only; copy to a private manifest or create secrets via CLI/Vault |
 | `apicast-policy.yaml` | Custom APIcast policy for PayU header forwarding     |
 
 ## Installation Steps
@@ -56,22 +58,8 @@ Partner Apps
 ### 1. Install 3scale Operator
 
 ```bash
-# Via OperatorHub (recommended)
-# Navigate to: OpenShift Console → Operators → OperatorHub → "Red Hat 3scale"
-# Or via CLI:
-oc apply -f - <<EOF
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: 3scale-operator
-  namespace: payu-api-management
-spec:
-  channel: threescale-2.16
-  installPlanApproval: Automatic
-  name: 3scale-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-EOF
+oc apply -f operator-install.yaml
+oc get csv -n payu-api-management | grep 3scale
 ```
 
 ### 2. Create Namespace and Secrets
@@ -104,12 +92,15 @@ oc create secret generic system-redis \
   -n payu-api-management
 ```
 
-### 3. Deploy 3scale Platform via Kustomize
+### 3. Deploy 3scale Platform
 
-Instead of applying files individually, deploy all platform resources (secrets, PVC, network policy, custom policy, and the APIManager CR) using Kustomize:
+Apply only after replacing all secret placeholders and verifying target DB/cache/gateway services exist:
 
 ```bash
-oc apply -k .
+oc apply -f system-storage-pvc.yaml
+oc apply -f apicast-policy.yaml
+oc apply -f 3scale-network-policy.yaml
+oc apply -f apimanager.yaml
 ```
 
 ### 5. Configure PayU Gateway as Backend

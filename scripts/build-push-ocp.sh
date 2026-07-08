@@ -1,115 +1,69 @@
-#!/bin/bash
-# Build and push all service images to OpenShift internal registry with correct tags
-# usage: ./scripts/build-push-ocp.sh
-set -e
+#!/usr/bin/env bash
+# Build and push the exact images referenced by the rendered dev overlay.
+set -euo pipefail
 
-REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
-NAMESPACE="payu-dev"
+OVERLAY="${OVERLAY:-infrastructure/workloads/overlays/payu-dev}"
+NAMESPACE="${NAMESPACE:-payu-dev}"
+TLS_VERIFY="${TLS_VERIFY:-false}"
 
-SERVICES=(
-  account-service
-  auth-service
-  backoffice-service
-  billing-service
-  cms-service
-  compliance-service
-  dispute-service
-  fx-service
-  integration-service
-  investment-service
-  kyc-service
-  lending-service
-  partner-service
-  product-catalog-service
-  promotion-service
-  statement-service
-  support-service
-  transaction-service
-  wallet-service
-  api-portal-service
-  gateway-service
-  notification-service
-  analytics-service
-  web-app
-  bi-fast-simulator
-  biller-simulator
-  dukcapil-simulator
-  qris-simulator
-)
-
-get_dir() {
-  local svc=$1
-  if [ -d "backend/${svc}" ]; then
-    echo "backend/${svc}"
-  elif [ -d "backend/simulators/${svc}" ]; then
-    echo "backend/simulators/${svc}"
-  elif [ -d "frontend/${svc}" ]; then
-    echo "frontend/${svc}"
-  else
-    echo ""
-  fi
-}
-
-get_tag() {
-  local svc=$1
-  local yaml=""
-  if [ -d "infrastructure/workloads/base/${svc}" ]; then
-    yaml="infrastructure/workloads/base/${svc}/deployment.yaml"
-  elif [ -f "infrastructure/workloads/base/${svc}.yaml" ]; then
-    yaml="infrastructure/workloads/base/${svc}.yaml"
-  fi
-  
-  if [ -f "$yaml" ]; then
-    # Extract tag from image: ...:tag line
-    grep -oP 'image:.*:\K[a-zA-Z0-9.-]+' "$yaml" | head -n 1
-  else
-    echo "latest"
-  fi
-}
-
-echo "============================================"
-echo "Starting PayU Build & Push to OCP Registry"
-echo "Registry: ${REGISTRY}/${NAMESPACE}"
-echo "============================================"
-echo ""
-
-# Make sure we're logged in
-if ! podman login --get-login "${REGISTRY}" &>/dev/null; then
-  echo "Logging podman into OCP registry..."
-  podman login -u kubeadmin -p "$(oc whoami -t)" --tls-verify=false "${REGISTRY}"
+if [ ! -d "$OVERLAY" ]; then
+  echo "ERROR: overlay not found: $OVERLAY" >&2
+  exit 1
 fi
 
-for svc in "${SERVICES[@]}"; do
-  dir=$(get_dir "$svc")
-  if [ -z "$dir" ]; then
-    echo "WARNING: Directory not found for ${svc}, skipping"
-    continue
-  fi
-  
-  tag=$(get_tag "$svc")
-  if [ -z "$tag" ]; then
-    tag="latest"
-  fi
-  
-  image="${REGISTRY}/${NAMESPACE}/${svc}:${tag}"
-  
-  echo "=== Building ${svc} (Tag: ${tag}, Directory: ${dir}) ==="
-  
-  if [ -f "${dir}/Containerfile" ]; then
-    podman build --tls-verify=false -t "${image}" -f "${dir}/Containerfile" "${dir}"
-  elif [ -f "${dir}/Dockerfile" ]; then
-    podman build --tls-verify=false -t "${image}" -f "${dir}/Dockerfile" "${dir}"
+REGISTRY="${REGISTRY:-$(oc get route default-route -n openshift-image-registry -o jsonpath='{.spec.host}' 2>/dev/null || true)}"
+if [ -z "$REGISTRY" ]; then
+  echo "ERROR: image registry default route is missing" >&2
+  echo "Run: oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge -p '{\"spec\":{\"defaultRoute\":true}}'" >&2
+  exit 1
+fi
+
+get_dir() {
+  local svc="$1"
+  if [ -f "backend/${svc}/Containerfile" ]; then
+    printf 'backend/%s\n' "$svc"
+  elif [ -f "backend/simulators/${svc}/Containerfile" ]; then
+    printf 'backend/simulators/%s\n' "$svc"
+  elif [ -f "frontend/${svc}/Containerfile" ]; then
+    printf 'frontend/%s\n' "$svc"
   else
-    echo "WARNING: No Containerfile or Dockerfile found for ${svc}, skipping"
-    continue
+    return 1
   fi
-  
-  echo "  Pushing ${image}..."
-  podman push --tls-verify=false "${image}"
-  echo "  Done: ${svc}"
-  echo ""
+}
+
+to_push_ref() {
+  local image="$1"
+  local path="${image#*/}"
+  local ns="${path%%/*}"
+  local repo_tag="${path#*/}"
+  printf '%s/%s/%s\n' "$REGISTRY" "$ns" "$repo_tag"
+}
+
+podman login -u "$(oc whoami)" -p "$(oc whoami -t)" --tls-verify="$TLS_VERIFY" "$REGISTRY" >/dev/null
+
+mapfile -t images < <(oc kustomize "$OVERLAY" | awk '/^[[:space:]]*image: /{print $2}' | sort -u)
+
+if [ "${#images[@]}" -eq 0 ]; then
+  echo "ERROR: no images found in rendered overlay: $OVERLAY" >&2
+  exit 1
+fi
+
+for image in "${images[@]}"; do
+  path="${image#*/}"
+  repo_tag="${path#*/}"
+  svc="${repo_tag%%:*}"
+  tag="${repo_tag##*:}"
+  dir="$(get_dir "$svc")"
+  push_image="$(to_push_ref "$image")"
+
+  echo "==> ${svc}:${tag}"
+  podman build --tls-verify="$TLS_VERIFY" \
+    --format=docker \
+    --build-arg "APP_VERSION=${tag}" \
+    -f "${dir}/Containerfile" \
+    -t "$push_image" \
+    "$dir"
+  podman push --tls-verify="$TLS_VERIFY" "$push_image"
 done
 
-echo "============================================"
-echo "All images built and pushed successfully!"
-echo "============================================"
+echo "Built and pushed ${#images[@]} image(s) for ${NAMESPACE}."

@@ -106,23 +106,32 @@ spec:
         - name: PAYU_CACHE_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: PAYU_CACHE_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: PAYU_CACHE_REDIS_USERNAME
-          value: ""
+          value: developer
         - name: REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: SPRING_DATA_REDIS_HOST
           value: payu-cache.payu-dev.svc.cluster.local
         - name: SPRING_DATA_REDIS_PORT
-          value: '6379'
+          value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD
-          value: payu-cache-dev-password
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS
@@ -141,9 +150,15 @@ spec:
         - name: ARTEMIS_HOST
           value: payu-broker-hdls-svc
         - name: ARTEMIS_USERNAME
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_USER
         - name: ARTEMIS_PASSWORD
-          value: payu-dev-artemis-pwd-2026
+          valueFrom:
+            secretKeyRef:
+              name: payu-broker-credentials-secret
+              key: AMQ_PASSWORD
 
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
@@ -151,8 +166,6 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
         - name: OTEL_SDK_DISABLED
           value: "true"
-        - name: OTEL_ENDPOINT
-          value: http://localhost:4317
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
         - name: PAYU_SECURITY_ENCRYPTION_SALT

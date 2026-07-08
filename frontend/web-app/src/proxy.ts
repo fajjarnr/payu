@@ -13,7 +13,7 @@ const intlMiddleware = createMiddleware({
 // Dynamically build locale pattern from config instead of hardcoding
 const localePattern = new RegExp(`^/(${locales.join('|')})`);
 
-export default async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Define public vs protected paths

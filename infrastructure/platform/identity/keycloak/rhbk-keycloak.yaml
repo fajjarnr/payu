@@ -1,6 +1,6 @@
 ###############################################################################
 # Red Hat Build of Keycloak (RHBK) - Keycloak CR
-# Migrated from RHSSO (keycloak.org/v1alpha1) → RHBK (k8s.keycloak.org/v2alpha1)
+# Migrated from RHSSO (keycloak.org/v1alpha1) → RHBK (k8s.keycloak.org/v2beta1)
 # API Reference: https://www.keycloak.org/operator/basic-deployment
 #
 # IMPORTANT:
@@ -10,7 +10,7 @@
 # 4. The 'keycloak' database must exist in the PostgresCluster.
 # 5. Hostname is set via environment overlay (see overlays/).
 ###############################################################################
-apiVersion: k8s.keycloak.org/v2alpha1
+apiVersion: k8s.keycloak.org/v2beta1
 kind: Keycloak
 metadata:
   name: payu-keycloak
@@ -28,10 +28,10 @@ spec:
     user:
       secret: payu-keycloak-admin
 
-  # --- Database Configuration (Crunchy PGO) ---
+  # --- Database Configuration (CloudNativePG) ---
   db:
     vendor: postgres
-    host: payu-postgres.payu-dev.svc.cluster.local
+    host: payu-database-rw.payu-dev.svc.cluster.local
     port: 5432
     database: keycloak
     usernameSecret:
@@ -77,27 +77,6 @@ spec:
       value: "true"
 
   # --- Probe Configuration ---
-  # Use liveness endpoint for readiness to avoid cluster health check failures
-  # in single-node deployments (cluster check includes stale JGroups connections)
   readinessProbe:
     periodSeconds: 10
     failureThreshold: 3
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-
-  # --- Unsupported (advanced pod customization) ---
-  # Override readiness probe to use /health/live instead of /health/ready
-  # to avoid cluster health check failures in single-node deployments
-  unsupported:
-    podTemplate:
-      spec:
-        containers:
-          - name: keycloak
-            readinessProbe:
-              httpGet:
-                path: /health/live
-                port: 9000
-              initialDelaySeconds: 30
-              periodSeconds: 10
-              timeoutSeconds: 5
-              failureThreshold: 3

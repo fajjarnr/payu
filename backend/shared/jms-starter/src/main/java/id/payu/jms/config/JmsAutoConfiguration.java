@@ -1,6 +1,5 @@
 package id.payu.jms.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -13,7 +12,7 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
+import org.springframework.jms.support.converter.JacksonJsonMessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 
@@ -120,9 +119,8 @@ public class JmsAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageConverter jacksonJmsMessageConverter(ObjectMapper objectMapper) {
-        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setObjectMapper(objectMapper);
+    public MessageConverter jacksonJmsMessageConverter() {
+        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
         return converter;

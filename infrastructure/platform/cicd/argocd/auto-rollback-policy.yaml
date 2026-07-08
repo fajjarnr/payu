@@ -20,7 +20,7 @@ spec:
   source:
     repoURL: https://github.com/fajjarnr/payu.git
     targetRevision: main
-    path: infrastructure/workloads/overlays/dev
+    path: infrastructure/workloads/overlays/payu-dev
   destination:
     namespace: payu-dev
     server: https://kubernetes.default.svc

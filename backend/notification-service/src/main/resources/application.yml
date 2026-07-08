@@ -2,7 +2,6 @@ quarkus:
   application:
     name: notification-service
     version: 1.0.0
-    environment: dev
   http:
     port: 8080
     auth:
@@ -18,9 +17,6 @@ quarkus:
       verification: none
     token:
       issuer: any
-  security:
-    jaxrs:
-      deny-unauthenticated-by-default: true
   otel:
     sdk:
       disabled: ${OTEL_SDK_DISABLED:true}
@@ -63,20 +59,6 @@ quarkus:
     info-title: PayU Notification Service API
     info-version: 1.0.0
     info-description: Notification API for Push, SMS, Email
-# SMS provider configuration
-payu:
-  sms:
-    provider: ${SMS_PROVIDER:LOG}
-    # twilio:
-    #   account-sid: ${TWILIO_SID:}
-    #   auth-token: ${TWILIO_TOKEN:}
-    #   from-number: ${TWILIO_FROM:}
-    # vonage:
-    #   api-key: ${VONAGE_KEY:}
-    #   api-secret: ${VONAGE_SECRET:}
-    # zenziva:
-    #   userkey: ${ZENZIVA_USERKEY:}
-    #   passkey: ${ZENZIVA_PASSKEY:}
   log:
     level: INFO
     category:
@@ -91,6 +73,20 @@ payu:
           "service.environment":
             value: dev
             type: STRING
+# SMS provider configuration
+payu:
+  sms:
+    provider: ${SMS_PROVIDER:LOG}
+    # twilio:
+    #   account-sid: ${TWILIO_SID:}
+    #   auth-token: ${TWILIO_TOKEN:}
+    #   from-number: ${TWILIO_FROM:}
+    # vonage:
+    #   api-key: ${VONAGE_KEY:}
+    #   api-secret: ${VONAGE_SECRET:}
+    # zenziva:
+    #   userkey: ${ZENZIVA_USERKEY:}
+    #   passkey: ${ZENZIVA_PASSKEY:}
 "%dev":
   quarkus:
     hibernate-orm:

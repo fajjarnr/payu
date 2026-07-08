@@ -19,7 +19,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.testcontainers.containers.KafkaContainer;
@@ -78,7 +78,7 @@ public class InvestmentIntegrationTest {
                     "spring.datasource.password=" + postgres.getPassword(),
                     "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
                     "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer",
-                    "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer",
+                    "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JacksonJsonSerializer",
                     "spring.jpa.hibernate.ddl-auto=create-drop",
                     "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/realms/payu"
             );
@@ -92,9 +92,9 @@ public class InvestmentIntegrationTest {
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "test-investment-consumer-" + UUID.randomUUID());
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
+        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
+        consumerProps.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
+        consumerProps.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
 
         DefaultKafkaConsumerFactory<String, Map<String, Object>> factory =
             new DefaultKafkaConsumerFactory<>(consumerProps);

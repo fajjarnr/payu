@@ -73,6 +73,7 @@ public @interface CacheWithTTL {
      * Name of the cache to use.
      * @deprecated Use {@link #value()} instead.
      */
+    @Deprecated(forRemoval = false)
     @AliasFor("value")
     String cacheName() default "";
 

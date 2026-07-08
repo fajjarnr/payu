@@ -20,6 +20,8 @@
     <description>Simulator service for Dukcapil (Indonesian Civil Registry) integration testing</description>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
 
@@ -90,7 +92,7 @@
         <!-- Testing -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -122,6 +124,7 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>25</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <parameters>true</parameters>
                 </configuration>
             </plugin>

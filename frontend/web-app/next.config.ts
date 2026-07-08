@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Fix Next 16 + isomorphic-dompurify@3.3.0 ESM/CommonJS interop bug:
   // html-encoding-sniffer uses require() on @exodus/bytes/encoding-lite.js
   // which is now a pure ESM module. Transpile the chain so webpack handles it.

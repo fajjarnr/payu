@@ -8,7 +8,7 @@ kind: Kustomization
 resources:
   - ../common
 
-namespace: payu-dev
+namespace: payu-sso
 
 # Dev-specific patches
 patches:

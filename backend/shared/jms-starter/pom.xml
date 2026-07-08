@@ -43,7 +43,7 @@
 
         <!-- ActiveMQ Artemis JMS Client -->
         <dependency>
-            <groupId>org.apache.activemq</groupId>
+            <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client</artifactId>
         </dependency>
 

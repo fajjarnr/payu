@@ -239,7 +239,7 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: stackrox
       server: https://kubernetes.default.svc
-    - namespace: openshift-compliance
+    - namespace: openshift-operators
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: "*"

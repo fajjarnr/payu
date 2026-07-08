@@ -364,6 +364,7 @@
     </dependencyManagement>
 
     <build>
+        <finalName>app</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -390,7 +391,6 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <configuration>
-                        <finalName>app</finalName>
                         <excludes>
                             <exclude>
                                 <groupId>org.projectlombok</groupId>

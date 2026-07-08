@@ -15,6 +15,7 @@ resources:
 - ./integration-service
 - ./investment-service
 - ./kyc-service
+- ./lending-rules
 - ./lending-service
 - ./loan-origination-process
 - ./notification-service
@@ -33,7 +34,4 @@ resources:
 - ./biller-simulator.yaml
 - ./dukcapil-simulator.yaml
 - ./qris-simulator.yaml
-- ./db-secrets.yaml
 - ./service-endpoints.yaml
-
-

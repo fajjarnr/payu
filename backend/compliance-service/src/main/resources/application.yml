@@ -47,14 +47,14 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       properties:
         interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
     consumer:
       group-id: compliance-service-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"

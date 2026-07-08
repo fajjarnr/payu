@@ -3,21 +3,35 @@
 # Apply BEFORE deploying infra CRs
 # ============================================================
 
-# 1. Crunchy Postgres for Kubernetes (PostgreSQL)
+# 1. CloudNativePG (PostgreSQL HA)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: crunchy-postgres-operator
+  name: cloudnative-pg
   namespace: openshift-operators
 spec:
-  channel: v5
-  name: crunchy-postgres-operator
+  channel: stable-v1
+  name: cloudnative-pg
   source: certified-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
 
 ---
-# 2. Red Hat Data Grid (Infinispan - Redis-compatible cache)
+# 2. Redis Enterprise Operator (external Redis for 3scale only)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: redis-enterprise-operator-cert
+  namespace: redis-enterprise
+spec:
+  channel: production
+  name: redis-enterprise-operator-cert
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 3. Red Hat Data Grid (application distributed cache)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -31,7 +45,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 3. AMQ Streams (Apache Kafka)
+# 4. AMQ Streams (Apache Kafka)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -126,9 +140,9 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: 3scale-operator
-  namespace: openshift-operators
+  namespace: payu-api-management
 spec:
-  channel: threescale-2.13
+  channel: threescale-2.16
   name: 3scale-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
@@ -214,7 +228,7 @@ metadata:
   name: openshift-gitops-operator
   namespace: openshift-gitops-operator
 spec:
-  channel: latest
+  channel: gitops-1.21
   name: openshift-gitops-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
@@ -304,4 +318,3 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
-
