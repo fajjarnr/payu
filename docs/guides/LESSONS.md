@@ -4,6 +4,24 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-106: Designing Portable Shell Scripts for Multi-Engine Container Environments (2026-07-08)
+
+**Date**: 2026-07-08
+**Domain**: Scripting, Developer Experience, Podman, Docker
+**Context**: Checking test environment health locally via `test-health-check.sh` failed with `docker: command not found` on developer machines running Podman and podman-compose instead of Docker.
+
+**Lesson**:
+- Avoid hardcoding `docker` or `docker-compose` commands directly in scripts meant for local developer environments. Query command availability dynamically (e.g. `command -v docker` / `command -v podman`) and set a dynamic wrapper variable (like `$CONTAINER_CLI`).
+- Standardize compose paths: check that compose configuration paths point to the correct, verified directories (e.g. `infrastructure/local/podman/podman-compose.yml`, not a non-existent `local-podman/`).
+- Use compose-compatible checks: when using podman, verify if `podman compose` or `podman-compose` is installed and configure the executor prefix accordingly.
+
+**Applied fix**:
+- Refactored `test-health-check.sh` to dynamically detect `docker` vs `podman` CLI.
+- Handled compose syntax dynamically for `docker compose`, `docker-compose`, `podman compose`, and `podman-compose`.
+- Corrected the relative path to `podman-compose.yml`.
+
+---
+
 ## L-105: Close Cluster Warning Tickets Only From Current Live Evidence (2026-07-08)
 
 **Date**: 2026-07-08

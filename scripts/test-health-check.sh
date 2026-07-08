@@ -35,12 +35,30 @@ print_info() {
     echo -e "${BLUE}ℹ${NC} $1"
 }
 
-# Determine which compose command to use
-COMPOSE_FILE="infrastructure/local-podman/podman-compose.yml"
-if docker-compose --version > /dev/null 2>&1; then
-    COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
+# Determine container CLI (docker or podman)
+if command -v docker >/dev/null 2>&1; then
+    CONTAINER_CLI="docker"
+elif command -v podman >/dev/null 2>&1; then
+    CONTAINER_CLI="podman"
 else
-    COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
+    print_warning "Neither docker nor podman command found!"
+    CONTAINER_CLI="docker" # Default fallback
+fi
+
+# Determine which compose command to use
+COMPOSE_FILE="infrastructure/local/podman/podman-compose.yml"
+if [ "$CONTAINER_CLI" = "podman" ]; then
+    if podman compose version > /dev/null 2>&1 || podman-compose --version > /dev/null 2>&1; then
+        COMPOSE_CMD="podman compose -f $COMPOSE_FILE"
+    else
+        COMPOSE_CMD="podman-compose -f $COMPOSE_FILE"
+    fi
+else
+    if docker-compose --version > /dev/null 2>&1; then
+        COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
+    else
+        COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
+    fi
 fi
 
 # Expected services (in dependency order)
@@ -113,17 +131,17 @@ echo "Step 3: Checking service health endpoints..."
 
 # Check PostgreSQL
 print_info "Checking PostgreSQL..."
-docker exec payu-postgres pg_isready -U postgres > /dev/null 2>&1
+$CONTAINER_CLI exec payu-postgres pg_isready -U postgres > /dev/null 2>&1
 print_status $? "PostgreSQL is ready"
 
 # Check Redis
 print_info "Checking Redis..."
-docker exec payu-redis redis-cli ping > /dev/null 2>&1
+$CONTAINER_CLI exec payu-redis redis-cli ping > /dev/null 2>&1
 print_status $? "Redis is ready"
 
 # Check Kafka
 print_info "Checking Kafka..."
-docker exec payu-kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1
+$CONTAINER_CLI exec payu-kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1
 print_status $? "Kafka is ready"
 
 # Check Keycloak
@@ -226,7 +244,7 @@ check_spring_service "Integration Service" 8101 "integration-service"
 
 echo ""
 echo "Step 5: Verifying test databases..."
-DBS=$(docker exec payu-postgres psql -U postgres -c "\l" 2>/dev/null | grep payu | wc -l)
+DBS=$($CONTAINER_CLI exec payu-postgres psql -U postgres -c "\l" 2>/dev/null | grep payu | wc -l)
 if [ $DBS -ge 10 ]; then
     print_status 0 "Databases found ($DBS databases)"
 else
@@ -235,7 +253,7 @@ fi
 
 echo ""
 echo "Step 6: Checking for test data..."
-TEST_USER_COUNT=$(docker exec payu-postgres psql -U postgres -d accountdb -c "SELECT COUNT(*) FROM users;" -t 2>/dev/null || echo "0")
+TEST_USER_COUNT=$($CONTAINER_CLI exec payu-postgres psql -U postgres -d accountdb -c "SELECT COUNT(*) FROM users;" -t 2>/dev/null || echo "0")
 if [ "$TEST_USER_COUNT" -gt 0 ]; then
     print_status 0 "Data found ($TEST_USER_COUNT users)"
 else

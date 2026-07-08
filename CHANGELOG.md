@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verified and resolved Strimzi Kafka Entity Operator liveness/readiness probe warnings (INFRA-023) based on healthy running pod conditions, zero restart counts, and clean periodic topic/user operator reconciliation logs.
 - Verified and resolved ActiveMQ STOMP client connection TTL timeout warnings (DEV-105) inside the AMQ Broker log history, following the KYC client heartbeat keep-alive configuration.
 - Closed operational workload stability tickets from the active backlog using target-scoped live evidence checks.
+- Updated the local environment verification script `test-health-check.sh` (DEVSECOPS-018) to dynamically detect and fall back to `podman` when `docker` is not installed on the developer machine, and corrected the local podman-compose file path mapping.
 
 ## [1.9.2] - 2026-07-08
 
