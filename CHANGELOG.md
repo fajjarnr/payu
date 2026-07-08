@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Documented the v1.9.2 production-ready sweep in `docs/guides/LESSONS.md` and `docs/roadmap`.
 - Replaced the obsolete infrastructure deployment guide with a current MOP covering Kustomize entrypoints, apply order, secret gates, verification, GitOps handoff, rollback, and known deployment gates.
+- Added the infrastructure deployment MOP pointer to `AGENTS.md`.
 
 ## [1.8.89] - 2026-07-08
 

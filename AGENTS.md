@@ -92,6 +92,7 @@ Kamu memiliki akses ke MCP servers berikut. Gunakan secara aktif tanpa perlu dim
 | Bug baru, open items, actionable todos    | `docs/roadmap/TODOS.md`        |
 | Deployment status, completed milestones   | `docs/roadmap/PROGRESS.md`     |
 | Architecture decisions, gap analysis      | `docs/roadmap/GATEWAY_ARCH.md` |
+| Infrastructure deployment MOP             | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md` |
 | Version changelog                         | `CHANGELOG.md`                 |
 | Implementation patterns & lessons learned | `docs/guides/LESSONS.md`       |
 
@@ -101,6 +102,7 @@ Kamu memiliki akses ke MCP servers berikut. Gunakan secara aktif tanpa perlu dim
 - Service status → `docs/roadmap/SERVICES.md`
 - Database & schema standards (ledger, RLS, Flyway, pgcrypto) → `docs/architecture/`
 - API & integration (retry/webhook/SNAP-BI) → `docs/architecture/`
+- Infrastructure deployment / OpenShift MOP → `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md`
 - Frontend / Mobile / Python-ML & Design System (Premium Emerald) standards → `docs/guides/`
 - Skills & workflows → `.agents/skills/` dan `.agents/workflows/`
 

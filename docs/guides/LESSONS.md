@@ -17,6 +17,7 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied fix**:
 - Replaced the obsolete infrastructure deployment guide with a current Method of Procedure covering preflight, apply order, runtime secrets, GitOps handoff, verification, rollback, and known gates.
+- Added the infrastructure MOP to `AGENTS.md` so agents handling OpenShift/deployment work start from the current runbook.
 
 ---
 
