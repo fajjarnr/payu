@@ -7,7 +7,7 @@ variable "region" {
 variable "name_prefix" {
   description = "Project or team identifier used as the leading portion for all resource names."
   type        = string
-  default     = "openshift"
+  default     = "payu"
 }
 
 variable "environment" {
