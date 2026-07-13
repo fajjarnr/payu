@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected compliance-service and lending-service internal port mappings and disabled absent local OpenTelemetry exporters by default.
 - Fixed partner-service cold-start Flyway schema validation (DEV-106): added idempotent `ALTER TABLE ADD COLUMN IF NOT EXISTS` for `partner_code`, `status`, and `webhook_url` columns originally created by Hibernate `ddl-auto=update`, plus a unique index on `partner_code`.
 - Eliminated partner-service test warnings (DEV-107): removed explicit H2 dialect declaration (auto-detected by Hibernate 7), disabled scheduling in test profile via `@Profile("!test")`, and added `-XX:+EnableDynamicAgentLoading` to Maven Surefire `argLine` to suppress Mockito dynamic agent loading warnings on JDK 25.
+- Fixed gateway-service `State` enum import regression: added `import id.payu.gateway.domain.State` to `CircuitBreakerService.java` and `CircuitBreakerServiceTest.java` after the enum was moved from `application.service` to `domain` package per AGENTS.md rule #8.
+- Fixed compliance-service test brace truncation: restored missing `}` at end of `DataAccessAuditServiceTest.java` and `GdprAuditControllerTest.java` lost during entity-to-domain-model mass rename.
+- Fixed billing/statement/promotion ArchUnit 1.4.2 regression: reverted to 1.2.1 — 1.4.2 correctly parses Java 25 bytecode, exposing pre-existing architecture violations (L-111). Parent POM retains `archunit.version` 1.4.2 for services ready to upgrade.
+- Rewrote `test-health-check.sh` (DEVSECOPS-018): replaced `podman-compose` v1.x dependency with native `podman` CLI; auto-detects docker/podman runtime; dynamic container name matching (payu-database-rw, payu-kafka, payu-cache, payu-keycloak); probes RESP/HTTP for Data Grid, RHBK /realms/master, AMQ Streams kafka-broker-api-versions.sh; zero false negatives on infra-only environment.
 
 ### Verification
 

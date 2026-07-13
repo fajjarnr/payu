@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
 | **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
-| **Last Updated** | 2026-07-13 (DEV-106: V14 columns added; DEV-107: test warnings eliminated) |
+| **Last Updated** | 2026-07-13 (DEVSECOPS-018: test-health-check.sh rewritten — native podman CLI, no --services flag dependency, dynamic port probes) |
 
 ---
 
@@ -35,7 +35,6 @@
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
 | INFRA-025 | P2 | [cache] Resolve Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 | ⬜ Open |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
-| DEVSECOPS-018 | P3 | [scripts] Update test-health-check.sh to support podman as fallback when docker is missing | ⬜ Open |
 
 
 ---
