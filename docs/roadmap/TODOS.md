@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
 | **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
-| **Last Updated** | 2026-07-13 (INFRA-025 re-scoped to ISPN005061 iterator leak; DEVSECOPS-003 implemented — global rate limit 1000 req/s; ARCH-008/009/010 created) |
+| **Last Updated** | 2026-07-13 (ARCH-008/009/010 resolved; INFRA-007/021 verified; 3 P0/P1 tickets blocked on cluster-admin; remaining open: INFRA-025 scoped, ARCH-007) |
 
 ---
 
@@ -27,11 +27,11 @@
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift | ⬜ Open |
-| INFRA-020 | P0 | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | ⬜ Open |
-| INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⬜ Open |
-| INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
-| SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
+| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift — requires Red Hat registry pull-secret + cluster-admin to configure ImageStream imports | 🔒 Blocked |
+| INFRA-020 | P0 | Reconcile GitOps ApplicationSet with `payu-dev` — 31/33 manual recovery done, ArgoCD app needs re-pointing. Cluster-admin needed for `oc apply -f argocd/` | 🔒 Blocked |
+| INFRA-007 | P1 | DR runbook: ✅ COMPLETE — `docs/operations/DISASTER_RECOVERY.md` (39KB, v2.0, Feb 2026) covers PostgreSQL, Kafka, Vault, DataGrid, Keycloak, service degradation, platform restore, DR testing, escalation matrix. Also: CHATOPS, INCIDENT_RESPONSE, INFRASTRUCTURE_DEPLOYMENT, ZERO-DOWNTIME-DEPLOYMENT. | ✅ Closed |
+| INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
+| SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] ISPN005061 unclosed iterator — RESP SCAN cursor auto-cleanup (not a leak). Root cause: Data Grid RESP protocol layer wraps Jedis `ScanCursor` as internal iterator with 2min TTL. Cursor not fully consumed → server removes stale iterators. Linked to ARCH-007 (Hot Rod migration eliminates this). Zero Netty SSL hits. | 🔄 Scoped |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client — eliminates ISPN005061 and improves performance | ⬜ Open |
