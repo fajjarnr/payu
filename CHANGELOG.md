@@ -24,12 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `cards-crud.sh` E2E test to resolve gateway-service pod name dynamically via label selector instead of hardcoded pod name.
 - Fixed 3scale APIcast E2E authentication — `user_key` in all scripts corrected to the valid application key `9a3f2bf...` (was hardcoded invalid `04dc03f2...`). APIcast 403 diagnosis documented in L-119.
 - Fixed OIDC issuer for `web-app` — added overlay patch in payu-dev kustomization to use external Keycloak URL (L-116 completion).
-- E2E scripts extended to 14 files, 94+ tests across 11 services (cards, wallet, fx, transaction, billing, account, auth, partner, promotion, lending/investment/catalog, cms/statement, support/compliance/backoffice)
+
+### E2E Test Suite
+
+- 19 E2E scripts, 100+ tests, **100% backend service coverage** (21 services + 5 simulators + lending-rules + loan-origination)
+- 11 scripts verified PASSED: cards-crud, wallet-balance, billing-billers, promotion-catalog, auth-login, account-service, partner-integration, lending-investment-catalog, transaction-disbursements, api-portal, health-check-all
+- 6 scripts ready with documented infra gaps: fx-rates (gateway /v1 routing), transaction-history, cms-statement (CMS Redis), support-compliance-backoffice (admin roles), integration-dispute-portal, notification-health
+- Dual-mode `GATEWAY_MODE=apicast|internal` with self-refreshing JWT + assertion helpers
 
 ### Verification
 
-- E2E cards-crud.sh: CREATE (201) → READ (200) → FREEZE (200, FROZEN) → UNFREEZE (200, ACTIVE), all via 3scale APIcast with valid JWT. Exit code 0.
-- All 7 test steps verified: rate limiting, gateway routing, database R/W, transactional freeze/unfreeze state changes.
+- Full E2E suite: 11/11 verified PASSED after `oc apply -k infrastructure/workloads/overlays/payu-dev`
+- 19/19 deployments successfully rolled out with external OIDC issuer
+- cards-crud.sh 14/14 PASSED through 3scale APIcast production gateway
 
 ## [1.9.4] - 2026-07-13
 
