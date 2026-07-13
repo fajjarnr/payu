@@ -515,7 +515,9 @@ patches:
             - name: OIDC_JWK_SET_URI
               value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
 
-# OIDC Issuer patches - Quarkus services (QUARKUS_OIDC_TOKEN_ISSUER + QUARKUS_TLS_TRUST_ALL)
+# OIDC Issuer patches - Quarkus services
+# Note: Quarkus reads QUARKUS_OIDC_TOKEN_ISSUER, not OIDC_ISSUER.
+# OIDC_ISSUER/JWK_SET_URI in base deployments are unused by Quarkus.
 - target:
     kind: Deployment
     name: api-portal-service
@@ -576,6 +578,22 @@ patches:
               value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
+            - name: OIDC_ISSUER
+              value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+
+# OIDC Issuer patch - web-app (Next.js)
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
 
 # Dev-only: Enable rate limit test mode for e2e testing
 - target:
