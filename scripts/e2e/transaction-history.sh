@@ -16,7 +16,7 @@
 
 set -e
 
-USERKEY="${USERKEY:-04dc03f2e2a776bffcb9b16eb9f93796}"
+USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
 ACCT="${ACCT:-7a51ced3-5602-40fb-96e7-1703e9243ed5}"
 RECIPIENT_ACCT="${RECIPIENT_ACCT:-}"

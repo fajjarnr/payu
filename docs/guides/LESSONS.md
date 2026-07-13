@@ -149,6 +149,25 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-119: 3scale APIcast 403 — user_key Mismatch Between Script and Product Application (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: 3scale, APIcast, API Management, E2E Testing, Product Configuration
+**Context**: E2E test `cards-crud.sh` gagal dengan HTTP 403 in 0ms saat menggunakan `user_key=04dc03f2e2a776bffcb9b16eb9f93796`. APIcast menolak request di layer auth 3scale sebelum meneruskan ke backend gateway. E2E test sebelumnya sukses dengan `user_key=9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed`.
+
+**Lesson**:
+- 3scale APIcast 403 in 0ms response time artinya APIcast menolak request di layer auth 3scale sendiri — bukan backend. Request tidak pernah mencapai gateway-service.
+- Penyebab paling umum: `user_key` tidak valid (bukan milik Application manapun dalam Product yang dikonfigurasi), Product state bukan `published`, atau Application tidak subscribed ke plan Product.
+- Diagnosis: baca APIcast access log (`oc logs deployment/apicast-production`). Perhatikan perbedaan antara request yang sukses (201/200) vs gagal (403/401). `user_key` yang berbeda dalam log adalah clue utama.
+- 3scale `Product` CR berbasis `capabilities.3scale.net/v1beta1` mengatur authentication via `spec.deployment.apicastHosted.authentication.userkey`. Field `authUserKey` menentukan nama query parameter (biasanya `user_key`).
+- `Application` dan `ApplicationPlan` perlu dibuat (baik lewat 3scale Admin Portal atau CR) agar `user_key` tertentu terdaftar. Tanpa `Application`, semua `user_key` akan ditolak.
+
+**Applied fix**:
+- Mengganti `USERKEY` default di semua script E2E (`cards-crud.sh`, `fx-rates.sh`, `transaction-history.sh`) dari `04dc03f2e2a776bffcb9b16eb9f93796` menjadi `9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed`.
+- E2E verified: cards-crud.sh 14/14 PASSED melalui APIcast production (GATEWAY_MODE=apicast).
+
+---
+
 ## L-109: Entity-to-Domain-Model Renames Can Truncate Closing Braces in Test Files (2026-07-13)
 
 **Date**: 2026-07-13

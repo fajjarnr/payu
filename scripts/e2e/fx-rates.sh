@@ -10,6 +10,7 @@
 set -e
 
 GATEWAY_MODE="${GATEWAY_MODE:-internal}"
+USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
 TMPFILE=/tmp/r.json
 FAILED=0
