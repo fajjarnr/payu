@@ -41,6 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verified PostgreSQL, Data Grid, AMQ Streams, AMQ Broker, RHBK, APIcast, and RustFS healthy together with no warning/error matches in the final runtime log window.
 - Verified authenticated Data Grid RESP `PONG`, Kafka broker API discovery, required database creation, and RHBK `payu` realm discovery.
 - Verified partner-service: 233/233 tests passing, zero test warnings, BUILD SUCCESS.
+- Verified DevSecOps infrastructure parity: 31/33 OCP application deployments defined in Podman compose, 7/7 infra containers running with Red Hat digest-pinned images, service DNS names match OCP, test-health-check.sh zero warnings.
+
+### Known Gaps (Local → OCP)
+
+- App containers not started: `podman-compose` v1.0.6 lacks `--profile` flag; 31 services defined but not built/started locally. 20 JARs + 30 Containerfiles are ready.
+- Application container hardening applied to 1/31 services (UID 1001, read-only FS). Remaining 30 need the same treatment.
+- 2 OCP operator-managed services excluded intentionally: `payu-cache-config-listener`, `payu-kafka-entity-operator`.
+- Infra image digests differ between local (podman pull from registry.redhat.io) and OCP (mirror via OpenShift internal registry). Images identical, digests reflect different pull paths.
 
 ## [1.9.3] - 2026-07-08
 
