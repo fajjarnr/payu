@@ -246,13 +246,20 @@ Gateway route mapping belum include prefix. Cek `application.yaml` di gateway-se
 
 ```
 scripts/e2e/
-├── README.md                  ← this file
-├── cards-crud.sh              wallet-service   (14 tests)
-├── wallet-balance.sh          wallet-service   (8 tests)
-├── fx-rates.sh                fx-service       (13 tests)
-├── transaction-history.sh     transaction-svc  (11 tests)
-├── billing-billers.sh         billing-service  (6 tests)
-├── account-beneficiaries.sh   account-service  (7 tests)
-├── verify-nik-cache.sh        account-service  (2 tests)
+├── README.md
+├── cards-crud.sh              wallet-service          (14 tests)
+├── wallet-balance.sh          wallet-service          (8 tests)
+├── fx-rates.sh                fx-service              (13 tests)
+├── transaction-history.sh     transaction-service     (11 tests)
+├── transaction-disbursements.sh transaction-service  (9 tests)
+├── billing-billers.sh         billing-service         (6 tests)
+├── account-service.sh         account-service         (5 tests)
+├── auth-login.sh              auth-service            (6 tests)
+├── partner-integration.sh     partner-service         (5 tests)
+├── promotion-catalog.sh       promotion-service       (7 tests)
+├── lending-investment-catalog.sh  lending/investment/catalog (8 tests)
+├── cms-statement.sh           cms/statement-service   (7 tests)
+├── support-compliance-backoffice.sh  support/compliance/backoffice (8 tests)
+├── verify-nik-cache.sh        account-service         (2 tests)
 └── wallet-bootstrap.sql       DB fixture
 ```
