@@ -33,8 +33,11 @@
 | INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
-| INFRA-025 | P2 | [cache] Resolve Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 | ⬜ Open |
+| INFRA-025 | P2 | [cache] Netty SSL: RESOLVED (0 hits 24h). NEW: ISPN005061 unclosed iterator — 184 per 24h, 2 per 2 min — RESP client not closing iterators. Investigate which client. | 🔄 Re-scoped |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
+| ARCH-008 | P2 | [billing] Fix 85 domain@adapter violations — SubscriptionEvent calls adapter entity getters directly (ArchUnit 1.4.2) | ⬜ Open |
+| ARCH-009 | P2 | [statement] Fix 12 Lombok@Builder immutability violations — RecipientInfo/SenderInfo non-final fields + ReceiptException placement | ⬜ Open |
+| ARCH-010 | P2 | [promotion] Fix 288 service dependency + 3 cyclic dependency + CashbackEntity naming violations (ArchUnit 1.4.2) | ⬜ Open |
 
 
 ---
@@ -78,15 +81,20 @@
 
 ## 📝 Platform Workload Audit Details
 
-### ⚙️ INFRA-025: Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222 (cache)
-* **Problem**: Pod `payu-cache-0` mencatat warning netty SSL negotiation pada port 11222 (`ApplicationProtocolNegotiationHandler`).
-* **Impact**: Kegagalan SSL/TLS ALPN negotiation saat mencoba terhubung ke cache server Infinispan.
-* **Fix**: Konfigurasi client SSL context dengan ALPN protocol list yang tepat (seperti HTTP/1.1 atau h2) atau sesuaikan konfigurasi client dengan SSL profile Infinispan.
+### ⚙️ INFRA-025: Cache warnings on port 11222 (cache-service)
+* **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222.
+* **Status**: 🟢 RESOLVED — 0 Netty/SSL hits in 24h window at 2026-07-13.
+* **New Finding**: `ISPN005061` unclosed iterator — 184 hits in 24h, steady 2 per 2 minutes. Data Grid server forcibly removes iterators that clients did not close via RESP. This is a client-side RESP iterator lifecycle bug, not a server issue. Impact: minor (automatic cleanup every 2 min), no pod restarts, no data loss. Root cause: one or more Spring Boot services using RESP cache client without closing `Cache.entrySet().iterator()` or similar bulk iterators.
+* **Next step**: Identify which service creates unclosed iterators → grep RESP client code for iterator usage without try-with-resources.
+* **Updated**: 2026-07-13.
 
-### 🛠️ DEVSECOPS-018: Update test-health-check.sh to support podman as fallback (scripts)
-* **Problem**: Skrip `./scripts/test-health-check.sh` mengalami error `docker: command not found` di environment lokal yang menggunakan `podman` dan `podman-compose`.
-* **Impact**: Developer workflow terganggu karena skrip pemeriksaan kesehatan environment pengujian gagal dijalankan.
-* **Fix**: Modifikasi skrip agar mendeteksi keberadaan perintah `docker` dan `podman`, lalu secara dinamis menggunakan container command yang tersedia.
+### 🏗️ ARCH-008/009/010: ArchUnit 1.4.2 violations (billing, statement, promotion)
+* **Context**: ArchUnit 1.2.1 → 1.4.2 upgrade in parent POM exposed pre-existing architecture violations that ArchUnit 1.2.1 silently skipped (ASM < 9.5 cannot parse Java 25 bytecode — empty `importPackages()`).
+* **ARCH-008 (billing)**: 85 domain@adapter violations — `SubscriptionEvent.createChargeFailedEvent()` calls `SubscriptionChargeEntity` getters directly. Domain layer depends on adapter persistence entities.
+* **ARCH-009 (statement)**: 12 immutability violations — `RecipientInfo`/`SenderInfo` Lombok `@Builder` + `@NoArgsConstructor` generates non-final fields. `ReceiptException` lives in `application.service.exception`, not `domain.model`.
+* **ARCH-010 (promotion)**: 288 dependency violations + 3 cyclic deps (adapter→application→adapter) + `CashbackEntity` naming (entity in persistence package not following naming convention).
+* **Status**: Pinned to ArchUnit 1.2.1 in these 3 services until remediation. Parent POM keeps `<archunit.version>1.4.2</archunit.version>` for services that already pass (compliance, partner, gateway, etc.).
+* **Created**: 2026-07-13.
 
 ### 🔐 SEC-020: Remediate CIS platform failures (platform-security)
 * **Problem**: Hasil pemindaian Compliance Operator untuk profile `ocp4-cis` (non-compliant) mendeteksi 9 temuan kegagalan (FAIL):

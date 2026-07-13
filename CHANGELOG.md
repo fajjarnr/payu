@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed billing/statement/promotion ArchUnit 1.4.2 regression: reverted to 1.2.1 — 1.4.2 correctly parses Java 25 bytecode, exposing pre-existing architecture violations (L-111). Parent POM retains `archunit.version` 1.4.2 for services ready to upgrade.
 - Rewrote `test-health-check.sh` (DEVSECOPS-018): replaced `podman-compose` v1.x dependency with native `podman` CLI; auto-detects docker/podman runtime; dynamic container name matching (payu-database-rw, payu-kafka, payu-cache, payu-keycloak); probes RESP/HTTP for Data Grid, RHBK /realms/master, AMQ Streams kafka-broker-api-versions.sh; zero false negatives on infra-only environment.
 
+- Re-scoped INFRA-025: Netty SSL ApplicationProtocolNegotiationHandler warnings RESOLVED (0 hits 24h). New finding: ISPN005061 unclosed iterator (184 hits/24h, 2 per 2 min) — RESP client not closing Cache iterators. Server auto-cleanup every 2 min, no restart/data loss. Root cause investigation pending.
+- Created ARCH-008/009/010 for ArchUnit 1.4.2 violations in billing/statement/promotion — hidden bugs exposed by Java 25 bytecode parsing fix (L-111).
+
 ### Verification
 
 - Verified valid Compose rendering and 8/8 infrastructure regression tests.
