@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Value Object representing sender information for a transaction receipt.
@@ -12,7 +11,6 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
 public class SenderInfo {

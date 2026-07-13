@@ -7,7 +7,7 @@ import id.payu.statement.domain.model.ReceiptStatus;
 import id.payu.statement.domain.model.SenderInfo;
 import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;
-import id.payu.statement.application.service.exception.ReceiptException;
+import id.payu.statement.domain.model.ReceiptException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;

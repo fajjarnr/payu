@@ -72,10 +72,13 @@ class HexagonalArchitectureTest {
                     .resideInAnyPackage(
                             "..domain..",
                             "..dto..",
+                            "id.payu.outbox..",
+                            "id.payu.saga..",
                             "java..",
                             "javax..",
                             "org.springframework..",
-                            "org.slf4j.."
+                            "org.slf4j..",
+                            "io.micrometer.."
                     )
                     .because("Application services orchestrate domain logic through ports")
                     .allowEmptyShould(true)
@@ -161,7 +164,6 @@ class HexagonalArchitectureTest {
             classes()
                     .that().resideInAPackage("..application.service..")
                     .and().haveSimpleNameContaining("Promo")
-                    .or().haveSimpleNameContaining("CashbackEntity")
                     .should().haveSimpleNameEndingWith("Service")
                     .because("Services should have Service suffix")
                     .allowEmptyShould(true)

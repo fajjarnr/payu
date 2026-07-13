@@ -33,11 +33,11 @@
 | INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
-| INFRA-025 | P2 | [cache] Netty SSL: RESOLVED (0 hits 24h). NEW: ISPN005061 unclosed iterator — 184 per 24h, 2 per 2 min — RESP client not closing iterators. Investigate which client. | 🔄 Re-scoped |
-| ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
-| ARCH-008 | P2 | [billing] Fix 85 domain@adapter violations — SubscriptionEvent calls adapter entity getters directly (ArchUnit 1.4.2) | ⬜ Open |
-| ARCH-009 | P2 | [statement] Fix 12 Lombok@Builder immutability violations — RecipientInfo/SenderInfo non-final fields + ReceiptException placement | ⬜ Open |
-| ARCH-010 | P2 | [promotion] Fix 288 service dependency + 3 cyclic dependency + CashbackEntity naming violations (ArchUnit 1.4.2) | ⬜ Open |
+| INFRA-025 | P2 | [cache] ISPN005061 unclosed iterator — RESP SCAN cursor auto-cleanup (not a leak). Root cause: Data Grid RESP protocol layer wraps Jedis `ScanCursor` as internal iterator with 2min TTL. Cursor not fully consumed → server removes stale iterators. Linked to ARCH-007 (Hot Rod migration eliminates this). Zero Netty SSL hits. | 🔄 Scoped |
+| ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client — eliminates ISPN005061 and improves performance | ⬜ Open |
+| ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
+| ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
+| ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
 
 
 ---

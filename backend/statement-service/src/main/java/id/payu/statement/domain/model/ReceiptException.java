@@ -1,4 +1,4 @@
-package id.payu.statement.application.service.exception;
+package id.payu.statement.domain.model;
 
 /**
  * Exception for receipt-related errors.

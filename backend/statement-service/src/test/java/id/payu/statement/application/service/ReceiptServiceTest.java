@@ -3,7 +3,7 @@ package id.payu.statement.application.service;
 import id.payu.statement.application.port.output.ReceiptRepositoryPort;
 import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;
-import id.payu.statement.application.service.exception.ReceiptException;
+import id.payu.statement.domain.model.ReceiptException;
 import id.payu.statement.domain.model.Receipt;
 import id.payu.statement.domain.model.ReceiptStatus;
 import org.junit.jupiter.api.BeforeEach;

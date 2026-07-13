@@ -27,7 +27,15 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     @Override
     public void publishSubscriptionCreated(SubscriptionEntity subscription) {
         CloudEventEnvelope<SubscriptionEvent.SubscriptionCreatedPayload> event =
-                SubscriptionEvent.createSubscriptionCreatedEvent(subscription);
+                SubscriptionEvent.createSubscriptionCreatedEvent(
+                        subscription.getId(), subscription.getPartnerId(),
+                        subscription.getAccountId(), subscription.getPlanId(),
+                        subscription.getExternalReferenceId(),
+                        subscription.getStatus().name(),
+                        subscription.getCurrentPrice(), subscription.getCurrency(),
+                        subscription.getTrialEndAt(), subscription.getCurrentPeriodStart(),
+                        subscription.getCurrentPeriodEnd(), subscription.getNextBillingAt(),
+                        subscription.getCreatedAt());
 
         outboxService.createEventFromObject(
                 "Subscription",
@@ -43,7 +51,13 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     @Override
     public void publishChargeSucceeded(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
-                SubscriptionEvent.createChargeSucceededEvent(subscription, charge);
+                SubscriptionEvent.createChargeSucceededEvent(
+                        charge.getId(), charge.getSubscriptionId(),
+                        charge.getAccountId(), subscription.getPartnerId(),
+                        subscription.getPlanId(), subscription.getExternalReferenceId(),
+                        charge.getAmount(), charge.getCurrency(), charge.getAttemptNumber(),
+                        charge.getBillingPeriodStart(), charge.getBillingPeriodEnd(),
+                        charge.getChargedAt());
 
         outboxService.createEventFromObject(
                 "SubscriptionCharge",
@@ -62,7 +76,13 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     @Override
     public void publishChargeFailed(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
-                SubscriptionEvent.createChargeFailedEvent(subscription, charge);
+                SubscriptionEvent.createChargeFailedEvent(
+                        charge.getId(), charge.getSubscriptionId(),
+                        charge.getAccountId(), subscription.getPartnerId(),
+                        subscription.getPlanId(), subscription.getExternalReferenceId(),
+                        charge.getAmount(), charge.getCurrency(), charge.getAttemptNumber(),
+                        charge.getBillingPeriodStart(), charge.getBillingPeriodEnd(),
+                        charge.getChargedAt(), charge.getFailureReason());
 
         outboxService.createEventFromObject(
                 "SubscriptionCharge",

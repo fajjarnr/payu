@@ -1,7 +1,5 @@
 package id.payu.billing.domain.event;
 
-import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
-import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import lombok.Builder;
 import lombok.Data;
@@ -9,25 +7,24 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
  * Domain event for subscription lifecycle notifications.
- * Published to Kafka and consumed by WebhookDispatcherService in partner-service.
+ * Published to Kafka via outbox-starter and consumed by WebhookDispatcherService in partner-service.
+ * <p>
+ * ARCH-008: Factory methods accept primitive values instead of adapter persistence entities.
+ * This keeps the domain layer independent of infrastructure concerns (hexagonal architecture).
  */
 public class SubscriptionEvent {
 
     public static final String TOPIC = "subscription.events";
-
-    // Event types
     public static final String SUBSCRIPTION_CREATED = "subscription.created";
     public static final String CHARGE_SUCCEEDED = "charge.succeeded";
     public static final String CHARGE_FAILED = "charge.failed";
 
-    /**
-     * Payload for subscription.created event.
-     */
     @Data
     @Builder
     public static class SubscriptionCreatedPayload {
@@ -46,9 +43,6 @@ public class SubscriptionEvent {
         private Instant createdAt;
     }
 
-    /**
-     * Payload for charge.succeeded and charge.failed events.
-     */
     @Data
     @Builder
     public static class ChargePayload {
@@ -68,110 +62,110 @@ public class SubscriptionEvent {
         private String failureReason;
     }
 
-    /**
-     * Create a CloudEvent envelope for subscription.created event.
-     */
     public static CloudEventEnvelope<SubscriptionCreatedPayload> createSubscriptionCreatedEvent(
-            SubscriptionEntity subscription) {
+            UUID subscriptionId, String partnerId, String accountId, UUID planId,
+            String externalReferenceId, String status, BigDecimal currentPrice, String currency,
+            LocalDateTime trialEndAt, LocalDateTime currentPeriodStart, LocalDateTime currentPeriodEnd,
+            LocalDateTime nextBillingAt, LocalDateTime createdAt) {
 
         SubscriptionCreatedPayload payload = SubscriptionCreatedPayload.builder()
-                .subscriptionId(subscription.getId().toString())
-                .partnerId(subscription.getPartnerId())
-                .accountId(subscription.getAccountId())
-                .planId(subscription.getPlanId().toString())
-                .externalReferenceId(subscription.getExternalReferenceId())
-                .status(subscription.getStatus().name())
-                .currentPrice(subscription.getCurrentPrice())
-                .currency(subscription.getCurrency())
-                .trialEndAt(toInstant(subscription.getTrialEndAt()))
-                .currentPeriodStart(toInstant(subscription.getCurrentPeriodStart()))
-                .currentPeriodEnd(toInstant(subscription.getCurrentPeriodEnd()))
-                .nextBillingAt(toInstant(subscription.getNextBillingAt()))
-                .createdAt(toInstant(subscription.getCreatedAt()))
+                .subscriptionId(subscriptionId.toString())
+                .partnerId(partnerId)
+                .accountId(accountId)
+                .planId(planId.toString())
+                .externalReferenceId(externalReferenceId)
+                .status(status)
+                .currentPrice(currentPrice)
+                .currency(currency)
+                .trialEndAt(toInstant(trialEndAt))
+                .currentPeriodStart(toInstant(currentPeriodStart))
+                .currentPeriodEnd(toInstant(currentPeriodEnd))
+                .nextBillingAt(toInstant(nextBillingAt))
+                .createdAt(toInstant(createdAt))
                 .build();
 
         return CloudEventEnvelope.<SubscriptionCreatedPayload>builder()
                 .id(UUID.randomUUID())
                 .source(URI.create("/billing-service/subscriptions"))
                 .type(SUBSCRIPTION_CREATED)
-                .subject(subscription.getId().toString())
+                .subject(subscriptionId.toString())
                 .time(OffsetDateTime.now())
                 .data(payload)
                 .payuCorrelationId(UUID.randomUUID().toString())
                 .build();
     }
 
-    /**
-     * Create a CloudEvent envelope for charge.succeeded event.
-     */
     public static CloudEventEnvelope<ChargePayload> createChargeSucceededEvent(
-            SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
+            UUID chargeId, UUID subscriptionId, String accountId,
+            String partnerId, UUID planId, String externalReferenceId,
+            BigDecimal amount, String currency, int attemptNumber,
+            LocalDateTime billingPeriodStart, LocalDateTime billingPeriodEnd,
+            LocalDateTime chargedAt) {
 
         ChargePayload payload = ChargePayload.builder()
-                .chargeId(charge.getId().toString())
-                .subscriptionId(charge.getSubscriptionId().toString())
-                .partnerId(subscription.getPartnerId())
-                .accountId(charge.getAccountId())
-                .planId(subscription.getPlanId().toString())
-                .externalReferenceId(subscription.getExternalReferenceId())
-                .amount(charge.getAmount())
-                .currency(charge.getCurrency())
+                .chargeId(chargeId.toString())
+                .subscriptionId(subscriptionId.toString())
+                .partnerId(partnerId)
+                .accountId(accountId)
+                .planId(planId.toString())
+                .externalReferenceId(externalReferenceId)
+                .amount(amount)
+                .currency(currency)
                 .status("SUCCEEDED")
-                .attemptNumber(charge.getAttemptNumber())
-                .billingPeriodStart(toInstant(charge.getBillingPeriodStart()))
-                .billingPeriodEnd(toInstant(charge.getBillingPeriodEnd()))
-                .chargedAt(toInstant(charge.getChargedAt()))
+                .attemptNumber(attemptNumber)
+                .billingPeriodStart(toInstant(billingPeriodStart))
+                .billingPeriodEnd(toInstant(billingPeriodEnd))
+                .chargedAt(toInstant(chargedAt))
                 .build();
 
         return CloudEventEnvelope.<ChargePayload>builder()
                 .id(UUID.randomUUID())
                 .source(URI.create("/billing-service/charges"))
                 .type(CHARGE_SUCCEEDED)
-                .subject(charge.getId().toString())
+                .subject(chargeId.toString())
                 .time(OffsetDateTime.now())
                 .data(payload)
                 .payuCorrelationId(UUID.randomUUID().toString())
                 .build();
     }
 
-    /**
-     * Create a CloudEvent envelope for charge.failed event.
-     */
     public static CloudEventEnvelope<ChargePayload> createChargeFailedEvent(
-            SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
+            UUID chargeId, UUID subscriptionId, String accountId,
+            String partnerId, UUID planId, String externalReferenceId,
+            BigDecimal amount, String currency, int attemptNumber,
+            LocalDateTime billingPeriodStart, LocalDateTime billingPeriodEnd,
+            LocalDateTime chargedAt, String failureReason) {
 
         ChargePayload payload = ChargePayload.builder()
-                .chargeId(charge.getId().toString())
-                .subscriptionId(charge.getSubscriptionId().toString())
-                .partnerId(subscription.getPartnerId())
-                .accountId(charge.getAccountId())
-                .planId(subscription.getPlanId().toString())
-                .externalReferenceId(subscription.getExternalReferenceId())
-                .amount(charge.getAmount())
-                .currency(charge.getCurrency())
+                .chargeId(chargeId.toString())
+                .subscriptionId(subscriptionId.toString())
+                .partnerId(partnerId)
+                .accountId(accountId)
+                .planId(planId.toString())
+                .externalReferenceId(externalReferenceId)
+                .amount(amount)
+                .currency(currency)
                 .status("FAILED")
-                .attemptNumber(charge.getAttemptNumber())
-                .billingPeriodStart(toInstant(charge.getBillingPeriodStart()))
-                .billingPeriodEnd(toInstant(charge.getBillingPeriodEnd()))
-                .chargedAt(toInstant(charge.getChargedAt()))
-                .failureReason(charge.getFailureReason())
+                .attemptNumber(attemptNumber)
+                .billingPeriodStart(toInstant(billingPeriodStart))
+                .billingPeriodEnd(toInstant(billingPeriodEnd))
+                .chargedAt(toInstant(chargedAt))
+                .failureReason(failureReason)
                 .build();
 
         return CloudEventEnvelope.<ChargePayload>builder()
                 .id(UUID.randomUUID())
                 .source(URI.create("/billing-service/charges"))
                 .type(CHARGE_FAILED)
-                .subject(charge.getId().toString())
+                .subject(chargeId.toString())
                 .time(OffsetDateTime.now())
                 .data(payload)
                 .payuCorrelationId(UUID.randomUUID().toString())
                 .build();
     }
 
-    private static Instant toInstant(java.time.LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return null;
-        }
+    private static Instant toInstant(LocalDateTime localDateTime) {
+        if (localDateTime == null) return null;
         return localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant();
     }
 }
