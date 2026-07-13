@@ -12,8 +12,8 @@ JWT=$(curl -skS -X POST "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms
   --data-urlencode "grant_type=password" --data-urlencode "username=customer1" \
   --data-urlencode "password=Customer1-test" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))")
 [ ${#JWT} -lt 20 ] && { echo "FATAL"; exit 1; }
-ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; }
-t(){ local l="$1"; shift; sleep 0.3; local c=$(oc exec -n payu-dev "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null); oc exec -n payu-dev "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null; printf "\n%s HTTP=%s\n" "$l" "$c" >&2; echo "$c"; }
+ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; true; }
+t(){ local l="$1"; shift; sleep 0.3; local c=$(oc exec -n payu-dev "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null); oc exec -n payu-dev "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null; printf "\n%s HTTP=%s\n" "$l" "$c" >&2; printf "%s" "$c"; }
 
 echo "=== Integration ==="
 t "T1: Status" "$INT/api/v1/integration/status" -H "Authorization: Bearer $JWT"; ok "T1" "200" "$T1"
