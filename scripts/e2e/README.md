@@ -138,15 +138,31 @@ RECIPIENT_ACCT="12345678901234" bash scripts/e2e/transaction-history.sh
 bash scripts/e2e/billing-billers.sh
 ```
 
-### account-beneficiaries.sh (7 tests) — account-service
+### auth-login.sh (6 tests) — auth-service
 
-**Flow:** CREATE beneficiary → LIST → UPDATE nickname → DELETE → 401 no JWT → 401 invalid JWT → 400 validation
+**Flow:** login (valid → 503 KC unreachable known gap) → JWT validate → wrong password → empty body validation → 401 no JWT → 401 invalid JWT
+
+> Auth-service delegates login to Keycloak. When KC is unreachable from auth-service, returns 503.
 
 ```
-bash scripts/e2e/account-beneficiaries.sh
+bash scripts/e2e/auth-login.sh
 ```
 
-### account-service.sh (5 tests) — account-service
+### partner-sandbox.sh (5 tests) — partner-service
+
+**Flow:** partners list → sandbox scenarios (restricted to ADMIN) → 401 no JWT → 401 invalid JWT. Direct to partner-service pod (skips gateway routing gap).
+
+```
+bash scripts/e2e/partner-sandbox.sh
+```
+
+### promotion-catalog.sh (7 tests) — promotion-service
+
+**Flow:** all promotions → active promotions → cashbacks list → cashback summary → loyalty points balance → 401 no JWT → 401 invalid JWT
+
+```
+bash scripts/e2e/promotion-catalog.sh
+```
 
 Nik verification cache round-trip (2 calls same NIK to verify cache deserialization).
 
