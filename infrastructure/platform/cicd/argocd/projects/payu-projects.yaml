@@ -241,6 +241,14 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: openshift-operators
       server: https://kubernetes.default.svc
+    - namespace: kyverno
+      server: https://kubernetes.default.svc
+    - namespace: falco-system
+      server: https://kubernetes.default.svc
+    - namespace: wazuh
+      server: https://kubernetes.default.svc
+    - namespace: payu-sso
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
