@@ -135,12 +135,6 @@ spec:
   generators:
     - list:
         elements:
-          - name: kyverno
-            path: infrastructure/platform/security/kyverno
-            namespace: kyverno
-          - name: falco
-            path: infrastructure/platform/security/falco
-            namespace: falco-system
           - name: wazuh
             path: infrastructure/platform/security/wazuh
             namespace: wazuh
