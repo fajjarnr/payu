@@ -323,6 +323,11 @@ gateway:
   rate-limit-v2:
     enabled: true
     algorithm: "token-bucket"
+    # Global rate limit — hard cap across all endpoints, all IPs, all users (DEVSECOPS-003)
+    global:
+      capacity: 1000
+      refill-tokens: 1000
+      refill-duration: "1s"
     default:
       capacity: 150
       refill-tokens: 100

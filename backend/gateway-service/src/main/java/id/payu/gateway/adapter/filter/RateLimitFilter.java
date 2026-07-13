@@ -127,9 +127,32 @@ public class RateLimitFilter implements ContainerRequestFilter {
         int windowSeconds = CATEGORY_WINDOWS.getOrDefault(category, 60);
 
         String clientId = getClientId(requestContext);
-        String key = RATE_LIMIT_PREFIX + category + ":" + clientId;
+
+        // DEVSECOPS-003: Global rate limit — hard cap across ALL endpoints/IPs/users
+        var globalOpt = config.rateLimitV2().globalRule();
+        if (globalOpt.isPresent()) {
+            var globalRule = globalOpt.get();
+            String globalKey = RATE_LIMIT_PREFIX + "global:all";
+            SlidingWindowResult globalResult = checkSlidingWindow(globalKey, globalRule.capacity(), 1);
+            if (globalResult.limited()) {
+                long retryAfter = Math.max(1, globalResult.windowResetEpoch() - Instant.now().getEpochSecond());
+                Log.warnf("Global rate limit exceeded: count=%d, limit=%d", globalResult.count(), globalRule.capacity());
+                requestContext.abortWith(
+                        Response.status(429)
+                                .header("Retry-After", String.valueOf(retryAfter))
+                                .entity(Map.of(
+                                        "error", "GLOBAL_RATE_LIMIT_EXCEEDED",
+                                        "message", "Service temporarily unavailable due to high traffic. Please retry shortly.",
+                                        "retryAfter", retryAfter
+                                ))
+                                .build()
+                );
+                return;
+            }
+        }
 
         try {
+            String key = RATE_LIMIT_PREFIX + category + ":" + clientId;
             SlidingWindowResult result = checkSlidingWindow(key, rule.requestsPerMinute(), windowSeconds);
 
             // Add RFC-compliant rate limit headers

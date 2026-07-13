@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
 | **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
-| **Last Updated** | 2026-07-13 (DEVSECOPS-018: test-health-check.sh rewritten — native podman CLI, no --services flag dependency, dynamic port probes) |
+| **Last Updated** | 2026-07-13 (INFRA-025 re-scoped to ISPN005061 iterator leak; DEVSECOPS-003 implemented — global rate limit 1000 req/s; ARCH-008/009/010 created) |
 
 ---
 
@@ -32,7 +32,7 @@
 | INFRA-007 | P1 | Document DR runbook for Vault, ArgoCD, ACS, Wazuh | ⬜ Open |
 | INFRA-021 | P1 | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ⬜ Open |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL | ⬜ Open |
-| DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ⬜ Open |
+| DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] Netty SSL: RESOLVED (0 hits 24h). NEW: ISPN005061 unclosed iterator — 184 per 24h, 2 per 2 min — RESP client not closing iterators. Investigate which client. | 🔄 Re-scoped |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client | ⬜ Open |
 | ARCH-008 | P2 | [billing] Fix 85 domain@adapter violations — SubscriptionEvent calls adapter entity getters directly (ArchUnit 1.4.2) | ⬜ Open |

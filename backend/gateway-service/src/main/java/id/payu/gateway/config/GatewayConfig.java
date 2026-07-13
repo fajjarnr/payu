@@ -336,6 +336,9 @@ public interface GatewayConfig {
         @WithName("per-ip")
         Optional<TokenBucketConfig> perIp();
 
+        @WithName("global")
+        Optional<TokenBucketConfig> globalRule();
+
         Map<String, TokenBucketConfig> endpoints();
     }
 
