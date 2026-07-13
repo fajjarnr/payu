@@ -3,30 +3,10 @@ import { render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import messages from '../../../messages/id.json';
 
 // Mock locale messages
 const locale = 'id';
-const messages = {
-  dashboard: {
-    financialHealthScore: 'Skor Kesehatan Finansial',
-    financialHealthExcellent: 'Sangat Baik',
-    financialHealthGood: 'Baik',
-    financialHealthFair: 'Cukup',
-    financialHealthPoor: 'Kurang',
-    financialHealthVeryPoor: 'Sangat Kurang',
-    spendingInsights: 'Wawasan Pengeluaran',
-    spendingByCategory: 'Pengeluaran per Kategori',
-    budgetTracking: 'Pelacakan Anggaran',
-    budgetRemaining: 'Sisa',
-    budgetUsed: 'Terpakai',
-    budgetOver: 'Melebihi',
-    quickActionsTitle: 'Aksi Cepat',
-    quickActionsDragHint: 'Drag untuk mengatur ulang',
-    viewAllAnalytics: 'Lihat Semua Analitik',
-    manageBudgets: 'Kelola Anggaran',
-  },
-};
-
 // Mock hooks at module level
 vi.mock('@/hooks/useUserSegment', () => ({
   useUserSegment: () => ({

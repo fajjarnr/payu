@@ -74,7 +74,7 @@ spec:
       containers:
         - name: ratelimit
           image: envoyproxy/ratelimit:e059638d
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: grpc
               containerPort: 8081

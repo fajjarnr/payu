@@ -1,6 +1,6 @@
 -- PayU Account Service - Seed Test Data
 -- This migration creates test users and accounts for development/testing
--- Run this manually after all V* migrations are complete
+-- Run this manually in disposable development/test environments only.
 
 -- Clean up existing test data to avoid conflicts
 DELETE FROM profiles WHERE id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));

@@ -166,7 +166,7 @@ spec:
       initContainers:
         - name: replica-setup
           image: registry.redhat.io/rhel9/postgresql-16:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["/bin/bash", "/scripts/replica-setup.sh"]
           env:
             - name: HOSTNAME
@@ -189,7 +189,7 @@ spec:
       containers:
         - name: postgresql
           image: registry.redhat.io/rhel9/postgresql-16:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: POSTGRESQL_USER
               value: payu

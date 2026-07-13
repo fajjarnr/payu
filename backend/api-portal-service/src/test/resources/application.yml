@@ -1,40 +1,11 @@
-# Test Configuration for API Portal Service
 quarkus:
-  # Use H2 in-memory database for unit tests (no Docker required)
-  datasource:
-    db-kind: h2
-    jdbc:
-      # PostgreSQL compatibility mode prevents test/production divergence
-      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
-    username: sa
-    password:
-  hibernate-orm:
-    database:
-      generation: drop-and-create
-      dialect: org.hibernate.dialect.H2Dialect
-  flyway:
-    migrate-at-start: false
-  kafka:
-    devservices:
-      enabled: false
-  opentelemetry:
+  oidc:
+    auth-server-url: http://localhost:8180/realms/payu
+  devservices:
     enabled: false
-  # Disable auth for tests
-  security:
-    auth:
-      enabled-in-dev-mode: false
-  # Test Configuration
-  test:
-    continuous-testing: disabled
-
-# Portal config for tests - uses Java Duration format for TTL
-portal:
-  cache:
-    ttl: PT5M
-
-# Sandbox config - latency disabled for faster tests
-sandbox:
-  latency:
-    enabled: false
-    min: 0
-    max: 0
+  otel:
+    sdk:
+      disabled: true
+    exporter:
+      otlp:
+        endpoint: http://localhost:4317

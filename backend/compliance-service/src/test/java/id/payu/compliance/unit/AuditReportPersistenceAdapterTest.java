@@ -3,6 +3,7 @@ package id.payu.compliance.unit;
 import id.payu.compliance.adapter.persistence.AuditReportPersistenceAdapter;
 import id.payu.compliance.adapter.persistence.repository.AuditReportRepository;
 import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
+import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
@@ -39,7 +40,7 @@ class AuditReportPersistenceAdapterTest {
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_001";
 
-        AuditReportEntity report = AuditReportEntity.builder()
+        AuditReport report = AuditReport.builder()
                 .transactionId(transactionId)
                 .merchantId(merchantId)
                 .standard(ComplianceStandard.PCI_DSS)
@@ -48,13 +49,21 @@ class AuditReportPersistenceAdapterTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(repository.save(any(AuditReportEntity.class))).thenReturn(report);
+        AuditReportEntity persisted = AuditReportEntity.builder()
+                .transactionId(transactionId)
+                .merchantId(merchantId)
+                .standard(ComplianceStandard.PCI_DSS)
+                .checks(List.of())
+                .overallStatus(ComplianceCheckResult.PASS)
+                .createdAt(report.getCreatedAt())
+                .build();
+        when(repository.save(any(AuditReportEntity.class))).thenReturn(persisted);
 
-        AuditReportEntity result = adapter.save(report);
+        AuditReport result = adapter.save(report);
 
         assertNotNull(result);
         assertEquals(transactionId, result.getTransactionId());
-        verify(repository, times(1)).save(report);
+        verify(repository, times(1)).save(any(AuditReportEntity.class));
     }
 
     @Test
@@ -72,7 +81,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findById(id)).thenReturn(Optional.of(report));
 
-        Optional<AuditReportEntity> result = adapter.findById(id);
+        Optional<AuditReport> result = adapter.findById(id);
 
         assertTrue(result.isPresent());
         assertEquals(id, result.get().getId());
@@ -85,7 +94,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        Optional<AuditReportEntity> result = adapter.findById(id);
+        Optional<AuditReport> result = adapter.findById(id);
 
         assertFalse(result.isPresent());
         verify(repository, times(1)).findById(id);
@@ -108,7 +117,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findByTransactionId(transactionId)).thenReturn(reports);
 
-        List<AuditReportEntity> result = adapter.findByTransactionId(transactionId);
+        List<AuditReport> result = adapter.findByTransactionId(transactionId);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -133,7 +142,7 @@ class AuditReportPersistenceAdapterTest {
 
         when(repository.findByMerchantId(merchantId)).thenReturn(reports);
 
-        List<AuditReportEntity> result = adapter.findByMerchantId(merchantId);
+        List<AuditReport> result = adapter.findByMerchantId(merchantId);
 
         assertNotNull(result);
         assertEquals(1, result.size());

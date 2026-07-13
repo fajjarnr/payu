@@ -8,6 +8,7 @@ resources:
   - current/cnpg-cluster.yaml
   - current/cnpg-databases.yaml
   - current/cnpg-network-policy.yaml
+  - current/outbox-bootstrap-job.yaml
   - current/shedlock-bootstrap-job.yaml
   - current/datagrid.yaml
   - kafka-amqstreams.yaml

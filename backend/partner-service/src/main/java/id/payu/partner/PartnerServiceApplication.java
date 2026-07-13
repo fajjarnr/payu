@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Main Spring Boot application class for PartnerEntity Service.
@@ -26,7 +25,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EntityScan(basePackages = {"id.payu.partner.domain", "id.payu.partner.adapter.persistence.entity"})
 @SpringBootApplication
 @EnableAsync
-@EnableScheduling
 // ITER-53: ShedLock distributed locking for @Scheduled methods.
 @EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")
 public class PartnerServiceApplication {

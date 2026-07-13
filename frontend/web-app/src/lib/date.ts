@@ -16,7 +16,7 @@ export function formatDate(
     locale?: string;
   } = {}
 ): string {
-  const { format = 'short', locale } = options;
+  const { format = 'short', locale = 'id-ID' } = options;
 
   if (!date) {
     return '-';
@@ -77,7 +77,7 @@ export function formatDateTime(
     format?: 'short' | 'long';
   } = {}
 ): string {
-  const { showSeconds = false, locale, format = 'short' } = options;
+  const { showSeconds = false, locale = 'id-ID', format = 'short' } = options;
 
   if (!date) {
     return '-';

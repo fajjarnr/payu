@@ -39,6 +39,7 @@ spec:
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.82
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http

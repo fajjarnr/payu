@@ -41,6 +41,7 @@
         <shedlock.version>5.16.0</shedlock.version>
         <spring-cloud-contract.version>4.3.4</spring-cloud-contract.version>
         <springdoc.version>3.0.3</springdoc.version>
+        <archunit.version>1.4.2</archunit.version>
         <swagger-annotations.version>2.2.25</swagger-annotations.version>
         <lombok.version>1.18.42</lombok.version>
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>

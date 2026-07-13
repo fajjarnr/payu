@@ -46,13 +46,6 @@
             <version>${spring-grpc.version}</version>
         </dependency>
 
-        <!-- gRPC Netty Shaded -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
-            <version>${grpc.version}</version>
-        </dependency>
-
         <!-- gRPC Servlet Jakarta (required by spring-grpc auto-configuration) -->
         <dependency>
             <groupId>io.grpc</groupId>

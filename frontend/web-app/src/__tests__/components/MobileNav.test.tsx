@@ -5,28 +5,17 @@ import { vi } from 'vitest';
 import MobileNav from '@/components/MobileNav';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Mock next/navigation with a mutable pathname
+// Mock the navigation adapter used by the component with a mutable pathname.
 let mockPathname = '/';
-vi.mock('next/navigation', () => ({
+vi.mock('@/lib/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
   usePathname: () => mockPathname,
 }));
 
 // Mock auth store with mutable state
 let mockIsAuthenticated = true;
 vi.mock('@/stores', () => ({
-  useAuthStore: vi.fn((selector) => {
-    const state = {
-      user: { id: 'test-user', fullName: 'Test User' },
-      accountId: 'test-account',
-      isAuthenticated: mockIsAuthenticated,
-      setAuth: vi.fn(),
-      setUser: vi.fn(),
-      setAuthenticated: vi.fn(),
-      logout: vi.fn(),
-      clearAuth: vi.fn(),
-    };
-    return selector ? selector(state) : state;
-  }),
+  useIsAuthenticated: () => mockIsAuthenticated,
 }));
 
 expect.extend(toHaveNoViolations);
@@ -49,9 +38,9 @@ describe('MobileNav', () => {
   it('should render mobile navigation with all items', () => {
     renderWithIntl(<MobileNav />);
 
-    expect(screen.getByText('Beranda')).toBeInTheDocument();
+    expect(screen.getByText('Dasbor')).toBeInTheDocument();
     expect(screen.getByText('Transfer')).toBeInTheDocument();
-    expect(screen.getByText('Kantong')).toBeInTheDocument();
+    expect(screen.getByText('Akun')).toBeInTheDocument();
     expect(screen.getByText('Tagihan')).toBeInTheDocument();
   });
 
@@ -80,7 +69,7 @@ describe('MobileNav', () => {
     mockIsAuthenticated = true;
     renderWithIntl(<MobileNav />);
 
-    expect(screen.getByText('Beranda')).toBeInTheDocument();
+    expect(screen.getByText('Dasbor')).toBeInTheDocument();
   });
 
   it('should highlight active navigation item', () => {
@@ -94,13 +83,13 @@ describe('MobileNav', () => {
   it('should render navigation items as links', () => {
     renderWithIntl(<MobileNav />);
 
-    const homeLink = screen.getByText('Beranda').closest('a');
-    expect(homeLink).toHaveAttribute('href', '/');
+    const homeLink = screen.getByText('Dasbor').closest('a');
+    expect(homeLink).toHaveAttribute('href', '/dashboard');
 
     const transferLink = screen.getByText('Transfer').closest('a');
     expect(transferLink).toHaveAttribute('href', '/transfer');
 
-    const pocketsLink = screen.getByText('Kantong').closest('a');
+    const pocketsLink = screen.getByText('Akun').closest('a');
     expect(pocketsLink).toHaveAttribute('href', '/pockets');
 
     const billsLink = screen.getByText('Tagihan').closest('a');
@@ -112,8 +101,8 @@ describe('MobileNav', () => {
 
     const navContainer = container.querySelector('.fixed.bottom-0.left-0.right-0');
     expect(navContainer).toHaveClass(
-      'bg-card/80',
-      'backdrop-blur-xl',
+      'bg-card/70',
+      'backdrop-blur-2xl',
       'border-t',
       'border-border',
       'z-50'
@@ -178,7 +167,7 @@ describe('MobileNav', () => {
     mockPathname = '/pockets';
     const { container } = renderWithIntl(<MobileNav />);
 
-    const activeIconContainer = container.querySelector('.bg-accent.shadow-sm');
+    const activeIconContainer = container.querySelector('.bg-primary\/10');
     expect(activeIconContainer).toBeInTheDocument();
   });
 
@@ -186,27 +175,26 @@ describe('MobileNav', () => {
     mockPathname = '/bills';
     const { container } = renderWithIntl(<MobileNav />);
 
-    const activeIcon = container.querySelector('.scale-110');
+    const activeIcon = container.querySelector('.scale-105');
     expect(activeIcon).toBeInTheDocument();
   });
 
   it('should use increased stroke width for active icon', () => {
-    mockPathname = '/';
+    mockPathname = '/dashboard';
     const { container } = renderWithIntl(<MobileNav />);
 
     // Check that the active icon has the stroke-[2.5px] class by checking the rendered HTML
-    const activeIconContainer = container.querySelector('.bg-accent');
+    const activeIconContainer = container.querySelector('.bg-primary\/10');
     expect(activeIconContainer).toBeInTheDocument();
     // The active icon should have a scale-110 class as well
-    const activeIcon = activeIconContainer?.querySelector('.scale-110');
+    const activeIcon = container.querySelector('.scale-105');
     expect(activeIcon).toBeInTheDocument();
   });
 
   it('should have safe area padding for mobile devices', () => {
-    const { container } = renderWithIntl(<MobileNav />);
+    renderWithIntl(<MobileNav />);
 
-    const navContainer = container.querySelector('.pb-safe');
-    expect(navContainer).toBeInTheDocument();
+    expect(screen.getByTestId('mobile-nav')).toHaveClass('pb-[env(safe-area-inset-bottom,1.5rem)]');
   });
 
 

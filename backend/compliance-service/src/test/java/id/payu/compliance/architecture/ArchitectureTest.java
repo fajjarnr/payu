@@ -42,6 +42,7 @@ class ArchitectureTest {
                         "java..",
                         "org.springframework..",
                         "org.slf4j..",
+                        "io.github.resilience4j..",
                         "lombok..",
                         "jakarta.."
                 )
@@ -62,7 +63,10 @@ class ArchitectureTest {
                         "id.payu.compliance.adapter..",
                         "id.payu.compliance.dto..",
                         "id.payu.compliance.exception..",
+                        "id.payu.api.common..",
+                        "id.payu.security..",
                         "java..",
+                        "javax.sql..",
                         "org.springframework..",
                         "org.slf4j..",
                         "lombok..",

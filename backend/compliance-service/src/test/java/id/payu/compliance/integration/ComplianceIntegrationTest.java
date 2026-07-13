@@ -2,11 +2,11 @@ package id.payu.compliance.integration;
 
 import id.payu.compliance.application.service.ComplianceAuditService;
 import id.payu.compliance.application.service.DataAccessAuditService;
-import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
+import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
-import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.model.DataOperationType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,7 +85,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -114,7 +114,7 @@ class ComplianceIntegrationTest {
             createComplianceCheck("AML_001", "Sanctions List Screening", ComplianceCheckResult.PASS)
         );
 
-        AuditReportEntity createdReport = complianceAuditService.createAuditReport(
+        AuditReport createdReport = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -122,7 +122,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity retrievedReport = complianceAuditService.getAuditReport(createdReport.getId());
+        AuditReport retrievedReport = complianceAuditService.getAuditReport(createdReport.getId());
 
         // Then
         assertThat(retrievedReport).isNotNull();
@@ -153,7 +153,7 @@ class ComplianceIntegrationTest {
         complianceAuditService.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, pciChecks);
 
         // When
-        List<AuditReportEntity> reports = complianceAuditService.getReportsByTransaction(transactionId);
+        List<AuditReport> reports = complianceAuditService.getReportsByTransaction(transactionId);
 
         // Then
         assertThat(reports).hasSize(2);
@@ -180,7 +180,7 @@ class ComplianceIntegrationTest {
         complianceAuditService.createAuditReport(UUID.randomUUID(), merchantId, ComplianceStandard.CFT, checks);
 
         // When
-        List<AuditReportEntity> reports = complianceAuditService.getReportsByMerchant(merchantId);
+        List<AuditReport> reports = complianceAuditService.getReportsByMerchant(merchantId);
 
         // Then
         assertThat(reports).hasSize(3);
@@ -205,7 +205,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -235,7 +235,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -265,7 +265,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -296,7 +296,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.CFT,
@@ -328,7 +328,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.PCI_DSS,
@@ -355,7 +355,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.OJK,
@@ -383,7 +383,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.GDPR,
@@ -403,7 +403,7 @@ class ComplianceIntegrationTest {
         String userId = "USER_001";
         String accessedBy = "ADMIN_USER";
         String serviceName = "compliance-service";
-        String resourceType = "AuditReportEntity";
+        String resourceType = "AuditReport";
         String resourceId = UUID.randomUUID().toString();
 
         // When
@@ -433,7 +433,7 @@ class ComplianceIntegrationTest {
         // Given
         String userId = "USER_002";
         String accessedBy = "UNAUTHORIZED_USER";
-        String resourceType = "AuditReportEntity";
+        String resourceType = "AuditReport";
         String resourceId = UUID.randomUUID().toString();
 
         // When - no exception should be thrown
@@ -453,12 +453,12 @@ class ComplianceIntegrationTest {
 
         // Then - verify failed access attempts can be retrieved
         LocalDateTime since = LocalDateTime.now().minusMinutes(1);
-        List<DataAccessAuditEntity> failedAttempts = dataAccessAuditService.getFailedAccessAttempts(since);
+        List<DataAccessAudit> failedAttempts = dataAccessAuditService.getFailedAccessAttempts(since);
 
         assertThat(failedAttempts).isNotEmpty();
         assertThat(failedAttempts)
             .anySatisfy(audit -> {
-                assertThat(audit.getSuccess()).isFalse();
+                assertThat(audit.isSuccess()).isFalse();
                 assertThat(audit.getErrorMessage()).isEqualTo("Access denied: insufficient permissions");
                 assertThat(audit.getOperationType()).isEqualTo(DataOperationType.READ);
             });
@@ -518,7 +518,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,
@@ -546,7 +546,7 @@ class ComplianceIntegrationTest {
         );
 
         // When
-        AuditReportEntity amlReport = complianceAuditService.createAuditReport(
+        AuditReport amlReport = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
             ComplianceStandard.AML,

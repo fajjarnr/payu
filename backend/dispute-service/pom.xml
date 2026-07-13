@@ -151,7 +151,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-flyway</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -168,7 +167,7 @@
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
-            <version>1.2.1</version>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

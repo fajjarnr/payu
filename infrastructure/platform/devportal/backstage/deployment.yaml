@@ -42,7 +42,7 @@ spec:
       containers:
         - name: developer-hub
           image: registry.redhat.io/rhdh/rhdh-hub-rhel9:1.3
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 7007
               name: http

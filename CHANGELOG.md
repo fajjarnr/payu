@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.4] - 2026-07-13
+
+### Added
+
+- Added local definitions for lending-rules, loan-origination-process, biller-simulator, and va-simulator so the Podman topology covers the OpenShift workloads.
+- Added an optional `api-management` profile running the Red Hat 3scale APIcast 2.16 image with a static local upstream configuration.
+- Added infrastructure regression tests covering workload presence, canonical OpenShift DNS, Red Hat image digests, profiles, ports, pull policies, and application-container hardening.
+
+### Changed
+
+- Aligned local service identities with OpenShift: `payu-database-rw`, `payu-cache-resp`, `payu-kafka-kafka-bootstrap`, `artemis`, and `payu-keycloak-service`.
+- Replaced community cache, Kafka, broker, and identity images with digest-pinned Red Hat Data Grid 8.6, AMQ Streams Kafka 4.1, AMQ Broker 7.14, and RHBK 26.6 images.
+- Set external infrastructure images to `pull_policy: always`; locally built application images use the required Compose build policy and run non-root with a read-only filesystem, dropped capabilities, resource limits, and isolated `/tmp`.
+- Moved optional observability, API management, secrets, UI, and DevSecOps tools behind explicit Compose profiles.
+
+### Fixed
+
+- Fixed PostgreSQL cold-start ownership grants and added the missing loan-origination, biller, and VA simulator databases.
+- Fixed Data Grid RESP authentication/health configuration, AMQ Broker health probing, AMQ Streams standalone KRaft bootstrap, and APIcast static configuration loading.
+- Replaced deprecated Keycloak admin and hostname-v1 variables and disabled Liquibase analytics noise in the RHBK local runtime.
+- Corrected compliance-service and lending-service internal port mappings and disabled absent local OpenTelemetry exporters by default.
+- Fixed partner-service cold-start Flyway schema validation (DEV-106): added idempotent `ALTER TABLE ADD COLUMN IF NOT EXISTS` for `partner_code`, `status`, and `webhook_url` columns originally created by Hibernate `ddl-auto=update`, plus a unique index on `partner_code`.
+- Eliminated partner-service test warnings (DEV-107): removed explicit H2 dialect declaration (auto-detected by Hibernate 7), disabled scheduling in test profile via `@Profile("!test")`, and added `-XX:+EnableDynamicAgentLoading` to Maven Surefire `argLine` to suppress Mockito dynamic agent loading warnings on JDK 25.
+
+### Verification
+
+- Verified valid Compose rendering and 8/8 infrastructure regression tests.
+- Verified PostgreSQL, Data Grid, AMQ Streams, AMQ Broker, RHBK, APIcast, and RustFS healthy together with no warning/error matches in the final runtime log window.
+- Verified authenticated Data Grid RESP `PONG`, Kafka broker API discovery, required database creation, and RHBK `payu` realm discovery.
+- Verified partner-service: 233/233 tests passing, zero test warnings, BUILD SUCCESS.
+
 ## [1.9.3] - 2026-07-08
 
 ### Fixed

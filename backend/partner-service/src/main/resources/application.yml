@@ -18,9 +18,12 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 13
+    validate-on-migrate: true
+    locations: classpath:db/migration
   # NOTE: spring.jackson.serialization.write-dates-as-timestamps removed for SB 4.1.0 Jackson 3 compatibility.
   # Jackson 3 default is `false` (ISO-8601 strings), matching previous behavior. Kebab-case binding to
   # tools.jackson.databind.SerializationFeature enum fails in SB 4.1.0 (would need SCREAMING_SNAKE_CASE).
@@ -45,8 +48,10 @@ spring:
 
 springdoc:
   api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
     path: /v3/api-docs
   swagger-ui:
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:false}
     path: /swagger-ui.html
     operations-sorter: alpha
     tags-sorter: alpha

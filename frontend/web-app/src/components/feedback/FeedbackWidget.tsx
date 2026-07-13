@@ -227,11 +227,13 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                   </Label>
                   <Input
                     id="feedback-subject"
+                    aria-label="Subjek"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Masalah atau saran singkat..."
                     className="h-14 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all px-5"
                     required
+                    maxLength={100}
                   />
                 </div>
 
@@ -241,12 +243,17 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                   </Label>
                   <Textarea
                     id="feedback-message"
+                    aria-label="Pesan"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Ceritakan detail lebih lanjut..."
                     className="rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all p-5 min-h-[120px]"
                     required
+                    maxLength={1000}
                   />
+                  <p className="text-right text-xs text-muted-foreground" aria-live="polite">
+                    {message.length} / 1000
+                  </p>
                 </div>
 
                 <div className="flex items-center space-x-3 p-4 bg-muted/20 rounded-xl border border-border/5">
@@ -268,6 +275,10 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                     </div>
                   )}
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Informasi perangkat dan log error disertakan untuk membantu diagnosis.
+                </p>
 
                 <Button
                   type="submit"

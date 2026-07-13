@@ -62,14 +62,13 @@ public class OutboxAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(KafkaTemplate.class)
+    @ConditionalOnProperty(prefix = "payu.outbox.publisher", name = "enabled", havingValue = "true", matchIfMissing = true)
     public OutboxPublisher outboxPublisher(OutboxRepository outboxRepository,
                                            KafkaTemplate<String, String> kafkaTemplate,
                                            MeterRegistry meterRegistry,
                                            PlatformTransactionManager transactionManager) {
         log.info("Initializing OutboxPublisher with auto-configuration");
-        OutboxPublisher publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry, transactionManager);
-        publisher.init();
-        return publisher;
+        return new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry, transactionManager);
     }
 
     /**

@@ -22,6 +22,8 @@ class LogbackPiiMaskingIntegrationTest {
     private static final String MASKING_LAYOUT_FQN = "id.payu.security.masking.LogbackMaskingFilter";
     private static final String LAYOUT_WRAPPING_ENCODER_FQN =
         "ch.qos.logback.core.encoder.LayoutWrappingEncoder";
+    private static final String JSON_MASKING_DECORATOR_FQN =
+        "net.logstash.logback.mask.MaskingJsonGeneratorDecorator";
 
     private String loadLogbackBaseXml() throws Exception {
         try (InputStream in = getClass().getClassLoader()
@@ -38,8 +40,10 @@ class LogbackPiiMaskingIntegrationTest {
         String xml = loadLogbackBaseXml();
         assertThat(extractAppenderBlock(xml, "JSON_CONSOLE"))
             .as("JSON_CONSOLE appender block must exist in logback-payu-base.xml")
-            .contains(LAYOUT_WRAPPING_ENCODER_FQN)
-            .contains(MASKING_LAYOUT_FQN);
+            .contains(JSON_MASKING_DECORATOR_FQN)
+            .contains("<jsonGeneratorDecorator")
+            .doesNotContain("<decorator")
+            .contains("<valueMask>");
     }
 
     @Test
@@ -49,6 +53,22 @@ class LogbackPiiMaskingIntegrationTest {
             .as("TEXT_CONSOLE appender block must exist in logback-payu-base.xml")
             .contains(LAYOUT_WRAPPING_ENCODER_FQN)
             .contains(MASKING_LAYOUT_FQN);
+    }
+
+    @Test
+    void appendersShouldBeScopedToProfilesThatReferenceThem() throws Exception {
+        String xml = loadLogbackBaseXml();
+
+        assertThat(extractProfileBlock(xml, "!staging &amp; !prod &amp; !container"))
+            .contains("<appender name=\"TEXT_CONSOLE\"")
+            .contains("<appender-ref ref=\"TEXT_CONSOLE\"/>")
+            .doesNotContain("JSON_CONSOLE");
+
+        assertThat(extractProfileBlock(xml, "staging | prod | container"))
+            .contains("<appender name=\"JSON_CONSOLE\"")
+            .contains("<appender name=\"ASYNC_JSON\"")
+            .contains("<appender-ref ref=\"ASYNC_JSON\"/>")
+            .doesNotContain("TEXT_CONSOLE");
     }
 
     /**
@@ -64,6 +84,19 @@ class LogbackPiiMaskingIntegrationTest {
         int end = xml.indexOf("</appender>", start);
         assertThat(end)
             .as("Appender <%s> must have closing tag", appenderName)
+            .isGreaterThan(start);
+        return xml.substring(start, end);
+    }
+
+    private String extractProfileBlock(String xml, String profileExpression) {
+        String openTag = "<springProfile name=\"" + profileExpression + "\">";
+        int start = xml.indexOf(openTag);
+        assertThat(start)
+            .as("Spring profile <%s> must exist", profileExpression)
+            .isGreaterThan(-1);
+        int end = xml.indexOf("</springProfile>", start);
+        assertThat(end)
+            .as("Spring profile <%s> must have closing tag", profileExpression)
             .isGreaterThan(start);
         return xml.substring(start, end);
     }

@@ -1,6 +1,7 @@
 package id.payu.gateway.application.service;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.domain.State;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;

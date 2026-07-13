@@ -7,7 +7,7 @@ import id.payu.grpc.starter.interceptor.GrpcTracingInterceptor;
 import io.grpc.ClientInterceptor;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

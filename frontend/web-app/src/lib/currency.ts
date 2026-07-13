@@ -21,7 +21,7 @@ export function formatCurrency(
   const {
     withDecimals = false,
     symbol = 'Rp',
-    locale,
+    locale = 'id-ID',
     compact = false,
   } = options;
 
@@ -31,7 +31,7 @@ export function formatCurrency(
   }
 
   // Convert to number
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const numAmount = typeof amount === 'string' ? Number(amount.replace(/,/g, '')) : amount;
 
   // Handle NaN
   if (isNaN(numAmount)) {
@@ -70,7 +70,7 @@ export function formatCurrencyWithoutSymbol(
   amount: number | string | null | undefined,
   options: { withDecimals?: boolean; locale?: string } = {}
 ): string {
-  const { withDecimals = false, locale } = options;
+  const { withDecimals = false, locale = 'id-ID' } = options;
 
   if (amount === null || amount === undefined) {
     return '0';
@@ -285,7 +285,8 @@ export function isValidCurrency(value: string | number): boolean {
 export function roundCurrency(amount: number, decimals: number = 0): number {
   // BUG-FE-047: Math.round(amount * multiplier) / multiplier has floating point errors
   // e.g., Math.round(1.005 * 100) / 100 = 1.00 (not 1.01)
-  return Number(amount.toFixed(decimals));
+  const multiplier = 10 ** decimals;
+  return Math.round((amount + Number.EPSILON) * multiplier) / multiplier;
 }
 
 /**

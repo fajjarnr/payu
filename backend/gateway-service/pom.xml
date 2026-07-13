@@ -21,6 +21,7 @@
 
     <properties>
         <zxing.version>3.5.3</zxing.version>
+        <archunit.version>1.4.2</archunit.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -164,7 +165,7 @@
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
-            <version>1.2.1</version>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
 

@@ -8,14 +8,15 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
+    div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useRouter
 const mockPush = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock('@/lib/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
   useRouter: () => ({
     push: mockPush,
   }),

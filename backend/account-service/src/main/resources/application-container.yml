@@ -27,7 +27,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
         connection:
           provider_disables_autocommit: true
@@ -35,6 +34,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    baseline-version: 0
     validate-on-migrate: true
     locations: classpath:db/migration
 

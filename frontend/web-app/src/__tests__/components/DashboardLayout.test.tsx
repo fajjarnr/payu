@@ -5,8 +5,8 @@ import { vi } from 'vitest';
 import DashboardLayout from '@/components/DashboardLayout';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
+vi.mock('@/lib/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
   usePathname: () => '/',
   useRouter: () => ({
     push: vi.fn(),
@@ -59,16 +59,16 @@ describe('DashboardLayout', () => {
     const desktopSidebar = screen.getByLabelText('Sidebar Navigasi Desktop');
     const { getByText } = within(desktopSidebar);
 
-    expect(getByText('Menu Utama')).toBeInTheDocument();
+    expect(getByText('Utama')).toBeInTheDocument();
 
-    expect(getByText('Beranda')).toBeInTheDocument();
-    expect(getByText('Kantong')).toBeInTheDocument();
+    expect(getByText('Dasbor')).toBeInTheDocument();
+    expect(getByText('Akun')).toBeInTheDocument();
     expect(getByText('Transfer')).toBeInTheDocument();
-    expect(getByText('Pembayaran QRIS')).toBeInTheDocument();
-    expect(getByText('Tagihan & Top-up')).toBeInTheDocument();
-    expect(getByText('Kartu Virtual')).toBeInTheDocument();
+    expect(getByText('Bayar QRIS')).toBeInTheDocument();
+    expect(getByText('Tagihan')).toBeInTheDocument();
+    expect(getByText('Kartu')).toBeInTheDocument();
     expect(getByText('Investasi')).toBeInTheDocument();
-    expect(getByText('Analitik Keuangan')).toBeInTheDocument();
+    expect(getByText('Analitik')).toBeInTheDocument();
   });
 
   it('should render desktop sidebar with other menu items', () => {
@@ -79,21 +79,21 @@ describe('DashboardLayout', () => {
     const { getByText } = within(desktopSidebar);
 
     expect(getByText('Lainnya')).toBeInTheDocument();
-    expect(getByText('Keamanan & MFA')).toBeInTheDocument();
-    expect(getByText('Pengaturan Akun')).toBeInTheDocument();
-    expect(getByText('Bantuan & Support')).toBeInTheDocument();
+    expect(getByText('Keamanan')).toBeInTheDocument();
+    expect(getByText('Pengaturan')).toBeInTheDocument();
+    expect(getByText('Bantuan')).toBeInTheDocument();
   });
 
   it('should render header with search input', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    expect(screen.getByPlaceholderText('Cari apapun...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Pencarian cerdas...')).toBeInTheDocument();
   });
 
   it('should render notification button with badge', () => {
     const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const notificationBadge = container.querySelector('.bg-destructive.rounded-full');
+    const notificationBadge = container.querySelector('.bg-primary.rounded-full');
     expect(notificationBadge).toBeInTheDocument();
   });
 
@@ -108,44 +108,37 @@ describe('DashboardLayout', () => {
   it('should open mobile sidebar when menu button is clicked', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const menuButton = screen.getByLabelText('Buka menu navigasi');
+    const menuButton = screen.getByTestId('mobile-menu-trigger');
     fireEvent.click(menuButton);
 
-    // Mobile sidebar should be visible
-    const mobileSidebar = screen.getByLabelText('Sidebar Navigasi Mobile');
-    expect(mobileSidebar).toHaveClass('translate-x-0');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('should close mobile sidebar when close button is clicked', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     // Open mobile sidebar
-    const menuButton = screen.getByLabelText('Buka menu navigasi');
+    const menuButton = screen.getByTestId('mobile-menu-trigger');
     fireEvent.click(menuButton);
 
-    // Close mobile sidebar
-    const closeButton = screen.getByLabelText('Tutup menu navigasi');
+    const closeButton = screen.getByRole('button', { name: 'Close' });
     fireEvent.click(closeButton);
 
-    const mobileSidebar = screen.getByLabelText('Sidebar Navigasi Mobile');
-    expect(mobileSidebar).toHaveClass('-translate-x-full');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should close mobile sidebar when overlay is clicked', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     // Open mobile sidebar
-    const menuButton = screen.getByLabelText('Buka menu navigasi');
+    const menuButton = screen.getByTestId('mobile-menu-trigger');
     fireEvent.click(menuButton);
 
-    // Click overlay
-    const overlay = document.querySelector('.bg-foreground\\/20.z-50.lg\\:hidden');
-    if (overlay) {
-      fireEvent.click(overlay);
-    }
+    const overlay = document.querySelector('.fixed.inset-0.z-50.bg-black\/80');
+    expect(overlay).toBeInTheDocument();
+    fireEvent.click(overlay!);
 
-    const mobileSidebar = screen.getByLabelText('Sidebar Navigasi Mobile');
-    expect(mobileSidebar).toHaveClass('-translate-x-full');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should call onLogout when logout button is clicked', () => {
@@ -157,7 +150,7 @@ describe('DashboardLayout', () => {
     fireEvent.click(profileButton);
 
     // Click logout
-    const logoutButton = screen.getByText('Keluar Sesi');
+    const logoutButton = screen.getByTestId('logout-button');
     fireEvent.click(logoutButton);
 
     expect(onLogout).toHaveBeenCalled();
@@ -208,16 +201,16 @@ describe('DashboardLayout', () => {
   it('should render sidebar navigation links with correct hrefs', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const homeLinks = screen.getAllByText('Beranda');
-    expect(homeLinks[0].closest('a')).toHaveAttribute('href', '/');
+    const homeLinks = screen.getAllByText('Dasbor');
+    expect(homeLinks[0].closest('a')).toHaveAttribute('href', '/dashboard');
 
-    const pocketLinks = screen.getAllByText('Kantong');
+    const pocketLinks = screen.getAllByText('Akun');
     expect(pocketLinks[0].closest('a')).toHaveAttribute('href', '/pockets');
 
     const transferLinks = screen.getAllByText('Transfer');
     expect(transferLinks[0].closest('a')).toHaveAttribute('href', '/transfer');
 
-    const qrisLinks = screen.getAllByText('Pembayaran QRIS');
+    const qrisLinks = screen.getAllByText('Bayar QRIS');
     expect(qrisLinks[0].closest('a')).toHaveAttribute('href', '/qris');
   });
 
@@ -241,7 +234,7 @@ describe('DashboardLayout', () => {
   it('should render search input with placeholder', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const searchInput = screen.getByPlaceholderText('Cari apapun...');
+    const searchInput = screen.getByPlaceholderText('Pencarian cerdas...');
     expect(searchInput).toHaveAttribute('type', 'text');
   });
 
@@ -255,7 +248,7 @@ describe('DashboardLayout', () => {
   it('should render logo with PayU branding', () => {
     const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const logoElements = container.querySelectorAll('.text-2xl.font-bold.text-primary');
+    const logoElements = container.querySelectorAll('.font-bold.text-foreground');
     expect(logoElements.length).toBeGreaterThan(0);
   });
 
@@ -265,7 +258,7 @@ describe('DashboardLayout', () => {
     const profileButton = screen.getByLabelText('Menu profil pengguna');
     fireEvent.click(profileButton);
 
-    expect(screen.getByText('Akun')).toBeInTheDocument();
+    expect(screen.getByText('Authenticated User')).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
   });
 });

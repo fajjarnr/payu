@@ -1,8 +1,5 @@
 # Container Integration Test Profile
 spring:
-  main:
-    allow-bean-definition-overriding: true
-  
   datasource:
     url: ${DB_URL:jdbc:postgresql://payu-postgres:5432/payu_test_support}
     username: ${DB_USERNAME:payu_test}
@@ -23,7 +20,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
   
   flyway:
     enabled: true

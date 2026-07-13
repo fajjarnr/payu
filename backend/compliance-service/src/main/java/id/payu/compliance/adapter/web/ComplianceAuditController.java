@@ -1,7 +1,7 @@
 package id.payu.compliance.adapter.web;
 
 import id.payu.compliance.application.service.ComplianceAuditService;
-import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
+import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceStandard;
 import id.payu.compliance.dto.AuditReportRequest;
@@ -55,7 +55,7 @@ public class ComplianceAuditController extends BaseController {
     public ResponseEntity<id.payu.api.common.response.ApiResponse<AuditReportResponse>> createAuditReport(@Valid @RequestBody AuditReportRequest request) {
         log.info("Creating {} audit report for transaction: {}", request.standard(), request.transactionId());
 
-        AuditReportEntity report = complianceAuditService.createAuditReport(
+        AuditReport report = complianceAuditService.createAuditReport(
                 request.transactionId(),
                 request.merchantId(),
                 request.standard(),
@@ -83,7 +83,7 @@ public class ComplianceAuditController extends BaseController {
             @Parameter(description = "Audit report ID", required = true) @PathVariable UUID id) {
         log.info("Retrieving audit report: {}", id);
 
-        AuditReportEntity report = complianceAuditService.getAuditReport(id);
+        AuditReport report = complianceAuditService.getAuditReport(id);
 
         return ok(toResponse(report));
     }
@@ -106,7 +106,7 @@ public class ComplianceAuditController extends BaseController {
         log.info("Searching audit reports with filters: transactionId={}, merchantId={}, standard={}",
                 transactionId, merchantId, standard);
 
-        List<AuditReportEntity> reports;
+        List<AuditReport> reports;
 
         if (transactionId != null) {
             reports = complianceAuditService.getReportsByTransaction(transactionId);
@@ -127,7 +127,7 @@ public class ComplianceAuditController extends BaseController {
         return ok(response);
     }
 
-    private AuditReportResponse toResponse(AuditReportEntity report) {
+    private AuditReportResponse toResponse(AuditReport report) {
         return new AuditReportResponse(
                 report.getId(),
                 report.getTransactionId(),

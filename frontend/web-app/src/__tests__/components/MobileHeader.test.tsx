@@ -5,9 +5,9 @@ import { vi } from "vitest";
 import MobileHeader from "@/components/MobileHeader";
 import { renderWithIntl } from "@/__tests__/utils/test-utils";
 
-// Mock next/navigation
 const mockBack = vi.fn();
-vi.mock("next/navigation", () => ({
+vi.mock("@/lib/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
   useRouter: () => ({
     back: mockBack,
   }),

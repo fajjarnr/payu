@@ -20,65 +20,68 @@
     <property scope="context" name="ENVIRONMENT" value="${SPRING_PROFILES_ACTIVE:-dev}"/>
     <property scope="context" name="LOG_LEVEL" value="INFO"/>
 
-    <!-- Console Appender with JSON for production -->
-    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <!-- Include all standard fields -->
-            <includeContext>true</includeContext>
-            <includeMdc>true</includeMdc>
-            <includeStructuredArguments>true</includeStructuredArguments>
+    <!-- Keep appenders inside the profiles that reference them. Logback otherwise
+         initializes unused appenders and emits startup warnings. -->
+    <springProfile name="!staging &amp; !prod &amp; !container">
+        <appender name="TEXT_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="id.payu.security.masking.LogbackMaskingFilter">
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlation_id:-}] [%X{trace_id:-}] %logger{36} - %msg%n</pattern>
+                </layout>
+            </encoder>
+        </appender>
 
-            <!-- Custom fields for PayU standard -->
-            <customFields>{"log_format":"json"}</customFields>
-
-            <!-- Field names compatible with Loki -->
-            <fieldNames>
-                <timestamp>@timestamp</timestamp>
-                <message>message</message>
-                <logger>logger</logger>
-                <thread>thread</thread>
-                <level>level</level>
-            </fieldNames>
-        </encoder>
-    </appender>
-
-    <!-- Console Appender with plain text for development -->
-    <appender name="TEXT_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="id.payu.security.masking.LogbackMaskingFilter">
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlation_id:-}] [%X{trace_id:-}] %logger{36} - %msg%n</pattern>
-            </layout>
-        </encoder>
-    </appender>
-
-    <!-- Async Appender for production performance -->
-    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="JSON_CONSOLE"/>
-        <queueSize>512</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
-    </appender>
-
-    <!-- Profile-based configuration -->
-    <springProfile name="default,dev,test">
         <root level="${LOG_LEVEL}">
             <appender-ref ref="TEXT_CONSOLE"/>
         </root>
     </springProfile>
 
-    <springProfile name="staging,prod,container">
+    <springProfile name="staging | prod | container">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <includeStructuredArguments>true</includeStructuredArguments>
+                <customFields>{"log_format":"json"}</customFields>
+                <fieldNames>
+                    <timestamp>@timestamp</timestamp>
+                    <message>message</message>
+                    <logger>logger</logger>
+                    <thread>thread</thread>
+                    <level>level</level>
+                </fieldNames>
+                <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+                    <defaultMask>****</defaultMask>
+                    <paths>password,pin,nik,token,accessToken,refreshToken,apiKey,cardNumber,cvv</paths>
+                    <valueMask>
+                        <value>(\w{1})[\w.]+@([\w.]+)</value>
+                        <mask>$1***@$2</mask>
+                    </valueMask>
+                    <valueMask>
+                        <value>(\d{3})\d{10}(\d{3})</value>
+                        <mask>$1**********$2</mask>
+                    </valueMask>
+                    <valueMask>
+                        <value>(\d{4})\d{8}(\d{4})</value>
+                        <mask>$1********$2</mask>
+                    </valueMask>
+                    <valueMask>
+                        <value>(?i)("(?:password|pin|token|api[_-]?key)"\s*:\s*")[^"]+("?)</value>
+                        <mask>$1****$2</mask>
+                    </valueMask>
+                </jsonGeneratorDecorator>
+            </encoder>
+        </appender>
+
+        <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <neverBlock>true</neverBlock>
+        </appender>
+
         <root level="${LOG_LEVEL}">
             <appender-ref ref="ASYNC_JSON"/>
-        </root>
-    </springProfile>
-
-    <!--
-        Fallback: if no profile matches (e.g. custom profile), still log to console.
-        Without this, mismatched profiles cause silent log loss.
-    -->
-    <springProfile name="!default &amp; !dev &amp; !test &amp; !staging &amp; !prod &amp; !container">
-        <root level="${LOG_LEVEL}">
-            <appender-ref ref="TEXT_CONSOLE"/>
         </root>
     </springProfile>
 

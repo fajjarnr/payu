@@ -1,9 +1,6 @@
 # Container Integration Test Profile
 # Activated via: SPRING_PROFILES_ACTIVE=container
 spring:
-  main:
-    allow-bean-definition-overriding: true
-
   # Simple single datasource (override multi-datasource config)
   datasource:
     url: ${DB_URL:jdbc:postgresql://payu-postgres:5432/payu_test_compliance}
@@ -25,12 +22,12 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
 
   flyway:
     enabled: true
     baseline-on-migrate: true
+    baseline-version: 0
     validate-on-migrate: true
 
   kafka:
@@ -78,7 +75,7 @@ payu:
     encryption-enabled: true
     encryption:
       password: ${ENCRYPTION_KEY}
-    masking-enabled: false
+    masking-enabled: true
     audit-enabled: false
 
 server:

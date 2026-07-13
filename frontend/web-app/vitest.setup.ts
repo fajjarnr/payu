@@ -10,11 +10,56 @@ afterEach(() => {
   cleanup();
 });
 
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  disconnect: vi.fn(),
-  unobserve: vi.fn(),
-})) as unknown as typeof IntersectionObserver;
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = '';
+  readonly thresholds = [];
+  disconnect = vi.fn();
+  observe = vi.fn();
+  takeRecords = vi.fn(() => []);
+  unobserve = vi.fn();
+}
+
+class MockResizeObserver implements ResizeObserver {
+  disconnect = vi.fn();
+  observe = vi.fn();
+  unobserve = vi.fn();
+}
+
+global.IntersectionObserver = MockIntersectionObserver;
+global.ResizeObserver = MockResizeObserver;
+
+Object.defineProperty(window, 'matchMedia', {
+  configurable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+Object.defineProperty(HTMLMediaElement.prototype, 'play', {
+  configurable: true,
+  value: vi.fn().mockResolvedValue(undefined),
+});
+
+Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  configurable: true,
+  value: vi.fn(() => ({ drawImage: vi.fn() })),
+});
+
+Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {
+  configurable: true,
+  value: vi.fn(() => 'data:image/png;base64,test'),
+});
+
+const nativeGetComputedStyle = window.getComputedStyle.bind(window);
+window.getComputedStyle = (element: Element) => nativeGetComputedStyle(element);
 
 // Global mock for next/navigation (required by next-intl in jsdom environment)
 vi.mock('next/navigation', () => ({

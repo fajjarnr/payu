@@ -14,6 +14,9 @@ CREATE DATABASE payu_dukcapil;
 CREATE DATABASE payu_qris;
 CREATE DATABASE payu_investment;
 CREATE DATABASE payu_lending;
+CREATE DATABASE payu_loan_origination;
+CREATE DATABASE payu_biller;
+CREATE DATABASE payu_va_simulator;
 CREATE DATABASE payu_backoffice;
 CREATE DATABASE payu_partner;
 CREATE DATABASE payu_promotion;
@@ -63,6 +66,9 @@ GRANT ALL PRIVILEGES ON DATABASE payu_dukcapil TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_qris TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_investment TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_lending TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_loan_origination TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_biller TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_va_simulator TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_backoffice TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_partner TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_promotion TO payu;
@@ -78,8 +84,8 @@ GRANT ALL PRIVILEGES ON DATABASE payu_gateway TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_api_portal TO payu;
 
 -- =============================================================================
--- Flyway runs migrations as postgres user → tables owned by postgres.
--- Without these grants, app user 'payu' gets "permission denied" on ALL tables.
+-- Local Flyway runs as POSTGRES_USER (payu), so tables are owned by payu.
+-- Keep grants explicit for extensions or objects created by bootstrap scripts.
 -- =============================================================================
 
 -- Grant on all existing tables (idempotent — runs after Flyway migrations)
@@ -87,7 +93,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO payu;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO payu;
 GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO payu;
 
--- Auto-grant on future tables created by postgres or payu-postgres-ha
-ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON TABLES TO payu;
-ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO payu;
-ALTER DEFAULT PRIVILEGES FOR USER postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO payu;
+-- Auto-grant future objects created by the local database owner.
+ALTER DEFAULT PRIVILEGES FOR USER payu IN SCHEMA public GRANT ALL ON TABLES TO payu;
+ALTER DEFAULT PRIVILEGES FOR USER payu IN SCHEMA public GRANT ALL ON SEQUENCES TO payu;
+ALTER DEFAULT PRIVILEGES FOR USER payu IN SCHEMA public GRANT ALL ON FUNCTIONS TO payu;

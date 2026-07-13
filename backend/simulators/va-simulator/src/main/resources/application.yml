@@ -38,11 +38,11 @@ quarkus:
       "id.payu.simulator.va":
         level: DEBUG
   otel:
-    enabled: true
+    enabled: ${OTEL_ENABLED:false}
     exporter:
       otlp:
         traces:
-          endpoint: ${OTEL_ENDPOINT}
+          endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
 
 # VA Simulator Configuration
 va:

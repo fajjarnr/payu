@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS compliance_checks (
     status VARCHAR(50) NOT NULL,
     details TEXT,
     checked_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (audit_report_id) REFERENCES audit_reports(id) ON DELETE CASCADE
+    FOREIGN KEY (audit_report_id) REFERENCES audit_reports(id)
 );
 
 CREATE INDEX idx_compliance_checks_audit_report_id ON compliance_checks(audit_report_id);

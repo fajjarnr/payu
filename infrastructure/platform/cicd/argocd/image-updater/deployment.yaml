@@ -70,7 +70,7 @@ spec:
       containers:
         - name: argocd-image-updater
           image: quay.io/argoprojlabs/argocd-image-updater:v0.15.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           args:
             - run
           env:

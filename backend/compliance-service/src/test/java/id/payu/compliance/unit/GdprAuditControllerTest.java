@@ -2,7 +2,7 @@ package id.payu.compliance.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.compliance.adapter.web.GdprAuditController;
-import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.model.DataOperationType;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.dto.DataAccessAuditRequest;
@@ -64,7 +64,7 @@ class GdprAuditControllerTest {
                 .success(true)
                 .build();
 
-        DataAccessAuditEntity audit = DataAccessAuditEntity.builder()
+        DataAccessAudit audit = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -102,7 +102,7 @@ class GdprAuditControllerTest {
     @Test
     void shouldGetDataAccessAuditById() throws Exception {
         UUID auditId = UUID.randomUUID();
-        DataAccessAuditEntity audit = DataAccessAuditEntity.builder()
+        DataAccessAudit audit = DataAccessAudit.builder()
                 .id(auditId)
                 .userId("user123")
                 .accessedBy("admin")
@@ -132,7 +132,7 @@ class GdprAuditControllerTest {
         String userId = "user123";
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("admin")
@@ -141,7 +141,7 @@ class GdprAuditControllerTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
+        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
         when(dataAccessAuditUseCase.getUserDataAccessHistory(eq(userId), any(Pageable.class)))
                 .thenReturn(expectedPage);
 
@@ -160,7 +160,7 @@ class GdprAuditControllerTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy("admin")
@@ -189,7 +189,7 @@ class GdprAuditControllerTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy(accessedBy)
@@ -217,7 +217,7 @@ class GdprAuditControllerTest {
         DataOperationType operationType = DataOperationType.READ;
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -226,7 +226,7 @@ class GdprAuditControllerTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
+        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
         when(dataAccessAuditUseCase.getDataAccessByOperationType(eq(operationType), any(Pageable.class)))
                 .thenReturn(expectedPage);
 
@@ -245,7 +245,7 @@ class GdprAuditControllerTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -289,7 +289,7 @@ class GdprAuditControllerTest {
     void shouldGetFailedAccessAttempts() throws Exception {
         LocalDateTime since = LocalDateTime.now().minusDays(7);
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -324,7 +324,7 @@ class GdprAuditControllerTest {
 
         Pageable pageable = PageRequest.of(0, 20);
 
-        DataAccessAuditEntity audit1 = DataAccessAuditEntity.builder()
+        DataAccessAudit audit1 = DataAccessAudit.builder()
                 .id(UUID.randomUUID())
                 .userId("user123")
                 .accessedBy("admin")
@@ -333,7 +333,7 @@ class GdprAuditControllerTest {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        Page<DataAccessAuditEntity> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
+        Page<DataAccessAudit> expectedPage = new PageImpl<>(List.of(audit1), pageable, 1);
         when(dataAccessAuditUseCase.searchDataAccessAudit(
                 eq("user123"), eq(null), eq("account-service"),
                 eq(DataOperationType.READ), eq(null), eq(null), any(Pageable.class)
@@ -352,6 +352,5 @@ class GdprAuditControllerTest {
                 eq(DataOperationType.READ), eq(null), eq(null), any(Pageable.class)
         );
     }
-
 
 }

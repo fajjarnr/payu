@@ -243,7 +243,7 @@ spec:
       containers:
         - name: vault
           image: docker.io/hashicorp/vault:1.15
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
 
           # --- Environment Variables ---
           env:

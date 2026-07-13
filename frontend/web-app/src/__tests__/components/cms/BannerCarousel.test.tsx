@@ -5,10 +5,16 @@ import { vi } from 'vitest';
 import BannerCarousel from '@/components/cms/BannerCarousel';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
+const mockReplace = vi.fn();
+vi.mock('@/lib/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
+    div: ({ children, initial: _initial, whileInView: _whileInView, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; whileInView?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
@@ -39,16 +45,20 @@ const mockBanners = [
   },
 ];
 
+let mockBannersData: typeof mockBanners | null = mockBanners;
+let mockIsLoading = false;
+let mockError: Error | null = null;
+
 vi.mock('@/hooks', () => ({
   useBanners: () => ({
-    data: mockBanners,
-    isLoading: false,
-    error: null,
+    data: mockBannersData,
+    isLoading: mockIsLoading,
+    error: mockError,
   }),
 }));
 
 // Mock Skeleton component
-vi.mock('@/components/ui/Skeleton', () => ({
+vi.mock('@/components/ui/skeleton', () => ({
   Skeleton: ({ className }: { className?: string }) => <div data-testid="skeleton" className={className} />,
 }));
 
@@ -61,6 +71,9 @@ describe('BannerCarousel', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockBannersData = mockBanners;
+    mockIsLoading = false;
+    mockError = null;
     // Mock window.open
     global.open = vi.fn();
     global.window.location.href = '';
@@ -78,13 +91,8 @@ describe('BannerCarousel', () => {
   });
 
   it('should render skeleton when loading', () => {
-    vi.doMock('@/hooks', () => ({
-      useBanners: () => ({
-        data: null,
-        isLoading: true,
-        error: null,
-      }),
-    }));
+    mockBannersData = null;
+    mockIsLoading = true;
 
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
@@ -92,13 +100,8 @@ describe('BannerCarousel', () => {
   });
 
   it('should return null when there is an error', () => {
-    vi.doMock('@/hooks', () => ({
-      useBanners: () => ({
-        data: null,
-        isLoading: false,
-        error: new Error('Failed to fetch'),
-      }),
-    }));
+    mockBannersData = null;
+    mockError = new Error('Failed to fetch');
 
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
@@ -106,13 +109,7 @@ describe('BannerCarousel', () => {
   });
 
   it('should return null when there are no banners', () => {
-    vi.doMock('@/hooks', () => ({
-      useBanners: () => ({
-        data: [],
-        isLoading: false,
-        error: null,
-      }),
-    }));
+    mockBannersData = [];
 
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
@@ -256,13 +253,7 @@ describe('BannerCarousel', () => {
   });
 
   it('should handle single banner without navigation arrows', () => {
-    vi.doMock('@/hooks', () => ({
-      useBanners: () => ({
-        data: [mockBanners[0]],
-        isLoading: false,
-        error: null,
-      }),
-    }));
+    mockBannersData = [mockBanners[0]];
 
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 

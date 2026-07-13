@@ -25,9 +25,9 @@ import id.payu.partner.domain.MerchantStatus;
  * This service is only available in sandbox/non-production environments.
  */
 @Service
-public class SandboxDataSeeder {
+public class SandboxDataSeederService {
 
-    private static final Logger log = LoggerFactory.getLogger(SandboxDataSeeder.class);
+    private static final Logger log = LoggerFactory.getLogger(SandboxDataSeederService.class);
 
     // Test merchant IDs
     public static final String TEST_MERCHANT_001 = "TEST-MERCHANT-001";
@@ -49,9 +49,9 @@ public class SandboxDataSeeder {
     private final MerchantRepository merchantRepository;
     private final ApiKeyRepository apiKeyRepository;
 
-    public SandboxDataSeeder(PartnerRepository partnerRepository,
-                             MerchantRepository merchantRepository,
-                             ApiKeyRepository apiKeyRepository) {
+    public SandboxDataSeederService(PartnerRepository partnerRepository,
+                                    MerchantRepository merchantRepository,
+                                    ApiKeyRepository apiKeyRepository) {
         this.partnerRepository = partnerRepository;
         this.merchantRepository = merchantRepository;
         this.apiKeyRepository = apiKeyRepository;

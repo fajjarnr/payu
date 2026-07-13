@@ -1,6 +1,6 @@
 package id.payu.compliance.adapter.web;
 
-import id.payu.compliance.adapter.persistence.entity.DataAccessAuditEntity;
+import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.dto.DataAccessAuditRequest;
 import id.payu.compliance.dto.DataAccessAuditResponse;
@@ -49,7 +49,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
     public ResponseEntity<id.payu.api.common.response.ApiResponse<DataAccessAuditResponse>> logDataAccess(@Valid @RequestBody DataAccessAuditRequest request) {
-        DataAccessAuditEntity audit = dataAccessAuditUseCase.logDataAccess(
+        DataAccessAudit audit = dataAccessAuditUseCase.logDataAccess(
                 request.getUserId(),
                 request.getAccessedBy(),
                 request.getServiceName(),
@@ -82,7 +82,7 @@ public class GdprAuditController extends BaseController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
     public ResponseEntity<id.payu.api.common.response.ApiResponse<DataAccessAuditResponse>> getDataAccessAudit(
             @Parameter(description = "Audit ID", required = true) @PathVariable UUID auditId) {
-        DataAccessAuditEntity audit = dataAccessAuditUseCase.getDataAccessAudit(auditId);
+        DataAccessAudit audit = dataAccessAuditUseCase.getDataAccessAudit(auditId);
         return ok(toResponse(audit));
     }
 
@@ -99,7 +99,7 @@ public class GdprAuditController extends BaseController {
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accessedAt").descending());
-        Page<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getUserDataAccessHistory(userId, pageable);
+        Page<DataAccessAudit> audits = dataAccessAuditUseCase.getUserDataAccessHistory(userId, pageable);
         return ok(audits.map(this::toResponse), audits);
     }
 
@@ -115,7 +115,7 @@ public class GdprAuditController extends BaseController {
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
-        List<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getUserDataAccessHistoryByDateRange(userId, startDate, endDate);
+        List<DataAccessAudit> audits = dataAccessAuditUseCase.getUserDataAccessHistoryByDateRange(userId, startDate, endDate);
         return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
@@ -131,7 +131,7 @@ public class GdprAuditController extends BaseController {
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
-        List<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getAccessedByUserHistory(accessedBy, startDate, endDate);
+        List<DataAccessAudit> audits = dataAccessAuditUseCase.getAccessedByUserHistory(accessedBy, startDate, endDate);
         return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
@@ -148,7 +148,7 @@ public class GdprAuditController extends BaseController {
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accessedAt").descending());
-        Page<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getDataAccessByOperationType(
+        Page<DataAccessAudit> audits = dataAccessAuditUseCase.getDataAccessByOperationType(
                 DataOperationType.valueOf(operationType.toUpperCase()),
                 pageable
         );
@@ -167,7 +167,7 @@ public class GdprAuditController extends BaseController {
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
-        List<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getServiceDataAccessHistory(serviceName, startDate, endDate);
+        List<DataAccessAudit> audits = dataAccessAuditUseCase.getServiceDataAccessHistory(serviceName, startDate, endDate);
         return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
@@ -195,7 +195,7 @@ public class GdprAuditController extends BaseController {
     public ResponseEntity<id.payu.api.common.response.ApiResponse<List<DataAccessAuditResponse>>> getFailedAccessAttempts(
             @Parameter(description = "Since date") @RequestParam LocalDateTime since
     ) {
-        List<DataAccessAuditEntity> audits = dataAccessAuditUseCase.getFailedAccessAttempts(since);
+        List<DataAccessAudit> audits = dataAccessAuditUseCase.getFailedAccessAttempts(since);
         return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
@@ -213,7 +213,7 @@ public class GdprAuditController extends BaseController {
                 Sort.by("accessedAt").descending()
         );
 
-        Page<DataAccessAuditEntity> audits = dataAccessAuditUseCase.searchDataAccessAudit(
+        Page<DataAccessAudit> audits = dataAccessAuditUseCase.searchDataAccessAudit(
                 request.getUserId(),
                 request.getAccessedBy(),
                 request.getServiceName(),
@@ -229,7 +229,7 @@ public class GdprAuditController extends BaseController {
     // BUG-BE-081: DELETE endpoint removed — audit logs are immutable per compliance policy.
     // Use soft-delete with approval workflow if data retention policy requires it.
 
-    private DataAccessAuditResponse toResponse(DataAccessAuditEntity audit) {
+    private DataAccessAuditResponse toResponse(DataAccessAudit audit) {
         return DataAccessAuditResponse.builder()
                 .id(audit.getId())
                 .userId(audit.getUserId())
@@ -241,7 +241,7 @@ public class GdprAuditController extends BaseController {
                 .purpose(audit.getPurpose())
                 .ipAddress(audit.getIpAddress())
                 .userAgent(audit.getUserAgent())
-                .success(audit.getSuccess())
+                .success(audit.isSuccess())
                 .errorMessage(audit.getErrorMessage())
                 .accessedAt(audit.getAccessedAt())
                 .createdAt(audit.getCreatedAt())

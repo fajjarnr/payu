@@ -5,8 +5,6 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -16,12 +14,6 @@ public class ArchitectureTest {
 
     private final JavaClasses classes = new ClassFileImporter()
             .importPackages("id.payu.integration");
-
-    @BeforeEach
-    void skipIfNoClasses() {
-        Assumptions.assumeFalse(classes.isEmpty(),
-                "Skipping architecture tests: no classes imported (likely Java 25 / ASM incompatibility)");
-    }
 
     @Test
     void domainShouldNotDependOnCamel() {

@@ -194,11 +194,7 @@ public class IntegrationService implements IntegrationUseCase {
     @Override
     @Transactional
     public void cancelMessage(String messageId) {
-        IntegrationMessage message = getMessageStatus(messageId);
-        if (message.getStatus() == MessageStatus.SENT || message.getStatus() == MessageStatus.FAILED) {
-            throw new IllegalStateException("Cannot cancel message in status: " + message.getStatus());
-        }
-        message.cancel();
+        messageProcessingService.cancelMessage(messageId);
     }
 
     private MessageType parseSwiftMessageType(String messageType) {

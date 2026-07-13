@@ -8,14 +8,15 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
+    div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useRouter
 const mockPush = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock('@/lib/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/navigation')>()),
   useRouter: () => ({
     push: mockPush,
   }),
@@ -49,10 +50,13 @@ const mockAlerts = [
   },
 ];
 
+let mockAlertsData: typeof mockAlerts | null = mockAlerts;
+let mockIsLoading = false;
+
 vi.mock('@/hooks', () => ({
   useEmergencyAlerts: () => ({
-    data: mockAlerts,
-    isLoading: false,
+    data: mockAlertsData,
+    isLoading: mockIsLoading,
   }),
 }));
 
@@ -70,6 +74,8 @@ expect.extend(toHaveNoViolations);
 describe('EmergencyAlert', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAlertsData = mockAlerts;
+    mockIsLoading = false;
     mockLocalStorage.getItem.mockReturnValue(null);
     mockPush.mockClear();
     global.open = vi.fn();
@@ -83,24 +89,15 @@ describe('EmergencyAlert', () => {
   });
 
   it('should not render when loading', () => {
-    vi.doMock('@/hooks', () => ({
-      useEmergencyAlerts: () => ({
-        data: null,
-        isLoading: true,
-      }),
-    }));
+    mockAlertsData = null;
+    mockIsLoading = true;
 
     const { container } = renderWithIntl(<EmergencyAlert />);
     expect(container.firstChild).toBeNull();
   });
 
   it('should not render when no alerts', () => {
-    vi.doMock('@/hooks', () => ({
-      useEmergencyAlerts: () => ({
-        data: [],
-        isLoading: false,
-      }),
-    }));
+    mockAlertsData = [];
 
     const { container } = renderWithIntl(<EmergencyAlert />);
     expect(container.firstChild).toBeNull();

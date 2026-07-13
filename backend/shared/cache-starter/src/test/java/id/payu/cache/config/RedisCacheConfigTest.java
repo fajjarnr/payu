@@ -22,5 +22,6 @@ class RedisCacheConfigTest {
 
         assertThat(options.getProtocolVersion()).isEqualTo(ProtocolVersion.RESP2);
         assertThat(options.isPingBeforeActivateConnection()).isFalse();
+        assertThat(options.getMaintNotificationsConfig().maintNotificationsEnabled()).isFalse();
     }
 }

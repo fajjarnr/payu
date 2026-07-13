@@ -1,10 +1,10 @@
 package id.payu.partner.adapter.web;
 
 import id.payu.partner.adapter.web.BaseController;
-import id.payu.partner.application.service.SandboxDataSeeder;
-import id.payu.partner.application.service.SandboxDataSeeder.SandboxSeedResult;
-import id.payu.partner.application.service.SandboxDataSeeder.TestBankAccount;
-import id.payu.partner.application.service.SandboxDataSeeder.TestVaNumber;
+import id.payu.partner.application.service.SandboxDataSeederService;
+import id.payu.partner.application.service.SandboxDataSeederService.SandboxSeedResult;
+import id.payu.partner.application.service.SandboxDataSeederService.TestBankAccount;
+import id.payu.partner.application.service.SandboxDataSeederService.TestVaNumber;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -28,9 +28,9 @@ public class SandboxController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(SandboxController.class);
 
-    private final SandboxDataSeeder sandboxDataSeeder;
+    private final SandboxDataSeederService sandboxDataSeeder;
 
-    public SandboxController(SandboxDataSeeder sandboxDataSeeder) {
+    public SandboxController(SandboxDataSeederService sandboxDataSeeder) {
         this.sandboxDataSeeder = sandboxDataSeeder;
     }
 
@@ -93,21 +93,21 @@ public class SandboxController extends BaseController {
         // Success scenarios
         scenarios.put("success_transfer", Map.of(
                 "description", "Successful transfer to test account",
-                "testAccount", SandboxDataSeeder.TEST_BCA_ACCOUNT,
+                "testAccount", SandboxDataSeederService.TEST_BCA_ACCOUNT,
                 "testBank", "BCA",
                 "expectedResult", "SUCCESS"
         ));
 
         scenarios.put("success_qr_payment", Map.of(
                 "description", "Successful QRIS payment",
-                "testMerchant", SandboxDataSeeder.TEST_MERCHANT_001,
+                "testMerchant", SandboxDataSeederService.TEST_MERCHANT_001,
                 "expectedResult", "SUCCESS"
         ));
 
         // Failure scenarios
         scenarios.put("insufficient_funds", Map.of(
                 "description", "Transfer with insufficient funds",
-                "testAccount", SandboxDataSeeder.TEST_BNI_ACCOUNT,
+                "testAccount", SandboxDataSeederService.TEST_BNI_ACCOUNT,
                 "testBank", "BNI",
                 "amount", "999999999999",
                 "expectedResult", "FAILED - Insufficient funds"
@@ -123,7 +123,7 @@ public class SandboxController extends BaseController {
         // Pending scenarios
         scenarios.put("pending_transfer", Map.of(
                 "description", "Transfer that remains pending",
-                "testAccount", SandboxDataSeeder.TEST_MANDIRI_ACCOUNT,
+                "testAccount", SandboxDataSeederService.TEST_MANDIRI_ACCOUNT,
                 "testBank", "MANDIRI",
                 "expectedResult", "PENDING"
         ));
@@ -142,9 +142,9 @@ public class SandboxController extends BaseController {
         status.put("environment", "sandbox");
         status.put("domain", "payu.fajjjar.my.id");
         status.put("testMerchants", List.of(
-                SandboxDataSeeder.TEST_MERCHANT_001,
-                SandboxDataSeeder.TEST_MERCHANT_002,
-                SandboxDataSeeder.TEST_MERCHANT_003
+                SandboxDataSeederService.TEST_MERCHANT_001,
+                SandboxDataSeederService.TEST_MERCHANT_002,
+                SandboxDataSeederService.TEST_MERCHANT_003
         ));
         status.put("testApiKey", "payu_test_sandbox_key_12345");
         status.put("features", List.of(

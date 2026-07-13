@@ -14,7 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import id.payu.gateway.application.service.State;
+import id.payu.gateway.domain.State;
 
 /**
  * Health and status endpoints for the gateway.

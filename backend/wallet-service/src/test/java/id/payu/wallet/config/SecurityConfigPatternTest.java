@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SecurityConfigPatternTest {
 
     private static final String SECURITY_CONFIG_PATH =
-        "src/main/java/id/payu/wallet/config/SecurityConfig.java";
+        "src/main/java/id/payu/wallet/config/SecurityCustomizer.java";
 
     private static final Pattern MULTI_STAR =
         Pattern.compile("\\.requestMatchers\\(([^)]*\\*\\*[^)]*)\\)\\.permitAll");

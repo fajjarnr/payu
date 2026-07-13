@@ -3,6 +3,7 @@ package id.payu.cache.config;
 import id.payu.cache.properties.CacheProperties;
 import id.payu.cache.serializer.TypedJsonRedisSerializer;
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.MaintNotificationsConfig;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.cluster.ClusterClientOptions;
@@ -92,6 +93,7 @@ public class RedisCacheConfig {
         return ClientOptions.builder()
                 .socketOptions(socketOptions)
                 .timeoutOptions(timeoutOptions)
+                .maintNotificationsConfig(MaintNotificationsConfig.disabled())
                 .protocolVersion(ProtocolVersion.RESP2)
                 .autoReconnect(true)
                 .pingBeforeActivateConnection(false)
@@ -160,11 +162,12 @@ public class RedisCacheConfig {
                 .enableAllAdaptiveRefreshTriggers()
                 .build();
 
-        ClusterClientOptions clusterOptions = ClusterClientOptions.builder()
-                .topologyRefreshOptions(topologyOptions)
-                .protocolVersion(ProtocolVersion.RESP2)
-                .autoReconnect(true)
-                .build();
+        ClusterClientOptions.Builder clusterOptionsBuilder = ClusterClientOptions.builder();
+        clusterOptionsBuilder.maintNotificationsConfig(MaintNotificationsConfig.disabled());
+        clusterOptionsBuilder.protocolVersion(ProtocolVersion.RESP2);
+        clusterOptionsBuilder.autoReconnect(true);
+        clusterOptionsBuilder.topologyRefreshOptions(topologyOptions);
+        ClusterClientOptions clusterOptions = clusterOptionsBuilder.build();
 
         LettuceClientConfiguration clusterClientConfig = LettuceClientConfiguration.builder()
                 .commandTimeout(properties.getRedis().getCommandTimeout())

@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: auth-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.8.81
+    app.kubernetes.io/version: 1.8.83
 spec:
   type: ClusterIP
   selector:

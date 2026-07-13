@@ -122,6 +122,30 @@ public class MessageProcessingServiceTest {
     }
 
     @Test
+    void retryMessageRejectsNonFailedMessage() {
+        testMessage.setStatus(MessageStatus.SENT);
+        when(messageRepository.findById("test-id")).thenReturn(Optional.of(testMessage));
+
+        boolean result = messageProcessingService.retryMessage("test-id");
+
+        assertFalse(result);
+        assertEquals(MessageStatus.SENT, testMessage.getStatus());
+        verify(messageRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelMessagePersistsCancellation() {
+        when(messageRepository.findById("test-id")).thenReturn(Optional.of(testMessage));
+        when(messageRepository.save(testMessage)).thenReturn(testMessage);
+
+        messageProcessingService.cancelMessage("test-id");
+
+        assertEquals(MessageStatus.CANCELLED, testMessage.getStatus());
+        assertNotNull(testMessage.getProcessedAt());
+        verify(messageRepository).save(testMessage);
+    }
+
+    @Test
     void testGetMessageNotFound() {
         when(messageRepository.findById("unknown-id")).thenReturn(Optional.empty());
 

@@ -122,8 +122,8 @@ public class MessageProcessingService {
     public boolean retryMessage(String messageId) {
         IntegrationMessage message = findMessageOrThrow(messageId);
 
-        if (!message.canRetry()) {
-            log.warn("Message {} has exceeded max retries", messageId);
+        if (message.getStatus() != MessageStatus.FAILED || !message.canRetry()) {
+            log.warn("Message {} is not retryable in status {}", messageId, message.getStatus());
             return false;
         }
 
@@ -132,6 +132,19 @@ public class MessageProcessingService {
         messageRepository.save(message);
         log.info("Message {} queued for retry (attempt {})", messageId, message.getRetryCount());
         return true;
+    }
+
+    /**
+     * Cancel a message and persist the terminal state.
+     */
+    @Transactional
+    public void cancelMessage(String messageId) {
+        IntegrationMessage message = findMessageOrThrow(messageId);
+        if (message.getStatus() == MessageStatus.SENT || message.getStatus() == MessageStatus.FAILED) {
+            throw new IllegalStateException("Cannot cancel message in status: " + message.getStatus());
+        }
+        message.cancel();
+        messageRepository.save(message);
     }
 
     /**

@@ -1,6 +1,6 @@
 package id.payu.compliance.domain.port.out;
 
-import id.payu.compliance.adapter.persistence.entity.AuditReportEntity;
+import id.payu.compliance.domain.model.AuditReport;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +18,7 @@ public interface AuditReportPersistencePort {
      * @param report the audit report to save
      * @return the saved report
      */
-    AuditReportEntity save(AuditReportEntity report);
+    AuditReport save(AuditReport report);
 
     /**
      * Find an audit report by its ID.
@@ -26,7 +26,7 @@ public interface AuditReportPersistencePort {
      * @param id the report ID
      * @return Optional containing the report if found
      */
-    Optional<AuditReportEntity> findById(UUID id);
+    Optional<AuditReport> findById(UUID id);
 
     /**
      * Find all audit reports for a specific transaction.
@@ -34,7 +34,7 @@ public interface AuditReportPersistencePort {
      * @param transactionId the transaction ID
      * @return list of audit reports for the transaction
      */
-    List<AuditReportEntity> findByTransactionId(UUID transactionId);
+    List<AuditReport> findByTransactionId(UUID transactionId);
 
     /**
      * Find all audit reports for a specific merchant.
@@ -42,5 +42,5 @@ public interface AuditReportPersistencePort {
      * @param merchantId the merchant ID
      * @return list of audit reports for the merchant
      */
-    List<AuditReportEntity> findByMerchantId(String merchantId);
+    List<AuditReport> findByMerchantId(String merchantId);
 }

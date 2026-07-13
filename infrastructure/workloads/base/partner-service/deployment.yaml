@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: partner-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
-    app.kubernetes.io/version: 1.8.90
+    app.kubernetes.io/version: 1.8.93
     team: backend
 spec:
   replicas: 1
@@ -19,7 +19,7 @@ spec:
         app.kubernetes.io/name: partner-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
-        app.kubernetes.io/version: 1.8.90
+        app.kubernetes.io/version: 1.8.93
         team: backend
     spec:
       securityContext:
@@ -38,7 +38,8 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.90
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.93
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http
@@ -84,7 +85,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: partner-service
         - name: SERVICE_VERSION
-          value: 1.8.90
+          value: 1.8.93
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT

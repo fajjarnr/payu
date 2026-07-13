@@ -209,7 +209,7 @@ spec:
       containers:
         - name: opencost
           image: ghcr.io/opencost/opencost:1.120.0@sha256:c4fbe5f8fad2bc54872350460e705bf9ab43c90efa784a0cdf3a2a39a66b3b82
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           args:
           ports:
             - containerPort: 9003
