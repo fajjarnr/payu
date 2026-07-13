@@ -35,8 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed billing/statement/promotion ArchUnit 1.4.2 regression: reverted to 1.2.1 — 1.4.2 correctly parses Java 25 bytecode, exposing pre-existing architecture violations (L-111). Parent POM retains `archunit.version` 1.4.2 for services ready to upgrade.
 - Rewrote `test-health-check.sh` (DEVSECOPS-018): replaced `podman-compose` v1.x dependency with native `podman` CLI; auto-detects docker/podman runtime; dynamic container name matching (payu-database-rw, payu-kafka, payu-cache, payu-keycloak); probes RESP/HTTP for Data Grid, RHBK /realms/master, AMQ Streams kafka-broker-api-versions.sh; zero false negatives on infra-only environment.
 
-- Re-scoped INFRA-025: Netty SSL ApplicationProtocolNegotiationHandler warnings RESOLVED (0 hits 24h). New finding: ISPN005061 unclosed iterator (184 hits/24h, 2 per 2 min) — RESP client not closing Cache iterators. Server auto-cleanup every 2 min, no restart/data loss. Root cause investigation pending.
-- Created ARCH-008/009/010 for ArchUnit 1.4.2 violations in billing/statement/promotion — hidden bugs exposed by Java 25 bytecode parsing fix (L-111).
+- Re-scoped INFRA-025 to ISPN005061 — Data Grid RESP cursor auto-cleanup, not client leak. Root cause documented (L-115). Zero Netty SSL hits.
+- Created and resolved ARCH-008/009/010 for ArchUnit 1.4.2 violations in billing/statement/promotion — domain@adapter decoupling, Lombok immutability, dependency/naming fixes.
+- Closed INFRA-007 (DR runbook verified), INFRA-021 (RHBK CR healthy), PON-019 (5 dead ports deleted).
+- Bootstrapped ArgoCD GitOps: ApplicationSets `payu-environments`, `payu-devsecops-platform`, `payu-identity`, `payu-monitoring`, `payu-pr-previews` deployed. `payu-dev` auto-converging with selfHeal=true.
+- Verified INFRA-001: Red Hat registry auth present in global pull-secret (registry.redhat.io, registry.connect.redhat.com, quay.io).
+- Configured SEC-020: Compliance Operator subscribed, `payu-cis-weekly` ScanSetting + ScanSettingBinding applied, weekly CIS scan scheduled Monday 3am.
+- Bumped 96 workload version labels from 1.8.x → 1.9.4 across 31 services for ArgoCD reconciliation.
+- Deployed 5 pods on 1.9.4: gateway (global rate limit), partner (V15 migration), billing (ARCH-008), statement (ARCH-009), promotion (ARCH-010). All 0 errors.
+- Validated wallet-service cache rollout (OPS-2026-04-08-01), scoped k6 crud-stress-test (OPS-2026-04-08-02).
+- 5 dead hexagonal ports deleted (notification-service: NotificationPersistencePort, NotificationSenderPort; support-service: AgentTrainingPersistencePort, SupportAgentPersistencePort, TrainingModulePersistencePort).
+- Added L-112 (Flyway V14→V15 split), L-113 (ArgoCD OutOfSync from version drift), L-114 (Podman parity infrastructure), L-115 (ISPN005061 root cause).
 
 ### Verification
 

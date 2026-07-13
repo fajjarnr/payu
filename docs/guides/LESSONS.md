@@ -4,7 +4,78 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
-## L-108: Cross-Package Enum Relocation Requires Full Import Sweep (2026-07-13)
+## L-112: Splitting Flyway Migrations — Keep Applied Versions Intact (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: Partner Service, Flyway, Database Migration, Schema Evolution
+**Context**: DEV-106 added columns (`partner_code`, `status`, `webhook_url`) to V14 migration via `ALTER TABLE ADD COLUMN IF NOT EXISTS`. The existing DB already applied V14 (index-only version) — the new JAR had a different checksum. Renaming V14 to V15 fixed the checksum error but broke `validate-on-migrate` because the DB had V14 applied and the new JAR had no V14 at all.
+
+**Lesson**:
+- Never modify an existing migration file that has already been applied to a production database. Flyway compares checksums — any change causes `Validate failed: Migration checksum mismatch for version N`.
+- Never delete or rename an applied migration. The DB `flyway_schema_history` table tracks applied versions — removing one causes `Detected applied migration not resolved locally`.
+- The correct pattern: keep the original migration content untouched, add a NEW migration (next version) for your changes.
+
+**Applied fix**:
+- Restored `V14__reconcile_pre_flyway_indexes.sql` with exact original content (indexes only).
+- Created `V15__add_partner_schema_columns.sql` with `ALTER TABLE ADD COLUMN IF NOT EXISTS` for the 3 columns + unique index.
+- Partner-service: 233/233 tests, deployed to `payu-dev` at `1.9.4`, zero errors.
+
+---
+
+## L-113: ArgoCD ApplicationSet Self-Heal + Version Drift (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: ArgoCD, GitOps, OpenShift, Deployment Reconciliation
+**Context**: After manually recovering `payu-dev` workloads and bumping container images to `1.9.4`, bootstrapping ArgoCD ApplicationSet caused `OutOfSync` because Git manifests still referenced `1.8.x` version labels. With `selfHeal=true`, ArgoCD would revert the cluster to the old manifests, undoing the manual fix.
+
+**Lesson**:
+- Always align Git manifests with the desired cluster state BEFORE enabling ArgoCD selfHeal. A mismatch between `app.kubernetes.io/version` labels in Git vs. cluster causes a permanent OutOfSync state that ArgoCD tries to undo.
+- The remediation sequence: (1) disable selfHeal, (2) update Git manifests to match cluster, (3) trigger hard refresh, (4) re-enable selfHeal once synced.
+- Version labels exist in 3 files per service (deployment.yaml, service.yaml, kustomization.yaml). A bulk sed across all 3 locations ensures consistency.
+- Container image tags and version labels serve different purposes: image tags drive pod rollout, labels drive ArgoCD/Grafana tracking. Both must be updated together.
+
+**Applied fix**:
+- Bumped 96 version labels across 31 services from `1.8.x` → `1.9.4` (72 files: deployment, service, kustomization).
+- Disabled then re-enabled selfHeal after Git update.
+- Hard refresh triggered on `payu-dev` ArgoCD application.
+
+---
+
+## L-114: Podman Compose Parity — Infrastructure Level, Not Full Dev Loop (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: Podman Compose, OpenShift, Docker, Local Development, DevSecOps
+**Context**: Built parity between local Podman compose and OpenShift `payu-dev`. Achieved: 31/33 service definitions matching OCP deployments, Red Hat digest-pinned infra images, DNS service names match (`payu-database-rw`, `payu-cache-resp`), 7 infra containers healthy. NOT achieved: full 31-service integration test locally because `podman-compose` v1.0.6 lacks `--profile` flag.
+
+**Lesson**:
+- `podman-compose` v1.0.6 (Python) does not support `--profile`, `--services`, or `--filter`. These require podman ≥5.x with the native compose provider. Ubuntu 24.04 ships podman 4.9.3 — upgrading requires external repos.
+- Parity is achieved at the infrastructure level. Application-level parity requires building 30 images, starting containers, and verifying service-to-service calls — this is 60+ minutes of build time.
+- Container hardening (UID 1001, read-only FS, capability drop) was applied partially (1/31 services). A bulk audit and update is needed.
+- Infrastructure image digests differ between local and OCP even when the same image is used — the digest reflects the pull path (registry.redhat.io → OCP mirror), not different content.
+
+**Applied evidence**:
+- 31/31 OCP deployments defined in compose, 7/7 infra containers running with Red Hat digests.
+- `test-health-check.sh` passes zero false negatives on infra-only env with native podman CLI.
+- Partner-service canary worked as cold-start validation — Flyway ran, reached the old V14, detected the missing column gap.
+
+---
+
+## L-115: ISPN005061 — Data Grid RESP Iterator Auto-Cleanup, Not a Leak (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: Data Grid, RESP Protocol, Cache, Infinispan, Monitoring
+**Context**: `payu-cache-0` logged `ISPN005061: Removed unclosed iterator` 184 times in 24h, steady 2 per 2 minutes. Initially suspected as a RESP client bug. Investigation revealed it's internal Data Grid protocol auto-cleanup.
+
+**Lesson**:
+- `ISPN005061` is Data Grid's internal RESP cursor cleanup. The RESP compatibility layer wraps `ScanCursor` with a 2-minute TTL. If a client's `SCAN` cursor is not fully consumed within that window, the server removes it and logs this warning.
+- This is NOT a client-side leak or a bug in application code. It's a protocol limitation of running RESP over the Jetty/Netty bridge in Data Grid.
+- The fix is NOT to chase iterators in Spring Boot services — it's to migrate from RESP to Hot Rod native protocol (ARCH-007). Hot Rod eliminates the RESP cursor abstraction layer entirely.
+- Netty SSL `ApplicationProtocolNegotiationHandler` warnings (original INFRA-025) — zero hits in 24h. Resolved by pod restart during recovery, not by code change.
+
+**Applied evidence**:
+- 24h log window: 0 Netty/SSL hits, 184 ISPN005061 hits (2 per 2 min, consistent).
+- No pod restarts, no data loss, no impact on application behavior.
+- Root cause linked to ARCH-007 (Hot Rod migration plan).
 
 **Date**: 2026-07-13
 **Domain**: Gateway Service, Quarkus, Hexagonal Architecture, Enum Placement
