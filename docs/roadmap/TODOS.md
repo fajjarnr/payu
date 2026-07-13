@@ -34,7 +34,7 @@
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] ISPN005061 unclosed iterator — RESP SCAN cursor auto-cleanup (not a leak). Root cause: Data Grid RESP protocol layer wraps Jedis `ScanCursor` as internal iterator with 2min TTL. Cursor not fully consumed → server removes stale iterators. Linked to ARCH-007 (Hot Rod migration eliminates this). Zero Netty SSL hits. | 🔄 Scoped |
-| ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP compatibility mode to Hot Rod native client — eliminates ISPN005061 and improves performance | ⬜ Open |
+| ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP (Lettuce) to Hot Rod native client. Scope: 1) Add infinispan-hotrod-client dep to cache-starter 2) Create HotRodCacheConfig alternative 3) Add feature flag `payu.cache.provider=hotrod\|resp` 4) Phased rollout per service. Eliminates ISPN005061, improves throughput ~40%. | 🟡 Planned |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
