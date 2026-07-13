@@ -51,8 +51,8 @@
 | DEPLOY-007 | P1 | Observability | OTel→Tempo (READY-019) + Loki (READY-020) + Prometheus alerts (READY-021) |
 | DEPLOY-008 | P1 | DR/Security | Vault auto-snapshot (DEVSECOPS-001) + auto-unseal (DEVSECOPS-002) + DR runbook (INFRA-007) |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
-| OPS-2026-04-08-01 | P2 | Ops | Validate wallet-service cache rollout |
-| OPS-2026-04-08-02 | P2 | Ops | Re-run k6 crud-stress-test.js via k6 Operator |
+| OPS-2026-04-08-01 | P2 | Ops | ✅ Validated — wallet-service cache config OK, /actuator/health/liveness UP, RESP PING reachable | ✅ Closed |
+| OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
 | READY-029 | P2 | Performance | Gatling load test: 1000 concurrent users |
 | READY-030 | P2 | Performance | Stress: SOAK test 24h |
 | READY-022 | P2 | Test | Unit test coverage 80%+ core domain |
