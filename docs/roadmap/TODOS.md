@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
 | **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
-| **Last Updated** | 2026-07-13 (ARCH-008/009/010 resolved; INFRA-007/021 verified; 3 P0/P1 tickets blocked on cluster-admin; remaining open: INFRA-025 scoped, ARCH-007) |
+| **Last Updated** | 2026-07-13 (Session: 14 tickets closed/scoped. PON-019 dead ports deleted. All actionable cleared. 5 pods on 1.9.4. Remaining: 3 blocked cluster-admin, 1 planned, 2 operator-only.) |
 
 ---
 
