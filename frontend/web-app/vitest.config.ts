@@ -30,8 +30,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // next/navigation.js exists but ESM can't resolve 'next/navigation' without extension
-      // next-intl imports 'next/navigation' using ESM, causing ERR_MODULE_NOT_FOUND in jsdom
       'next/navigation': path.resolve(__dirname, 'node_modules/next/navigation.js'),
     },
   },

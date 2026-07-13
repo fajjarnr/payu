@@ -33,7 +33,7 @@
 | INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
-| INFRA-025 | P2 | [cache] ISPN005061 unclosed iterator — RESP SCAN cursor auto-cleanup (not a leak). Root cause: Data Grid RESP protocol layer wraps Jedis `ScanCursor` as internal iterator with 2min TTL. Cursor not fully consumed → server removes stale iterators. Linked to ARCH-007 (Hot Rod migration eliminates this). Zero Netty SSL hits. | 🔄 Scoped |
+| INFRA-025 | P2 | [cache] ✅ RESOLVED — ISPN005061 root cause: RESP SCAN cursor 2min TTL. Not a leak — Data Grid server auto-cleanup. Netty SSL: 0 hits 24h. No further action needed — ARCH-007 Hot Rod migration will eliminate RESP entirely. | ✅ Closed |
 | ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP (Lettuce) to Hot Rod native client. Scope: 1) Add infinispan-hotrod-client dep to cache-starter 2) Create HotRodCacheConfig alternative 3) Add feature flag `payu.cache.provider=hotrod\|resp` 4) Phased rollout per service. Eliminates ISPN005061, improves throughput ~40%. | 🟡 Planned |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
@@ -55,7 +55,7 @@
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
 | READY-029 | P2 | Performance | Gatling load test: 1000 concurrent users |
 | READY-030 | P2 | Performance | Stress: SOAK test 24h |
-| READY-022 | P2 | Test | Unit test coverage 80%+ core domain |
+| READY-022 | P2 | Test | 🔄 Audited: account 22%, auth 19%, tx 4%, wallet 0% core domain coverage. Needs 80%. Major test-writing effort — defer to sprint planning | 🔄 Planned |
 | READY-023 | P2 | Test | Contract tests (Pact/SCC) |
 | READY-060 | P3 | Card | Card tokenization + 3DS |
 | READY-061 | P3 | Mobile | Expo SDK 55 + RN 0.85 upgrade |
@@ -75,7 +75,7 @@
 
 | # | Key | Category | Summary |
 |:---:|:---|:---|:---|
-| AUDIT-096 | **PON-019** | arch | ~95 single-implementation hexagonal ports across 21 services. Consolidate when refactoring |
+| AUDIT-096 | PON-019 | arch | ✅ Audited: 74 ports across 21 services. 68 single-implementation (normal hexagonal — abstract for testability). 6 dead ports with 0 implementations: AgentTrainingPersistencePort, NotificationPersistencePort, NotificationSenderPort, PortalConfig, SupportAgentPersistencePort, TrainingModulePersistencePort. Can be deleted or implemented. | ✅ Audited |
 
 ---
 
