@@ -1,18 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# =========================================================================
-# PayU Vault — Dev (vault.yaml) and Production (vault-production.yaml)
-# Use kustomize overlays to select the appropriate variant per environment:
-#   dev:  resources: [vault.yaml, vault-init-job.yaml]
-#   prod: resources: [vault-production.yaml, vault-snapshot-cronjob.yaml]
-# =========================================================================
+# Vault Dev — lab bootstrap (vault.yaml + ESO bridge + init job)
+# Production variant lives in overlays/prod/ directory.
+# ============================================================
 
 resources:
-  # --- Dev / Lab ---
   - vault.yaml
+  - vault-externalsecrets.yaml
   - vault-init-job.yaml
-
-  # --- Production (HA Raft + Auto-Unseal + Snapshots) ---
-  - vault-production.yaml
-  - vault-snapshot-cronjob.yaml
