@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.5] - 2026-07-13
+
+### Added
+
+- Added NetworkPolicy `allow-dev-gateway-to-redis-3scale` to permit gateway-service cross-namespace access to 3scale Redis for rate limiting sorted-set operations (L-118).
+
+### Changed
+
+- Changed OIDC issuer and JWKS URI from internal K8s service URL to external Keycloak URL across all 20 backend services (L-116). This fixes `INVALID_TOKEN` after 3scale APIcast Tier 1 integration — APIcast obtains tokens from external Keycloak, backend must validate against the same issuer.
+- Redirected gateway-service rate limiting from Infinispan Data Grid RESP to 3scale `redis-3scale` standalone Redis; Infinispan RESP compatibility layer does not implement sorted-set range operations (L-118).
+
+### Fixed
+
+- Fixed `CardPersistenceAdapter.save()` to detect existing records and update fields instead of blindly inserting — eliminates `DuplicateKeyException` on card freeze/unfreeze state transitions (L-117).
+- Fixed `cards-crud.sh` E2E test to resolve gateway-service pod name dynamically via label selector instead of hardcoded pod name.
+
+### Verification
+
+- E2E cards-crud.sh: CREATE (201) → READ (200) → FREEZE (200, FROZEN) → UNFREEZE (200, ACTIVE), all via 3scale APIcast with valid JWT. Exit code 0.
+- All 7 test steps verified: rate limiting, gateway routing, database R/W, transactional freeze/unfreeze state changes.
+
 ## [1.9.4] - 2026-07-13
 
 ### Added

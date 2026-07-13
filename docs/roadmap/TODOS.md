@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `1.9.3` — P2 workload stability audit after `payu-dev` recovery |
-| **Last Updated** | 2026-07-13 (Session: 14 tickets closed/scoped. PON-019 dead ports deleted. All actionable cleared. 5 pods on 1.9.4. Remaining: 3 blocked cluster-admin, 1 planned, 2 operator-only.) |
+| **Last Release** | `1.9.5` — 3scale Tier 1 integration, OIDC issuer global fix, card upsert fix, redis-3scale rate limit |
+| **Last Updated** | 2026-07-13 (Session: 3scale integration E2E verified. DEPLOY-010 closed. L-116/117/118 lessons added.) |
 
 ---
 
@@ -47,7 +47,7 @@
 | Key | Priority | Category | Summary |
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
-| DEPLOY-010 | P1 | API Management | Deploy 3scale APIManager after production external backing-store/Vault secrets exist |
+| DEPLOY-010 | P1 | API Management | ✅ Deploy 3scale APIManager — APIcast production routing + Keycloak OIDC introspection + E2E cards-crud verified. See PROGRESS.md and `infrastructure/platform/api-management/3scale/README.md`. | ✅ Closed |
 | DEPLOY-007 | P1 | Observability | OTel→Tempo (READY-019) + Loki (READY-020) + Prometheus alerts (READY-021) |
 | DEPLOY-008 | P1 | DR/Security | Vault auto-snapshot (DEVSECOPS-001) + auto-unseal (DEVSECOPS-002) + DR runbook (INFRA-007) |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |

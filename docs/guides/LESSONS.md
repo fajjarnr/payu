@@ -92,6 +92,63 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-116: OIDC Issuer External URL — INVALID_TOKEN from Claim Mismatch (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: Keycloak, OIDC, OpenShift, APIcast, 3scale, Spring Security, Quarkus OIDC
+**Context**: Setelah integrasi 3scale APIcast sebagai Tier 1 gateway, seluruh request masuk ke APIcast mendapat token JWT yang di-issue oleh Keycloak external URL (`https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu`). Namun seluruh 20 backend services masih mengkonfigurasi `OIDC_ISSUER` ke internal K8s service URL (`http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu`). Akibatnya validasi JWT gagal dengan `INVALID_TOKEN` — issuer claim dari token tidak cocok dengan issuer yang diharapkan backend.
+
+**Lesson**:
+- APIcast melakukan OIDC token introspection dan meneruskan token JWT asli dari Keycloak ke backend service. Token tersebut mengandung issuer claim sesuai URL yang digunakan client (APIcast) untuk memperoleh token — yaitu external Keycloak URL.
+- Backend service harus memvalidasi token terhadap issuer yang sama persis (exact string match). Jika backend dikonfigurasi ke internal K8s service URL sedangkan token ber-issuer external URL, validasi akan gagal setiap kali.
+- Perubahan ini wajib diterapkan ke seluruh service secara serentak. Satu service dengan issuer lama akan tetap gagal meskipun yang lain sudah diperbaiki.
+- Spring Boot services menggunakan env `OIDC_ISSUER` + `OIDC_JWK_SET_URI`; Quarkus services menggunakan `QUARKUS_OIDC_TOKEN_ISSUER`. Kedua path harus di-update.
+- Jangan pernah meng-hardcode issuer URL — gunakan env variable atau properti eksternal agar bisa di-override per environment (dev/sit/uat/prod).
+
+**Applied fix**:
+- Mengubah `OIDC_ISSUER` dan `OIDC_JWK_SET_URI` di 18 Spring Boot service patches dari internal K8s URL ke external Keycloak URL.
+- Mengubah `QUARKUS_OIDC_TOKEN_ISSUER` di 3 Quarkus service patches (gateway, notification, api-portal) ke external Keycloak URL.
+- E2E verification: cards-crud.sh sukses CREATE → READ → FREEZE → UNFREEZE dengan semua request melalui APIcast + JWT valid.
+
+---
+
+## L-117: JPA Persistence Save = Upsert, Not Blind Insert — Detect Existing Records (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: JPA, Hibernate, Spring Data, Wallet Service, Card Management, Hexagonal Architecture
+**Context**: `CardPersistenceAdapter.save()` memanggil `cardJpaRepository.save(CardEntity.fromDomain(card))` langsung. Setiap kali Card entity yang sudah ada di-trigger freeze/unfreeze, method ini membuat entity baru dari domain model tanpa ID persistent, sehingga Hibernate memperlakukannya sebagai INSERT baru. Karena card number + wallet ID sudah ada, database menolak dengan `DuplicateKeyException`.
+
+**Lesson**:
+- Spring Data JPA `save()` menggunakan strategi `persist()` (INSERT) saat entity tidak memiliki ID, dan `merge()` (UPDATE) saat entity sudah memiliki ID yang terdeteksi di persistence context. Jika entity dibuat dari domain model tanpa mempertahankan ID persistent, Hibernate akan selalu INSERT.
+- Pattern yang benar: cek `existsById()` — jika record sudah ada, load entity persistent dari database, lalu set fields satu per satu dari domain model. Simpan entity yang sudah attached ke persistence context.
+- Ini adalah anti-pattern umum di hexagonal architecture: adapter tidak boleh asumsi bahwa domain object "baru" atau "existing" secara otomatis. Adapter harus implementasi logika merge/upsert sendiri.
+- Untuk entity dengan unique constraint (card number, email, account ID, dsb.), pattern ini mencegah `DuplicateKeyException` pada operasi update.
+
+**Applied fix**:
+- Refactor `CardPersistenceAdapter.save()`: detect existing via `existsById()`, load persistent entity, update fields, save attached entity.
+- E2E verified: freeze → FROZEN, unfreeze → ACTIVE, tanpa DuplicateKeyException.
+
+---
+
+## L-118: Redis Sorted Set Operations — Infinispan RESP Gateway vs Standalone Redis (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: Redis, Data Grid, Infinispan, RESP Protocol, Rate Limiting, Gateway Service, 3scale
+**Context**: Gateway service rate limiting menggunakan Redis sorted set operations (`ZREVRANGEBYSCORE`, `ZADD`, `ZREMRANGEBYSCORE`) untuk sliding window counter. Saat terhubung ke Infinispan Data Grid melalui RESP compatibility layer (`payu-cache-resp:11222`), operasi sorted set mengembalikan `ERR index out of range`. Infinispan RESP gateway tidak sepenuhnya mengimplementasikan semantik sorted set Redis.
+
+**Lesson**:
+- RESP protocol pada Infinispan Data Grid adalah compatibility layer — bukan implementasi penuh Redis. Operasi kompleks seperti sorted set range queries, blocking list operations (`BLPOP`), dan Lua scripting (`EVAL`) mungkin tidak berfungsi atau memiliki semantik berbeda.
+- Untuk workload yang membutuhkan Redis-native data structures (sorted sets untuk rate limiting, streams untuk event sourcing, HyperLogLog untuk analytics), gunakan Redis standalone — bukan Data Grid RESP.
+- 3scale menyediakan Redis instance sendiri (`redis-3scale`) untuk backend storage. Instance ini adalah Redis asli (Redis Enterprise atau Redis standalone), bukan RESP compatibility layer. Gunakan ini untuk operasi Redis-native.
+- NetworkPolicy cross-namespace diperlukan saat service di namespace berbeda (e.g., `gateway-service` di `payu-dev` mengakses `redis-3scale` di `payu-api-management`).
+
+**Applied fix**:
+- Redirect rate limiting gateway-service dari Infinispan RESP ke `redis-3scale` di namespace `payu-api-management`.
+- Added `QUARKUS_REDIS_HOSTS`, `REDIS_HOST`, `REDIS_PORT` env vars di gateway-service deployment patch.
+- Created `NetworkPolicy` `allow-dev-gateway-to-redis-3scale` untuk izinkan traffic cross-namespace.
+
+---
+
 ## L-109: Entity-to-Domain-Model Renames Can Truncate Closing Braces in Test Files (2026-07-13)
 
 **Date**: 2026-07-13

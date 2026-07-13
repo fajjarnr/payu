@@ -20,7 +20,20 @@ public class CardPersistenceAdapter implements CardPersistencePort {
 
     @Override
     public Card save(Card card) {
-        CardEntity saved = cardJpaRepository.save(CardEntity.fromDomain(card));
+        CardEntity entity;
+        if (card.getId() != null && cardJpaRepository.existsById(card.getId())) {
+            entity = cardJpaRepository.findById(card.getId()).orElseThrow();
+            entity.setWalletId(card.getWalletId());
+            entity.setCardNumber(card.getCardNumber());
+            entity.setExpiryDate(card.getExpiryDate());
+            entity.setCardHolderName(card.getCardHolderName());
+            entity.setStatus(card.getStatus());
+            entity.setDailyLimit(card.getDailyLimit());
+            entity.setUpdatedAt(card.getUpdatedAt());
+        } else {
+            entity = CardEntity.fromDomain(card);
+        }
+        CardEntity saved = cardJpaRepository.save(entity);
         return saved.toDomain();
     }
 
