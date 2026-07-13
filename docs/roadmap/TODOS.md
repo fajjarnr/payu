@@ -53,9 +53,9 @@
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
 | OPS-2026-04-08-01 | P2 | Ops | ✅ Validated — wallet-service cache config OK, /actuator/health/liveness UP, RESP PING reachable | ✅ Closed |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
-| READY-029 | P2 | Performance | Gatling load test: 1000 concurrent users |
-| READY-030 | P2 | Performance | Stress: SOAK test 24h |
-| READY-022 | P2 | Test | 🔄 Audited: account 22%, auth 19%, tx 4%, wallet 0% core domain coverage. Needs 80%. Major test-writing effort — defer to sprint planning | 🔄 Planned |
+| READY-029 | P2 | Performance | Gatling: defer to cluster integration test phase (needs port-forward or in-cluster runner) | 🔄 Operator-only |
+| READY-030 | P2 | Performance | SOAK 24h: defer to staging environment | 🔄 Staging-only |
+| READY-022 | P2 | Test | 80% coverage: audited 4-22% across 4 services. Sprint planning needed | 🔄 Planned |
 | READY-023 | P2 | Test | Contract tests (Pact/SCC) |
 | READY-060 | P3 | Card | Card tokenization + 3DS |
 | READY-061 | P3 | Mobile | Expo SDK 55 + RN 0.85 upgrade |
