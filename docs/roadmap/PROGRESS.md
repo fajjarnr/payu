@@ -19,9 +19,9 @@
 | Maven Build              | 🟢 43/43                                 | BUILD SUCCESS all modules. |
 | Cache                    | 🟢 Rate limiting on redis-3scale         | Rate limiting migrated from Infinispan RESP to 3scale redis-3scale standalone Redis (L-118). Data Grid RESP still used for general cache. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
-| **API Management**        | 🟢 3scale Tier 1 active, OIDC applied cluster-wide | APIcast routing verified. `oc apply -k` deployed to all 19 services. E2E 11/11 PASSED. |
-| **Production Readiness** | 🟡 Bootstrap in progress                  | OIDC + E2E done. CMS Redis fix + ArgoCD sync remain. |
-| Last Status Update       | 2026-07-13                               | v1.9.5: kustomize OIDC applied. 19 deployments rolled out. E2E 11/11 verified. 100% service coverage. |
+| **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
+| **Production Readiness** | 🟡 Bootstrap in progress                  | OIDC + E2E suite done. CMS Lettuce→DG RESP + Gateway build-from-cluster remain. |
+| Last Status Update       | 2026-07-13                               | v1.9.5: E2E 19 scripts. Gateway 1.9.5 tagged. ArgoCD hard refresh. Lessons L-120/L-121. |
 
 > ✅ **2026-07-13 — Kustomize OIDC applied cluster-wide, E2E 11/11 verified**: `oc apply -k infrastructure/workloads/overlays/payu-dev` deployed external OIDC issuer to all 19 backend deployments. All services rolled out successfully. Full E2E suite verified: 11 scripts PASSED (cards-crud, wallet-balance, billing-billers, promotion-catalog, auth-login, account-service, partner-integration, lending-investment-catalog, transaction-disbursements, api-portal, health-check-all). 6 scripts with documented infra gaps.
 

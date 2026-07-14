@@ -29,13 +29,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 19 E2E scripts, 100+ tests, **100% backend service coverage** (21 services + 5 simulators + lending-rules + loan-origination)
 - 11 scripts verified PASSED: cards-crud, wallet-balance, billing-billers, promotion-catalog, auth-login, account-service, partner-integration, lending-investment-catalog, transaction-disbursements, api-portal, health-check-all
-- 6 scripts ready with documented infra gaps: fx-rates (gateway /v1 routing), transaction-history, cms-statement (CMS Redis), support-compliance-backoffice (admin roles), integration-dispute-portal, notification-health
+- 6 scripts ready with documented infra gaps: fx-rates (gateway /v1 routing), transaction-history, cms-statement (CMS Lettuce→DataGrid RESP), support-compliance-backoffice (admin roles), integration-dispute-portal, notification-health
 - Dual-mode `GATEWAY_MODE=apicast|internal` with self-refreshing JWT + assertion helpers
+- E2E helper bug fixed: `ok()` always returns true, `run_test()` uses `printf` for clean capture
+
+### Infrastructure
+
+- Gateway base deployment bumped to `1.9.5` for `/v1` FX route registry (ArgoCD ImageStream import sync)
+- Kustomize overlay `images[].newTag` for gateway-service updated from `1.8.80` → `1.9.5`
+- CMS Redis connection timeout reduced to 5s (Lettuce→DataGrid RESP known compatibility gap — L-118)
+- ArgoCD hard refresh triggered after Git manifest updates
+
+### Documentation
+
+- L-120: E2E Test Suite shared helper pattern — 19 scripts, dual-mode, JWT auto-refresh, assertion design
+- L-121: ArgoCD ImageStream import vs podman push SHA mismatch — diagnosis + fix workflow
 
 ### Verification
 
 - Full E2E suite: 11/11 verified PASSED after `oc apply -k infrastructure/workloads/overlays/payu-dev`
 - 19/19 deployments successfully rolled out with external OIDC issuer
+- ArgoCD `payu-dev` application Synced + Healthy after hard refresh
 - cards-crud.sh 14/14 PASSED through 3scale APIcast production gateway
 
 ## [1.9.4] - 2026-07-13

@@ -168,6 +168,50 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 ---
 
+## L-120: E2E Test Suite — Shared Helper Pattern for Multi-Service Coverage (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: E2E Testing, Bash Scripting, Multi-Service Architecture, OCP, Keycloak
+**Context**: Membangun 19 E2E scripts dengan 100% backend service coverage (21 services + 5 simulators + lending-rules + loan-origination). Script harus dual-mode (APIcast external gateway + internal oc exec) dengan self-refreshing JWT via Keycloak admin API.
+
+**Lesson**:
+- Gunakan shared helper pattern: `refresh_jwt()`, `assert_http()`, `assert_json()`, `run_test()` — setiap script copy boilerplate yang sama. Jika helper berubah, update harus ke semua script. Better: extract ke `lib/e2e-helpers.sh` dan source.
+- `oc exec` dari gateway pod sebagai jumpbox lebih reliable daripada port-forward (JWT validation butuh Keycloak reachable internal). `run_test()` untuk mode internal tinggal prefix URL dengan `http://localhost:8080` atau `http://<service>.payu-dev.svc.cluster.local:8080`.
+- JWT auto-refresh via Keycloak admin API + client secret di `/tmp/client-secret.txt`. Secret harus direfresh minimal 1x per sesi (admin token expired ~5 menit). Simpan di `/tmp/` bukan di repo.
+- `assert_json` field path traversal harus handle nested dict dan list (e.g. `data.status`, `data.pockets.0.name`). Gunakan Python one-liner untuk reliability.
+- Setiap service punya prefix URL berbeda: Spring Boot = `/api/v1/...`, Quarkus = `/v1`, `/q/health`. Gateway `api-gateway-service` punya route registry yang memetakan prefix ke service target — jika tidak ada di registry, fallback ke direct service URL.
+- `$FAILED` counter harus global — setiap `assert_http()` gagal increment counter. Exit code script = 0 jika `$FAILED=0`, else 1. Hindari `set -e` jika pakai flexible assertion (e.g. "200 or 403 is OK").
+- `printf` jangan `echo` untuk output return value dari `run_test()` — echo menambahkan newline yang merusak comparison.
+- `ok()` helper harus diakhiri `true;` agar tidak exit script saat assertion fail.
+
+**Applied evidence**:
+- 19 scripts, 11 verified PASSED zero-fail: cards-crud (14 tests), wallet-balance (8), billing-billers (6), promotion-catalog (7), auth-login (6), account-service (5), partner-integration (5), lending-investment-catalog (8), transaction-disbursements (9), api-portal (4), health-check-all (18).
+- 6 scripts with documented gaps: fx-rates (gateway /v1 routing butuh image rebuild), transaction-history, cms-statement (CMS Lettuce→DataGrid RESP handshake), support-compliance-backoffice (admin roles), integration-dispute-portal, notification-health.
+- All scripts tested via `GATEWAY_MODE=internal` / `oc exec` jumpbox pattern.
+
+---
+
+## L-121: ArgoCD Image Stream Import vs Podman Push — SHA Mismatch (2026-07-13)
+
+**Date**: 2026-07-13
+**Domain**: ArgoCD, OpenShift ImageStream, Container Registry, GitOps, DevSecOps
+**Context**: Membangun image gateway-service 1.9.5 via `podman build` + `podman push` ke external registry. ImageStream tag `1.9.5` dibuat via `oc tag`. Namun saat ArgoCD reconcile dari kustomize overlay `newTag: "1.9.5"`, deployment tetap menggunakan `1.8.80`. ImageStream status menunjuk SHA yang berbeda dari image yang di-push.
+
+**Lesson**:
+- `oc tag` hanya memetakan tag di ImageStream — tidak mengimport image ke internal registry. `oc import-image` harus dipanggil untuk menarik image dari external registry ke internal OpenShift registry.
+- ImageStream `importPolicy: {importMode: Legacy}` di OCP 4.20 menggunakan SHA digest-based import dari external registry ke internal. Jika SHA internal berbeda dengan SHA yang di-push external, kemungkinan import gagal karena network/registry connectivity.
+- Build dari dalam cluster (via `oc new-build` atau `BuildConfig`) selalu lebih reliable daripada `podman build` + push external. OCP internal registry auto-resolve image ke node lokal tanpa external registry dependency.
+- Untuk hotfix deployment: `oc set image deployment/gateway-service app=...:1.9.5 -n payu-dev` langsung, tapi ArgoCD akan revert. Harus commit ke Git dulu (base deployment + overlay newTag), lalu biarkan ArgoCD reconcile.
+- Kustomize overlay `images[].newTag` harus match dengan version label di Git — jika tidak, ArgoCD `SelfHeal` akan menyebabkan infinite reconcile loop (L-113).
+
+**Applied evidence**:
+- Gateway base deployment bumped ke `1.9.5` di Git + kustomize overlay `newTag` diubah.
+- `oc apply -k` deploy 19 service dengan OIDC external.
+- Gateway akhirnya mengimport `1.9.5` via ImageStream (SHA: `sha256:5a90e...`).
+- ArgoCD hard refresh triggered (`oc annotate application payu-dev argocd.argoproj.io/refresh=hard --overwrite`).
+
+---
+
 ## L-109: Entity-to-Domain-Model Renames Can Truncate Closing Braces in Test Files (2026-07-13)
 
 **Date**: 2026-07-13
