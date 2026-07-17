@@ -1,7 +1,7 @@
 package id.payu.billing.domain.port.out;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 
 public interface PaymentEventPort {
-    void publishPaymentEvent(BillPaymentEntity payment);
+    void publishPaymentEvent(BillPayment payment);
 }

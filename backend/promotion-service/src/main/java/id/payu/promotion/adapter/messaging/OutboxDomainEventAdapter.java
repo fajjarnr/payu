@@ -1,0 +1,2 @@
+package id.payu.promotion.adapter.messaging; import id.payu.outbox.service.OutboxService; import id.payu.promotion.domain.port.out.DomainEventPublisher; import java.util.Map; import org.springframework.stereotype.Component;
+@Component public class OutboxDomainEventAdapter implements DomainEventPublisher {private final OutboxService outbox;public OutboxDomainEventAdapter(OutboxService o){outbox=o;}public void createEvent(String a,String id,String t,Map<String,Object> p,Map<String,Object> m,String topic){outbox.createEvent(a,id,t,p,m,topic);}}

@@ -1,6 +1,6 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.FraudCaseStatus;
 import id.payu.backoffice.domain.RiskLevel;
 import id.payu.backoffice.dto.FraudCaseDecisionRequest;
@@ -40,7 +40,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testCreateFraudCase_Success() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-001",
                 testTransactionId,
@@ -70,7 +70,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testCreateFraudCase_WithDefaultRiskLevel() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-002",
                 testTransactionId,
@@ -91,7 +91,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testGetById_Success() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-QUERY",
                 testTransactionId,
@@ -103,7 +103,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        Optional<FraudCaseEntity> result = fraudCaseService.getById(fraudCase.getId());
+        Optional<FraudCase> result = fraudCaseService.getById(fraudCase.getId());
 
         assertTrue(result.isPresent());
         assertEquals(fraudCase.getId(), result.get().getId());
@@ -111,7 +111,7 @@ class FraudCaseServiceTest {
 
     @Test
     void testGetById_NotFound() {
-        Optional<FraudCaseEntity> result = fraudCaseService.getById(UUID.randomUUID());
+        Optional<FraudCase> result = fraudCaseService.getById(UUID.randomUUID());
 
         assertFalse(result.isPresent());
     }
@@ -131,7 +131,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        List<FraudCaseEntity> results = fraudCaseService.getByUserId(testUserId);
+        List<FraudCase> results = fraudCaseService.getByUserId(testUserId);
 
         assertFalse(results.isEmpty());
         assertTrue(results.stream().anyMatch(fc -> fc.getUserId().equals(testUserId)));
@@ -152,7 +152,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        List<FraudCaseEntity> results = fraudCaseService.listByStatus(FraudCaseStatus.OPEN, 0, 10);
+        List<FraudCase> results = fraudCaseService.listByStatus(FraudCaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
         assertTrue(results.stream().allMatch(fc -> fc.getStatus() == FraudCaseStatus.OPEN));
@@ -173,7 +173,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        List<FraudCaseEntity> results = fraudCaseService.listByRiskLevel(RiskLevel.CRITICAL, 0, 10);
+        List<FraudCase> results = fraudCaseService.listByRiskLevel(RiskLevel.CRITICAL, 0, 10);
 
         assertNotNull(results);
         assertTrue(results.stream().allMatch(fc -> fc.getRiskLevel() == RiskLevel.CRITICAL));
@@ -194,7 +194,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        List<FraudCaseEntity> results = fraudCaseService.listAll(0, 10);
+        List<FraudCase> results = fraudCaseService.listAll(0, 10);
 
         assertNotNull(results);
         assertTrue(results.size() >= 1);
@@ -205,7 +205,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testAssign_Success() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-ASSIGN",
                 testTransactionId,
@@ -217,7 +217,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        FraudCaseEntity result = fraudCaseService.assign(fraudCase.getId(), "admin1");
+        FraudCase result = fraudCaseService.assign(fraudCase.getId(), "admin1");
 
         assertNotNull(result);
         assertEquals("admin1", result.getAssignedTo());
@@ -237,7 +237,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsResolved() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-RESOLVE",
                 testTransactionId,
@@ -254,7 +254,7 @@ class FraudCaseServiceTest {
                 "Case resolved - confirmed fraud"
         );
 
-        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertNotNull(result);
         assertEquals(FraudCaseStatus.RESOLVED, result.getStatus());
@@ -266,7 +266,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsClosed() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-CLOSE",
                 testTransactionId,
@@ -283,7 +283,7 @@ class FraudCaseServiceTest {
                 "False positive"
         );
 
-        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertEquals(FraudCaseStatus.CLOSED, result.getStatus());
         assertEquals("False positive", result.getNotes());
@@ -292,7 +292,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsEscalated() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-ESCALATE",
                 testTransactionId,
@@ -309,7 +309,7 @@ class FraudCaseServiceTest {
                 "Escalating to legal team"
         );
 
-        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertEquals(FraudCaseStatus.ESCALATED, result.getStatus());
         assertEquals("Escalating to legal team", result.getNotes());
@@ -318,7 +318,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testResolve_AsUnderInvestigation() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-INV",
                 testTransactionId,
@@ -335,7 +335,7 @@ class FraudCaseServiceTest {
                 "Need more evidence"
         );
 
-        FraudCaseEntity result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertEquals(FraudCaseStatus.UNDER_INVESTIGATION, result.getStatus());
     }
@@ -358,7 +358,7 @@ class FraudCaseServiceTest {
     @Test
     @Transactional
     void testDelete_Success() {
-        FraudCaseEntity fraudCase = fraudCaseService.create(
+        FraudCase fraudCase = fraudCaseService.create(
                 testUserId,
                 "ACC-DELETE",
                 testTransactionId,
@@ -373,7 +373,7 @@ class FraudCaseServiceTest {
         UUID fraudCaseId = fraudCase.getId();
         fraudCaseService.delete(fraudCaseId);
 
-        Optional<FraudCaseEntity> result = fraudCaseService.getById(fraudCaseId);
+        Optional<FraudCase> result = fraudCaseService.getById(fraudCaseId);
         assertFalse(result.isPresent());
     }
 }

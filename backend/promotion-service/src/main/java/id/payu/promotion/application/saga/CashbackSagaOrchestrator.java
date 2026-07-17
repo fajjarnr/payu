@@ -1,7 +1,7 @@
 package id.payu.promotion.application.saga;
 
-import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
-import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
+import id.payu.promotion.domain.model.Cashback;
+import id.payu.promotion.domain.port.out.CashbackPersistencePort;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaStep;
@@ -35,12 +35,12 @@ import id.payu.promotion.domain.CashbackStatus;
  *   but cashback record stays in PENDING status for manual reconciliation.
  */
 @Component
-public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaContext> {
+public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaContext> implements id.payu.promotion.domain.port.in.CashbackSagaUseCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(CashbackSagaOrchestrator.class);
 
     private final WalletServicePort walletServicePort;
-    private final CashbackRepository cashbackRepository;
+    private final CashbackPersistencePort cashbackRepository;
 
     public CashbackSagaOrchestrator(
             SagaRepository sagaRepository,
@@ -48,7 +48,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
             PlatformTransactionManager transactionManager,
             WalletServicePort walletServicePort,
-            CashbackRepository cashbackRepository) {
+            CashbackPersistencePort cashbackRepository) {
         super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, transactionManager);
         this.walletServicePort = walletServicePort;
         this.cashbackRepository = cashbackRepository;
@@ -122,7 +122,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
         try {
             var request = context.getRequest();
 
-            CashbackEntity cashback = new CashbackEntity();
+            Cashback cashback = new Cashback();
             cashback.setAccountId(request.accountId());
             cashback.setTransactionId(request.transactionId());
             cashback.setTransactionAmount(request.transactionAmount());
@@ -162,7 +162,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             if (context.getCashbackId() != null) {
                 var cashbackOpt = cashbackRepository.findById(context.getCashbackId());
                 if (cashbackOpt.isPresent()) {
-                    CashbackEntity cashback = cashbackOpt.get();
+                    Cashback cashback = cashbackOpt.get();
                     cashback.setStatus(CashbackStatus.VOIDED);
                     cashbackRepository.save(cashback);
                     LOG.info("CashbackEntity marked as VOIDED: id={}", context.getCashbackId());
@@ -191,5 +191,14 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
      */
     public SagaResult<CashbackSagaContext> executeCashbackSaga(CashbackSagaContext context) {
         return execute(context);
+    }
+
+    @Override
+    public id.payu.promotion.domain.model.CashbackSagaOutcome execute(id.payu.promotion.domain.model.CashbackCommand command) {
+        var request = new id.payu.promotion.dto.CreateCashbackRequest(command.accountId(), command.transactionId(), command.transactionAmount(), command.merchantCode(), command.categoryCode(), command.cashbackCode());
+        SagaResult<CashbackSagaContext> result = executeCashbackSaga(new CashbackSagaContext(request));
+        Cashback cashback = result.getData() == null ? null : result.getData().getCashback();
+        return new id.payu.promotion.domain.model.CashbackSagaOutcome(result.isSuccess(), result.isCompensated(), cashback,
+            result.getErrorMessage(), result.getErrorStep(), result.getFinalState().name());
     }
 }

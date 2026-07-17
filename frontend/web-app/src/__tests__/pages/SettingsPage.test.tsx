@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import SettingsPage from '@/app/[locale]/settings/page';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -25,40 +26,40 @@ describe('SettingsPage', () => {
   });
 
   it('should render within DashboardLayout', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render page title', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Ekosistem Akun')).toBeInTheDocument();
   });
 
   it('should render profile section', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Profil Umum')).toBeInTheDocument();
     expect(screen.getByText('PENGGUNA PAYU')).toBeInTheDocument();
     expect(screen.getByText('Premium Member')).toBeInTheDocument();
   });
 
   it('should render credentials section', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Kredensial Profil')).toBeInTheDocument();
   });
 
   it('should render system preferences', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Preferensi Sistem')).toBeInTheDocument();
     expect(screen.getByText('Notifikasi Push')).toBeInTheDocument();
   });
 
   it('should render e-statement section', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('E-Statement')).toBeInTheDocument();
   });
 
   it('should render session actions', () => {
-    render(<SettingsPage />);
+    renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Sinkronisasi Profil')).toBeInTheDocument();
     expect(screen.getByText('Hapus Sesi')).toBeInTheDocument();
   });

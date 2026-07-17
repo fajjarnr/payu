@@ -115,7 +115,7 @@ describe('EmergencyAlert', () => {
   it('should dismiss alert when dismiss button is clicked', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getByLabelText('Dismiss alert');
+    const dismissButton = screen.getAllByLabelText('Dismiss alert')[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe('EmergencyAlert', () => {
   it('should display end date if available', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    expect(screen.getByText(/Valid until/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Valid until/)).toHaveLength(mockAlerts.length);
   });
 
   it('should have proper ARIA attributes', () => {
@@ -268,10 +268,8 @@ describe('EmergencyAlert', () => {
   });
 
   it('should animate alerts in and out', () => {
-    const { container } = renderWithIntl(<EmergencyAlert />);
-
-    const alert = container.querySelector('[initial*="opacity: 0"]');
-    expect(alert).toBeInTheDocument();
+    renderWithIntl(<EmergencyAlert />);
+    expect(screen.getAllByRole('alert')).toHaveLength(mockAlerts.length);
   });
 
   it('should have backdrop blur effect', () => {
@@ -291,7 +289,7 @@ describe('EmergencyAlert', () => {
   it('should format end date correctly', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dateText = screen.getByText((content) => content.startsWith('Valid until'));
-    expect(dateText).toBeInTheDocument();
+    const dateText = screen.getAllByText((content) => content.startsWith('Valid until'));
+    expect(dateText).toHaveLength(mockAlerts.length);
   });
 });

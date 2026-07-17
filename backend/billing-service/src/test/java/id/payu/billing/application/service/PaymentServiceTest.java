@@ -1,6 +1,6 @@
 package id.payu.billing.application.service;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.domain.model.PaymentStatus;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
@@ -45,9 +45,9 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setup() {
-        lenient().when(persistencePort.save(any(BillPaymentEntity.class)))
+        lenient().when(persistencePort.save(any(BillPayment.class)))
                 .thenAnswer(invocation -> {
-                    BillPaymentEntity p = invocation.getArgument(0);
+                    BillPayment p = invocation.getArgument(0);
                     if (p.getId() == null) {
                         p.setId(java.util.UUID.randomUUID());
                     }
@@ -80,7 +80,7 @@ class PaymentServiceTest {
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertNotNull(payment);
@@ -109,7 +109,7 @@ class PaymentServiceTest {
                 .thenReturn(new WalletPort.ReserveResult(null, "FAILED"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertNotNull(payment);
@@ -132,7 +132,7 @@ class PaymentServiceTest {
                 .thenThrow(new RuntimeException("Connection refused"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertNotNull(payment);
@@ -180,7 +180,7 @@ class PaymentServiceTest {
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertEquals(new BigDecimal("2500"), payment.getAdminFee());
@@ -202,7 +202,7 @@ class PaymentServiceTest {
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertEquals(BigDecimal.ZERO, payment.getAdminFee());
@@ -224,7 +224,7 @@ class PaymentServiceTest {
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             // When
-            BillPaymentEntity payment = paymentService.createPayment(request);
+            BillPayment payment = paymentService.createPayment(request);
 
             // Then
             assertEquals(new BigDecimal("2000"), payment.getAdminFee());

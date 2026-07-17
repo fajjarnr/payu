@@ -3,6 +3,8 @@ import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLogin, useLogout, useRefreshToken, useAuth } from '@/hooks/useAuth';
 import AuthService from '@/services/AuthService';
+import { NextIntlClientProvider } from 'next-intl';
+import messages from '../../../messages/id.json';
 
 // Mock AuthService
 vi.mock('@/services/AuthService');
@@ -44,7 +46,9 @@ describe('useLogin hook', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="id" messages={messages}>{children}</NextIntlClientProvider>
+    </QueryClientProvider>
   );
 
   beforeEach(() => {
@@ -98,7 +102,7 @@ describe('useLogin hook', () => {
     // setAuth now only takes (user, accountId) - tokens are in httpOnly cookies
     expect(mockSetAuth).toHaveBeenCalledWith(
       expect.any(Object),
-      ''
+      'user-123'
     );
   });
 
@@ -168,7 +172,9 @@ describe('useLogout hook', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="id" messages={messages}>{children}</NextIntlClientProvider>
+    </QueryClientProvider>
   );
 
   beforeEach(() => {
@@ -203,7 +209,7 @@ describe('useLogout hook', () => {
       await result.current.mutateAsync();
     });
 
-    expect(mockLocation.href).toBe('/login');
+    expect(mockLocation.href).toBe('/id/login');
   });
 
   it('should handle logout mutation states', async () => {
@@ -221,7 +227,9 @@ describe('useRefreshToken hook', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="id" messages={messages}>{children}</NextIntlClientProvider>
+    </QueryClientProvider>
   );
 
   beforeEach(() => {
@@ -295,7 +303,9 @@ describe('useAuth integration', () => {
   let queryClient: QueryClient;
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="id" messages={messages}>{children}</NextIntlClientProvider>
+    </QueryClientProvider>
   );
 
   beforeEach(() => {
@@ -347,7 +357,7 @@ describe('useAuth integration', () => {
 
     // Verify logout was called and redirect happened
     expect(mockLogout).toHaveBeenCalled();
-    expect(mockLocation.href).toBe('/login');
+    expect(mockLocation.href).toBe('/id/login');
   });
 
   it('should handle token refresh during authenticated session', async () => {

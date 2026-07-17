@@ -1,13 +1,15 @@
 package id.payu.promotion.application.service;
 
 import id.payu.promotion.application.saga.CashbackSagaContext;
-import id.payu.promotion.application.saga.CashbackSagaOrchestrator;
-import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
-import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
+import id.payu.promotion.domain.port.in.CashbackSagaUseCase;
+import id.payu.promotion.domain.model.CashbackCommand;
+import id.payu.promotion.domain.model.CashbackSagaOutcome;
+import id.payu.promotion.domain.model.Cashback;
+import id.payu.promotion.domain.port.out.CashbackPersistencePort;
 import id.payu.promotion.domain.CashbackStatus;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.domain.port.out.WalletServicePort;
-import id.payu.outbox.service.OutboxService;
+import id.payu.promotion.domain.port.out.CashbackEventPublisher;
 import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaState;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -37,16 +39,16 @@ import static org.mockito.Mockito.*;
 class CashbackServiceTest {
 
     @Mock
-    private CashbackSagaOrchestrator sagaOrchestrator;
+    private CashbackSagaUseCase sagaOrchestrator;
 
     @Mock
     private WalletServicePort walletServicePort;
 
     @Mock
-    private CashbackRepository cashbackRepository;
+    private CashbackPersistencePort cashbackRepository;
 
     @Mock
-    private OutboxService outboxService;
+    private CashbackEventPublisher outboxService;
 
     @InjectMocks
     private CashbackService cashbackService;
@@ -75,7 +77,7 @@ class CashbackServiceTest {
             "CASHBACK10"
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("20.00"), CashbackStatus.CREDITED);
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -87,18 +89,18 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(successResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertNotNull(result);
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
         assertEquals(CashbackStatus.CREDITED, result.getStatus());
 
-        verify(sagaOrchestrator).executeCashbackSaga(any(CashbackSagaContext.class));
+        verify(sagaOrchestrator).execute(any(CashbackCommand.class));
     }
 
     @Test
@@ -120,8 +122,8 @@ class CashbackServiceTest {
             "CREDIT_WALLET"
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(failureResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(failureResult));
 
         // When & Then
         CashbackService.CashbackCreationException exception = assertThrows(
@@ -132,7 +134,7 @@ class CashbackServiceTest {
         assertTrue(exception.getMessage().contains("Failed to create cashback"));
         assertEquals("CREDIT_WALLET", exception.getFailedStep());
 
-        verify(sagaOrchestrator).executeCashbackSaga(any(CashbackSagaContext.class));
+        verify(sagaOrchestrator).execute(any(CashbackCommand.class));
     }
 
     @Test
@@ -148,7 +150,7 @@ class CashbackServiceTest {
         );
 
         // Create failure result for saga
-        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
+        ArgumentCaptor<CashbackCommand> contextCaptor = ArgumentCaptor.forClass(CashbackCommand.class);
 
         SagaResult<CashbackSagaContext> failureResult = SagaResult.<CashbackSagaContext>builder()
             .sagaId(UUID.randomUUID().toString())
@@ -158,17 +160,17 @@ class CashbackServiceTest {
             .errorStep("CREDIT_WALLET")
             .build();
 
-        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
-            .thenReturn(failureResult);
+        when(sagaOrchestrator.execute(contextCaptor.capture()))
+            .thenReturn(toOutcome(failureResult));
 
         // When & Then
         assertThrows(CashbackService.CashbackCreationException.class,
             () -> cashbackService.createCashback(request));
 
         // Verify saga was called with correct context
-        CashbackSagaContext capturedContext = contextCaptor.getValue();
-        assertEquals(TEST_ACCOUNT_ID, capturedContext.getAccountId());
-        assertEquals(new BigDecimal("20.00"), capturedContext.getAmount());
+        CashbackCommand capturedContext = contextCaptor.getValue();
+        assertEquals(TEST_ACCOUNT_ID, capturedContext.accountId());
+        assertEquals(new BigDecimal("20.00"), new CashbackSagaContext(request).getAmount());
     }
 
     @Test
@@ -183,7 +185,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("20.00"), CashbackStatus.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("2.0000"));
 
@@ -196,20 +198,20 @@ class CashbackServiceTest {
             context
         );
 
-        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
-        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
-            .thenReturn(successResult);
+        ArgumentCaptor<CashbackCommand> contextCaptor = ArgumentCaptor.forClass(CashbackCommand.class);
+        when(sagaOrchestrator.execute(contextCaptor.capture()))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then — verify the mock's return value
         assertEquals(new BigDecimal("20.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("2.0000"), result.getPercentage());
 
         // Also verify the context's calculated amount (exercises CashbackSagaContext.calculateCashbackAmount)
-        CashbackSagaContext capturedContext = contextCaptor.getValue();
-        assertEquals(new BigDecimal("20.00"), capturedContext.getAmount(),
+        CashbackCommand capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("20.00"), new CashbackSagaContext(request).getAmount(),
             "GROCERY category should calculate 2% of 1000.00 = 20.00");
     }
 
@@ -225,7 +227,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("30.00"), CashbackStatus.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("3.0000"));
 
@@ -238,20 +240,20 @@ class CashbackServiceTest {
             context
         );
 
-        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
-        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
-            .thenReturn(successResult);
+        ArgumentCaptor<CashbackCommand> contextCaptor = ArgumentCaptor.forClass(CashbackCommand.class);
+        when(sagaOrchestrator.execute(contextCaptor.capture()))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("30.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("3.0000"), result.getPercentage());
 
         // Verify context's calculated amount
-        CashbackSagaContext capturedContext = contextCaptor.getValue();
-        assertEquals(new BigDecimal("30.00"), capturedContext.getAmount(),
+        CashbackCommand capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("30.00"), new CashbackSagaContext(request).getAmount(),
             "DINING category should calculate 3% of 1000.00 = 30.00");
     }
 
@@ -267,7 +269,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("15.00"), CashbackStatus.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.5000"));
 
@@ -280,20 +282,20 @@ class CashbackServiceTest {
             context
         );
 
-        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
-        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
-            .thenReturn(successResult);
+        ArgumentCaptor<CashbackCommand> contextCaptor = ArgumentCaptor.forClass(CashbackCommand.class);
+        when(sagaOrchestrator.execute(contextCaptor.capture()))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("15.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("1.5000"), result.getPercentage());
 
         // Verify context's calculated amount
-        CashbackSagaContext capturedContext = contextCaptor.getValue();
-        assertEquals(new BigDecimal("15.00"), capturedContext.getAmount(),
+        CashbackCommand capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("15.00"), new CashbackSagaContext(request).getAmount(),
             "SHOPPING category should calculate 1.5% of 1000.00 = 15.00");
     }
 
@@ -309,7 +311,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("10.00"), CashbackStatus.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.0000"));
 
@@ -322,20 +324,20 @@ class CashbackServiceTest {
             context
         );
 
-        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
-        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
-            .thenReturn(successResult);
+        ArgumentCaptor<CashbackCommand> contextCaptor = ArgumentCaptor.forClass(CashbackCommand.class);
+        when(sagaOrchestrator.execute(contextCaptor.capture()))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("10.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("1.0000"), result.getPercentage());
 
         // Verify context's calculated amount
-        CashbackSagaContext capturedContext = contextCaptor.getValue();
-        assertEquals(new BigDecimal("10.00"), capturedContext.getAmount(),
+        CashbackCommand capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("10.00"), new CashbackSagaContext(request).getAmount(),
             "DEFAULT (OTHER) category should calculate 1% of 1000.00 = 10.00");
     }
 
@@ -351,7 +353,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("10.00"), CashbackStatus.CREDITED);
         expectedCashback.setPercentage(new BigDecimal("1.0000"));
 
@@ -364,11 +366,11 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(successResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("10.00"), result.getCashbackAmount());
@@ -387,7 +389,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("24.69"), CashbackStatus.CREDITED);
 
         CashbackSagaContext context = new CashbackSagaContext();
@@ -399,11 +401,11 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(successResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(new BigDecimal("24.69"), result.getCashbackAmount());
@@ -421,7 +423,7 @@ class CashbackServiceTest {
             "PROMO2024"
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("20.00"), CashbackStatus.CREDITED);
         expectedCashback.setCashbackCode("PROMO2024");
 
@@ -434,11 +436,11 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(successResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals("PROMO2024", result.getCashbackCode());
@@ -447,7 +449,7 @@ class CashbackServiceTest {
     @Test
     void testCreateCashback_StatusOnlyCreditedAfterWalletSuccess() {
         // Given - This test verifies the core bug fix:
-        // CashbackEntity status should only be CREDITED after wallet credit succeeds
+        // Cashback status should only be CREDITED after wallet credit succeeds
 
         CreateCashbackRequest request = new CreateCashbackRequest(
             TEST_ACCOUNT_ID,
@@ -458,7 +460,7 @@ class CashbackServiceTest {
             null
         );
 
-        CashbackEntity expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
+        Cashback expectedCashback = createTestCashback(UUID.randomUUID(), TEST_ACCOUNT_ID,
             new BigDecimal("20.00"), CashbackStatus.CREDITED);
         expectedCashback.setCreditedAt(java.time.LocalDateTime.now());
 
@@ -473,11 +475,11 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
-            .thenReturn(successResult);
+        when(sagaOrchestrator.execute(any(CashbackCommand.class)))
+            .thenReturn(toOutcome(successResult));
 
         // When
-        CashbackEntity result = cashbackService.createCashback(request);
+        Cashback result = cashbackService.createCashback(request);
 
         // Then
         assertEquals(CashbackStatus.CREDITED, result.getStatus());
@@ -485,11 +487,11 @@ class CashbackServiceTest {
 
         // Verify the saga context indicates both steps succeeded
         assertTrue(context.isWalletCredited(), "Wallet should be credited");
-        assertTrue(context.isCashbackRecorded(), "CashbackEntity should be recorded");
+        assertTrue(context.isCashbackRecorded(), "Cashback should be recorded");
     }
 
-    private CashbackEntity createTestCashback(UUID id, String accountId, BigDecimal amount, CashbackStatus status) {
-        CashbackEntity cashback = new CashbackEntity();
+    private Cashback createTestCashback(UUID id, String accountId, BigDecimal amount, CashbackStatus status) {
+        Cashback cashback = new Cashback();
         cashback.setId(id);
         cashback.setAccountId(accountId);
         cashback.setTransactionId(TEST_TRANSACTION_ID);
@@ -499,5 +501,12 @@ class CashbackServiceTest {
         cashback.setMerchantCode("MERCHANT001");
         cashback.setCategoryCode("GROCERY");
         return cashback;
+    }
+
+    private CashbackSagaOutcome toOutcome(SagaResult<CashbackSagaContext> result) {
+        Cashback cashback = result.getData() == null ? null : result.getData().getCashback();
+        String state = result.getFinalState() == null ? null : result.getFinalState().name();
+        return new CashbackSagaOutcome(result.isSuccess(), result.isCompensated(), cashback,
+            result.getErrorMessage(), result.getErrorStep(), state);
     }
 }

@@ -210,7 +210,7 @@ export default function PromoPopup({
           size="icon"
           onClick={() => handleClose(false)}
           className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all h-9 w-9"
-          aria-label="Close"
+          aria-label="Close popup"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -239,7 +239,7 @@ export default function PromoPopup({
         >
           <div className="mb-8">
             <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-white/20 backdrop-blur-md">
-              Special Offer
+              SPECIAL OFFER
             </span>
             <h3 className="text-2xl sm:text-4xl font-bold text-foreground mb-4 leading-tight uppercase">
               {currentPopup.title}
@@ -264,7 +264,7 @@ export default function PromoPopup({
               onClick={() => handleClose(true)}
               className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl border-border hover:bg-muted transition-all"
             >
-              Don&apos;t Show
+              Don&apos;t Show Again
             </Button>
           </div>
 

@@ -1,8 +1,8 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.model.Reward;
+import id.payu.promotion.domain.port.out.RewardPersistencePort;
 import id.payu.promotion.dto.RewardSummaryResponse;
-import id.payu.promotion.adapter.persistence.repository.RewardRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,22 +18,22 @@ public class RewardService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RewardService.class);
 
-    private final RewardRepository rewardRepository;
+    private final RewardPersistencePort rewardRepository;
 
-    public RewardService(RewardRepository rewardRepository) {
+    public RewardService(RewardPersistencePort rewardRepository) {
         this.rewardRepository = rewardRepository;
     }
 
-    public Optional<RewardEntity> getReward(UUID id) {
+    public Optional<Reward> getReward(UUID id) {
         return rewardRepository.findById(id);
     }
 
-    public List<RewardEntity> getRewardsByAccount(String accountId) {
+    public List<Reward> getRewardsByAccount(String accountId) {
         return rewardRepository.findByAccountId(accountId);
     }
 
-    public List<RewardEntity> getRewardsByAccount(String accountId, int limit, int offset) {
-        List<RewardEntity> allRewards = rewardRepository.findByAccountId(accountId);
+    public List<Reward> getRewardsByAccount(String accountId, int limit, int offset) {
+        List<Reward> allRewards = rewardRepository.findByAccountId(accountId);
         int start = offset;
         int end = Math.min(offset + limit, allRewards.size());
         if (start >= allRewards.size()) {
@@ -43,16 +43,16 @@ public class RewardService {
     }
 
     public RewardSummaryResponse getRewardSummary(String accountId) {
-        List<RewardEntity> rewards = rewardRepository.findByAccountId(accountId);
+        List<Reward> rewards = rewardRepository.findByAccountId(accountId);
 
         BigDecimal totalCashback = rewards.stream()
-            .filter(r -> r.getType() == RewardType.CASHBACK)
-            .map(RewardEntity::getAmount)
+            .filter(r -> r.type() == RewardType.CASHBACK)
+            .map(Reward::amount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Integer totalPoints = rewards.stream()
-            .filter(r -> r.getType() == RewardType.LOYALTY_POINTS)
-            .map(RewardEntity::getPointsEarned)
+            .filter(r -> r.type() == RewardType.LOYALTY_POINTS)
+            .map(Reward::pointsEarned)
             .filter(points -> points != null)
             .reduce(0, Integer::sum);
 

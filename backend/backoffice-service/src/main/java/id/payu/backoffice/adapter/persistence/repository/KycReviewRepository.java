@@ -6,8 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 import id.payu.backoffice.domain.KycStatus;
 
@@ -15,12 +18,18 @@ import id.payu.backoffice.domain.KycStatus;
 public interface KycReviewRepository extends JpaRepository<KycReviewEntity, UUID> {
     List<KycReviewEntity> findByStatus(KycStatus status);
     Page<KycReviewEntity> findByStatus(KycStatus status, Pageable pageable);
-    List<KycReviewEntity> findByUserId(String userId);
-    List<KycReviewEntity> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<KycReviewEntity> findByUserIdBlindIndexInOrderByCreatedAtDesc(Collection<String> userIdBlindIndexes);
+    Page<KycReviewEntity> findByUserIdBlindIndexIsNull(Pageable pageable);
 
-    // Search methods
-    List<KycReviewEntity> findByUserIdContainingIgnoreCase(String userId);
-    List<KycReviewEntity> findByAccountNumberContainingIgnoreCase(String accountNumber);
-    List<KycReviewEntity> findByDocumentNumberContainingIgnoreCase(String documentNumber);
-    List<KycReviewEntity> findByFullNameContainingIgnoreCase(String fullName);
+    @Query(value = """
+            SELECT * FROM kyc_reviews
+            WHERE user_id_blind_index IS NULL
+               OR user_id_blind_index_key_version IS DISTINCT FROM :currentVersion
+            ORDER BY created_at, id
+            LIMIT :batchSize
+            FOR UPDATE SKIP LOCKED
+            """, nativeQuery = true)
+    List<KycReviewEntity> lockNextPiiMigrationBatch(
+            @Param("currentVersion") String currentVersion, @Param("batchSize") int batchSize);
+
 }

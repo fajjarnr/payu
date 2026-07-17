@@ -1,6 +1,6 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.LoyaltyPoints;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import id.payu.promotion.domain.TransactionType;
@@ -16,7 +16,7 @@ public record LoyaltyPointsResponse(
     LocalDateTime redeemedAt,
     LocalDateTime createdAt
 ) {
-    public static LoyaltyPointsResponse from(LoyaltyPointsEntity loyaltyPoints) {
+    public static LoyaltyPointsResponse from(LoyaltyPoints loyaltyPoints) {
         return new LoyaltyPointsResponse(
             loyaltyPoints.getId(),
             loyaltyPoints.getAccountId(),

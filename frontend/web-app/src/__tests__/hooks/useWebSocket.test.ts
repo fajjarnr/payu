@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 
 vi.mock('@/stores', () => ({
+  useIsAuthenticated: () => true,
   useAuthStore: () => ({
     token: 'test-token'
   })

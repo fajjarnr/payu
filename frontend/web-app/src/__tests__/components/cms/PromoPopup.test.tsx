@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import PromoPopup from '@/components/cms/PromoPopup';
@@ -32,7 +32,7 @@ const mockPopups = [
     actionUrl: '/offers/special',
     actionType: 'DEEP_LINK' as const,
     startDate: '2024-01-01',
-    endDate: '2025-12-31',
+    endDate: '2099-12-31',
     metadata: {},
   },
 ];
@@ -71,6 +71,9 @@ Object.defineProperty(window, 'sessionStorage', {
 expect.extend(toHaveNoViolations);
 
 describe('PromoPopup', () => {
+  const advanceTimers = (milliseconds: number) => {
+    act(() => { vi.advanceTimersByTime(milliseconds); });
+  };
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -95,9 +98,9 @@ describe('PromoPopup', () => {
   it('should render popup after delay', () => {
     renderWithIntl(<PromoPopup delay={2000} />);
 
-    vi.advanceTimersByTime(2000);
+    advanceTimers(2000);
 
-    expect(screen.getByText('Special Offer')).toBeInTheDocument();
+    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
   });
 
   it('should not render when loading', () => {
@@ -129,7 +132,7 @@ describe('PromoPopup', () => {
 
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
   });
@@ -142,7 +145,7 @@ describe('PromoPopup', () => {
 
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
   });
@@ -150,7 +153,7 @@ describe('PromoPopup', () => {
   it('should close popup when close button is clicked', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     const closeButton = screen.getByLabelText('Close popup');
     fireEvent.click(closeButton);
@@ -161,7 +164,7 @@ describe('PromoPopup', () => {
   it('should permanently dismiss when "Don\'t Show Again" is clicked', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     const dontShowButton = screen.getByText("Don't Show Again");
     fireEvent.click(dontShowButton);
@@ -175,7 +178,7 @@ describe('PromoPopup', () => {
   it('should navigate to deep link when action is clicked', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     const claimButton = screen.getByText('Claim Now');
     fireEvent.click(claimButton);
@@ -186,7 +189,8 @@ describe('PromoPopup', () => {
   it('should have no accessibility violations', async () => {
     const { container } = renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
+    vi.useRealTimers();
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
@@ -201,7 +205,7 @@ describe('PromoPopup', () => {
       />
     );
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     const closeButton = screen.getByLabelText('Close popup');
     fireEvent.click(closeButton);
@@ -215,11 +219,11 @@ describe('PromoPopup', () => {
   it('should handle custom delay', () => {
     renderWithIntl(<PromoPopup delay={5000} />);
 
-    vi.advanceTimersByTime(3000);
+    advanceTimers(3000);
     expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
 
-    vi.advanceTimersByTime(2000);
-    expect(screen.getByText('Special Offer')).toBeInTheDocument();
+    advanceTimers(2000);
+    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
   });
 
   it('should handle segment, location, and device props', () => {
@@ -232,15 +236,15 @@ describe('PromoPopup', () => {
       />
     );
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
-    expect(screen.getByText('Special Offer')).toBeInTheDocument();
+    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
   });
 
   it('should display SPECIAL OFFER badge', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     expect(screen.getByText('SPECIAL OFFER')).toBeInTheDocument();
   });
@@ -248,7 +252,7 @@ describe('PromoPopup', () => {
   it('should have proper ARIA attributes', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
-    vi.advanceTimersByTime(100);
+    advanceTimers(100);
 
     const closeButton = screen.getByLabelText('Close popup');
     expect(closeButton).toBeInTheDocument();

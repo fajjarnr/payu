@@ -83,7 +83,7 @@ class CashbackRuleTest {
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE003")
                 .name("5% CashbackEntity")
-                .cashbackPercentage(5)
+                .cashbackPercentage(new BigDecimal("5"))
                 .cashbackType(CashbackType.PERCENTAGE)
                 .maxCashback(new BigDecimal("10000"))
                 .build();
@@ -106,7 +106,7 @@ class CashbackRuleTest {
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE004")
                 .name("10% CashbackEntity Capped")
-                .cashbackPercentage(10)
+                .cashbackPercentage(new BigDecimal("10"))
                 .cashbackType(CashbackType.PERCENTAGE)
                 .maxCashback(new BigDecimal("5000"))
                 .build();
@@ -235,7 +235,7 @@ class CashbackRuleTest {
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE010")
                 .name("Odd Percentage")
-                .cashbackPercentage(3.33)
+                .cashbackPercentage(new BigDecimal("3.33"))
                 .cashbackType(CashbackType.PERCENTAGE)
                 .build();
 
@@ -246,6 +246,22 @@ class CashbackRuleTest {
 
         // Then
         assertEquals(new BigDecimal("333.00"), cashback, "Should round to 2 decimal places");
+    }
+
+    @Test
+    @DisplayName("should preserve decimal percentage without floating-point conversion")
+    void shouldPreserveDecimalPercentage() {
+        BigDecimal percentage = new BigDecimal("3.35");
+
+        CashbackRule rule = CashbackRule.builder()
+                .ruleId("RULE-PRECISION")
+                .cashbackType(CashbackType.PERCENTAGE)
+                .cashbackPercentage(percentage)
+                .build();
+
+        assertEquals(percentage, rule.getCashbackPercentage());
+        assertEquals(new BigDecimal("0.34"),
+                rule.calculateCashback(createTransaction(new BigDecimal("10.00"))));
     }
 
     @Test

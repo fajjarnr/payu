@@ -1,6 +1,6 @@
 package id.payu.backoffice.dto;
 
-import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.backoffice.domain.KycReview;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import id.payu.backoffice.domain.KycStatus;
@@ -21,19 +21,19 @@ public record KycReviewResponse(
         LocalDateTime reviewedAt,
         LocalDateTime createdAt
 ) {
-    public static KycReviewResponse from(KycReviewEntity review) {
+    public static KycReviewResponse from(KycReview review) {
         return new KycReviewResponse(
                 review.getId(),
-                review.getUserId(),
-                review.getAccountNumber(),
+                PiiMasking.lastFour(review.getUserId()),
+                PiiMasking.lastFour(review.getAccountNumber()),
                 review.getDocumentType(),
-                review.getDocumentNumber(),
-                review.getDocumentUrl(),
-                review.getFullName(),
-                review.getAddress(),
-                review.getPhoneNumber(),
+                PiiMasking.lastFour(review.getDocumentNumber()),
+                null,
+                PiiMasking.name(review.getFullName()),
+                "****",
+                PiiMasking.lastFour(review.getPhoneNumber()),
                 review.getStatus(),
-                review.getNotes(),
+                PiiMasking.redact(review.getNotes()),
                 review.getReviewedBy(),
                 review.getReviewedAt(),
                 review.getCreatedAt()

@@ -3,14 +3,13 @@ package id.payu.promotion.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
-import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Architecture Tests for PromotionEntity Service (Spring Boot) — Hexagonal Architecture.
@@ -25,7 +24,7 @@ class ArchitectureTest {
         importedClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("id.payu.promotion");
-        Assumptions.assumeFalse(importedClasses.isEmpty(), "Skipping ArchUnit tests on Java 25 due to class import limitations");
+        assertFalse(importedClasses.isEmpty(), "ArchUnit must import promotion classes");
     }
 
     @Nested
@@ -35,23 +34,13 @@ class ArchitectureTest {
         @Test
         @DisplayName("should follow hexagonal architecture boundaries")
         void shouldFollowHexagonalArchitecture() {
-            layeredArchitecture()
-                    .consideringAllDependencies()
-                    .layer("Adapter.Web").definedBy("..adapter.web..")
-                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
-                    .layer("Application").definedBy("..application..")
-                    .layer("Domain").definedBy("..domain..")
-                    .layer("Config").definedBy("..config..")
-                    .layer("DTO").definedBy("..dto..")
-
-                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
-                    .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
-                    .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
-                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
-                            "Application", "Adapter.Web", "Adapter.Persistence", "DTO")
-                    .whereLayer("DTO").mayOnlyBeAccessedByLayers("Adapter.Web", "Application")
-
-                    .allowEmptyShould(true)
+            noClasses().that().resideInAPackage("..application..")
+                    .should().dependOnClassesThat().resideInAPackage("..adapter..")
+                    .because("application must reach infrastructure only through ports")
+                    .check(importedClasses);
+            noClasses().that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat().resideInAnyPackage("..adapter..", "..application..", "..config..", "..dto..", "org.springframework..", "jakarta.persistence..")
+                    .because("domain is the inward dependency boundary")
                     .check(importedClasses);
         }
     }
@@ -72,7 +61,6 @@ class ArchitectureTest {
                             "org.springframework.web.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns")
-                    .allowEmptyShould(true)
                     .check(importedClasses);
         }
     }

@@ -69,6 +69,7 @@ spec:
               KEYCLOAK_OIDC_ISSUER_URL="${KEYCLOAK_OIDC_ISSUER_URL:-https://sso.payu.fajjjar.my.id/realms/payu}"
               JWT_SECRET="${JWT_SECRET:-$(random_alnum 64)}"
               AES_ENCRYPTION_KEY="${AES_ENCRYPTION_KEY:-$(random_b64 32)}"
+              BLIND_INDEX_KEY="${BLIND_INDEX_KEY:-$(random_b64 32)}"
               SECRET_KEY="${SECRET_KEY:-$(random_b64 32)}"
 
               echo "=== Seeding db-credentials ==="
@@ -86,6 +87,8 @@ spec:
               echo "=== Seeding encryption-keys ==="
               vault kv put secret/payu/encryption-keys \
                 AES_ENCRYPTION_KEY="$AES_ENCRYPTION_KEY" \
+                BLIND_INDEX_KEY="$BLIND_INDEX_KEY" \
+                BLIND_INDEX_PREVIOUS_KEYS="${BLIND_INDEX_PREVIOUS_KEYS:-}" \
                 SECRET_KEY="$SECRET_KEY"
 
               echo "=== Seeding keycloak-credentials ==="

@@ -109,7 +109,7 @@ export function useSilentRefresh() {
         // BUG-AUTH-004: Exponential backoff retry (2s, 4s, 8s, 16s, 32s)
         const backoffMs = Math.min(2000 * Math.pow(2, retryAttemptsRef.current), 32000);
         retryAttemptsRef.current += 1;
-        timerRef.current = setTimeout(() => scheduleRefresh(null), backoffMs);
+        timerRef.current = setTimeout(() => scheduleRefresh(Date.now()), backoffMs);
       }
     }, delay);
   }, [clearTimer, doRefresh]);

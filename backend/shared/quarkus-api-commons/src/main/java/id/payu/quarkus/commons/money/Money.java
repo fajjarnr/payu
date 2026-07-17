@@ -100,10 +100,6 @@ public final class Money implements Serializable, Comparable<Money> {
         return multiply(BigDecimal.valueOf(multiplier));
     }
 
-    public Money multiply(double multiplier) {
-        return multiply(BigDecimal.valueOf(multiplier));
-    }
-
     public Money divide(BigDecimal divisor) {
         Objects.requireNonNull(divisor, "Divisor must not be null");
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
@@ -116,10 +112,6 @@ public final class Money implements Serializable, Comparable<Money> {
 
     public Money divide(long divisor) {
         if (divisor == 0) throw new ArithmeticException("Cannot divide by zero");
-        return divide(BigDecimal.valueOf(divisor));
-    }
-
-    public Money divide(double divisor) {
         return divide(BigDecimal.valueOf(divisor));
     }
 

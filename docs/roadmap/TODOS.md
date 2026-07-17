@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `1.9.5` — 3scale Tier 1 integration, OIDC issuer global fix, card upsert fix, redis-3scale rate limit |
-| **Last Updated** | 2026-07-13 (Session: 3scale integration E2E verified. DEPLOY-010 closed. L-116/117/118 lessons added.) |
+| **Last Release** | `1.9.6` — local security, financial integrity, frontend regression, and Podman parity fixes |
+| **Last Updated** | 2026-07-17 (Frontend full suite and six-service Podman smoke pass; backoffice architecture remains open.) |
 
 ---
 
@@ -27,6 +27,8 @@
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
+| ARCH-BACKOFFICE-001 | P1 | Remediate 373 real backoffice ArchUnit violations: web/application DTOs depend directly on persistence entities and integration tests are included in production package rules. Requires domain/application mapping design; do not suppress the rule. | 🔴 Open |
+| ARCH-JAVA25-001 | P1 | Align ArchUnit/ASM with Java 25 bytecode. Billing logs `Unsupported class file major version 69`, so affected architecture tests may import incomplete class sets and false-green. | 🔴 Open |
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift — ✅ Red Hat registry credentials already in global pull-secret (openshift-config). registry.redhat.io, registry.connect.redhat.com, quay.io all authenticated. No blocker. | ✅ Verified |
 | INFRA-020 | P0 | Reconcile GitOps ApplicationSet with `payu-dev` — 31/33 manual recovery done, ArgoCD app needs re-pointing. Cluster-admin needed for `oc apply -f argocd/` | 🔒 Blocked |
 | INFRA-007 | P1 | DR runbook: ✅ COMPLETE — `docs/operations/DISASTER_RECOVERY.md` (39KB, v2.0, Feb 2026) covers PostgreSQL, Kafka, Vault, DataGrid, Keycloak, service degradation, platform restore, DR testing, escalation matrix. Also: CHATOPS, INCIDENT_RESPONSE, INFRASTRUCTURE_DEPLOYMENT, ZERO-DOWNTIME-DEPLOYMENT. | ✅ Closed |

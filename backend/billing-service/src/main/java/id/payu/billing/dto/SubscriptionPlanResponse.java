@@ -1,6 +1,6 @@
 package id.payu.billing.dto;
 
-import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.domain.model.SubscriptionPlan;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ public record SubscriptionPlanResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static SubscriptionPlanResponse from(SubscriptionPlanEntity plan) {
+    public static SubscriptionPlanResponse from(SubscriptionPlan plan) {
         return new SubscriptionPlanResponse(
                 plan.getId(),
                 plan.getPartnerId(),

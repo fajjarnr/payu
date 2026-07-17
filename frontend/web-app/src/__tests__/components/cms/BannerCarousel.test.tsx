@@ -183,9 +183,9 @@ describe('BannerCarousel', () => {
   });
 
   it('should display indicators for multiple banners', () => {
-    const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
+    renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const indicators = container.querySelectorAll('.rounded-full.transition-all');
+    const indicators = screen.getAllByRole('button', { name: /Go to banner/ });
     expect(indicators.length).toBe(mockBanners.length);
   });
 
@@ -234,7 +234,7 @@ describe('BannerCarousel', () => {
   it('should have correct aspect ratio for responsive design', () => {
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const carousel = container.querySelector('.aspect-\\[2\\/1\\]');
+    const carousel = container.querySelector('.aspect-\\[1\\.8\\/1\\]');
     expect(carousel).toBeInTheDocument();
   });
 
@@ -264,13 +264,13 @@ describe('BannerCarousel', () => {
   it('should display PROMO badge on banners', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    expect(screen.getByText('PROMO')).toBeInTheDocument();
+    expect(screen.getAllByText('PROMO')).toHaveLength(mockBanners.length);
   });
 
   it('should apply hover effect on banner', () => {
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const bannerImage = container.querySelector('.group-hover\\:scale-105');
+    const bannerImage = container.querySelector('[class*="group-hover/item:scale-105"]');
     expect(bannerImage).toBeInTheDocument();
   });
 

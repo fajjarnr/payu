@@ -33,7 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SecurityConfigPatternTest {
 
     private static final Path SOURCE = Paths.get(
-            "src/main/java/id/payu/backoffice/config/SecurityConfig.java");
+            System.getProperty("basedir"),
+            "../shared/security-starter/src/main/java/id/payu/security/config/WebSecurityAutoConfiguration.java")
+            .normalize();
 
     @Test
     @DisplayName("SecurityConfig should not contain the /api/v1/v1/public/** typo")

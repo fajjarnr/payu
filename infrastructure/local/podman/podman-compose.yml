@@ -4,6 +4,12 @@
 #       payu-cache-resp payu-kafka-kafka-bootstrap artemis payu-keycloak-service
 # Optional example: COMPOSE_PROFILES=api-management podman compose
 #       -f podman-compose.yml up -d apicast
+# Local substitutions are intentional: single-node infrastructure, locally built
+# app images, Kafka's internal 29092 listener, and development-only secret defaults.
+
+x-local-security-environment: &local-security-environment
+  PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-PayU-local-PBKDF2-salt-change-outside-development}
+  WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-payu-local-webhook-secret-change-outside-development}
 
 x-app-defaults: &app-defaults
   pull_policy: build
@@ -253,6 +259,7 @@ services:
     ports:
       - 8001:8080
     environment:
+      <<: *local-security-environment
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
       SERVICES_AUTH_URL: http://auth-service:8080
       GATEWAY_URL: http://gateway-service:8080
@@ -274,6 +281,9 @@ services:
       SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      BLIND_INDEX_KEY: ${BLIND_INDEX_KEY:-payu-local-blind-index-key-dev-only-32}
+      BLIND_INDEX_KEY_VERSION: ${BLIND_INDEX_KEY_VERSION:-local-v1}
+      BLIND_INDEX_PREVIOUS_KEYS: ${BLIND_INDEX_PREVIOUS_KEYS:-}
 
       SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
       PAYU_CACHE_REDIS_HOST: payu-cache-resp
@@ -289,6 +299,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-payu-dev-encryption-key-change-in-production-minimum-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
     depends_on:
       payu-cache-resp:
         condition: service_healthy
@@ -318,6 +329,7 @@ services:
     ports:
       - 8002:8080
     environment:
+      <<: *local-security-environment
       PAYU_KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
       PAYU_KEYCLOAK_REALM: payu
       PAYU_KEYCLOAK_CLIENT_ID: payu-backend
@@ -367,6 +379,8 @@ services:
         condition: service_healthy
       payu-keycloak-service:
         condition: service_healthy
+      payu-kafka-kafka-bootstrap:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -389,6 +403,7 @@ services:
     ports:
       - 8003:8080
     environment:
+      <<: *local-security-environment
       SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
       SERVICES_QRIS_URL: http://qris-simulator:8080
@@ -424,6 +439,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payu-database-rw:5432/payu_transaction
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      PAYU_CALLBACK_SIGNATURE_SECRET: ${CALLBACK_SIGNATURE_SECRET:-local-development-callback-signature-secret}
     depends_on:
       payu-cache-resp:
         condition: service_healthy
@@ -453,6 +469,7 @@ services:
     ports:
       - 8004:8080
     environment:
+      <<: *local-security-environment
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -514,6 +531,7 @@ services:
     ports:
       - 8087:8080
     environment:
+      <<: *local-security-environment
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -575,6 +593,7 @@ services:
     ports:
       - 8009:8080
     environment:
+      <<: *local-security-environment
       WALLET_SERVICE_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -637,6 +656,7 @@ services:
     ports:
       - 8010:8080
     environment:
+      <<: *local-security-environment
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -741,7 +761,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -799,7 +819,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -858,7 +878,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -875,10 +895,16 @@ services:
     ports:
       - 8005:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SERVICES_WALLET_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
+      ARTEMIS_URL: tcp://artemis:61616
+      ARTEMIS_HOST: artemis
+      ARTEMIS_PORT: "61616"
+      ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
       DB_URL: jdbc:postgresql://payu-database-rw:5432/payu_billing
       DATABASE_URL: jdbc:postgresql://payu-database-rw:5432/payu_billing
       SERVER_PORT: "8080"
@@ -914,6 +940,8 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
+      artemis:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -936,11 +964,16 @@ services:
     ports:
       - 8006:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       ARTEMIS_URL: tcp://artemis:61616
+      ARTEMIS_HOST: artemis
+      ARTEMIS_PORT: "61616"
+      ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://payu-database-rw:5432/payu_notification
       QUARKUS_DATASOURCE_USERNAME: payu
@@ -969,12 +1002,14 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
+      artemis:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -992,6 +1027,7 @@ services:
     ports:
       - 8080:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KEYCLOAK_URL: http://payu-keycloak-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
@@ -1041,6 +1077,8 @@ services:
       FX_SERVICE_URL: http://fx-service:8080
       WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
       GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-payu-web-local-client-secret}
       BIFAST_SIMULATOR_URL: http://bi-fast-simulator:8080
       DUKCAPIL_SIMULATOR_URL: http://dukcapil-simulator:8080
       QRIS_SIMULATOR_URL: http://qris-simulator:8080
@@ -1080,7 +1118,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1096,6 +1134,7 @@ services:
     ports:
       - 8011:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SERVICES_KYC_URL: http://kyc-service:8080
       SERVICES_WALLET_URL: http://wallet-service:8080
@@ -1158,6 +1197,7 @@ services:
     ports:
       - 8012:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1202,7 +1242,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1219,6 +1259,7 @@ services:
     ports:
       - 8013:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1279,6 +1320,7 @@ services:
     ports:
       - 8014:8080
     environment:
+      <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1339,6 +1381,7 @@ services:
     ports:
       - 8021:8080
     environment:
+      <<: *local-security-environment
       ACCOUNT_SERVICE_URL: http://account-service:8080
       AUTH_SERVICE_URL: http://auth-service:8080
       TRANSACTION_SERVICE_URL: http://transaction-service:8080
@@ -1381,6 +1424,12 @@ services:
     depends_on:
       payu-cache-resp:
         condition: service_healthy
+      payu-database-rw:
+        condition: service_healthy
+      payu-kafka-kafka-bootstrap:
+        condition: service_healthy
+      payu-keycloak-service:
+        condition: service_healthy
       account-service:
         condition: service_healthy
       auth-service:
@@ -1416,7 +1465,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health
+        - http://localhost:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1434,6 +1483,7 @@ services:
     ports:
       - 8015:8080
     environment:
+      <<: *local-security-environment
       SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_TRANSACTION_URL: http://transaction-service:8080
       KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
@@ -1505,6 +1555,7 @@ services:
     ports:
       - 8007:8080
     environment:
+      <<: *local-security-environment
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@payu-database-rw:5432/payu_kyc
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
@@ -1516,10 +1567,18 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       PORT: "8080"
       SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
+      ARTEMIS_HOST: artemis
+      ARTEMIS_STOMP_PORT: "61616"
+      ARTEMIS_HEARTBEAT_SEND_MS: "30000"
+      ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
+      ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
     depends_on:
       payu-database-rw:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
+        condition: service_healthy
+      artemis:
         condition: service_healthy
     healthcheck:
       test:
@@ -1541,6 +1600,7 @@ services:
     ports:
       - 8008:8080
     environment:
+      <<: *local-security-environment
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@payu-database-rw:5432/payu_analytics
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
@@ -1576,6 +1636,7 @@ services:
     ports:
       - "8095:8080"
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
@@ -1621,7 +1682,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1638,6 +1699,7 @@ services:
     ports:
       - "8096:8080"
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: payu-database-rw
@@ -1696,6 +1758,7 @@ services:
     ports:
       - "8098:8080"
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
@@ -1742,7 +1805,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1759,6 +1822,7 @@ services:
     ports:
       - "8101:8080"
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
@@ -1792,6 +1856,11 @@ services:
       PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
+      ARTEMIS_URL: tcp://artemis:61616
+      ARTEMIS_HOST: artemis
+      ARTEMIS_PORT: "61616"
+      ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
     depends_on:
       payu-cache-resp:
         condition: service_healthy
@@ -1799,12 +1868,14 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
+      artemis:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1821,6 +1892,7 @@ services:
     ports:
       - "8100:8080"
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
@@ -1864,7 +1936,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1879,7 +1951,7 @@ services:
     networks:
       - payu-network
     ports:
-      - 3001:3000
+      - 3001:8080
     environment:
       NEXT_PUBLIC_API_URL: /api/v1
       GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
@@ -1895,7 +1967,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:3000/api/health
+        - http://localhost:8080/api/health
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1931,6 +2003,7 @@ services:
     ports:
       - 8103:8080
     environment:
+      <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       DATABASE_URL: jdbc:postgresql://payu-database-rw:5432/payu_loan_origination

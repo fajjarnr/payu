@@ -157,6 +157,19 @@ spec:
               name: dev-env-secrets
               key: ENCRYPTION_SALT
               optional: true
+        - name: BLIND_INDEX_KEY
+          valueFrom:
+            secretKeyRef:
+              name: payu-secrets
+              key: BLIND_INDEX_KEY
+        - name: BLIND_INDEX_KEY_VERSION
+          value: v1
+        - name: BLIND_INDEX_PREVIOUS_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: payu-secrets
+              key: BLIND_INDEX_PREVIOUS_KEYS
+              optional: true
         - name: WEBHOOK_SECURITY_SECRET
           valueFrom:
             secretKeyRef:

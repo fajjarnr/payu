@@ -1,6 +1,6 @@
 package id.payu.backoffice.dto;
 
-import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.domain.FraudCase;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.math.BigDecimal;
@@ -25,11 +25,11 @@ public record FraudCaseResponse(
         LocalDateTime resolvedAt,
         LocalDateTime createdAt
 ) {
-    public static FraudCaseResponse from(FraudCaseEntity fraudCase) {
+    public static FraudCaseResponse from(FraudCase fraudCase) {
         return new FraudCaseResponse(
                 fraudCase.getId(),
                 fraudCase.getUserId(),
-                fraudCase.getAccountNumber(),
+                PiiMasking.lastFour(fraudCase.getAccountNumber()),
                 fraudCase.getTransactionId(),
                 fraudCase.getTransactionType(),
                 fraudCase.getAmount(),
@@ -37,7 +37,7 @@ public record FraudCaseResponse(
                 fraudCase.getRiskLevel(),
                 fraudCase.getStatus(),
                 fraudCase.getDescription(),
-                fraudCase.getEvidence(),
+                null,
                 fraudCase.getNotes(),
                 fraudCase.getAssignedTo(),
                 fraudCase.getResolvedBy(),

@@ -1,6 +1,7 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
+import id.payu.promotion.domain.model.Promotion;
+import id.payu.promotion.domain.model.Reward;
 import id.payu.promotion.dto.CreatePromotionRequest;
 import id.payu.promotion.dto.UpdatePromotionRequest;
 import id.payu.promotion.dto.ClaimPromotionRequest;
@@ -71,7 +72,7 @@ public class PromotionResource extends BaseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> createPromotion(@Valid @RequestBody CreatePromotionRequest request) {
         try {
-            PromotionEntity promotion = promotionService.createPromotion(request);
+            Promotion promotion = promotionService.createPromotion(request);
             return created(PromotionResponse.from(promotion), "/api/v1/promotions/{id}", promotion.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_001", e.getMessage());
@@ -92,7 +93,7 @@ public class PromotionResource extends BaseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> updatePromotion(@PathVariable UUID id, @RequestBody UpdatePromotionRequest request) {
         try {
-            PromotionEntity promotion = promotionService.updatePromotion(id, request);
+            Promotion promotion = promotionService.updatePromotion(id, request);
             return ok(PromotionResponse.from(promotion));
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_002", e.getMessage());
@@ -121,8 +122,8 @@ public class PromotionResource extends BaseController {
                     request.merchantCode(),
                     request.categoryCode()
             );
-            id.payu.promotion.adapter.persistence.entity.RewardEntity reward = promotionService.claimPromotion(code, securedRequest);
-            return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.getId());
+            Reward reward = promotionService.claimPromotion(code, securedRequest);
+            return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.id());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_003", e.getMessage());
         }
@@ -142,7 +143,7 @@ public class PromotionResource extends BaseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> activatePromotion(@PathVariable UUID id) {
         try {
-            PromotionEntity promotion = promotionService.activatePromotion(id);
+            Promotion promotion = promotionService.activatePromotion(id);
             return ok(PromotionResponse.from(promotion));
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_004", e.getMessage());
@@ -160,7 +161,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotion(@PathVariable UUID id) {
-        Optional<PromotionEntity> promotionOpt = promotionService.getPromotion(id);
+        Optional<Promotion> promotionOpt = promotionService.getPromotion(id);
         if (promotionOpt.isPresent()) {
             return ok(PromotionResponse.from(promotionOpt.get()));
         }
@@ -178,7 +179,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotionByCode(@PathVariable String code) {
-        Optional<PromotionEntity> promotionOpt = promotionService.getPromotionByCode(code);
+        Optional<Promotion> promotionOpt = promotionService.getPromotionByCode(code);
         if (promotionOpt.isPresent()) {
             return ok(PromotionResponse.from(promotionOpt.get()));
         }
@@ -195,7 +196,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getActivePromotions() {
-        List<PromotionEntity> promotions = promotionService.getActivePromotions();
+        List<Promotion> promotions = promotionService.getActivePromotions();
         return ok(promotions.stream().map(PromotionResponse::from).toList());
     }
 

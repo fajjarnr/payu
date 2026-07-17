@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
@@ -16,6 +16,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import type { CarouselApi } from '@/components/ui/carousel';
 
 interface BannerCarouselProps {
   className?: string;
@@ -42,6 +43,16 @@ export default function BannerCarousel({
   );
   // BUG-FE-011 FIX: Debounce navigation to prevent history flooding
   const isNavigating = useRef(false);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    const updateCurrent = () => setCurrent(api.selectedScrollSnap());
+    updateCurrent();
+    api.on('select', updateCurrent);
+    return () => { api.off('select', updateCurrent); };
+  }, [api]);
 
   const handleBannerClick = (banner: Content) => {
     if (onBannerClick) {
@@ -74,6 +85,7 @@ export default function BannerCarousel({
   return (
     <div className={clsx('relative w-full group/carousel', className)}>
       <Carousel
+        setApi={setApi}
         plugins={[plugin.current]}
         className="w-full"
         onMouseEnter={plugin.current.stop}
@@ -113,7 +125,7 @@ export default function BannerCarousel({
                     className="max-w-xl"
                   >
                     <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 backdrop-blur-md uppercase border border-white/20">
-                      Exclusive Promo
+                      PROMO
                     </span>
                     <h3 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 leading-[1.1] tracking-tight uppercase">
                       {banner.title}
@@ -129,11 +141,30 @@ export default function BannerCarousel({
         </CarouselContent>
         
         {/* Navigation - Premium styling */}
-        <div className="hidden sm:block">
-          <CarouselPrevious className="left-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
-          <CarouselNext className="right-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
-        </div>
+        {banners.length > 1 && (
+          <div className="hidden sm:block">
+            <CarouselPrevious aria-label="Previous banner" className="left-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
+            <CarouselNext aria-label="Next banner" className="right-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
+          </div>
+        )}
       </Carousel>
+      {banners.length > 1 && (
+        <div className="mt-3 flex justify-center gap-2" aria-label="Banner pagination">
+          {banners.map((banner, index) => (
+            <button
+              key={banner.id}
+              type="button"
+              aria-label={`Go to banner ${index + 1}`}
+              aria-current={index === current ? 'true' : undefined}
+              onClick={() => api?.scrollTo(index)}
+              className={clsx(
+                'h-2 rounded-full transition-all',
+                index === current ? 'w-8 bg-bank-green' : 'w-2 bg-muted-foreground/30'
+              )}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

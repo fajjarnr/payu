@@ -1,6 +1,6 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.CaseType;
 import id.payu.backoffice.domain.CustomerCaseStatus;
 import id.payu.backoffice.domain.Priority;
@@ -49,7 +49,7 @@ class CustomerCaseServiceTest {
                 "Please investigate"
         );
 
-        CustomerCaseEntity result = customerCaseService.create(request);
+        CustomerCase result = customerCaseService.create(request);
 
         assertNotNull(result);
         assertNotNull(result.getId());
@@ -78,7 +78,7 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity result = customerCaseService.create(request);
+        CustomerCase result = customerCaseService.create(request);
 
         assertNotNull(result);
         assertEquals(Priority.MEDIUM, result.getPriority());
@@ -107,7 +107,7 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity result1 = customerCaseService.create(request1);
+        CustomerCase result1 = customerCaseService.create(request1);
 
         try {
             Thread.sleep(50);
@@ -115,7 +115,7 @@ class CustomerCaseServiceTest {
             Thread.currentThread().interrupt();
         }
 
-        CustomerCaseEntity result2 = customerCaseService.create(request2);
+        CustomerCase result2 = customerCaseService.create(request2);
 
         assertNotEquals(result1.getCaseNumber(), result2.getCaseNumber());
     }
@@ -135,9 +135,9 @@ class CustomerCaseServiceTest {
                 "Urgent attention needed"
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
-        Optional<CustomerCaseEntity> result = customerCaseService.getById(customerCase.getId());
+        Optional<CustomerCase> result = customerCaseService.getById(customerCase.getId());
 
         assertTrue(result.isPresent());
         assertEquals(customerCase.getId(), result.get().getId());
@@ -145,7 +145,7 @@ class CustomerCaseServiceTest {
 
     @Test
     void testGetById_NotFound() {
-        Optional<CustomerCaseEntity> result = customerCaseService.getById(UUID.randomUUID());
+        Optional<CustomerCase> result = customerCaseService.getById(UUID.randomUUID());
 
         assertFalse(result.isPresent());
     }
@@ -163,9 +163,9 @@ class CustomerCaseServiceTest {
                 "Urgent attention needed"
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
-        Optional<CustomerCaseEntity> result = customerCaseService.getByCaseNumber(customerCase.getCaseNumber());
+        Optional<CustomerCase> result = customerCaseService.getByCaseNumber(customerCase.getCaseNumber());
 
         assertTrue(result.isPresent());
         assertEquals(customerCase.getCaseNumber(), result.get().getCaseNumber());
@@ -173,7 +173,7 @@ class CustomerCaseServiceTest {
 
     @Test
     void testGetByCaseNumber_NotFound() {
-        Optional<CustomerCaseEntity> result = customerCaseService.getByCaseNumber("NONEXISTENT-CASE");
+        Optional<CustomerCase> result = customerCaseService.getByCaseNumber("NONEXISTENT-CASE");
 
         assertFalse(result.isPresent());
     }
@@ -193,7 +193,7 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.getByUserId(testUserId);
+        List<CustomerCase> results = customerCaseService.getByUserId(testUserId);
 
         assertNotNull(results);
         assertFalse(results.isEmpty());
@@ -215,7 +215,7 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 10);
+        List<CustomerCase> results = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
         assertTrue(results.stream().allMatch(cc -> cc.getStatus() == CustomerCaseStatus.OPEN));
@@ -236,7 +236,7 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.listByPriority(Priority.URGENT, 0, 10);
+        List<CustomerCase> results = customerCaseService.listByPriority(Priority.URGENT, 0, 10);
 
         assertNotNull(results);
         assertTrue(results.stream().allMatch(cc -> cc.getPriority() == Priority.URGENT));
@@ -257,7 +257,7 @@ class CustomerCaseServiceTest {
 
         customerCaseService.create(request);
 
-        List<CustomerCaseEntity> results = customerCaseService.listAll(0, 10);
+        List<CustomerCase> results = customerCaseService.listAll(0, 10);
 
         assertNotNull(results);
         assertTrue(results.size() >= 1);
@@ -278,9 +278,9 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
-        CustomerCaseEntity result = customerCaseService.assign(customerCase.getId(), "agent1");
+        CustomerCase result = customerCaseService.assign(customerCase.getId(), "agent1");
 
         assertNotNull(result);
         assertEquals("agent1", result.getAssignedTo());
@@ -310,14 +310,14 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
                 CustomerCaseStatus.RESOLVED,
                 "Issue resolved successfully"
         );
 
-        CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent2");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent2");
 
         assertNotNull(result);
         assertEquals(CustomerCaseStatus.RESOLVED, result.getStatus());
@@ -339,14 +339,14 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
                 CustomerCaseStatus.CLOSED,
                 "Case closed - customer satisfied"
         );
 
-        CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent3");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent3");
 
         assertEquals(CustomerCaseStatus.CLOSED, result.getStatus());
         assertEquals("Case closed - customer satisfied", result.getNotes());
@@ -367,14 +367,14 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
 
         CustomerCaseUpdateRequest updateRequest = new CustomerCaseUpdateRequest(
                 CustomerCaseStatus.IN_PROGRESS,
                 "Working on this issue"
         );
 
-        CustomerCaseEntity result = customerCaseService.update(customerCase.getId(), updateRequest, "agent4");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent4");
 
         assertEquals(CustomerCaseStatus.IN_PROGRESS, result.getStatus());
         assertEquals("Working on this issue", result.getNotes());
@@ -410,12 +410,12 @@ class CustomerCaseServiceTest {
                 null
         );
 
-        CustomerCaseEntity customerCase = customerCaseService.create(request);
+        CustomerCase customerCase = customerCaseService.create(request);
         UUID caseId = customerCase.getId();
 
         customerCaseService.delete(caseId);
 
-        Optional<CustomerCaseEntity> result = customerCaseService.getById(caseId);
+        Optional<CustomerCase> result = customerCaseService.getById(caseId);
         assertFalse(result.isPresent());
     }
 
@@ -441,11 +441,11 @@ class CustomerCaseServiceTest {
         }
 
         // Get first page
-        List<CustomerCaseEntity> page1 = customerCaseService.listAll(0, 2);
+        List<CustomerCase> page1 = customerCaseService.listAll(0, 2);
         assertTrue(page1.size() <= 2);
 
         // Get second page
-        List<CustomerCaseEntity> page2 = customerCaseService.listAll(1, 2);
+        List<CustomerCase> page2 = customerCaseService.listAll(1, 2);
         assertTrue(page2.size() <= 2);
     }
 
@@ -467,10 +467,10 @@ class CustomerCaseServiceTest {
             customerCaseService.create(request);
         }
 
-        List<CustomerCaseEntity> page1 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 2);
+        List<CustomerCase> page1 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 0, 2);
         assertTrue(page1.size() <= 2);
 
-        List<CustomerCaseEntity> page2 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 1, 2);
+        List<CustomerCase> page2 = customerCaseService.listByStatus(CustomerCaseStatus.OPEN, 1, 2);
         assertTrue(page2.size() <= 2);
     }
 }

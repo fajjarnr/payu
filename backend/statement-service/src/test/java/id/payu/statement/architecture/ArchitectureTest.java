@@ -1,7 +1,9 @@
 package id.payu.statement.architecture;
 
+import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import org.junit.jupiter.api.DisplayName;
@@ -10,24 +12,36 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@AnalyzeClasses(packages = "id.payu.statement")
+@AnalyzeClasses(
+        packages = "id.payu.statement",
+        importOptions = ImportOption.DoNotIncludeTests.class
+)
 public class ArchitectureTest {
+
+    @ArchTest
+    static void classes_should_be_imported(JavaClasses classes) {
+        assertFalse(classes.isEmpty(), "ArchUnit must import statement classes");
+    }
 
     @ArchTest
     static final ArchRule hexagonal_architecture = layeredArchitecture()
             .consideringOnlyDependenciesInAnyPackage("id.payu.statement..")
             .layer("Adapter.Web").definedBy("..adapter.web..")
+            .layer("Adapter.Client").definedBy("..adapter.client..")
             .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
             .layer("Application").definedBy("..application..")
             .layer("Domain").definedBy("..domain..")
             .layer("Config").definedBy("..config..")
 
             .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+            .whereLayer("Adapter.Client").mayOnlyBeAccessedByLayers("Application")
             .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
             .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
-            .whereLayer("Domain").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Persistence", "Application")
+            .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                    "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Application")
             .allowEmptyShould(true);
 
     // Epic E-19: Receipt Domain Architecture Tests
@@ -46,10 +60,10 @@ public class ArchitectureTest {
                     .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule receipt_repository_port_should_be_in_application_port_package =
+    static final ArchRule receipt_repository_port_should_be_in_domain_port_package =
             ArchRuleDefinition.classes()
                     .that().haveSimpleNameContaining("ReceiptRepositoryPort")
-                    .should().resideInAPackage("..application.port.output..")
+                    .should().resideInAPackage("..domain.port.out..")
                     .allowEmptyShould(true);
 
     @ArchTest

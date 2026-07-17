@@ -1,6 +1,6 @@
 package id.payu.promotion.integration;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.LoyaltyBalanceResponse;
@@ -55,7 +55,7 @@ class LoyaltyPointsServiceIntegrationTest {
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         Assertions.assertNotNull(points.getId());
         Assertions.assertEquals("acc-points-001", points.getAccountId());
@@ -67,7 +67,7 @@ class LoyaltyPointsServiceIntegrationTest {
         Assertions.assertNotNull(points.getCreatedAt());
 
         // Verify persistence by fetching from database
-        Optional<LoyaltyPointsEntity> fetched = loyaltyPointsService.getLoyaltyPoints(points.getId());
+        Optional<LoyaltyPoints> fetched = loyaltyPointsService.getLoyaltyPoints(points.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("acc-points-001", fetched.get().getAccountId());
     }
@@ -82,7 +82,7 @@ class LoyaltyPointsServiceIntegrationTest {
             LocalDateTime.now().plusMonths(12)
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         // New user should have balance of 50 (0 + 50)
         Assertions.assertEquals(50, points.getBalanceAfter());
@@ -111,7 +111,7 @@ class LoyaltyPointsServiceIntegrationTest {
         ));
 
         // Third transaction
-        LoyaltyPointsEntity third = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
+        LoyaltyPoints third = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
             accountId,
             "txn-003",
             TransactionType.EARNED,
@@ -137,7 +137,7 @@ class LoyaltyPointsServiceIntegrationTest {
             LocalDateTime.now().plusMonths(12)
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         Assertions.assertEquals(TransactionType.REFERRAL_BONUS, points.getTransactionType());
         Assertions.assertEquals(500, points.getPoints());
@@ -162,7 +162,7 @@ class LoyaltyPointsServiceIntegrationTest {
         ));
 
         // Adjustment (manual correction)
-        LoyaltyPointsEntity adjustment = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
+        LoyaltyPoints adjustment = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
             accountId,
             "txn-adjustment",
             TransactionType.ADJUSTED,
@@ -197,7 +197,7 @@ class LoyaltyPointsServiceIntegrationTest {
             "txn-redeem-001"
         );
 
-        LoyaltyPointsEntity redemption = loyaltyPointsService.redeemPoints(redeemRequest);
+        LoyaltyPoints redemption = loyaltyPointsService.redeemPoints(redeemRequest);
 
         Assertions.assertNotNull(redemption.getId());
         Assertions.assertEquals(accountId, redemption.getAccountId());
@@ -208,7 +208,7 @@ class LoyaltyPointsServiceIntegrationTest {
         Assertions.assertNotNull(redemption.getRedeemedAt());
 
         // Verify persistence
-        Optional<LoyaltyPointsEntity> fetched = loyaltyPointsService.getLoyaltyPoints(redemption.getId());
+        Optional<LoyaltyPoints> fetched = loyaltyPointsService.getLoyaltyPoints(redemption.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals(-100, fetched.get().getPoints());
     }
@@ -258,7 +258,7 @@ class LoyaltyPointsServiceIntegrationTest {
             "txn-exact-redeem"
         );
 
-        LoyaltyPointsEntity redemption = loyaltyPointsService.redeemPoints(redeemRequest);
+        LoyaltyPoints redemption = loyaltyPointsService.redeemPoints(redeemRequest);
 
         Assertions.assertEquals(-200, redemption.getPoints());
         Assertions.assertEquals(0, redemption.getBalanceAfter());
@@ -292,7 +292,7 @@ class LoyaltyPointsServiceIntegrationTest {
         ));
 
         // Third redemption
-        LoyaltyPointsEntity thirdRedemption = loyaltyPointsService.redeemPoints(new RedeemLoyaltyPointsRequest(
+        LoyaltyPoints thirdRedemption = loyaltyPointsService.redeemPoints(new RedeemLoyaltyPointsRequest(
             accountId, 300, "txn-redeem-3"
         ));
 
@@ -317,9 +317,9 @@ class LoyaltyPointsServiceIntegrationTest {
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPointsEntity created = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints created = loyaltyPointsService.addPoints(request);
 
-        Optional<LoyaltyPointsEntity> fetched = loyaltyPointsService.getLoyaltyPoints(created.getId());
+        Optional<LoyaltyPoints> fetched = loyaltyPointsService.getLoyaltyPoints(created.getId());
 
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("acc-get-001", fetched.get().getAccountId());
@@ -328,7 +328,7 @@ class LoyaltyPointsServiceIntegrationTest {
 
     @Test
     void testGetLoyaltyPoints_WithInvalidId_ShouldReturnEmpty() {
-        Optional<LoyaltyPointsEntity> fetched = loyaltyPointsService.getLoyaltyPoints(UUID.randomUUID());
+        Optional<LoyaltyPoints> fetched = loyaltyPointsService.getLoyaltyPoints(UUID.randomUUID());
 
         Assertions.assertTrue(fetched.isEmpty());
     }
@@ -350,7 +350,7 @@ class LoyaltyPointsServiceIntegrationTest {
             accountId, 75, "txn-003"
         ));
 
-        List<LoyaltyPointsEntity> transactions = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
+        List<LoyaltyPoints> transactions = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
 
         Assertions.assertEquals(3, transactions.size());
         Assertions.assertTrue(transactions.stream().allMatch(t -> t.getAccountId().equals(accountId)));
@@ -362,7 +362,7 @@ class LoyaltyPointsServiceIntegrationTest {
 
     @Test
     void testGetLoyaltyPointsByAccount_WithNoTransactions_ShouldReturnEmpty() {
-        List<LoyaltyPointsEntity> transactions = loyaltyPointsService.getLoyaltyPointsByAccount("acc-no-history");
+        List<LoyaltyPoints> transactions = loyaltyPointsService.getLoyaltyPointsByAccount("acc-no-history");
 
         Assertions.assertTrue(transactions.isEmpty());
     }
@@ -467,7 +467,7 @@ class LoyaltyPointsServiceIntegrationTest {
         ));
 
         // Simulate expiration (manual entry)
-        LoyaltyPointsEntity expired = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
+        LoyaltyPoints expired = loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
             accountId, "txn-expired", TransactionType.EXPIRED, -100,
             null
         ));
@@ -493,12 +493,12 @@ class LoyaltyPointsServiceIntegrationTest {
             expiryDate
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         Assertions.assertEquals(expiryDate.withNano(0), points.getExpiryDate().withNano(0));
 
         // Verify persistence
-        Optional<LoyaltyPointsEntity> fetched = loyaltyPointsService.getLoyaltyPoints(points.getId());
+        Optional<LoyaltyPoints> fetched = loyaltyPointsService.getLoyaltyPoints(points.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertNotNull(fetched.get().getExpiryDate());
     }
@@ -513,7 +513,7 @@ class LoyaltyPointsServiceIntegrationTest {
             null // No expiry date
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         Assertions.assertNull(points.getExpiryDate());
     }
@@ -552,7 +552,7 @@ class LoyaltyPointsServiceIntegrationTest {
             LocalDateTime.now().plusMonths(12)
         );
 
-        LoyaltyPointsEntity points = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints points = loyaltyPointsService.addPoints(request);
 
         Assertions.assertEquals(999999, points.getPoints());
         Assertions.assertEquals(999999, points.getBalanceAfter());

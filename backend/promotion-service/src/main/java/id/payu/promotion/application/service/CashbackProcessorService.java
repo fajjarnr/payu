@@ -22,7 +22,7 @@ import id.payu.promotion.domain.model.CashbackStatus;
  * Listens to transaction events and applies matching cashback rules.
  */
 @Service
-public class CashbackProcessorService {
+public class CashbackProcessorService implements id.payu.promotion.application.port.in.ProcessCashbackUseCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(CashbackProcessorService.class);
 

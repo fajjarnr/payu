@@ -1,6 +1,6 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
+import id.payu.promotion.domain.model.Referral;
 import id.payu.promotion.adapter.persistence.entity.RewardEntity;
 import id.payu.promotion.domain.ReferralRewardType;
 import id.payu.promotion.domain.ReferralStatus;
@@ -66,17 +66,33 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity result = referralService.createReferral(request);
+        Referral result = referralService.createReferral(request);
 
         assertNotNull(result.getId());
         assertEquals(REFERRER_ACCOUNT_ID, result.getReferrerAccountId());
         assertNotNull(result.getReferralCode());
-        assertEquals(new BigDecimal("50.00"), result.getReferrerReward());
-        assertEquals(new BigDecimal("25.00"), result.getRefereeReward());
+        assertEquals(new BigDecimal("50.0000"), result.getReferrerReward());
+        assertEquals(new BigDecimal("25.0000"), result.getRefereeReward());
         assertEquals(ReferralRewardType.CASHBACK, result.getRewardType());
         assertEquals(ReferralStatus.PENDING, result.getStatus());
         assertNotNull(result.getCreatedAt());
         assertEquals(8, result.getReferralCode().length());
+    }
+
+    @Test
+    void testCreateReferral_NormalizesRewardsHalfEvenToDatabaseScale() {
+        CreateReferralRequest request = new CreateReferralRequest(
+            REFERRER_ACCOUNT_ID,
+            new BigDecimal("1.23445"),
+            new BigDecimal("1.23455"),
+            ReferralRewardType.CASHBACK,
+            LocalDateTime.now().plusMonths(3)
+        );
+
+        Referral result = referralService.createReferral(request);
+
+        assertEquals(new BigDecimal("1.2344"), result.getReferrerReward());
+        assertEquals(new BigDecimal("1.2346"), result.getRefereeReward());
     }
 
     @Test
@@ -89,7 +105,7 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity result = referralService.createReferral(request);
+        Referral result = referralService.createReferral(request);
 
         assertEquals(ReferralRewardType.POINTS, result.getRewardType());
         assertNotNull(result.getReferralCode());
@@ -105,14 +121,14 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(createRequest);
+        Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
-        ReferralEntity result = referralService.completeReferral(completeRequest);
+        Referral result = referralService.completeReferral(completeRequest);
 
         assertEquals(created.getId(), result.getId());
         assertEquals(REFEREE_ACCOUNT_ID, result.getRefereeAccountId());
@@ -130,14 +146,14 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(createRequest);
+        Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
-        ReferralEntity result = referralService.completeReferral(completeRequest);
+        Referral result = referralService.completeReferral(completeRequest);
 
         assertEquals(ReferralStatus.COMPLETED, result.getStatus());
 
@@ -173,7 +189,7 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(createRequest);
+        Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             created.getReferralCode(),
@@ -200,7 +216,7 @@ class ReferralServiceTest {
             LocalDateTime.now().minusDays(1)
         );
 
-        ReferralEntity created = referralService.createReferral(createRequest);
+        Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
             created.getReferralCode(),
@@ -229,7 +245,7 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(request);
+        Referral created = referralService.createReferral(request);
 
         var result = referralService.getReferral(created.getId());
 
@@ -257,7 +273,7 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(request);
+        Referral created = referralService.createReferral(request);
 
         var result = referralService.getReferralByCode(created.getReferralCode());
 
@@ -294,7 +310,7 @@ class ReferralServiceTest {
         referralService.createReferral(request1);
         referralService.createReferral(request2);
 
-        List<ReferralEntity> results = referralService.getReferralsByReferrer(REFERRER_ACCOUNT_ID);
+        List<Referral> results = referralService.getReferralsByReferrer(REFERRER_ACCOUNT_ID);
 
         assertEquals(2, results.size());
         assertTrue(results.stream().allMatch(r -> REFERRER_ACCOUNT_ID.equals(r.getReferrerAccountId())));
@@ -318,7 +334,7 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity created = referralService.createReferral(request1);
+        Referral created = referralService.createReferral(request1);
         referralService.createReferral(request2);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
@@ -354,8 +370,8 @@ class ReferralServiceTest {
             LocalDateTime.now().plusMonths(3)
         );
 
-        ReferralEntity result1 = referralService.createReferral(request1);
-        ReferralEntity result2 = referralService.createReferral(request2);
+        Referral result1 = referralService.createReferral(request1);
+        Referral result2 = referralService.createReferral(request2);
 
         assertNotEquals(result1.getReferralCode(), result2.getReferralCode());
         assertEquals(8, result1.getReferralCode().length());

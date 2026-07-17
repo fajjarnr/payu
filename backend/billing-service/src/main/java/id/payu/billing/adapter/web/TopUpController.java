@@ -1,7 +1,7 @@
 package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.dto.TopUpRequest;
 import id.payu.billing.dto.TopUpResponse;
 import id.payu.billing.application.service.PaymentService;
@@ -58,7 +58,7 @@ public class TopUpController {
     /**
      * BUG-SECURITY-002 FIX: Validate that the authenticated user owns the top-up.
      */
-    private void validateOwnership(BillPaymentEntity payment) {
+    private void validateOwnership(BillPayment payment) {
         String userId = extractUserId();
         if (userId != null && payment.getAccountId() != null
                 && !Objects.equals(payment.getAccountId(), userId)) {
@@ -91,7 +91,7 @@ public class TopUpController {
             throw new TopUpNotFoundException("Unauthorized top-up attempt: account ownership mismatch");
         }
 
-        BillPaymentEntity payment = paymentService.createTopUp(request);
+        BillPayment payment = paymentService.createTopUp(request);
         return ApiResponse.success(TopUpResponse.from(payment));
     }
 

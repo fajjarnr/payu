@@ -1,22 +1,20 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
-import id.payu.promotion.adapter.persistence.entity.RewardEntity;
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.Referral;
 import id.payu.promotion.dto.CreateReferralRequest;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.ReferralSummaryResponse;
-import id.payu.promotion.adapter.persistence.repository.ReferralRepository;
-import id.payu.promotion.adapter.persistence.repository.RewardRepository;
-import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
+import id.payu.promotion.domain.port.out.ReferralRepositoryPort;
+import id.payu.promotion.domain.port.out.ReferralRewardPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import id.payu.outbox.service.OutboxService;
+import id.payu.promotion.domain.port.out.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -32,28 +30,26 @@ import id.payu.promotion.domain.TransactionType;
 public class ReferralService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReferralService.class);
+    private static final int MONEY_SCALE = 4;
 
-    private final ReferralRepository referralRepository;
-    private final RewardRepository rewardRepository;
-    private final LoyaltyPointsRepository loyaltyPointsRepository;
-    private final OutboxService outboxService;
+    private final ReferralRepositoryPort referralRepository;
+    private final ReferralRewardPort referralRewardPort;
+    private final DomainEventPublisher outboxService;
     private final String promotionEventsTopic;
 
     public ReferralService(
-            ReferralRepository referralRepository,
-            RewardRepository rewardRepository,
-            LoyaltyPointsRepository loyaltyPointsRepository,
-            OutboxService outboxService,
+            ReferralRepositoryPort referralRepository,
+            ReferralRewardPort referralRewardPort,
+            DomainEventPublisher outboxService,
             @Value("${app.kafka.topics.promotion-events:payu.promotion.referral-event.v1}") String promotionEventsTopic) {
         this.referralRepository = referralRepository;
-        this.rewardRepository = rewardRepository;
-        this.loyaltyPointsRepository = loyaltyPointsRepository;
+        this.referralRewardPort = referralRewardPort;
         this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
     }
 
     @Transactional
-    public ReferralEntity createReferral(CreateReferralRequest request) {
+    public Referral createReferral(CreateReferralRequest request) {
         LOG.info("Creating referral: referrer={}", request.referrerAccountId());
 
         if (request.referrerAccountId() == null || request.referrerAccountId().isBlank()) {
@@ -62,11 +58,11 @@ public class ReferralService {
 
         String referralCode = generateReferralCode();
 
-        ReferralEntity referral = new ReferralEntity();
+        Referral referral = new Referral();
         referral.setReferrerAccountId(request.referrerAccountId());
         referral.setReferralCode(referralCode);
-        referral.setReferrerReward(request.referrerReward());
-        referral.setRefereeReward(request.refereeReward());
+        referral.setReferrerReward(normalizeMoney(request.referrerReward()));
+        referral.setRefereeReward(normalizeMoney(request.refereeReward()));
         referral.setRewardType(request.rewardType());
         referral.setExpiryDate(request.expiryDate());
         referral.setStatus(ReferralStatus.PENDING);
@@ -81,8 +77,8 @@ public class ReferralService {
     }
 
     @Transactional
-    public ReferralEntity completeReferral(CompleteReferralRequest request) {
-        ReferralEntity referral = referralRepository.findByReferralCode(request.referralCode())
+    public Referral completeReferral(CompleteReferralRequest request) {
+        Referral referral = referralRepository.findByReferralCode(request.referralCode())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid referral code"));
 
         if (referral.getStatus() != ReferralStatus.PENDING) {
@@ -110,20 +106,20 @@ public class ReferralService {
         return referral;
     }
 
-    public Optional<ReferralEntity> getReferral(UUID id) {
+    public Optional<Referral> getReferral(UUID id) {
         return referralRepository.findById(id);
     }
 
-    public Optional<ReferralEntity> getReferralByCode(String code) {
+    public Optional<Referral> getReferralByCode(String code) {
         return referralRepository.findByReferralCode(code);
     }
 
-    public List<ReferralEntity> getReferralsByReferrer(String referrerAccountId) {
+    public List<Referral> getReferralsByReferrer(String referrerAccountId) {
         return referralRepository.findByReferrerAccountId(referrerAccountId);
     }
 
     public ReferralSummaryResponse getReferralSummary(String referrerAccountId) {
-        List<ReferralEntity> referrals = referralRepository.findByReferrerAccountId(referrerAccountId);
+        List<Referral> referrals = referralRepository.findByReferrerAccountId(referrerAccountId);
         long totalReferrals = referrals.size();
         long completedReferrals = referrals.stream()
             .filter(r -> r.getStatus() == ReferralStatus.COMPLETED)
@@ -132,12 +128,12 @@ public class ReferralService {
             .filter(r -> r.getStatus() == ReferralStatus.PENDING)
             .count();
 
-        Optional<ReferralEntity> lastReferral = referrals.stream()
-            .sorted(java.util.Comparator.comparing(ReferralEntity::getCreatedAt).reversed())
+        Optional<Referral> lastReferral = referrals.stream()
+            .sorted(java.util.Comparator.comparing(Referral::getCreatedAt).reversed())
             .findFirst();
 
         String referralCode = lastReferral
-            .map(ReferralEntity::getReferralCode)
+            .map(Referral::getReferralCode)
             .orElse(null);
 
         return new ReferralSummaryResponse(
@@ -148,7 +144,7 @@ public class ReferralService {
         );
     }
 
-    private void grantReferralRewards(ReferralEntity referral) {
+    private void grantReferralRewards(Referral referral) {
         if (referral.getRewardType() == ReferralRewardType.CASHBACK) {
             grantCashbackReward(referral.getReferrerAccountId(), referral.getReferrerReward(),
                 referral.getReferralCode(), "REFERRER");
@@ -164,27 +160,16 @@ public class ReferralService {
 
     private void grantCashbackReward(String accountId, BigDecimal amount,
         String transactionId, String rewardType) {
-        RewardEntity reward = new RewardEntity();
-        reward.setAccountId(accountId);
-        reward.setTransactionId(transactionId);
-        reward.setType(RewardType.REFERRAL_BONUS);
-        reward.setAmount(amount);
-        reward.setTransactionAmount(BigDecimal.ZERO);
-        reward.setStatus(RewardStatus.AWARDED);
-        rewardRepository.save(reward);
+        referralRewardPort.grantCashback(accountId, amount, transactionId);
     }
 
     private void grantLoyaltyPoints(String accountId, Integer points,
         String transactionId, TransactionType type) {
-        Integer currentBalance = 0;
+        referralRewardPort.grantPoints(accountId, points, transactionId, type);
+    }
 
-        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
-        loyaltyPoints.setAccountId(accountId);
-        loyaltyPoints.setTransactionId(transactionId);
-        loyaltyPoints.setTransactionType(type);
-        loyaltyPoints.setPoints(points);
-        loyaltyPoints.setBalanceAfter(currentBalance + points);
-        loyaltyPointsRepository.save(loyaltyPoints);
+    private static BigDecimal normalizeMoney(BigDecimal amount) {
+        return amount == null ? null : amount.setScale(MONEY_SCALE, RoundingMode.HALF_EVEN);
     }
 
     private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
@@ -198,7 +183,7 @@ public class ReferralService {
         return code.toString();
     }
 
-    private void publishReferralEvent(ReferralEntity referral, String eventType) {
+    private void publishReferralEvent(Referral referral, String eventType) {
         outboxService.createEvent(
                 "Referral",
                 referral.getId().toString(),

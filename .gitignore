@@ -165,3 +165,6 @@ java_pid*.hprof
 # Untracked dirs
 docs/operations/OPENSHIFT_BACKUP_EVALUATION.md
 infrastructure/foundation/hostedcluster/
+.codegraph/
+.gemini/
+

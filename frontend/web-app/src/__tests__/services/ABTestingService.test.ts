@@ -108,7 +108,7 @@ describe('ABTestingService', () => {
 
       await ABTestingService.assignVariant('test_experiment', 'user-1');
 
-      const cached = ABTestingService.getCachedVariant('test_experiment');
+      const cached = ABTestingService.getCachedVariant('test_experiment', 'user-1');
       expect(cached).toBe('control');
     });
 

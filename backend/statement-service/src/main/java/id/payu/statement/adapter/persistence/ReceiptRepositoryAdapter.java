@@ -2,7 +2,7 @@ package id.payu.statement.adapter.persistence;
 
 import id.payu.statement.adapter.persistence.entity.ReceiptEntity;
 import id.payu.statement.adapter.persistence.repository.ReceiptJpaRepository;
-import id.payu.statement.application.port.output.ReceiptRepositoryPort;
+import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.domain.model.Receipt;
 import id.payu.statement.domain.model.RecipientInfo;
 import id.payu.statement.domain.model.SenderInfo;
@@ -77,17 +77,11 @@ public class ReceiptRepositoryAdapter implements ReceiptRepositoryPort {
      * Convert JPA Entity to domain Receipt.
      */
     private Receipt toDomain(ReceiptEntity entity) {
-        SenderInfo senderInfo = SenderInfo.builder()
-                .name(entity.getSenderName())
-                .accountNumber(entity.getSenderAccountNumber())
-                .bankName(entity.getSenderBankName())
-                .build();
+        SenderInfo senderInfo = new SenderInfo(
+                entity.getSenderName(), entity.getSenderAccountNumber(), entity.getSenderBankName());
 
-        RecipientInfo recipientInfo = RecipientInfo.builder()
-                .name(entity.getRecipientName())
-                .accountNumber(entity.getRecipientAccountNumber())
-                .bankName(entity.getRecipientBankName())
-                .build();
+        RecipientInfo recipientInfo = new RecipientInfo(
+                entity.getRecipientName(), entity.getRecipientAccountNumber(), entity.getRecipientBankName());
 
         return Receipt.builder()
                 .id(entity.getId())

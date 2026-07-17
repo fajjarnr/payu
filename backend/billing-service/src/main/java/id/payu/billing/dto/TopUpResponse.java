@@ -1,6 +1,6 @@
 package id.payu.billing.dto;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public record TopUpResponse(
     LocalDateTime createdAt,
     LocalDateTime completedAt
 ) {
-    public static TopUpResponse from(BillPaymentEntity payment) {
+    public static TopUpResponse from(BillPayment payment) {
         return new TopUpResponse(
             payment.getId(),
             payment.getReferenceNumber(),

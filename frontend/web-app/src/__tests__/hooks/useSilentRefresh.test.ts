@@ -11,7 +11,7 @@ let mockIsAuthenticated = false;
 let mockTokenExpiresAt: number | null = null;
 
 vi.mock('@/stores', () => ({
-  useAuthStore: vi.fn((selector: (state: unknown) => unknown) => {
+  useAuthStore: vi.fn((selector?: (state: unknown) => unknown) => {
     const state = {
       isAuthenticated: mockIsAuthenticated,
       tokenExpiresAt: mockTokenExpiresAt,
@@ -19,7 +19,7 @@ vi.mock('@/stores', () => ({
       setTokenExpiry: mockSetTokenExpiry,
       logout: mockLogout,
     };
-    return selector(state);
+    return selector ? selector(state) : state;
   }),
 }));
 
@@ -175,14 +175,19 @@ describe('useSilentRefresh', () => {
 
     renderHook(() => useSilentRefresh());
 
-    // Trigger the initial scheduled refresh (immediate since past margin)
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
-
-    // First call happened — failed, so logout was called
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockLogout).toHaveBeenCalled();
+    expect(mockLogout).not.toHaveBeenCalled();
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(1999); });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    await act(async () => { await vi.advanceTimersToNextTimerAsync(); });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    await act(async () => { await vi.advanceTimersToNextTimerAsync(); });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockSetAuthenticated).toHaveBeenCalledWith(true);
   });
 
   it('should eagerly refresh on tab focus when token is about to expire', async () => {

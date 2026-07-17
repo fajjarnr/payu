@@ -1,8 +1,8 @@
 package id.payu.billing.adapter.messaging;
 
 import id.payu.billing.domain.event.SubscriptionEvent;
-import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
-import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.Subscription;
+import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.SubscriptionStatus;
 import id.payu.billing.domain.model.ChargeStatus;
 import id.payu.events.cloudevents.CloudEventEnvelope;
@@ -42,7 +42,7 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish subscription.created event to correct topic via Outbox")
     void shouldPublishSubscriptionCreatedEvent() {
         // Given
-        SubscriptionEntity subscription = createSampleSubscription();
+        Subscription subscription = createSampleSubscription();
 
         // When
         adapter.publishSubscriptionCreated(subscription);
@@ -72,8 +72,8 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish charge.succeeded event to correct topic via Outbox")
     void shouldPublishChargeSucceededEvent() {
         // Given
-        SubscriptionEntity subscription = createSampleSubscription();
-        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), true);
+        Subscription subscription = createSampleSubscription();
+        SubscriptionCharge charge = createSampleCharge(subscription.getId(), true);
 
         // When
         adapter.publishChargeSucceeded(subscription, charge);
@@ -104,8 +104,8 @@ class SubscriptionEventAdapterTest {
     @DisplayName("should publish charge.failed event to correct topic via Outbox")
     void shouldPublishChargeFailedEvent() {
         // Given
-        SubscriptionEntity subscription = createSampleSubscription();
-        SubscriptionChargeEntity charge = createSampleCharge(subscription.getId(), false);
+        Subscription subscription = createSampleSubscription();
+        SubscriptionCharge charge = createSampleCharge(subscription.getId(), false);
         charge.markFailed("Insufficient balance");
 
         // When
@@ -135,8 +135,8 @@ class SubscriptionEventAdapterTest {
 
     // Helper methods
 
-    private SubscriptionEntity createSampleSubscription() {
-        SubscriptionEntity sub = new SubscriptionEntity();
+    private Subscription createSampleSubscription() {
+        Subscription sub = new Subscription();
         sub.setId(UUID.randomUUID());
         sub.setAccountId("acc-123456");
         sub.setPlanId(UUID.randomUUID());
@@ -149,8 +149,8 @@ class SubscriptionEventAdapterTest {
         return sub;
     }
 
-    private SubscriptionChargeEntity createSampleCharge(UUID subscriptionId, boolean succeeded) {
-        SubscriptionChargeEntity charge = new SubscriptionChargeEntity();
+    private SubscriptionCharge createSampleCharge(UUID subscriptionId, boolean succeeded) {
+        SubscriptionCharge charge = new SubscriptionCharge();
         charge.setId(UUID.randomUUID());
         charge.setSubscriptionId(subscriptionId);
         charge.setAccountId("acc-123456");

@@ -1,6 +1,6 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
+import id.payu.promotion.domain.model.Referral;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public record ReferralResponse(
     LocalDateTime expiryDate,
     LocalDateTime createdAt
 ) {
-    public static ReferralResponse from(ReferralEntity referral) {
+    public static ReferralResponse from(Referral referral) {
         return new ReferralResponse(
             referral.getId(),
             referral.getReferrerAccountId(),

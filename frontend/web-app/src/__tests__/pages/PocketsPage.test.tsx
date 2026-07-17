@@ -1,18 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen } from '@testing-library/react';
 import PocketsPage from '@/app/[locale]/pockets/page';
-
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-  wrapper.displayName = "TestWrapper";
-  return wrapper;
-};
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -55,6 +44,11 @@ vi.mock('@/hooks/usePockets', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useCreditPocket: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useDebitPocket: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useFreezePocket: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUnfreezePocket: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useClosePocket: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/lib/api', () => ({
@@ -69,22 +63,22 @@ describe('PocketsPage', () => {
   });
 
   it('should render within DashboardLayout', () => {
-    render(<PocketsPage />, { wrapper: createWrapper() });
+    renderWithIntl(<PocketsPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render page title', () => {
-    render(<PocketsPage />, { wrapper: createWrapper() });
+    renderWithIntl(<PocketsPage />);
     expect(screen.getByText('Manajemen Kantong')).toBeInTheDocument();
   });
 
   it('should render main pocket section', () => {
-    render(<PocketsPage />, { wrapper: createWrapper() });
+    renderWithIntl(<PocketsPage />);
     expect(screen.getByText('Kantong Utama Cair')).toBeInTheDocument();
   });
 
   it('should render add pocket button', () => {
-    render(<PocketsPage />, { wrapper: createWrapper() });
+    renderWithIntl(<PocketsPage />);
     expect(screen.getByText('Tambah Kantong')).toBeInTheDocument();
   });
 });

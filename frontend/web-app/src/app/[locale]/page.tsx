@@ -4,7 +4,7 @@ import { Link } from '@/lib/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { Shield, Zap, Menu, X, PieChart, Globe } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
 
 const SLIDE_IDS = ['hero', 'app', 'about', 'support'] as const;
 
@@ -14,9 +14,6 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const rawHeroTitle = t.raw('heroTitle') as string;
-  const safeHeroTitle = rawHeroTitle
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -174,10 +171,14 @@ export default function LandingPage() {
                {t('badge')}
              </motion.div>
              
-              <h1
-                className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight text-shadow-lg"
-                 dangerouslySetInnerHTML={{ __html: safeHeroTitle }}
-              />
+              <h1 className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight text-shadow-lg">
+                {rawHeroTitle.split(/<br\s*\/?>/i).map((line, index) => (
+                  <Fragment key={`${index}-${line}`}>
+                    {index > 0 && <br />}
+                    {line}
+                  </Fragment>
+                ))}
+              </h1>
              
              {/* The Floating Card System */}
             <div className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center perspective-1000">

@@ -77,7 +77,7 @@ describe('useUIStore', () => {
     expect(result.current.toasts).toHaveLength(1);
     expect(result.current.toasts[0].message).toBe('Test message');
     expect(result.current.toasts[0].type).toBe('success');
-    expect(result.current.toasts[0].id).toMatch(/^toast-/);
+    expect(result.current.toasts[0].id).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   test('should add toast with custom duration', () => {

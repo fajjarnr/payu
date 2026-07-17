@@ -66,6 +66,10 @@ springdoc:
     path: /swagger-ui.html
 
 payu:
+  security:
+    blind-index-key: ${BLIND_INDEX_KEY}
+    blind-index-key-version: ${BLIND_INDEX_KEY_VERSION:v1}
+    blind-index-previous-keys: ${BLIND_INDEX_PREVIOUS_KEYS:}
   kogito:
     task-api:
       url: ${KOGITO_TASK_API_URL:http://loan-origination-process:8080}

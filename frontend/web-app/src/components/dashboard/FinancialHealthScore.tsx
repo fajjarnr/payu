@@ -44,9 +44,13 @@ export default function FinancialHealthScore({
 
   if (isLoading || score == null) {
     return (
-      <Card className={cn("relative overflow-hidden flex flex-col justify-between group", className)}>
+      <Card
+        role="region"
+        aria-labelledby="financial-health-title"
+        className={cn("relative overflow-hidden flex flex-col justify-between group", className)}
+      >
         <CardHeader>
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="financial-health-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
           </CardTitle>
         </CardHeader>
@@ -107,7 +111,7 @@ export default function FinancialHealthScore({
   };
 
   const healthLevel = getHealthLevel(score);
-  const scoreChange = previousScore ? score - previousScore : 0;
+  const scoreChange = previousScore != null ? score - previousScore : 0;
   const isImprovement = scoreChange > 0;
 
   // Calculate stroke dasharray for circular progress
@@ -116,20 +120,24 @@ export default function FinancialHealthScore({
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <Card className={cn("relative overflow-hidden flex flex-col justify-between group", className)}>
+    <Card
+      role="region"
+      aria-labelledby="financial-health-title"
+      className={cn("relative overflow-hidden flex flex-col justify-between group", className)}
+    >
       {/* Decorative background gradient */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
         <div>
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="financial-health-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
           </CardTitle>
           <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
             Update terakhir: {new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
           </CardDescription>
         </div>
-        {previousScore && (
+        {previousScore != null && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -137,8 +145,11 @@ export default function FinancialHealthScore({
               'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm',
               isImprovement ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
             )}
+            role="status"
+            aria-live="polite"
+            aria-label={`Skor berubah ${isImprovement ? 'meningkat' : 'menurun'} ${Math.abs(scoreChange)} poin`}
           >
-            {isImprovement ? <TrendingUp className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {isImprovement ? <TrendingUp className="h-4 w-4" aria-hidden="true" /> : <AlertCircle className="h-4 w-4" aria-hidden="true" />}
             {isImprovement ? '+' : ''}{scoreChange}
           </motion.div>
         )}
@@ -152,6 +163,11 @@ export default function FinancialHealthScore({
             <svg
               className="w-full h-full transform -rotate-90"
               viewBox="0 0 120 120"
+              role="progressbar"
+              aria-label="Skor kesehatan finansial"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={score}
             >
               <circle
                 cx="60"
@@ -193,7 +209,7 @@ export default function FinancialHealthScore({
 
           <div className="flex-1 space-y-4 text-center xl:text-left">
             <div className={cn('inline-flex items-center gap-3 px-4 py-2 rounded-xl border border-transparent transition-all shadow-sm', healthLevel.bgColor)}>
-              <healthLevel.icon className={cn('h-5 w-5', healthLevel.color)} />
+              <healthLevel.icon className={cn('h-5 w-5', healthLevel.color)} aria-hidden="true" />
               <span className={cn('text-xs font-bold uppercase tracking-[0.2em]', healthLevel.color)}>
                 {healthLevel.label}
               </span>

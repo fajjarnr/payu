@@ -155,13 +155,18 @@ export default function QuickActions({
   };
 
   return (
-    <Card data-testid="quick-actions-card" className={cn("relative overflow-hidden group", className)}>
+    <Card
+      data-testid="quick-actions-card"
+      role="region"
+      aria-labelledby="quick-actions-title"
+      className={cn("relative overflow-hidden group", className)}
+    >
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
         <div>
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="quick-actions-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('quickActionsTitle')}
           </CardTitle>
           <CardDescription className="uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
@@ -174,6 +179,8 @@ export default function QuickActions({
           size="sm"
           data-testid="edit-quick-actions-button"
           onClick={() => setIsEditMode(!isEditMode)}
+          aria-label={isEditMode ? 'Selesai mengedit' : 'Edit urutan aksi cepat'}
+          aria-pressed={isEditMode}
           className="text-xs sm:text-xs px-4"
         >
           {isEditMode ? 'Selesai' : 'Edit'}
@@ -225,6 +232,7 @@ export default function QuickActions({
           <Button
             variant="ghost"
             data-testid="view-all-features-button"
+            aria-label="Lihat semua fitur"
             className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12"
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -304,4 +312,3 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
     </div>
   );
 }
-

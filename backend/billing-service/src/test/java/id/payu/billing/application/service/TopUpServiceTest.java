@@ -1,6 +1,6 @@
 package id.payu.billing.application.service;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.domain.model.PaymentStatus;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
@@ -45,9 +45,9 @@ class TopUpServiceTest {
 
     @BeforeEach
     void setup() {
-        lenient().when(persistencePort.save(any(BillPaymentEntity.class)))
+        lenient().when(persistencePort.save(any(BillPayment.class)))
                 .thenAnswer(invocation -> {
-                    BillPaymentEntity p = invocation.getArgument(0);
+                    BillPayment p = invocation.getArgument(0);
                     if (p.getId() == null) {
                         p.setId(java.util.UUID.randomUUID());
                     }
@@ -78,7 +78,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals("account-123", payment.getAccountId());
@@ -105,7 +105,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(eq("account-456"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-456", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals(BillerType.OVO, payment.getBillerType());
@@ -125,7 +125,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(eq("account-789"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-789", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals(BillerType.DANA, payment.getBillerType());
@@ -145,7 +145,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(eq("account-999"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-999", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals(BillerType.LINKAJA, payment.getBillerType());
@@ -165,7 +165,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult(null, "FAILED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals(PaymentStatus.FAILED, payment.getStatus());
@@ -185,7 +185,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
             assertEquals(PaymentStatus.FAILED, payment.getStatus());
@@ -228,7 +228,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertEquals(new BigDecimal("1000"), payment.getAdminFee());
             assertEquals(new BigDecimal("101000"), payment.getTotalAmount());
@@ -247,7 +247,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertEquals(new BigDecimal("1500"), payment.getAdminFee());
             assertEquals(new BigDecimal("301500"), payment.getTotalAmount());
@@ -266,7 +266,7 @@ class TopUpServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            BillPaymentEntity payment = paymentService.createTopUp(request);
+            BillPayment payment = paymentService.createTopUp(request);
 
             assertEquals(new BigDecimal("2000"), payment.getAdminFee());
             assertEquals(new BigDecimal("1002000"), payment.getTotalAmount());

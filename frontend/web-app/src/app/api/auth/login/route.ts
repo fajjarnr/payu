@@ -97,7 +97,12 @@ export async function POST(request: Request) {
 
     if (!res.ok) {
       log.warn({ action: "login", status: res.status, durationMs: Date.now() - startTime }, "Login failed");
-      return NextResponse.json(data, { status: res.status });
+      const message = typeof data?.message === "string" ? data.message : "Login failed";
+      const code = typeof data?.code === "string" ? data.code : undefined;
+      return NextResponse.json(
+        { success: false, message, ...(code ? { code } : {}) },
+        { status: res.status },
+      );
     }
 
     // Backend may return tokens at top-level or nested in data
@@ -134,8 +139,7 @@ export async function POST(request: Request) {
     // BUG-CROSS-005: Use expires_in from Keycloak response instead of hardcoded 900s
     const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
     const responseData = {
-      ...(data.data || data),
-      user: user || data.data?.user,
+      user,
       expiresIn: ACCESS_TOKEN_MAX_AGE, // seconds until accessToken expires — safe to expose
     };
     const response = NextResponse.json({ success: true, data: responseData });

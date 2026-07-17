@@ -1,14 +1,14 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
-import id.payu.promotion.adapter.persistence.entity.RewardEntity;
+import id.payu.promotion.domain.model.Promotion;
+import id.payu.promotion.domain.model.Reward;
 import id.payu.promotion.dto.*;
-import id.payu.promotion.adapter.persistence.repository.PromotionRepository;
-import id.payu.promotion.adapter.persistence.repository.RewardRepository;
+import id.payu.promotion.domain.port.out.PromotionPersistencePort;
+import id.payu.promotion.domain.port.out.RewardPersistencePort;
+import id.payu.promotion.domain.port.out.PromotionEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,32 +28,29 @@ public class PromotionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(PromotionService.class);
 
-    private final PromotionRepository promotionRepository;
-    private final RewardRepository rewardRepository;
-    private final OutboxService outboxService;
+    private final PromotionPersistencePort promotionRepository;
+    private final RewardPersistencePort rewardRepository;
+    private final PromotionEventPublisher eventPublisher;
     private final String promotionEventsTopic;
-    private final jakarta.persistence.EntityManager entityManager;
 
     public PromotionService(
-            PromotionRepository promotionRepository,
-            RewardRepository rewardRepository,
-            OutboxService outboxService,
-            @Value("${app.kafka.topics.promotion-events:payu.promotion.promotion-event.v1}") String promotionEventsTopic,
-            jakarta.persistence.EntityManager entityManager) {
+            PromotionPersistencePort promotionRepository,
+            RewardPersistencePort rewardRepository,
+            PromotionEventPublisher eventPublisher,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.promotion-event.v1}") String promotionEventsTopic) {
         this.promotionRepository = promotionRepository;
         this.rewardRepository = rewardRepository;
-        this.outboxService = outboxService;
+        this.eventPublisher = eventPublisher;
         this.promotionEventsTopic = promotionEventsTopic;
-        this.entityManager = entityManager;
     }
 
     @Transactional
-    public PromotionEntity createPromotion(CreatePromotionRequest request) {
+    public Promotion createPromotion(CreatePromotionRequest request) {
         LOG.info("Creating promotion: code={}, type={}", request.code(), request.promotionType());
 
         validatePromotionDates(request.startDate(), request.endDate());
 
-        PromotionEntity promotion = new PromotionEntity();
+        Promotion promotion = new Promotion();
         promotion.setCode(request.code());
         promotion.setName(request.name());
         promotion.setDescription(request.description());
@@ -76,8 +73,8 @@ public class PromotionService {
     }
 
     @Transactional
-    public PromotionEntity updatePromotion(UUID id, UpdatePromotionRequest request) {
-        PromotionEntity promotion = promotionRepository.findById(id)
+    public Promotion updatePromotion(UUID id, UpdatePromotionRequest request) {
+        Promotion promotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PromotionEntity not found"));
 
         if (request.name() != null) {
@@ -108,8 +105,8 @@ public class PromotionService {
     }
 
     @Transactional
-    public PromotionEntity activatePromotion(UUID id) {
-        PromotionEntity promotion = promotionRepository.findById(id)
+    public Promotion activatePromotion(UUID id) {
+        Promotion promotion = promotionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PromotionEntity not found"));
 
         LocalDateTime now = LocalDateTime.now();
@@ -125,22 +122,22 @@ public class PromotionService {
         return promotion;
     }
 
-    public Optional<PromotionEntity> getPromotion(UUID id) {
+    public Optional<Promotion> getPromotion(UUID id) {
         return promotionRepository.findById(id);
     }
 
-    public Optional<PromotionEntity> getPromotionByCode(String code) {
+    public Optional<Promotion> getPromotionByCode(String code) {
         return promotionRepository.findByCode(code);
     }
 
-    public List<PromotionEntity> getActivePromotions() {
+    public List<Promotion> getActivePromotions() {
         LocalDateTime now = LocalDateTime.now();
         return promotionRepository.findActivePromotions(PromotionStatus.ACTIVE, now);
     }
 
     @Transactional
-    public RewardEntity claimPromotion(String code, ClaimPromotionRequest request) {
-        PromotionEntity promotion = getPromotionByCode(code)
+    public Reward claimPromotion(String code, ClaimPromotionRequest request) {
+        Promotion promotion = getPromotionByCode(code)
             .orElseThrow(() -> new IllegalArgumentException("Invalid promotion code"));
 
         if (promotion.getStatus() != PromotionStatus.ACTIVE) {
@@ -156,13 +153,13 @@ public class PromotionService {
         // The old code: read count → check < max → increment was vulnerable to concurrent claims
         // both passing the check before either increments.
         // atomicIncrementRedemptionCount returns 0 if maxRedemptions already reached.
-        int updated = promotionRepository.atomicIncrementRedemptionCount(promotion.getId());
-        if (updated == 0) {
+        Optional<Promotion> incremented = promotionRepository.incrementRedemptionIfAvailable(promotion.getId());
+        if (incremented.isEmpty()) {
             throw new IllegalArgumentException("PromotionEntity has reached maximum redemptions");
         }
 
         // Refresh promotion to reflect the atomic increment in the current persistence context
-        entityManager.refresh(promotion);
+        promotion = incremented.get();
 
         if (promotion.getMinTransactionAmount() != null &&
             request.transactionAmount().compareTo(promotion.getMinTransactionAmount()) < 0) {
@@ -171,20 +168,10 @@ public class PromotionService {
 
         BigDecimal rewardAmount = calculateRewardAmount(promotion, request.transactionAmount());
 
-        RewardEntity reward = new RewardEntity();
-        reward.setAccountId(request.accountId());
-        reward.setTransactionId(request.transactionId());
-        reward.setPromotionCode(promotion.getCode());
-        reward.setType(RewardType.PROMOTION_REWARD);
-        reward.setAmount(rewardAmount);
-        reward.setTransactionAmount(request.transactionAmount());
-        reward.setMerchantCode(request.merchantCode());
-        reward.setCategoryCode(request.categoryCode());
-        reward.setStatus(RewardStatus.AWARDED);
-
-        if (promotion.getPromotionType() == PromotionType.REWARD_POINTS) {
-            reward.setPointsEarned(rewardAmount.intValue());
-        }
+        Integer points = promotion.getPromotionType() == PromotionType.REWARD_POINTS ? rewardAmount.intValue() : null;
+        Reward reward = new Reward(null, request.accountId(), request.transactionId(), promotion.getCode(),
+            RewardType.PROMOTION_REWARD, rewardAmount, points, request.transactionAmount(), request.merchantCode(),
+            request.categoryCode(), RewardStatus.AWARDED, null, null, null);
 
         reward = rewardRepository.save(reward);
 
@@ -197,7 +184,7 @@ public class PromotionService {
         return reward;
     }
 
-    private BigDecimal calculateRewardAmount(PromotionEntity promotion, BigDecimal transactionAmount) {
+    private BigDecimal calculateRewardAmount(Promotion promotion, BigDecimal transactionAmount) {
         return switch (promotion.getRewardType()) {
             case PERCENTAGE -> transactionAmount.multiply(promotion.getRewardValue())
                 .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_EVEN);
@@ -215,8 +202,8 @@ public class PromotionService {
         }
     }
 
-    private void publishPromotionEvent(PromotionEntity promotion, String eventType) {
-        outboxService.createEvent(
+    private void publishPromotionEvent(Promotion promotion, String eventType) {
+        eventPublisher.publish(
                 "Promotion",
                 promotion.getId().toString(),
                 eventType,
@@ -228,24 +215,22 @@ public class PromotionService {
                         "eventType", eventType,
                         "timestamp", LocalDateTime.now().toString()
                 ),
-                null,
                 promotionEventsTopic
         );
     }
 
-    private void publishRewardEvent(RewardEntity reward) {
-        outboxService.createEvent(
+    private void publishRewardEvent(Reward reward) {
+        eventPublisher.publish(
                 "Reward",
-                reward.getId().toString(),
+                reward.id().toString(),
                 "RewardAwarded",
                 Map.of(
-                        "rewardId", reward.getId().toString(),
-                        "accountId", reward.getAccountId(),
-                        "amount", reward.getAmount().toString(),
-                        "status", reward.getStatus().name(),
+                        "rewardId", reward.id().toString(),
+                        "accountId", reward.accountId(),
+                        "amount", reward.amount().toString(),
+                        "status", reward.status().name(),
                         "timestamp", LocalDateTime.now().toString()
                 ),
-                null,
                 promotionEventsTopic
         );
     }

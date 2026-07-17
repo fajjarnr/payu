@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import InvestmentsPage from '@/app/[locale]/investments/page';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -39,34 +40,34 @@ describe('InvestmentsPage', () => {
   });
 
   it('should render within DashboardLayout', () => {
-    render(<InvestmentsPage />);
+    renderWithIntl(<InvestmentsPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render page title', () => {
-    render(<InvestmentsPage />);
+    renderWithIntl(<InvestmentsPage />);
     expect(screen.getByText('Manajemen Kekayaan')).toBeInTheDocument();
   });
 
   it('should render new investment button', () => {
-    render(<InvestmentsPage />);
+    renderWithIntl(<InvestmentsPage />);
     expect(screen.getByTestId('new-investment-button')).toBeInTheDocument();
   });
 
   it('should render portfolio overview', () => {
-    render(<InvestmentsPage />);
+    renderWithIntl(<InvestmentsPage />);
     expect(screen.getByText('Total Portofolio Bersih')).toBeInTheDocument();
   });
 
   it('should render risk profile', () => {
-    render(<InvestmentsPage />);
+    renderWithIntl(<InvestmentsPage />);
     expect(screen.getByText('Profil Risiko')).toBeInTheDocument();
     expect(screen.getByText('Moderat-Agresif')).toBeInTheDocument();
   });
 
   it('should render product catalog', () => {
-    render(<InvestmentsPage />);
-    expect(screen.getByText('Katalog Produk Terpilih')).toBeInTheDocument();
+    renderWithIntl(<InvestmentsPage />);
+    expect(screen.getAllByTestId(/investment-product-/)).toHaveLength(3);
     expect(screen.getByText('Emas Digital (XAU)')).toBeInTheDocument();
   });
 });

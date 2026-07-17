@@ -104,13 +104,17 @@ export default function BudgetTracking({
   };
 
   return (
-    <Card className={cn("relative overflow-hidden h-full flex flex-col group", className)}>
+    <Card
+      role="region"
+      aria-labelledby="budget-tracking-title"
+      className={cn("relative overflow-hidden h-full flex flex-col group", className)}
+    >
       {/* Decorative background */}
       <div className="absolute top-1/2 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8 shrink-0">
         <div>
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="budget-tracking-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('budgetTracking')}
           </CardTitle>
           <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
@@ -118,7 +122,7 @@ export default function BudgetTracking({
           </CardDescription>
         </div>
 
-        <Button size="sm" className="hidden sm:flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest">
+        <Button aria-label="Tambah anggaran" size="sm" className="hidden sm:flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest">
           <Plus className="h-4 w-4" />
           <span>Tambah</span>
         </Button>
@@ -205,7 +209,10 @@ export default function BudgetTracking({
                   budget.status === 'exceeded' && 'ring-2 ring-destructive/10'
                 )}
               >
-                <AccordionTrigger className="hover:no-underline px-6 py-10 group/trigger">
+                <AccordionTrigger
+                  className="hover:no-underline px-6 py-10 group/trigger"
+                  aria-label={`${budget.category}, status ${budget.status}, ${budget.percentage}%`}
+                >
                   <div className="flex items-center gap-6 w-full text-left">
                     {/* Status Icon */}
                     <div
@@ -231,7 +238,8 @@ export default function BudgetTracking({
                         value={Math.min(budget.percentage, 100)} 
                         className="h-3" 
                         indicatorClassName={getProgressColor(budget.status)}
-                        aria-label={`${budget.category}: ${budget.percentage.toFixed(0)}%`}
+                        aria-label={`${budget.category}: ${budget.percentage}%`}
+                        aria-valuetext={`${budget.percentage}% (${budget.status})`}
                       />
                     </div>
                   </div>
@@ -253,11 +261,11 @@ export default function BudgetTracking({
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
+                      <Button aria-label={`Edit anggaran ${budget.category}`} variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
                         <Edit className="h-3.5 w-3.5 mr-2" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
+                      <Button aria-label={`Hapus anggaran ${budget.category}`} variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
                         <Trash2 className="h-3.5 w-3.5 mr-2" />
                         Hapus
                       </Button>
@@ -270,7 +278,7 @@ export default function BudgetTracking({
         </Accordion>
 
         <div className="mt-6 pt-4 border-t border-border">
-          <Button variant="ghost" className="w-full text-xs font-bold uppercase tracking-widest text-primary">
+          <Button aria-label="Kelola anggaran" variant="ghost" className="w-full text-xs font-bold uppercase tracking-widest text-primary">
             {t('manageBudgets')}
           </Button>
         </div>

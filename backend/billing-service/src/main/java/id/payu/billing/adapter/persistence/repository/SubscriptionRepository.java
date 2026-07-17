@@ -1,6 +1,6 @@
 package id.payu.billing.adapter.persistence.repository;
 
-import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
+import id.payu.billing.infrastructure.persistence.entity.SubscriptionEntity;
 import id.payu.billing.domain.model.SubscriptionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

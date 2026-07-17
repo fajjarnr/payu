@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
+import id.payu.promotion.domain.model.Referral;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.application.service.ReferralService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,7 +53,7 @@ public class ReferralResource {
     })
     public ResponseEntity<?> createReferral(@Valid @RequestBody CreateReferralRequest request) {
         try {
-            ReferralEntity referral = referralService.createReferral(request);
+            Referral referral = referralService.createReferral(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ReferralResponse.from(referral));
         } catch (IllegalArgumentException e) {
@@ -74,7 +74,7 @@ public class ReferralResource {
     })
     public ResponseEntity<?> completeReferral(@Valid @RequestBody CompleteReferralRequest request) {
         try {
-            ReferralEntity referral = referralService.completeReferral(request);
+            Referral referral = referralService.completeReferral(request);
             return ResponseEntity.ok(ReferralResponse.from(referral));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -93,7 +93,7 @@ public class ReferralResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReferral(@PathVariable UUID id) {
-        Optional<ReferralEntity> referralOpt = referralService.getReferral(id);
+        Optional<Referral> referralOpt = referralService.getReferral(id);
         if (referralOpt.isPresent()) {
             return ResponseEntity.ok(ReferralResponse.from(referralOpt.get()));
         }
@@ -112,7 +112,7 @@ public class ReferralResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReferralByCode(@PathVariable String code) {
-        Optional<ReferralEntity> referralOpt = referralService.getReferralByCode(code);
+        Optional<Referral> referralOpt = referralService.getReferralByCode(code);
         if (referralOpt.isPresent()) {
             return ResponseEntity.ok(ReferralResponse.from(referralOpt.get()));
         }
@@ -129,7 +129,7 @@ public class ReferralResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<List<ReferralResponse>> getReferralsByReferrer(@PathVariable String referrerAccountId) {
-        List<ReferralEntity> referrals = referralService.getReferralsByReferrer(referrerAccountId);
+        List<Referral> referrals = referralService.getReferralsByReferrer(referrerAccountId);
         return ResponseEntity.ok(referrals.stream().map(ReferralResponse::from).toList());
     }
 

@@ -43,7 +43,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Create settlement batch", description = "Create a new settlement batch for a partner")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> createSettlementBatch(
             @RequestBody CreateSettlementBatchRequest request) {
@@ -82,7 +82,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/process")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
-    @Idempotent(required = false)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Start processing settlement", description = "Start processing a settlement batch")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> startProcessing(
             @PathVariable UUID batchId,
@@ -93,7 +93,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/complete")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
-    @Idempotent(required = false)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Complete settlement", description = "Mark settlement batch as completed")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> completeSettlement(
             @PathVariable UUID batchId) {
@@ -103,7 +103,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/fail")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
-    @Idempotent(required = false)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Fail settlement", description = "Mark settlement batch as failed")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> failSettlement(
             @PathVariable UUID batchId,
@@ -114,7 +114,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/override")
     @PreAuthorize("hasRole('ADMIN')")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Manual override settlement", description = "Manually override a failed settlement")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> manualOverride(
             @PathVariable UUID batchId,
@@ -134,6 +134,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches/{batchId}/discrepancies/detect")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Detect discrepancies", description = "Run discrepancy detection on settlement batch")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> detectDiscrepancies(
             @PathVariable UUID batchId) {
@@ -145,7 +146,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/revenue-splits")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Create revenue split", description = "Create a new revenue split configuration")
     public ResponseEntity<ApiResponse<RevenueSplitResponse>> createRevenueSplit(
             @RequestBody CreateRevenueSplitRequest request) {
@@ -183,6 +184,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/revenue-splits/{splitId}/stakeholders")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Add stakeholder", description = "Add a stakeholder to a revenue split")
     public ResponseEntity<ApiResponse<RevenueSplitResponse>> addStakeholder(
             @PathVariable UUID splitId,
@@ -195,6 +197,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/revenue-splits/{splitId}/deactivate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Deactivate revenue split", description = "Deactivate a revenue split configuration")
     public ResponseEntity<ApiResponse<RevenueSplitResponse>> deactivateRevenueSplit(
             @PathVariable UUID splitId) {
@@ -204,6 +207,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/revenue-splits/{splitId}/calculate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Calculate splits", description = "Calculate revenue splits for a given amount")
     public ResponseEntity<ApiResponse<List<CalculatedSplitResponse>>> calculateSplits(
             @PathVariable UUID splitId,

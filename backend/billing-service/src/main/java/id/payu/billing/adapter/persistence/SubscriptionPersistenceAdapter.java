@@ -3,12 +3,16 @@ package id.payu.billing.adapter.persistence;
 import id.payu.billing.adapter.persistence.repository.SubscriptionChargeRepository;
 import id.payu.billing.adapter.persistence.repository.SubscriptionPlanRepository;
 import id.payu.billing.adapter.persistence.repository.SubscriptionRepository;
-import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
-import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
-import id.payu.billing.adapter.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.infrastructure.persistence.entity.SubscriptionEntity;
+import id.payu.billing.infrastructure.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.infrastructure.persistence.entity.SubscriptionPlanEntity;
+import id.payu.billing.domain.model.Subscription;
+import id.payu.billing.domain.model.SubscriptionCharge;
+import id.payu.billing.domain.model.SubscriptionPlan;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,67 +28,108 @@ public class SubscriptionPersistenceAdapter implements SubscriptionPersistencePo
     private final SubscriptionChargeRepository chargeRepository;
 
     @Override
-    public SubscriptionPlanEntity savePlan(SubscriptionPlanEntity plan) {
-        return planRepository.save(plan);
+    public SubscriptionPlan savePlan(SubscriptionPlan plan) {
+        return toDomain(planRepository.save(toEntity(plan)));
     }
 
     @Override
-    public Optional<SubscriptionPlanEntity> findPlanById(UUID id) {
-        return planRepository.findById(id);
+    public Optional<SubscriptionPlan> findPlanById(UUID id) {
+        return planRepository.findById(id).map(this::toDomain);
     }
 
     @Override
-    public List<SubscriptionPlanEntity> findPlansByPartnerId(String partnerId) {
-        return planRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId);
+    public List<SubscriptionPlan> findPlansByPartnerId(String partnerId) {
+        return planRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public SubscriptionEntity saveSubscription(SubscriptionEntity subscription) {
-        return subscriptionRepository.save(subscription);
+    public Subscription saveSubscription(Subscription subscription) {
+        return toDomain(subscriptionRepository.save(toEntity(subscription)));
     }
 
     @Override
-    public Optional<SubscriptionEntity> findSubscriptionById(UUID id) {
-        return subscriptionRepository.findById(id);
+    public Optional<Subscription> findSubscriptionById(UUID id) {
+        return subscriptionRepository.findById(id).map(this::toDomain);
     }
 
     @Override
-    public List<SubscriptionEntity> findSubscriptionsByAccountId(String accountId) {
-        return subscriptionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+    public List<Subscription> findSubscriptionsByAccountId(String accountId) {
+        return subscriptionRepository.findByAccountIdOrderByCreatedAtDesc(accountId).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<SubscriptionEntity> findSubscriptionsByPartnerId(String partnerId) {
-        return subscriptionRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId);
+    public List<Subscription> findSubscriptionsByPartnerId(String partnerId) {
+        return subscriptionRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<SubscriptionEntity> findDueSubscriptions(LocalDateTime cutoff) {
-        return subscriptionRepository.findDueSubscriptions(cutoff);
+    public List<Subscription> findDueSubscriptions(LocalDateTime cutoff) {
+        return subscriptionRepository.findDueSubscriptions(cutoff).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<SubscriptionEntity> findPastDueSubscriptions() {
-        return subscriptionRepository.findPastDueSubscriptions();
+    public List<Subscription> findPastDueSubscriptions() {
+        return subscriptionRepository.findPastDueSubscriptions().stream().map(this::toDomain).toList();
     }
 
     @Override
-    public List<SubscriptionEntity> findExpiredTrials(LocalDateTime now) {
-        return subscriptionRepository.findExpiredTrials(now);
+    public List<Subscription> findExpiredTrials(LocalDateTime now) {
+        return subscriptionRepository.findExpiredTrials(now).stream().map(this::toDomain).toList();
     }
 
     @Override
-    public SubscriptionChargeEntity saveCharge(SubscriptionChargeEntity charge) {
-        return chargeRepository.save(charge);
+    public SubscriptionCharge saveCharge(SubscriptionCharge charge) {
+        return toDomain(chargeRepository.save(toEntity(charge)));
     }
 
     @Override
-    public Optional<SubscriptionChargeEntity> findChargeByIdempotencyKey(String idempotencyKey) {
-        return chargeRepository.findByIdempotencyKey(idempotencyKey);
+    public Optional<SubscriptionCharge> findChargeByIdempotencyKey(String idempotencyKey) {
+        return chargeRepository.findByIdempotencyKey(idempotencyKey).map(this::toDomain);
     }
 
     @Override
-    public List<SubscriptionChargeEntity> findChargesBySubscriptionId(UUID subscriptionId) {
-        return chargeRepository.findBySubscriptionIdOrderByCreatedAtDesc(subscriptionId);
+    public List<SubscriptionCharge> findChargesBySubscriptionId(UUID subscriptionId) {
+        return chargeRepository.findBySubscriptionIdOrderByCreatedAtDesc(subscriptionId).stream().map(this::toDomain).toList();
+    }
+
+    private SubscriptionPlanEntity toEntity(SubscriptionPlan source) {
+        SubscriptionPlanEntity target = copy(source, new SubscriptionPlanEntity());
+        target.setBillingInterval(source.getBillingInterval().name());
+        return target;
+    }
+
+    private SubscriptionPlan toDomain(SubscriptionPlanEntity source) {
+        SubscriptionPlan target = copy(source, new SubscriptionPlan());
+        target.setBillingInterval(id.payu.billing.domain.model.BillingInterval.valueOf(source.getBillingInterval()));
+        return target;
+    }
+
+    private SubscriptionEntity toEntity(Subscription source) {
+        SubscriptionEntity target = copy(source, new SubscriptionEntity());
+        target.setStatus(source.getStatus().name());
+        return target;
+    }
+
+    private Subscription toDomain(SubscriptionEntity source) {
+        Subscription target = copy(source, new Subscription());
+        target.setStatus(id.payu.billing.domain.model.SubscriptionStatus.valueOf(source.getStatus()));
+        return target;
+    }
+
+    private SubscriptionChargeEntity toEntity(SubscriptionCharge source) {
+        SubscriptionChargeEntity target = copy(source, new SubscriptionChargeEntity());
+        target.setStatus(source.getStatus().name());
+        return target;
+    }
+
+    private SubscriptionCharge toDomain(SubscriptionChargeEntity source) {
+        SubscriptionCharge target = copy(source, new SubscriptionCharge());
+        target.setStatus(id.payu.billing.domain.model.ChargeStatus.valueOf(source.getStatus()));
+        return target;
+    }
+
+    private <T> T copy(Object source, T target) {
+        BeanUtils.copyProperties(source, target);
+        return target;
     }
 }

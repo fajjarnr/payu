@@ -14,8 +14,10 @@ import id.payu.backoffice.domain.CustomerCaseStatus;
 @Repository
 public interface CustomerCaseRepository extends JpaRepository<CustomerCaseEntity, UUID> {
     List<CustomerCaseEntity> findByUserId(String userId);
+    java.util.Optional<CustomerCaseEntity> findByCaseNumber(String caseNumber);
     List<CustomerCaseEntity> findByStatus(CustomerCaseStatus status);
     Page<CustomerCaseEntity> findByStatus(CustomerCaseStatus status, Pageable pageable);
+    Page<CustomerCaseEntity> findByPriority(id.payu.backoffice.domain.Priority priority, Pageable pageable);
     List<CustomerCaseEntity> findByAssignedTo(String assignedTo);
 
     // Search methods

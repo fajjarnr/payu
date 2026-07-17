@@ -3,13 +3,16 @@ import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { toHaveNoViolations as jestAxeToHaveNoViolations } from 'jest-axe';
 import { act } from 'react-dom/test-utils';
+import * as React from 'react';
 
 // React 19.2+ does not export `act` from the top-level 'react' module (ESM).
 // @testing-library/react 16.3.2 tries `React.act` first and falls back to
 // `ReactDOMTestUtils.act` (deprecated). We polyfill `React.act` here so the
 // testing library works without deprecation warnings in vitest/jsdom.
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-(globalThis as any).React = { act };
+Object.assign(globalThis, {
+  IS_REACT_ACT_ENVIRONMENT: true,
+  React: { ...React, act },
+});
 
 expect.extend(matchers);
 expect.extend({ toHaveNoViolations: jestAxeToHaveNoViolations.toHaveNoViolations });

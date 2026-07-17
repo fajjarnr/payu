@@ -75,7 +75,7 @@ describe('useTransactions hook', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(TransactionService.getAccountTransactions).toHaveBeenCalledWith('account-1', 0, 20);
+    expect(TransactionService.getAccountTransactions).toHaveBeenCalledWith('account-1', 0, 20, undefined);
     expect(result.current.isSuccess).toBe(true);
     expect(result.current.data).toEqual(mockTransactions);
   });
@@ -98,7 +98,7 @@ describe('useTransactions hook', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(TransactionService.getAccountTransactions).toHaveBeenCalledWith('account-1', 1, 50);
+    expect(TransactionService.getAccountTransactions).toHaveBeenCalledWith('account-1', 1, 50, undefined);
   });
 
   it('should handle fetch errors', async () => {

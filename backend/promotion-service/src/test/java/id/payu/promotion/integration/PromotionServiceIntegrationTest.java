@@ -69,7 +69,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
 
         Assertions.assertNotNull(promotion.getId());
         Assertions.assertEquals("TEST-CASHBACK-001", promotion.getCode());
@@ -85,7 +85,7 @@ class PromotionServiceIntegrationTest {
         Assertions.assertNotNull(promotion.getUpdatedAt());
 
         // Verify persistence by fetching from database
-        Optional<PromotionEntity> fetched = promotionService.getPromotion(promotion.getId());
+        var fetched = promotionService.getPromotion(promotion.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("TEST-CASHBACK-001", fetched.get().getCode());
     }
@@ -150,7 +150,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity created = promotionService.createPromotion(createRequest);
+        var created = promotionService.createPromotion(createRequest);
 
         // Update the promotion
         UpdatePromotionRequest updateRequest = new UpdatePromotionRequest(
@@ -161,14 +161,14 @@ class PromotionServiceIntegrationTest {
             null
         );
 
-        PromotionEntity updated = promotionService.updatePromotion(created.getId(), updateRequest);
+        var updated = promotionService.updatePromotion(created.getId(), updateRequest);
 
         Assertions.assertEquals("Updated Name", updated.getName());
         Assertions.assertEquals("Updated description", updated.getDescription());
         Assertions.assertEquals(PromotionStatus.ACTIVE, updated.getStatus());
 
         // Verify persistence
-        Optional<PromotionEntity> fetched = promotionService.getPromotion(created.getId());
+        var fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("Updated Name", fetched.get().getName());
         Assertions.assertEquals(PromotionStatus.ACTIVE, fetched.get().getStatus());
@@ -207,7 +207,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(3)
         );
 
-        PromotionEntity created = promotionService.createPromotion(createRequest);
+        var created = promotionService.createPromotion(createRequest);
 
         // Try to update with invalid end date
         UpdatePromotionRequest updateRequest = new UpdatePromotionRequest(
@@ -241,15 +241,15 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity created = promotionService.createPromotion(request);
+        var created = promotionService.createPromotion(request);
         Assertions.assertEquals(PromotionStatus.DRAFT, created.getStatus());
 
-        PromotionEntity activated = promotionService.activatePromotion(created.getId());
+        var activated = promotionService.activatePromotion(created.getId());
 
         Assertions.assertEquals(PromotionStatus.ACTIVE, activated.getStatus());
 
         // Verify persistence
-        Optional<PromotionEntity> fetched = promotionService.getPromotion(created.getId());
+        var fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals(PromotionStatus.ACTIVE, fetched.get().getStatus());
     }
@@ -270,7 +270,7 @@ class PromotionServiceIntegrationTest {
             now.plusDays(30)
         );
 
-        PromotionEntity created = promotionService.createPromotion(request);
+        var created = promotionService.createPromotion(request);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             promotionService.activatePromotion(created.getId());
@@ -304,7 +304,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
         promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -315,19 +315,19 @@ class PromotionServiceIntegrationTest {
             "SHOPPING"
         );
 
-        RewardEntity reward = promotionService.claimPromotion("TEST-CLAIM-PCT-001", claimRequest);
+        var reward = promotionService.claimPromotion("TEST-CLAIM-PCT-001", claimRequest);
 
-        Assertions.assertNotNull(reward.getId());
-        Assertions.assertEquals("acc-test-claim-1", reward.getAccountId());
-        Assertions.assertEquals("txn-claim-001", reward.getTransactionId());
-        Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.getPromotionCode());
-        Assertions.assertEquals(RewardType.PROMOTION_REWARD, reward.getType());
-        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.getAmount())); // 10% of 50000
-        Assertions.assertEquals(0, new BigDecimal("50000").compareTo(reward.getTransactionAmount()));
-        Assertions.assertEquals(RewardStatus.AWARDED, reward.getStatus());
+        Assertions.assertNotNull(reward.id());
+        Assertions.assertEquals("acc-test-claim-1", reward.accountId());
+        Assertions.assertEquals("txn-claim-001", reward.transactionId());
+        Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.promotionCode());
+        Assertions.assertEquals(RewardType.PROMOTION_REWARD, reward.type());
+        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.amount())); // 10% of 50000
+        Assertions.assertEquals(0, new BigDecimal("50000").compareTo(reward.transactionAmount()));
+        Assertions.assertEquals(RewardStatus.AWARDED, reward.status());
 
         // Verify redemption count incremented
-        Optional<PromotionEntity> updatedPromo = promotionService.getPromotion(promotion.getId());
+        var updatedPromo = promotionService.getPromotion(promotion.getId());
         Assertions.assertTrue(updatedPromo.isPresent());
         Assertions.assertEquals(1, updatedPromo.get().getRedemptionCount());
     }
@@ -348,7 +348,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
         promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -359,10 +359,10 @@ class PromotionServiceIntegrationTest {
             "DINING"
         );
 
-        RewardEntity reward = promotionService.claimPromotion("TEST-CLAIM-FIX-001", claimRequest);
+        var reward = promotionService.claimPromotion("TEST-CLAIM-FIX-001", claimRequest);
 
         // Fixed amount should be awarded regardless of transaction amount
-        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.getAmount()));
+        Assertions.assertEquals(0, new BigDecimal("5000").compareTo(reward.amount()));
     }
 
     @Test
@@ -381,7 +381,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
         promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -392,10 +392,10 @@ class PromotionServiceIntegrationTest {
             null
         );
 
-        RewardEntity reward = promotionService.claimPromotion("TEST-CLAIM-PTS-001", claimRequest);
+        var reward = promotionService.claimPromotion("TEST-CLAIM-PTS-001", claimRequest);
 
-        Assertions.assertEquals(0, new BigDecimal("100").compareTo(reward.getAmount()));
-        Assertions.assertEquals(100, reward.getPointsEarned());
+        Assertions.assertEquals(0, new BigDecimal("100").compareTo(reward.amount()));
+        Assertions.assertEquals(100, reward.pointsEarned());
     }
 
     @Test
@@ -445,9 +445,10 @@ class PromotionServiceIntegrationTest {
             now.minusDays(1) // Expired yesterday
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
-        promotion.setStatus(PromotionStatus.ACTIVE);
-        promotionRepository.save(promotion);
+        var promotion = promotionService.createPromotion(request);
+        PromotionEntity persisted = promotionRepository.findById(promotion.getId()).orElseThrow();
+        persisted.setStatus(PromotionStatus.ACTIVE);
+        promotionRepository.save(persisted);
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-5",
@@ -478,7 +479,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
         promotionService.activatePromotion(promotion.getId());
 
         // First claim - should succeed
@@ -531,7 +532,7 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promotion = promotionService.createPromotion(request);
+        var promotion = promotionService.createPromotion(request);
         promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
@@ -580,9 +581,9 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity created = promotionService.createPromotion(request);
+        var created = promotionService.createPromotion(request);
 
-        Optional<PromotionEntity> fetched = promotionService.getPromotion(created.getId());
+        var fetched = promotionService.getPromotion(created.getId());
 
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("TEST-GET-001", fetched.get().getCode());
@@ -590,7 +591,7 @@ class PromotionServiceIntegrationTest {
 
     @Test
     void testGetPromotion_WithInvalidId_ShouldReturnEmpty() {
-        Optional<PromotionEntity> fetched = promotionService.getPromotion(UUID.randomUUID());
+        var fetched = promotionService.getPromotion(UUID.randomUUID());
 
         Assertions.assertTrue(fetched.isEmpty());
     }
@@ -613,7 +614,7 @@ class PromotionServiceIntegrationTest {
 
         promotionService.createPromotion(request);
 
-        Optional<PromotionEntity> fetched = promotionService.getPromotionByCode("TEST-GET-CODE-001");
+        var fetched = promotionService.getPromotionByCode("TEST-GET-CODE-001");
 
         Assertions.assertTrue(fetched.isPresent());
         Assertions.assertEquals("TEST-GET-CODE-001", fetched.get().getCode());
@@ -621,7 +622,7 @@ class PromotionServiceIntegrationTest {
 
     @Test
     void testGetPromotionByCode_WithInvalidCode_ShouldReturnEmpty() {
-        Optional<PromotionEntity> fetched = promotionService.getPromotionByCode("INVALID-CODE");
+        var fetched = promotionService.getPromotionByCode("INVALID-CODE");
 
         Assertions.assertTrue(fetched.isEmpty());
     }
@@ -646,7 +647,7 @@ class PromotionServiceIntegrationTest {
             now.plusDays(7)
         );
 
-        PromotionEntity campaign = promotionService.createPromotion(request);
+        var campaign = promotionService.createPromotion(request);
         Assertions.assertEquals(PromotionStatus.DRAFT, campaign.getStatus());
 
         // Activate
@@ -666,7 +667,7 @@ class PromotionServiceIntegrationTest {
         }
 
         // Verify claims
-        Optional<PromotionEntity> finalCampaign = promotionService.getPromotion(campaign.getId());
+        var finalCampaign = promotionService.getPromotion(campaign.getId());
         Assertions.assertTrue(finalCampaign.isPresent());
         Assertions.assertEquals(3, finalCampaign.get().getRedemptionCount());
     }
@@ -703,8 +704,8 @@ class PromotionServiceIntegrationTest {
             now.plusMonths(1)
         );
 
-        PromotionEntity promo1 = promotionService.createPromotion(request1);
-        PromotionEntity promo2 = promotionService.createPromotion(request2);
+        var promo1 = promotionService.createPromotion(request1);
+        var promo2 = promotionService.createPromotion(request2);
 
         promotionService.activatePromotion(promo1.getId());
         promotionService.activatePromotion(promo2.getId());
@@ -739,8 +740,8 @@ class PromotionServiceIntegrationTest {
         promotionService.claimPromotion("TEST-MULTI-002", claim3);
 
         // Verify independent counts
-        Optional<PromotionEntity> fetched1 = promotionService.getPromotion(promo1.getId());
-        Optional<PromotionEntity> fetched2 = promotionService.getPromotion(promo2.getId());
+        var fetched1 = promotionService.getPromotion(promo1.getId());
+        var fetched2 = promotionService.getPromotion(promo2.getId());
 
         Assertions.assertTrue(fetched1.isPresent());
         Assertions.assertTrue(fetched2.isPresent());

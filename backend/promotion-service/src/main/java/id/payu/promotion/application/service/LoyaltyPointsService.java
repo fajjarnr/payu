@@ -1,14 +1,14 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
 import id.payu.promotion.dto.LoyaltyBalanceResponse;
-import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
+import id.payu.promotion.domain.port.out.LoyaltyPointsRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import id.payu.outbox.service.OutboxService;
+import id.payu.promotion.domain.port.out.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,20 +25,17 @@ public class LoyaltyPointsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(LoyaltyPointsService.class);
 
-    private final LoyaltyPointsRepository loyaltyPointsRepository;
-    private final OutboxService outboxService;
+    private final LoyaltyPointsRepositoryPort loyaltyPointsRepository;
+    private final DomainEventPublisher outboxService;
     private final String promotionEventsTopic;
-    private final jakarta.persistence.EntityManager entityManager;
 
     public LoyaltyPointsService(
-            LoyaltyPointsRepository loyaltyPointsRepository,
-            OutboxService outboxService,
-            @Value("${app.kafka.topics.promotion-events:payu.promotion.loyalty-event.v1}") String promotionEventsTopic,
-            jakarta.persistence.EntityManager entityManager) {
+            LoyaltyPointsRepositoryPort loyaltyPointsRepository,
+            DomainEventPublisher outboxService,
+            @Value("${app.kafka.topics.promotion-events:payu.promotion.loyalty-event.v1}") String promotionEventsTopic) {
         this.loyaltyPointsRepository = loyaltyPointsRepository;
         this.outboxService = outboxService;
         this.promotionEventsTopic = promotionEventsTopic;
-        this.entityManager = entityManager;
     }
 
     /**
@@ -49,13 +46,13 @@ public class LoyaltyPointsService {
      * @return the created loyalty points record
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public LoyaltyPointsEntity addPoints(CreateLoyaltyPointsRequest request) {
+    public LoyaltyPoints addPoints(CreateLoyaltyPointsRequest request) {
         LOG.info("Adding points: accountId={}, points={}", request.accountId(), request.points());
 
         // Use atomic balance calculation with pessimistic lock to prevent race conditions
         Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
-        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
+        LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
         loyaltyPoints.setAccountId(request.accountId());
         loyaltyPoints.setTransactionId(request.transactionId());
         loyaltyPoints.setTransactionType(request.transactionType());
@@ -64,7 +61,7 @@ public class LoyaltyPointsService {
         loyaltyPoints.setExpiryDate(request.expiryDate());
 
         loyaltyPoints = loyaltyPointsRepository.save(loyaltyPoints);
-        entityManager.flush();
+        loyaltyPointsRepository.flush();
 
         publishLoyaltyEvent(loyaltyPoints);
 
@@ -83,7 +80,7 @@ public class LoyaltyPointsService {
      * @throws IllegalArgumentException if insufficient balance
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public LoyaltyPointsEntity redeemPoints(RedeemLoyaltyPointsRequest request) {
+    public LoyaltyPoints redeemPoints(RedeemLoyaltyPointsRequest request) {
         LOG.info("Redeeming points: accountId={}, points={}",
             request.accountId(), request.points());
 
@@ -94,7 +91,7 @@ public class LoyaltyPointsService {
             throw new IllegalArgumentException("Insufficient loyalty points balance");
         }
 
-        LoyaltyPointsEntity loyaltyPoints = new LoyaltyPointsEntity();
+        LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
         loyaltyPoints.setAccountId(request.accountId());
         loyaltyPoints.setTransactionId(request.transactionId());
         loyaltyPoints.setTransactionType(TransactionType.REDEEMED);
@@ -112,23 +109,23 @@ public class LoyaltyPointsService {
         return loyaltyPoints;
     }
 
-    public Optional<LoyaltyPointsEntity> getLoyaltyPoints(UUID id) {
+    public Optional<LoyaltyPoints> getLoyaltyPoints(UUID id) {
         return loyaltyPointsRepository.findById(id);
     }
 
-    public List<LoyaltyPointsEntity> getLoyaltyPointsByAccount(String accountId) {
+    public List<LoyaltyPoints> getLoyaltyPointsByAccount(String accountId) {
         return loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
     }
 
     public LoyaltyBalanceResponse getBalance(String accountId) {
         Integer currentBalance = calculateCurrentBalance(accountId);
 
-        List<LoyaltyPointsEntity> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        List<LoyaltyPoints> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
         // BUG-BE-065 Fix: Use .sum() of actual points, not .count() of records.
         // .count() returned number of transactions, not total points value.
         long totalEarned = allPoints.stream()
             .filter(p -> p.getTransactionType() == TransactionType.EARNED)
-            .mapToInt(LoyaltyPointsEntity::getPoints)
+            .mapToInt(LoyaltyPoints::getPoints)
             .sum();
 
         long totalRedeemed = allPoints.stream()
@@ -152,7 +149,7 @@ public class LoyaltyPointsService {
             .filter(p -> p.getExpiryDate() != null)
             .filter(p -> p.getExpiryDate().isAfter(now))
             .filter(p -> p.getExpiryDate().isBefore(expiryWindow))
-            .map(LoyaltyPointsEntity::getExpiryDate)
+            .map(LoyaltyPoints::getExpiryDate)
             .min(java.time.LocalDateTime::compareTo)
             .orElse(null);
 
@@ -161,7 +158,7 @@ public class LoyaltyPointsService {
             .filter(p -> p.getTransactionType() == TransactionType.EARNED)
             .filter(p -> p.getExpiryDate() != null)
             .filter(p -> p.getExpiryDate().isAfter(now) && p.getExpiryDate().isBefore(expiryWindow))
-            .mapToInt(LoyaltyPointsEntity::getPoints)
+            .mapToInt(LoyaltyPoints::getPoints)
             .sum();
 
         java.time.Instant expiryInstant = nearestExpiry != null
@@ -189,9 +186,7 @@ public class LoyaltyPointsService {
     @Transactional(readOnly = false) // MUST be readWrite for advisory lock to hold correctly in PG
     public Integer calculateCurrentBalanceWithLock(String accountId) {
         // Acquire transaction-level advisory lock using Postgres hash function
-        entityManager.createNativeQuery("SELECT pg_advisory_xact_lock(hashtext(:accountId))")
-                     .setParameter("accountId", accountId)
-                     .getSingleResult();
+        loyaltyPointsRepository.lockAccount(accountId);
 
         // Safe to read the balance now, no other transaction can concurrently insert for this account
         Integer balance = loyaltyPointsRepository.calculateBalanceByAccountId(accountId);
@@ -210,7 +205,7 @@ public class LoyaltyPointsService {
         return balance != null ? balance : 0;
     }
 
-    private void publishLoyaltyEvent(LoyaltyPointsEntity loyaltyPoints) {
+    private void publishLoyaltyEvent(LoyaltyPoints loyaltyPoints) {
         outboxService.createEvent(
                 "LoyaltyPoints",
                 loyaltyPoints.getId().toString(),

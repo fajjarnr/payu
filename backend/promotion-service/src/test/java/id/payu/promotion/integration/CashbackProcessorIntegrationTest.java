@@ -104,7 +104,7 @@ class CashbackProcessorIntegrationTest {
                 .ruleId("RULE002")
                 .name("Percentage CashbackEntity")
                 .cashbackType(CashbackType.PERCENTAGE)
-                .cashbackPercentage(5.0)
+                .cashbackPercentage(new BigDecimal("5"))
                 .maxCashback(new BigDecimal("10000"))
                 .minAmount(new BigDecimal("10000"))
                 .active(true)

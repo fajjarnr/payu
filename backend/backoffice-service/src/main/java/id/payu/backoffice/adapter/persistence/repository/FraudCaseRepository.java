@@ -16,6 +16,7 @@ public interface FraudCaseRepository extends JpaRepository<FraudCaseEntity, UUID
     List<FraudCaseEntity> findByUserId(String userId);
     List<FraudCaseEntity> findByStatus(FraudCaseStatus status);
     Page<FraudCaseEntity> findByStatus(FraudCaseStatus status, Pageable pageable);
+    Page<FraudCaseEntity> findByRiskLevel(id.payu.backoffice.domain.RiskLevel riskLevel, Pageable pageable);
 
     // Search methods
     List<FraudCaseEntity> findByUserIdContainingIgnoreCase(String userId);

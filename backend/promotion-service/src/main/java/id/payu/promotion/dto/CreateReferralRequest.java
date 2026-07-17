@@ -1,14 +1,16 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.adapter.persistence.entity.ReferralEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import id.payu.promotion.domain.ReferralRewardType;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotNull;
 
 public record CreateReferralRequest(
     String referrerAccountId,
-    BigDecimal referrerReward,
-    BigDecimal refereeReward,
-    ReferralRewardType rewardType,
+    @NotNull @DecimalMin(value = "0.0000") @Digits(integer = 15, fraction = 4) BigDecimal referrerReward,
+    @NotNull @DecimalMin(value = "0.0000") @Digits(integer = 15, fraction = 4) BigDecimal refereeReward,
+    @NotNull ReferralRewardType rewardType,
     LocalDateTime expiryDate
 ) {}

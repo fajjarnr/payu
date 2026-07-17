@@ -167,7 +167,7 @@ describe('MobileNav', () => {
     mockPathname = '/pockets';
     const { container } = renderWithIntl(<MobileNav />);
 
-    const activeIconContainer = container.querySelector('.bg-primary\/10');
+    const activeIconContainer = screen.getByText('Akun').closest('a')?.querySelector('div');
     expect(activeIconContainer).toBeInTheDocument();
   });
 
@@ -184,7 +184,7 @@ describe('MobileNav', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
     // Check that the active icon has the stroke-[2.5px] class by checking the rendered HTML
-    const activeIconContainer = container.querySelector('.bg-primary\/10');
+    const activeIconContainer = screen.getByText('Dasbor').closest('a')?.querySelector('div');
     expect(activeIconContainer).toBeInTheDocument();
     // The active icon should have a scale-110 class as well
     const activeIcon = container.querySelector('.scale-105');

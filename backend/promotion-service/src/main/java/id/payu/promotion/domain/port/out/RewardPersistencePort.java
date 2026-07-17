@@ -1,0 +1,15 @@
+package id.payu.promotion.domain.port.out;
+
+import id.payu.promotion.domain.model.Reward;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface RewardPersistencePort {
+    Reward save(Reward reward);
+
+    Optional<Reward> findById(UUID id);
+
+    List<Reward> findByAccountId(String accountId);
+}

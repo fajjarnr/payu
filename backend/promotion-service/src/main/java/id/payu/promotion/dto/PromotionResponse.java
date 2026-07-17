@@ -1,6 +1,6 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.adapter.persistence.entity.PromotionEntity;
+import id.payu.promotion.domain.model.Promotion;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public record PromotionResponse(
     LocalDateTime endDate,
     LocalDateTime createdAt
 ) {
-    public static PromotionResponse from(PromotionEntity promotion) {
+    public static PromotionResponse from(Promotion promotion) {
         return new PromotionResponse(
             promotion.getId(),
             promotion.getCode(),

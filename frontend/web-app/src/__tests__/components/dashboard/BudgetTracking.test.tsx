@@ -62,12 +62,10 @@ describe('BudgetTracking', () => {
     });
   });
 
-  it('should display correct status colors', () => {
+  it('should expose budget status without relying on color', () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    // The exceeded budget should have the ring class on its container
-    const exceededBudget = screen.getByText('Hiburan').closest('button');
-    expect(exceededBudget?.parentElement).toHaveClass('ring-2', 'ring-destructive/20');
+    expect(screen.getByRole('button', { name: /Hiburan, status exceeded, 112.5%/ })).toBeInTheDocument();
   });
 
   it('should show remaining budget correctly', () => {

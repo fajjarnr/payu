@@ -7,7 +7,7 @@ describe('Skeleton Components', () => {
     it('renders with default classes', () => {
       render(<Skeleton />);
       const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toHaveClass('bg-muted/60', 'rounded-md');
+      expect(skeleton).toHaveClass('bg-muted/50', 'rounded-xl', 'animate-pulse');
     });
 
   it('accepts custom className', () => {

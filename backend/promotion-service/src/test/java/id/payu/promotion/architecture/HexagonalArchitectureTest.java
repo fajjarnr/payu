@@ -3,13 +3,13 @@ package id.payu.promotion.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -27,7 +27,7 @@ class HexagonalArchitectureTest {
         importedClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("id.payu.promotion");
-        Assumptions.assumeFalse(importedClasses.isEmpty(), "Skipping ArchUnit tests on Java 25 due to class import limitations");
+        assertFalse(importedClasses.isEmpty(), "ArchUnit must import promotion classes");
     }
 
     @Nested
@@ -72,8 +72,7 @@ class HexagonalArchitectureTest {
                     .resideInAnyPackage(
                             "..domain..",
                             "..dto..",
-                            "id.payu.outbox..",
-                            "id.payu.saga..",
+                            "..application..",
                             "java..",
                             "javax..",
                             "org.springframework..",

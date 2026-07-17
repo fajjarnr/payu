@@ -54,7 +54,7 @@ describe('StatementService', () => {
         month: 1,
       };
 
-      vi.mocked(api.post).mockResolvedValue({ data: { data: mockStatement } });
+      vi.mocked(api.post).mockResolvedValue({ data: mockStatement });
 
       const result = await service.generateStatement(request);
 
@@ -66,7 +66,7 @@ describe('StatementService', () => {
 
   describe('getStatement', () => {
     it('should fetch statement by ID', async () => {
-      vi.mocked(api.get).mockResolvedValue({ data: { data: mockStatement } });
+      vi.mocked(api.get).mockResolvedValue({ data: mockStatement });
 
       const result = await service.getStatement('stmt_001');
 
@@ -87,7 +87,7 @@ describe('StatementService', () => {
         last: true,
       };
 
-      vi.mocked(api.get).mockResolvedValue({ data: { data: mockListResponse } });
+      vi.mocked(api.get).mockResolvedValue({ data: mockListResponse });
 
       const result = await service.listStatements();
 
@@ -100,7 +100,7 @@ describe('StatementService', () => {
 
     it('should support custom pagination', async () => {
       const mockListResponse = { content: [], totalPages: 5, totalElements: 50, size: 10, number: 2, first: false, last: false };
-      vi.mocked(api.get).mockResolvedValue({ data: { data: mockListResponse } });
+      vi.mocked(api.get).mockResolvedValue({ data: mockListResponse });
 
       await service.listStatements(2, 10);
 
@@ -112,7 +112,7 @@ describe('StatementService', () => {
 
   describe('getLatestStatement', () => {
     it('should fetch latest statement', async () => {
-      vi.mocked(api.get).mockResolvedValue({ data: { data: mockStatement } });
+      vi.mocked(api.get).mockResolvedValue({ data: mockStatement });
 
       const result = await service.getLatestStatement();
 

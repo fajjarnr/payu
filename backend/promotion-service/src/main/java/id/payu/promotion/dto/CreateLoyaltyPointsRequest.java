@@ -1,6 +1,5 @@
 package id.payu.promotion.dto;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
 import java.time.LocalDateTime;
 import id.payu.promotion.domain.TransactionType;
 

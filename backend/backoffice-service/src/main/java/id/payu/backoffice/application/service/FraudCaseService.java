@@ -1,16 +1,14 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
+import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.dto.FraudCaseDecisionRequest;
-import id.payu.backoffice.adapter.persistence.repository.FraudCaseRepository;
+import id.payu.backoffice.domain.port.outbound.FraudCaseRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,90 +20,66 @@ import id.payu.backoffice.domain.RiskLevel;
 @Slf4j
 public class FraudCaseService {
 
-    private final FraudCaseRepository repository;
+    private final FraudCaseRepositoryPort repository;
 
     @Transactional
-    public FraudCaseEntity create(String userId, String accountNumber, UUID transactionId, 
-                           String transactionType, BigDecimal amount, String fraudType, 
+    public FraudCase create(String userId, String accountNumber, UUID transactionId,
+                           String transactionType, BigDecimal amount, String fraudType,
                            RiskLevel riskLevel, String description, String evidence) {
-        log.info("Creating fraud case for user: {}, transaction: {}", userId, transactionId);
-
-        FraudCaseEntity fraudCase = FraudCaseEntity.builder()
-                .userId(userId)
-                .accountNumber(accountNumber)
-                .transactionId(transactionId)
-                .transactionType(transactionType)
-                .amount(amount)
-                .fraudType(fraudType)
-                .riskLevel(riskLevel != null ? riskLevel : RiskLevel.MEDIUM)
-                .status(FraudCaseStatus.OPEN)
-                .description(description)
-                .evidence(evidence)
-                .build();
-
-        FraudCaseEntity saved = repository.save(fraudCase);
+        log.info("Creating fraud case: transaction={}", transactionId);
+        FraudCase saved = repository.save(FraudCase.create(userId, accountNumber, transactionId,
+                transactionType, amount, fraudType, riskLevel, description, evidence));
         log.info("Fraud case created: id={}", saved.getId());
         return saved;
     }
 
-    public Optional<FraudCaseEntity> getById(UUID id) {
+    public Optional<FraudCase> getById(UUID id) {
         return repository.findById(id);
     }
 
-    public List<FraudCaseEntity> getByUserId(String userId) {
+    public List<FraudCase> getByUserId(String userId) {
         return repository.findByUserId(userId);
     }
 
-    public List<FraudCaseEntity> listByStatus(FraudCaseStatus status, int page, int size) {
-        return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
+    public List<FraudCase> listByStatus(FraudCaseStatus status, int page, int size) {
+        return repository.findByStatus(status, page, size);
     }
 
-    public List<FraudCaseEntity> listByRiskLevel(RiskLevel riskLevel, int page, int size) {
-        // Need to add method to repository if needed, or filter manually (inefficient) or ignore pagination for now
-        // Assuming repo has it or just simplified
-        return repository.findAll().stream()
-                .filter(fc -> fc.getRiskLevel() == riskLevel)
-                .toList(); 
+    public List<FraudCase> listByRiskLevel(RiskLevel riskLevel, int page, int size) {
+        return repository.findByRiskLevel(riskLevel, page, size);
     }
 
-    public List<FraudCaseEntity> listAll(int page, int size) {
-        return repository.findAll(PageRequest.of(page, size)).getContent();
+    public List<FraudCase> listAll(int page, int size) {
+        return repository.findAll(page, size);
     }
 
     @Transactional
-    public FraudCaseEntity assign(UUID id, String assignedTo) {
-        log.info("Assigning fraud case: id={}, to={}", id, assignedTo);
+    public FraudCase assign(UUID id, String assignedTo) {
+        log.info("Assigning fraud case: id={}", id);
 
-        FraudCaseEntity fraudCase = repository.findById(id)
+        FraudCase fraudCase = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Fraud case not found: " + id));
 
-        fraudCase.setAssignedTo(assignedTo);
-        if (fraudCase.getStatus() == FraudCaseStatus.OPEN) {
-            fraudCase.setStatus(FraudCaseStatus.UNDER_INVESTIGATION);
-        }
+        fraudCase.assignTo(assignedTo);
 
         return repository.save(fraudCase);
     }
 
     @Transactional
-    public FraudCaseEntity resolve(UUID id, FraudCaseDecisionRequest request, String resolvedBy) {
-        log.info("Resolving fraud case: id={}, status={}, resolver={}", id, request.status(), resolvedBy);
+    public FraudCase resolve(UUID id, FraudCaseDecisionRequest request, String resolvedBy) {
+        log.info("Resolving fraud case: id={}, status={}", id, request.status());
 
-        FraudCaseEntity fraudCase = repository.findById(id)
+        FraudCase fraudCase = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Fraud case not found: " + id));
 
-        fraudCase.setStatus(switch (request.status()) {
+        FraudCaseStatus status = switch (request.status()) {
             case UNDER_INVESTIGATION -> FraudCaseStatus.UNDER_INVESTIGATION;
             case RESOLVED -> FraudCaseStatus.RESOLVED;
             case CLOSED -> FraudCaseStatus.CLOSED;
             case ESCALATED -> FraudCaseStatus.ESCALATED;
-        });
-
-        fraudCase.setNotes(request.notes());
-        fraudCase.setResolvedBy(resolvedBy);
-        fraudCase.setResolvedAt(LocalDateTime.now());
-
-        FraudCaseEntity saved = repository.save(fraudCase);
+        };
+        fraudCase.resolve(status, request.notes(), resolvedBy);
+        FraudCase saved = repository.save(fraudCase);
         log.info("Fraud case updated: id={}, newStatus={}", saved.getId(), saved.getStatus());
         return saved;
     }

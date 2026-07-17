@@ -32,6 +32,8 @@ vi.mock('@/hooks/useCards', () => ({
   useFreezeCard: () => ({ mutateAsync: vi.fn() }),
   useUnfreezeCard: () => ({ mutateAsync: vi.fn() }),
   useCreateCard: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useDeleteCard: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateCard: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 describe('CardsPage', () => {

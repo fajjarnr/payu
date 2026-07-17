@@ -52,13 +52,17 @@ export default function SpendingInsights({
   // State for manual expansion removed in favor of Accordion
 
   return (
-    <Card className={cn("relative overflow-hidden h-full flex flex-col group", className)}>
+    <Card
+      role="region"
+      aria-labelledby="spending-insights-title"
+      className={cn("relative overflow-hidden h-full flex flex-col group", className)}
+    >
       {/* Decorative background */}
       <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 shrink-0 z-10">
         <div>
-          <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="spending-insights-title" className="text-sm font-bold text-foreground tracking-widest uppercase">
             {t('spendingInsights')}
           </CardTitle>
           <CardDescription>
@@ -72,6 +76,7 @@ export default function SpendingInsights({
             variant={viewMode === 'category' ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode('category')}
+            aria-label="Tampilan per kategori"
             className={clsx(
               'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
               viewMode === 'category' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
@@ -84,6 +89,7 @@ export default function SpendingInsights({
             variant={viewMode === 'monthly' ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode('monthly')}
+            aria-label="Tampilan bulanan"
             className={clsx(
               'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
               viewMode === 'monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
@@ -138,7 +144,13 @@ export default function SpendingInsights({
           </Card>
         </div>
         {/* Category List with Shadcn Accordion */}
-        <Accordion type="single" collapsible className="space-y-3 pb-2">
+        <Accordion
+          type="single"
+          collapsible
+          role="list"
+          aria-label="Daftar kategori pengeluaran"
+          className="space-y-3 pb-2"
+        >
           {categories.map((category, index) => {
             const Icon = category.icon;
 
@@ -146,6 +158,7 @@ export default function SpendingInsights({
               <AccordionItem 
                 key={category.id} 
                 value={category.id}
+                role="listitem"
                 className="bg-muted/30 rounded-xl border-none overflow-hidden"
               >
                 <AccordionTrigger className="hover:no-underline px-4 py-8 group/trigger">
@@ -187,8 +200,9 @@ export default function SpendingInsights({
                           ? 'bg-primary/10 text-primary'
                           : 'bg-muted text-muted-foreground'
                       )}
+                      aria-label={`Tren ${category.trend === 'up' ? 'naik' : category.trend === 'down' ? 'turun' : 'tetap'} ${category.trendValue}%`}
                     >
-                      <TrendingUp className={cn('h-3 w-3', category.trend === 'down' && 'rotate-180')} />
+                      <TrendingUp aria-hidden="true" className={cn('h-3 w-3', category.trend === 'down' && 'rotate-180')} />
                       {category.trendValue}%
                     </div>
                   </div>
@@ -213,11 +227,11 @@ export default function SpendingInsights({
                     </div>
 
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10">
-                        Lihat Detail
+                      <Button aria-label={`Lihat transaksi ${category.name}`} size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10">
+                        Lihat Transaksi
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10 bg-muted/30">
-                        Set Budget
+                      <Button aria-label={`Set anggaran ${category.name}`} variant="outline" size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10 bg-muted/30">
+                        Set Anggaran
                       </Button>
                     </div>
                   </div>

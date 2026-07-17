@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import MerchantDashboard from '@/app/[locale]/merchant/page';
+import { NextIntlClientProvider } from 'next-intl';
+import messages from '../../../messages/id.json';
+
+const renderMerchant = () => render(
+  <NextIntlClientProvider locale="id" messages={messages}>
+    <MerchantDashboard />
+  </NextIntlClientProvider>
+);
+
+vi.mock('@/components/DashboardLayout', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/stores/authStore', () => ({
+  useAuthStore: () => ({ user: { id: '1' } }),
+}));
 
 vi.mock('next/link', () => ({
   default: ({ children, ...props }: { children: React.ReactNode; href: string }) => (
@@ -24,20 +40,20 @@ describe('MerchantDashboard', () => {
   it('should show loading state initially', () => {
     // Never resolve so we stay in loading state
     mockGetProfile.mockReturnValue(new Promise(() => {}));
-    render(<MerchantDashboard />);
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    renderMerchant();
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('should render merchant portal when no partner found', async () => {
     mockGetProfile.mockRejectedValue(new Error('Not found'));
-    render(<MerchantDashboard />);
-    expect(await screen.findByText('Merchant Portal')).toBeInTheDocument();
+    renderMerchant();
+    expect(await screen.findByText('Portal Merchant')).toBeInTheDocument();
   });
 
   it('should render register link when not registered', async () => {
     mockGetProfile.mockRejectedValue(new Error('Not found'));
-    render(<MerchantDashboard />);
-    expect(await screen.findByText('Register as Merchant')).toBeInTheDocument();
+    renderMerchant();
+    expect(await screen.findByText('Daftar sebagai Merchant')).toBeInTheDocument();
   });
 
   it('should render merchant dashboard when partner exists', async () => {
@@ -49,8 +65,8 @@ describe('MerchantDashboard', () => {
       active: true,
       clientId: 'test-client-id',
     });
-    render(<MerchantDashboard />);
-    expect(await screen.findByText('Merchant Dashboard')).toBeInTheDocument();
+    renderMerchant();
+    expect(await screen.findByText('Dasbor Merchant')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('Test Merchant')).toBeInTheDocument();
     });

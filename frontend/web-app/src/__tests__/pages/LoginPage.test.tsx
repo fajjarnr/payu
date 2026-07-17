@@ -37,6 +37,7 @@ vi.mock('@/stores/authStore', () => ({
 
 // Mock navigation lib
 vi.mock('@/lib/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   Link: ({ children, ...props }: { children: React.ReactNode; href: string }) => (
     <a {...props}>{children}</a>
   ),

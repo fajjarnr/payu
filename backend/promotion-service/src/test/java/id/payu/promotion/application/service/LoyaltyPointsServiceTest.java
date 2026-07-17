@@ -1,6 +1,6 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
@@ -54,7 +54,7 @@ class LoyaltyPointsServiceTest {
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPointsEntity result = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints result = loyaltyPointsService.addPoints(request);
 
         assertNotNull(result.getId());
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
@@ -83,10 +83,10 @@ class LoyaltyPointsServiceTest {
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPointsEntity result1 = loyaltyPointsService.addPoints(request1);
+        LoyaltyPoints result1 = loyaltyPointsService.addPoints(request1);
         assertEquals(100, result1.getBalanceAfter());
 
-        LoyaltyPointsEntity result2 = loyaltyPointsService.addPoints(request2);
+        LoyaltyPoints result2 = loyaltyPointsService.addPoints(request2);
         assertEquals(150, result2.getBalanceAfter());
     }
 
@@ -108,7 +108,7 @@ class LoyaltyPointsServiceTest {
             "redeem-txn-789"
         );
 
-        LoyaltyPointsEntity result = loyaltyPointsService.redeemPoints(redeemRequest);
+        LoyaltyPoints result = loyaltyPointsService.redeemPoints(redeemRequest);
 
         assertNotNull(result.getId());
         assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
@@ -154,7 +154,7 @@ class LoyaltyPointsServiceTest {
             LocalDateTime.now().plusMonths(6)
         );
 
-        LoyaltyPointsEntity created = loyaltyPointsService.addPoints(request);
+        LoyaltyPoints created = loyaltyPointsService.addPoints(request);
 
         var result = loyaltyPointsService.getLoyaltyPoints(created.getId());
 

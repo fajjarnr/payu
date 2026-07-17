@@ -1,6 +1,6 @@
 package id.payu.billing.dto;
 
-import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.SubscriptionCharge;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,7 +21,7 @@ public record SubscriptionChargeResponse(
         LocalDateTime createdAt,
         LocalDateTime chargedAt
 ) {
-    public static SubscriptionChargeResponse from(SubscriptionChargeEntity charge) {
+    public static SubscriptionChargeResponse from(SubscriptionCharge charge) {
         return new SubscriptionChargeResponse(
                 charge.getId(),
                 charge.getSubscriptionId(),

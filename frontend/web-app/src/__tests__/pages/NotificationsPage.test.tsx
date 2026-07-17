@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import NotificationsPage from '@/app/[locale]/notifications/page';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -36,28 +37,28 @@ describe('NotificationsPage', () => {
   });
 
   it('should render within DashboardLayout', () => {
-    render(<NotificationsPage />);
+    renderWithIntl(<NotificationsPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render page title', () => {
-    render(<NotificationsPage />);
+    renderWithIntl(<NotificationsPage />);
     expect(screen.getByText('Kotak Masuk')).toBeInTheDocument();
   });
 
   it('should render filter tabs', () => {
-    render(<NotificationsPage />);
+    renderWithIntl(<NotificationsPage />);
     expect(screen.getByText('Semua')).toBeInTheDocument();
     expect(screen.getByText('Belum Dibaca')).toBeInTheDocument();
   });
 
   it('should render action buttons', () => {
-    render(<NotificationsPage />);
+    renderWithIntl(<NotificationsPage />);
     expect(screen.getByText('Tandai Semua Dibaca')).toBeInTheDocument();
   });
 
   it('should render empty state when no notifications', () => {
-    render(<NotificationsPage />);
+    renderWithIntl(<NotificationsPage />);
     expect(screen.getByText('Tidak ada notifikasi')).toBeInTheDocument();
   });
 });

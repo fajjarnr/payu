@@ -1,6 +1,6 @@
 package id.payu.backoffice.dto;
 
-import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
+import id.payu.backoffice.domain.CustomerCase;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import id.payu.backoffice.domain.CaseType;
@@ -23,11 +23,11 @@ public record CustomerCaseResponse(
         LocalDateTime resolvedAt,
         LocalDateTime createdAt
 ) {
-    public static CustomerCaseResponse from(CustomerCaseEntity customerCase) {
+    public static CustomerCaseResponse from(CustomerCase customerCase) {
         return new CustomerCaseResponse(
                 customerCase.getId(),
                 customerCase.getUserId(),
-                customerCase.getAccountNumber(),
+                PiiMasking.lastFour(customerCase.getAccountNumber()),
                 customerCase.getCaseNumber(),
                 customerCase.getCaseType(),
                 customerCase.getPriority(),

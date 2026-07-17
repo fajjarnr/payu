@@ -334,7 +334,7 @@ class CashbackProcessorServiceTest {
                 .ruleId(ruleId)
                 .name("Test Percentage Rule " + ruleId)
                 .cashbackType(CashbackType.PERCENTAGE)
-                .cashbackPercentage(percentage)
+                .cashbackPercentage(BigDecimal.valueOf(percentage))
                 .maxCashback(maxCashback)
                 .minAmount(new BigDecimal("10000"))
                 .active(true)

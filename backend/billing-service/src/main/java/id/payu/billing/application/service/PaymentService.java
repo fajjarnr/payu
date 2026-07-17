@@ -1,6 +1,6 @@
 package id.payu.billing.application.service;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.domain.port.in.PayBillUseCase;
 import id.payu.billing.domain.port.in.PaymentQueryUseCase;
@@ -44,7 +44,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     @CircuitBreaker(name = "billing", fallbackMethod = "createPaymentFallback")
     @Retry(name = "billing")
     @Transactional
-    public BillPaymentEntity createPayment(CreatePaymentRequest request) {
+    public BillPayment createPayment(CreatePaymentRequest request) {
         log.info("Creating payment: biller={}, customerId={}, amount={}",
                 request.billerCode(), request.customerId(), request.amount());
 
@@ -56,7 +56,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         BigDecimal adminFee = calculateAdminFee(billerType);
 
         // Create payment record
-        BillPaymentEntity payment = new BillPaymentEntity();
+        BillPayment payment = new BillPayment();
         payment.setAccountId(request.accountId());
         payment.setBillerType(billerType);
         payment.setCustomerId(request.customerId());
@@ -134,7 +134,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     @CircuitBreaker(name = "billing", fallbackMethod = "createTopUpFallback")
     @Retry(name = "billing")
     @Transactional
-    public BillPaymentEntity createTopUp(TopUpRequest request) {
+    public BillPayment createTopUp(TopUpRequest request) {
         log.info("Creating top-up: provider={}, walletNumber={}, amount={}",
                 request.provider(), request.walletNumber(), request.amount());
 
@@ -146,7 +146,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         BigDecimal adminFee = calculateTopUpFee(request.amount());
 
         // Create payment record
-        BillPaymentEntity payment = new BillPaymentEntity();
+        BillPayment payment = new BillPayment();
         payment.setAccountId(request.accountId());
         payment.setBillerType(billerType);
         payment.setCustomerId(request.walletNumber());
@@ -216,13 +216,13 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
 
     @CircuitBreaker(name = "billing", fallbackMethod = "getPaymentFallback")
     @Retry(name = "billing")
-    public Optional<BillPaymentEntity> getPayment(UUID id) {
+    public Optional<BillPayment> getPayment(UUID id) {
         return persistencePort.findById(id);
     }
 
     @CircuitBreaker(name = "billing", fallbackMethod = "getPaymentByReferenceFallback")
     @Retry(name = "billing")
-    public Optional<BillPaymentEntity> getPaymentByReference(String referenceNumber) {
+    public Optional<BillPayment> getPaymentByReference(String referenceNumber) {
         return persistencePort.findByReferenceNumber(referenceNumber);
     }
 
@@ -235,7 +235,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         return Optional.empty();
     }
 
-    private BillPaymentEntity createPaymentFallback(CreatePaymentRequest request, Exception ex) {
+    private BillPayment createPaymentFallback(CreatePaymentRequest request, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
@@ -247,7 +247,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private BillPaymentEntity createTopUpFallback(TopUpRequest request, Exception ex) {
+    private BillPayment createTopUpFallback(TopUpRequest request, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
@@ -259,7 +259,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Optional<BillPaymentEntity> getPaymentFallback(UUID id, Exception ex) {
+    private Optional<BillPayment> getPaymentFallback(UUID id, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
@@ -271,7 +271,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Optional<BillPaymentEntity> getPaymentByReferenceFallback(String referenceNumber, Exception ex) {
+    private Optional<BillPayment> getPaymentByReferenceFallback(String referenceNumber, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException

@@ -92,7 +92,7 @@ public class WebSecurityAutoConfiguration {
                 auth.requestMatchers(
                     "/api-docs/**", "/v3/api-docs/**",
                     "/swagger-ui/**", "/swagger-ui.html",
-                    "/v1/public/**", "/api/v1/v1/public/**"
+                    "/v1/public/**", "/api/v1/public/**"
                 ).permitAll();
 
                 // Apply per-service customizers

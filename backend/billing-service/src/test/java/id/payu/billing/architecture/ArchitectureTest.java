@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Architecture Tests for Billing Service (Spring Boot) — Hexagonal Architecture.
@@ -29,6 +30,7 @@ class ArchitectureTest {
         importedClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                 .importPackages("id.payu.billing");
+        assertFalse(importedClasses.isEmpty(), "ArchUnit must import billing classes");
     }
 
     @Nested
@@ -45,6 +47,7 @@ class ArchitectureTest {
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Client").definedBy("..adapter.client..")
                     .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                    .layer("Infrastructure.Persistence").definedBy("..infrastructure.persistence..")
                     .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
                     // Application layer (use-case orchestration)
                     .layer("Application").definedBy("..application..")
@@ -68,6 +71,7 @@ class ArchitectureTest {
                     // Driven adapters implement domain ports
                     .whereLayer("Adapter.Client").mayOnlyBeAccessedByLayers("Application")
                     .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
+                    .whereLayer("Infrastructure.Persistence").mayOnlyBeAccessedByLayers("Adapter.Persistence")
                     .whereLayer("Adapter.Messaging").mayOnlyBeAccessedByLayers("Application")
 
                     .allowEmptyShould(true)
@@ -87,6 +91,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
                             "..adapter..",
+                            "..infrastructure..",
                             "..config..",
                             "org.springframework.."
                     )

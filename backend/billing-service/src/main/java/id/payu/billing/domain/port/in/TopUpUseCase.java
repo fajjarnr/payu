@@ -1,6 +1,6 @@
 package id.payu.billing.domain.port.in;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.dto.TopUpRequest;
 
 /**
@@ -11,5 +11,5 @@ public interface TopUpUseCase {
     /**
      * Create and process an e-wallet top-up.
      */
-    BillPaymentEntity createTopUp(TopUpRequest request);
+    BillPayment createTopUp(TopUpRequest request);
 }

@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService, type LoginRequest, type LoginResponse } from '@/services/AuthService';
 import api from '@/lib/api';
 
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 vi.mock('@/lib/api', () => ({
   default: {
     post: vi.fn(),
@@ -20,6 +23,8 @@ vi.mock('@/lib/api', () => ({
 describe('AuthService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    AuthService.getInstance()['authenticated'] = false;
+    mockFetch.mockReset();
   });
 
   it('should be a singleton', () => {
@@ -47,7 +52,7 @@ describe('AuthService', () => {
         }
       };
 
-      vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => mockResponse });
 
       const credentials: LoginRequest = {
         username: 'testuser',
@@ -56,7 +61,12 @@ describe('AuthService', () => {
 
       const result = await AuthService.getInstance().login(credentials);
 
-      expect(api.post).toHaveBeenCalledWith('/auth/login', credentials);
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(credentials),
+      });
       // SECURITY: Tokens are NOT stored in localStorage
       // They are managed via httpOnly cookies by the backend
       expect(result).toEqual(mockResponse);
@@ -80,7 +90,7 @@ describe('AuthService', () => {
         }
       };
 
-      vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => mockResponse });
 
       await AuthService.getInstance().login({ username: 'test', password: 'pass' });
 
@@ -91,11 +101,12 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should clear session state without touching localStorage', () => {
+    it('should clear session state without touching localStorage', async () => {
       // Set authenticated state first
       AuthService.getInstance()['authenticated'] = true;
 
-      AuthService.getInstance().logout();
+      mockFetch.mockResolvedValue({ ok: true });
+      await AuthService.getInstance().logout();
 
       expect(AuthService.getInstance().isAuthenticated()).toBe(false);
       // SECURITY: No localStorage operations - tokens are in httpOnly cookies
@@ -147,12 +158,15 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('should call refresh endpoint without using stored refresh token', async () => {
-      vi.mocked(api.post).mockResolvedValue({ data: {} });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ expiresIn: 900 }) });
 
       await AuthService.getInstance().refreshToken();
 
       // SECURITY: Backend manages refresh token via httpOnly cookie
-      expect(api.post).toHaveBeenCalledWith('/auth/refresh', {});
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
     });
   });
 

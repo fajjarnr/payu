@@ -1,8 +1,8 @@
 package id.payu.billing.adapter.messaging;
 
 import id.payu.billing.domain.event.SubscriptionEvent;
-import id.payu.billing.adapter.persistence.entity.SubscriptionEntity;
-import id.payu.billing.adapter.persistence.entity.SubscriptionChargeEntity;
+import id.payu.billing.domain.model.Subscription;
+import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.events.cloudevents.CloudEventEnvelope;
 import id.payu.outbox.service.OutboxService;
@@ -25,7 +25,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     private static final String TOPIC = "payu.billing.subscription-event.v1";
 
     @Override
-    public void publishSubscriptionCreated(SubscriptionEntity subscription) {
+    public void publishSubscriptionCreated(Subscription subscription) {
         CloudEventEnvelope<SubscriptionEvent.SubscriptionCreatedPayload> event =
                 SubscriptionEvent.createSubscriptionCreatedEvent(
                         subscription.getId(), subscription.getPartnerId(),
@@ -49,7 +49,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     }
 
     @Override
-    public void publishChargeSucceeded(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
+    public void publishChargeSucceeded(Subscription subscription, SubscriptionCharge charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
                 SubscriptionEvent.createChargeSucceededEvent(
                         charge.getId(), charge.getSubscriptionId(),
@@ -74,7 +74,7 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
     }
 
     @Override
-    public void publishChargeFailed(SubscriptionEntity subscription, SubscriptionChargeEntity charge) {
+    public void publishChargeFailed(Subscription subscription, SubscriptionCharge charge) {
         CloudEventEnvelope<SubscriptionEvent.ChargePayload> event =
                 SubscriptionEvent.createChargeFailedEvent(
                         charge.getId(), charge.getSubscriptionId(),

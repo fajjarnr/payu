@@ -63,7 +63,9 @@ describe('WalletService', () => {
 
       const result = await WalletService.getInstance().reserveBalance('acc_123', mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/wallets/acc_123/reserve', mockRequest);
+      expect(api.post).toHaveBeenCalledWith('/wallets/acc_123/reserve', mockRequest, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result).toEqual(mockResponse);
     });
   });
@@ -79,7 +81,9 @@ describe('WalletService', () => {
 
       const result = await WalletService.getInstance().commitReservation('res_123');
 
-      expect(api.post).toHaveBeenCalledWith('/wallets/reservations/res_123/commit');
+      expect(api.post).toHaveBeenCalledWith('/wallets/reservations/res_123/commit', null, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result).toEqual(mockResponse);
     });
   });
@@ -95,7 +99,9 @@ describe('WalletService', () => {
 
       const result = await WalletService.getInstance().releaseReservation('res_123');
 
-      expect(api.post).toHaveBeenCalledWith('/wallets/reservations/res_123/release');
+      expect(api.post).toHaveBeenCalledWith('/wallets/reservations/res_123/release', null, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result).toEqual(mockResponse);
     });
   });

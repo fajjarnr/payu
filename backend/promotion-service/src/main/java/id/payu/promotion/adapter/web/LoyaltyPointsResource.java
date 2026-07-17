@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.adapter.persistence.entity.LoyaltyPointsEntity;
+import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.application.service.LoyaltyPointsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,7 +88,7 @@ public class LoyaltyPointsResource {
         try {
             // BUG-SECURITY-024 FIX: Verify caller owns the account
             verifyAccountOwnership(request.accountId());
-            LoyaltyPointsEntity loyaltyPoints = loyaltyPointsService.addPoints(request);
+            LoyaltyPoints loyaltyPoints = loyaltyPointsService.addPoints(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(LoyaltyPointsResponse.from(loyaltyPoints));
         } catch (AccessDeniedException e) {
@@ -115,7 +115,7 @@ public class LoyaltyPointsResource {
         try {
             // BUG-SECURITY-024 FIX: Verify caller owns the account
             verifyAccountOwnership(request.accountId());
-            LoyaltyPointsEntity loyaltyPoints = loyaltyPointsService.redeemPoints(request);
+            LoyaltyPoints loyaltyPoints = loyaltyPointsService.redeemPoints(request);
             return ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPoints));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -138,11 +138,11 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getLoyaltyPoints(@PathVariable UUID id) {
-        Optional<LoyaltyPointsEntity> loyaltyPointsOpt = loyaltyPointsService.getLoyaltyPoints(id);
+        Optional<LoyaltyPoints> loyaltyPointsOpt = loyaltyPointsService.getLoyaltyPoints(id);
         if (loyaltyPointsOpt.isPresent()) {
             try {
                 // BUG-SECURITY-024 FIX: Verify ownership
-                LoyaltyPointsEntity lp = loyaltyPointsOpt.get();
+                LoyaltyPoints lp = loyaltyPointsOpt.get();
                 verifyAccountOwnership(lp.getAccountId());
                 return ResponseEntity.ok(LoyaltyPointsResponse.from(lp));
             } catch (AccessDeniedException e) {
@@ -167,7 +167,7 @@ public class LoyaltyPointsResource {
         try {
             // BUG-SECURITY-024 FIX: Verify caller owns the account
             verifyAccountOwnership(accountId);
-            List<LoyaltyPointsEntity> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
+            List<LoyaltyPoints> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
             return ResponseEntity.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList());
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

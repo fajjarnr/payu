@@ -1,6 +1,6 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.application.port.output.ReceiptRepositoryPort;
+import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.domain.model.Receipt;
 import id.payu.statement.domain.model.RecipientInfo;
 import id.payu.statement.domain.model.ReceiptStatus;
@@ -95,18 +95,12 @@ public class ReceiptService {
         }
 
         // Create sender info
-        SenderInfo senderInfo = SenderInfo.builder()
-                .name(txnData.getSenderName())
-                .accountNumber(txnData.getSenderAccountNumber())
-                .bankName(txnData.getSenderBankName())
-                .build();
+        SenderInfo senderInfo = new SenderInfo(
+                txnData.getSenderName(), txnData.getSenderAccountNumber(), txnData.getSenderBankName());
 
         // Create recipient info
-        RecipientInfo recipientInfo = RecipientInfo.builder()
-                .name(txnData.getRecipientName())
-                .accountNumber(txnData.getRecipientAccountNumber())
-                .bankName(txnData.getRecipientBankName())
-                .build();
+        RecipientInfo recipientInfo = new RecipientInfo(
+                txnData.getRecipientName(), txnData.getRecipientAccountNumber(), txnData.getRecipientBankName());
 
         // Generate receipt
         Receipt receipt = Receipt.generate(

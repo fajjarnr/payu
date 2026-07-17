@@ -1,8 +1,5 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
-import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
-import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.domain.CaseType;
 import id.payu.backoffice.domain.Priority;
 import id.payu.backoffice.dto.*;

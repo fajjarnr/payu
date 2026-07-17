@@ -16,6 +16,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 describe('TransactionService', () => {
+  const accountId = '123e4567-e89b-12d3-a456-426614174000';
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -50,7 +51,9 @@ describe('TransactionService', () => {
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest);
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result).toEqual(mockResponse);
     });
 
@@ -74,7 +77,9 @@ describe('TransactionService', () => {
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest);
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result).toEqual(mockResponse);
     });
   });
@@ -149,9 +154,9 @@ describe('TransactionService', () => {
 
       vi.mocked(api.get).mockResolvedValue({ data: mockTransactions });
 
-      const result = await TransactionService.getInstance().getAccountTransactions('acc_123');
+      const result = await TransactionService.getInstance().getAccountTransactions(accountId);
 
-      expect(api.get).toHaveBeenCalledWith('/transactions/accounts/acc_123', {
+      expect(api.get).toHaveBeenCalledWith(`/transactions/accounts/${accountId}`, {
         params: { page: 0, size: 20 },
       });
       expect(result).toEqual(mockTransactions);
@@ -162,9 +167,9 @@ describe('TransactionService', () => {
 
       vi.mocked(api.get).mockResolvedValue({ data: mockTransactions });
 
-      const result = await TransactionService.getInstance().getAccountTransactions('acc_123', 1, 50);
+      const result = await TransactionService.getInstance().getAccountTransactions(accountId, 1, 50);
 
-      expect(api.get).toHaveBeenCalledWith('/transactions/accounts/acc_123', {
+      expect(api.get).toHaveBeenCalledWith(`/transactions/accounts/${accountId}`, {
         params: { page: 1, size: 50 },
       });
       expect(result).toEqual(mockTransactions);
@@ -183,7 +188,9 @@ describe('TransactionService', () => {
 
       await TransactionService.getInstance().processQrisPayment(mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/transactions/qris/pay', mockRequest);
+      expect(api.post).toHaveBeenCalledWith('/transactions/qris/pay', mockRequest, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
     });
 
     it('should process QRIS payment with different amount', async () => {
@@ -197,7 +204,9 @@ describe('TransactionService', () => {
 
       await TransactionService.getInstance().processQrisPayment(mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/transactions/qris/pay', mockRequest);
+      expect(api.post).toHaveBeenCalledWith('/transactions/qris/pay', mockRequest, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
     });
   });
 });

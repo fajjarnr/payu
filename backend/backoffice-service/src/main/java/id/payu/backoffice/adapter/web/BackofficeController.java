@@ -1,8 +1,5 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
-import id.payu.backoffice.adapter.persistence.entity.FraudCaseEntity;
-import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.dto.*;
 import id.payu.backoffice.application.service.CustomerCaseService;
 import id.payu.backoffice.application.service.FraudCaseService;
@@ -130,7 +127,7 @@ public class BackofficeController extends BaseController {
                     content = @Content(schema = @Schema(implementation = KycReviewRequest.class))
             )
             KycReviewRequest request) {
-        LOG.info("Creating KYC review for user: {}", request.userId());
+        LOG.info("Creating KYC review");
         var review = kycReviewService.create(request);
         return created(KycReviewResponse.from(review), "/api/v1/backoffice/kyc-reviews/" + review.getId());
     }
@@ -524,7 +521,8 @@ public class BackofficeController extends BaseController {
     })
     public ResponseEntity<id.payu.backoffice.dto.ApiResponse<UniversalSearchResponse>> search(
             @Valid @RequestBody UniversalSearchRequest request) {
-        LOG.info("Universal search request: query={}, entityType={}", request.query(), request.entityType());
+        LOG.info("Universal search request: queryPresent={}, entityType={}",
+                request.query() != null && !request.query().isBlank(), request.entityType());
         var results = universalSearchService.search(
                 request.query(),
                 request.entityType(),
@@ -545,7 +543,8 @@ public class BackofficeController extends BaseController {
             @RequestParam(value = "type", required = false) String entityType,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        LOG.info("Universal search GET request: query={}, entityType={}", query, entityType);
+        LOG.info("Universal search GET request: queryPresent={}, entityType={}",
+                query != null && !query.isBlank(), entityType);
         if (query == null || query.isEmpty()) {
             return badRequest("Query parameter 'q' is required");
         }

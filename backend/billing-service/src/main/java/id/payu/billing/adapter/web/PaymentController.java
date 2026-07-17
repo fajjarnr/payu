@@ -1,7 +1,7 @@
 package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.PaymentResponse;
 import id.payu.billing.application.service.PaymentService;
@@ -59,7 +59,7 @@ public class PaymentController {
      * BUG-BE-159 FIX: Validate that the authenticated user owns the payment.
      * Prevents unauthorized access to other users' payment details.
      */
-    private void validateOwnership(BillPaymentEntity payment) {
+    private void validateOwnership(BillPayment payment) {
         String userId = extractUserId();
         if (userId != null && payment.getAccountId() != null
                 && !Objects.equals(payment.getAccountId(), userId)) {
@@ -109,7 +109,7 @@ public class PaymentController {
             throw new PaymentNotFoundException("Unauthorized payment attempt: account ownership mismatch");
         }
 
-        BillPaymentEntity payment = paymentService.createPayment(request);
+        BillPayment payment = paymentService.createPayment(request);
         return ApiResponse.success(PaymentResponse.from(payment));
     }
 

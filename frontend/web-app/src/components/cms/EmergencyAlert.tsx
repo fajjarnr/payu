@@ -108,6 +108,13 @@ export default function EmergencyAlert({
     return type === 'ERROR' ? 'destructive' : 'default';
   };
 
+  const getAlertClasses = (alert: Content) => {
+    const type = alert.metadata?.alertType as string;
+    if (type === 'WARNING') return 'bg-amber-50 dark:bg-amber-950/30 border-amber-300';
+    if (type === 'INFO') return 'bg-blue-50 dark:bg-blue-950/30 border-blue-300';
+    return '';
+  };
+
   return (
     <div className={clsx("w-full space-y-2", className)}>
       <AnimatePresence>
@@ -126,7 +133,8 @@ export default function EmergencyAlert({
               <Alert 
                 variant={alertType}
                 className={clsx(
-                  "relative pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md",
+                  "relative pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md border-b-2",
+                  getAlertClasses(alert),
                   alertType === 'default' && "border-primary/20"
                 )}
                 onClick={() => handleAlertClick(alert)}
@@ -138,6 +146,11 @@ export default function EmergencyAlert({
                 <AlertDescription className="text-xs font-medium opacity-80 line-clamp-2">
                   {alert.description}
                 </AlertDescription>
+                {alert.endDate && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Valid until {new Date(alert.endDate).toLocaleDateString()}
+                  </p>
+                )}
                 
                 {/* Dismiss Button */}
                 <Button
@@ -145,6 +158,7 @@ export default function EmergencyAlert({
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
                   onClick={(e) => handleDismiss(alert.id, e)}
+                  aria-label="Dismiss alert"
                 >
                   <X className="h-4 w-4" />
                 </Button>

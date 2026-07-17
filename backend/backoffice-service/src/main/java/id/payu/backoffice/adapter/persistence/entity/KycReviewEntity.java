@@ -2,6 +2,8 @@ package id.payu.backoffice.adapter.persistence.entity;
 
 import id.payu.backoffice.domain.KycStatus;
 import jakarta.persistence.*;
+import id.payu.security.annotation.Sensitive;
+import id.payu.security.converter.EncryptedStringConverter;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -24,28 +26,46 @@ public class KycReviewEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(nullable = false, length = 512)
     private String userId;
 
-    @Column(nullable = false)
+    @Column(length = 64)
+    private String userIdBlindIndex;
+
+    @Column(length = 32)
+    private String userIdBlindIndexKeyVersion;
+
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(nullable = false, length = 512)
     private String accountNumber;
 
     @Column(length = 100)
     private String documentType;
 
-    @Column(length = 200)
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 512)
     private String documentNumber;
 
     @Column(columnDefinition = "TEXT")
     private String documentUrl;
 
-    @Column(length = 100)
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 512)
     private String fullName;
 
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(length = 50)
+    @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 512)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +90,10 @@ public class KycReviewEntity {
     public void setId(UUID id) { this.id = id; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
+    public String getUserIdBlindIndex() { return userIdBlindIndex; }
+    public void setUserIdBlindIndex(String value) { this.userIdBlindIndex = value; }
+    public String getUserIdBlindIndexKeyVersion() { return userIdBlindIndexKeyVersion; }
+    public void setUserIdBlindIndexKeyVersion(String value) { this.userIdBlindIndexKeyVersion = value; }
     public String getAccountNumber() { return accountNumber; }
     public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
     public String getDocumentType() { return documentType; }

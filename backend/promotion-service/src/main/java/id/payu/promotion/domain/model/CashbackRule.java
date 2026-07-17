@@ -17,7 +17,7 @@ public class CashbackRule {
     private String name;
     private CashbackType cashbackType;
     private BigDecimal cashbackAmount;
-    private Double cashbackPercentage;
+    private BigDecimal cashbackPercentage;
     private BigDecimal maxCashback;
     private BigDecimal minAmount;
     private BigDecimal exactAmount;
@@ -105,7 +105,7 @@ public class CashbackRule {
             case PERCENTAGE:
                 if (cashbackPercentage != null) {
                      calculatedCashback = transaction.getAmount()
-                             .multiply(BigDecimal.valueOf(cashbackPercentage))
+                             .multiply(cashbackPercentage)
                              .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
                 } else {
                     calculatedCashback = BigDecimal.ZERO;
@@ -184,11 +184,11 @@ public class CashbackRule {
         this.cashbackAmount = cashbackAmount;
     }
 
-    public Double getCashbackPercentage() {
+    public BigDecimal getCashbackPercentage() {
         return cashbackPercentage;
     }
 
-    public void setCashbackPercentage(Double cashbackPercentage) {
+    public void setCashbackPercentage(BigDecimal cashbackPercentage) {
         this.cashbackPercentage = cashbackPercentage;
     }
 
@@ -287,7 +287,7 @@ public class CashbackRule {
             return this;
         }
 
-        public Builder cashbackPercentage(double cashbackPercentage) {
+        public Builder cashbackPercentage(BigDecimal cashbackPercentage) {
             rule.cashbackPercentage = cashbackPercentage;
             return this;
         }

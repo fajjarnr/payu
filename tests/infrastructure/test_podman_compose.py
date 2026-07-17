@@ -8,12 +8,22 @@ COMPOSE = ROOT / "infrastructure/local/podman/podman-compose.yml"
 APICAST_CONFIG = ROOT / "infrastructure/local/podman/config/apicast-config.json"
 KAFKA_CONFIG = ROOT / "infrastructure/local/podman/config/kafka-server.properties"
 INIT_DB = ROOT / "infrastructure/local/podman/config/init-db.sql"
+WEB_CONTAINERFILE = ROOT / "frontend/web-app/Containerfile"
 
 
 class PodmanComposeParityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.document = COMPOSE.read_text()
+
+    def service_config(self, service):
+        match = re.search(
+            rf"(?s)^  {re.escape(service)}:\n(.*?)(?=^  [a-z0-9-]+:|\Z)",
+            self.document,
+            re.MULTILINE,
+        )
+        self.assertIsNotNone(match, service)
+        return match.group(1)
 
     def test_contains_openshift_workloads(self):
         for service in (
@@ -98,7 +108,7 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertIn('LIQUIBASE_ANALYTICS_ENABLED: "false"', config)
 
     def test_local_app_anchor_is_hardened_and_builds_locally(self):
-        anchor = re.search(r"(?s)^x-app-defaults: &app-defaults\n(.*?)\nservices:", self.document)
+        anchor = re.search(r"(?s)^x-app-defaults: &app-defaults\n(.*?)^services:", self.document, re.MULTILINE)
         self.assertIsNotNone(anchor)
         defaults = anchor.group(1)
         for expected in (
@@ -111,6 +121,110 @@ class PodmanComposeParityTest(unittest.TestCase):
             "- /tmp",
         ):
             self.assertIn(expected, defaults)
+
+    def test_web_app_uses_standard_internal_port(self):
+        containerfile = WEB_CONTAINERFILE.read_text()
+        self.assertIn("ENV PORT=8080", containerfile)
+        self.assertIn("EXPOSE 8080", containerfile)
+        self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", containerfile)
+        self.assertNotIn("/app/e2e ./e2e", containerfile)
+        runner = containerfile.split("# Stage 3: Minimal production runner", 1)[1]
+        self.assertNotIn("/app/node_modules ./node_modules", runner)
+        self.assertRegex(self.document, r"(?s)\n  web-app:.*?ports:\n      - 3001:8080")
+        self.assertRegex(
+            self.document,
+            r"(?s)\n  web-app:.*?healthcheck:.*?http://localhost:8080/api/health",
+        )
+
+    def test_gateway_maps_mandatory_runtime_secrets(self):
+        gateway = re.search(
+            r"(?s)^  gateway-service:\n(.*?)(?=^  [a-z0-9-]+:)",
+            self.document,
+            re.MULTILINE,
+        )
+        self.assertIsNotNone(gateway)
+        config = gateway.group(1)
+        self.assertIn("JWT_SECRET: ${JWT_SECRET:-", config)
+        self.assertIn("OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-", config)
+
+    def test_security_environment_matches_workload_contracts(self):
+        shared = re.search(
+            r"(?s)^x-local-security-environment: &local-security-environment\n(.*?)(?=^x-app-defaults:)",
+            self.document,
+            re.MULTILINE,
+        )
+        self.assertIsNotNone(shared)
+        self.assertIn("PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-", shared.group(1))
+        self.assertIn("WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-", shared.group(1))
+        shared_security_services = (
+            "account-service", "analytics-service", "api-portal-service", "auth-service",
+            "backoffice-service", "billing-service", "cms-service", "compliance-service",
+            "dispute-service", "fx-service", "gateway-service", "integration-service",
+            "investment-service", "kyc-service", "lending-service",
+            "loan-origination-process", "notification-service", "partner-service",
+            "product-catalog-service", "promotion-service", "statement-service",
+            "support-service", "transaction-service", "wallet-service",
+        )
+        for service in shared_security_services:
+            config = self.service_config(service)
+            self.assertIn("<<: *local-security-environment", config, service)
+
+        for service in ("account-service", "gateway-service", "partner-service"):
+            self.assertIn("JWT_SECRET: ${JWT_SECRET:-", self.service_config(service), service)
+        self.assertIn(
+            "PAYU_CALLBACK_SIGNATURE_SECRET: ${CALLBACK_SIGNATURE_SECRET:-",
+            self.service_config("transaction-service"),
+        )
+
+    def test_artemis_consumers_have_exact_runtime_contract_and_dependency(self):
+        common = ("ARTEMIS_HOST:", "ARTEMIS_USERNAME:", "ARTEMIS_PASSWORD:")
+        for service in ("billing-service", "integration-service", "notification-service"):
+            config = self.service_config(service)
+            for name in common + ("ARTEMIS_URL:", "ARTEMIS_PORT:"):
+                self.assertIn(name, config, service)
+            self.assertRegex(config, r"(?ms)depends_on:.*?^      artemis:\n        condition: service_healthy")
+
+        kyc = self.service_config("kyc-service")
+        for name in common + (
+            "ARTEMIS_STOMP_PORT:", "ARTEMIS_HEARTBEAT_SEND_MS:",
+            "ARTEMIS_HEARTBEAT_RECEIVE_MS:",
+        ):
+            self.assertIn(name, kyc)
+        self.assertRegex(kyc, r"(?ms)depends_on:.*?^      artemis:\n        condition: service_healthy")
+
+    def test_compose_healthchecks_use_workload_liveness_endpoints(self):
+        expected = {
+            "product-catalog-service": "/actuator/health/liveness",
+            "partner-service": "/actuator/health/liveness",
+            "integration-service": "/actuator/health/liveness",
+            "cms-service": "/actuator/health/liveness",
+            "dispute-service": "/actuator/health/liveness",
+            "notification-service": "/q/health/live",
+            "api-portal-service": "/q/health/live",
+            "gateway-service": "/q/health/live",
+            "bi-fast-simulator": "/q/health/live",
+            "dukcapil-simulator": "/q/health/live",
+            "qris-simulator": "/q/health/live",
+        }
+        for service, endpoint in expected.items():
+            self.assertIn(f"http://localhost:8080{endpoint}", self.service_config(service), service)
+
+    def test_services_wait_for_mandatory_infrastructure(self):
+        expected = {
+            "auth-service": ("payu-kafka-kafka-bootstrap",),
+            "api-portal-service": (
+                "payu-database-rw", "payu-kafka-kafka-bootstrap", "payu-keycloak-service",
+            ),
+            "notification-service": ("artemis",),
+        }
+        for service, dependencies in expected.items():
+            config = self.service_config(service)
+            for dependency in dependencies:
+                self.assertRegex(
+                    config,
+                    rf"(?ms)depends_on:.*?^      {re.escape(dependency)}:\n        condition: service_healthy",
+                    service,
+                )
 
     def test_external_anchor_pulls_always_and_heavy_tools_are_profiled(self):
         self.assertRegex(self.document, r"(?s)x-infra-defaults: &infra-defaults\n.*?pull_policy: always")

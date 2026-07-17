@@ -1,6 +1,6 @@
 package id.payu.billing.adapter.messaging;
 
-import id.payu.billing.application.service.SubscriptionService;
+import id.payu.billing.domain.port.in.SubscriptionUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SubscriptionScheduledChargeListener {
 
-    private final SubscriptionService subscriptionService;
+    private final SubscriptionUseCase subscriptionService;
 
     @JmsListener(destination = "payu.billing.scheduled")
     public void onScheduledBilling(String subscriptionIdStr) {

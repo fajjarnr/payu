@@ -1,6 +1,6 @@
 package id.payu.billing.adapter.messaging;
 
-import id.payu.billing.adapter.persistence.entity.BillPaymentEntity;
+import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class PaymentEventAdapter implements PaymentEventPort {
     private final OutboxService outboxService;
 
     @Override
-    public void publishPaymentEvent(BillPaymentEntity payment) {
+    public void publishPaymentEvent(BillPayment payment) {
         Map<String, Object> payload = Map.of(
                 "paymentId", payment.getId().toString(),
                 "referenceNumber", payment.getReferenceNumber(),

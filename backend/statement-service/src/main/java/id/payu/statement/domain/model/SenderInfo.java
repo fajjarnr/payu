@@ -1,29 +1,12 @@
 package id.payu.statement.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+/** Value object representing sender information for a transaction receipt. */
+public record SenderInfo(String name, String accountNumber, String bankName) {
 
-/**
- * Value Object representing sender information for a transaction receipt.
- * Epic E-19: Transaction Proof & Receipts (IMP-055)
- */
-@Getter
-@Builder
-@AllArgsConstructor
-@EqualsAndHashCode
-public class SenderInfo {
+    public String getName() { return name; }
+    public String getAccountNumber() { return accountNumber; }
+    public String getBankName() { return bankName; }
 
-    private String name;
-    private String accountNumber;
-    private String bankName;
-
-    /**
-     * Validates that all required fields are present.
-     *
-     * @throws IllegalArgumentException if any required field is invalid
-     */
     public void validate() {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Sender name is required");

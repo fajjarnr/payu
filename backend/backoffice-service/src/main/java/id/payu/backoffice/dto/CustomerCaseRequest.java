@@ -2,7 +2,6 @@ package id.payu.backoffice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import id.payu.backoffice.adapter.persistence.entity.CustomerCaseEntity;
 import id.payu.backoffice.domain.CaseType;
 import id.payu.backoffice.domain.Priority;
 

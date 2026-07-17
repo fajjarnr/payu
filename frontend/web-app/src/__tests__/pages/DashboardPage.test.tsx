@@ -72,6 +72,12 @@ vi.mock('@/components/dashboard', () => ({
   BudgetTracking: () => <div data-testid="budget-tracking">Budget Tracking</div>,
   InvestmentPerformance: () => <div data-testid="investment-performance">Investment Performance</div>,
 }));
+vi.mock('@/components/dashboard/BalanceCard', () => ({
+  default: () => <div data-testid="balance-card">Balance Card</div>,
+}));
+vi.mock('@/components/dashboard/QuickActions', () => ({
+  default: () => <div data-testid="quick-actions">Quick Actions</div>,
+}));
 vi.mock('@/components/cms/BannerCarousel', () => ({
   default: () => <div data-testid="banner-carousel">Banners</div>,
 }));

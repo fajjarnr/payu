@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.messaging;
 
-import id.payu.promotion.application.service.CashbackProcessorService;
+import id.payu.promotion.application.port.in.ProcessCashbackUseCase;
 import id.payu.promotion.dto.TransactionCompletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +18,9 @@ public class TransactionCompletedConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactionCompletedConsumer.class);
 
-    private final CashbackProcessorService cashbackProcessorService;
+    private final ProcessCashbackUseCase cashbackProcessorService;
 
-    public TransactionCompletedConsumer(CashbackProcessorService cashbackProcessorService) {
+    public TransactionCompletedConsumer(ProcessCashbackUseCase cashbackProcessorService) {
         this.cashbackProcessorService = cashbackProcessorService;
     }
 

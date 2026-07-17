@@ -1,11 +1,11 @@
 package id.payu.promotion.application.service;
 
-import id.payu.promotion.application.saga.CashbackSagaContext;
-import id.payu.promotion.application.saga.CashbackSagaOrchestrator;
-import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
+import id.payu.promotion.domain.port.in.CashbackSagaUseCase;
+import id.payu.promotion.domain.model.CashbackCommand;
+import id.payu.promotion.domain.model.Cashback;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.dto.CashbackSummaryResponse;
-import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
+import id.payu.promotion.domain.port.out.CashbackPersistencePort;
 import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaState;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import id.payu.outbox.service.OutboxService;
+import id.payu.promotion.domain.port.out.CashbackEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,21 +34,21 @@ public class CashbackService {
 
     private static final Logger LOG = LoggerFactory.getLogger(CashbackService.class);
 
-    private final CashbackRepository cashbackRepository;
-    private final CashbackSagaOrchestrator sagaOrchestrator;
-    private final OutboxService outboxService;
+    private final CashbackPersistencePort cashbackRepository;
+    private final CashbackSagaUseCase sagaOrchestrator;
+    private final CashbackEventPublisher eventPublisher;
     private final String promotionEventsTopic;
     private final MeterRegistry meterRegistry;
 
     public CashbackService(
-            CashbackRepository cashbackRepository,
-            CashbackSagaOrchestrator sagaOrchestrator,
-            OutboxService outboxService,
+            CashbackPersistencePort cashbackRepository,
+            CashbackSagaUseCase sagaOrchestrator,
+            CashbackEventPublisher eventPublisher,
             @Value("${app.kafka.topics.promotion-events:payu.promotion.cashback-event.v1}") String promotionEventsTopic,
             @Autowired(required = false) MeterRegistry meterRegistry) {
         this.cashbackRepository = cashbackRepository;
         this.sagaOrchestrator = sagaOrchestrator;
-        this.outboxService = outboxService;
+        this.eventPublisher = eventPublisher;
         this.promotionEventsTopic = promotionEventsTopic;
         this.meterRegistry = meterRegistry;
     }
@@ -64,7 +64,7 @@ public class CashbackService {
      * @throws CashbackCreationException if saga execution fails
      */
     @Transactional
-    public CashbackEntity createCashback(CreateCashbackRequest request) {
+    public Cashback createCashback(CreateCashbackRequest request) {
         if (request.accountId() == null || request.accountId().isBlank()) {
             throw new IllegalArgumentException("Account ID is required");
         }
@@ -72,13 +72,11 @@ public class CashbackService {
             request.accountId(), request.transactionId());
 
         // Create saga context
-        CashbackSagaContext context = new CashbackSagaContext(request);
+        var result = sagaOrchestrator.execute(new CashbackCommand(request.accountId(), request.transactionId(),
+            request.transactionAmount(), request.merchantCode(), request.categoryCode(), request.cashbackCode()));
 
-        // Execute saga
-        SagaResult<CashbackSagaContext> result = sagaOrchestrator.executeCashbackSaga(context);
-
-        if (result.isSuccess()) {
-            CashbackEntity cashback = result.getData().getCashback();
+        if (result.success()) {
+            Cashback cashback = result.cashback();
             LOG.info("CashbackEntity saga completed successfully: id={}, amount={}",
                 cashback.getId(), cashback.getCashbackAmount());
 
@@ -86,43 +84,43 @@ public class CashbackService {
             return cashback;
         } else {
             LOG.error("CashbackEntity saga failed: state={}, error={}, step={}",
-                result.getFinalState(), result.getErrorMessage(), result.getErrorStep());
+                result.state(), result.error(), result.errorStep());
 
             // If saga was compensated, the cashback might be in PENDING or VOIDED state
-            if (result.isCompensated() && result.getData() != null && result.getData().getCashback() != null) {
-                return result.getData().getCashback();
+            if (result.compensated() && result.cashback() != null) {
+                return result.cashback();
             }
 
             throw new CashbackCreationException(
-                "Failed to create cashback: " + result.getErrorMessage(),
-                result.getErrorStep()
+                "Failed to create cashback: " + result.error(),
+                result.errorStep()
             );
         }
     }
 
-    public Optional<CashbackEntity> getCashback(UUID id) {
+    public Optional<Cashback> getCashback(UUID id) {
         return cashbackRepository.findById(id);
     }
 
-    public List<CashbackEntity> getCashbacksByAccount(String accountId) {
+    public List<Cashback> getCashbacksByAccount(String accountId) {
         return cashbackRepository.findByAccountId(accountId);
     }
 
     public CashbackSummaryResponse getCashbackSummary(String accountId) {
-        List<CashbackEntity> cashbacks = cashbackRepository.findByAccountId(accountId);
+        List<Cashback> cashbacks = cashbackRepository.findByAccountId(accountId);
 
         BigDecimal totalCashback = cashbacks.stream()
-            .map(CashbackEntity::getCashbackAmount)
+            .map(Cashback::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal pendingCashback = cashbacks.stream()
             .filter(c -> c.getStatus() == CashbackStatus.PENDING)
-            .map(CashbackEntity::getCashbackAmount)
+            .map(Cashback::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal creditedCashback = cashbacks.stream()
             .filter(c -> c.getStatus() == CashbackStatus.CREDITED)
-            .map(CashbackEntity::getCashbackAmount)
+            .map(Cashback::getCashbackAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int transactionCount = cashbacks.size();
@@ -136,8 +134,8 @@ public class CashbackService {
     }
 
     // MSG-008: Migrated to OutboxService for transactional atomicity
-    private void publishCashbackEvent(CashbackEntity cashback) {
-        outboxService.createEvent(
+    private void publishCashbackEvent(Cashback cashback) {
+        eventPublisher.publish(
                 "Cashback",
                 cashback.getId().toString(),
                 "CashbackCreated",
@@ -148,7 +146,6 @@ public class CashbackService {
                         "status", cashback.getStatus().name(),
                         "timestamp", LocalDateTime.now().toString()
                 ),
-                null,
                 promotionEventsTopic
         );
     }

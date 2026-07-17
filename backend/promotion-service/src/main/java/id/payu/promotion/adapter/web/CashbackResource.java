@@ -1,6 +1,6 @@
 package id.payu.promotion.adapter.web;
 
-import id.payu.promotion.adapter.persistence.entity.CashbackEntity;
+import id.payu.promotion.domain.model.Cashback;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.application.service.CashbackService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,7 +54,7 @@ public class CashbackResource {
     })
     public ResponseEntity<?> createCashback(@Valid @RequestBody CreateCashbackRequest request) {
         try {
-            CashbackEntity cashback = cashbackService.createCashback(request);
+            Cashback cashback = cashbackService.createCashback(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CashbackResponse.from(cashback));
         } catch (IllegalArgumentException e) {
@@ -74,7 +74,7 @@ public class CashbackResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getCashback(@PathVariable UUID id) {
-        Optional<CashbackEntity> cashbackOpt = cashbackService.getCashback(id);
+        Optional<Cashback> cashbackOpt = cashbackService.getCashback(id);
         if (cashbackOpt.isPresent()) {
             return ResponseEntity.ok(CashbackResponse.from(cashbackOpt.get()));
         }
@@ -91,7 +91,7 @@ public class CashbackResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<List<CashbackResponse>> getCashbacksByAccount(@PathVariable String accountId) {
-        List<CashbackEntity> cashbacks = cashbackService.getCashbacksByAccount(accountId);
+        List<Cashback> cashbacks = cashbackService.getCashbacksByAccount(accountId);
         return ResponseEntity.ok(cashbacks.stream().map(CashbackResponse::from).toList());
     }
 

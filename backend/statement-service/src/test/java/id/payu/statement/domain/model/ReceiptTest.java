@@ -23,19 +23,11 @@ class ReceiptTest {
     private static final String REFERENCE_NUMBER = "REF-BIFAST-789456";
 
     private SenderInfo createSenderInfo() {
-        return SenderInfo.builder()
-                .name("John Doe")
-                .accountNumber("1234567890")
-                .bankName("PayU Digital Banking")
-                .build();
+        return new SenderInfo("John Doe", "1234567890", "PayU Digital Banking");
     }
 
     private RecipientInfo createRecipientInfo() {
-        return RecipientInfo.builder()
-                .name("Jane Smith")
-                .accountNumber("0987654321")
-                .bankName("Bank Central Asia")
-                .build();
+        return new RecipientInfo("Jane Smith", "0987654321", "Bank Central Asia");
     }
 
     @Test
