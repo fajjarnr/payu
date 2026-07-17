@@ -14,16 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored `notification-service` to Hexagonal Architecture with pure domain model `Notification` and outbound persistence port `NotificationRepositoryPort`.
 - Added `NotificationMapper` and `NotificationRepositoryAdapter` to convert between domain `Notification` and persistence `NotificationEntity`.
 - Updated `NotificationService`, `EmailSender`, `PushSender`, `SmsSender`, `NotificationResource`, `NotificationResponse`, and tests to use pure domain `Notification`.
+- Added default property fallbacks (`${OTEL_ENDPOINT:http://localhost:4317}` & `${KEYCLOAK_REALM:payu}`) and test-profile `application.properties` in `api-portal-service`.
 
 ### Fixed
 
 - Fixed ArchUnit rules in `ArchitectureTest` (`notification-service`) to enforce `PanacheEntityBase` classes reside in `adapter.persistence` layer instead of `domain`.
 - Fixed domain isolation violation where `NotificationUseCase` (inbound port) returned JPA `NotificationEntity`.
+- Fixed `api-portal-service` `@QuarkusTest` initialization failure (`SRCFG00011` / `ConfigurationException`) caused by missing environment property fallbacks during offline unit test execution.
 
 ### Verification
 
 - `rtk mvn -f backend/notification-service/pom.xml test` passed with `BUILD SUCCESS` (including `ArchitectureTest`).
-- `rtk mvn -f backend/pom.xml test-compile -DskipTests` passed on all 44/44 backend modules.
+- `rtk mvn -f backend/api-portal-service/pom.xml test` passed with `BUILD SUCCESS` (76/76 tests).
+- `rtk mvn -f backend/pom.xml test -Djacoco.skip=true` passed with 0 failures, 0 errors across all 44/44 backend reactor modules.
+
 
 ## [1.9.6] - 2026-07-17
 

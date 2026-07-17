@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `1.9.6` — local security, financial integrity, frontend regression, and Podman parity fixes |
-| **Last Updated** | 2026-07-17 (Frontend full suite and six-service Podman smoke pass; backoffice architecture remains open.) |
+| **Last Release** | `1.9.7` — notification pure domain refactoring, api-portal test config fallbacks, and full reactor 44/44 green build |
+| **Last Updated** | 2026-07-17 (Full backend reactor 44/44 green, Notification & API Portal test remediations complete) |
 
 ---
 
