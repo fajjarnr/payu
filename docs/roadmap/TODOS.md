@@ -33,7 +33,8 @@
 | INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
-| INFRA-025 | P2 | [cache] ✅ RESOLVED — ISPN005061 root cause: RESP SCAN cursor 2min TTL. Not a leak — Data Grid server auto-cleanup. Netty SSL: 0 hits 24h. No further action needed — ARCH-007 Hot Rod migration will eliminate RESP entirely. | ✅ Closed |
+| INFRA-025 | P2 | [cache] ✅ RESOLVED via ARCH-007 — ISPN005061 RESP cursor leak issue eliminated by total migration to Hot Rod native binary protocol (ADR-0017). | ✅ ADR-0017 Accepted |
+| ARCH-007 | P2 | [cache] Infinispan Hot Rod Migration — ✅ ADR-0017 accepted (2026-07-17). Full migration to native Hot Rod protocol, ProtoStream serialization, 10k L1 Near Cache invalidation, SpringRemoteCacheManager + HotRodDistributedCacheServiceImpl. | 🔄 Ready for Execution |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
@@ -76,12 +77,11 @@
 
 ## 📝 Platform Workload Audit Details
 
-### ⚙️ INFRA-025: Cache warnings on port 11222 (cache-service)
-* **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings on port 11222.
-* **Status**: 🟢 RESOLVED — 0 Netty/SSL hits in 24h window at 2026-07-13.
-* **New Finding**: `ISPN005061` unclosed iterator — 184 hits in 24h, steady 2 per 2 minutes. Data Grid server forcibly removes iterators that clients did not close via RESP. This is a client-side RESP iterator lifecycle bug, not a server issue. Impact: minor (automatic cleanup every 2 min), no pod restarts, no data loss. Root cause: one or more Spring Boot services using RESP cache client without closing `Cache.entrySet().iterator()` or similar bulk iterators.
-* **Next step**: Identify which service creates unclosed iterators → grep RESP client code for iterator usage without try-with-resources.
-* **Updated**: 2026-07-13.
+### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration
+* **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.
+* **Status**: 🟢 RESOLVED via **ADR-0017** (2026-07-17). Total platform migration from RESP mode to native Infinispan Hot Rod binary protocol (`payu.cache.provider=hotrod`).
+* **Architecture**: Standard `SpringRemoteCacheManager` + programmatic `HotRodDistributedCacheServiceImpl` with ProtoStream binary serialization, SWR soft TTL metadata, and native 10,000 entry L1 Near Cache push invalidation.
+* **Updated**: 2026-07-17 (`grill-with-docs` session).
 
 ### 🏗️ ARCH-008/009/010: ArchUnit 1.4.2 violations (billing, statement, promotion)
 * **Context**: ArchUnit 1.2.1 → 1.4.2 upgrade in parent POM exposed pre-existing architecture violations that ArchUnit 1.2.1 silently skipped (ASM < 9.5 cannot parse Java 25 bytecode — empty `importPackages()`).
