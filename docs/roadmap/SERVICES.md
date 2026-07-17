@@ -1,10 +1,10 @@
 # PayU Backend Services Status
 
-> **Last Updated**: June 13, 2026
+> **Last Updated**: July 17, 2026
 > **Total Services**: 28 (23 microservices + 5 simulators) + 1 frontend (web-app)
-> **OpenShift Status**: 🟢 All pods 1/1 Running + 2 production bugs flagged (BUG-TXN-SPLITBILL-001 [P1], BUG-TXN-ACCOUNT-001 [P2])
+> **OpenShift Status**: 🟢 All pods 1/1 Running + 44/44 backend reactor modules 100% green
 >
-> **Note**: All 703 E2E tests (544 Playwright + 159 Pytest) are 🟢 PASSING in local environment.
+> **Note**: Full backend unit test suite (`rtk mvn -f backend/pom.xml test`) verified 100% clean (0 failures, 0 errors).
 
 ---
 
