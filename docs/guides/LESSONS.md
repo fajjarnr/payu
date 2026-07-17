@@ -2,6 +2,43 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-123: Pure Domain Model Extraction & Persistence Adapter Layering in Hexagonal Architecture (2026-07-17)
+
+**Date**: 2026-07-17
+**Domain**: Notification Service, Quarkus, ArchUnit, Hexagonal Architecture, Panache Entity
+**Context**: ArchUnit tests in `notification-service` failed after correcting `panacheEntitiesShouldBeInDomainPackage` to `panacheEntitiesShouldBeInPersistencePackage`. Domain input port (`NotificationUseCase`) returned JPA entities (`NotificationEntity`), violating domain isolation.
+
+**Lesson**:
+- Panache entities (`PanacheEntityBase`) are persistence infrastructure details and must reside in `adapter.persistence`, NOT in `domain`.
+- Inbound domain use cases / ports (`NotificationUseCase`) must return pure domain models (`Notification`), never JPA / Panache entities.
+- ArchUnit rules must define `Adapter.Persistence` in `layeredArchitecture()` and allow `Adapter.Persistence` to access `Domain` while preventing `Domain` from depending on `Adapter.Persistence`.
+- Mappers (`NotificationMapper`) and persistence adapters (`NotificationRepositoryAdapter`) bridge pure domain models with Panache entities.
+
+**Applied fix**:
+- Extracted pure domain model `Notification` and `NotificationRepositoryPort`.
+- Created `NotificationMapper` and `NotificationRepositoryAdapter`.
+- Updated `NotificationUseCase`, `NotificationService`, `EmailSender`, `PushSender`, `SmsSender`, `NotificationResource`, `NotificationResponse`, and unit tests.
+- Fixed `ArchitectureTest` rules. `notification-service` tests and 44/44 reactor modules pass cleanly.
+
+---
+
+## L-122: Local Podman Smoke Tests Need Provider-Aware Waiting and Runtime Contracts (2026-07-17)
+
+**Date**: 2026-07-17
+**Domain**: Podman Compose, Red Hat Registry, Quarkus Configuration, Local Infrastructure
+**Context**: Local verification used Podman 5.7 with the external `podman-compose` 1.5 provider. Compose rendered correctly, but `up --wait` was rejected by the provider. PostgreSQL became healthy when startup and health polling were run separately. A static container review also found that gateway configuration required `JWT_SECRET` and `OIDC_CLIENT_SECRET`, while compose supplied a differently named JWT variable and no OIDC client secret.
+
+**Lesson**:
+- Treat `podman compose` features as provider-dependent. For portable local smoke tests, run `up -d`, then poll the declared container health state explicitly instead of assuming `up --wait` exists.
+- A successful compose render does not prove an application can boot. Add contract tests that compare mandatory runtime configuration names with compose environment mappings.
+- Digest pinning improves reproducibility but does not remove registry authentication requirements. Verify login with `podman login --get-login registry.redhat.io`, then pull at least one exact digest before starting the stack.
+- Preserve local data during smoke tests: start and stop selected services; never use `down -v` unless volume deletion is explicitly requested.
+
+**Applied evidence**:
+- Rootless Podman 5.7 uses overlay storage; PostgreSQL 16.8 reached `healthy`.
+- Authenticated pull of the pinned Data Grid digest completed successfully.
+- Infrastructure contract test now requires exact gateway mappings for `JWT_SECRET` and `OIDC_CLIENT_SECRET`.
+
 ---
 
 ## L-112: Splitting Flyway Migrations — Keep Applied Versions Intact (2026-07-13)

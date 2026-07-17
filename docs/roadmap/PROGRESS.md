@@ -16,12 +16,16 @@
 | Operators Installed      | 🟢 Core platform ready                    | OpenShift GitOps 1.21.1, OpenShift Pipelines 1.22.4, 3scale operator 2.16 channel, CNPG 1.30.0, Redis Enterprise 8.0.20-23.0, Vault Secrets 1.4.0, Tempo 0.21.0-2, Compliance 1.9.1. |
 | Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid RESP compatibility, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |
-| Maven Build              | 🟢 43/43                                 | BUILD SUCCESS all modules. |
+| Maven Build              | 🟢 44/44                                 | `clean package -DskipTests -T 1C` BUILD SUCCESS on 2026-07-17. |
 | Cache                    | 🟢 Rate limiting on redis-3scale         | Rate limiting migrated from Infinispan RESP to 3scale redis-3scale standalone Redis (L-118). Data Grid RESP still used for general cache. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
-| **Production Readiness** | 🟡 Bootstrap in progress                  | OIDC + E2E suite done. CMS Lettuce→DG RESP + Gateway build-from-cluster remain. |
-| Last Status Update       | 2026-07-13                               | v1.9.5: E2E 19 scripts. Gateway 1.9.5 tagged. ArgoCD hard refresh. Lessons L-120/L-121. |
+| **Production Readiness** | 🟡 Bootstrap in progress                  | Local frontend and six-service Podman smoke are green; backoffice architecture remediation remains. |
+| Last Status Update       | 2026-07-17                               | Full frontend suite and local Podman runtime smoke pass; backend full tests stop at backoffice ArchUnit violations. |
+
+> ✅ **2026-07-17 — Notification Service pure domain & ArchUnit remediation completed**: Extracted pure domain model `Notification` and `NotificationRepositoryPort`. Implemented `NotificationMapper` and `NotificationRepositoryAdapter`. Corrected `ArchitectureTest` rules to enforce `PanacheEntityBase` classes reside in `adapter.persistence` and `Domain` ports return domain models. `rtk mvn -f backend/notification-service/pom.xml test` passed with `BUILD SUCCESS` (including ArchUnit). Backend reactor 44/44 modules compiled cleanly. Documented L-123.
+
+> 🟡 **2026-07-17 — Local production-readiness remediation verified**: Backend financial integrity uses `BigDecimal`, removes shared `Money` double overloads, and requires idempotency on settlement mutations. Web auth no longer exposes JWT fields, landing translations no longer render raw HTML, and accessibility/behavior regressions were restored. Evidence: frontend lint/type/build green and full Vitest 85/85 files (1,184 passed, 1 skipped); Compose parity 15/15; authenticated Red Hat digest pulls; rootless PostgreSQL, Data Grid, Kafka, RHBK, gateway, and web containers all healthy; gateway liveness and web health UP. Backend package build is 44/44 green, while full tests now reach backoffice and expose 373 real ArchUnit dependency violations tracked in `TODOS.md`.
 
 > ✅ **2026-07-13 — Kustomize OIDC applied cluster-wide, E2E 11/11 verified**: `oc apply -k infrastructure/workloads/overlays/payu-dev` deployed external OIDC issuer to all 19 backend deployments. All services rolled out successfully. Full E2E suite verified: 11 scripts PASSED (cards-crud, wallet-balance, billing-billers, promotion-catalog, auth-login, account-service, partner-integration, lending-investment-catalog, transaction-disbursements, api-portal, health-check-all). 6 scripts with documented infra gaps.
 

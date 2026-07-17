@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.sender;
 
-import id.payu.notification.adapter.persistence.entity.NotificationEntity;
+import id.payu.notification.domain.Notification;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,17 +18,17 @@ public class EmailSender {
     @Inject
     Mailer mailer;
 
-    public boolean send(NotificationEntity notification) {
+    public boolean send(Notification notification) {
         try {
-            LOG.infof("Sending email to: %s", notification.recipient);
+            LOG.infof("Sending email to: %s", notification.getRecipient());
 
             mailer.send(
                     Mail.withText(
-                            notification.recipient,
-                            notification.title,
-                            notification.body));
+                            notification.getRecipient(),
+                            notification.getTitle(),
+                            notification.getBody()));
 
-            LOG.infof("Email sent successfully to: %s", notification.recipient);
+            LOG.infof("Email sent successfully to: %s", notification.getRecipient());
             return true;
         } catch (Exception e) {
             LOG.errorf("Failed to send email: %s", e.getMessage());

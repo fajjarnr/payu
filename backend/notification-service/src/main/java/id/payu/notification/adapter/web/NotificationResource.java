@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.web;
 
-import id.payu.notification.adapter.persistence.entity.NotificationEntity;
+import id.payu.notification.domain.Notification;
 import id.payu.notification.dto.NotificationResponse;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
@@ -131,7 +131,7 @@ public class NotificationResource {
         LOG.infof("Received notification request: channel=%s, recipient=%s",
                 request.channel(), request.recipient());
 
-        NotificationEntity notification = notificationService.send(request, idempotencyKey);
+        Notification notification = notificationService.send(request, idempotencyKey);
         return Response.status(Response.Status.CREATED)
                 .entity(NotificationResponse.from(notification))
                 .build();

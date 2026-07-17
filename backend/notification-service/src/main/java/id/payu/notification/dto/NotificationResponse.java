@@ -1,7 +1,6 @@
 package id.payu.notification.dto;
 
-import id.payu.notification.adapter.persistence.entity.NotificationEntity;
-import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import id.payu.notification.domain.Notification;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -10,7 +9,7 @@ import java.util.UUID;
 /**
  * Response DTO for notification.
  */
-@Schema(description = "NotificationEntity details including delivery status and timestamps")
+@Schema(description = "Notification details including delivery status and timestamps")
 public record NotificationResponse(
         @Schema(
             description = "Unique notification identifier",
@@ -38,13 +37,13 @@ public record NotificationResponse(
         String recipient,
 
         @Schema(
-            description = "NotificationEntity title or subject",
+            description = "Notification title or subject",
             example = "Transfer Successful"
         )
         String title,
 
         @Schema(
-            description = "NotificationEntity body content",
+            description = "Notification body content",
             example = "Your transfer of Rp 100.000 was successful."
         )
         String body,
@@ -73,17 +72,17 @@ public record NotificationResponse(
             example = "2026-01-31T10:35:00"
         )
         LocalDateTime readAt) {
-    public static NotificationResponse from(NotificationEntity n) {
+    public static NotificationResponse from(Notification n) {
         return new NotificationResponse(
-                n.id,
-                n.userId,
-                n.channel.name(),
-                n.recipient,
-                n.title,
-                n.body,
-                n.status.name(),
-                n.createdAt,
-                n.sentAt,
-                n.readAt);
+                n.getId(),
+                n.getUserId(),
+                n.getChannel() != null ? n.getChannel().name() : null,
+                n.getRecipient(),
+                n.getTitle(),
+                n.getBody(),
+                n.getStatus() != null ? n.getStatus().name() : null,
+                n.getCreatedAt(),
+                n.getSentAt(),
+                n.getReadAt());
     }
 }

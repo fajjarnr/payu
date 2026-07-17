@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.7] - 2026-07-17
+
+### Changed
+
+- Refactored `notification-service` to Hexagonal Architecture with pure domain model `Notification` and outbound persistence port `NotificationRepositoryPort`.
+- Added `NotificationMapper` and `NotificationRepositoryAdapter` to convert between domain `Notification` and persistence `NotificationEntity`.
+- Updated `NotificationService`, `EmailSender`, `PushSender`, `SmsSender`, `NotificationResource`, `NotificationResponse`, and tests to use pure domain `Notification`.
+
+### Fixed
+
+- Fixed ArchUnit rules in `ArchitectureTest` (`notification-service`) to enforce `PanacheEntityBase` classes reside in `adapter.persistence` layer instead of `domain`.
+- Fixed domain isolation violation where `NotificationUseCase` (inbound port) returned JPA `NotificationEntity`.
+
+### Verification
+
+- `rtk mvn -f backend/notification-service/pom.xml test` passed with `BUILD SUCCESS` (including `ArchitectureTest`).
+- `rtk mvn -f backend/pom.xml test-compile -DskipTests` passed on all 44/44 backend modules.
+
+## [1.9.6] - 2026-07-17
+
+### Changed
+
+- Changed promotion cashback percentages from binary floating-point values to `BigDecimal`; calculations retain `HALF_EVEN` rounding.
+- Standardized the web-app production container on internal port 8080 and removed Playwright libraries, configuration, tests, and full development dependencies from the runtime image.
+- Aligned local Compose application configuration with `infrastructure/workloads/base`: security secrets, Artemis consumers, hard infrastructure dependencies, and liveness probes now use the production contract names.
+
+### Fixed
+
+- Fixed the web BFF login route leaking upstream access and refresh token fields in its JSON body; browser-visible response data is now allowlisted while tokens remain in HttpOnly cookies.
+- Fixed landing-page translation XSS exposure by removing `dangerouslySetInnerHTML`; React escapes text and only explicit `<br>` separators become elements.
+- Removed unsafe `multiply(double)` and `divide(double)` overloads from the shared Quarkus `Money` API.
+- Required `X-Idempotency-Key` for every wallet settlement POST mutation.
+- Added the explicit local SonarQube database grant required by Compose parity checks and aligned the web-app health check with port 8080. Existing PostgreSQL volumes are unchanged.
+- Fixed Quarkus VA simulator test configuration precedence, backoffice test Redis configuration, and the duplicated shared security path `/api/v1/v1/public/**`.
+- Restored web accessibility and current behavior contracts across CMS, dashboard, authentication, WebSocket, service, and localization tests; silent refresh now retries after the intended exponential backoff instead of adding the proactive refresh delay.
+
+### Verification
+
+- Backend 44-module package build: `BUILD SUCCESS` with tests skipped, matching the repository build command.
+- Targeted backend financial regression tests and frontend auth/XSS regression tests pass.
+- Frontend lint, TypeScript check, production build, and full Vitest suite pass: 85/85 files, 1,184 passed, 1 skipped.
+- Podman Compose regression suite passes 15/15 and renders 49 services. Rootless runtime smoke is healthy for PostgreSQL, Data Grid, Kafka, RHBK, gateway, and web-app; gateway liveness and web health endpoints return UP.
+- Full backend tests progress through 42 modules but remain blocked by 373 real backoffice ArchUnit dependency violations; the package build with tests skipped remains 44/44 green.
+
 ## [1.9.5] - 2026-07-13
 
 ### Added

@@ -45,6 +45,7 @@ class ArchitectureTest {
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
                     .layer("Adapter.Sender").definedBy("..adapter.sender..")
+                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
                     .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
                     .layer("Config").definedBy("..config..")
@@ -53,11 +54,12 @@ class ArchitectureTest {
                     .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Adapter.Messaging").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Adapter.Sender").mayOnlyBeAccessedByLayers("Application")
+                    .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
                     .whereLayer("Application").mayOnlyBeAccessedByLayers(
                             "Adapter.Web", "Adapter.Messaging")
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers(
                             "Application", "Adapter.Web", "Adapter.Messaging",
-                            "Adapter.Sender", "DTO")
+                            "Adapter.Sender", "Adapter.Persistence", "DTO")
 
                     .check(importedClasses);
         }
@@ -159,12 +161,12 @@ class ArchitectureTest {
     class PanacheEntityRules {
 
         @Test
-        @DisplayName("Panache entities should be in domain package")
-        void panacheEntitiesShouldBeInDomainPackage() {
+        @DisplayName("Panache entities should be in persistence adapter package")
+        void panacheEntitiesShouldBeInPersistencePackage() {
             classes()
                     .that().areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
-                    .should().resideInAPackage("..domain..")
-                    .because("Panache entities are domain objects in this architecture")
+                    .should().resideInAPackage("..adapter.persistence..")
+                    .because("Panache entities are persistence infrastructure details and must reside in adapter.persistence layer")
                     .allowEmptyShould(true)
                     .check(importedClasses);
         }

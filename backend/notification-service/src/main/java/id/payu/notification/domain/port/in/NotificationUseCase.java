@@ -1,6 +1,6 @@
 package id.payu.notification.domain.port.in;
 
-import id.payu.notification.adapter.persistence.entity.NotificationEntity;
+import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.NotificationChannel;
 
 import java.util.List;
@@ -8,18 +8,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Inbound port for NotificationEntity use cases.
+ * Inbound port for Notification use cases.
  */
 public interface NotificationUseCase {
 
-    NotificationEntity send(String userId, NotificationChannel channel, String recipient,
+    Notification send(String userId, NotificationChannel channel, String recipient,
                       String title, String body, String templateId, String data);
 
-    Optional<NotificationEntity> getById(UUID id);
+    Optional<Notification> getById(UUID id);
 
-    List<NotificationEntity> getByUserId(String userId, int limit);
+    List<Notification> getByUserId(String userId, int limit);
 
-    List<NotificationEntity> getAllNotifications(int limit);
+    List<Notification> getAllNotifications(int limit);
 
     void markAsRead(UUID id);
 
