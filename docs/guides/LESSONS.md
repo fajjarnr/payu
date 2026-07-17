@@ -3907,3 +3907,19 @@ synchronized (lock) {
 - Operator pod needs `anyuid` SCC (UID 10001 incompatible with `restricted-v2`)
 - PostgreSQL cluster pods inherit `restricted-v2` SCC automatically (no manual patch needed)
 - Poolers CRD install fails (CRD annotation too large) — non-critical, just use `payu-database-rw` directly
+
+---
+
+### L-124: Quarkus Microservice Test Configuration & Property Fallbacks
+
+**Context**: Full reactor testing of 44 modules revealed `api-portal-service` failure during `@QuarkusTest` initialization (`SRCFG00011: Could not expand value OTEL_ENDPOINT` & `ConfigurationException: 'quarkus.oidc.auth-server-url' property must be configured`).
+
+**Root Cause**:
+1. Environment variable placeholders like `${OTEL_ENDPOINT}` or `${KEYCLOAK_REALM}` in `application.yaml` without default fallbacks fail to resolve during offline unit test execution when environment variables are absent.
+2. In Quarkus `@QuarkusTest` execution, Quarkus inspects `src/test/resources/application.properties` for test overrides. If absent, runtime property resolution fails during OIDC tenant initialization and OpenTelemetry recorder setup.
+
+**Key Learnings**:
+- Always provide default fallbacks for microservice configuration properties in `application.yaml` (e.g., `${OTEL_ENDPOINT:http://localhost:4317}` and `${KEYCLOAK_REALM:payu}`).
+- Include `src/test/resources/application.properties` with test-safe overrides (`quarkus.devservices.enabled=false`, `quarkus.opentelemetry.enabled=false`, `quarkus.oidc.tenant-enabled=false`) for offline unit testing without external dependencies.
+- Verify full 44/44 reactor module build and test execution before claiming production readiness.
+
