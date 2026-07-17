@@ -5,6 +5,9 @@ commonLabels:
   app.kubernetes.io/part-of: payu
 
 resources:
+  # Tracing Stack (Tempo & OTel Collector)
+  - tracing/
+
   # Logging Stack
   - logging/
 
@@ -15,3 +18,4 @@ resources:
   - monitoring/cluster-observability.yaml
   - monitoring/alerts/slo-alerts.yaml
   - monitoring/alerts/pagerduty-integration.yaml
+  - monitoring/alerts/prometheus-rules.yaml

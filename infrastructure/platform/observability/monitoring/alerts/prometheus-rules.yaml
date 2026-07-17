@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: payu-platform-alerts
+  namespace: payu-dev
+  labels:
+    role: alert-rules
+    app.kubernetes.io/part-of: payu
+spec:
+  groups:
+    - name: payu-service-alerts
+      rules:
+        - alert: PayUHighHTTP5xxRate
+          expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[2m])) by (job, service) / sum(rate(http_server_requests_seconds_count[2m])) by (job, service) > 0.05
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High HTTP 5xx error rate on {{ $labels.service }}"
+            description: "Service {{ $labels.service }} has > 5% 5xx HTTP response rate over 2 minutes."
+
+        - alert: PayUHighLatencyP99
+          expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[2m])) by (le, service)) > 2.0
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High p99 latency on {{ $labels.service }}"
+            description: "Service {{ $labels.service }} p99 response time exceeds 2.0 seconds."
+
+        - alert: PayUPodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total{namespace="payu-dev"}[5m]) * 300 > 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crashlooping"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} restarted more than 2 times in 5 minutes."

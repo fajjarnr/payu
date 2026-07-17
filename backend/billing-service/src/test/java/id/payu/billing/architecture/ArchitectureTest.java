@@ -12,6 +12,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import id.payu.archunit.HexagonalArchitectureTest;
+
 /**
  * Architecture Tests for Billing Service (Spring Boot) — Hexagonal Architecture.
  *
@@ -20,8 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * - Domain isolation from frameworks
  * - Naming conventions for each layer
  */
+@AnalyzeClasses(
+        packages = "id.payu.billing",
+        importOptions = ImportOption.DoNotIncludeTests.class)
 @DisplayName("Architecture Rules - Billing Service (Hexagonal)")
-class ArchitectureTest {
+class ArchitectureTest extends HexagonalArchitectureTest {
 
     private static JavaClasses importedClasses;
 

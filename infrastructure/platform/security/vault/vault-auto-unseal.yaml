@@ -1,0 +1,26 @@
+# =============================================================================
+# PayU Platform - Vault Auto-Unseal Configuration
+# =============================================================================
+# DEVSECOPS-002: Automated unseal via Kubernetes KMS / Transit auto-unseal
+#
+# Configures Vault seal stanza for auto-unsealing on pod restarts/failover.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-auto-unseal-config
+  namespace: payu
+  labels:
+    app.kubernetes.io/name: vault-auto-unseal
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+data:
+  auto-unseal.hcl: |
+    seal "transit" {
+      address         = "http://vault-autounseal.payu.svc.cluster.local:8200"
+      disable_renewal = "false"
+      key_name        = "autounseal"
+      mount_path      = "transit/"
+      tls_skip_verify = "true"
+    }

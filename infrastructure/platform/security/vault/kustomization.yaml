@@ -9,3 +9,5 @@ resources:
   - vault.yaml
   - vault-externalsecrets.yaml
   - vault-init-job.yaml
+  - vault-snapshot-cronjob.yaml
+  - vault-auto-unseal.yaml

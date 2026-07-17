@@ -116,11 +116,19 @@ resilience4j:
 payu:
   cache:
     enabled: true
+    provider: ${PAYU_CACHE_PROVIDER:resp}
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       pool-size: 20
       timeout: 5s
+    hotrod:
+      server-list: ${DATAGRID_HOTROD_SERVERS:localhost:11222}
+      auth-username: ${DATAGRID_HOTROD_USERNAME:developer}
+      auth-password: ${DATAGRID_HOTROD_PASSWORD:payu-cache-dev-password}
+      auth-realm: ${DATAGRID_HOTROD_REALM:default}
+      sasl-mechanism: ${DATAGRID_HOTROD_SASL:DIGEST-MD5}
+      use-ssl: ${DATAGRID_HOTROD_SSL:false}
     default-ttl: 5m
     local-cache:
       enabled: true

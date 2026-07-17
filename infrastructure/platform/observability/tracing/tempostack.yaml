@@ -1,0 +1,17 @@
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: payu-tempo
+  namespace: payu-observability
+spec:
+  managementState: Managed
+  size: 1x.extra-small
+  storage:
+    secret:
+      name: tempo-s3-secret
+      type: s3
+  storageSize: 10Gi
+  template:
+    queryFrontend:
+      jaegerQuery:
+        enabled: true

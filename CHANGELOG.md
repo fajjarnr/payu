@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.9.8] - 2026-07-17
+
+### Added
+
+- Added `HotRodCacheConfig` native client auto-configuration and feature flag `payu.cache.provider=hotrod|resp` in `cache-starter` (ARCH-007).
+- Added `TempoStack` tracing backend (`tempostack.yaml`), `OpenTelemetryCollector` CR (`otel-collector.yaml`), and platform alerting rules (`prometheus-rules.yaml`) in `infrastructure/platform/observability/` (DEPLOY-007).
+- Added Vault transit auto-unseal manifest (`vault-auto-unseal.yaml`) and enabled Raft auto-snapshot CronJob (DEPLOY-008).
+- Added `build-helper-maven-plugin` and test dependencies for Spring Cloud Contract verification across `auth-service` and `wallet-service` (READY-023).
+
+### Changed
+
+- Updated `cms-service` application configuration to support `PAYU_CACHE_PROVIDER` canary deployment.
+- Aligned ArchUnit hexagonal rules in `archunit-starter` for Lombok annotation handling and top-level port interfaces (ARCH-JAVA25-001).
+
+### Verification
+
+- Live Data Grid container on port 11222: `HotRodCacheConfigTest` passed (18/18 tests).
+- `cms-service` passed 101/101 tests under both `resp` and `hotrod` provider flags.
+- All YAML manifests validated with `python3 PyYAML`.
+- Service tests: `auth-service` (69/69 pass), `wallet-service` (14/14 pass), `backoffice-service` (131/131 pass), `billing-service` (107/107 pass).
+
 ## [1.9.7] - 2026-07-17
 
 ### Changed

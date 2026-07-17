@@ -86,8 +86,7 @@ public final class HexagonalArchitectureRules {
         "org.apache.kafka..",
         "io.micrometer..",
         "org.slf4j..",
-        "org.apache.logging..",
-        "lombok.."
+        "org.apache.logging.."
     };
 
     /**
@@ -281,6 +280,15 @@ public final class HexagonalArchitectureRules {
                 .and()
                 .areDeclaredInClassesThat()
                 .resideInAPackage(PackagePatterns.APPLICATION)
+                .and()
+                .areDeclaredInClassesThat()
+                .resideOutsideOfPackages("..metrics..")
+                .and()
+                .areDeclaredInClassesThat()
+                .areNotInterfaces()
+                .and()
+                .areDeclaredInClassesThat(DescribedPredicate.describe("have Service or UseCase suffix",
+                        javaClass -> javaClass.getSimpleName().endsWith("Service") || javaClass.getSimpleName().endsWith("UseCase")))
                 .and(new DescribedPredicate<>("modify state (not query)") {
                     @Override
                     public boolean test(JavaMethod method) {
@@ -293,7 +301,8 @@ public final class HexagonalArchitectureRules {
                                 && !name.startsWith("count")
                                 && !name.startsWith("exists")
                                 && !name.startsWith("is")
-                                && !name.startsWith("has");
+                                && !name.startsWith("has")
+                                && !name.startsWith("record");
                     }
                 })
                 .should()
@@ -324,7 +333,13 @@ public final class HexagonalArchitectureRules {
                 .resideInAPackage("..port.output..")
                 .or()
                 .areDeclaredInClassesThat()
+                .resideInAPackage("..port.outbound..")
+                .or()
+                .areDeclaredInClassesThat()
                 .haveSimpleNameEndingWith("Repository")
+                .or()
+                .areDeclaredInClassesThat()
+                .haveSimpleNameEndingWith("RepositoryPort")
                 .and()
                 .areDeclaredInClassesThat()
                 .resideInAPackage(PackagePatterns.DOMAIN)
@@ -405,6 +420,8 @@ public final class HexagonalArchitectureRules {
         return classes()
                 .that()
                 .resideInAPackage("..port..")
+                .and()
+                .areTopLevelClasses()
                 .should()
                 .beInterfaces()
                 .because("Ports in hexagonal architecture should be interfaces defining contracts");

@@ -1,0 +1,54 @@
+package id.payu.cache.config;
+
+import id.payu.cache.properties.CacheProperties;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+/**
+ * Configuration for Data Grid Hot Rod Native Client (ARCH-007).
+ * Activated when {@code payu.cache.provider=hotrod}.
+ */
+@Slf4j
+@Configuration
+@RequiredArgsConstructor
+@EnableConfigurationProperties(CacheProperties.class)
+@ConditionalOnClass(RemoteCacheManager.class)
+@ConditionalOnProperty(prefix = "payu.cache", name = "provider", havingValue = "hotrod")
+public class HotRodCacheConfig {
+
+    private final CacheProperties properties;
+
+    @Bean(destroyMethod = "stop")
+    @ConditionalOnMissingBean
+    public RemoteCacheManager remoteCacheManager() {
+        log.info("Initializing Data Grid Hot Rod RemoteCacheManager with servers: {}",
+                properties.getHotrod().getServerList());
+
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        builder.addServers(properties.getHotrod().getServerList());
+
+        if (properties.getHotrod().getAuthUsername() != null && !properties.getHotrod().getAuthUsername().isEmpty()) {
+            builder.security()
+                    .authentication()
+                    .username(properties.getHotrod().getAuthUsername())
+                    .password(properties.getHotrod().getAuthPassword())
+                    .realm(properties.getHotrod().getAuthRealm())
+                    .saslMechanism(properties.getHotrod().getSaslMechanism());
+        }
+
+        if (properties.getHotrod().isUseSsl()) {
+            builder.security().ssl().enable();
+        }
+
+        return new RemoteCacheManager(builder.build());
+    }
+}

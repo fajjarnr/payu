@@ -21,7 +21,7 @@ import static org.mockito.BDDMockito.given;
  * Keycloak instance is not available during contract verification.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureMessageVerifier
 @ActiveProfiles("test")
 public abstract class ContractVerifierBase {
@@ -34,7 +34,6 @@ public abstract class ContractVerifierBase {
 
     @BeforeEach
     void setUpContractMocks() {
-        // Wire RestAssuredMockMvc to the Spring MockMvc instance
         RestAssuredMockMvc.mockMvc(mockMvc);
 
         // Stub KeycloakService to return a successful login response for any valid-looking credentials.

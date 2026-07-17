@@ -5,13 +5,15 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 
+import id.payu.archunit.HexagonalArchitectureTest;
+
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(
         packages = "id.payu.backoffice",
         importOptions = ImportOption.DoNotIncludeTests.class)
-public class ArchitectureTest {
+public class ArchitectureTest extends HexagonalArchitectureTest {
 
     @ArchTest
     static final ArchRule domain_is_framework_and_adapter_free = noClasses()

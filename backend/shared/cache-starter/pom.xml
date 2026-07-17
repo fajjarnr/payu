@@ -47,6 +47,13 @@
             <artifactId>lettuce-core</artifactId>
         </dependency>
 
+        <!-- Infinispan Hot Rod Native Client (ARCH-007) -->
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring AOP for aspects (SB 4.0+: starter-aop removed, use aspectjweaver directly) -->
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -139,6 +146,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-bom</artifactId>
+                <version>15.0.11.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

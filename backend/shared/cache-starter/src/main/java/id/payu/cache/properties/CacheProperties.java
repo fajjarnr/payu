@@ -80,6 +80,16 @@ public class CacheProperties {
     private String serializer;
 
     /**
+     * Cache provider mode: "resp" (default, Redis / Data Grid RESP protocol) or "hotrod" (Data Grid Hot Rod native client).
+     */
+    private String provider = "resp";
+
+    /**
+     * Red Hat Data Grid Hot Rod native client configuration properties.
+     */
+    private HotRod hotrod = new HotRod();
+
+    /**
      * Redis / Red Hat Data Grid connection configuration.
      * Uses Lettuce client which communicates via RESP protocol — compatible with both
      * Redis and Data Grid. Point host/port to either Redis or Data Grid RESP endpoint.
@@ -182,6 +192,44 @@ public class CacheProperties {
          * Sentinel master name.
          */
         private String sentinelMaster;
+    }
+
+    @Data
+    public static class HotRod {
+        /**
+         * Server list (host:port, comma separated). Default: "localhost:11222".
+         */
+        private String serverList = "localhost:11222";
+
+        /**
+         * Data Grid authentication username.
+         */
+        private String authUsername;
+
+        /**
+         * Data Grid authentication password.
+         */
+        private String authPassword;
+
+        /**
+         * Data Grid authentication realm.
+         */
+        private String authRealm = "default";
+
+        /**
+         * SASL authentication mechanism.
+         */
+        private String saslMechanism = "DIGEST-MD5";
+
+        /**
+         * Enable SSL.
+         */
+        private boolean useSsl = false;
+
+        /**
+         * Client intelligence strategy.
+         */
+        private String clientIntelligence = "HASH_DISTRIBUTION_AWARE";
     }
 
     @Data

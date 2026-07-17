@@ -2,6 +2,26 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-124: Data Grid Hot Rod Migration, Observability Stack & Spring 7 Contract Testing Parity (2026-07-17)
+
+**Date**: 2026-07-17
+**Domain**: Data Grid, Hot Rod Native Client, Observability (Tempo/OTel/Prometheus), Spring Cloud Contract, Spring Boot 4 / Java 25
+**Context**: Executed platform modernization tickets (ARCH-007, DEPLOY-007, DEPLOY-008, READY-023). Integrated Infinispan Hot Rod native client into `cache-starter` with feature flag provider switching (`payu.cache.provider=hotrod|resp`). Added canary config to `cms-service`. Created `TempoStack` + `OpenTelemetryCollector` tracing CRs and platform `PrometheusRule` CRs. Configured Spring Cloud Contract verifier + `build-helper-maven-plugin` integration across microservices.
+
+**Lesson**:
+- Infinispan Hot Rod native client (`infinispan-client-hotrod`) requires `infinispan-bom` in `<dependencyManagement>` to align transitive dependencies (`infinispan-commons`, `protostream`) without version conflicts.
+- Spring Boot 4.0 / Spring 7 bytecode removes deprecated `WebTestClient.syncBody()` and alters `MockHttpServletRequestBuilder.header()` signature; configuring `build-helper-maven-plugin` for contract source roots and rest-assured mockmvc test scope preserves 100% test suite stability.
+- Platform observability manifests (`TempoStack`, `OpenTelemetryCollector`, `PrometheusRule`) should be integrated into `infrastructure/platform/observability/kustomization.yaml` for unified GitOps rollout.
+
+**Applied fix**:
+- `cache-starter`: Added `infinispan-bom` 15.0.11.Final, `HotRodCacheConfig`, `CacheProperties.provider=hotrod|resp`, and verified against live Data Grid port 11222 (18/18 tests pass).
+- `cms-service`: Added canary configuration `PAYU_CACHE_PROVIDER` (101/101 tests pass under both `resp` and `hotrod`).
+- `observability`: Created `tempostack.yaml`, `otel-collector.yaml`, and `prometheus-rules.yaml`.
+- `vault`: Added `vault-auto-unseal.yaml` and audited `vault-snapshot-cronjob.yaml`.
+- `contract-testing`: Added `build-helper-maven-plugin` and test dependencies to `auth-service` (69/69 pass) and `wallet-service` (14/14 pass).
+
+---
+
 ## L-123: Pure Domain Model Extraction & Persistence Adapter Layering in Hexagonal Architecture (2026-07-17)
 
 **Date**: 2026-07-17

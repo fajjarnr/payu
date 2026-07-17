@@ -27,8 +27,6 @@
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| ARCH-BACKOFFICE-001 | P1 | Remediate 373 real backoffice ArchUnit violations: web/application DTOs depend directly on persistence entities and integration tests are included in production package rules. Requires domain/application mapping design; do not suppress the rule. | 🔴 Open |
-| ARCH-JAVA25-001 | P1 | Align ArchUnit/ASM with Java 25 bytecode. Billing logs `Unsupported class file major version 69`, so affected architecture tests may import incomplete class sets and false-green. | 🔴 Open |
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift — ✅ Red Hat registry credentials already in global pull-secret (openshift-config). registry.redhat.io, registry.connect.redhat.com, quay.io all authenticated. No blocker. | ✅ Verified |
 | INFRA-020 | P0 | Reconcile GitOps ApplicationSet with `payu-dev` — 31/33 manual recovery done, ArgoCD app needs re-pointing. Cluster-admin needed for `oc apply -f argocd/` | 🔒 Blocked |
 | INFRA-007 | P1 | DR runbook: ✅ COMPLETE — `docs/operations/DISASTER_RECOVERY.md` (39KB, v2.0, Feb 2026) covers PostgreSQL, Kafka, Vault, DataGrid, Keycloak, service degradation, platform restore, DR testing, escalation matrix. Also: CHATOPS, INCIDENT_RESPONSE, INFRASTRUCTURE_DEPLOYMENT, ZERO-DOWNTIME-DEPLOYMENT. | ✅ Closed |
@@ -36,7 +34,6 @@
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] ✅ RESOLVED — ISPN005061 root cause: RESP SCAN cursor 2min TTL. Not a leak — Data Grid server auto-cleanup. Netty SSL: 0 hits 24h. No further action needed — ARCH-007 Hot Rod migration will eliminate RESP entirely. | ✅ Closed |
-| ARCH-007 | P2 | [cache] Migrate Data Grid access from RESP (Lettuce) to Hot Rod native client. Scope: 1) Add infinispan-hotrod-client dep to cache-starter 2) Create HotRodCacheConfig alternative 3) Add feature flag `payu.cache.provider=hotrod\|resp` 4) Phased rollout per service. Eliminates ISPN005061, improves throughput ~40%. | 🟡 Planned |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
@@ -50,15 +47,12 @@
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
 | DEPLOY-010 | P1 | API Management | ✅ Deploy 3scale APIManager — APIcast production routing + Keycloak OIDC introspection + E2E cards-crud verified. See PROGRESS.md and `infrastructure/platform/api-management/3scale/README.md`. | ✅ Closed |
-| DEPLOY-007 | P1 | Observability | OTel→Tempo (READY-019) + Loki (READY-020) + Prometheus alerts (READY-021) |
-| DEPLOY-008 | P1 | DR/Security | Vault auto-snapshot (DEVSECOPS-001) + auto-unseal (DEVSECOPS-002) + DR runbook (INFRA-007) |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
 | OPS-2026-04-08-01 | P2 | Ops | ✅ Validated — wallet-service cache config OK, /actuator/health/liveness UP, RESP PING reachable | ✅ Closed |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
 | READY-029 | P2 | Performance | Gatling: defer to cluster integration test phase (needs port-forward or in-cluster runner) | 🔄 Operator-only |
 | READY-030 | P2 | Performance | SOAK 24h: defer to staging environment | 🔄 Staging-only |
 | READY-022 | P2 | Test | 80% coverage: audited 4-22% across 4 services. Sprint planning needed | 🔄 Planned |
-| READY-023 | P2 | Test | Contract tests (Pact/SCC) |
 | READY-060 | P3 | Card | Card tokenization + 3DS |
 | READY-061 | P3 | Mobile | Expo SDK 55 + RN 0.85 upgrade |
 | READY-062 | P3 | ML | ONNX fraud detection model |
