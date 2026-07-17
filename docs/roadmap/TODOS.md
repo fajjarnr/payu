@@ -56,7 +56,6 @@
 | READY-060 | P3 | Card | Card tokenization + 3DS |
 | READY-061 | P3 | Mobile | Expo SDK 55 + RN 0.85 upgrade |
 | READY-062 | P3 | ML | ONNX fraud detection model |
-| DEVSECOPS-014 | P3 | DevSecOps | Local Pipeline Simulation |
 | DEVSECOPS-015 | P3 | DevSecOps | Security Findings Dashboard Grafana |
 | DEVSECOPS-016 | P3 | DevSecOps | Service template scaffolder |
 | INFRA-018 | P3 | Registry | Setup registry GC policy |

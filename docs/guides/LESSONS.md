@@ -2,6 +2,22 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-125: Local Tekton CI/CD Pipeline Simulation Script (2026-07-17)
+
+**Date**: 2026-07-17
+**Domain**: DevSecOps, Tekton CI/CD, Local Simulation, Container Security, Shell Scripting
+**Context**: Executed DEVSECOPS-014 to build a standalone bash simulation tool `scripts/simulate-local-pipeline.sh` that replicates remote Tekton CI/CD pipeline stages locally before pushing code to Git repositories.
+
+**Lesson**:
+- Portable bash scripts for multi-stage CI/CD simulation must handle arithmetic expansions using `$(( end - start ))` syntax rather than string interpolation.
+- Fallback checks (e.g. static Containerfile inspection for `USER 1001` when local Trivy CLI is missing) allow developers to validate non-root container security requirements locally without external network dependencies.
+
+**Applied fix**:
+- Created `scripts/simulate-local-pipeline.sh` with 4 pipeline stages (`Lint/ArchUnit` -> `Tests` -> `Container Build` -> `Security Scan`).
+- Verified execution on `cms-service` (`./scripts/simulate-local-pipeline.sh cms-service --skip-build`) with clean 0 exit code across all stages in 10 seconds.
+
+---
+
 ## L-124: Data Grid Hot Rod Migration, Observability Stack & Spring 7 Contract Testing Parity (2026-07-17)
 
 **Date**: 2026-07-17

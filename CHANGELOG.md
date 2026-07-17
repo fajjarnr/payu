@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added local Tekton CI/CD pipeline simulation script `scripts/simulate-local-pipeline.sh` (DEVSECOPS-014).
 - Added `HotRodCacheConfig` native client auto-configuration and feature flag `payu.cache.provider=hotrod|resp` in `cache-starter` (ARCH-007).
 - Added `TempoStack` tracing backend (`tempostack.yaml`), `OpenTelemetryCollector` CR (`otel-collector.yaml`), and platform alerting rules (`prometheus-rules.yaml`) in `infrastructure/platform/observability/` (DEPLOY-007).
 - Added Vault transit auto-unseal manifest (`vault-auto-unseal.yaml`) and enabled Raft auto-snapshot CronJob (DEPLOY-008).
