@@ -70,10 +70,10 @@ config:
   # Use Redis for distributed rate limiting (shared across Kong replicas)
   policy: redis
   redis:
-    host: datagrid.payu-cache.svc  # Red Hat Data Grid in RESP mode
+    host: redis-3scale.payu-api-management.svc.cluster.local
     port: 6379
     password: "${REDIS_PASSWORD}"  # REQUIRED: inject via Kong env or K8s Secret. Never leave null in production.
-    database: 3     # Separate DB from 3scale/application cache
+    database: 3     # Separate database from the 3scale application cache
     timeout: 2000
   # Rate limit by consumer (partner), not by IP
   limit_by: consumer

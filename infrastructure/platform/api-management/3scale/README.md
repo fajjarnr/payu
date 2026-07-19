@@ -41,7 +41,7 @@ Partner Apps
 - OpenShift 4.20+ cluster with admin access
 - Red Hat 3scale Operator installed from OperatorHub
 - PostgreSQL (for 3scale system database, can reuse Crunchy Postgres Operator)
-- Redis (for 3scale backend storage, can reuse Red Hat Data Grid in RESP mode)
+- Redis-native `redis-3scale` (for 3scale backend storage and mesh/Kong rate limiting; do not use Data Grid RESP)
 - Wildcard DNS configured for developer portal and APIcast routes
 
 ## Files
@@ -83,12 +83,12 @@ oc create secret generic system-database \
   -n payu-api-management
 
 oc create secret generic backend-redis \
-  --from-literal=REDIS_STORAGE_URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/0 \
-  --from-literal=REDIS_QUEUES_URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/1 \
+  --from-literal=REDIS_STORAGE_URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/0 \
+  --from-literal=REDIS_QUEUES_URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/1 \
   -n payu-api-management
 
 oc create secret generic system-redis \
-  --from-literal=URL=redis://:<REDIS_PASSWORD>@payu-cache-resp.payu-dev.svc.cluster.local:11222/2 \
+  --from-literal=URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/2 \
   -n payu-api-management
 ```
 

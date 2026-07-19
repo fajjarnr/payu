@@ -23,10 +23,12 @@ resources:
   - ratelimit-service.yaml
   - security-headers.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: payu
-  app.kubernetes.io/managed-by: kustomize
-  app.kubernetes.io/component: service-mesh
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: payu
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/component: service-mesh
+    includeSelectors: true
 
 configMapGenerator:
   - name: mesh-config
@@ -37,16 +39,8 @@ configMapGenerator:
       - ENABLE_TRACING=true
       - TRACING_SAMPLING=10000
 
-secretGenerator:
-  - name: payu-ingress-cert
-    type: kubernetes.io/tls
-    files:
-      - tls.crt=certs/tls.crt
-      - tls.key=certs/tls.key
-  - name: payu-ingress-ca
-    type: Opaque
-    files:
-      - ca.crt=certs/ca.crt
+# `payu-ingress-cert` and `payu-ingress-ca` are provisioned externally by the
+# certificate workflow. Private keys must not be kept in this repository.
 
 images:
   - name: gcr.io/istio-testing/pilot

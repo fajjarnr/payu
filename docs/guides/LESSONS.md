@@ -2,6 +2,23 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-130: Redis-Native Rate Limiting Must Be Isolated from Data Grid (2026-07-19)
+
+**Date**: 2026-07-19
+**Domain**: Envoy rate limit service, Kong, 3scale Redis, Infinispan
+**Context**: The mesh rate-limit service, Kong template, and 3scale setup guide still pointed to the deleted Data Grid RESP endpoint.
+
+**Lesson**:
+- Envoy rate-limit and Kong's Redis policy require Redis semantics; they cannot use an Infinispan Hot Rod endpoint.
+- Reuse the dedicated `redis-3scale` service for Redis-native rate limiting and admit only the required gateway and mesh workloads through NetworkPolicy.
+- Ingress TLS secrets must be externally provisioned. A Git-tracked private key or placeholder Secret both break safe GitOps and prevent deterministic local Kustomize rendering.
+
+**Applied fix**:
+- Moved mesh, Kong, and 3scale Redis connection references to `redis-3scale.payu-api-management.svc.cluster.local:6379` and added the mesh ingress policy.
+- Removed mesh Secret generators and inline placeholder Secrets; the mesh now renders while external certificate automation owns `payu-ingress-cert` and `payu-ingress-ca`.
+
+---
+
 ## L-129: A Security Field Rule May Have No Target in a Bounded Service (2026-07-19)
 
 **Date**: 2026-07-19

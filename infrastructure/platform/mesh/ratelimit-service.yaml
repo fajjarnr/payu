@@ -1,6 +1,6 @@
 # Rate Limit Service — Envoy-compatible rate limit backend
 # Required by the EnvoyFilter in gateway.yaml for global rate limiting
-# Uses envoyproxy/ratelimit with Redis backend (Red Hat Data Grid RESP mode)
+# Uses envoyproxy/ratelimit with the dedicated Redis-native 3scale backend.
 
 ---
 # ConfigMap for rate limit configuration
@@ -90,7 +90,7 @@ spec:
             - name: REDIS_SOCKET_TYPE
               value: "tcp"
             - name: REDIS_URL
-              value: "payu-cache-resp.payu-dev.svc.cluster.local:11222"
+              value: "redis-3scale.payu-api-management.svc.cluster.local:6379"
             - name: RUNTIME_ROOT
               value: "/data"
             - name: RUNTIME_SUBDIRECTORY

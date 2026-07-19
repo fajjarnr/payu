@@ -435,25 +435,3 @@ spec:
         - name: Authorization
           prefix: "Bearer "
       outputPayloadToHeader: x-jwt-payload
----
-# TLS Certificate Secret (placeholder - replace with actual certificates)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: payu-ingress-cert
-  namespace: istio-system
-type: kubernetes.io/tls
-data:
-  # Replace with actual certificate and key
-  tls.crt: LS0tLS1CRUdJTi...
-  tls.key: LS0tLS1CRUdJTi...
----
-# CA Certificate Secret for mTLS (if using mutual TLS)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: payu-ingress-ca
-  namespace: istio-system
-type: Opaque
-data:
-  ca.crt: LS0tLS1CRUdJTi...

@@ -20,3 +20,26 @@ spec:
     ports:
     - protocol: TCP
       port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mesh-ratelimit-to-redis-3scale
+  namespace: payu-api-management
+spec:
+  podSelector:
+    matchLabels:
+      app: redis-3scale
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: istio-system
+      podSelector:
+        matchLabels:
+          app: ratelimit
+    ports:
+    - protocol: TCP
+      port: 6379

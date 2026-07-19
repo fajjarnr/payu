@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the platform Data Grid RESP CR and subscription with an Infinispan 16.2.1 Hot Rod/REST CR using Operator-managed endpoints and mTLS Secret references.
 - Migrated CMS cache configuration and its OpenShift workload manifest from Redis environment variables to the shared Hot Rod `payu` cache contract.
 - Applied the Hot Rod/mTLS contract to every JVM workload overlay and removed rendered RESP environment variables from dev, SIT, UAT, preprod, and prod.
+- Moved mesh, Kong, and 3scale rate-limit configuration from Data Grid RESP to the dedicated `redis-3scale` service; removed inline mesh TLS Secret placeholders.
 
 ### Fixed
 
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Podman `apps` profile smoke test: gateway readiness, KYC health, analytics health, Data Grid, Kafka, and Artemis are healthy; fresh steady-state application logs contain no WARN/ERROR/exception entries.
 - Rendered the Data Grid dev overlay and the `payu-dev` workload overlay successfully; CMS `ProductionMigrationResourcesTest` passes (2 tests).
 - All five workload overlays render successfully. Full CMS reactor test suite passes (528 tests, 26 skipped).
+- Mesh and Data Grid overlays render successfully; no active platform or foundation manifest references the removed RESP endpoint.
 
 ## [1.9.8] - 2026-07-17
 

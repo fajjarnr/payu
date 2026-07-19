@@ -32,6 +32,7 @@
 > 🟡 **2026-07-19 — ARCH-007 platform manifest preparation**:
 > - Replaced the stale RESP/Data Grid manifest with an Infinispan 16.2.1 CR, Operator-managed Hot Rod/REST endpoint, `payu` text/plain cache, endpoint authentication, and mTLS Secret references.
 > - Migrated all JVM workload manifests to Hot Rod/mTLS; CMS source no longer defaults to Redis/RESP. Data plus dev, SIT, UAT, preprod, and prod Kustomize renders pass locally with no rendered RESP cache environment variables.
+> - Moved Envoy mesh, Kong, and 3scale Redis-native rate limiting to `redis-3scale`; mesh Kustomize no longer depends on a Git-tracked ingress private key or placeholder TLS Secret.
 > - No OpenShift cluster deployment was attempted. External Secrets provisioning, an in-cluster mTLS smoke test, and the 24-hour canary remain required before promotion.
 
 > ✅ **2026-07-17 — Local CI/CD Pipeline Simulation (DEVSECOPS-014) Completed**:
