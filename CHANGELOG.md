@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rendered the Data Grid dev overlay and the `payu-dev` workload overlay successfully; CMS `ProductionMigrationResourcesTest` passes (2 tests).
 - All five workload overlays render successfully. Full CMS reactor test suite passes (528 tests, 26 skipped).
 - Mesh and Data Grid overlays render successfully; no active platform or foundation manifest references the removed RESP endpoint.
+- Local Podman Compose parity suite passes 15/15 against the Infinispan 16.2.1 Hot Rod/mTLS contract.
 
 ## [1.9.8] - 2026-07-17
 

@@ -42,23 +42,28 @@ class PodmanComposeParityTest(unittest.TestCase):
         )
         self.assertEqual(created | {"payu_account"}, granted)
 
-    def test_uses_data_grid_resp_and_standard_networking(self):
+    def test_uses_infinispan_hotrod_mtls_and_standard_networking(self):
         self.assertNotIn("podman_networks", self.document)
         self.assertNotIn("redis-native", self.document)
+        self.assertNotIn("payu-cache-resp", self.document)
+        self.assertNotIn("PAYU_CACHE_REDIS_", self.document)
         self.assertIn(
-            "registry.redhat.io/datagrid/datagrid-8-rhel9@sha256:"
-            "66e76900551564dcb58ed37fb978fa27101849316dba1024a594bf027b25adc6",
+            "image: quay.io/infinispan/server:16.2.1",
             self.document,
         )
-        self.assertRegex(self.document, r"(?m)^  payu-cache-resp:$")
-        self.assertIn("PAYU_CACHE_REDIS_HOST: payu-cache-resp", self.document)
-        self.assertIn('PAYU_CACHE_REDIS_PORT: "11222"', self.document)
-        self.assertIn("PAYU_CACHE_REDIS_USERNAME: developer", self.document)
+        self.assertRegex(self.document, r"(?m)^  payu-cache:$")
+        self.assertIn(
+            "PAYU_CACHE_HOTROD_SERVER_LIST: ${PAYU_CACHE_HOTROD_SERVER_LIST:-payu-cache:11222}",
+            self.document,
+        )
+        self.assertIn("PAYU_CACHE_HOTROD_USE_SSL: ${PAYU_CACHE_HOTROD_USE_SSL:-true}", self.document)
+        self.assertIn("PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME:", self.document)
+        self.assertIn("PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME:", self.document)
 
     def test_uses_openshift_service_dns_names(self):
         for service in (
             "payu-database-rw",
-            "payu-cache-resp",
+            "payu-cache",
             "payu-kafka-kafka-bootstrap",
             "artemis",
             "payu-keycloak-service",

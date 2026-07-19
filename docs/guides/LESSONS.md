@@ -2,6 +2,21 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-131: Parity Tests Must Assert the Current Protocol Contract (2026-07-19)
+
+**Date**: 2026-07-19
+**Domain**: Podman Compose, Infinispan 16.2.1, Hot Rod, mTLS
+**Context**: The local compose parity test still required a Data Grid RESP image, `payu-cache-resp`, and Redis environment variables after the runtime had migrated to Infinispan 16.2.1 Hot Rod with mTLS.
+
+**Lesson**:
+- A passing runtime smoke test is insufficient when the manifest contract test still encodes a removed protocol.
+- Update contract tests in the same migration: require the current image, service DNS, Hot Rod endpoint, and mTLS stores; reject stale RESP assumptions.
+
+**Applied fix**:
+- Replaced the stale RESP assertions with the Infinispan 16.2.1 `payu-cache` Hot Rod/mTLS contract. The local compose test suite passes 15/15.
+
+---
+
 ## L-130: Redis-Native Rate Limiting Must Be Isolated from Data Grid (2026-07-19)
 
 **Date**: 2026-07-19
