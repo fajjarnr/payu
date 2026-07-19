@@ -34,9 +34,9 @@ payu:
       wallet-service:
         address: ${WALLET_GRPC_ADDRESS:static://localhost:9090}
   cache:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+    hotrod:
+      server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}
+      cache-name: payu
 
 management:
   otlp:

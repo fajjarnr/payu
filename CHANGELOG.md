@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [Unreleased]
+
+### Changed
+
+- Migrated backend cache access to Infinispan Data Grid 16.2.1: Java and Quarkus use native Hot Rod; Python KYC and analytics use authenticated REST.
+- Replaced the local Redis/RESP cache service with Data Grid REST/Hot Rod and configured the shared `payu` cache for UTF-8 JSON text interoperability.
+
+### Fixed
+
+- Removed protocol-dependent key encoding so a REST `text/plain` write is readable through the JVM Hot Rod client.
+- Configured Python cache clients to fail closed when a configured remote Data Grid endpoint is unavailable.
+
+### Verification
+
+- Local Podman Data Grid healthy; live REST-to-Hot-Rod cache interoperability test passed.
+- Passed KYC (2), analytics (2), cache starter (8), gateway (453), and auth security (14) targeted tests.
+
 ## [1.9.8] - 2026-07-17
 
 ### Added

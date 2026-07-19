@@ -1,12 +1,9 @@
 package id.payu.partner.application.service;
 
+import id.payu.cache.service.DistributedCache;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +11,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
@@ -34,20 +30,17 @@ public class SnapBiTokenService {
 
     private SecretKey signingKey;
 
-    @SuppressWarnings("unchecked")
-    private final RedisTemplate<String, TokenInfo> redisTemplate;
-    private ValueOperations<String, TokenInfo> valueOps;
+    private final DistributedCache distributedCache;
 
-    public SnapBiTokenService(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = (RedisTemplate<String, TokenInfo>) (RedisTemplate<?, ?>) redisTemplate;
+    public SnapBiTokenService(DistributedCache distributedCache) {
+        this.distributedCache = distributedCache;
     }
 
     @PostConstruct
     public void init() {
         byte[] secretBytes = tokenSecret.getBytes(StandardCharsets.UTF_8);
         this.signingKey = new SecretKeySpec(secretBytes, "HmacSHA256");
-        this.valueOps = redisTemplate.opsForValue();
-        LOG.info("SnapBiTokenService initialized with JWT expiration={}ms (Redis-backed)", expirationTimeMs);
+        LOG.info("SnapBiTokenService initialized with JWT expiration={}ms (distributed-cache-backed)", expirationTimeMs);
     }
 
     public String generateAccessToken(String clientId, String partnerId, String partnerName) {
@@ -71,7 +64,7 @@ public class SnapBiTokenService {
 
         TokenInfo tokenInfo = new TokenInfo(tokenId, clientId, partnerId, expiration);
         String redisKey = buildTokenKey(clientId);
-        valueOps.set(redisKey, tokenInfo, Duration.ofMillis(expirationTimeMs));
+        distributedCache.put(redisKey, tokenInfo, Duration.ofMillis(expirationTimeMs));
 
         LOG.info("Generated access token for partner clientId={} partnerId={} tokenId={}", clientId, partnerId, tokenId);
 
@@ -88,15 +81,15 @@ public class SnapBiTokenService {
 
             String clientId = (String) claims.get("clientId");
             String redisKey = buildTokenKey(clientId);
-            TokenInfo tokenInfo = valueOps.get(redisKey);
+            TokenInfo tokenInfo = distributedCache.get(redisKey, TokenInfo.class);
 
             if (tokenInfo == null) {
                 LOG.warn("Token not found in Redis store clientId={}", clientId);
                 return null;
             }
 
-            if (tokenInfo.expiration.before(new Date())) {
-                redisTemplate.delete(redisKey);
+            if (tokenInfo.expiration().before(new Date())) {
+                distributedCache.evict(redisKey);
                 LOG.warn("Token expired clientId={}", clientId);
                 return null;
             }
@@ -123,31 +116,8 @@ public class SnapBiTokenService {
         if (claims != null) {
             String clientId = (String) claims.get("clientId");
             String redisKey = buildTokenKey(clientId);
-            redisTemplate.delete(redisKey);
+            distributedCache.evict(redisKey);
             LOG.info("Token revoked clientId={}", clientId);
-        }
-    }
-
-    @SchedulerLock(name = "SnapBiTokenService_cleanupExpiredTokens", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")@Scheduled(fixedRate = 60000)
-    public void cleanupExpiredTokens() {
-        try {
-            Date now = new Date();
-            Set<String> keys = redisTemplate.keys(TOKEN_KEY_PREFIX + "*");
-            if (keys != null && !keys.isEmpty()) {
-                int removedCount = 0;
-                for (String key : keys) {
-                    TokenInfo tokenInfo = valueOps.get(key);
-                    if (tokenInfo != null && tokenInfo.expiration.before(now)) {
-                        redisTemplate.delete(key);
-                        removedCount++;
-                    }
-                }
-                if (removedCount > 0) {
-                    LOG.debug("Cleaned up {} expired tokens from Redis", removedCount);
-                }
-            }
-        } catch (Exception e) {
-            LOG.error("Unexpected error occurred during expired token cleanup scheduled task", e);
         }
     }
 
@@ -155,17 +125,6 @@ public class SnapBiTokenService {
         return TOKEN_KEY_PREFIX + clientId;
     }
 
-    private static class TokenInfo {
-        String tokenId;
-        String clientId;
-        String partnerId;
-        Date expiration;
-
-        TokenInfo(String tokenId, String clientId, String partnerId, Date expiration) {
-            this.tokenId = tokenId;
-            this.clientId = clientId;
-            this.partnerId = partnerId;
-            this.expiration = expiration;
-        }
+    public record TokenInfo(String tokenId, String clientId, String partnerId, Date expiration) {
     }
 }

@@ -13,8 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,11 +36,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *   <li>Cache warming executor</li>
  * </ul>
  */
-@AutoConfiguration(after = RedisCacheConfig.class)
+@AutoConfiguration
 @RequiredArgsConstructor
 @EnableAspectJAutoProxy
 @EnableConfigurationProperties(CacheProperties.class)
-@ConditionalOnClass(RedisConnectionFactory.class)
+@ConditionalOnClass(RemoteCacheManager.class)
 @ConditionalOnProperty(prefix = "payu.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Import(CacheThreadPoolConfig.class)
 public class CacheAutoConfiguration {
@@ -55,10 +54,10 @@ public class CacheAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public DistributedCacheService distributedCacheService(
-            @Qualifier("payuCacheRedisTemplate") RedisTemplate<String, Object> redisTemplate) {
-        return new DistributedCacheService(redisTemplate, properties);
+    @ConditionalOnMissingBean(DistributedCacheService.class)
+    public HotRodDistributedCacheServiceImpl hotRodDistributedCacheService(
+            RemoteCacheManager remoteCacheManager) {
+        return new HotRodDistributedCacheServiceImpl(remoteCacheManager, properties);
     }
 
     @Bean

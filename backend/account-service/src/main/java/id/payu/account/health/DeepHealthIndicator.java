@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.health.contributor.Status;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>This performs active checks:</p>
  * <ul>
  *   <li>Database: Executes a test query</li>
- *   <li>Redis: PING command</li>
+ *   <li>Data Grid: Native Hot Rod operation</li>
  *   <li>Kafka: Produces a test message</li>
  * </ul>
  */
@@ -36,12 +36,12 @@ public class DeepHealthIndicator implements HealthIndicator {
     private static final Logger log = LoggerFactory.getLogger(DeepHealthIndicator.class);
 
     private final DataSource dataSource;
-    private final RedisConnectionFactory redisConnectionFactory;
+    private final RemoteCacheManager remoteCacheManager;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ListenerContainerRegistry listenerRegistry;
 
     private final AtomicBoolean databaseHealthy = new AtomicBoolean(false);
-    private final AtomicBoolean redisHealthy = new AtomicBoolean(false);
+    private final AtomicBoolean dataGridHealthy = new AtomicBoolean(false);
     private final AtomicBoolean kafkaHealthy = new AtomicBoolean(false);
 
     @Override
@@ -54,11 +54,10 @@ public class DeepHealthIndicator implements HealthIndicator {
         boolean dbUp = dbHealth.getStatus() == Status.UP;
         databaseHealthy.set(dbUp);
 
-        // Check Redis
-        Health redisHealth = checkRedis();
-        details.put("redis", redisHealth.getDetails());
-        boolean redisUp = redisHealth.getStatus() == Status.UP;
-        redisHealthy.set(redisUp);
+        Health dataGridHealth = checkDataGrid();
+        details.put("datagrid", dataGridHealth.getDetails());
+        boolean dataGridUp = dataGridHealth.getStatus() == Status.UP;
+        dataGridHealthy.set(dataGridUp);
 
         // Check Kafka
         Health kafkaHealth = checkKafka();
@@ -67,7 +66,7 @@ public class DeepHealthIndicator implements HealthIndicator {
         kafkaHealthy.set(kafkaUp);
 
         // Overall status
-        boolean allHealthy = dbUp && redisUp && kafkaUp;
+        boolean allHealthy = dbUp && dataGridUp && kafkaUp;
         Status status = allHealthy ? Status.UP : Status.DOWN;
 
         return Health.status(status)
@@ -108,28 +107,20 @@ public class DeepHealthIndicator implements HealthIndicator {
     }
 
     /**
-     * Check Redis connectivity with PING command.
+     * Check Data Grid connectivity through Hot Rod.
      */
-    private Health checkRedis() {
+    private Health checkDataGrid() {
         long start = System.currentTimeMillis();
         try {
-            String pong = redisConnectionFactory.getConnection().ping();
+            remoteCacheManager.getCache().containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
 
-            if ("PONG".equals(pong)) {
-                return Health.up()
-                    .withDetail("latency", duration + "ms")
-                    .withDetail("response", pong)
-                    .build();
-            } else {
-                return Health.down()
-                    .withDetail("reason", "Unexpected response: " + pong)
-                    .withDetail("latency", duration + "ms")
-                    .build();
-            }
+            return Health.up()
+                .withDetail("latency", duration + "ms")
+                .build();
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - start;
-            log.error("Redis health check failed: {}", e.getMessage());
+            log.error("Data Grid health check failed: {}", e.getMessage());
             return Health.down()
                 .withDetail("error", e.getClass().getSimpleName())
                 .withDetail("message", e.getMessage())

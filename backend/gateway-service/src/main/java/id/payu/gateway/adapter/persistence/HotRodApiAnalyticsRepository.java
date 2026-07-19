@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.gateway.domain.entity.ApiAnalyticsEvent;
 import id.payu.gateway.domain.repository.ApiAnalyticsRepository;
 import id.payu.gateway.domain.vo.HttpMethod;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.quarkus.redis.datasource.list.ReactiveListCommands;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
@@ -22,11 +21,11 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Redis-based implementation of ApiAnalyticsRepository.
+ * Hot Rod-based implementation of ApiAnalyticsRepository.
  *
  * <p>
  * This implementation provides:
- * - Fast writes using Redis lists for buffering
+ * - Fast writes using atomic Data Grid lists for buffering
  * - Time-series data organization by day
  * - Aggregation support for metrics queries
  * - TTL-based automatic expiration (90 days detailed)
@@ -38,7 +37,7 @@ import java.util.Optional;
  * - Persists to TimescaleDB for long-term storage
  */
 @ApplicationScoped
-public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
+public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
 
     private static final String ANALYTICS_KEY_PREFIX = "analytics:events:";
     private static final String ANALYTICS_INDEX_PREFIX = "analytics:index:";
@@ -46,17 +45,14 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
     private static final int DETAILED_RETENTION_DAYS = 90;
 
     @Inject
-    ReactiveRedisDataSource redisDataSource;
+    HotRodCacheClient cache;
 
     @Inject
     ObjectMapper objectMapper;
 
-    private ReactiveListCommands<String, String> listCommands;
-
     @PostConstruct
     void init() {
-        this.listCommands = redisDataSource.list(String.class);
-        Log.info("RedisApiAnalyticsRepository initialized");
+        Log.info("HotRodApiAnalyticsRepository initialized");
     }
 
     @Override
@@ -65,10 +61,7 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
             String json = objectMapper.writeValueAsString(event);
             String key = buildDailyKey(event.getTimestamp());
 
-            return listCommands.lpush(key, json)
-                .flatMap(ignored ->
-                    redisDataSource.key().expire(key, Duration.ofDays(DETAILED_RETENTION_DAYS)))
-                .replaceWithVoid();
+            return cache.appendToList(key, json, Duration.ofDays(DETAILED_RETENTION_DAYS));
         } catch (JsonProcessingException e) {
             Log.errorf(e, "Failed to serialize analytics event");
             return Uni.createFrom().failure(e);
@@ -102,10 +95,7 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
             List<String> jsonEvents = entry.getValue();
 
             result = result.chain(() ->
-                listCommands.lpush(key, jsonEvents.toArray(new String[0]))
-                    .flatMap(ignored ->
-                        redisDataSource.key().expire(key, Duration.ofDays(DETAILED_RETENTION_DAYS)))
-                    .replaceWithVoid()
+                appendAll(key, jsonEvents)
             );
         }
 
@@ -207,7 +197,7 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
         // Fetch events from all keys
         return Multi.createFrom().iterable(keys)
             .onItem().transformToMultiAndConcatenate(key ->
-                listCommands.lrange(key, 0, -1)
+                cache.readList(key)
                     .onItem().transformToMulti(list ->
                         Multi.createFrom().iterable(list != null ? list : List.of())
                     )
@@ -228,6 +218,14 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
             Log.warnf(e, "Failed to parse analytics event");
             return Optional.empty();
         }
+    }
+
+    private Uni<Void> appendAll(String key, List<String> jsonEvents) {
+        Uni<Void> result = Uni.createFrom().voidItem();
+        for (String jsonEvent : jsonEvents) {
+            result = result.chain(() -> cache.appendToList(key, jsonEvent, Duration.ofDays(DETAILED_RETENTION_DAYS)));
+        }
+        return result;
     }
 
     private String buildDailyKey(Instant timestamp) {

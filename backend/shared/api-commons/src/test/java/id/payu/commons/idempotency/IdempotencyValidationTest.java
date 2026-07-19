@@ -2,8 +2,6 @@ package id.payu.commons.idempotency;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -26,12 +24,10 @@ class IdempotencyValidationTest {
 
     private IdempotencyService idempotencyService;
     private IdempotencyRepository repository;
-    private StringRedisTemplate redisTemplate;
 
     @BeforeEach
     void setUp() {
         repository = mock(IdempotencyRepository.class);
-        redisTemplate = mock(StringRedisTemplate.class);
         idempotencyService = new IdempotencyService(repository, new com.fasterxml.jackson.databind.ObjectMapper());
     }
 

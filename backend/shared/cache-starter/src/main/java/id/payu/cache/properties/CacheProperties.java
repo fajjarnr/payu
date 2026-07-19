@@ -69,32 +69,14 @@ public class CacheProperties {
     private boolean enabled = true;
 
     /**
-     * NEW-003: Value serializer selector for the {@code CacheManager} bean
-     * (and therefore every {@code @Cacheable} hit in the service).
-     *
-     * <p>Default ({@code null} or {@code typed}) uses
-     * {@link id.payu.cache.serializer.TypedJsonRedisSerializer} which preserves
-     * the runtime class on the wire, including for top-level
-     * {@link java.util.List} payloads. Other values are ignored.</p>
+     * Cache provider mode. Native Hot Rod is the only supported protocol.
      */
-    private String serializer;
-
-    /**
-     * Cache provider mode: "resp" (default, Redis / Data Grid RESP protocol) or "hotrod" (Data Grid Hot Rod native client).
-     */
-    private String provider = "resp";
+    private String provider = "hotrod";
 
     /**
      * Red Hat Data Grid Hot Rod native client configuration properties.
      */
     private HotRod hotrod = new HotRod();
-
-    /**
-     * Redis / Red Hat Data Grid connection configuration.
-     * Uses Lettuce client which communicates via RESP protocol — compatible with both
-     * Redis and Data Grid. Point host/port to either Redis or Data Grid RESP endpoint.
-     */
-    private Redis redis = new Redis();
 
     /**
      * Default TTL for cache entries.
@@ -132,70 +114,12 @@ public class CacheProperties {
     private Metrics metrics = new Metrics();
 
     @Data
-    public static class Redis {
-        /**
-         * Redis host.
-         */
-        private String host = "localhost";
-
-        /**
-         * Redis port.
-         */
-        private int port = 6379;
-
-        /**
-         * Redis username (optional, for Redis 6+ ACL or Data Grid).
-         */
-        private String username;
-
-        /**
-         * Redis password (optional).
-         */
-        private String password;
-
-        /**
-         * Redis database index.
-         */
-        private int database = 0;
-
-        /**
-         * Connection timeout.
-         */
-        private Duration timeout = Duration.ofSeconds(5);
-
-        /**
-         * Command timeout.
-         */
-        private Duration commandTimeout = Duration.ofSeconds(3);
-
-        /**
-         * Connection pool size.
-         */
-        private int poolSize = 10;
-
-        /**
-         * Enable SSL.
-         */
-        private boolean ssl = false;
-
-        /**
-         * Enable cluster mode.
-         */
-        private boolean cluster = false;
-
-        /**
-         * Cluster nodes (comma-separated).
-         */
-        private String clusterNodes;
-
-        /**
-         * Sentinel master name.
-         */
-        private String sentinelMaster;
-    }
-
-    @Data
     public static class HotRod {
+        /**
+         * Named Data Grid cache used by PayU services.
+         */
+        private String cacheName = "payu";
+
         /**
          * Server list (host:port, comma separated). Default: "localhost:11222".
          */
@@ -282,7 +206,7 @@ public class CacheProperties {
     @Data
     public static class LocalCache {
         /**
-         * Enable local cache fallback when Redis is unavailable.
+         * Enable local cache fallback when Data Grid is unavailable.
          */
         private boolean enabled = true;
 

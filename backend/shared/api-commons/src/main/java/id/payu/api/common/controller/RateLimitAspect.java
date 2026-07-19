@@ -2,28 +2,22 @@ package id.payu.api.common.controller;
 
 import id.payu.api.common.exception.RateLimitExceededException;
 import id.payu.api.common.constant.ApiConstants;
+import id.payu.cache.service.DistributedAtomicCache;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * Aspect for implementing rate limiting on API endpoints.
- * Uses Redis to track request counts per client.
- * <p>
- * Uses atomic Lua script to prevent race condition between INCR and EXPIRE.
- * BUG-BE-090 Fix: Lua script ensures both operations are atomic.
+ * Uses the shared atomic cache port to track request counts per client.
  */
 @Aspect
 @Component
@@ -31,34 +25,15 @@ public class RateLimitAspect {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final DistributedAtomicCache distributedCache;
 
-    /**
-     * Lua script for atomic increment and expire.
-     * Returns the current count after increment.
-     * If this is the first request (count == 1), sets the expiration.
-     * <p>
-     * KEYS[1]: rate limit key
-     * ARGV[1]: expiration time in seconds
-     */
-    private static final String RATE_LIMIT_LUA_SCRIPT =
-            "local current = redis.call('incr', KEYS[1]) " +
-            "if current == 1 then " +
-            "    redis.call('expire', KEYS[1], ARGV[1]) " +
-            "end " +
-            "return current";
-
-    private final DefaultRedisScript<Long> rateLimitScript;
-
-    public RateLimitAspect(RedisTemplate<String, String> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-        this.rateLimitScript = new DefaultRedisScript<>(RATE_LIMIT_LUA_SCRIPT, Long.class);
+    public RateLimitAspect(DistributedAtomicCache distributedCache) {
+        this.distributedCache = distributedCache;
     }
 
     /**
      * Applies rate limiting to methods annotated with @RateLimit.
-     * OPS-2026-04-09-06: Wraps Redis calls with DataAccessException handling
-     * to gracefully degrade when Redis/DataGrid is unreachable (prevents HTTP 500).
+     * Fails open if the distributed cache is unavailable.
      */
     @Around("@annotation(rateLimit)")
     public Object applyRateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -72,28 +47,16 @@ public class RateLimitAspect {
         long windowSeconds = rateLimit.windowSeconds();
 
         try {
-            Long currentCount = redisTemplate.execute(
-                    rateLimitScript,
-                    Collections.singletonList(key),
-                    String.valueOf(windowSeconds)
-            );
-
-            if (currentCount == null) {
-                return joinPoint.proceed();
-            }
+            long currentCount = distributedCache.increment(key, Duration.ofSeconds(windowSeconds));
 
             if (currentCount > limit) {
-                long retryAfter;
-                try {
-                    retryAfter = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-                } catch (DataAccessException e) {
-                    log.warn("Redis unavailable while checking TTL, allowing request: {}", e.getMessage());
-                    return joinPoint.proceed();
-                }
+                long retryAfter = distributedCache.getRemainingTtlSeconds(key);
                 throw new RateLimitExceededException(retryAfter);
             }
-        } catch (DataAccessException e) {
-            log.warn("Redis/DataGrid unavailable for rate limiting, allowing request: {}", e.getMessage());
+        } catch (RateLimitExceededException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.warn("Distributed cache unavailable for rate limiting, allowing request: {}", e.getMessage());
         }
 
         return joinPoint.proceed();

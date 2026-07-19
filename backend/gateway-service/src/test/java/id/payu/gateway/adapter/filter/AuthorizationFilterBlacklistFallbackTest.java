@@ -4,7 +4,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import io.quarkus.redis.datasource.value.ReactiveValueCommands;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,21 +29,21 @@ import static org.mockito.Mockito.when;
 class AuthorizationFilterBlacklistFallbackTest {
 
     private AuthorizationFilter filter;
-    private ReactiveValueCommands<String, String> valueCommands;
+    private HotRodCacheClient cache;
     private ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
     @BeforeEach
     void setUp() throws Exception {
         filter = new AuthorizationFilter();
-        valueCommands = mock(ReactiveValueCommands.class);
+        cache = mock(HotRodCacheClient.class);
         jwtProcessor = mock(ConfigurableJWTProcessor.class);
 
-        setField("valueCommands", valueCommands);
+        setField("cache", cache);
         setField("jwtProcessor", jwtProcessor);
     }
 
     @Test
-    @DisplayName("should continue JWT validation when Redis blacklist lookup fails")
+    @DisplayName("should continue JWT validation when Data Grid blacklist lookup fails")
     void shouldContinueJwtValidationWhenBlacklistLookupFails() throws Exception {
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
             .subject("user-123")
@@ -54,8 +54,8 @@ class AuthorizationFilterBlacklistFallbackTest {
             .expirationTime(new Date(System.currentTimeMillis() + 60_000))
             .build();
 
-        when(valueCommands.get(anyString()))
-            .thenReturn(Uni.createFrom().failure(new RuntimeException("redis pool busy")));
+        when(cache.get(anyString()))
+            .thenReturn(Uni.createFrom().failure(new RuntimeException("Data Grid unavailable")));
         when(jwtProcessor.process(any(SignedJWT.class), isNull()))
             .thenReturn(claimsSet);
 
@@ -70,7 +70,7 @@ class AuthorizationFilterBlacklistFallbackTest {
     @Test
     @DisplayName("should reject blacklisted token before JWT validation")
     void shouldRejectBlacklistedToken() throws Exception {
-        when(valueCommands.get(anyString())).thenReturn(Uni.createFrom().item("1"));
+        when(cache.get(anyString())).thenReturn(Uni.createFrom().item("1"));
 
         Object userContext = invokeValidateToken(buildJwt());
 

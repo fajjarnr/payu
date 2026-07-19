@@ -17,8 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Security configuration tests for Auth Service.
  *
  * Uses a minimal Spring context to test only security filter chains
- * without requiring external infrastructure (DB, Redis, Keycloak).
+     * without requiring external infrastructure (DB, Data Grid, Keycloak).
  *
  * PCI-DSS Compliance:
  * - Requirement 1: Firewall configurations (actuator security)
@@ -76,13 +74,6 @@ class SecurityConfigTest {
 
     @MockitoBean
     private SessionValidationService sessionValidationService;
-
-    @MockitoBean
-    private RedisConnectionFactory redisConnectionFactory;
-
-    @MockitoBean
-    @SuppressWarnings("rawtypes")
-    private RedisTemplate redisTemplate;
 
     // Public endpoint tests
 

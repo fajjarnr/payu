@@ -2,6 +2,24 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-126: Shared Data Grid Cache Needs an Explicit Cross-Protocol Contract (2026-07-19)
+
+**Date**: 2026-07-19
+**Domain**: Infinispan Data Grid 16.2.1, Hot Rod, REST, Python idempotency
+**Context**: ARCH-007 removed direct Redis/RESP client paths from Java, Quarkus, KYC, and analytics. JVM services use native Hot Rod while Python uses authenticated Data Grid REST against the shared `payu` cache.
+
+**Lesson**:
+- A REST `text/plain` key and a Hot Rod ProtoStream scalar key are different cache entries. Verify interoperability with a real `REST write → Hot Rod read` test, not independent protocol tests.
+- A generic cross-language cache needs an explicit media-type contract: `text/plain` keys and values, UTF-8 JSON text payloads, and Java's `UTF8StringMarshaller`.
+- The Python Hot Rod client is not maintained for this target. Use authenticated REST with CA/client-certificate support; if a remote endpoint is configured but unavailable, fail closed. Only an unset endpoint may use process-local fallback.
+- Native Hot Rod remains the JVM choice for near cache and atomic operations. REST is the Python boundary, not a replacement for JVM Hot Rod.
+
+**Applied fix**:
+- Configured the `payu` cache as `text/plain`/`text/plain`, migrated JVM clients to Hot Rod, and migrated KYC/analytics idempotency to Data Grid REST.
+- Verified KYC (2), analytics (2), `HotRodCacheConfig` (8, including live REST-to-Hot-Rod), gateway (453), and auth security (14) tests; Podman Data Grid is healthy and routes REST/Hot Rod only.
+
+---
+
 ## L-125: Local Tekton CI/CD Pipeline Simulation Script (2026-07-17)
 
 **Date**: 2026-07-17
@@ -3958,4 +3976,3 @@ synchronized (lock) {
 - Always provide default fallbacks for microservice configuration properties in `application.yaml` (e.g., `${OTEL_ENDPOINT:http://localhost:4317}` and `${KEYCLOAK_REALM:payu}`).
 - Include `src/test/resources/application.properties` with test-safe overrides (`quarkus.devservices.enabled=false`, `quarkus.opentelemetry.enabled=false`, `quarkus.oidc.tenant-enabled=false`) for offline unit testing without external dependencies.
 - Verify full 44/44 reactor module build and test execution before claiming production readiness.
-

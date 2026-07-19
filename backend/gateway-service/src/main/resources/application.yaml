@@ -22,10 +22,6 @@ quarkus:
       issuer: ${OIDC_ISSUER:${OIDC_AUTH_SERVER_URL:http://localhost:8080/realms/payu}}
       # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks.
       signature-algorithm: RS256
-  # Redis Configuration (for rate limiting & caching)
-  redis:
-    hosts: ${QUARKUS_REDIS_HOSTS:redis://redis:6379}
-    timeout: 5s
   # Health & Metrics
   smallrye-health:
     ui:

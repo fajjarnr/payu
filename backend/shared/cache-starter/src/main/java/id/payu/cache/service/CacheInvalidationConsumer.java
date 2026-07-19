@@ -6,12 +6,9 @@ import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Consumer for cache invalidation events from Kafka.
@@ -96,16 +93,8 @@ public class CacheInvalidationConsumer {
     private void invalidatePattern(CacheInvalidationEvent event) {
         String pattern = buildCacheKey(event.getCacheName(), event.getKey());
 
-        // Use Redis SCAN (non-blocking) instead of KEYS to find matching keys
-        var redisTemplate = cacheService.getDistributedCache().getRedisTemplate();
-        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern).count(100).build();
-        try (var cursor = redisTemplate.scan(scanOptions)) {
-            while (cursor.hasNext()) {
-                String key = cursor.next();
-                redisTemplate.delete(key);
-            }
-            log.debug("Invalidated keys matching pattern: {}", pattern);
-        }
+        cacheService.getDistributedCache().evictMatching(pattern);
+        log.debug("Invalidated keys matching pattern: {}", pattern);
     }
 
     /**
@@ -114,17 +103,8 @@ public class CacheInvalidationConsumer {
     private void invalidateAll(CacheInvalidationEvent event) {
         String pattern = buildCacheKey(event.getCacheName(), "*");
 
-        var redisTemplate = cacheService.getDistributedCache().getRedisTemplate();
-        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern).count(100).build();
-        int count = 0;
-        try (var cursor = redisTemplate.scan(scanOptions)) {
-            while (cursor.hasNext()) {
-                String key = cursor.next();
-                redisTemplate.delete(key);
-                count++;
-            }
-        }
-        log.debug("Invalidated {} keys in cache: {}", count, event.getCacheName());
+        cacheService.getDistributedCache().evictMatching(pattern);
+        log.debug("Invalidated all keys in cache: {}", event.getCacheName());
     }
 
     /**

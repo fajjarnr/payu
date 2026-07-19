@@ -14,9 +14,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.quarkus.redis.datasource.value.ReactiveValueCommands;
 import id.payu.gateway.config.GatewayConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -105,9 +104,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     GatewayConfig gatewayConfig;
 
     @Inject
-    ReactiveRedisDataSource redisDataSource;
-
-    private ReactiveValueCommands<String, String> valueCommands;
+    HotRodCacheClient cache;
     private ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
     private JWKSource<SecurityContext> jwkSource;
     // BUG-AUTH-029: Track JWKS URI for periodic refresh
@@ -117,7 +114,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     @PostConstruct
     void init() {
-        this.valueCommands = redisDataSource.value(String.class);
         initJwtProcessor();
         // BUG-AUTH-029: Schedule periodic JWKS refresh every 5 minutes
         this.jwksRefreshScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -406,13 +402,13 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     private boolean isTokenBlacklisted(String token) {
         try {
-            String blacklisted = valueCommands.get("blacklist:token:" + token)
+            String blacklisted = cache.get("blacklist:token:" + token)
                 .await().atMost(Duration.ofSeconds(1));
             return blacklisted != null;
         } catch (Exception e) {
-            // Redis-backed token revocation is advisory during transient cache failures.
+            // Data Grid-backed token revocation is advisory during transient cache failures.
             // Continue with JWT signature/claims validation rather than rejecting valid tokens.
-            Log.warnf(e, "Failed to check token blacklist in Redis, continuing with JWT validation");
+            Log.warnf(e, "Failed to check token blacklist in Data Grid, continuing with JWT validation");
             return false;
         }
     }

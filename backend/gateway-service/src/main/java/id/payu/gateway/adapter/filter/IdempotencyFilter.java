@@ -1,10 +1,8 @@
 package id.payu.gateway.adapter.filter;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.quarkus.redis.datasource.value.ReactiveValueCommands;
-import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -94,13 +92,10 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
     GatewayConfig config;
 
     @Inject
-    ReactiveRedisDataSource redisDataSource;
-
-    private ReactiveValueCommands<String, String> valueCommands;
+    HotRodCacheClient cache;
 
     @PostConstruct
     void init() {
-        this.valueCommands = redisDataSource.value(String.class);
         Log.infof("Idempotency filter initialized (enabled: %s, ttl: %s)", config.idempotency().enabled(), config.idempotency().ttl());
     }
 
@@ -167,37 +162,27 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         }
 
         // Check if this key was already used
-        String redisKey = IDEMPOTENCY_PREFIX + idempotencyKey;
-
-        // Create effectively final copies for lambda
-        final String finalIdempotencyKey = idempotencyKey;
-        final String finalHeaderUsed = headerUsed;
-        final String finalRedisKey = redisKey;
-
-        valueCommands.get(redisKey)
-            .subscribe()
-            .with(cachedResponse -> {
-                if (cachedResponse != null) {
-                    // Idempotency key was already used, return cached response
-                    Log.infof("Returning cached response for idempotency key: %s (header: %s)", finalIdempotencyKey, finalHeaderUsed);
-                    CachedResponse response = parseCachedResponse(cachedResponse);
-                    requestContext.abortWith(
-                        Response.status(response.status)
-                            .entity(response.body)
-                            .header("Idempotency-Replayed", "true")
-                            .header("X-Idempotency-Replayed", "true") // Legacy header for backward compatibility
-                            .build()
-                    );
-                } else {
-                    // Store request context for later caching in response filter
-                    requestContext.setProperty(IDEMPOTENCY_KEY_PROPERTY, finalIdempotencyKey);
-                    requestContext.setProperty(IDEMPOTENCY_REDIS_KEY_PROPERTY, finalRedisKey);
-                    Log.debugf("Idempotency key registered: %s", finalIdempotencyKey);
-                }
-            }, failure -> {
-                // Redis error, allow request to proceed (fail-open)
-                Log.warnf(failure, "Failed to check idempotency key in Redis, allowing request");
-            });
+        String cacheKey = IDEMPOTENCY_PREFIX + idempotencyKey;
+        try {
+            String cachedResponse = cache.get(cacheKey).await().atMost(java.time.Duration.ofSeconds(1));
+            if (cachedResponse != null) {
+                Log.infof("Returning cached response for idempotency key: %s (header: %s)", idempotencyKey, headerUsed);
+                CachedResponse response = parseCachedResponse(cachedResponse);
+                requestContext.abortWith(
+                    Response.status(response.status)
+                        .entity(response.body)
+                        .header("Idempotency-Replayed", "true")
+                        .header("X-Idempotency-Replayed", "true")
+                        .build()
+                );
+                return;
+            }
+            requestContext.setProperty(IDEMPOTENCY_KEY_PROPERTY, idempotencyKey);
+            requestContext.setProperty(IDEMPOTENCY_REDIS_KEY_PROPERTY, cacheKey);
+            Log.debugf("Idempotency key registered: %s", idempotencyKey);
+        } catch (Exception failure) {
+            Log.warnf(failure, "Failed to check idempotency key in Data Grid, allowing request");
+        }
     }
 
     /**
@@ -237,12 +222,10 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             return;
         }
 
-        String redisKey = IDEMPOTENCY_PREFIX + idempotencyKey;
+        String cacheKey = IDEMPOTENCY_PREFIX + idempotencyKey;
         String bodyStr = body != null ? body.toString() : "";
         String responseJson = serializeCachedResponse(status, bodyStr);
-        long ttlSeconds = config.idempotency().ttl().toSeconds();
-
-        valueCommands.setex(redisKey, ttlSeconds, responseJson)
+        cache.put(cacheKey, responseJson, config.idempotency().ttl())
             .subscribe()
             .with(
                 unused -> Log.debugf("Stored idempotent response for key: %s (status: %d)", idempotencyKey, status),

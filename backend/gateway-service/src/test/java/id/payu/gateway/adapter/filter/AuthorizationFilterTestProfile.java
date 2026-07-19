@@ -35,10 +35,7 @@ public class AuthorizationFilterTestProfile implements QuarkusTestProfile {
 
             // Service URLs (point to non-existent services for testing)
             "gateway.services.account-service.url", "http://localhost:18001",
-            "gateway.services.auth-service.url", "http://localhost:18002",
-
-            // Redis configuration
-            "quarkus.redis.hosts", "redis://localhost:16379"
+            "gateway.services.auth-service.url", "http://localhost:18002"
         );
     }
 

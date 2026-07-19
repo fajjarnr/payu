@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -53,7 +53,7 @@ class VaultConfigurationTest {
 
     // Mock health indicator dependencies
     @MockitoBean
-    private RedisConnectionFactory redisConnectionFactory;
+    private RemoteCacheManager remoteCacheManager;
 
     @MockitoBean
     private ListenerContainerRegistry listenerContainerRegistry;

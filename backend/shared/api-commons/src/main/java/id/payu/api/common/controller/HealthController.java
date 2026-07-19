@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,13 +31,13 @@ public class HealthController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(HealthController.class);
 
-    private final RedisConnectionFactory redisConnectionFactory;
+    private final RemoteCacheManager remoteCacheManager;
     private final ListenerContainerRegistry listenerRegistry;
 
     public HealthController(
-            @Autowired(required = false) RedisConnectionFactory redisConnectionFactory,
+            @Autowired(required = false) RemoteCacheManager remoteCacheManager,
             @Autowired(required = false) ListenerContainerRegistry listenerRegistry) {
-        this.redisConnectionFactory = redisConnectionFactory;
+        this.remoteCacheManager = remoteCacheManager;
         this.listenerRegistry = listenerRegistry;
     }
 
@@ -48,10 +48,10 @@ public class HealthController extends BaseController {
         Map<String, Object> health = new LinkedHashMap<>();
         Map<String, Object> details = new LinkedHashMap<>();
 
-        boolean redisUp = checkRedis(details);
+        boolean dataGridUp = checkDataGrid(details);
         boolean kafkaUp = checkKafka(details);
 
-        boolean allUp = redisUp && kafkaUp;
+        boolean allUp = dataGridUp && kafkaUp;
 
         health.put("status", allUp ? "UP" : "DOWN");
         health.put("timestamp", Instant.now().toString());
@@ -68,10 +68,10 @@ public class HealthController extends BaseController {
         Map<String, Object> readiness = new LinkedHashMap<>();
         Map<String, Object> details = new LinkedHashMap<>();
 
-        boolean redisUp = checkRedis(details);
+        boolean dataGridUp = checkDataGrid(details);
         boolean kafkaUp = checkKafka(details);
 
-        boolean allReady = redisUp && kafkaUp;
+        boolean allReady = dataGridUp && kafkaUp;
 
         readiness.put("status", allReady ? "READY" : "NOT_READY");
         readiness.put("timestamp", Instant.now().toString());
@@ -91,33 +91,26 @@ public class HealthController extends BaseController {
     }
 
     /**
-     * Check Redis connectivity with PING command.
+     * Check Data Grid connectivity through a native Hot Rod operation.
      */
-    private boolean checkRedis(Map<String, Object> details) {
-        if (redisConnectionFactory == null) {
-            details.put("redis", "NOT_CONFIGURED");
+    private boolean checkDataGrid(Map<String, Object> details) {
+        if (remoteCacheManager == null) {
+            details.put("datagrid", "NOT_CONFIGURED");
             return true;
         }
         long start = System.currentTimeMillis();
         try {
-            String pong = redisConnectionFactory.getConnection().ping();
+            remoteCacheManager.getCache().containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
-            if ("PONG".equals(pong)) {
-                details.put("redis", "UP");
-                details.put("redis.latency_ms", duration);
-                return true;
-            } else {
-                details.put("redis", "DOWN");
-                details.put("redis.error", "Unexpected PING response: " + pong);
-                details.put("redis.latency_ms", duration);
-                return false;
-            }
+            details.put("datagrid", "UP");
+            details.put("datagrid.latency_ms", duration);
+            return true;
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - start;
-            log.warn("Redis health check failed: {}", e.getMessage());
-            details.put("redis", "DOWN");
-            details.put("redis.error", e.getClass().getSimpleName() + ": " + e.getMessage());
-            details.put("redis.latency_ms", duration);
+            log.warn("Data Grid health check failed: {}", e.getMessage());
+            details.put("datagrid", "DOWN");
+            details.put("datagrid.error", e.getClass().getSimpleName() + ": " + e.getMessage());
+            details.put("datagrid.latency_ms", duration);
             return false;
         }
     }

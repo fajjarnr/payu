@@ -3,7 +3,7 @@ package id.payu.account.adapter.web;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,14 +31,14 @@ public class HealthController {
     private static final String SERVICE_NAME = "account-service";
 
     private final DataSource dataSource;
-    private final RedisConnectionFactory redisConnectionFactory;
+    private final RemoteCacheManager remoteCacheManager;
     private final ListenerContainerRegistry listenerRegistry;
 
     public HealthController(DataSource dataSource,
-                           @Autowired(required = false) RedisConnectionFactory redisConnectionFactory,
+                           @Autowired(required = false) RemoteCacheManager remoteCacheManager,
                            @Autowired(required = false) ListenerContainerRegistry listenerRegistry) {
         this.dataSource = dataSource;
-        this.redisConnectionFactory = redisConnectionFactory;
+        this.remoteCacheManager = remoteCacheManager;
         this.listenerRegistry = listenerRegistry;
     }
 
@@ -48,10 +48,10 @@ public class HealthController {
         Map<String, Object> details = new LinkedHashMap<>();
 
         boolean dbUp = checkDatabase(details);
-        boolean redisUp = checkRedis(details);
+        boolean dataGridUp = checkDataGrid(details);
         boolean kafkaUp = checkKafka(details);
 
-        boolean allUp = dbUp && redisUp && kafkaUp;
+        boolean allUp = dbUp && dataGridUp && kafkaUp;
 
         result.put("status", allUp ? "UP" : "DOWN");
         result.put("service", SERVICE_NAME);
@@ -80,31 +80,24 @@ public class HealthController {
         }
     }
 
-    private boolean checkRedis(Map<String, Object> details) {
-        if (redisConnectionFactory == null) {
-            details.put("redis", "NOT_CONFIGURED");
+    private boolean checkDataGrid(Map<String, Object> details) {
+        if (remoteCacheManager == null) {
+            details.put("datagrid", "NOT_CONFIGURED");
             return true;
         }
         long start = System.currentTimeMillis();
         try {
-            String pong = redisConnectionFactory.getConnection().ping();
+            remoteCacheManager.getCache().containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
-            if ("PONG".equals(pong)) {
-                details.put("redis", "UP");
-                details.put("redis.latency_ms", duration);
-                return true;
-            } else {
-                details.put("redis", "DOWN");
-                details.put("redis.error", "Unexpected PING response: " + pong);
-                details.put("redis.latency_ms", duration);
-                return false;
-            }
+            details.put("datagrid", "UP");
+            details.put("datagrid.latency_ms", duration);
+            return true;
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - start;
-            log.warn("Redis health check failed: {}", e.getMessage());
-            details.put("redis", "DOWN");
-            details.put("redis.error", e.getClass().getSimpleName() + ": " + e.getMessage());
-            details.put("redis.latency_ms", duration);
+            log.warn("Data Grid health check failed: {}", e.getMessage());
+            details.put("datagrid", "DOWN");
+            details.put("datagrid.error", e.getClass().getSimpleName() + ": " + e.getMessage());
+            details.put("datagrid.latency_ms", duration);
             return false;
         }
     }

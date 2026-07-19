@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
-| **Last Release** | `1.9.7` — notification pure domain refactoring, api-portal test config fallbacks, and full reactor 44/44 green build |
-| **Last Updated** | 2026-07-17 (Full backend reactor 44/44 green, Notification & API Portal test remediations complete) |
+| **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
+| **Last Updated** | 2026-07-19 (ARCH-007 local migration complete: JVM Hot Rod, Python REST, shared `payu` JSON-text cache; production TLS/mTLS and canary remain) |
 
 ---
 
@@ -33,8 +33,8 @@
 | INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
-| INFRA-025 | P2 | [cache] ✅ RESOLVED via ARCH-007 — ISPN005061 RESP cursor leak issue eliminated by total migration to Hot Rod native binary protocol (ADR-0017). | ✅ ADR-0017 Accepted |
-| ARCH-007 | P2 | [cache] Infinispan Hot Rod Migration — ✅ ADR-0017 accepted (2026-07-17). Full migration to native Hot Rod protocol, ProtoStream serialization, 10k L1 Near Cache invalidation, SpringRemoteCacheManager + HotRodDistributedCacheServiceImpl. | 🔄 Ready for Execution |
+| INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
+| ARCH-007 | P2 | [cache] Infinispan 16.2.1 migration: Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. Shared `payu` cache uses explicit UTF-8 JSON-text interoperability. Production TLS/mTLS and canary evidence remain. | 🔄 In progress |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
@@ -79,9 +79,9 @@
 
 ### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration
 * **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.
-* **Status**: 🟢 RESOLVED via **ADR-0017** (2026-07-17). Total platform migration from RESP mode to native Infinispan Hot Rod binary protocol (`payu.cache.provider=hotrod`).
-* **Architecture**: Standard `SpringRemoteCacheManager` + programmatic `HotRodDistributedCacheServiceImpl` with ProtoStream binary serialization, SWR soft TTL metadata, and native 10,000 entry L1 Near Cache push invalidation.
-* **Updated**: 2026-07-17 (`grill-with-docs` session).
+* **Status**: 🔄 IN PROGRESS. `cache-starter` uses Infinispan 16.2.1 native Hot Rod with a lazy `RemoteCacheManager`, 10,000-entry invalidated near cache, and explicit UTF-8 JSON-text values in the `payu` cache. Auth refresh tokens, partner SNAP-BI tokens, API-commons atomic paths, and Quarkus gateway paths use Hot Rod. KYC and analytics idempotency use authenticated Data Grid REST because the Python Hot Rod client is unmaintained.
+* **Remaining**: Production TLS/mTLS secret wiring and a 24-hour `payu-dev` canary. Do not claim ARCH-007 complete before those evidence gates pass.
+* **Updated**: 2026-07-19.
 
 ### 🏗️ ARCH-008/009/010: ArchUnit 1.4.2 violations (billing, statement, promotion)
 * **Context**: ArchUnit 1.2.1 → 1.4.2 upgrade in parent POM exposed pre-existing architecture violations that ArchUnit 1.2.1 silently skipped (ASM < 9.5 cannot parse Java 25 bytecode — empty `importPackages()`).
@@ -110,18 +110,18 @@
   1. Infinispan/Data Grid menyediakan RESP endpoint agar RESP-compatible clients bisa terhubung tanpa perubahan besar.
   2. Hot Rod adalah client native Data Grid untuk remote access, dengan API sync/async/Mutiny dan opsi TTL/lifespan pada write operations.
   3. ProtoStream menyediakan schema `.proto`, adapter untuk tipe pihak ketiga, serializer/deserializer compile-time, dan compatibility check untuk perubahan schema.
-* **Problem**: PayU saat ini memakai Data Grid melalui RESP compatibility mode (`RedisTemplate`, Lettuce, Quarkus Redis client, dan env `*REDIS*`). Ini cepat untuk recovery cluster, tetapi aplikasi masih terikat pada semantik Redis dan belum memakai kemampuan native Data Grid.
+* **Status (2026-07-19)**: Java/Quarkus tidak lagi membawa Redis/Lettuce/Quarkus Redis client; cache bernama `payu` tersedia pada Data Grid lokal dengan media type `text/plain`. Focused build, Python REST round-trip, dan REST-write → Hot Rod-read lulus.
 * **Goal**: Migrasi cache/session/rate-limit/idempotency/lock/analytics dari RESP ke Hot Rod tanpa kehilangan key aktif dan tanpa regresi latency.
-* **Decision**: RESP tetap jalur stabilisasi saat ini. Hot Rod dikerjakan sebagai migration track berikutnya setelah cluster `payu-dev` stabil.
+* **Decision**: RESP dihapus dari runtime backend. Hot Rod 16.2.1 adalah satu-satunya client cache Java/Quarkus yang didukung; Python memakai Data Grid REST terautentikasi.
 * **Plan**:
-  1. **Stabilkan RESP sekarang**: selesaikan hardening Data Grid RESP di `cache-starter` dan Quarkus Redis client path, termasuk handshake RESP2, auth `developer`, endpoint `payu-cache-resp:11222`, log scan, dan pod rollout. Tujuan fase ini hanya recovery/stabilitas, bukan redesign.
-  2. **Catat semua Redis API sebagai debt**: inventory penggunaan `RedisTemplate`, `StringRedisTemplate`, `ReactiveRedisTemplate`, Lettuce/Jedis/Redisson, `quarkus-redis-client`, Python `redis`, `QUARKUS_REDIS_HOSTS`, `SPRING_DATA_REDIS_*`, `PAYU_CACHE_REDIS_*`, serta repository/cache class yang memakai command Redis langsung.
-  3. **Mulai Hot Rod dari shared starter**: tambah `datagrid-hotrod-starter` atau refactor `cache-starter` dengan provider switch sementara (`resp`/`hotrod`) untuk canary dan rollback. Business service harus bergantung ke port/adaptor cache, bukan langsung ke `RedisTemplate` atau Hot Rod `RemoteCache`.
-  4. **Canary satu service low-risk**: mulai dari `cms-service` atau `product-catalog-service`. Petakan operasi `GET`, `SETEX`, `DEL`, `EXISTS`, `INCR+EXPIRE`, `SCAN`, lock, idempotency replay, dan rate-limit ke operasi Hot Rod/Data Grid. Validasi TTL expiry, serialization round-trip, atomicity, rollback provider switch, dan p95 latency.
-  5. **Migrasi path kritis bertahap**: setelah canary stabil, lanjut ke scheduler-heavy `partner-service`/`billing-service`, lalu gateway/rate-limit/idempotency paths, terakhir Quarkus/Python services. Untuk idempotency key/payment replay, lock scheduler, rate-limit counter, dan session, pakai dual-read/dual-write atau tunggu TTL aktif selesai sebelum cutover.
-  6. **Cleanup setelah stabil**: setelah canary `payu-dev` minimal 24 jam tanpa `RedisConnectionException`, duplicate payment replay, scheduler lock overlap, atau p95 cache latency regression >10%, hapus RESP-only env `PAYU_CACHE_REDIS_*`, direct `RedisTemplate` usage dari aplikasi, RESP service alias, dan dokumentasi compatibility mode yang tidak lagi berlaku.
+  1. **Completed**: migrate cache, auth refresh token, partner SNAP-BI token, API-common idempotency/rate limit/webhook, and gateway API keys, analytics, authorization, idempotency, and rate limiting to Hot Rod.
+  2. **Completed**: remove Java RESP dependencies and direct Redis APIs; use native TTL and versioned CAS for counters/sliding windows.
+  3. **Completed**: migrate every `payu.cache.redis` profile block to `payu.cache.hotrod`; local profiles default to `localhost:11222`, while container/non-local profiles require `PAYU_CACHE_HOTROD_SERVER_LIST`.
+  4. **Completed**: shared `payu` cache uses UTF-8 JSON-text values so Data Grid REST and Hot Rod address identical keys; Java uses `UTF8StringMarshaller`.
+  5. **Completed**: Python KYC/analytics idempotency uses the authenticated Data Grid REST API; the unmaintained Python Hot Rod client is not introduced.
+  6. **In progress**: wire production TLS/mTLS secrets and run a 24-hour `payu-dev` canary with p95/error/duplicate-replay evidence before production promotion.
 * **Done criteria**:
   1. Tidak ada business code yang inject `RedisTemplate`/`StringRedisTemplate` langsung.
-  2. Semua workload memakai Hot Rod endpoint Data Grid dan secret refs, tanpa inline credential.
+  2. Java/Quarkus memakai Hot Rod dan Python memakai Data Grid REST, semuanya memakai secret refs tanpa inline credential.
   3. Idempotency/rate-limit/lock tests hijau di Hot Rod profile.
   4. `payu-dev` canary 24 jam tanpa `RedisConnectionException`, duplicate payment replay, scheduler lock overlap, atau p95 cache latency regression >10%.

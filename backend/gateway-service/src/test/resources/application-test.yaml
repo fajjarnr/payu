@@ -13,8 +13,6 @@ quarkus:
     token:
       issuer: http://localhost:8080/realms/payu
       audience: gateway-service
-  redis:
-    hosts: redis://localhost:6379
   log:
     level: WARN
     category:

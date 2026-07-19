@@ -1,8 +1,8 @@
 package id.payu.gateway.application.service;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
@@ -30,7 +30,7 @@ public class ApiKeyRotationService {
     GatewayConfig config;
 
     @Inject
-    ReactiveRedisDataSource redis;
+    HotRodCacheClient cache;
 
     private boolean enabled;
 
@@ -48,12 +48,10 @@ public class ApiKeyRotationService {
         random.nextBytes(keyBytes);
         String apiKey = Base64.getUrlEncoder().withoutPadding().encodeToString(keyBytes);
 
-        // Store in Redis
-        String redisKey = API_KEY_PREFIX + apiKey;
+        String cacheKey = API_KEY_PREFIX + apiKey;
         Instant expiresAt = Instant.now().plus(config.apiKeys().rotation().autoRotateDays(), ChronoUnit.DAYS);
 
-        redis.value(String.class)
-            .setex(redisKey, config.apiKeys().rotation().autoRotateDays() * 86400, userId)
+        cache.put(cacheKey, userId, java.time.Duration.ofDays(config.apiKeys().rotation().autoRotateDays()))
             .subscribe()
             .with(
                 unused -> {
@@ -75,9 +73,9 @@ public class ApiKeyRotationService {
             return Uni.createFrom().item((String) null);
         }
 
-        String redisKey = API_KEY_PREFIX + apiKey;
+        String cacheKey = API_KEY_PREFIX + apiKey;
 
-        return redis.value(String.class).get(redisKey)
+        return cache.get(cacheKey)
             .map(userId -> {
                 Log.debugf("API key validated for user: %s", userId);
                 return userId;
@@ -93,16 +91,16 @@ public class ApiKeyRotationService {
      */
     public Uni<String> rotateApiKey(String oldApiKey) {
         // Get user ID from old key
-        String redisKey = API_KEY_PREFIX + oldApiKey;
+        String cacheKey = API_KEY_PREFIX + oldApiKey;
 
-        return redis.value(String.class).get(redisKey)
+        return cache.get(cacheKey)
             .flatMap(userId -> {
                 if (userId == null) {
                     return Uni.createFrom().failure(new IllegalArgumentException("Invalid API key"));
                 }
 
                 // Delete old key
-                return redis.key().del(redisKey)
+                return cache.remove(cacheKey)
                     .flatMap(deleted -> {
                         // Generate new key
                         String newApiKey = generateApiKey(userId);
@@ -126,7 +124,7 @@ public class ApiKeyRotationService {
 
         Log.debug("Checking for expiring API keys...");
 
-        // In production, you'd scan Redis for keys approaching expiration
+        // In production, query cache metadata for keys approaching expiration
         // and send notifications to users
 
         Instant warningThreshold = Instant.now().plus(
@@ -143,7 +141,7 @@ public class ApiKeyRotationService {
     public Uni<ApiKeyMetadata> getApiKeyMetadata(String apiKey) {
         String metadataKey = API_KEY_METADATA_PREFIX + apiKey;
 
-        return redis.value(String.class).get(metadataKey)
+        return cache.get(metadataKey)
             .map(metadata -> {
                 String[] parts = metadata.split(":");
                 return new ApiKeyMetadata(
@@ -163,8 +161,7 @@ public class ApiKeyRotationService {
             expiresAt.toString()
         );
 
-        redis.value(String.class)
-            .setex(metadataKey, config.apiKeys().rotation().autoRotateDays() * 86400, metadata)
+        cache.put(metadataKey, metadata, java.time.Duration.ofDays(config.apiKeys().rotation().autoRotateDays()))
             .subscribe()
             .with(
                 unused -> Log.debugf("Stored API key metadata for %s", apiKey),

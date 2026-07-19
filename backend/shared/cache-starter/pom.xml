@@ -35,23 +35,10 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Spring Data Redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
-        <!-- Lettuce for Redis connection -->
-        <dependency>
-            <groupId>io.lettuce</groupId>
-            <artifactId>lettuce-core</artifactId>
-        </dependency>
-
         <!-- Infinispan Hot Rod Native Client (ARCH-007) -->
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Spring AOP for aspects (SB 4.0+: starter-aop removed, use aspectjweaver directly) -->
@@ -152,7 +139,7 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-bom</artifactId>
-                <version>15.0.11.Final</version>
+                <version>16.2.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

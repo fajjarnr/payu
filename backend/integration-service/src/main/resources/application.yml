@@ -106,10 +106,9 @@ management:
 
 payu:
   cache:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      ttl: 3600
+    hotrod:
+      server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}
+      cache-name: payu
   integration:
     api:
       server-url: https://integration.payu.fajjjar.my.id

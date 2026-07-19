@@ -60,10 +60,11 @@
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
-        <!-- Redis for rate limiting and caching -->
+        <!-- Native Infinispan Hot Rod client -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-redis-client</artifactId>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
+            <version>16.2.1</version>
         </dependency>
 
         <!-- Cache annotations -->

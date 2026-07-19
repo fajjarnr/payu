@@ -1,6 +1,6 @@
-# ADR-0017: Full Migration to Native Infinispan Hot Rod Protocol & ProtoStream
+# ADR-0017: Native Hot Rod Migration with a Shared REST Interoperability Contract
 
-**Status**: Accepted  
+**Status**: Accepted — amended 2026-07-19
 **Date**: 2026-07-17  
 **Deciders**: Principal Architect, Core Banking Engineering Team, Infrastructure Team  
 
@@ -60,6 +60,21 @@ We will perform a **Full Migration to Native Infinispan Hot Rod Protocol**:
 **Negative**:
 - Cached DTOs require `@ProtoDoc` / `@ProtoField` annotations or ProtoStream schema initializers.
 - Hot Rod port (`11222`) must be strictly exposed and secured via TLS/SASL across OpenShift namespaces.
+
+## Amendment — 2026-07-19
+
+Java and Quarkus remain native Hot Rod 16.2.1 clients; RESP is removed from their runtime path. Python KYC and analytics use the supported Data Grid REST endpoint because the official Python Hot Rod client is unmaintained.
+
+The cross-protocol `payu` cache therefore has one explicit contract:
+
+1. Name: `payu`.
+2. Key and value media types: `text/plain`.
+3. Structured values: JSON text.
+4. Java/Quarkus: Hot Rod with `UTF8StringMarshaller`.
+5. Python: authenticated Data Grid REST with Digest or Basic auth, CA validation, and optional client certificate.
+6. A configured Python REST cache fails closed; only an unset local endpoint uses the in-memory development fallback.
+
+ProtoStream is deferred to dedicated JVM-only, typed caches after their schema initializer and server schemas are delivered. It is not used by the cross-language `payu` cache.
 
 ## Implementation Plan
 

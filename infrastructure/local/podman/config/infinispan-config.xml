@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     Infinispan 15.2 server config, matching Data Grid 8.6 protocol behavior.
-    RESP shares the endpoint port 11222, as it does on OpenShift.
-    Authentication is enabled on RESP using the default properties realm.
-    The container's USER/PASS env vars populate this realm via launch.sh.
+    Hot Rod and REST share endpoint port 11222.
+    The container's USER/PASS env vars populate the default properties realm.
 -->
 <infinispan
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -17,6 +16,12 @@
         <security>
             <authorization/>
         </security>
+        <local-cache name="payu">
+            <encoding>
+                <key media-type="text/plain"/>
+                <value media-type="text/plain"/>
+            </encoding>
+        </local-cache>
     </cache-container>
 
     <server xmlns="urn:infinispan:server:15.2">
@@ -42,7 +47,6 @@
             <endpoint>
                 <rest-connector/>
                 <hotrod-connector/>
-                <resp-connector security-realm="default"/>
             </endpoint>
         </endpoints>
     </server>

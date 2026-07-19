@@ -4,7 +4,10 @@ import id.payu.cache.properties.CacheProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.NearCacheMode;
+import org.infinispan.commons.marshall.UTF8StringMarshaller;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +28,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @ConditionalOnProperty(prefix = "payu.cache", name = "provider", havingValue = "hotrod")
 public class HotRodCacheConfig {
 
+    private static final int NEAR_CACHE_MAX_ENTRIES = 10_000;
+
     private final CacheProperties properties;
 
     @Bean(destroyMethod = "stop")
@@ -35,6 +40,11 @@ public class HotRodCacheConfig {
 
         ConfigurationBuilder builder = new ConfigurationBuilder();
         builder.addServers(properties.getHotrod().getServerList());
+        builder.marshaller(UTF8StringMarshaller.class);
+        builder.clientIntelligence(ClientIntelligence.valueOf(properties.getHotrod().getClientIntelligence()));
+        builder.remoteCache(properties.getHotrod().getCacheName())
+                .nearCacheMode(NearCacheMode.INVALIDATED)
+                .nearCacheMaxEntries(NEAR_CACHE_MAX_ENTRIES);
 
         if (properties.getHotrod().getAuthUsername() != null && !properties.getHotrod().getAuthUsername().isEmpty()) {
             builder.security()
@@ -49,6 +59,6 @@ public class HotRodCacheConfig {
             builder.security().ssl().enable();
         }
 
-        return new RemoteCacheManager(builder.build());
+        return new RemoteCacheManager(builder.build(), false);
     }
 }

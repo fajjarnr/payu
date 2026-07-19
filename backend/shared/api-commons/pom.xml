@@ -86,13 +86,6 @@
             <artifactId>spring-data-commons</artifactId>
         </dependency>
 
-        <!-- Redis for rate limiting (optional) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- JPA for Money Value Object persistence (optional) -->
         <dependency>
             <groupId>jakarta.persistence</groupId>
@@ -123,6 +116,12 @@
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>outbox-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>cache-starter</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 

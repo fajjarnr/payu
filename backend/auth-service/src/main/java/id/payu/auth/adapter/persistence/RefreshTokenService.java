@@ -1,9 +1,8 @@
 package id.payu.auth.adapter.persistence;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import id.payu.cache.service.DistributedCache;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -29,17 +28,17 @@ import java.util.UUID;
 @Component
 public class RefreshTokenService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final DistributedCache distributedCache;
     private final BCryptPasswordEncoder tokenEncoder = new BCryptPasswordEncoder(12);
 
     // Refresh token lifetime: 7 days
     private static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(7);
 
-    // Redis key prefix for storing refresh tokens
+    // Cache key prefix for storing refresh tokens
     private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
 
-    public RefreshTokenService(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public RefreshTokenService(DistributedCache distributedCache) {
+        this.distributedCache = distributedCache;
     }
 
     /**
@@ -53,26 +52,19 @@ public class RefreshTokenService {
         String rawToken = generateRawToken(tokenId);
         String hashedToken = hashToken(rawToken);
 
-        RefreshTokenMetadata metadata = RefreshTokenMetadata.builder()
-                .tokenId(tokenId)
-                .userId(userId)
-                .createdAt(Instant.now())
-                .expiresAt(Instant.now().plus(REFRESH_TOKEN_TTL))
-                .rotationCount(0)
-                .hashedToken(hashedToken)
-                .build();
+        RefreshTokenMetadata metadata = new RefreshTokenMetadata(
+                tokenId, userId, Instant.now(), Instant.now().plus(REFRESH_TOKEN_TTL), 0, hashedToken);
 
-        // Store the hashed token in Redis
-        String redisKey = buildRedisKey(userId, tokenId);
-        redisTemplate.opsForValue().set(redisKey, metadata, REFRESH_TOKEN_TTL);
+        String cacheKey = buildCacheKey(userId, tokenId);
+        distributedCache.put(cacheKey, metadata, REFRESH_TOKEN_TTL);
 
         // Store reverse index: tokenId -> userId for O(1) lookup
         String reverseIndexKey = buildReverseIndexKey(tokenId);
-        redisTemplate.opsForValue().set(reverseIndexKey, userId, REFRESH_TOKEN_TTL);
+        distributedCache.put(reverseIndexKey, userId, REFRESH_TOKEN_TTL);
 
         log.info("Created refresh token for user: {}, tokenId: {}", maskUserId(userId), tokenId);
 
-        return new RefreshTokenResponse(rawToken, metadata.getExpiresAt());
+        return new RefreshTokenResponse(rawToken, metadata.expiresAt());
     }
 
     /**
@@ -92,8 +84,7 @@ public class RefreshTokenService {
         // Extract token ID from the raw token
         String tokenId = extractTokenId(oldRefreshToken);
 
-        // Find the token metadata from Redis (search by iterating user tokens)
-        // In production, you'd store a reverse index for faster lookup
+        // Find token metadata through its reverse index.
         RefreshTokenMetadata metadata = findTokenMetadata(tokenId);
 
         if (metadata == null) {
@@ -103,29 +94,29 @@ public class RefreshTokenService {
         }
 
         // Check if token has expired
-        if (Instant.now().isAfter(metadata.getExpiresAt())) {
+        if (Instant.now().isAfter(metadata.expiresAt())) {
             log.warn("Attempt to use expired refresh token for user: {}",
-                    maskUserId(metadata.getUserId()));
+                    maskUserId(metadata.userId()));
             throw new org.springframework.security.authentication.BadCredentialsException(
                     "Refresh token has expired");
         }
 
         // Verify the token hash matches
-        if (!tokenEncoder.matches(oldRefreshToken, metadata.getHashedToken())) {
+        if (!tokenEncoder.matches(oldRefreshToken, metadata.hashedToken())) {
             log.warn("Attempt to use invalid refresh token for user: {}",
-                    maskUserId(metadata.getUserId()));
+                    maskUserId(metadata.userId()));
             throw new org.springframework.security.authentication.BadCredentialsException(
                     "Invalid refresh token");
         }
 
         // Invalidate the old token
-        invalidateToken(metadata.getUserId(), tokenId);
+        invalidateToken(metadata.userId(), tokenId);
 
         // Create a new token (rotation)
-        RefreshTokenResponse newToken = createRefreshToken(metadata.getUserId());
+        RefreshTokenResponse newToken = createRefreshToken(metadata.userId());
 
         log.info("Rotated refresh token for user: {}, previous rotation count: {}",
-                maskUserId(metadata.getUserId()), metadata.getRotationCount());
+                maskUserId(metadata.userId()), metadata.rotationCount());
 
         return newToken;
     }
@@ -137,10 +128,10 @@ public class RefreshTokenService {
      * @param tokenId The token ID
      */
     public void invalidateToken(String userId, String tokenId) {
-        String redisKey = buildRedisKey(userId, tokenId);
+        String cacheKey = buildCacheKey(userId, tokenId);
         String reverseIndexKey = buildReverseIndexKey(tokenId);
-        redisTemplate.delete(redisKey);
-        redisTemplate.delete(reverseIndexKey);
+        distributedCache.evict(cacheKey);
+        distributedCache.evict(reverseIndexKey);
         log.info("Invalidated refresh token for user: {}, tokenId: {}", maskUserId(userId), tokenId);
     }
 
@@ -151,13 +142,8 @@ public class RefreshTokenService {
      * @param userId The user ID
      */
     public void invalidateAllUserTokens(String userId) {
-        // In production, you'd maintain a set of token IDs per user
-        // For now, we'll use a pattern-based deletion
         String pattern = REFRESH_TOKEN_PREFIX + userId + ":*";
-        java.util.Set<String> keys = redisTemplate.keys(pattern);
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
+        distributedCache.evictMatching(pattern);
         log.info("Invalidated all refresh tokens for user: {}", maskUserId(userId));
     }
 
@@ -177,11 +163,11 @@ public class RefreshTokenService {
                 return false;
             }
 
-            if (Instant.now().isAfter(metadata.getExpiresAt())) {
+            if (Instant.now().isAfter(metadata.expiresAt())) {
                 return false;
             }
 
-            return tokenEncoder.matches(refreshToken, metadata.getHashedToken());
+            return tokenEncoder.matches(refreshToken, metadata.hashedToken());
         } catch (Exception e) {
             log.warn("Error validating refresh token: {}", e.getMessage());
             return false;
@@ -196,18 +182,16 @@ public class RefreshTokenService {
      * @return RefreshTokenMetadata if found, null otherwise
      */
     private RefreshTokenMetadata findTokenMetadata(String tokenId) {
-        // Use reverse index to find userId from tokenId
         String reverseIndexKey = buildReverseIndexKey(tokenId);
-        String userId = (String) redisTemplate.opsForValue().get(reverseIndexKey);
+        String userId = distributedCache.get(reverseIndexKey, String.class);
 
         if (userId == null) {
             log.debug("Token ID not found in reverse index: {}", tokenId);
             return null;
         }
 
-        // Now fetch the full metadata using userId and tokenId
-        String redisKey = buildRedisKey(userId, tokenId);
-        RefreshTokenMetadata metadata = (RefreshTokenMetadata) redisTemplate.opsForValue().get(redisKey);
+        String cacheKey = buildCacheKey(userId, tokenId);
+        RefreshTokenMetadata metadata = distributedCache.get(cacheKey, RefreshTokenMetadata.class);
 
         if (metadata == null) {
             log.warn("Metadata not found for token ID: {} and user: {}", tokenId, maskUserId(userId));
@@ -247,7 +231,7 @@ public class RefreshTokenService {
     /**
      * Builds Redis key for storing token metadata.
      */
-    private String buildRedisKey(String userId, String tokenId) {
+    private String buildCacheKey(String userId, String tokenId) {
         return REFRESH_TOKEN_PREFIX + userId + ":" + tokenId;
     }
 
@@ -293,37 +277,12 @@ public class RefreshTokenService {
         }
     }
 
-    @lombok.Builder
-    static class RefreshTokenMetadata {
-        private String tokenId;
-        private String userId;
-        private Instant createdAt;
-        private Instant expiresAt;
-        private int rotationCount;
-        private String hashedToken;
-
-        public String getTokenId() {
-            return tokenId;
-        }
-
-        public String getUserId() {
-            return userId;
-        }
-
-        public Instant getCreatedAt() {
-            return createdAt;
-        }
-
-        public Instant getExpiresAt() {
-            return expiresAt;
-        }
-
-        public int getRotationCount() {
-            return rotationCount;
-        }
-
-        public String getHashedToken() {
-            return hashedToken;
-        }
+    record RefreshTokenMetadata(
+            String tokenId,
+            String userId,
+            Instant createdAt,
+            Instant expiresAt,
+            int rotationCount,
+            String hashedToken) {
     }
 }

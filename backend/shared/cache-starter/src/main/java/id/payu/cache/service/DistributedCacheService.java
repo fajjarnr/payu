@@ -1,6 +1,7 @@
 package id.payu.cache.service;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.cache.model.CacheEntry;
 import id.payu.cache.properties.CacheProperties;
@@ -8,34 +9,36 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.MetadataValue;
+import org.infinispan.commons.util.CloseableIterator;
 
 import java.time.Duration;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
- * Distributed cache service using Redis/Red Hat Data Grid with stale-while-revalidate support.
+ * Distributed cache service with stale-while-revalidate support.
  *
- * <p>Compatible with both Redis and Red Hat Data Grid (Infinispan) in RESP protocol mode.
- * Uses Lettuce client with JSON serialization for portable, cross-platform caching.</p>
+ * <p>Uses native Infinispan Hot Rod.</p>
  *
  * <p>Features:</p>
  * <ul>
- *   <li>Redis/Data Grid distributed caching via RESP protocol</li>
+ *   <li>Data Grid distributed caching via Hot Rod protocol</li>
  *   <li>Stale-while-revalidate pattern</li>
  *   <li>Type-safe deserialization via ObjectMapper.convertValue()</li>
  *   <li>Metrics tracking with Micrometer</li>
- *   <li>Automatic JSON serialization (GenericJackson2JsonRedisSerializer)</li>
+ *   <li>Automatic JSON serialization</li>
  *   <li>Connection failure handling</li>
  * </ul>
  */
 @Slf4j
-public class DistributedCacheService {
+public class DistributedCacheService implements DistributedCache, DistributedAtomicCache {
 
     private static final Set<String> SERIALIZER_METADATA_KEYS = Set.of(
         "@class",
@@ -54,41 +57,38 @@ public class DistributedCacheService {
         "javaClass"
     );
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final ValueOperations<String, Object> valueOps;
+    private final Supplier<RemoteCache<String, Object>> hotRodCacheSupplier;
     private final CacheProperties properties;
     private final ObjectMapper objectMapper;
 
     // Metrics
-    private final Counter hitCounter;
-    private final Counter missCounter;
-    private final Counter staleCounter;
-    private final Counter errorCounter;
-    private final Timer getTimer;
-    private final Timer putTimer;
+    private Counter hitCounter;
+    private Counter missCounter;
+    private Counter staleCounter;
+    private Counter errorCounter;
+    private Timer getTimer;
+    private Timer putTimer;
 
     /**
-     * Creates DistributedCacheService with a pre-configured RedisTemplate.
-     * The template should use GenericJackson2JsonRedisSerializer for DataGrid/Redis compatibility.
+     * Creates a native Hot Rod cache service.
      *
-     * @param redisTemplate pre-configured template (from RedisCacheConfig)
-     * @param properties    cache configuration properties
+     * @param hotRodCache configured named remote cache
+     * @param properties cache configuration properties
      */
-    public DistributedCacheService(
-            RedisTemplate<String, Object> redisTemplate,
+    protected DistributedCacheService(
+            Supplier<RemoteCache<String, Object>> hotRodCacheSupplier,
             CacheProperties properties) {
         this.properties = properties;
-
-        // ObjectMapper for type-safe deserialization (BUG-BE-074 fix)
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModules(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        this.hotRodCacheSupplier = hotRodCacheSupplier;
 
-        // Use the pre-configured RedisTemplate with JSON serializers
-        // This ensures consistency with RedisCacheConfig and DataGrid compatibility
-        this.redisTemplate = redisTemplate;
-        this.valueOps = redisTemplate.opsForValue();
+        initializeMetrics();
+        log.info("Distributed cache service initialized with native Hot Rod backend");
+    }
 
-        // Initialize metrics
+    private void initializeMetrics() {
         String prefix = "cache.distributed";
         this.hitCounter = Metrics.counter(prefix + ".hits");
         this.missCounter = Metrics.counter(prefix + ".misses");
@@ -97,7 +97,6 @@ public class DistributedCacheService {
         this.getTimer = Metrics.timer(prefix + ".get");
         this.putTimer = Metrics.timer(prefix + ".put");
 
-        log.info("Distributed cache service initialized");
     }
 
     /**
@@ -117,7 +116,7 @@ public class DistributedCacheService {
         Timer.Sample sample = Timer.start();
 
         try {
-            Object value = valueOps.get(key);
+            Object value = getRaw(key);
 
             if (value == null) {
                 missCounter.increment();
@@ -187,7 +186,7 @@ public class DistributedCacheService {
             long hardTtlSeconds) {
 
         try {
-            Object value = valueOps.get(key);
+            Object value = getRaw(key);
 
             if (value == null) {
                 missCounter.increment();
@@ -238,7 +237,7 @@ public class DistributedCacheService {
      */
     public <T> CacheEntry<T> getEntry(String key, Class<T> type) {
         try {
-            Object value = valueOps.get(key);
+            Object value = getRaw(key);
             // BUG-BE-074: Type-safe conversion from deserialized JSON
             return convertToCacheEntry(value, type);
         } catch (Exception e) {
@@ -256,7 +255,7 @@ public class DistributedCacheService {
         try {
             Duration ttl = properties.getDefaultTtl();
             CacheEntry<Object> entry = CacheEntry.create(value, ttl.getSeconds());
-            valueOps.set(key, entry, ttl);
+            putRaw(key, entry, ttl);
             log.debug("Put key in cache: {} with TTL: {}", key, ttl);
         } catch (Exception e) {
             errorCounter.increment();
@@ -281,7 +280,7 @@ public class DistributedCacheService {
 
         try {
             CacheEntry<Object> entry = CacheEntry.create(value, softTtlSeconds, hardTtlSeconds);
-            valueOps.set(key, entry, Duration.ofSeconds(hardTtlSeconds));
+            putRaw(key, entry, Duration.ofSeconds(hardTtlSeconds));
             log.debug("Put key in cache: {} with softTTL: {}s, hardTTL: {}s",
                     key, softTtlSeconds, hardTtlSeconds);
         } catch (Exception e) {
@@ -297,7 +296,7 @@ public class DistributedCacheService {
      */
     public void evict(String key) {
         try {
-            redisTemplate.delete(key);
+            hotRodCache().remove(key);
             log.debug("Evicted key from cache: {}", key);
         } catch (Exception e) {
             log.error("Error evicting from cache for key {}: {}", key, e.getMessage());
@@ -309,8 +308,7 @@ public class DistributedCacheService {
      */
     public boolean exists(String key) {
         try {
-            Boolean exists = redisTemplate.hasKey(key);
-            return Boolean.TRUE.equals(exists);
+            return hotRodCache().containsKey(key);
         } catch (Exception e) {
             log.error("Error checking cache for key {}: {}", key, e.getMessage());
             return false;
@@ -318,10 +316,87 @@ public class DistributedCacheService {
     }
 
     /**
-     * Get Redis template for advanced operations.
+     * Evict keys matching a cache invalidation glob.
      */
-    public RedisTemplate<String, Object> getRedisTemplate() {
-        return redisTemplate;
+    public void evictMatching(String pattern) {
+        Pattern matcher = Pattern.compile(Pattern.quote(pattern).replace("*", "\\E.*\\Q"));
+        RemoteCache<String, Object> cache = hotRodCache();
+        try (CloseableIterator<String> keys = cache.keySet().iterator()) {
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (matcher.matcher(key).matches()) {
+                    cache.remove(key);
+                }
+            }
+        }
+    }
+
+    @Override
+    public String getString(String key) {
+        Object value = hotRodCache().get(key);
+        return value == null ? null : value.toString();
+    }
+
+    @Override
+    public void putString(String key, String value, Duration ttl) {
+        hotRodCache().put(key, value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public boolean putStringIfAbsent(String key, String value, Duration ttl) {
+        return hotRodCache().putIfAbsent(key, value, ttl.toMillis(), TimeUnit.MILLISECONDS) == null;
+    }
+
+    @Override
+    public boolean replaceString(String key, String value, Duration ttl) {
+        MetadataValue<Object> current = hotRodCache().getWithMetadata(key);
+        return current != null && hotRodCache().replaceWithVersion(
+                key, value, current.getVersion(), ttl.toMillis(), TimeUnit.MILLISECONDS, -1, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public long increment(String key, Duration ttl) {
+        RemoteCache<String, Object> cache = hotRodCache();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            MetadataValue<Object> current = cache.getWithMetadata(key);
+            if (current == null) {
+                if (cache.putIfAbsent(key, "1", ttl.toMillis(), TimeUnit.MILLISECONDS) == null) {
+                    return 1L;
+                }
+                continue;
+            }
+
+            long next = Long.parseLong(current.getValue().toString()) + 1;
+            if (cache.replaceWithVersion(key, Long.toString(next), current.getVersion())) {
+                return next;
+            }
+        }
+        throw new IllegalStateException("Could not atomically increment cache key: " + key);
+    }
+
+    @Override
+    public long getRemainingTtlSeconds(String key) {
+        MetadataValue<Object> metadata = hotRodCache().getWithMetadata(key);
+        if (metadata == null || metadata.getLifespan() <= 0) {
+            return -1L;
+        }
+        long expiresAtMillis = metadata.getCreated() + TimeUnit.SECONDS.toMillis(metadata.getLifespan());
+        return Math.max(0L, TimeUnit.MILLISECONDS.toSeconds(expiresAtMillis - System.currentTimeMillis()));
+    }
+
+    private Object getRaw(String key) throws IOException {
+        Object value = hotRodCache().get(key);
+        return value instanceof String json
+                ? objectMapper.readValue(json, Object.class)
+                : value;
+    }
+
+    private void putRaw(String key, Object value, Duration ttl) throws com.fasterxml.jackson.core.JsonProcessingException {
+        hotRodCache().put(key, objectMapper.writeValueAsString(value), ttl.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    private RemoteCache<String, Object> hotRodCache() {
+        return hotRodCacheSupplier.get();
     }
 
     // --- BUG-BE-074: Type-safe conversion helpers ---

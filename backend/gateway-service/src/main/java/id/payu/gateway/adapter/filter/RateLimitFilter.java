@@ -1,11 +1,8 @@
 package id.payu.gateway.adapter.filter;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.redis.client.Command;
-import io.vertx.mutiny.redis.client.Request;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,7 +14,6 @@ import jakarta.ws.rs.ext.Provider;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Consolidated rate limiting filter using Redis sorted sets for sliding window.
@@ -90,11 +86,11 @@ public class RateLimitFilter implements ContainerRequestFilter {
     GatewayConfig config;
 
     @Inject
-    ReactiveRedisDataSource redisDataSource;
+    HotRodCacheClient cache;
 
     @PostConstruct
     void init() {
-        Log.info("RateLimitFilter initialized (sliding window, Redis-backed)");
+        Log.info("RateLimitFilter initialized (sliding window, Data Grid-backed)");
     }
 
     @Override
@@ -180,50 +176,19 @@ public class RateLimitFilter implements ContainerRequestFilter {
                 );
             }
         } catch (Exception e) {
-            // Fail-open: if Redis is unavailable, allow the request
-            Log.warnf(e, "Rate limit check failed (Redis unavailable?), allowing request for client=%s", clientId);
+            // Fail-open: if Data Grid is unavailable, allow the request
+            Log.warnf(e, "Rate limit check failed (Data Grid unavailable?), allowing request for client=%s", clientId);
         }
     }
 
     /**
-     * Sliding window rate limit check using Redis sorted sets.
-     * <p>
-     * Algorithm:
-     * 1. ZREMRANGEBYSCORE — remove entries outside the window
-     * 2. ZADD — add current request with timestamp as score
-     * 3. ZCARD — count entries in window
-     * 4. EXPIRE — set TTL on the key for cleanup
-     * All executed atomically via Redis pipeline.
+     * Sliding window rate limit check using one Hot Rod versioned cache entry.
      */
     private SlidingWindowResult checkSlidingWindow(String key, int maxRequests, int windowSeconds) {
-        long nowMicros = System.currentTimeMillis() * 1000 + (System.nanoTime() % 1000);
-        double nowScore = (double) nowMicros;
-        double windowStart = (double) ((System.currentTimeMillis() - (windowSeconds * 1000L)) * 1000);
-        String member = UUID.randomUUID().toString();
-        long windowResetEpoch = Instant.now().getEpochSecond() + windowSeconds;
-
-        // Execute sliding window operations using the reactive Redis API
-        io.vertx.mutiny.redis.client.RedisAPI redisAPI =
-                io.vertx.mutiny.redis.client.RedisAPI.api(redisDataSource.getRedis());
-
-        // Step 1: Remove old entries outside the window
-        redisAPI.zremrangebyscore(key, "0", String.valueOf(windowStart))
+        HotRodCacheClient.SlidingWindow window = cache.recordSlidingWindowRequest(key, Duration.ofSeconds(windowSeconds))
                 .await().atMost(Duration.ofSeconds(2));
-
-        // Step 2: Add new entry with current timestamp as score
-        redisAPI.zadd(java.util.List.of(key, String.valueOf(nowScore), member))
-                .await().atMost(Duration.ofSeconds(2));
-
-        // Step 3: Get count of entries in window
-        io.vertx.mutiny.redis.client.Response countResp =
-                redisAPI.zcard(key).await().atMost(Duration.ofSeconds(2));
-        long count = countResp != null ? countResp.toLong() : 0;
-
-        // Step 4: Set expiry on key for automatic cleanup
-        redisAPI.expire(java.util.List.of(key, String.valueOf(windowSeconds * 2)))
-                .await().atMost(Duration.ofSeconds(2));
-
-        return new SlidingWindowResult(count, count > maxRequests, windowResetEpoch);
+        long windowResetEpoch = (window.oldestRequestEpochMillis() / 1000) + windowSeconds;
+        return new SlidingWindowResult(window.count(), window.count() > maxRequests, windowResetEpoch);
     }
 
     private String determineCategory(String path) {

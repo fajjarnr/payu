@@ -7,7 +7,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.health.contributor.Status;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ import java.util.Map;
  * <p>This checks if all critical dependencies are available:</p>
  * <ul>
  *   <li>Database: Can establish connection</li>
- *   <li>Redis: Can establish connection</li>
+ *   <li>Data Grid: Can establish a native Hot Rod operation</li>
  *   <li>Kafka: Listeners are running</li>
  * </ul>
  */
@@ -34,7 +34,7 @@ public class ReadinessHealthIndicator implements HealthIndicator {
     private static final Logger log = LoggerFactory.getLogger(ReadinessHealthIndicator.class);
 
     private final DataSource dataSource;
-    private final RedisConnectionFactory redisConnectionFactory;
+    private final RemoteCacheManager remoteCacheManager;
     private final ListenerContainerRegistry listenerRegistry;
 
     @Override
@@ -44,14 +44,13 @@ public class ReadinessHealthIndicator implements HealthIndicator {
         // Check database - only connection, no query
         boolean dbReady = isDatabaseReady(details);
 
-        // Check Redis - only connection, no ping
-        boolean redisReady = isRedisReady(details);
+        boolean dataGridReady = isDataGridReady(details);
 
         // Check Kafka - listeners running
         boolean kafkaReady = isKafkaReady(details);
 
         // Overall status
-        boolean allReady = dbReady && redisReady && kafkaReady;
+        boolean allReady = dbReady && dataGridReady && kafkaReady;
         Status status = allReady ? Status.UP : Status.OUT_OF_SERVICE;
 
         return Health.status(status)
@@ -80,22 +79,22 @@ public class ReadinessHealthIndicator implements HealthIndicator {
     }
 
     /**
-     * Check if Redis is ready (can establish connection).
+     * Check if Data Grid is ready (can establish a native Hot Rod operation).
      */
-    private boolean isRedisReady(Map<String, Object> details) {
+    private boolean isDataGridReady(Map<String, Object> details) {
         long start = System.currentTimeMillis();
         try {
-            redisConnectionFactory.getConnection().close();
+            remoteCacheManager.getCache().containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
-            details.put("redis", "UP");
-            details.put("redis.latency", duration + "ms");
+            details.put("datagrid", "UP");
+            details.put("datagrid.latency", duration + "ms");
             return true;
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - start;
-            log.warn("Redis readiness check failed: {}", e.getMessage());
-            details.put("redis", "DOWN");
-            details.put("redis.error", e.getClass().getSimpleName());
-            details.put("redis.latency", duration + "ms");
+            log.warn("Data Grid readiness check failed: {}", e.getMessage());
+            details.put("datagrid", "DOWN");
+            details.put("datagrid.error", e.getClass().getSimpleName());
+            details.put("datagrid.latency", duration + "ms");
             return false;
         }
     }

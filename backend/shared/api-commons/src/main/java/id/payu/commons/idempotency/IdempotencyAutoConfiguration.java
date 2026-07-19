@@ -1,17 +1,16 @@
 package id.payu.commons.idempotency;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.cache.service.DistributedAtomicCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -20,7 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>
  * This auto-configuration sets up all necessary beans for idempotency handling:
  * <ul>
- *   <li>{@link IdempotencyRepository} - Redis-based repository implementation</li>
+ *   <li>{@link IdempotencyRepository} - distributed-cache repository implementation</li>
  *   <li>{@link IdempotencyService} - Core idempotency service</li>
  *   <li>{@link IdempotencyInterceptor} - HTTP interceptor for automatic handling</li>
  *   <li>WebMvc configuration for interceptor registration</li>
@@ -49,26 +48,26 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @see IdempotencyInterceptor
  */
 @Slf4j
-@AutoConfiguration(after = DataRedisAutoConfiguration.class)
-@ConditionalOnClass({StringRedisTemplate.class, ObjectMapper.class})
-@ConditionalOnProperty(prefix = "payu.fajjjar.my.idempotency", name = "enabled", havingValue = "true", matchIfMissing = true)
+@AutoConfiguration
+@ConditionalOnClass({DistributedAtomicCache.class, ObjectMapper.class})
+@ConditionalOnProperty(prefix = "payu.idempotency", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(IdempotencyProperties.class)
 public class IdempotencyAutoConfiguration {
 
     /**
-     * Creates the Redis-based idempotency repository.
+     * Creates the distributed-cache idempotency repository.
      */
     @Bean
     @ConditionalOnMissingBean(IdempotencyRepository.class)
-    @ConditionalOnBean(StringRedisTemplate.class)
+    @ConditionalOnBean(DistributedAtomicCache.class)
     public IdempotencyRepository idempotencyRepository(
-            StringRedisTemplate redisTemplate,
+            DistributedAtomicCache distributedCache,
             ObjectMapper objectMapper,
             IdempotencyProperties properties) {
 
-        log.info("Initializing RedisIdempotencyRepository with prefix: {}",
+        log.info("Initializing DistributedCacheIdempotencyRepository with prefix: {}",
                 properties.getRedis().getKeyPrefix());
-        return new RedisIdempotencyRepository(redisTemplate, objectMapper, properties);
+        return new DistributedCacheIdempotencyRepository(distributedCache, objectMapper, properties);
     }
 
     /**

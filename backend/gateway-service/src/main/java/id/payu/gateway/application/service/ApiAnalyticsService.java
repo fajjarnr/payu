@@ -1,8 +1,8 @@
 package id.payu.gateway.application.service;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
@@ -29,7 +29,7 @@ public class ApiAnalyticsService {
     GatewayConfig config;
 
     @Inject
-    ReactiveRedisDataSource redis;
+    HotRodCacheClient cache;
 
     private boolean enabled;
 
@@ -77,15 +77,14 @@ public class ApiAnalyticsService {
             return Uni.createFrom().item(metrics.toMap());
         }
 
-        // Try to fetch from Redis
+        // Try to fetch from Data Grid
         String today = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
-        String redisKey = "analytics:" + today + ":" + key;
+        String cacheKey = "analytics:" + today + ":" + key;
 
-        return redis.key().exists(redisKey)
-            .flatMap(exists -> {
-                if (exists) {
-                    return redis.value(String.class).get(redisKey)
-                        .map(value -> {
+        return cache.get(cacheKey)
+            .flatMap(value -> {
+                if (value != null) {
+                    return Uni.createFrom().item(() -> {
                             Map<?, ?> parsed = parseMetricsJson(value);
                             @SuppressWarnings("unchecked")
                             Map<String, Object> result = (Map<String, Object>) parsed;
@@ -110,12 +109,11 @@ public class ApiAnalyticsService {
             String today = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
 
             metricsBuffer.forEach((key, metrics) -> {
-                String redisKey = "analytics:" + today + ":" + key;
+                String cacheKey = "analytics:" + today + ":" + key;
                 String metricsJson = toJson(metrics);
 
-                // Store in Redis with TTL
-                redis.value(String.class)
-                    .setex(redisKey, config.analytics().retentionDays() * 86400, metricsJson)
+                // Store in Data Grid with TTL
+                cache.put(cacheKey, metricsJson, java.time.Duration.ofDays(config.analytics().retentionDays()))
                     .subscribe()
                     .with(unused -> {}, failure -> Log.warnf(failure, "Failed to store metrics for %s", key));
             });
@@ -123,10 +121,10 @@ public class ApiAnalyticsService {
             long flushedSize = bufferSize.getAndSet(0);
             metricsBuffer.clear();
 
-            Log.debugf("Flushed %d metrics to Redis", flushedSize);
+            Log.debugf("Flushed %d metrics to Data Grid", flushedSize);
 
         } catch (Exception e) {
-            Log.errorf(e, "Failed to flush metrics to Redis");
+            Log.errorf(e, "Failed to flush metrics to Data Grid");
         }
     }
 

@@ -8,18 +8,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoSettings;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import id.payu.cache.service.DistributedCache;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,10 +23,7 @@ import static org.mockito.Mockito.when;
 public class SnapBiTokenServiceTest {
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
-
-    @Mock
-    private ValueOperations<String, Object> valueOps;
+    private DistributedCache distributedCache;
 
     @InjectMocks
     private SnapBiTokenService tokenService;
@@ -43,16 +36,15 @@ public class SnapBiTokenServiceTest {
         ReflectionTestUtils.setField(tokenService, "tokenSecret", "test-secret-key-for-jwt-token-generation-validation-for-testing-only");
         ReflectionTestUtils.setField(tokenService, "expirationTimeMs", 900000L);
 
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        when(valueOps.get(anyString())).thenAnswer(inv -> redisStore.get(inv.getArgument(0)));
-        doAnswer(inv -> {
+        when(distributedCache.get(anyString(), org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> redisStore.get(inv.getArgument(0)));
+        org.mockito.Mockito.doAnswer(inv -> {
             redisStore.put(inv.getArgument(0), inv.getArgument(1));
             return null;
-        }).when(valueOps).set(anyString(), any(), any(Duration.class));
-        doAnswer(inv -> {
+        }).when(distributedCache).put(anyString(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(java.time.Duration.class));
+        org.mockito.Mockito.doAnswer(inv -> {
             redisStore.remove(inv.getArgument(0));
             return null;
-        }).when(redisTemplate).delete(anyString());
+        }).when(distributedCache).evict(anyString());
 
         tokenService.init();
     }

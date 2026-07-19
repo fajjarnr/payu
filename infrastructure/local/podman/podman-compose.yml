@@ -1,7 +1,7 @@
 # Prerequisite: authenticate Podman to registry.redhat.io with a Red Hat
 # registry service-account token. Never copy a cluster pull-secret into Git.
 # Core: podman compose -f podman-compose.yml up -d payu-database-rw
-#       payu-cache-resp payu-kafka-kafka-bootstrap artemis payu-keycloak-service
+#       payu-cache payu-kafka-kafka-bootstrap artemis payu-keycloak-service
 # Optional example: COMPOSE_PROFILES=api-management podman compose
 #       -f podman-compose.yml up -d apicast
 # Local substitutions are intentional: single-node infrastructure, locally built
@@ -10,6 +10,7 @@
 x-local-security-environment: &local-security-environment
   PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-PayU-local-PBKDF2-salt-change-outside-development}
   WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-payu-local-webhook-secret-change-outside-development}
+  PAYU_CACHE_HOTROD_SERVER_LIST: ${PAYU_CACHE_HOTROD_SERVER_LIST:-payu-cache:11222}
 
 x-app-defaults: &app-defaults
   pull_policy: build
@@ -59,7 +60,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-  payu-cache-resp:
+  payu-cache:
     <<: *infra-defaults
     mem_limit: 1g
     cpus: 1.0
@@ -72,7 +73,6 @@ services:
     environment:
       USER: developer
       PASS: payu-cache-dev-password
-      REDIS_PASSWORD: payu-cache-dev-password
     ports:
       - 11222:11222
     volumes:
@@ -272,24 +272,12 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
       BLIND_INDEX_KEY: ${BLIND_INDEX_KEY:-payu-local-blind-index-key-dev-only-32}
       BLIND_INDEX_KEY_VERSION: ${BLIND_INDEX_KEY_VERSION:-local-v1}
       BLIND_INDEX_PREVIOUS_KEYS: ${BLIND_INDEX_PREVIOUS_KEYS:-}
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -301,7 +289,7 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-payu-dev-encryption-key-change-in-production-minimum-32-chars}
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -348,21 +336,9 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -373,7 +349,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-payu-dev-encryption-key-change-in-production-minimum-32-chars}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -416,21 +392,9 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -441,7 +405,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       PAYU_CALLBACK_SIGNATURE_SECRET: ${CALLBACK_SIGNATURE_SECRET:-local-development-callback-signature-secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -479,21 +443,9 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -503,7 +455,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -541,21 +493,9 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -565,7 +505,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -604,21 +544,9 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -628,7 +556,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -667,18 +595,6 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
       DB_USERNAME: payu
@@ -689,7 +605,7 @@ services:
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -728,21 +644,9 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -752,7 +656,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -786,21 +690,9 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -810,7 +702,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -845,21 +737,9 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -869,7 +749,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -910,21 +790,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -934,7 +802,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -981,22 +849,10 @@ services:
       QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1087,25 +943,12 @@ services:
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
-      QUARKUS_REDIS_HOSTS: redis://developer:payu-cache-dev-password@payu-cache-resp:11222
       SERVER_PORT: "8080"
       PORT: "8080"
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-keycloak-service:
         condition: service_healthy
@@ -1145,21 +988,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1169,7 +1000,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1206,21 +1037,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1231,7 +1050,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1268,21 +1087,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1292,7 +1099,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1329,21 +1136,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1353,7 +1148,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1407,22 +1202,10 @@ services:
       QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1496,21 +1279,9 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1526,7 +1297,7 @@ services:
       STATEMENT_STORAGE_S3_ACCESS_KEY: ${S3_ACCESS_KEY:-payu-admin}
       STATEMENT_STORAGE_S3_SECRET_KEY: ${S3_SECRET_KEY:-payu-secret-key-change-me}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1573,12 +1344,18 @@ services:
       ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
+      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-http://payu-cache:11222}
+      PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
+      PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
+      PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
     depends_on:
       payu-database-rw:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
       artemis:
+        condition: service_healthy
+      payu-cache:
         condition: service_healthy
     healthcheck:
       test:
@@ -1611,10 +1388,16 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       PORT: "8080"
       SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
+      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-http://payu-cache:11222}
+      PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
+      PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
+      PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
     depends_on:
       payu-database-rw:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
+        condition: service_healthy
+      payu-cache:
         condition: service_healthy
     healthcheck:
       test:
@@ -1653,27 +1436,15 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
     depends_on:
       payu-database-rw:
         condition: service_healthy
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
@@ -1712,18 +1483,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
@@ -1733,7 +1492,7 @@ services:
     depends_on:
       payu-database-rw:
         condition: service_healthy
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
@@ -1774,27 +1533,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://payu-keycloak-service:8080/realms/payu
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1839,21 +1586,9 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BOOTSTRAP: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       ARTEMIS_URL: tcp://artemis:61616
@@ -1862,7 +1597,7 @@ services:
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
     depends_on:
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-database-rw:
         condition: service_healthy
@@ -1907,27 +1642,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      REDIS_HOST: payu-cache-resp
-      REDIS_USERNAME: developer
-      REDIS_PORT: "11222"
-      REDIS_PASSWORD: payu-cache-dev-password
-      SPRING_DATA_REDIS_HOST: payu-cache-resp
-      SPRING_DATA_REDIS_USERNAME: developer
-      SPRING_DATA_REDIS_PORT: "11222"
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
 
-      SPRING_DATA_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_HOST: payu-cache-resp
-      PAYU_CACHE_REDIS_USERNAME: developer
-      PAYU_CACHE_REDIS_PASSWORD: payu-cache-dev-password
-      PAYU_CACHE_REDIS_PORT: "11222"
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
     depends_on:
       payu-database-rw:
         condition: service_healthy
-      payu-cache-resp:
+      payu-cache:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy

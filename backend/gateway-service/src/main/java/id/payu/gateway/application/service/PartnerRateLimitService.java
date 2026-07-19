@@ -6,9 +6,8 @@ import id.payu.gateway.domain.repository.PartnerRatePlanRepository;
 import id.payu.gateway.domain.repository.RatePlanRepository;
 import id.payu.gateway.domain.vo.RateLimit;
 import id.payu.gateway.domain.vo.TimeWindow;
+import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
-import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.quarkus.redis.datasource.value.ReactiveValueCommands;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,13 +42,10 @@ public class PartnerRateLimitService {
     PartnerRatePlanRepository partnerRatePlanRepository;
 
     @Inject
-    ReactiveRedisDataSource redisDataSource;
-
-    private ReactiveValueCommands<String, String> valueCommands;
+    HotRodCacheClient cache;
 
     @PostConstruct
     void init() {
-        this.valueCommands = redisDataSource.value(String.class);
         Log.info("PartnerRateLimitService initialized");
     }
 
@@ -131,8 +127,6 @@ public class PartnerRateLimitService {
         String hourKey = buildCounterKey(partnerId, endpoint, "hour");
         String dayKey = buildCounterKey(partnerId, endpoint, "day");
 
-        long now = Instant.now().getEpochSecond();
-
         // Increment counters with TTL
         incrementCounter(minuteKey, 60);
         incrementCounter(hourKey, 3600);
@@ -140,12 +134,7 @@ public class PartnerRateLimitService {
     }
 
     private void incrementCounter(String key, long ttlSeconds) {
-        // Use Redis INCR and EXPIRE
-        io.vertx.mutiny.redis.client.RedisAPI redisAPI =
-            io.vertx.mutiny.redis.client.RedisAPI.api(redisDataSource.getRedis());
-
-        redisAPI.incr(key)
-            .flatMap(response -> redisAPI.expire(java.util.List.of(key, String.valueOf(ttlSeconds))))
+        cache.increment(key, Duration.ofSeconds(ttlSeconds))
             .subscribe()
             .with(
                 unused -> {},
@@ -158,13 +147,10 @@ public class PartnerRateLimitService {
         String hourKey = buildCounterKey(partnerId, endpoint, "hour");
         String dayKey = buildCounterKey(partnerId, endpoint, "day");
 
-        io.vertx.mutiny.redis.client.RedisAPI redisAPI =
-            io.vertx.mutiny.redis.client.RedisAPI.api(redisDataSource.getRedis());
-
         // Get all counters in parallel
-        Uni<Long> minuteCount = getCounterValue(redisAPI, minuteKey);
-        Uni<Long> hourCount = getCounterValue(redisAPI, hourKey);
-        Uni<Long> dayCount = getCounterValue(redisAPI, dayKey);
+        Uni<Long> minuteCount = getCounterValue(minuteKey);
+        Uni<Long> hourCount = getCounterValue(hourKey);
+        Uni<Long> dayCount = getCounterValue(dayKey);
 
         return Uni.combine().all()
             .unis(minuteCount, hourCount, dayCount)
@@ -206,14 +192,14 @@ public class PartnerRateLimitService {
             });
     }
 
-    private Uni<Long> getCounterValue(io.vertx.mutiny.redis.client.RedisAPI redisAPI, String key) {
-        return redisAPI.get(key)
-            .map(response -> {
-                if (response == null || response.toString() == null) {
+    private Uni<Long> getCounterValue(String key) {
+        return cache.get(key)
+            .map(value -> {
+                if (value == null) {
                     return 0L;
                 }
                 try {
-                    return Long.parseLong(response.toString());
+                    return Long.parseLong(value);
                 } catch (NumberFormatException e) {
                     return 0L;
                 }

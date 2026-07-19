@@ -1,10 +1,10 @@
 package id.payu.api.common.webhook;
 
+import id.payu.cache.service.DistributedAtomicCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-@ConditionalOnBean({id.payu.outbox.service.OutboxService.class, StringRedisTemplate.class})
+@ConditionalOnBean({id.payu.outbox.service.OutboxService.class, DistributedAtomicCache.class})
 @RequiredArgsConstructor
 public class WebhookProcessor implements DisposableBean {
 
@@ -46,7 +46,7 @@ public class WebhookProcessor implements DisposableBean {
     private static final String PROCESSING_SUFFIX = ":processing";
     private static final String ERROR_SUFFIX = ":error";
 
-    private final StringRedisTemplate redisTemplate;
+    private final DistributedAtomicCache distributedCache;
     private final id.payu.outbox.service.OutboxService outboxService;
     private final WebhookConfig config;
 
@@ -62,7 +62,7 @@ public class WebhookProcessor implements DisposableBean {
     /**
      * Checks if a webhook has already been processed.
      *
-     * <p>This method uses Redis to check for duplicate webhook IDs.
+     * <p>This method uses the distributed cache to check for duplicate webhook IDs.
      * If the webhook was processed within the TTL window, it returns true.
      *
      * @param webhookId the unique webhook identifier
@@ -70,8 +70,7 @@ public class WebhookProcessor implements DisposableBean {
      */
     public boolean isProcessed(String webhookId) {
         String key = buildKey(webhookId);
-        Boolean exists = redisTemplate.hasKey(key);
-        return Boolean.TRUE.equals(exists);
+        return distributedCache.getString(key) != null;
     }
 
     /**
@@ -84,8 +83,7 @@ public class WebhookProcessor implements DisposableBean {
      */
     public boolean isProcessing(String webhookId) {
         String key = buildKey(webhookId) + PROCESSING_SUFFIX;
-        Boolean exists = redisTemplate.hasKey(key);
-        return Boolean.TRUE.equals(exists);
+        return distributedCache.getString(key) != null;
     }
 
     /**
@@ -104,8 +102,8 @@ public class WebhookProcessor implements DisposableBean {
         Duration processedTtl = Duration.ofHours(config.getIdempotencyTtlHours());
         Duration processingTtl = Duration.ofMinutes(5);
 
-        redisTemplate.opsForValue().set(processedKey, "acknowledged", processedTtl);
-        redisTemplate.opsForValue().set(processingKey, "true", processingTtl);
+        distributedCache.putString(processedKey, "acknowledged", processedTtl);
+        distributedCache.putString(processingKey, "true", processingTtl);
 
         log.debug("Webhook acknowledged: id={}", webhookId);
     }
@@ -120,8 +118,8 @@ public class WebhookProcessor implements DisposableBean {
         String processingKey = key + PROCESSING_SUFFIX;
 
         Duration ttl = Duration.ofHours(config.getIdempotencyTtlHours());
-        redisTemplate.opsForValue().set(key, "processed", ttl);
-        redisTemplate.delete(processingKey);
+        distributedCache.putString(key, "processed", ttl);
+        distributedCache.evict(processingKey);
 
         log.debug("Webhook marked as processed: id={}", webhookId);
     }
@@ -140,9 +138,9 @@ public class WebhookProcessor implements DisposableBean {
         Duration ttl = Duration.ofHours(config.getIdempotencyTtlHours());
         Duration errorTtl = Duration.ofDays(7);
 
-        redisTemplate.opsForValue().set(key, "failed:" + errorMessage, ttl);
-        redisTemplate.delete(processingKey);
-        redisTemplate.opsForValue().set(errorKey, errorMessage, errorTtl);
+        distributedCache.putString(key, "failed:" + errorMessage, ttl);
+        distributedCache.evict(processingKey);
+        distributedCache.putString(errorKey, errorMessage, errorTtl);
 
         log.warn("Webhook marked as failed: id={}, error={}", webhookId, errorMessage);
     }
@@ -281,7 +279,7 @@ public class WebhookProcessor implements DisposableBean {
      */
     public String getErrorMessage(String webhookId) {
         String errorKey = buildKey(webhookId) + ERROR_SUFFIX;
-        return redisTemplate.opsForValue().get(errorKey);
+        return distributedCache.getString(errorKey);
     }
 
     /**
@@ -293,9 +291,9 @@ public class WebhookProcessor implements DisposableBean {
      */
     public void clearIdempotency(String webhookId) {
         String key = buildKey(webhookId);
-        redisTemplate.delete(key);
-        redisTemplate.delete(key + PROCESSING_SUFFIX);
-        redisTemplate.delete(key + ERROR_SUFFIX);
+        distributedCache.evict(key);
+        distributedCache.evict(key + PROCESSING_SUFFIX);
+        distributedCache.evict(key + ERROR_SUFFIX);
 
         log.info("Cleared idempotency record for webhook: id={}", webhookId);
     }

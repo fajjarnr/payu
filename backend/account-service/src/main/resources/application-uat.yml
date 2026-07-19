@@ -21,9 +21,9 @@ payu:
   gateway:
     url: ${GATEWAY_URL:https://gateway-uat.payu.id}
   cache:
-    redis:
-      host: ${REDIS_HOST:payu-redis-uat.payu-cache-uat.svc.cluster.local}
-      port: ${REDIS_PORT:6379}
+    hotrod:
+      server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST}
+      cache-name: payu
 
 management:
   otlp:
