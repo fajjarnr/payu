@@ -12,50 +12,17 @@ import java.util.Map;
 /**
  * Configuration properties for PayU Cache Starter.
  *
- * <p>Supports both <b>Redis</b> and <b>Red Hat Data Grid</b> (Infinispan) in RESP protocol mode.
- * Data Grid operates as a drop-in replacement for Redis when configured in RESP mode —
- * simply point {@code payu.cache.redis.host} and {@code payu.cache.redis.port} to your
- * Data Grid endpoint.</p>
+ * <p>Uses native Red Hat Data Grid (Infinispan) Hot Rod.</p>
  *
- * <p>Configuration example (Redis):</p>
+ * <p>Configuration example:</p>
  * <pre>
  * payu:
  *   cache:
  *     enabled: true
- *     redis:
- *       host: localhost
- *       port: 6379
- *       timeout: 5s
- *     default-ttl: 5m
- *     stale-while-revalidate:
- *       enabled: true
- *       soft-ttl-multiplier: 0.5
- *     cache-warming:
- *       enabled: true
- *       startup-delay: 10s
- *     invalidation:
- *       enabled: true
- *       kafka-topic: cache-invalidation
- *     caches:
- *       account:
- *         ttl: 10m
- *         stale-while-revalidate: true
- *       balance:
- *         ttl: 30s
- *         stale-while-revalidate: true
- * </pre>
- *
- * <p>Configuration example (Red Hat Data Grid in RESP mode):</p>
- * <pre>
- * payu:
- *   cache:
- *     enabled: true
- *     redis:
- *       host: datagrid-resp.payu-infra.svc.cluster.local  # Data Grid RESP endpoint
- *       port: 11222                                        # Data Grid default port
- *       password: ${DATAGRID_PASSWORD}
- *       ssl: true                                          # Recommended for Data Grid
- *       timeout: 5s
+ *     provider: hotrod
+ *     hotrod:
+ *       server-list: payu-cache.payu-infra.svc.cluster.local:11222
+ *       use-ssl: true
  *     default-ttl: 5m
  * </pre>
  */
@@ -143,12 +110,57 @@ public class CacheProperties {
         /**
          * SASL authentication mechanism.
          */
-        private String saslMechanism = "DIGEST-MD5";
+        private String saslMechanism = "DIGEST-SHA-256";
 
         /**
          * Enable SSL.
          */
         private boolean useSsl = false;
+
+        /**
+         * PKCS12 trust store used to verify the Data Grid endpoint certificate.
+         */
+        private String trustStoreFileName;
+
+        /**
+         * Password for the Data Grid endpoint trust store.
+         */
+        private String trustStorePassword;
+
+        /**
+         * Trust store format.
+         */
+        private String trustStoreType = "PKCS12";
+
+        /**
+         * Optional PKCS12 client key store for Data Grid mTLS.
+         */
+        private String keyStoreFileName;
+
+        /**
+         * Password for the Data Grid client key store.
+         */
+        private String keyStorePassword;
+
+        /**
+         * Client key store format.
+         */
+        private String keyStoreType = "PKCS12";
+
+        /**
+         * Optional client key alias for Data Grid mTLS.
+         */
+        private String keyAlias;
+
+        /**
+         * TLS SNI hostname for the Data Grid endpoint.
+         */
+        private String sniHostName;
+
+        /**
+         * Verify the Data Grid certificate hostname.
+         */
+        private boolean hostnameValidation = true;
 
         /**
          * Client intelligence strategy.

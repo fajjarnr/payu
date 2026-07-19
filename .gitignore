@@ -29,6 +29,7 @@ test-results/
 *.jks
 *.jceks
 .secrets.baseline
+infrastructure/local/podman/.secrets/
 
 # --- IDEs & Editors ---
 .idea/
@@ -167,4 +168,3 @@ docs/operations/OPENSHIFT_BACKUP_EVALUATION.md
 infrastructure/foundation/hostedcluster/
 .codegraph/
 .gemini/
-

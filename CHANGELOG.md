@@ -13,16 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Migrated backend cache access to Infinispan Data Grid 16.2.1: Java and Quarkus use native Hot Rod; Python KYC and analytics use authenticated REST.
 - Replaced the local Redis/RESP cache service with Data Grid REST/Hot Rod and configured the shared `payu` cache for UTF-8 JSON text interoperability.
+- Secured the local Data Grid REST/Hot Rod endpoint with TLS/mTLS and aligned every gateway Infinispan runtime module to 16.2.1.
 
 ### Fixed
 
 - Removed protocol-dependent key encoding so a REST `text/plain` write is readable through the JVM Hot Rod client.
 - Configured Python cache clients to fail closed when a configured remote Data Grid endpoint is unavailable.
+- Corrected Hot Rod SASL defaults to `DIGEST-SHA-256` and removed a gateway dependency mismatch that caused mTLS startup failure.
 
 ### Verification
 
-- Local Podman Data Grid healthy; live REST-to-Hot-Rod cache interoperability test passed.
-- Passed KYC (2), analytics (2), cache starter (8), gateway (453), and auth security (14) targeted tests.
+- Podman Compose renders; Infinispan 16.2.1 is healthy. mTLS REST succeeds with the client certificate and is rejected without it; the fresh server log has no application WARN/ERROR/FATAL/exception entries.
+- Passed KYC (2), analytics (2), cache starter (9), and gateway Hot Rod (3) targeted local tests, including REST-to-Hot-Rod interoperability.
 
 ## [1.9.8] - 2026-07-17
 

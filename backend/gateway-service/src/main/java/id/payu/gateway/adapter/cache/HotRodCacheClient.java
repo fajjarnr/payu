@@ -39,8 +39,35 @@ public class HotRodCacheClient {
     @ConfigProperty(name = "payu.cache.hotrod.auth-realm", defaultValue = "default")
     String realm;
 
-    @ConfigProperty(name = "payu.cache.hotrod.sasl-mechanism", defaultValue = "DIGEST-MD5")
-    String saslMechanism;
+    @ConfigProperty(name = "payu.cache.hotrod.sasl-mechanism", defaultValue = "DIGEST-SHA-256")
+    String saslMechanism = "DIGEST-SHA-256";
+
+    @ConfigProperty(name = "payu.cache.hotrod.use-ssl", defaultValue = "false")
+    boolean useSsl;
+
+    @ConfigProperty(name = "payu.cache.hotrod.trust-store-file-name")
+    Optional<String> trustStoreFileName;
+
+    @ConfigProperty(name = "payu.cache.hotrod.trust-store-password")
+    Optional<String> trustStorePassword;
+
+    @ConfigProperty(name = "payu.cache.hotrod.trust-store-type", defaultValue = "PKCS12")
+    String trustStoreType;
+
+    @ConfigProperty(name = "payu.cache.hotrod.key-store-file-name")
+    Optional<String> keyStoreFileName;
+
+    @ConfigProperty(name = "payu.cache.hotrod.key-store-password")
+    Optional<String> keyStorePassword;
+
+    @ConfigProperty(name = "payu.cache.hotrod.key-store-type", defaultValue = "PKCS12")
+    String keyStoreType;
+
+    @ConfigProperty(name = "payu.cache.hotrod.key-alias")
+    Optional<String> keyAlias;
+
+    @ConfigProperty(name = "payu.cache.hotrod.sni-host-name")
+    Optional<String> sniHostName;
 
     private RemoteCacheManager cacheManager;
     private RemoteCache<String, String> cache;
@@ -57,6 +84,19 @@ public class HotRodCacheClient {
                     .password(password.orElseThrow(() -> new IllegalStateException("Hot Rod password is required")))
                     .realm(realm)
                     .saslMechanism(saslMechanism);
+        }
+        if (useSsl) {
+            var ssl = builder.security().ssl().enable();
+            trustStoreFileName.ifPresent(path -> ssl.trustStoreFileName(path)
+                    .trustStorePassword(trustStorePassword.orElseThrow(
+                            () -> new IllegalStateException("Hot Rod trust store password is required")).toCharArray())
+                    .trustStoreType(trustStoreType));
+            keyStoreFileName.ifPresent(path -> ssl.keyStoreFileName(path)
+                    .keyStorePassword(keyStorePassword.orElseThrow(
+                            () -> new IllegalStateException("Hot Rod key store password is required")).toCharArray())
+                    .keyStoreType(keyStoreType));
+            keyAlias.ifPresent(ssl::keyAlias);
+            sniHostName.ifPresent(ssl::sniHostName);
         }
         cacheManager = new RemoteCacheManager(builder.build(), false);
         Log.infof("Gateway Hot Rod client configured for cache %s at %s", cacheName, serverList);

@@ -56,9 +56,32 @@ public class HotRodCacheConfig {
         }
 
         if (properties.getHotrod().isUseSsl()) {
-            builder.security().ssl().enable();
+            CacheProperties.HotRod hotrod = properties.getHotrod();
+            var ssl = builder.security().ssl().enable()
+                    .hostnameValidation(hotrod.isHostnameValidation());
+
+            if (hasText(hotrod.getTrustStoreFileName())) {
+                ssl.trustStoreFileName(hotrod.getTrustStoreFileName())
+                        .trustStorePassword(hotrod.getTrustStorePassword().toCharArray())
+                        .trustStoreType(hotrod.getTrustStoreType());
+            }
+            if (hasText(hotrod.getKeyStoreFileName())) {
+                ssl.keyStoreFileName(hotrod.getKeyStoreFileName())
+                        .keyStorePassword(hotrod.getKeyStorePassword().toCharArray())
+                        .keyStoreType(hotrod.getKeyStoreType());
+            }
+            if (hasText(hotrod.getKeyAlias())) {
+                ssl.keyAlias(hotrod.getKeyAlias());
+            }
+            if (hasText(hotrod.getSniHostName())) {
+                ssl.sniHostName(hotrod.getSniHostName());
+            }
         }
 
         return new RemoteCacheManager(builder.build(), false);
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

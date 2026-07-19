@@ -78,6 +78,46 @@ class HotRodCacheConfigTest {
     }
 
     @Test
+    void shouldUseDigestSha256ByDefault() {
+        contextRunner
+                .withPropertyValues(
+                        "payu.cache.provider=hotrod",
+                        "payu.cache.hotrod.auth-username=developer",
+                        "payu.cache.hotrod.auth-password=payu-cache-dev-password")
+                .run(context -> assertThat(context.getBean(RemoteCacheManager.class)
+                        .getConfiguration().security().authentication().saslMechanism())
+                        .isEqualTo("DIGEST-SHA-256"));
+    }
+
+    @Test
+    void shouldConfigureTlsTrustAndClientKeyStores() {
+        contextRunner
+                .withPropertyValues(
+                        "payu.cache.provider=hotrod",
+                        "payu.cache.hotrod.use-ssl=true",
+                        "payu.cache.hotrod.sni-host-name=payu-cache.payu-dev.svc",
+                        "payu.cache.hotrod.trust-store-file-name=/var/run/datagrid/truststore.p12",
+                        "payu.cache.hotrod.trust-store-password=changeit",
+                        "payu.cache.hotrod.trust-store-type=PKCS12",
+                        "payu.cache.hotrod.key-store-file-name=/var/run/datagrid/client.p12",
+                        "payu.cache.hotrod.key-store-password=changeit",
+                        "payu.cache.hotrod.key-store-type=PKCS12",
+                        "payu.cache.hotrod.key-alias=payu-client")
+                .run(context -> {
+                    var ssl = context.getBean(RemoteCacheManager.class)
+                            .getConfiguration().security().ssl();
+
+                    assertThat(ssl.enabled()).isTrue();
+                    assertThat(ssl.sniHostName()).isEqualTo("payu-cache.payu-dev.svc");
+                    assertThat(ssl.trustStoreFileName()).isEqualTo("/var/run/datagrid/truststore.p12");
+                    assertThat(ssl.trustStoreType()).isEqualTo("PKCS12");
+                    assertThat(ssl.keyStoreFileName()).isEqualTo("/var/run/datagrid/client.p12");
+                    assertThat(ssl.keyStoreType()).isEqualTo("PKCS12");
+                    assertThat(ssl.keyAlias()).isEqualTo("payu-client");
+                });
+    }
+
+    @Test
     void shouldCreateHotRodDistributedCacheService() {
         cacheContextRunner
                 .withPropertyValues(
@@ -89,45 +129,9 @@ class HotRodCacheConfigTest {
     }
 
     @Test
-    void shouldConnectAndPerformHotRodOperationsIfServerAvailable() {
-        contextRunner
-                .withPropertyValues(
-                        "payu.cache.provider=hotrod",
-                        "payu.cache.hotrod.server-list=localhost:11222",
-                        "payu.cache.hotrod.auth-username=developer",
-                        "payu.cache.hotrod.auth-password=payu-cache-dev-password",
-                        "payu.cache.hotrod.auth-realm=default",
-                        "payu.cache.hotrod.sasl-mechanism=DIGEST-MD5"
-                )
-                .run(context -> {
-                    assertThat(context).hasSingleBean(RemoteCacheManager.class);
-                    RemoteCacheManager cacheManager = context.getBean(RemoteCacheManager.class);
-                    assertThat(cacheManager).isNotNull();
-
-                    try {
-                        RemoteCache<String, String> cache = cacheManager.getCache("payu");
-                        if (cache != null) {
-                            cache.put("arch007:test:key", "hotrod-value");
-                            String val = cache.get("arch007:test:key");
-                            assertThat(val).isEqualTo("hotrod-value");
-                            cache.remove("arch007:test:key");
-                        }
-                    } catch (Exception e) {
-                        // Log connection status, pass context assertion
-                        System.out.println("Hot Rod server test connection note: " + e.getMessage());
-                    }
-                });
-    }
-
-    @Test
     @EnabledIfSystemProperty(named = "datagrid.integration", matches = "true")
     void shouldReadAndWriteToLocalDataGridOverHotRod() {
-        contextRunner
-                .withPropertyValues(
-                        "payu.cache.provider=hotrod",
-                        "payu.cache.hotrod.server-list=localhost:11222",
-                        "payu.cache.hotrod.auth-username=developer",
-                        "payu.cache.hotrod.auth-password=payu-cache-dev-password")
+        localDataGridContextRunner()
                 .run(context -> {
                     RemoteCacheManager cacheManager = context.getBean(RemoteCacheManager.class);
                     cacheManager.start();
@@ -150,17 +154,38 @@ class HotRodCacheConfigTest {
         assertThat(restKey).isNotBlank();
         assertThat(restValue).isNotBlank();
 
-        contextRunner
-                .withPropertyValues(
-                        "payu.cache.provider=hotrod",
-                        "payu.cache.hotrod.server-list=localhost:11222",
-                        "payu.cache.hotrod.auth-username=developer",
-                        "payu.cache.hotrod.auth-password=payu-cache-dev-password")
+        localDataGridContextRunner()
                 .run(context -> {
                     RemoteCacheManager cacheManager = context.getBean(RemoteCacheManager.class);
                     cacheManager.start();
                     RemoteCache<String, String> cache = cacheManager.getCache("payu");
                     assertThat(cache.get(restKey)).isEqualTo(restValue);
                 });
+    }
+
+    private ApplicationContextRunner localDataGridContextRunner() {
+        return contextRunner.withPropertyValues(
+                "payu.cache.provider=hotrod",
+                "payu.cache.hotrod.server-list=" + System.getProperty("datagrid.hotrod.server-list", "localhost:11222"),
+                "payu.cache.hotrod.auth-username=developer",
+                "payu.cache.hotrod.auth-password=payu-cache-dev-password",
+                "payu.cache.hotrod.auth-realm=default",
+                "payu.cache.hotrod.sasl-mechanism=DIGEST-SHA-256",
+                "payu.cache.hotrod.client-intelligence=BASIC",
+                "payu.cache.hotrod.use-ssl=true",
+                "payu.cache.hotrod.sni-host-name=localhost",
+                "payu.cache.hotrod.trust-store-file-name=" + requiredSystemProperty("datagrid.hotrod.trust-store"),
+                "payu.cache.hotrod.trust-store-password=changeit",
+                "payu.cache.hotrod.trust-store-type=PKCS12",
+                "payu.cache.hotrod.key-store-file-name=" + requiredSystemProperty("datagrid.hotrod.key-store"),
+                "payu.cache.hotrod.key-store-password=changeit",
+                "payu.cache.hotrod.key-store-type=PKCS12",
+                "payu.cache.hotrod.key-alias=payu-client");
+    }
+
+    private static String requiredSystemProperty(String name) {
+        String value = System.getProperty(name);
+        assertThat(value).as("system property %s", name).isNotBlank();
+        return value;
     }
 }

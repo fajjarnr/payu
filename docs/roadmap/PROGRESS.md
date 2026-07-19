@@ -26,7 +26,7 @@
 > ✅ **2026-07-19 — ARCH-007 local Data Grid migration completed**:
 > - Java and Quarkus backend cache clients now use native Infinispan Hot Rod 16.2.1; direct Redis/RESP client paths were removed.
 > - Python KYC and analytics idempotency use authenticated Data Grid REST. The shared `payu` cache has an explicit `text/plain` key/value and UTF-8 JSON-text contract.
-> - Local Podman Data Grid is healthy and exposes REST/Hot Rod only. Verified: KYC (2), analytics (2), cache starter live interoperability (8), gateway (453), and auth security (14) tests.
+> - Local Podman Data Grid 16.2.1 is healthy and exposes mTLS-protected REST/Hot Rod only. Verified: KYC (2), analytics (2), cache starter (9), and gateway Hot Rod (3) tests; REST without a client certificate is rejected.
 > - Production promotion remains gated on TLS/mTLS secret provisioning and a `payu-dev` canary; this entry supersedes the older `hotrod|resp` canary description for local backend cache paths.
 
 > ✅ **2026-07-17 — Local CI/CD Pipeline Simulation (DEVSECOPS-014) Completed**:

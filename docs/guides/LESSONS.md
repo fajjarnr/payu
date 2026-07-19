@@ -3976,3 +3976,15 @@ synchronized (lock) {
 - Always provide default fallbacks for microservice configuration properties in `application.yaml` (e.g., `${OTEL_ENDPOINT:http://localhost:4317}` and `${KEYCLOAK_REALM:payu}`).
 - Include `src/test/resources/application.properties` with test-safe overrides (`quarkus.devservices.enabled=false`, `quarkus.opentelemetry.enabled=false`, `quarkus.oidc.tenant-enabled=false`) for offline unit testing without external dependencies.
 - Verify full 44/44 reactor module build and test execution before claiming production readiness.
+
+### L-126: Local Infinispan 16.2.1 mTLS Must Use Java-Compatible Truststores
+
+**Context**: ARCH-007 local Podman gate required one `payu` cache shared by Python REST and Java/Quarkus Hot Rod clients over mTLS.
+
+**Root causes found**:
+1. `require-ssl-client-auth` belongs on an explicit `<endpoint>` inside `<endpoints>` with Hot Rod and REST connectors.
+2. A CA certificate needs `CA:TRUE` plus `keyCertSign`; HTTPX correctly rejects a CA that omits key usage.
+3. `openssl pkcs12 -export -nokeys` creates no Java `trustedCertEntry`; build the client/server truststore with `keytool -importcert`.
+4. A Hot Rod 16.2.1 client cannot run with Infinispan Commons 16.0.x selected by another BOM; pin the complete Infinispan module family to 16.2.1.
+
+**Prevention**: Validate positive and negative mTLS, Python REST round-trips, and Java/Quarkus Hot Rod round-trips against the same local container. Scan the fresh server log after a clean recreation; do not let connection tests swallow exceptions.

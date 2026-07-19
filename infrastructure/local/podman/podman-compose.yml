@@ -11,6 +11,15 @@ x-local-security-environment: &local-security-environment
   PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-PayU-local-PBKDF2-salt-change-outside-development}
   WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-payu-local-webhook-secret-change-outside-development}
   PAYU_CACHE_HOTROD_SERVER_LIST: ${PAYU_CACHE_HOTROD_SERVER_LIST:-payu-cache:11222}
+  PAYU_CACHE_HOTROD_USE_SSL: ${PAYU_CACHE_HOTROD_USE_SSL:-true}
+  PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME: /run/secrets/payu-datagrid/client-truststore.p12
+  PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD: ${PAYU_CACHE_TLS_STORE_PASSWORD:-changeit}
+  PAYU_CACHE_HOTROD_TRUST_STORE_TYPE: PKCS12
+  PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME: /run/secrets/payu-datagrid/client-keystore.p12
+  PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD: ${PAYU_CACHE_TLS_STORE_PASSWORD:-changeit}
+  PAYU_CACHE_HOTROD_KEY_STORE_TYPE: PKCS12
+  PAYU_CACHE_HOTROD_KEY_ALIAS: payu-client
+  PAYU_CACHE_HOTROD_SNI_HOST_NAME: payu-cache
 
 x-app-defaults: &app-defaults
   pull_policy: build
@@ -22,6 +31,8 @@ x-app-defaults: &app-defaults
     - no-new-privileges:true
   tmpfs:
     - /tmp:rw,noexec,nosuid,size=128m
+  volumes:
+    - ./.secrets/datagrid:/run/secrets/payu-datagrid:ro,z
   pids_limit: 512
   mem_limit: 768m
   cpus: 1.0
@@ -64,12 +75,10 @@ services:
     <<: *infra-defaults
     mem_limit: 1g
     cpus: 1.0
-    image: registry.redhat.io/datagrid/datagrid-8-rhel9@sha256:66e76900551564dcb58ed37fb978fa27101849316dba1024a594bf027b25adc6
+    image: quay.io/infinispan/server:16.2.1
     container_name: payu-cache
     networks:
-      payu-network:
-        aliases:
-          - redis
+      - payu-network
     environment:
       USER: developer
       PASS: payu-cache-dev-password
@@ -77,8 +86,9 @@ services:
       - 11222:11222
     volumes:
       - ./config/infinispan-config.xml:/opt/infinispan/server/conf/infinispan.xml:z
+      - ./.secrets/datagrid:/opt/infinispan/server/conf/tls:ro,z
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "-u", "developer:payu-cache-dev-password", "http://localhost:11222/rest/v2/container/health/status"]
+      test: ["CMD", "curl", "-fsS", "--cacert", "/opt/infinispan/server/conf/tls/ca.crt", "--cert", "/opt/infinispan/server/conf/tls/client.crt", "--key", "/opt/infinispan/server/conf/tls/client.key", "-u", "developer:payu-cache-dev-password", "https://localhost:11222/rest/v2/container/health/status"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1344,10 +1354,13 @@ services:
       ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-payu}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu_broker_secret}
-      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-http://payu-cache:11222}
+      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-https://payu-cache:11222}
       PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
       PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
       PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
+      PAYU_CACHE_REST_CA_FILE: /run/secrets/payu-datagrid/ca.crt
+      PAYU_CACHE_REST_CLIENT_CERT_FILE: /run/secrets/payu-datagrid/client.crt
+      PAYU_CACHE_REST_CLIENT_KEY_FILE: /run/secrets/payu-datagrid/client.key
     depends_on:
       payu-database-rw:
         condition: service_healthy
@@ -1388,10 +1401,13 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       PORT: "8080"
       SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
-      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-http://payu-cache:11222}
+      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-https://payu-cache:11222}
       PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
       PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
       PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
+      PAYU_CACHE_REST_CA_FILE: /run/secrets/payu-datagrid/ca.crt
+      PAYU_CACHE_REST_CLIENT_CERT_FILE: /run/secrets/payu-datagrid/client.crt
+      PAYU_CACHE_REST_CLIENT_KEY_FILE: /run/secrets/payu-datagrid/client.key
     depends_on:
       payu-database-rw:
         condition: service_healthy

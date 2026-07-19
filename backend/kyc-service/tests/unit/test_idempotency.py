@@ -45,6 +45,9 @@ async def test_store_round_trips_through_local_datagrid_rest():
         username=os.getenv("PAYU_CACHE_REST_USERNAME"),
         password=os.getenv("PAYU_CACHE_REST_PASSWORD"),
         auth_type=os.getenv("PAYU_CACHE_REST_AUTH_TYPE", "digest"),
+        ca_file=os.getenv("PAYU_CACHE_REST_CA_FILE"),
+        client_cert_file=os.getenv("PAYU_CACHE_REST_CLIENT_CERT_FILE"),
+        client_key_file=os.getenv("PAYU_CACHE_REST_CLIENT_KEY_FILE"),
     )
     try:
         key = str(uuid.uuid4())
