@@ -165,7 +165,7 @@ describe('MobileNav', () => {
 
   it('should apply active styling with accent background', () => {
     mockPathname = '/pockets';
-    const { container } = renderWithIntl(<MobileNav />);
+    renderWithIntl(<MobileNav />);
 
     const activeIconContainer = screen.getByText('Akun').closest('a')?.querySelector('div');
     expect(activeIconContainer).toBeInTheDocument();
