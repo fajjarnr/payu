@@ -554,12 +554,6 @@ patches:
               value: "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
-            - name: QUARKUS_REDIS_HOSTS
-              value: "redis://redis-3scale.payu-api-management.svc.cluster.local:6379"
-            - name: REDIS_HOST
-              value: "redis-3scale.payu-api-management.svc.cluster.local"
-            - name: REDIS_PORT
-              value: "6379"
 - target:
     kind: Deployment
     name: notification-service

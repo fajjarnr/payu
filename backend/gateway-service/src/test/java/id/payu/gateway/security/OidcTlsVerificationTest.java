@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * GAP-23: Verify that {@code quarkus.oidc.tls.verification} is set to {@code required}
- * in {@code gateway-service/src/main/resources/application.yaml}.
+ * GAP-23: Verify that the removed {@code quarkus.oidc.tls.verification}
+ * setting is not retained in {@code gateway-service/src/main/resources/application.yaml}.
  *
- * <p>Previously {@code none} which exposed the gateway to MITM attacks inside the
- * OpenShift cluster when validating tokens with Keycloak.</p>
+ * <p>Quarkus now manages OIDC TLS through the TLS registry. Retaining the legacy
+ * setting emits a startup warning and does not configure an HTTPS trust store.</p>
  *
  * <p>This test asserts YAML-resource wiring only (no Quarkus boot, no AssertJ dep —
  * plain JUnit to avoid pulling transitive shared-starter deps). The actual TLS
@@ -23,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class OidcTlsVerificationTest {
 
     @Test
-    void oidcTlsVerificationMustBeRequired() throws Exception {
+    void deprecatedOidcTlsVerificationMustBeAbsent() throws Exception {
         String yaml = loadApplicationYaml();
-        assertTrue(yaml.contains("verification: required"),
-            "GAP-23 fix: quarkus.oidc.tls.verification must be 'required' "
-                + "to prevent MITM during Keycloak token validation");
+        assertFalse(yaml.contains("verification:"),
+            "Use Quarkus TLS registry for HTTPS OIDC instead of deprecated "
+                + "quarkus.oidc.tls.verification");
     }
 
     @Test

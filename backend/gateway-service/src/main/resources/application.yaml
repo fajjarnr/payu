@@ -16,16 +16,11 @@ quarkus:
     client-id: ${OIDC_CLIENT_ID:gateway-service}
     credentials:
       secret: ${OIDC_CLIENT_SECRET} # pragma: allowlist secret
-    tls:
-      verification: required # GAP-23 fix: was 'none' (MITM exposure); Keycloak CA mounted via infra/.
     token:
       issuer: ${OIDC_ISSUER:${OIDC_AUTH_SERVER_URL:http://localhost:8080/realms/payu}}
       # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks.
       signature-algorithm: RS256
   # Health & Metrics
-  smallrye-health:
-    ui:
-      enable: true
   micrometer:
     export:
       prometheus:
@@ -34,6 +29,8 @@ quarkus:
       http-server:
         enabled: true
       jvm: true
+      netty:
+        enabled: false
   # OpenTelemetry
   otel:
     service:

@@ -154,7 +154,3 @@ labels:
 - pairs:
     environment: preprod
   includeSelectors: false
-
-- target:
-    kind: Deployment
-  patch: |-

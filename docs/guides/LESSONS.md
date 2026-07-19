@@ -2,6 +2,38 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-129: A Security Field Rule May Have No Target in a Bounded Service (2026-07-19)
+
+**Date**: 2026-07-19
+**Domain**: ArchUnit, security annotations, CMS service
+**Context**: The CMS full suite failed because the shared sensitive-field ArchUnit rule treated an empty match set as a failure. CMS has no field whose name matches the PII/financial/auth vocabulary, so no field needed an `@Sensitive` annotation.
+
+**Lesson**:
+- Keep the sensitive-field rule strict whenever a matching field exists, but permit an empty `should` set on that specific rule. A global `archRule.failOnEmptyShould=false` would weaken unrelated architecture rules.
+
+**Applied fix**:
+- Added per-rule `allowEmptyShould(true)` to `SensitiveFieldRules`; the full CMS reactor suite passes while matching fields remain enforced.
+
+---
+
+## L-128: Operator-Managed Data Grid Must Not Carry Legacy Endpoint Configuration (2026-07-19)
+
+**Date**: 2026-07-19
+**Domain**: Infinispan Operator 2.5, OpenShift, mTLS, Hot Rod
+**Context**: The platform Data Grid CR still declared Infinispan 14 schema, a RESP connector and a hand-maintained `payu-cache-resp` Service although the local runtime had already moved to Infinispan 16.2.1 Hot Rod and REST.
+
+**Lesson**:
+- Server version belongs in `spec.version`; an Infinispan 16.2.1 server requires the matching 16.2 configuration schema.
+- Keep Operator custom configuration inside `cache-container`. Overriding endpoints, security realms, or transport in the ConfigMap can conflict with Operator reconciliation.
+- The Operator owns the internal `payu-cache` service on port 11222. A RESP proxy service is neither needed nor protocol-compatible with Hot Rod.
+- mTLS manifests must reference externally provisioned TLS and client-CA Secrets. Never put certificate material or cache credentials in Git.
+
+**Applied fix**:
+- Replaced the Data Grid CR with Infinispan 16.2.1, cache `payu`, text/plain key/value encoding, endpoint authentication, and client certificate validation.
+- Replaced all JVM workload Redis environment variables with a Kustomize Hot Rod/mTLS contract and added a CMS resource test that prevents a return to Redis/RESP defaults.
+
+---
+
 ## L-126: Shared Data Grid Cache Needs an Explicit Cross-Protocol Contract (2026-07-19)
 
 **Date**: 2026-07-19
@@ -3988,3 +4020,15 @@ synchronized (lock) {
 4. A Hot Rod 16.2.1 client cannot run with Infinispan Commons 16.0.x selected by another BOM; pin the complete Infinispan module family to 16.2.1.
 
 **Prevention**: Validate positive and negative mTLS, Python REST round-trips, and Java/Quarkus Hot Rod round-trips against the same local container. Scan the fresh server log after a clean recreation; do not let connection tests swallow exceptions.
+
+### L-127: Podman Compose Local Apps Need Runtime-Ready Dependencies (2026-07-19)
+
+**Context**: Gateway, KYC, and analytics were started against the local Data Grid stack.
+
+**Root causes**:
+1. `gateway-service/Containerfile` copies a prebuilt Quarkus `target/`; rebuilding the image alone can retain a removed Redis extension. Run `mvn clean package` first.
+2. Kafka advertised `kafka:29092`, but the Compose DNS name is `payu-kafka-kafka-bootstrap`; consumers then fail after bootstrap.
+3. KYC clients used different Artemis defaults from the local broker. Align a single local credential contract.
+4. Analytics can briefly report missing topics/group coordinator while a new KRaft broker creates metadata; judge the final state from a steady-state log scan.
+
+**Prevention**: For a local application gate, rebuild artifacts before images, validate advertised listener names against container DNS, wait for dependency health, then scan a fresh 30-second steady-state log window.

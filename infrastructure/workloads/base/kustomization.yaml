@@ -36,3 +36,93 @@ resources:
 - ./qris-simulator.yaml
 - ./va-simulator.yaml
 - ./service-endpoints.yaml
+
+# ARCH-007: all remaining JVM workloads use the shared Hot Rod/mTLS contract.
+# The referenced secrets are provisioned externally; no credential material is
+# stored in this repository.
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: "^(account-service|api-portal-service|auth-service|backoffice-service|billing-service|compliance-service|dispute-service|fx-service|integration-service|investment-service|lending-service|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: hotrod-client-workload
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: datagrid-client-tls
+                secret:
+                  name: payu-cache-client-tls
+            containers:
+              - name: app
+                volumeMounts:
+                  - name: datagrid-client-tls
+                    mountPath: /var/run/payu-cache/tls
+                    readOnly: true
+                env:
+                  - name: PAYU_CACHE_PROVIDER
+                    value: hotrod
+                  - name: PAYU_CACHE_HOTROD_SERVER_LIST
+                    valueFrom:
+                      configMapKeyRef:
+                        name: service-endpoints
+                        key: DATAGRID_HOTROD_SERVER_LIST
+                  - name: PAYU_CACHE_HOTROD_CACHE_NAME
+                    valueFrom:
+                      configMapKeyRef:
+                        name: service-endpoints
+                        key: DATAGRID_CACHE_NAME
+                  - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+                    value: developer
+                  - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-credentials
+                        key: password
+                  - name: PAYU_CACHE_HOTROD_USE_SSL
+                    value: 'true'
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+                    value: /var/run/payu-cache/tls/truststore.p12
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-client-tls
+                        key: truststore-password
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+                    value: /var/run/payu-cache/tls/keystore.p12
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-client-tls
+                        key: keystore-password
+                  - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
+                    value: payu-cache.payu-dev.svc.cluster.local
+                  - name: PAYU_CACHE_REDIS_HOST
+                    $patch: delete
+                  - name: PAYU_CACHE_REDIS_PORT
+                    $patch: delete
+                  - name: PAYU_CACHE_REDIS_PASSWORD
+                    $patch: delete
+                  - name: PAYU_CACHE_REDIS_USERNAME
+                    $patch: delete
+                  - name: PAYU_CACHE_REDIS_URL
+                    $patch: delete
+                  - name: REDIS_HOST
+                    $patch: delete
+                  - name: REDIS_PORT
+                    $patch: delete
+                  - name: REDIS_PASSWORD
+                    $patch: delete
+                  - name: SPRING_DATA_REDIS_HOST
+                    $patch: delete
+                  - name: SPRING_DATA_REDIS_PORT
+                    $patch: delete
+                  - name: SPRING_DATA_REDIS_USERNAME
+                    $patch: delete
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    $patch: delete

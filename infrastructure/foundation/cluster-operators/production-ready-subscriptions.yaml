@@ -36,12 +36,12 @@ spec:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: datagrid
+  name: infinispan
   namespace: openshift-operators
 spec:
   channel: stable
   installPlanApproval: Automatic
-  name: datagrid
+  name: infinispan
   source: redhat-operators
   sourceNamespace: openshift-marketplace
 ---

@@ -29,15 +29,15 @@ data:
   .dockerconfigjson: e30=
 
 ---
-# 2. Red Hat Data Grid (application distributed cache)
+# 2. Infinispan Operator (application distributed cache)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: datagrid
+  name: infinispan
   namespace: openshift-operators
 spec:
   channel: stable
-  name: datagrid
+  name: infinispan
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic

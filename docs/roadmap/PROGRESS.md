@@ -29,6 +29,11 @@
 > - Local Podman Data Grid 16.2.1 is healthy and exposes mTLS-protected REST/Hot Rod only. Verified: KYC (2), analytics (2), cache starter (9), and gateway Hot Rod (3) tests; REST without a client certificate is rejected.
 > - Production promotion remains gated on TLS/mTLS secret provisioning and a `payu-dev` canary; this entry supersedes the older `hotrod|resp` canary description for local backend cache paths.
 
+> 🟡 **2026-07-19 — ARCH-007 platform manifest preparation**:
+> - Replaced the stale RESP/Data Grid manifest with an Infinispan 16.2.1 CR, Operator-managed Hot Rod/REST endpoint, `payu` text/plain cache, endpoint authentication, and mTLS Secret references.
+> - Migrated all JVM workload manifests to Hot Rod/mTLS; CMS source no longer defaults to Redis/RESP. Data plus dev, SIT, UAT, preprod, and prod Kustomize renders pass locally with no rendered RESP cache environment variables.
+> - No OpenShift cluster deployment was attempted. External Secrets provisioning, an in-cluster mTLS smoke test, and the 24-hour canary remain required before promotion.
+
 > ✅ **2026-07-17 — Local CI/CD Pipeline Simulation (DEVSECOPS-014) Completed**:
 > - Built `scripts/simulate-local-pipeline.sh` simulating 4 Tekton pipeline stages (`Lint/ArchUnit` -> `Unit/Integration Tests` -> `Container Build` -> `Security Scan`). Verified on `cms-service` (10s total duration). Documented L-125.
 
@@ -1074,6 +1079,12 @@ Closed 3 high-priority tickets in a single session:
 - 55 web-app files with eslint-disable comments
 
 ## Iteration 68: GAP-27 + GAP-31 Closure — Recursive Dev Loop (2026-07-01)
+
+## Local Data Grid application smoke gate (2026-07-19)
+
+- Rebuilt and started `gateway-service`, `kyc-service`, and `analytics-service` with the `apps` Compose profile.
+- Gateway readiness, KYC health, and analytics health are `UP`; Data Grid, Kafka, and Artemis are healthy.
+- Corrected local Kafka advertised listener and Artemis credential defaults; Python tracing is disabled when the optional Jaeger profile is absent.
 
 ### Iter 68.1 — GAP-27: CacheWithTTLAspect Thread-Local Leak (cache-starter)
 - **Bug**: `handleSyncCache` wrapped `joinPoint.proceed()` in `CompletableFuture.supplyAsync(...)`, executing on `ForkJoinPool.commonPool-worker-N` and stripping every `ThreadLocal` (SecurityContext, TenantContext, MDC, Hibernate `@Transactional`).

@@ -14,17 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated backend cache access to Infinispan Data Grid 16.2.1: Java and Quarkus use native Hot Rod; Python KYC and analytics use authenticated REST.
 - Replaced the local Redis/RESP cache service with Data Grid REST/Hot Rod and configured the shared `payu` cache for UTF-8 JSON text interoperability.
 - Secured the local Data Grid REST/Hot Rod endpoint with TLS/mTLS and aligned every gateway Infinispan runtime module to 16.2.1.
+- Rebuilt local gateway artifacts before image assembly and removed deprecated Quarkus OIDC/Health configuration.
+- Replaced the platform Data Grid RESP CR and subscription with an Infinispan 16.2.1 Hot Rod/REST CR using Operator-managed endpoints and mTLS Secret references.
+- Migrated CMS cache configuration and its OpenShift workload manifest from Redis environment variables to the shared Hot Rod `payu` cache contract.
+- Applied the Hot Rod/mTLS contract to every JVM workload overlay and removed rendered RESP environment variables from dev, SIT, UAT, preprod, and prod.
 
 ### Fixed
 
 - Removed protocol-dependent key encoding so a REST `text/plain` write is readable through the JVM Hot Rod client.
 - Configured Python cache clients to fail closed when a configured remote Data Grid endpoint is unavailable.
 - Corrected Hot Rod SASL defaults to `DIGEST-SHA-256` and removed a gateway dependency mismatch that caused mTLS startup failure.
+- Corrected local Kafka advertised DNS, Artemis client credentials, and optional Python tracing startup behavior.
+- Corrected the shared sensitive-field ArchUnit rule so services without matching fields do not fail their full test suite.
 
 ### Verification
 
 - Podman Compose renders; Infinispan 16.2.1 is healthy. mTLS REST succeeds with the client certificate and is rejected without it; the fresh server log has no application WARN/ERROR/FATAL/exception entries.
 - Passed KYC (2), analytics (2), cache starter (9), and gateway Hot Rod (3) targeted local tests, including REST-to-Hot-Rod interoperability.
+- Podman `apps` profile smoke test: gateway readiness, KYC health, analytics health, Data Grid, Kafka, and Artemis are healthy; fresh steady-state application logs contain no WARN/ERROR/exception entries.
+- Rendered the Data Grid dev overlay and the `payu-dev` workload overlay successfully; CMS `ProductionMigrationResourcesTest` passes (2 tests).
+- All five workload overlays render successfully. Full CMS reactor test suite passes (528 tests, 26 skipped).
 
 ## [1.9.8] - 2026-07-17
 

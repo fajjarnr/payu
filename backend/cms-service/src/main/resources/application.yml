@@ -48,24 +48,6 @@ spring:
     locations: classpath:db/migration
     table: flyway_schema_history_cms
     validate-on-migrate: true
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD:}
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 20
-          max-idle: 10
-          min-idle: 5
-          time-between-eviction-runs: 60000ms
-  cache:
-    type: redis
-    cache-names: contents,activeContents
-    redis:
-      time-to-live: 600000
-      cache-null-values: false
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}
     producer:
@@ -112,23 +94,24 @@ resilience4j:
       default:
         timeout-duration: 10s
 
-# Cache Configuration (aggressive caching for CMS content)
+# Cache Configuration (shared Infinispan Hot Rod contract)
 payu:
   cache:
     enabled: true
-    provider: ${PAYU_CACHE_PROVIDER:resp}
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      pool-size: 20
-      timeout: 5s
+    provider: ${PAYU_CACHE_PROVIDER:hotrod}
     hotrod:
-      server-list: ${DATAGRID_HOTROD_SERVERS:localhost:11222}
-      auth-username: ${DATAGRID_HOTROD_USERNAME:developer}
-      auth-password: ${DATAGRID_HOTROD_PASSWORD:payu-cache-dev-password}
-      auth-realm: ${DATAGRID_HOTROD_REALM:default}
-      sasl-mechanism: ${DATAGRID_HOTROD_SASL:DIGEST-MD5}
-      use-ssl: ${DATAGRID_HOTROD_SSL:false}
+      server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}
+      cache-name: ${PAYU_CACHE_HOTROD_CACHE_NAME:payu}
+      auth-username: ${PAYU_CACHE_HOTROD_AUTH_USERNAME:}
+      auth-password: ${PAYU_CACHE_HOTROD_AUTH_PASSWORD:}
+      auth-realm: ${PAYU_CACHE_HOTROD_AUTH_REALM:default}
+      sasl-mechanism: ${PAYU_CACHE_HOTROD_SASL_MECHANISM:DIGEST-SHA-256}
+      use-ssl: ${PAYU_CACHE_HOTROD_USE_SSL:false}
+      trust-store-file-name: ${PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME:}
+      trust-store-password: ${PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD:}
+      key-store-file-name: ${PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME:}
+      key-store-password: ${PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD:}
+      sni-host-name: ${PAYU_CACHE_HOTROD_SNI_HOST_NAME:}
     default-ttl: 5m
     local-cache:
       enabled: true
@@ -166,8 +149,6 @@ management:
     livenessstate:
       enabled: true
     readinessstate:
-      enabled: true
-    redis:
       enabled: true
     db:
       enabled: true

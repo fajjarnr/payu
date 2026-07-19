@@ -154,7 +154,3 @@ labels:
 - pairs:
     environment: sit
   includeSelectors: false
-
-- target:
-    kind: Deployment
-  patch: |-

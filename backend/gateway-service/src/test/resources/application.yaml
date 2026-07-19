@@ -5,9 +5,6 @@ quarkus:
   # Disable OIDC for tests
   oidc:
     enabled: false
-    # GAP-23 fix: TLS verification must be 'required' in ALL profiles (was 'none' — MITM).
-    tls:
-      verification: required
 
   # Disable health check dependency on external services
   smallrye-health:

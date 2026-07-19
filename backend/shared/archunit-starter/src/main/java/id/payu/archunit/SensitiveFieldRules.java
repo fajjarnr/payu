@@ -107,7 +107,8 @@ public final class SensitiveFieldRules {
                 + "(NIK, phone, email, accountNumber, cardNumber, password, OTP, "
                 + "token, secret, etc.) must be annotated with @Sensitive so the "
                 + "DataMaskingAspect in security-starter can mask them in logs. "
-                + "(NEW-006 / READY-012)");
+                + "(NEW-006 / READY-012)")
+            .allowEmptyShould(true);
     }
 
     private static ArchCondition<JavaField> beAnnotatedWithSensitive() {

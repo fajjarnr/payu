@@ -34,7 +34,7 @@
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
-| ARCH-007 | P2 | [cache] Infinispan 16.2.1 migration: Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. Shared `payu` cache uses explicit UTF-8 JSON-text interoperability. Local mTLS evidence is complete; production secret wiring and canary remain. | 🔄 In progress |
+| ARCH-007 | P2 | [cache] Infinispan 16.2.1 migration: Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. All JVM workload renders now use the `payu` Hot Rod/mTLS contract. Provision the external TLS/client-CA/client-keystore Secrets, remove mesh/Kong RESP dependencies in favor of their dedicated Redis backend, then run the `payu-dev` 24-hour canary. | 🔄 In progress |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |

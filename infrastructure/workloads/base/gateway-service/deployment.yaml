@@ -36,6 +36,9 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
+      - name: datagrid-client-tls
+        secret:
+          name: payu-cache-client-tls
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.5
@@ -55,6 +58,9 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: datagrid-client-tls
+          mountPath: /var/run/payu-cache/tls
+          readOnly: true
         readinessProbe:
           httpGet:
             path: /q/health/live
@@ -94,27 +100,46 @@ spec:
             configMapKeyRef:
               name: service-endpoints
               key: GATEWAY_DB_URL
-        - name: REDIS_HOST
-          value: payu-cache-resp.payu-dev.svc.cluster.local
-        - name: REDIS_PORT
-          value: '11222'
+        - name: PAYU_CACHE_HOTROD_SERVER_LIST
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: DATAGRID_HOTROD_SERVER_LIST
+        - name: PAYU_CACHE_HOTROD_CACHE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: DATAGRID_CACHE_NAME
+        - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+          value: developer
+        - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+              key: password
+        - name: PAYU_CACHE_HOTROD_USE_SSL
+          value: 'true'
+        - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+          value: /var/run/payu-cache/tls/truststore.p12
+        - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-client-tls
+              key: truststore-password
+        - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+          value: /var/run/payu-cache/tls/keystore.p12
+        - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-client-tls
+              key: keystore-password
+        - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
+          value: payu-cache.payu-dev.svc.cluster.local
         - name: KAFKA_BOOTSTRAP_SERVERS
           valueFrom:
             configMapKeyRef:
               name: service-endpoints
               key: KAFKA_URL
-        - name: QUARKUS_REDIS_HOSTS
-          value: redis://payu-cache-resp.payu-dev.svc.cluster.local:11222
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payu-cache-credentials
-              key: password
-        - name: QUARKUS_REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payu-cache-credentials
-              key: password
         - name: QUARKUS_OIDC_AUTH_SERVER_URL
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: QUARKUS_OIDC_TOKEN_ISSUER

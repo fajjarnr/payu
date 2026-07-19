@@ -220,7 +220,7 @@ patches:
                 secretKeyRef:
                   name: payu-db-credentials
                   key: password
-            - name: PAYU_CACHE_REDIS_PASSWORD
+            - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: payu-cache-credentials
