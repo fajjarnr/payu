@@ -35,6 +35,7 @@ spec:
             - ALL
         readOnlyRootFilesystem: true
         runAsNonRoot: true
+        runAsUser: 1001
       script: |
         #!/bin/sh
         set -eu

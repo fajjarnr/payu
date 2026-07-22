@@ -384,6 +384,10 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             {"IMAGE_URL", "IMAGE_DIGEST"},
             {result["name"] for result in release["spec"]["results"]},
         )
+        self.assertEqual(
+            1001,
+            release["spec"]["steps"][0]["securityContext"]["runAsUser"],
+        )
         release_run = tasks["release-signed-image"]
         self.assertEqual(["grype-sbom-check"], release_run["runAfter"])
         release_params = {
