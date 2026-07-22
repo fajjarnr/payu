@@ -1,4 +1,7 @@
 vulnerabilities:
+  - id: CVE-2026-54369
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: account-service ships Red Hat libacl 2.4.0-1.el9_8; current vendor data marks it affected with no newer fix."
   - id: CVE-2026-11352
     expired_at: 2026-08-21
     statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl QUIC."
