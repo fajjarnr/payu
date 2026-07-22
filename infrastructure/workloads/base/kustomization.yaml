@@ -37,7 +37,6 @@ resources:
 - ./va-simulator.yaml
 - ./service-endpoints.yaml
 - ./dev-env-secrets.yaml
-- ./payu-secrets.yaml
 
 # ARCH-007: all remaining JVM workloads use the shared Hot Rod/mTLS contract.
 # The referenced secrets are provisioned externally; no credential material is
