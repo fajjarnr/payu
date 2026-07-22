@@ -137,7 +137,7 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             for param in trufflehog["spec"]["params"]
             if param["name"] == "EXCLUDE_DETECTORS"
         )
-        self.assertEqual("JDBC", excluded_default)
+        self.assertEqual("JDBC,Postgres", excluded_default)
 
     def test_tekton_prefers_digest_pinned_red_hat_images(self) -> None:
         tasks = REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks"
@@ -431,6 +431,8 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         config = (REPO_ROOT / ".gitleaks.toml").read_text(encoding="utf-8")
         self.assertIn('id = "jdbc-embedded-credentials"', config)
         self.assertIn('id = "jdbc-password-parameter"', config)
+        self.assertIn('id = "postgres-uri-credentials"', config)
+        self.assertIn("replication-lag-service-monitor", config)
 
     def test_account_image_patches_os_and_postgresql_cves(self) -> None:
         containerfile = (

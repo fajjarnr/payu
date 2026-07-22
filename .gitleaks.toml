@@ -15,6 +15,23 @@ title = "PayU Gitleaks Config"
   regex = '''(?i)jdbc:[^\s"']{0,512}[?&](?:password|pwd)=[^&\s"']+'''
   keywords = ["jdbc:", "password=", "pwd="]
 
+[[rules]]
+  id = "postgres-uri-credentials"
+  description = "PostgreSQL URI with embedded username and password"
+  regex = '''(?i)postgres(?:ql)?://[^\s"'@/:]+:[^\s"'@/]+@'''
+  keywords = ["postgres://", "postgresql://"]
+
+  [rules.allowlist]
+    description = "Reviewed documentation and monitoring placeholders"
+    paths = [
+      '''\.agents/skills/integration-architect/references/celery\.md''',
+      '''infrastructure/local/podman/config/BUILD_COMMANDS\.md''',
+      '''infrastructure/platform/api-management/3scale/README\.md''',
+      '''infrastructure/platform/multi-region/replication/postgres-replication\.yaml''',
+      '''infrastructure/platform/multi-region/monitoring/replication-lag-service-monitor\.yaml''',
+      '''infrastructure/platform/security/rhtas/securesign-ha\.yaml''',
+    ]
+
 [allowlist]
   description = "Allowlist dummy secrets in lab manifests"
   paths = [

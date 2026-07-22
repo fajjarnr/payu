@@ -19,7 +19,7 @@ spec:
     - name: EXCLUDE_DETECTORS
       type: string
       description: "Explicit non-secret detectors covered by the Gitleaks gate"
-      default: "JDBC"
+      default: "JDBC,Postgres"
   workspaces:
     - name: source
       description: "Workspace containing the cloned repository"
