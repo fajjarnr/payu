@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS wallets (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_wallet_account_id ON wallets(account_id);
+CREATE INDEX idx_wallet_account_id ON wallets(account_id);
 
 -- Wallet transactions (ledger) table
 CREATE TABLE IF NOT EXISTS wallet_transactions (
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     CONSTRAINT fk_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_txn_wallet_id ON wallet_transactions(wallet_id);
-CREATE INDEX IF NOT EXISTS idx_txn_reference_id ON wallet_transactions(reference_id);
+CREATE INDEX idx_txn_wallet_id ON wallet_transactions(wallet_id);
+CREATE INDEX idx_txn_reference_id ON wallet_transactions(reference_id);
 
 -- Insert test wallet for development
 INSERT INTO wallets (id, account_id, balance, reserved_balance, currency, status, version)

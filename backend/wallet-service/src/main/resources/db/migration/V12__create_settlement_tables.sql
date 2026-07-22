@@ -2,7 +2,7 @@
 -- Supports E-12: Settlement & Financial Operations (GAP-003, GAP-013)
 
 -- 1. Settlement batches for daily settlement processing
-CREATE TABLE IF NOT EXISTS settlement_batches (
+CREATE TABLE settlement_batches (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     partner_id      VARCHAR(128) NOT NULL,
     settlement_date DATE NOT NULL,
@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS settlement_batches (
     updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_settlement_partner ON settlement_batches (partner_id);
-CREATE INDEX IF NOT EXISTS idx_settlement_date ON settlement_batches (settlement_date);
-CREATE INDEX IF NOT EXISTS idx_settlement_status ON settlement_batches (status);
-CREATE INDEX IF NOT EXISTS idx_settlement_partner_date ON settlement_batches (partner_id, settlement_date);
-CREATE INDEX IF NOT EXISTS idx_settlement_tenant ON settlement_batches (tenant_id);
+CREATE INDEX idx_settlement_partner ON settlement_batches (partner_id);
+CREATE INDEX idx_settlement_date ON settlement_batches (settlement_date);
+CREATE INDEX idx_settlement_status ON settlement_batches (status);
+CREATE INDEX idx_settlement_partner_date ON settlement_batches (partner_id, settlement_date);
+CREATE INDEX idx_settlement_tenant ON settlement_batches (tenant_id);
 
 -- 2. Settlement entries (individual transactions within a batch)
-CREATE TABLE IF NOT EXISTS settlement_entries (
+CREATE TABLE settlement_entries (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     settlement_batch_id UUID NOT NULL REFERENCES settlement_batches(id) ON DELETE CASCADE,
     transaction_id      VARCHAR(128),
@@ -41,12 +41,12 @@ CREATE TABLE IF NOT EXISTS settlement_entries (
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_settlement_entry_batch ON settlement_entries (settlement_batch_id);
-CREATE INDEX IF NOT EXISTS idx_settlement_entry_tx ON settlement_entries (transaction_id);
-CREATE INDEX IF NOT EXISTS idx_settlement_entry_status ON settlement_entries (status);
+CREATE INDEX idx_settlement_entry_batch ON settlement_entries (settlement_batch_id);
+CREATE INDEX idx_settlement_entry_tx ON settlement_entries (transaction_id);
+CREATE INDEX idx_settlement_entry_status ON settlement_entries (status);
 
 -- 3. Settlement discrepancies for reconciliation
-CREATE TABLE IF NOT EXISTS settlement_discrepancies (
+CREATE TABLE settlement_discrepancies (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     settlement_batch_id UUID NOT NULL REFERENCES settlement_batches(id) ON DELETE CASCADE,
     transaction_id      VARCHAR(128),
@@ -61,11 +61,11 @@ CREATE TABLE IF NOT EXISTS settlement_discrepancies (
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_discrepancy_batch ON settlement_discrepancies (settlement_batch_id);
-CREATE INDEX IF NOT EXISTS idx_discrepancy_resolved ON settlement_discrepancies (resolved);
+CREATE INDEX idx_discrepancy_batch ON settlement_discrepancies (settlement_batch_id);
+CREATE INDEX idx_discrepancy_resolved ON settlement_discrepancies (resolved);
 
 -- 4. Revenue split configurations (GAP-013)
-CREATE TABLE IF NOT EXISTS revenue_splits (
+CREATE TABLE revenue_splits (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     partner_id      VARCHAR(128) NOT NULL,
     name            VARCHAR(128) NOT NULL,
@@ -80,12 +80,12 @@ CREATE TABLE IF NOT EXISTS revenue_splits (
     updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_revenue_split_partner ON revenue_splits (partner_id);
-CREATE INDEX IF NOT EXISTS idx_revenue_split_active ON revenue_splits (active);
-CREATE INDEX IF NOT EXISTS idx_revenue_split_tenant ON revenue_splits (tenant_id);
+CREATE INDEX idx_revenue_split_partner ON revenue_splits (partner_id);
+CREATE INDEX idx_revenue_split_active ON revenue_splits (active);
+CREATE INDEX idx_revenue_split_tenant ON revenue_splits (tenant_id);
 
 -- 5. Revenue split stakeholders
-CREATE TABLE IF NOT EXISTS revenue_split_stakeholders (
+CREATE TABLE revenue_split_stakeholders (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     revenue_split_id UUID NOT NULL REFERENCES revenue_splits(id) ON DELETE CASCADE,
     account_id      VARCHAR(128) NOT NULL,
@@ -96,5 +96,5 @@ CREATE TABLE IF NOT EXISTS revenue_split_stakeholders (
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_stakeholder_split ON revenue_split_stakeholders (revenue_split_id);
-CREATE INDEX IF NOT EXISTS idx_stakeholder_account ON revenue_split_stakeholders (account_id);
+CREATE INDEX idx_stakeholder_split ON revenue_split_stakeholders (revenue_split_id);
+CREATE INDEX idx_stakeholder_account ON revenue_split_stakeholders (account_id);

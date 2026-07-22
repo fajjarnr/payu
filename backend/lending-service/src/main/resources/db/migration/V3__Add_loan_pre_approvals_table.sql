@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS loan_pre_approvals (
+CREATE TABLE loan_pre_approvals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     loan_type VARCHAR(50) NOT NULL,
@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS loan_pre_approvals (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_loan_pre_approval_user_id ON loan_pre_approvals(user_id);
-CREATE INDEX IF NOT EXISTS idx_loan_pre_approval_valid_until ON loan_pre_approvals(valid_until);
-CREATE INDEX IF NOT EXISTS idx_loan_pre_approval_status ON loan_pre_approvals(status);
+CREATE INDEX idx_loan_pre_approval_user_id ON loan_pre_approvals(user_id);
+CREATE INDEX idx_loan_pre_approval_valid_until ON loan_pre_approvals(valid_until);
+CREATE INDEX idx_loan_pre_approval_status ON loan_pre_approvals(status);

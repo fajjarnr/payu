@@ -1,7 +1,7 @@
 -- GAP-005: API Key Management
 -- Dedicated API key entity with hashing, rotation, revocation, and rate plan linkage
 
-CREATE TABLE IF NOT EXISTS api_keys (
+CREATE TABLE api_keys (
     id                    BIGSERIAL PRIMARY KEY,
     partner_id            BIGINT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
     key_prefix            VARCHAR(32) NOT NULL,
@@ -26,10 +26,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
 );
 
 -- Indexes for api_keys
-CREATE INDEX IF NOT EXISTS idx_api_key_partner ON api_keys(partner_id);
-CREATE INDEX IF NOT EXISTS idx_api_key_prefix ON api_keys(key_prefix);
-CREATE INDEX IF NOT EXISTS idx_api_key_status ON api_keys(status);
-CREATE INDEX IF NOT EXISTS idx_api_key_tenant ON api_keys(tenant_id);
+CREATE INDEX idx_api_key_partner ON api_keys(partner_id);
+CREATE INDEX idx_api_key_prefix ON api_keys(key_prefix);
+CREATE INDEX idx_api_key_status ON api_keys(status);
+CREATE INDEX idx_api_key_tenant ON api_keys(tenant_id);
 
 -- Composite index for key validation
-CREATE INDEX IF NOT EXISTS idx_api_key_active ON api_keys(key_hash, status);
+CREATE INDEX idx_api_key_active ON api_keys(key_hash, status);

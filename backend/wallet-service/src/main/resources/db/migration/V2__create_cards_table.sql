@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS cards (
+CREATE TABLE cards (
     id UUID PRIMARY KEY,
     wallet_id UUID NOT NULL REFERENCES wallets(id),
     card_number VARCHAR(16) NOT NULL UNIQUE,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS cards (
     updated_at TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_cards_wallet_id ON cards(wallet_id);
-CREATE INDEX IF NOT EXISTS idx_cards_card_number ON cards(card_number);
+CREATE INDEX idx_cards_wallet_id ON cards(wallet_id);
+CREATE INDEX idx_cards_card_number ON cards(card_number);

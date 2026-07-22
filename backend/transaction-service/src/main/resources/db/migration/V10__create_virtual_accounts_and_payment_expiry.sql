@@ -2,7 +2,7 @@
 -- Part of E-15 IMP-042: Virtual Account Payment Collection
 -- Part of E-15 IMP-044: Payment Expiry & Auto-Cancel
 
-CREATE TABLE IF NOT EXISTS virtual_accounts (
+CREATE TABLE virtual_accounts (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     va_number           VARCHAR(30) NOT NULL UNIQUE,
     bank_code           VARCHAR(10) NOT NULL,
@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS virtual_accounts (
 );
 
 -- va_number already has UNIQUE constraint which creates an implicit index
-CREATE INDEX IF NOT EXISTS idx_va_partner_id ON virtual_accounts(partner_id);
-CREATE INDEX IF NOT EXISTS idx_va_status ON virtual_accounts(status);
-CREATE INDEX IF NOT EXISTS idx_va_expires_at ON virtual_accounts(expires_at);
-CREATE INDEX IF NOT EXISTS idx_va_external_id ON virtual_accounts(partner_id, external_id);
-CREATE INDEX IF NOT EXISTS idx_va_idempotency ON virtual_accounts(idempotency_key);
+CREATE INDEX idx_va_partner_id ON virtual_accounts(partner_id);
+CREATE INDEX idx_va_status ON virtual_accounts(status);
+CREATE INDEX idx_va_expires_at ON virtual_accounts(expires_at);
+CREATE INDEX idx_va_external_id ON virtual_accounts(partner_id, external_id);
+CREATE INDEX idx_va_idempotency ON virtual_accounts(idempotency_key);
 
 -- IMP-044: Add expires_at to transactions for payment expiry tracking
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;

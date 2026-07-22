@@ -1,7 +1,7 @@
 -- V9: Create escrow_transactions table for marketplace payment holding
 -- Supports E-10: Escrow & Marketplace Payments (GAP-007)
 
-CREATE TABLE IF NOT EXISTS escrow_transactions (
+CREATE TABLE escrow_transactions (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     buyer_account_id VARCHAR(128) NOT NULL,
     seller_account_id VARCHAR(128) NOT NULL,
@@ -25,13 +25,13 @@ CREATE TABLE IF NOT EXISTS escrow_transactions (
 );
 
 -- Performance indexes
-CREATE INDEX IF NOT EXISTS idx_escrow_buyer ON escrow_transactions (buyer_account_id);
-CREATE INDEX IF NOT EXISTS idx_escrow_seller ON escrow_transactions (seller_account_id);
-CREATE INDEX IF NOT EXISTS idx_escrow_partner ON escrow_transactions (partner_id);
-CREATE INDEX IF NOT EXISTS idx_escrow_status ON escrow_transactions (status);
-CREATE INDEX IF NOT EXISTS idx_escrow_external_ref ON escrow_transactions (external_reference_id);
-CREATE INDEX IF NOT EXISTS idx_escrow_expires ON escrow_transactions (expires_at);
-CREATE INDEX IF NOT EXISTS idx_escrow_tenant ON escrow_transactions (tenant_id);
+CREATE INDEX idx_escrow_buyer ON escrow_transactions (buyer_account_id);
+CREATE INDEX idx_escrow_seller ON escrow_transactions (seller_account_id);
+CREATE INDEX idx_escrow_partner ON escrow_transactions (partner_id);
+CREATE INDEX idx_escrow_status ON escrow_transactions (status);
+CREATE INDEX idx_escrow_external_ref ON escrow_transactions (external_reference_id);
+CREATE INDEX idx_escrow_expires ON escrow_transactions (expires_at);
+CREATE INDEX idx_escrow_tenant ON escrow_transactions (tenant_id);
 
 -- Composite index for expired escrow auto-refund scheduler
-CREATE INDEX IF NOT EXISTS idx_escrow_held_expires ON escrow_transactions (status, expires_at);
+CREATE INDEX idx_escrow_held_expires ON escrow_transactions (status, expires_at);

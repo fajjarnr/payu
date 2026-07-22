@@ -35,7 +35,7 @@ FROM accounts a
 WHERE a.updated_at >= CURRENT_DATE - INTERVAL '30 days'
 GROUP BY a.id, date_trunc('day', a.updated_at);
 
-CREATE INDEX IF NOT EXISTS idx_mv_balance_summary_account_date ON mv_account_balance_summary(account_id, date);
+CREATE INDEX idx_mv_balance_summary_account_date ON mv_account_balance_summary(account_id, date);
 
 COMMENT ON MATERIALIZED VIEW mv_account_balance_summary IS 'Daily balance summaries per account';
 

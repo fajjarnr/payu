@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id UUID PRIMARY KEY,
     external_id VARCHAR(255) NOT NULL UNIQUE,
     username VARCHAR(255) NOT NULL UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS profiles (
+CREATE TABLE profiles (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
     full_name VARCHAR(255) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE accounts (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
     account_number VARCHAR(20) NOT NULL UNIQUE,
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     CONSTRAINT fk_account_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_external_id ON users(external_id);
-CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
-CREATE INDEX IF NOT EXISTS idx_accounts_account_number ON accounts(account_number);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_external_id ON users(external_id);
+CREATE INDEX idx_accounts_user_id ON accounts(user_id);
+CREATE INDEX idx_accounts_account_number ON accounts(account_number);

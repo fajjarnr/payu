@@ -1,7 +1,7 @@
 -- V6: Merchant and QR Payment tables for dynamic QRIS
 -- Part of E-15 IMP-045: Dynamic QR for Merchants
 
-CREATE TABLE IF NOT EXISTS merchants (
+CREATE TABLE merchants (
     id                      BIGSERIAL PRIMARY KEY,
     partner_id              BIGINT NOT NULL REFERENCES partners(id),
     merchant_code           VARCHAR(20) NOT NULL UNIQUE,
@@ -22,12 +22,12 @@ CREATE TABLE IF NOT EXISTS merchants (
     updated_at              TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_partner_id ON merchants(partner_id);
+CREATE INDEX idx_merchant_partner_id ON merchants(partner_id);
 -- merchant_code already has UNIQUE constraint which creates an implicit index
-CREATE INDEX IF NOT EXISTS idx_merchant_status ON merchants(status);
-CREATE INDEX IF NOT EXISTS idx_merchant_tenant_id ON merchants(tenant_id);
+CREATE INDEX idx_merchant_status ON merchants(status);
+CREATE INDEX idx_merchant_tenant_id ON merchants(tenant_id);
 
-CREATE TABLE IF NOT EXISTS merchant_qr_payments (
+CREATE TABLE merchant_qr_payments (
     id                  BIGSERIAL PRIMARY KEY,
     reference_id        VARCHAR(36) NOT NULL UNIQUE,
     merchant_id         BIGINT NOT NULL REFERENCES merchants(id),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS merchant_qr_payments (
     created_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_qr_payment_merchant_id ON merchant_qr_payments(merchant_id);
+CREATE INDEX idx_qr_payment_merchant_id ON merchant_qr_payments(merchant_id);
 -- reference_id already has UNIQUE constraint which creates an implicit index
-CREATE INDEX IF NOT EXISTS idx_qr_payment_status ON merchant_qr_payments(status);
-CREATE INDEX IF NOT EXISTS idx_qr_payment_expires_at ON merchant_qr_payments(expires_at);
+CREATE INDEX idx_qr_payment_status ON merchant_qr_payments(status);
+CREATE INDEX idx_qr_payment_expires_at ON merchant_qr_payments(expires_at);

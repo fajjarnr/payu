@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS split_bills (
+CREATE TABLE split_bills (
     id UUID PRIMARY KEY,
     reference_number VARCHAR(50) UNIQUE NOT NULL,
     creator_account_id UUID NOT NULL,
@@ -14,11 +14,11 @@ CREATE TABLE IF NOT EXISTS split_bills (
     completed_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX IF NOT EXISTS idx_split_bills_creator ON split_bills(creator_account_id);
-CREATE INDEX IF NOT EXISTS idx_split_bills_status ON split_bills(status);
-CREATE INDEX IF NOT EXISTS idx_split_bills_due_date ON split_bills(due_date);
+CREATE INDEX idx_split_bills_creator ON split_bills(creator_account_id);
+CREATE INDEX idx_split_bills_status ON split_bills(status);
+CREATE INDEX idx_split_bills_due_date ON split_bills(due_date);
 
-CREATE TABLE IF NOT EXISTS split_bill_participants (
+CREATE TABLE split_bill_participants (
     id UUID PRIMARY KEY,
     split_bill_id UUID NOT NULL,
     account_id UUID NOT NULL,
@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS split_bill_participants (
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_split_bill_participants_split_bill ON split_bill_participants(split_bill_id);
-CREATE INDEX IF NOT EXISTS idx_split_bill_participants_account ON split_bill_participants(account_id);
-CREATE INDEX IF NOT EXISTS idx_split_bill_participants_status ON split_bill_participants(status);
+CREATE INDEX idx_split_bill_participants_split_bill ON split_bill_participants(split_bill_id);
+CREATE INDEX idx_split_bill_participants_account ON split_bill_participants(account_id);
+CREATE INDEX idx_split_bill_participants_status ON split_bill_participants(status);
 
 COMMENT ON TABLE split_bills IS 'Stores split bill information for multi-user payment sharing';
 COMMENT ON TABLE split_bill_participants IS 'Stores participants for split bills';

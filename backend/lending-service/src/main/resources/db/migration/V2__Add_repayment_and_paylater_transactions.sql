@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS repayment_schedules (
+CREATE TABLE repayment_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     loan_id UUID NOT NULL,
     installment_number INTEGER NOT NULL,
@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS repayment_schedules (
     CONSTRAINT fk_repayment_schedule_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_repayment_schedule_loan_id ON repayment_schedules(loan_id);
-CREATE INDEX IF NOT EXISTS idx_repayment_schedule_due_date ON repayment_schedules(due_date);
-CREATE INDEX IF NOT EXISTS idx_repayment_schedule_status ON repayment_schedules(status);
+CREATE INDEX idx_repayment_schedule_loan_id ON repayment_schedules(loan_id);
+CREATE INDEX idx_repayment_schedule_due_date ON repayment_schedules(due_date);
+CREATE INDEX idx_repayment_schedule_status ON repayment_schedules(status);
 
-CREATE TABLE IF NOT EXISTS paylater_transactions (
+CREATE TABLE paylater_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     external_id VARCHAR(255) UNIQUE,
     paylater_account_id UUID NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS paylater_transactions (
     CONSTRAINT fk_paylater_transaction_account FOREIGN KEY (paylater_account_id) REFERENCES paylater_accounts(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_paylater_transactions_account_id ON paylater_transactions(paylater_account_id);
-CREATE INDEX IF NOT EXISTS idx_paylater_transactions_type ON paylater_transactions(type);
-CREATE INDEX IF NOT EXISTS idx_paylater_transactions_status ON paylater_transactions(status);
-CREATE INDEX IF NOT EXISTS idx_paylater_transactions_date ON paylater_transactions(transaction_date);
+CREATE INDEX idx_paylater_transactions_account_id ON paylater_transactions(paylater_account_id);
+CREATE INDEX idx_paylater_transactions_type ON paylater_transactions(type);
+CREATE INDEX idx_paylater_transactions_status ON paylater_transactions(status);
+CREATE INDEX idx_paylater_transactions_date ON paylater_transactions(transaction_date);
