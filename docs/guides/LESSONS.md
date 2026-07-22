@@ -4124,3 +4124,11 @@ synchronized (lock) {
 **Context**: Interactive `roxctl` validation initially used the public Central Route even though direct external exposure was unnecessary.
 
 **Prevention**: For operator/admin access from a workstation, use `oc port-forward` to the Central Service with its CA and SNI, then stop the forward after validation. In-cluster CI uses `central.stackrox.svc` directly with a scoped token; never place the RHACS admin password in pipeline Secrets.
+
+### L-131: Transparency Requires a Complete Network Path (2026-07-22)
+
+**Context**: Tekton Chains signed and stored an OCI attestation but stalled before marking the release TaskRun signed after Rekor transparency was enabled.
+
+**Root cause**: The RHTAS namespace default-deny policy allowed the RHTAS operator, but not the Tekton Chains controller, to reach Rekor on TCP 3000.
+
+**Prevention**: Enable `transparency.enabled` with the internal Rekor Service URL and allow only the `tekton-chains-controller` pod from `openshift-pipelines` to TCP 3000. Completion evidence must include the `chains.tekton.dev/signed=true` annotation, a Rekor entry URL, and an increased Rekor tree size.

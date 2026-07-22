@@ -395,6 +395,15 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         }
         self.assertEqual(digest_reference, release_params["IMAGE"])
 
+        tekton_config = load_documents(
+            REPO_ROOT / "infrastructure/platform/cicd/tekton/pipelines.yaml"
+        )[0]
+        self.assertEqual("true", tekton_config["spec"]["chain"]["transparency.enabled"])
+        self.assertEqual(
+            "http://rekor-server.trusted-artifact-signer.svc",
+            tekton_config["spec"]["chain"]["transparency.url"],
+        )
+
     def test_trivy_reports_all_findings_and_uses_expiring_exceptions(self) -> None:
         trivy = load_documents(
             REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks/trivy-task.yaml"
@@ -888,6 +897,22 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             operator_ingress["from"][0]["podSelector"]["matchLabels"]
             ["control-plane"],
         )
+        chains_ingress = next(
+            rule
+            for rule in network_policy["spec"]["ingress"]
+            if any(
+                source.get("namespaceSelector", {})
+                .get("matchLabels", {})
+                .get("kubernetes.io/metadata.name")
+                == "openshift-pipelines"
+                for source in rule.get("from", [])
+            )
+        )
+        self.assertEqual(
+            "tekton-chains-controller",
+            chains_ingress["from"][0]["podSelector"]["matchLabels"]["app"],
+        )
+        self.assertEqual([{"protocol": "TCP", "port": 3000}], chains_ingress["ports"])
 
 
 if __name__ == "__main__":

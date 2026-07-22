@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-22 (RHTAS core services, EFS RWX, S3/KMS, and multi-AZ workers live; TUF/Vault/Loki/Results remain) |
+| **Last Updated** | 2026-07-22 (RHTAS Ready and fail-closed Tekton release recorded in Rekor; Vault/Loki/Results remain) |
 
 ---
 
@@ -76,11 +76,10 @@ completion evidence.
 - [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
 - [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
 - [ ] Bootstrap Argo CD Applications/ApplicationSets with Git/live parity before enabling prune and self-heal.
-- [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity is live; finish Rekor-backed strict verification, SBOM attestation retention, signed-image admission, and provider opt-in for the Pact gate.
+- [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity, OCI signature/attestation, and internal Rekor transparency are verified; finish SBOM attestation retention, signed-image admission, and provider opt-in for the Pact gate.
 - [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days.
 - [ ] Enforce security controls in ACS and operational controls in Kyverno without overlapping ownership. RHACS Central/SecuredCluster and nine Kyverno policies are Ready. Host-namespace denial remains enforced; root-user, approved-registry, and required-label controls remain Audit until 7, 8, and 6 live `payu-dev` violations respectively are remediated and negative admission tests pass.
 - [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.
-- [ ] Finish RHTAS 1.4 aggregate readiness. CNPG PostgreSQL 3/3, Redis/Sentinel 3/3, EFS-backed retained TUF storage, S3/KMS-backed Rekor/backups, and Rekor HTTP 200 are verified; the Securesign CR remains Pending until TUF reconciliation completes.
 - [x] Measure scheduler pressure and MachineSet topology; add workers only for a verified constraint. Required zone anti-affinity exposed the single-AZ worker layout, so workers were added in `1b/1c`; five workers are currently Ready across three AZs.
 - [ ] After workload redistribution and a disruption-budget review, rightsize the original `1a` MachineSet from three replicas to one so steady state is one worker per AZ.
 - [ ] Run positive and negative E2E security gates, DR/rollback exercises, reviewer audit, then reconcile architecture and PCI evidence documents with runtime truth.

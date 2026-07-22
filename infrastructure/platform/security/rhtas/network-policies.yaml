@@ -34,6 +34,17 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+    # Tekton Chains submits signed release records to Rekor.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-pipelines
+          podSelector:
+            matchLabels:
+              app: tekton-chains-controller
+      ports:
+        - protocol: TCP
+          port: 3000
   egress:
     - to:
         - podSelector: {}

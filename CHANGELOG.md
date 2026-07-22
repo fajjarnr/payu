@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allowed only the Tekton Chains controller to submit signed release records to the internal Rekor API through the RHTAS default-deny network policy.
+- Corrected Java build security gates, OpenShift registry authentication, scanner exceptions, and non-root release execution so the account-service pipeline completes fail closed.
 - Corrected EFS CSI Operator placement so its operand consumes CCO credentials from `openshift-cluster-csi-drivers`.
 - Allowed the exact DNS, Kubernetes API, and CNPG manager paths required inside the RHTAS default-deny namespace; corrected CCO policy resource encoding and cluster-wide External Secrets reconciliation.
 - Recovered RHTAS bootstrap after dependency ordering failures and replaced an incompatible HAProxy 3 DNS parser path with a Podman-validated, digest-pinned HAProxy 2.8 LTS image.
@@ -45,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Verification
 
+- `account-service-build-z75gg` completed all 16 Tekton TaskRuns, including Gitleaks, TruffleHog, Semgrep, SpotBugs, Trivy, RHACS `roxctl` scan/check, Syft, license, Grype, and signed release gates. The immutable image digest is `sha256:67f0bfc1e0010c6b040b697391164ab2e0d5d9373482a14750c18cca5ea40077`.
+- Tekton Chains stored the pipeline release OCI signature and attestation and annotated its TaskRun `chains.tekton.dev/signed=true`. After enabling automatic transparency, a standalone release verification for the same digest was recorded by internal Rekor at `logIndex=1`; Rekor reported `treeSize=2` through port-forward.
 - OpenShift reports eight Ready nodes with workers in three AZs; RHTAS PostgreSQL is healthy 3/3, Redis/Sentinel is 3/3, its proxy is 2/2, and the TUF EFS claim is Bound RWX.
 - Trillian schema and tree-creation jobs completed. Rekor returned HTTP 200 through port-forward with an initialized transparency log.
 - AWS CloudFormation validation and deployment completed for the retained KMS, S3, and EFS resources; EFS CSI controller and node conditions report Available.
