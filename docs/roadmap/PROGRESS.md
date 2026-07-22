@@ -10,18 +10,24 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 32/32 deployments Ready               | `payu-dev` workloads manually recovered and verified. GitOps ApplicationSet reconciliation remains open. |
+| Services Deployed        | 🟢 33/33 deployments Ready               | `payu-dev` workloads manually recovered and verified. GitOps ApplicationSet reconciliation remains open. |
 | Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
 | OpenShift Cluster        | 🟢 Active                                | OCP 4.20.26, 7 nodes Ready (3 control-plane + 4 worker). |
 | Operators Installed      | 🟢 Core platform ready                    | OpenShift GitOps 1.21.1, OpenShift Pipelines 1.22.4, 3scale operator 2.16 channel, CNPG 1.30.0, Redis Enterprise 8.0.20-23.0, Vault Secrets 1.4.0, Tempo 0.21.0-2, Compliance 1.9.1. |
-| Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid RESP compatibility, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
+| Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid Hot Rod/mTLS, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |
 | Maven Build              | 🟢 44/44                                 | `clean package -DskipTests -T 1C` BUILD SUCCESS on 2026-07-17. |
-| Cache                    | 🟢 Rate limiting on redis-3scale         | Rate limiting migrated from Infinispan RESP to 3scale redis-3scale standalone Redis (L-118). Data Grid RESP still used for general cache. |
+| Cache                    | 🟢 Hot Rod/mTLS healthy                  | JVM workloads use Data Grid Hot Rod; Redis-native rate limiting remains on redis-3scale. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
 | **Production Readiness** | 🟡 Bootstrap in progress                  | Local frontend and six-service Podman smoke are green; backoffice architecture remediation remains. |
-| Last Status Update       | 2026-07-17                               | Full backend reactor 44/44 modules verified green (0 failures, 0 errors). |
+| Last Status Update       | 2026-07-22                               | Cache recovery and all `payu-dev` workload readiness verified. |
+
+> ✅ **2026-07-22 — `payu-dev` cache and workload recovery completed**:
+> - The active Data Grid server reports Infinispan 16.0.14.redhat; the custom XML schema now matches 16.0. Zero-byte TLS key/certificate data was replaced with valid dev mTLS Secret material, and the `payu-cache` CR reached `WellFormed=True`.
+> - Added the `payu-dev` Hot Rod Spring-source compatibility overlay, explicit `RateLimitInterceptor` constructor injection, and a fallback `CacheManager` for `@EnableCaching` workloads.
+> - Restored billing V3 and backoffice V8 Flyway sources to their DB-applied checksums. Backoffice `1.8.83` and billing `1.8.84` rollouts succeeded.
+> - Final audit: 33/33 deployments Ready; 46/46 pods Running (`1/1`, Kafka entity operator `2/2`); no non-ready pod.
 
 > ✅ **2026-07-19 — ARCH-007 local Data Grid migration completed**:
 > - Java and Quarkus backend cache clients now use native Infinispan Hot Rod 16.2.1; direct Redis/RESP client paths were removed.

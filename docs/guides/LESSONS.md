@@ -2,6 +2,27 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-132: Cluster Cache Recovery Must Validate Runtime Contract Before App Rollout (2026-07-22)
+
+**Date**: 2026-07-22
+**Domain**: OpenShift, Red Hat Data Grid, Spring Boot, Flyway, mTLS
+**Context**: `payu-dev` had a Data Grid CrashLoop and 18 backend workloads in CrashLoopBackOff. The running Data Grid was Infinispan 16.0.14.redhat while its custom XML used the 16.2 schema. Its server TLS Secret also contained zero-byte certificate and key data. After cache recovery, two services exposed independent startup blockers: an ambiguous Spring constructor, an absent `CacheManager`, and checksum mismatches caused by edits to already-applied Flyway migrations.
+
+**Lesson**:
+- Match an Operator-managed custom configuration schema to the server actually running; manifest intent alone does not prove runtime compatibility.
+- A Secret key can exist yet be unusable. Validate certificate and key material before attributing an mTLS failure to client configuration.
+- A shared Hot Rod client configuration must be explicitly loaded by every Spring Boot workload. The `payu-dev` `SPRING_MAIN_SOURCES` overlay is a compatibility bridge until starter auto-configuration metadata includes `HotRodCacheConfig`.
+- `@EnableCaching` requires a `CacheManager` bean even when application cache operations use a native Hot Rod service.
+- Never change an applied Flyway migration. Restore its exact applied text; put schema changes in a new versioned migration.
+
+**Applied fix**:
+- Aligned the Data Grid custom XML to the active 16.0 server schema, restored valid dev mTLS server/client Secret material, and verified `WellFormed=True`.
+- Added an explicit constructor injection point for `RateLimitInterceptor` and a missing-bean `ConcurrentMapCacheManager` fallback in `cache-starter`.
+- Restored billing V3 and backoffice V8 migration source text to the checksums recorded in their database histories. Built and deployed backoffice `1.8.83` and billing `1.8.84`.
+- Verified `RateLimitInterceptorTest` (2 tests), `HotRodCacheConfigTest` (9 tests), backoffice/billing Maven package builds, 33/33 deployments Ready, and 46/46 pods Running in `payu-dev`.
+
+---
+
 ## L-131: Parity Tests Must Assert the Current Protocol Contract (2026-07-19)
 
 **Date**: 2026-07-19

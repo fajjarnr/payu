@@ -5,6 +5,7 @@ import id.payu.cache.service.DistributedAtomicCache;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -32,6 +33,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         this.windowSeconds = windowSeconds;
     }
 
+    @Autowired
     public RateLimitInterceptor(DistributedAtomicCache distributedCache) {
         this(distributedCache,
                 ApiConstants.DEFAULT_RATE_LIMIT_PER_MINUTE,

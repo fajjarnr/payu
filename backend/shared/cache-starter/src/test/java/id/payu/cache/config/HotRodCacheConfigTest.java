@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cache.CacheManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.UUID;
@@ -125,7 +126,10 @@ class HotRodCacheConfigTest {
                         "payu.cache.hotrod.server-list=localhost:11222",
                         "payu.cache.hotrod.auth-username=developer",
                         "payu.cache.hotrod.auth-password=payu-cache-dev-password")
-                .run(context -> assertThat(context).hasSingleBean(HotRodDistributedCacheServiceImpl.class));
+                .run(context -> {
+                    assertThat(context).hasSingleBean(HotRodDistributedCacheServiceImpl.class);
+                    assertThat(context).hasSingleBean(CacheManager.class);
+                });
     }
 
     @Test

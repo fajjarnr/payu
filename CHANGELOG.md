@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Recovered `payu-dev` Data Grid by aligning its custom configuration with the active Infinispan 16.0 runtime and restoring valid dev mTLS Secret material.
+- Added explicit constructor injection for `RateLimitInterceptor` and a missing-bean `ConcurrentMapCacheManager` fallback for Spring `@EnableCaching` workloads.
+- Restored billing V3 and backoffice V8 Flyway migration sources to their existing database checksums; deployed backoffice `1.8.83` and billing `1.8.84`.
+- Added a `payu-dev` Hot Rod Spring-source compatibility overlay until the starter auto-configuration metadata includes `HotRodCacheConfig`.
 - Removed protocol-dependent key encoding so a REST `text/plain` write is readable through the JVM Hot Rod client.
 - Configured Python cache clients to fail closed when a configured remote Data Grid endpoint is unavailable.
 - Corrected Hot Rod SASL defaults to `DIGEST-SHA-256` and removed a gateway dependency mismatch that caused mTLS startup failure.
@@ -30,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Verification
 
+- `RateLimitInterceptorTest` passed (2 tests); `HotRodCacheConfigTest` passed (9 tests); backoffice and billing Maven package builds completed with `BUILD SUCCESS`.
+- OpenShift final audit: 33/33 deployments Ready, 46/46 pods Running, `payu-cache` `WellFormed=True`, and no non-ready pod.
 - Podman Compose renders; Infinispan 16.2.1 is healthy. mTLS REST succeeds with the client certificate and is rejected without it; the fresh server log has no application WARN/ERROR/FATAL/exception entries.
 - Passed KYC (2), analytics (2), cache starter (9), and gateway Hot Rod (3) targeted local tests, including REST-to-Hot-Rod interoperability.
 - Podman `apps` profile smoke test: gateway readiness, KYC health, analytics health, Data Grid, Kafka, and Artemis are healthy; fresh steady-state application logs contain no WARN/ERROR/exception entries.

@@ -3,6 +3,7 @@ package id.payu.api.common.controller;
 import id.payu.cache.service.DistributedAtomicCache;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -13,6 +14,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class RateLimitInterceptorTest {
+
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withBean(DistributedAtomicCache.class, () -> mock(DistributedAtomicCache.class))
+            .withBean(RateLimitInterceptor.class);
+
+    @Test
+    void shouldCreateInterceptorFromItsCacheConstructor() {
+        contextRunner.run(context ->
+                assertThat(context).hasSingleBean(RateLimitInterceptor.class));
+    }
 
     @Test
     void shouldRejectRequestOverTheLimitWithAtomicCacheTtl() throws Exception {

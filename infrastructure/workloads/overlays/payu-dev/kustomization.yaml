@@ -20,10 +20,10 @@ images:
   newTag: "1.8.83"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-  newTag: "1.8.80"
+  newTag: "1.8.83"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-  newTag: "1.8.82"
+  newTag: "1.8.84"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newTag: "1.8.81"
@@ -615,3 +615,21 @@ patches:
       value:
         name: OTEL_ENDPOINT
         value: "http://localhost:4317"
+
+# Cache starter publishes CacheAutoConfiguration but HotRodCacheConfig is not
+# listed in the deployed starter's auto-configuration metadata. Register it as
+# an additional Spring source until images include the corrected metadata.
+- target:
+    kind: Deployment
+    labelSelector: app.kubernetes.io/component=backend
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: SPRING_MAIN_SOURCES
+              value: id.payu.cache.config.HotRodCacheConfig

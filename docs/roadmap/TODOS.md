@@ -17,9 +17,9 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running, 32/32 deployments Ready, and 39 ImageStreamTags. |
+| **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-19 (ARCH-007 local mTLS gate complete: JVM Hot Rod, Python REST, shared `payu` JSON-text cache; production secret wiring and canary remain) |
+| **Last Updated** | 2026-07-22 (cache recovery complete: Data Grid `WellFormed=True`, mTLS and Hot Rod verified; 24-hour canary remains) |
 
 ---
 
@@ -34,7 +34,7 @@
 | SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
-| ARCH-007 | P2 | [cache] Infinispan 16.2.1 migration: Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. All workload, mesh, and Kong renders now use their correct `payu` Hot Rod/mTLS or dedicated Redis-native contracts. Provision the external TLS/client-CA/client-keystore Secrets, perform an in-cluster mTLS smoke test, then run the `payu-dev` 24-hour canary. | 🔄 In progress |
+| ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
 | ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
 | ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
 | ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
