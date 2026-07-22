@@ -1,5 +1,5 @@
 -- Create savings_goals table (IMP-039)
-CREATE TABLE savings_goals (
+CREATE TABLE IF NOT EXISTS savings_goals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pocket_id UUID NOT NULL,
     user_id UUID NOT NULL,
@@ -23,11 +23,11 @@ CREATE TABLE savings_goals (
 );
 
 -- Create indexes
-CREATE INDEX idx_savings_goals_pocket_id ON savings_goals(pocket_id);
-CREATE INDEX idx_savings_goals_user_id ON savings_goals(user_id);
-CREATE INDEX idx_savings_goals_status ON savings_goals(status);
-CREATE INDEX idx_savings_goals_user_status ON savings_goals(user_id, status);
-CREATE INDEX idx_savings_goals_deadline ON savings_goals(deadline) WHERE deadline IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_savings_goals_pocket_id ON savings_goals(pocket_id);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_user_id ON savings_goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_status ON savings_goals(status);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_user_status ON savings_goals(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_deadline ON savings_goals(deadline) WHERE deadline IS NOT NULL;
 
 -- Add comments
 COMMENT ON TABLE savings_goals IS 'User savings goals within pockets';

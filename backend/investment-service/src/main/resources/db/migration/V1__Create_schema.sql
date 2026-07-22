@@ -1,4 +1,4 @@
-CREATE TABLE investment_accounts (
+CREATE TABLE IF NOT EXISTS investment_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR(255) NOT NULL UNIQUE,
     total_balance DECIMAL(19, 4) DEFAULT 0,
@@ -9,7 +9,7 @@ CREATE TABLE investment_accounts (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE deposits (
+CREATE TABLE IF NOT EXISTS deposits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id VARCHAR(255) NOT NULL,
     amount DECIMAL(19, 4) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE deposits (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE mutual_funds (
+CREATE TABLE IF NOT EXISTS mutual_funds (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE mutual_funds (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE gold_holdings (
+CREATE TABLE IF NOT EXISTS gold_holdings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR(255) NOT NULL UNIQUE,
     amount DECIMAL(19, 4),
@@ -51,7 +51,7 @@ CREATE TABLE gold_holdings (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE investment_transactions (
+CREATE TABLE IF NOT EXISTS investment_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id VARCHAR(255) NOT NULL,
     type VARCHAR(20) NOT NULL,
@@ -68,11 +68,11 @@ CREATE TABLE investment_transactions (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_deposits_account_id ON deposits(account_id);
-CREATE INDEX idx_mutual_funds_code ON mutual_funds(code);
-CREATE INDEX idx_gold_holdings_user_id ON gold_holdings(user_id);
-CREATE INDEX idx_investment_transactions_account_id ON investment_transactions(account_id);
-CREATE INDEX idx_investment_transactions_reference_number ON investment_transactions(reference_number);
+CREATE INDEX IF NOT EXISTS idx_deposits_account_id ON deposits(account_id);
+CREATE INDEX IF NOT EXISTS idx_mutual_funds_code ON mutual_funds(code);
+CREATE INDEX IF NOT EXISTS idx_gold_holdings_user_id ON gold_holdings(user_id);
+CREATE INDEX IF NOT EXISTS idx_investment_transactions_account_id ON investment_transactions(account_id);
+CREATE INDEX IF NOT EXISTS idx_investment_transactions_reference_number ON investment_transactions(reference_number);
 
 INSERT INTO mutual_funds (code, name, type, nav_per_unit, minimum_investment, management_fee, redemption_fee) VALUES
 ('MMF001', 'PayU Money Market Fund', 'MONEY_MARKET', 1500.0000, 10000.0000, 0.0050, 0.0020),

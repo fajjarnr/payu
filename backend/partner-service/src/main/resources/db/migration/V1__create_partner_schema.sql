@@ -1,4 +1,4 @@
-CREATE TABLE partners (
+CREATE TABLE IF NOT EXISTS partners (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE partners (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE partner_certificates (
+CREATE TABLE IF NOT EXISTS partner_certificates (
     id BIGSERIAL PRIMARY KEY,
     partner_id BIGINT REFERENCES partners(id),
     certificate_pem TEXT NOT NULL,
@@ -31,5 +31,5 @@ CREATE TABLE partner_certificates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_partners_client_id ON partners(client_id);
-CREATE INDEX idx_partner_certificates_partner_id ON partner_certificates(partner_id);
+CREATE INDEX IF NOT EXISTS idx_partners_client_id ON partners(client_id);
+CREATE INDEX IF NOT EXISTS idx_partner_certificates_partner_id ON partner_certificates(partner_id);

@@ -1,5 +1,5 @@
 -- Scheduled Transfers table
-CREATE TABLE scheduled_transfers (
+CREATE TABLE IF NOT EXISTS scheduled_transfers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reference_number VARCHAR(50) UNIQUE NOT NULL,
     sender_account_id UUID NOT NULL,
@@ -30,8 +30,8 @@ CREATE TABLE scheduled_transfers (
     CONSTRAINT valid_occurrence_count CHECK (occurrence_count IS NULL OR occurrence_count > 0)
 );
 
-CREATE INDEX idx_scheduled_transfers_sender ON scheduled_transfers(sender_account_id);
-CREATE INDEX idx_scheduled_transfers_reference ON scheduled_transfers(reference_number);
-CREATE INDEX idx_scheduled_transfers_next_execution ON scheduled_transfers(next_execution_date);
-CREATE INDEX idx_scheduled_transfers_status ON scheduled_transfers(status);
-CREATE INDEX idx_scheduled_transfers_type ON scheduled_transfers(schedule_type);
+CREATE INDEX IF NOT EXISTS idx_scheduled_transfers_sender ON scheduled_transfers(sender_account_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_transfers_reference ON scheduled_transfers(reference_number);
+CREATE INDEX IF NOT EXISTS idx_scheduled_transfers_next_execution ON scheduled_transfers(next_execution_date);
+CREATE INDEX IF NOT EXISTS idx_scheduled_transfers_status ON scheduled_transfers(status);
+CREATE INDEX IF NOT EXISTS idx_scheduled_transfers_type ON scheduled_transfers(schedule_type);

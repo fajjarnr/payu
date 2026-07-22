@@ -13,4 +13,4 @@ COMMENT ON COLUMN cards.card_number IS 'Card number encrypted at rest using AES-
 
 -- 4. Rebuild indexes after column type change
 DROP INDEX IF EXISTS idx_cards_card_number;
-CREATE INDEX idx_cards_card_number ON cards(card_number);
+CREATE INDEX IF NOT EXISTS idx_cards_card_number ON cards(card_number);

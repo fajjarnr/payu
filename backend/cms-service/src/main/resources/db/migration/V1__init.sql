@@ -13,7 +13,7 @@ CREATE TYPE content_status AS ENUM (
 );
 
 -- Create cms_contents table
-CREATE TABLE cms_contents (
+CREATE TABLE IF NOT EXISTS cms_contents (
     -- Primary key
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -56,15 +56,15 @@ CREATE TABLE cms_contents (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_cms_content_type ON cms_contents(content_type);
-CREATE INDEX idx_cms_status ON cms_contents(status);
-CREATE INDEX idx_cms_dates ON cms_contents(start_date, end_date);
-CREATE INDEX idx_cms_priority ON cms_contents(priority DESC);
-CREATE INDEX idx_cms_created_by ON cms_contents(created_by);
+CREATE INDEX IF NOT EXISTS idx_cms_content_type ON cms_contents(content_type);
+CREATE INDEX IF NOT EXISTS idx_cms_status ON cms_contents(status);
+CREATE INDEX IF NOT EXISTS idx_cms_dates ON cms_contents(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_cms_priority ON cms_contents(priority DESC);
+CREATE INDEX IF NOT EXISTS idx_cms_created_by ON cms_contents(created_by);
 
 -- Create GIN indexes for JSONB searches
-CREATE INDEX idx_cms_targeting_rules ON cms_contents USING GIN (targeting_rules);
-CREATE INDEX idx_cms_metadata ON cms_contents USING GIN (metadata);
+CREATE INDEX IF NOT EXISTS idx_cms_targeting_rules ON cms_contents USING GIN (targeting_rules);
+CREATE INDEX IF NOT EXISTS idx_cms_metadata ON cms_contents USING GIN (metadata);
 
 -- Add comments for documentation
 COMMENT ON TABLE cms_contents IS 'Content Management System table for banners, promos, alerts, and popups';

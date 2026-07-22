@@ -1,5 +1,5 @@
 -- Transactions table
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reference_number VARCHAR(50) UNIQUE NOT NULL,
     sender_account_id UUID NOT NULL,
@@ -19,8 +19,8 @@ CREATE TABLE transactions (
     CONSTRAINT valid_status CHECK (status IN ('PENDING', 'VALIDATING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'))
 );
 
-CREATE INDEX idx_transactions_sender ON transactions(sender_account_id);
-CREATE INDEX idx_transactions_recipient ON transactions(recipient_account_id);
-CREATE INDEX idx_transactions_reference ON transactions(reference_number);
-CREATE INDEX idx_transactions_created ON transactions(created_at DESC);
-CREATE INDEX idx_transactions_status ON transactions(status);
+CREATE INDEX IF NOT EXISTS idx_transactions_sender ON transactions(sender_account_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_recipient ON transactions(recipient_account_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_reference ON transactions(reference_number);
+CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);

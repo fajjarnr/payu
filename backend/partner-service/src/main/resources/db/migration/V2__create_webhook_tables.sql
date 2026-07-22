@@ -1,7 +1,7 @@
 -- GAP-001: Outbound webhook subscriptions and delivery tracking
 -- Enables partners to receive real-time event notifications via HTTP POST
 
-CREATE TABLE webhook_subscriptions (
+CREATE TABLE IF NOT EXISTS webhook_subscriptions (
     id              BIGSERIAL PRIMARY KEY,
     partner_id      BIGINT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
     url             VARCHAR(2048) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE webhook_subscriptions (
     CONSTRAINT uq_webhook_partner_url UNIQUE (partner_id, url)
 );
 
-CREATE TABLE webhook_deliveries (
+CREATE TABLE IF NOT EXISTS webhook_deliveries (
     id              BIGSERIAL PRIMARY KEY,
     subscription_id BIGINT NOT NULL REFERENCES webhook_subscriptions(id) ON DELETE CASCADE,
     event_id        VARCHAR(64) NOT NULL,
@@ -35,15 +35,15 @@ CREATE TABLE webhook_deliveries (
 );
 
 -- Indexes for webhook_subscriptions
-CREATE INDEX idx_webhook_sub_partner ON webhook_subscriptions(partner_id);
-CREATE INDEX idx_webhook_sub_active ON webhook_subscriptions(active);
+CREATE INDEX IF NOT EXISTS idx_webhook_sub_partner ON webhook_subscriptions(partner_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_sub_active ON webhook_subscriptions(active);
 
 -- Indexes for webhook_deliveries
-CREATE INDEX idx_delivery_subscription ON webhook_deliveries(subscription_id);
-CREATE INDEX idx_delivery_status ON webhook_deliveries(status);
-CREATE INDEX idx_delivery_next_retry ON webhook_deliveries(next_retry_at);
-CREATE INDEX idx_delivery_event_id ON webhook_deliveries(event_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_subscription ON webhook_deliveries(subscription_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_status ON webhook_deliveries(status);
+CREATE INDEX IF NOT EXISTS idx_delivery_next_retry ON webhook_deliveries(next_retry_at);
+CREATE INDEX IF NOT EXISTS idx_delivery_event_id ON webhook_deliveries(event_id);
 
 -- Composite index for retry processor query
-CREATE INDEX idx_delivery_retry_eligible
+CREATE INDEX IF NOT EXISTS idx_delivery_retry_eligible
     ON webhook_deliveries(status, next_retry_at);

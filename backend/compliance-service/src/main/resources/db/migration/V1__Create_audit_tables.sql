@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS audit_reports (
     created_by VARCHAR(255)
 );
 
-CREATE INDEX idx_audit_reports_transaction_id ON audit_reports(transaction_id);
-CREATE INDEX idx_audit_reports_merchant_id ON audit_reports(merchant_id);
-CREATE INDEX idx_audit_reports_compliance_standard ON audit_reports(compliance_standard);
-CREATE INDEX idx_audit_reports_created_at ON audit_reports(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_reports_transaction_id ON audit_reports(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_audit_reports_merchant_id ON audit_reports(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_audit_reports_compliance_standard ON audit_reports(compliance_standard);
+CREATE INDEX IF NOT EXISTS idx_audit_reports_created_at ON audit_reports(created_at);
 
 CREATE TABLE IF NOT EXISTS compliance_checks (
     audit_report_id UUID NOT NULL,
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS compliance_checks (
     FOREIGN KEY (audit_report_id) REFERENCES audit_reports(id)
 );
 
-CREATE INDEX idx_compliance_checks_audit_report_id ON compliance_checks(audit_report_id);
-CREATE INDEX idx_compliance_checks_check_id ON compliance_checks(check_id);
+CREATE INDEX IF NOT EXISTS idx_compliance_checks_audit_report_id ON compliance_checks(audit_report_id);
+CREATE INDEX IF NOT EXISTS idx_compliance_checks_check_id ON compliance_checks(check_id);
 
 CREATE TABLE IF NOT EXISTS data_access_audits (
     id UUID PRIMARY KEY,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS data_access_audits (
     created_at TIMESTAMP NOT NULL
 );
 
-CREATE INDEX idx_user_id ON data_access_audits(user_id);
-CREATE INDEX idx_accessed_by ON data_access_audits(accessed_by);
-CREATE INDEX idx_accessed_at ON data_access_audits(accessed_at);
-CREATE INDEX idx_service_name ON data_access_audits(service_name);
+CREATE INDEX IF NOT EXISTS idx_user_id ON data_access_audits(user_id);
+CREATE INDEX IF NOT EXISTS idx_accessed_by ON data_access_audits(accessed_by);
+CREATE INDEX IF NOT EXISTS idx_accessed_at ON data_access_audits(accessed_at);
+CREATE INDEX IF NOT EXISTS idx_service_name ON data_access_audits(service_name);

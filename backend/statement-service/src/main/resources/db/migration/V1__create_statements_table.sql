@@ -26,10 +26,10 @@ CREATE TABLE IF NOT EXISTS statements (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_statements_customer_id ON statements(customer_id);
-CREATE INDEX idx_statements_period ON statements(statement_period DESC);
-CREATE INDEX idx_statements_status ON statements(status);
-CREATE INDEX idx_statements_customer_period ON statements(customer_id, statement_period DESC);
+CREATE INDEX IF NOT EXISTS idx_statements_customer_id ON statements(customer_id);
+CREATE INDEX IF NOT EXISTS idx_statements_period ON statements(statement_period DESC);
+CREATE INDEX IF NOT EXISTS idx_statements_status ON statements(status);
+CREATE INDEX IF NOT EXISTS idx_statements_customer_period ON statements(customer_id, statement_period DESC);
 
 -- Comments for documentation
 COMMENT ON TABLE statements IS 'Monthly e-statement metadata for customer accounts';

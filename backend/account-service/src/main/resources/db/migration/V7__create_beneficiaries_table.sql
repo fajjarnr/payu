@@ -1,5 +1,5 @@
 -- Create beneficiaries table (IMP-035)
-CREATE TABLE beneficiaries (
+CREATE TABLE IF NOT EXISTS beneficiaries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     bank_code VARCHAR(10) NOT NULL,
@@ -17,9 +17,9 @@ CREATE TABLE beneficiaries (
 );
 
 -- Create indexes
-CREATE INDEX idx_beneficiaries_user_id ON beneficiaries(user_id);
-CREATE INDEX idx_beneficiaries_status ON beneficiaries(status);
-CREATE INDEX idx_beneficiaries_user_status ON beneficiaries(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_beneficiaries_user_id ON beneficiaries(user_id);
+CREATE INDEX IF NOT EXISTS idx_beneficiaries_status ON beneficiaries(status);
+CREATE INDEX IF NOT EXISTS idx_beneficiaries_user_status ON beneficiaries(user_id, status);
 
 -- Add comments
 COMMENT ON TABLE beneficiaries IS 'User saved beneficiaries for quick transfers';

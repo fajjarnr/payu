@@ -1,7 +1,7 @@
 -- V5: Payment Links table for partner invoice/payment link generation
 -- Part of E-15 IMP-040: Payment Link / Invoice Generation
 
-CREATE TABLE payment_links (
+CREATE TABLE IF NOT EXISTS payment_links (
     id              BIGSERIAL PRIMARY KEY,
     slug            VARCHAR(36) NOT NULL UNIQUE,
     partner_id      BIGINT NOT NULL REFERENCES partners(id),
@@ -24,8 +24,8 @@ CREATE TABLE payment_links (
 );
 
 -- slug already has UNIQUE constraint which creates an implicit index
-CREATE INDEX idx_payment_link_partner ON payment_links(partner_id);
-CREATE INDEX idx_payment_link_status ON payment_links(status);
-CREATE INDEX idx_payment_link_tenant_id ON payment_links(tenant_id);
-CREATE INDEX idx_payment_link_expires_at ON payment_links(expires_at);
-CREATE INDEX idx_payment_link_external ON payment_links(partner_id, external_id);
+CREATE INDEX IF NOT EXISTS idx_payment_link_partner ON payment_links(partner_id);
+CREATE INDEX IF NOT EXISTS idx_payment_link_status ON payment_links(status);
+CREATE INDEX IF NOT EXISTS idx_payment_link_tenant_id ON payment_links(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_payment_link_expires_at ON payment_links(expires_at);
+CREATE INDEX IF NOT EXISTS idx_payment_link_external ON payment_links(partner_id, external_id);

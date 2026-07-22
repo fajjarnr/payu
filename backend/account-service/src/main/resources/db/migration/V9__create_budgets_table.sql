@@ -1,6 +1,6 @@
 -- IMP-054: Budget Management - Create budgets table
 
-CREATE TABLE budgets (
+CREATE TABLE IF NOT EXISTS budgets (
     id                    UUID PRIMARY KEY,
     user_id               UUID NOT NULL,
     category              VARCHAR(100) NOT NULL,
@@ -20,15 +20,15 @@ CREATE TABLE budgets (
 );
 
 -- Indexes for budgets
-CREATE INDEX idx_budget_user_id ON budgets(user_id);
-CREATE INDEX idx_budget_category ON budgets(category);
-CREATE INDEX idx_budget_active ON budgets(active);
-CREATE INDEX idx_budget_reset_date ON budgets(reset_date);
-CREATE INDEX idx_budget_user_category ON budgets(user_id, category);
-CREATE INDEX idx_budget_user_active ON budgets(user_id, active);
+CREATE INDEX IF NOT EXISTS idx_budget_user_id ON budgets(user_id);
+CREATE INDEX IF NOT EXISTS idx_budget_category ON budgets(category);
+CREATE INDEX IF NOT EXISTS idx_budget_active ON budgets(active);
+CREATE INDEX IF NOT EXISTS idx_budget_reset_date ON budgets(reset_date);
+CREATE INDEX IF NOT EXISTS idx_budget_user_category ON budgets(user_id, category);
+CREATE INDEX IF NOT EXISTS idx_budget_user_active ON budgets(user_id, active);
 
 -- Composite unique constraint: one active budget per user per category
-CREATE UNIQUE INDEX idx_budget_unique_active_category
+CREATE UNIQUE INDEX IF NOT EXISTS idx_budget_unique_active_category
     ON budgets(user_id, category)
     WHERE active = TRUE;
 
