@@ -129,7 +129,7 @@ spec:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
 
-    # ── Step 2-4: Service-specific SAST & SCA (SpotBugs + Dep Check for Java) ──
+    # ── Step 2-4: Java SAST + tests; image SCA runs later via Trivy and Grype ──
     - name: sast-sca-scan
       runAfter:
         - semgrep-scan
@@ -147,6 +147,8 @@ spec:
       params:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
+        - name: MODULE
+          value: $(params.service-path)
 
     - name: python-unit-tests
       runAfter:
@@ -290,6 +292,8 @@ spec:
       taskRef:
         name: trivy
       workspaces:
+        - name: output
+          workspace: source
         - name: dockerconfig
           workspace: dockerconfig
       params:
@@ -299,6 +303,8 @@ spec:
           value: "CRITICAL,HIGH"
         - name: EXIT_CODE
           value: "1"
+        - name: IGNORE_FILE
+          value: "$(params.service-base-dir)/$(params.service-path)/.trivyignore.yaml"
 
     # ── Step 5: RHACS Image Scan (CVE vulnerability report) ──
     - name: rhacs-image-scan

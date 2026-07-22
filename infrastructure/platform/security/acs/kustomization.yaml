@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - rhacs.yaml
   - security-policies.yaml
+  - registry-reader-rbac.yaml

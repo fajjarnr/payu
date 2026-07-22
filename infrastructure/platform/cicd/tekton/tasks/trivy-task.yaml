@@ -19,6 +19,10 @@ spec:
       type: string
       description: "Exit code when vulnerabilities found (0=warn, 1=fail)"
       default: "1"
+    - name: IGNORE_FILE
+      type: string
+      description: "Optional service-scoped Trivy YAML exception file within the source workspace"
+      default: ""
   workspaces:
     - name: output
       description: Workspace for scan reports
@@ -88,8 +92,13 @@ spec:
           echo -n "$VULN_COUNT" | tee $(results.VULN_COUNT.path)
 
           set +e
+          IGNORE_ARGS=""
+          if [ -n "$(params.IGNORE_FILE)" ] && [ -f "$(workspaces.output.path)/$(params.IGNORE_FILE)" ]; then
+            IGNORE_ARGS="--ignorefile $(workspaces.output.path)/$(params.IGNORE_FILE)"
+          fi
           trivy image \
             --severity $(params.SEVERITY) \
+            $IGNORE_ARGS \
             --exit-code $(params.EXIT_CODE) \
             $(params.IMAGE)
           RESULT=$?
@@ -97,9 +106,9 @@ spec:
 
           if [ $RESULT -eq 0 ]; then
             echo -n "PASS" | tee $(results.SCAN_RESULT.path)
-            echo "[✓] No $(params.SEVERITY) vulnerabilities found"
+            echo "[✓] No unaccepted $(params.SEVERITY) vulnerabilities found"
           else
             echo -n "FAIL" | tee $(results.SCAN_RESULT.path)
-            echo "[✗] Found $VULN_COUNT vulnerabilities at $(params.SEVERITY) level"
+            echo "[✗] Found unaccepted vulnerabilities at $(params.SEVERITY) level ($VULN_COUNT total reported)"
             exit $(params.EXIT_CODE)
           fi

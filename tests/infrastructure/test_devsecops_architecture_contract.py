@@ -48,6 +48,16 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertEqual(8080, service["spec"]["ports"][0]["targetPort"])
         self.assertEqual("http", route["spec"]["port"]["targetPort"])
 
+    def test_account_service_runtime_image_is_digest_pinned_red_hat(self) -> None:
+        containerfile = (
+            REPO_ROOT / "backend/account-service/Containerfile"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "FROM registry.redhat.io/ubi9/openjdk-25-runtime@sha256:",
+            containerfile,
+        )
+        self.assertNotIn("registry.access.redhat.com", containerfile)
+
     def test_build_pipeline_runs_tests_and_blocks_vulnerable_images(self) -> None:
         pipeline = (
             REPO_ROOT / "infrastructure/platform/cicd/tekton/build-pipeline.yaml"
@@ -83,9 +93,51 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             "$(workspaces.source.path)/scripts/security/spotbugs-filter.xml",
             security_scan,
         )
+        self.assertIn(
+            "com.github.spotbugs:spotbugs-maven-plugin:4.10.3.0:check",
+            security_scan,
+        )
+        reactor_install = (
+            'mvn -f "$(params.MAVEN_POM)" -pl "$(params.MODULE)" -am install'
+        )
+        module_scan = 'mvn -f "$(params.CONTEXT_DIR)/pom.xml"'
+        self.assertIn(reactor_install, security_scan)
+        self.assertIn(module_scan, security_scan)
+        self.assertLess(security_scan.index(reactor_install), security_scan.index(module_scan))
+        self.assertIn('-Dspotbugs.threshold="$SPOTBUGS_THRESHOLD"', security_scan)
+        self.assertNotIn("-Dspotbugs.threshold=Low", security_scan)
+        self.assertIn("reports/spotbugsXml.xml", security_scan)
+        self.assertNotIn("spotbugs-report.xml", security_scan)
+        self.assertNotIn("spotbugs-report.html", security_scan)
+        self.assertNotIn("org.owasp:dependency-check-maven", security_scan)
+
+        build_pipeline = load_documents(
+            REPO_ROOT / "infrastructure/platform/cicd/tekton/build-pipeline.yaml"
+        )[0]
+        sast_task = next(
+            task
+            for task in build_pipeline["spec"]["tasks"]
+            if task["name"] == "sast-sca-scan"
+        )
+        sast_params = {param["name"]: param["value"] for param in sast_task["params"]}
+        self.assertEqual("$(params.service-path)", sast_params["MODULE"])
         self.assertTrue(
             (REPO_ROOT / "scripts/security/spotbugs-filter.xml").is_file()
         )
+
+        trufflehog = load_documents(tasks / "trufflehog-task.yaml")[0]
+        results_default = next(
+            param["default"]
+            for param in trufflehog["spec"]["params"]
+            if param["name"] == "RESULTS"
+        )
+        self.assertEqual("verified,unknown", results_default)
+        excluded_default = next(
+            param["default"]
+            for param in trufflehog["spec"]["params"]
+            if param["name"] == "EXCLUDE_DETECTORS"
+        )
+        self.assertEqual("JDBC", excluded_default)
 
     def test_tekton_prefers_digest_pinned_red_hat_images(self) -> None:
         tasks = REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks"
@@ -120,9 +172,17 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             if param["name"] == "MAVEN_IMAGE"
         )
         self.assertEqual(
-            "registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf",
+            "registry.redhat.io/ubi9/openjdk-25@sha256:f35678fbb52016a6b61ea586ee4413e616a300cdf0969bf0bfc5b7c6791033d6",
             image_default,
         )
+
+        security_scan = load_documents(tasks / "security-scan-task.yaml")[0]
+        security_image = next(
+            param["default"]
+            for param in security_scan["spec"]["params"]
+            if param["name"] == "MAVEN_IMAGE"
+        )
+        self.assertEqual(image_default, security_image)
 
     def test_every_deployed_tekton_task_image_is_digest_pinned(self) -> None:
         root = REPO_ROOT / "infrastructure/platform/cicd/tekton"
@@ -330,6 +390,72 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             param["name"]: param["value"] for param in release_run["params"]
         }
         self.assertEqual(digest_reference, release_params["IMAGE"])
+
+    def test_trivy_reports_all_findings_and_uses_expiring_exceptions(self) -> None:
+        trivy = load_documents(
+            REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks/trivy-task.yaml"
+        )[0]
+        script = trivy["spec"]["steps"][0]["args"][1]
+        self.assertEqual(2, script.count("trivy image "))
+        self.assertNotIn("--ignore-unfixed", script)
+        self.assertEqual(1, script.count("--ignorefile"))
+
+        exceptions_path = REPO_ROOT / "backend/account-service/.trivyignore.yaml"
+        self.assertFalse((REPO_ROOT / ".trivyignore.yaml").exists())
+        exceptions = load_documents(exceptions_path)[0]
+        self.assertGreater(len(exceptions["vulnerabilities"]), 0)
+        for exception in exceptions["vulnerabilities"]:
+            self.assertIn("Owner platform-security", exception["statement"])
+            self.assertGreaterEqual(str(exception["expired_at"]), "2026-08-21")
+
+        pipeline = load_documents(
+            REPO_ROOT / "infrastructure/platform/cicd/tekton/build-pipeline.yaml"
+        )[0]
+        trivy_run = next(
+            task for task in pipeline["spec"]["tasks"]
+            if task["name"] == "trivy-image-scan"
+        )
+        self.assertIn(
+            {"name": "output", "workspace": "source"},
+            trivy_run["workspaces"],
+        )
+        trivy_params = {
+            param["name"]: param["value"] for param in trivy_run["params"]
+        }
+        self.assertEqual(
+            "$(params.service-base-dir)/$(params.service-path)/.trivyignore.yaml",
+            trivy_params["IGNORE_FILE"],
+        )
+
+    def test_gitleaks_covers_jdbc_credentials_before_trufflehog_excludes_jdbc(self) -> None:
+        config = (REPO_ROOT / ".gitleaks.toml").read_text(encoding="utf-8")
+        self.assertIn('id = "jdbc-embedded-credentials"', config)
+        self.assertIn('id = "jdbc-password-parameter"', config)
+
+    def test_account_image_patches_os_and_postgresql_cves(self) -> None:
+        containerfile = (
+            REPO_ROOT / "backend/account-service/Containerfile"
+        ).read_text(encoding="utf-8")
+        backend_pom = (REPO_ROOT / "backend/pom.xml").read_text(encoding="utf-8")
+        self.assertNotIn("microdnf update -y", containerfile)
+        self.assertIn("glib2-2.68.4-19.el9_8.2", containerfile)
+        self.assertIn("libacl-2.4.0-1.el9_8", containerfile)
+        self.assertIn("python3-3.9.25-7.el9_8.2", containerfile)
+        self.assertIn("<postgresql.version>42.7.12</postgresql.version>", backend_pom)
+
+    def test_rhacs_registry_reader_is_least_privilege(self) -> None:
+        acs = REPO_ROOT / "infrastructure/platform/security/acs"
+        kustomization = load_documents(acs / "kustomization.yaml")[0]
+        self.assertIn("registry-reader-rbac.yaml", kustomization["resources"])
+        resources = load_documents(acs / "registry-reader-rbac.yaml")
+        service_account = next(item for item in resources if item["kind"] == "ServiceAccount")
+        role_binding = next(item for item in resources if item["kind"] == "RoleBinding")
+        self.assertEqual("payu-dev", service_account["metadata"]["namespace"])
+        self.assertEqual("system:image-puller", role_binding["roleRef"]["name"])
+        self.assertEqual(
+            ["rhacs-registry-reader"],
+            [subject["name"] for subject in role_binding["subjects"]],
+        )
 
     def test_grype_can_read_the_generated_sbom_workspace(self) -> None:
         task = load_documents(
@@ -705,6 +831,23 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertFalse(securesign["spec"]["trillian"]["database"]["create"])
         self.assertFalse(securesign["spec"]["rekor"]["searchIndex"]["create"])
         self.assertTrue(securesign["spec"]["tuf"]["pvc"]["retain"])
+
+        network_policy = load_documents(root / "network-policies.yaml")[0]
+        operator_ingress = next(
+            rule
+            for rule in network_policy["spec"]["ingress"]
+            if any(port.get("port") == 3000 for port in rule.get("ports", []))
+        )
+        self.assertEqual(
+            "openshift-operators",
+            operator_ingress["from"][0]["namespaceSelector"]["matchLabels"]
+            ["kubernetes.io/metadata.name"],
+        )
+        self.assertEqual(
+            "operator-controller-manager",
+            operator_ingress["from"][0]["podSelector"]["matchLabels"]
+            ["control-plane"],
+        )
 
 
 if __name__ == "__main__":

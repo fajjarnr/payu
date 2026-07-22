@@ -23,6 +23,17 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    # The RHTAS operator resolves component public keys through their HTTP services.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-operators
+          podSelector:
+            matchLabels:
+              control-plane: operator-controller-manager
+      ports:
+        - protocol: TCP
+          port: 3000
   egress:
     - to:
         - podSelector: {}

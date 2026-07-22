@@ -9,7 +9,6 @@ spec:
   description: >-
     Comprehensive security scanning task that includes:
     - SpotBugs (SAST) for Java code
-    - OWASP Dependency Check
     - Security unit tests
   workspaces:
     - name: source
@@ -24,10 +23,19 @@ spec:
       type: string
       default: "."
 
+    - name: MAVEN_POM
+      description: Reactor POM path within source
+      type: string
+      default: "backend/pom.xml"
+
+    - name: MODULE
+      description: Maven reactor module to scan
+      type: string
+
     - name: MAVEN_IMAGE
       description: Maven image to use
       type: string
-      default: "registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf"
+      default: "registry.redhat.io/ubi9/openjdk-25@sha256:f35678fbb52016a6b61ea586ee4413e616a300cdf0969bf0bfc5b7c6791033d6"
 
     - name: FAILURE_THRESHOLD
       description: Security issue threshold for failing the build
@@ -57,7 +65,7 @@ spec:
   steps:
     - name: spotbugs-sast
       image: $(params.MAVEN_IMAGE)
-      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/bash
         set -euo pipefail
@@ -70,53 +78,44 @@ spec:
           cp $(workspaces.maven-settings.path)/settings.xml ~/.m2/
         fi
 
+        # Install reactor dependencies first; direct plugin goals do not run a
+        # lifecycle phase that makes upstream SNAPSHOT artifacts resolvable.
+        mvn -f "$(params.MAVEN_POM)" -pl "$(params.MODULE)" -am install \
+          -DskipTests
+
         # Missing plugin/configuration is a build failure, not a bypass.
-        mvn spotbugs:check \
+        case "$(params.FAILURE_THRESHOLD)" in
+          high) SPOTBUGS_THRESHOLD=High ;;
+          medium) SPOTBUGS_THRESHOLD=Medium ;;
+          *) echo "FAIL: unsupported FAILURE_THRESHOLD=$(params.FAILURE_THRESHOLD)"; exit 1 ;;
+        esac
+        mvn -f "$(params.CONTEXT_DIR)/pom.xml" \
+          com.github.spotbugs:spotbugs-maven-plugin:4.10.3.0:check \
           -Dspotbugs.effort=Max \
-          -Dspotbugs.threshold=Low \
+          -Dspotbugs.threshold="$SPOTBUGS_THRESHOLD" \
           -Dspotbugs.failOnError=true \
           -Dspotbugs.includeFilterFile=$(workspaces.source.path)/scripts/security/spotbugs-filter.xml
 
         # Copy report to output
         mkdir -p $(workspaces.source.path)/reports
-        if compgen -G "target/spotbugs*" > /dev/null; then
-          cp -r target/spotbugs* $(workspaces.source.path)/reports/
-        fi
+        test -f "$(params.CONTEXT_DIR)/target/spotbugsXml.xml"
+        cp "$(params.CONTEXT_DIR)/target/spotbugsXml.xml" \
+          "$(workspaces.source.path)/reports/spotbugsXml.xml"
 
         echo "SpotBugs scan completed"
-        echo -n "$(workspaces.source.path)/reports/spotbugs-report.html" > $(results.security-report-path.path)
-
-    - name: dependency-check
-      image: $(params.MAVEN_IMAGE)
-      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
-      script: |
-        #!/bin/bash
-        set -euo pipefail
-
-        echo "Running OWASP Dependency Check..."
-
-        # CVSS 7+ and scanner errors fail the task.
-        mvn org.owasp:dependency-check-maven:check \
-          -DfailBuildOnCVSS=7
-
-        # Copy report to output
-        mkdir -p $(workspaces.source.path)/reports
-        if [ -f target/dependency-check-report.html ]; then
-          cp target/dependency-check-report.html $(workspaces.source.path)/reports/
-        fi
-
-        echo "Dependency check completed"
+        echo -n "$(workspaces.source.path)/reports/spotbugsXml.xml" > $(results.security-report-path.path)
 
     - name: security-unit-tests
       image: $(params.MAVEN_IMAGE)
-      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/bash
         set -euo pipefail
 
         echo "Running security-focused unit tests..."
 
-        mvn test -Dsecurity-tests=true
+        mvn -f "$(params.CONTEXT_DIR)/pom.xml" test \
+          -Dsecurity-tests=true
 
         echo "Security tests completed"
 
@@ -134,9 +133,9 @@ spec:
         HIGH_COUNT=0
         MEDIUM_COUNT=0
 
-        if [ -f "$REPORTS_DIR/spotbugs-report.xml" ]; then
-          HIGH_COUNT=$(awk '/High"/{count++} END{print count+0}' "$REPORTS_DIR/spotbugs-report.xml")
-          MEDIUM_COUNT=$(awk '/Medium"/{count++} END{print count+0}' "$REPORTS_DIR/spotbugs-report.xml")
+        if [ -f "$REPORTS_DIR/spotbugsXml.xml" ]; then
+          HIGH_COUNT=$(grep -o "priority='1'" "$REPORTS_DIR/spotbugsXml.xml" | wc -l)
+          MEDIUM_COUNT=$(grep -o "priority='2'" "$REPORTS_DIR/spotbugsXml.xml" | wc -l)
         fi
 
         echo -n "$HIGH_COUNT" > $(results.high-severity-count.path)

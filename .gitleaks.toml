@@ -3,6 +3,18 @@
 
 title = "PayU Gitleaks Config"
 
+[[rules]]
+  id = "jdbc-embedded-credentials"
+  description = "JDBC URL with embedded username and password"
+  regex = '''(?i)jdbc:[a-z0-9]+:(?:/{0,2})[^\s"'@/:]+:[^\s"'@/]+@'''
+  keywords = ["jdbc:"]
+
+[[rules]]
+  id = "jdbc-password-parameter"
+  description = "JDBC URL with password query parameter"
+  regex = '''(?i)jdbc:[^\s"']{0,512}[?&](?:password|pwd)=[^&\s"']+'''
+  keywords = ["jdbc:", "password=", "pwd="]
+
 [allowlist]
   description = "Allowlist dummy secrets in lab manifests"
   paths = [

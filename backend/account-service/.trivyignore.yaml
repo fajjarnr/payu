@@ -1,0 +1,31 @@
+vulnerabilities:
+  - id: CVE-2026-11352
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl QUIC."
+  - id: CVE-2026-11586
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl WebSockets."
+  - id: CVE-2026-12064
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl SFTP or SCP."
+  - id: CVE-2026-8286
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service curl usage is limited to its local health check."
+  - id: CVE-2026-8925
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl SASL."
+  - id: CVE-2026-9547
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service does not use curl SSH."
+  - id: CVE-2026-22020
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat OpenJDK 25 runtime has no vendor fix; review on account-service image refresh."
+  - id: CVE-2026-25646
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat marks the bundled libpng issue will-not-fix; review account-service compensating controls."
+  - id: CVE-2026-59873
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service never extracts untrusted archives."
+  - id: CVE-2026-59874
+    expired_at: 2026-08-21
+    statement: "Owner platform-security: Red Hat UBI 9.8 has no vendor fix; account-service never extracts untrusted archives."

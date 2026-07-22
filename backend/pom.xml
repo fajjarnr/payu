@@ -29,6 +29,7 @@
         <!-- Jackson 2 versions are managed by SB 4.1.0's jackson-2-bom (currently 2.21.4 + annotations 2.21 which provides JsonSerializeAs required by Jackson 3 BOM). Do NOT pin <jackson.version> here unless you also bump the SB parent BOM. -->
         <commons-io.version>2.18.0</commons-io.version>
         <commons-fileupload.version>1.6.0</commons-fileupload.version>
+        <postgresql.version>42.7.12</postgresql.version>
 
         <!-- PayU Shared Modules Versions -->
         <payu.shared.version>1.0.0-SNAPSHOT</payu.shared.version>
