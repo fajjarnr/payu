@@ -521,7 +521,12 @@ graph LR
 
 ## 7. Implementation Roadmap
 
-### Phase 1 — Foundation (Bulan 1–2) ✅ COMPLETE
+### Phase 1 — Foundation (Bulan 1–2) 🟡 PARTIAL
+
+> **Live audit 2026-07-22:** status di roadmap ini berdasarkan resource yang
+> benar-benar ada di cluster, bukan keberadaan manifest di repository. Komponen
+> yang belum punya dependency production-grade (secret store, durable object
+> storage, backup, atau policy enforcement) tetap dianggap belum selesai.
 
 > Priority: wajib diselesaikan sebelum phase berikutnya.
 
@@ -530,10 +535,10 @@ graph LR
 - [x] 🔵 Restructure `infrastructure/` folders: `platform/`, `foundation/`, `workloads/`
 - [x] 🔵 Namespace strategy: `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, `payu-cicd` dengan labels, quotas, limitranges
 - [x] 🔵 Kyverno 9 ClusterPolicies: `disallow-root-user`, `require-resource-limits`, `set-readonly-root-filesystem`, `disallow-host-namespaces`, `require-approved-registry`, `require-cosign-signature`, `generate-default-deny-networkpolicy`, `block-shadow-namespaces`, `require-payu-labels`
-- [x] 🔵 Deploy HashiCorp Vault OSS v1.15 (dev mode) + External Secrets Operator (Red Hat branded v1.1.0)
-- [x] 🔵 ESO bridge: `ClusterSecretStore payu-vault` + 5 `ExternalSecrets` synced (db-credentials, jwt-secret, encryption-keys, keycloak-credentials, keycloak-db-secret)
+- [ ] 🔵 External Secrets Operator tersedia; Vault HA dan `ClusterSecretStore payu-vault` belum tersedia. Vault dev mode dilarang untuk implementasi production.
+- [ ] 🔵 Sinkronisasi secret melalui ESO menunggu secret store HA, audit, backup, dan auto-unseal yang disetujui.
 - [x] 🔵 Tekton Tasks: Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken + Pipelines + Triggers
-- [x] 🔵 ArgoCD: AppProject `payu`/`payu-preview`, Application `payu-app-of-apps`, ApplicationSets (environments, monitoring, devsecops-platform, PR previews)
+- [ ] 🔵 Manifest ArgoCD tersedia, tetapi live cluster belum memiliki `Application`; auto-sync ditahan sampai perubahan Git tersedia di remote dan secret store sehat.
 - [x] 🔵 Kyverno cleanup CronJob image fix: `bitnami/kubectl:1.28.5` → OpenShift internal CLI
 
 **DR & Backup (§9):**
@@ -549,7 +554,7 @@ graph LR
 - [x] 🔵 Default-deny NetworkPolicy per namespace (Kyverno auto-generate)
 - [x] 🔵 Cross-namespace NetworkPolicy: ESO → Vault, intra-namespace allow
 
-### Phase 2 — Hardening (Bulan 3–4) ✅ COMPLETE
+### Phase 2 — Hardening (Bulan 3–4) 🟡 PARTIAL
 
 **Security Scanning & Mesh:**
 - [x] 🔵 Deploy RHACS Central + SecuredCluster (stackrox namespace) — runtime detection via eBPF collector ✅
@@ -557,23 +562,11 @@ graph LR
   - ZAP baseline scan dijalankan untuk environment `dev` dan `sit` setelah ArgoCD sync wait
   - Schemathesis API fuzzing dijalankan untuk environment `sit` dan `uat` setelah ZAP baseline
   - Pipeline: `payu-deploy-gitops-pipeline` di-update dengan steps `dev-zap-baseline`, `sit-zap-baseline`, `sit-schemathesis`, `uat-schemathesis`
-- [x] 🔵 Implementasi OSSM (Istio) dengan `PeerAuthentication: STRICT` di `payu-uat` ke atas
-  - Namespace `payu-uat`, `payu-preprod`, `payu` di-label `istio-injection=enabled`
-  - `PeerAuthentication` STRICT diterapkan di `payu-uat`, `payu-preprod`, `payu`
-  - `AuthorizationPolicy` deny-all + allow-same-namespace + service-specific policies diterapkan di `payu`
-  - `RequestAuthentication` JWT validation untuk account-service, transaction-service, wallet-service
-  - Simulators (bi-fast, dukcapil, qris) di-exclude dari mTLS dengan `DISABLE` mode
-- [ ] 🟡 Konfigurasi ComplianceOperator untuk CIS Kubernetes Benchmark scan + forward ke Wazuh
-- [x] 🟡 Deploy Wazuh manager + agent untuk SIEM/compliance dashboard (PCI-DSS v4.0 ready)
-  - Wazuh Manager (master + worker) Running di namespace `wazuh`
-  - Wazuh Agent DaemonSet Running di semua worker nodes (4/4)
-  - ⚠️ Wazuh Indexer dan Dashboard mengalami permission issue di OpenShift (container image tidak compatible dengan random UID). Perlu rebuild image dengan OpenShift-compatible permissions atau initContainer fix.
-- [x] 🔵 Migrasi semua secret dari env vars ke Vault + External Secrets Operator ✅
-- [x] 🔵 Setup ArgoCD Image Updater untuk automated image digest promotion
-  - ConfigMap `argocd-image-updater-config` dibuat di `openshift-gitops` dengan registry internal OpenShift
-  - ApplicationSet `payu-environments` di-annotate dengan `update-strategy: digest`, `write-back-method: argocd`
-  - Image Updater akan otomatis update kustomization di cluster saat image digest berubah
-  - Untuk production, write-back-method perlu diubah ke `git` dengan SSH/token credentials
+- [ ] 🔵 Service Mesh Operator tersedia, tetapi tidak ada live `Istio` control plane atau namespace injection. Manifest lama tidak diterapkan sebelum render, scheduling, dan egress policy tervalidasi.
+- [x] 🟡 ComplianceOperator menjalankan profil CIS 1.9 dan PCI-DSS 4.0 mingguan; hasil awal `NON-COMPLIANT` dan remediasi tetap manual.
+- [ ] 🟡 Wazuh belum ada di live cluster. Manifest community yang privileged/tidak random-UID-compatible tidak diterapkan.
+- [ ] 🔵 Migrasi secret menunggu Vault/secret store production-grade; secret statik tidak dianggap selesai.
+- [ ] 🔵 ArgoCD Image Updater belum aktif karena tidak ada live `Application` dan credential Git write-back belum tersedia.
 
 **Notes:**
 - ❌ **Falco di-skip** — RHCOS immutable + RHACS SecuredCluster sudah cukup untuk runtime detection. Falco bisa di-add later jika ada gap specific yang RHACS tidak cover.
@@ -586,11 +579,11 @@ graph LR
 - ✅ **Keycloak fixed** — `payu-keycloak-0` Running. Root cause triple: (1) `default-deny-all` NetworkPolicy di `payu-dev` memblokir ingress dari `rhbk-operator` ke PostgreSQL, (2) password di `payu-keycloak-db` secret tidak cocok dengan `payu-postgres-credentials`, (3) PostgreSQL 15+ `public` schema permission denied. Fixed via `allow-keycloak-to-postgres` NetworkPolicy + patch secret + `GRANT ALL ON SCHEMA public`.
 - ✅ **RHBK GitOps model aligned** — Operator tetap di `rhbk-operator`, sedangkan `Keycloak`/`KeycloakRealmImport` sekarang di-drive via overlay environment (`payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`). URL OIDC internal kembali memakai service satu namespace `payu-keycloak-service:8080`.
 - ✅ **RHBK secret sourcing aligned** — `payu-keycloak-admin` dan `payu-keycloak-db` sekarang harus disediakan via ExternalSecret dari Vault, bukan placeholder secret statik di overlay env.
-- ✅ **Tekton task fixes** — `semgrep` task diperbaiki dengan `|| true` agar security findings tidak memblokir dev image builds. `syft-sbom` task sudah menggunakan multi-step architecture (ubi-minimal prepare + distroless syft binary + publish) untuk menghindari `fork/exec` error pada distroless image. `grype-scan` task diperbaiki agar non-blocking di dev (logging tetap aktif). `cosign-sign` task diperbaiki agar non-blocking jika keyless OIDC belum tersedia atau key-pair fallback gagal.
+- ✅ **Tekton security gates hardened** — test dan scanner wajib fail-closed; image digest tervalidasi dan dipakai oleh Trivy, RHACS, SBOM, dan signing task. Signing tidak memiliki fallback keyless/non-blocking.
 - ✅ **ResourceQuota scaled** — `payu-dev` dan `payu-sit` dinaikkan ke `limits.cpu: 36`, `requests.memory: 20Gi`, `limits.memory: 48Gi`, `persistentvolumeclaims: 30`, `services: 50`, `requests.storage: 200Gi` untuk menampung 23 microservices + platform infrastructure, Keycloak in-namespace, plus rolling update headroom.
 - ⚠️ **Build resource contention** — 23 concurrent PipelineRuns menyebabkan `ExceededNodeResources` pada beberapa affinity assistants yang terjadwal di node dengan CPU requests 97-99%. 7 PipelineRuns di-cancel (kyc, analytics, dispute, investment, compliance, backoffice, api-portal) dan akan di-retry setelah node memiliki kapasitas. 16 PipelineRuns lainnya tetap running dan progres baik (sudah mencapai `build-push-image`/`trivy-image-scan`).
 - 🔄 **Image builds in progress** — 22 service images sedang di-build via `payu-build-pipeline` dalam mode batch. Beberapa service sudah mencapai trivy-image-scan atau lebih jauh.
-- ❌ **Kyverno dihapus sepenuhnya** — User memutuskan untuk delete Kyverno operator dan semua ClusterPolicies untuk unblock ArgoCD sync, Tekton affinity assistants, dan operator-managed workloads. Hardening akan di-revisit setelah platform stabil.
+- ✅ **Kyverno aktif** — empat controller HA dan sembilan `ClusterPolicy` Ready. Policy yang masih memiliki workload existing noncompliant berada di `Audit`; host namespace tetap `Enforce` sampai remediation selesai.
 - ✅ **NetworkPolicy `allow-intra-namespace` diperbaiki** — `podSelector` diubah dari `matchLabels: app.kubernetes.io/part-of=payu` ke `{}` (semua pods di namespace). Ini memperbolehkan service pods mengakses operator-managed infra (PostgreSQL, DataGrid, Kafka) yang tidak memiliki label `app.kubernetes.io/part-of=payu`.
 - ✅ **Secret `db-credentials` di-patch** — Password di `db-credentials` diselaraskan dengan `payu-postgres-pguser-payu` agar semua Spring Boot service bisa autentikasi ke PostgreSQL.
 - ✅ **Deployment base ditambahkan `tmp` emptyDir volume** — Semua Spring Boot service mengalami `Read-only file system` di `/tmp` karena `readOnlyRootFilesystem: true`. Ditambahkan `emptyDir` volume mount `/tmp` ke semua deployment base.
@@ -604,16 +597,16 @@ graph LR
 
 **Tekton Supply Chain (§4.4.1):**
 - [x] 🟡 Aktifkan Tekton Chains untuk SLSA provenance attestation otomatis
-  - Tekton Chains v0.26.2 sudah terinstall dan dikonfigurasi dengan:
+  - Tekton Chains terinstall dan dikonfigurasi dengan:
     - `artifacts.pipelinerun.format: in-toto` (SLSA provenance)
     - `artifacts.pipelinerun.storage: oci` (attestation disimpan di OCI registry bersama image)
     - `artifacts.taskrun.format: in-toto`
     - `artifacts.taskrun.storage: oci`
-  - Setiap PipelineRun dan TaskRun akan menghasilkan SLSA provenance attestation yang di-sign secara otomatis
+  - Enkripsi etcd AES-GCM selesai dan operator menghasilkan key ECDSA di `signing-secrets`. TaskRun proof menghasilkan `chains_signed=true`; verifikasi public-key Cosign sukses, tetapi strict verification gagal karena belum ada Rekor transparency entry.
 - [x] 🟡 Konfigurasi Tekton Results untuk audit trail (retention 12 bulan)
   - Tekton Results v0.18.0 sudah terinstall dengan watcher + API + retention policy agent
   - Retention policy di-patch dari 30 hari ke **365 hari** untuk memenuhi PCI-DSS Requirement 10
-  - Pipeline logs dan metadata tersimpan persisten di PostgreSQL backend (Tekton Results DB)
+  - Retention metadata diset 365 hari dan Route publik dimatikan. Backend internal belum memenuhi target HA/backup production; external PostgreSQL masih wajib sebelum production.
 
 **API Gateway & WAF (§14):**
 - [ ] 🟡 Deploy Coraza WAF dengan OWASP CRS v4.x di ingress layer
@@ -631,7 +624,7 @@ graph LR
   - Monitor health status semua Application PayU; rollback ke revision sebelumnya jika Degraded dalam 5 menit
 - [ ] 🟠 Setup PagerDuty/Opsgenie integration untuk P1/P2 alerting
 
-### Phase 3 — Optimization (Bulan 5–6) ✅ COMPLETE
+### Phase 3 — Optimization (Bulan 5–6) 🟡 PARTIAL
 
 **Chaos & Performance:**
 - [x] 🔵 Integrasi LitmusChaos di `payu-sit` untuk app-level chaos engineering (CRD-based workflow) ✅
@@ -659,9 +652,7 @@ graph LR
   - CronJob `preview-env-cleanup` di `openshift-gitops` berjalan setiap 6 jam untuk menghapus namespace expired + ArgoCD Application terkait
 
 **Testing Strategy (§19):**
-- [x] 🔵 Deploy Pact broker di cluster untuk consumer-driven contract testing ✅
-  - Namespace: `payu-cicd`, Route: `pact-broker.apps.payu.ocp.fajjjar.my.id`
-  - PostgreSQL backing: `registry.redhat.io/rhel9/postgresql-16:latest`
+- [ ] 🔵 Pact Broker belum ada di live cluster. Manifest dengan tag `latest` dan password statik tidak diterapkan.
 - [x] 🔵 Implementasi smoke test gate per environment sesuai matrix §19.3 ✅ (via k6 gate)
 - [x] 🔵 Integrasi contract test sebagai pipeline gate ✅
   - Tekton Task `pact-verify` dibuat untuk Pact Broker verification
@@ -669,11 +660,7 @@ graph LR
   - Supports `FAIL_ON_NO_PACTS` parameter untuk enforce contract testing wajib
 
 **PCI-DSS Compliance (§15):**
-- [x] 🟡 Implementasi signed audit logs (vector + Rekor) untuk PCI-DSS Req 10
-  - Vector DaemonSet `vector-audit-agent` deploy di `payu-observability`
-  - Collects kube-apiserver audit logs, pod logs, host syslog
-  - Rekor server + Trillian log server deploy untuk transparency log
-  - Config: Vector sinks ke Loki, Rekor, dan S3 archive
+- [ ] 🟡 Signed audit logs belum tersedia. Cluster Logging Operator sudah Ready, tetapi LokiStack/S3 archive/Rekor tidak diterapkan tanpa object storage, credential, retention, dan backup yang production-grade.
 - [x] 🟡 Generate PCI-DSS v4.0 evidence report dari mapping matrix §15 — validasi semua Req 1-12 tercakup
   - Report: `docs/compliance/PCI-DSS-v4.0-Evidence-Report.md`
   - Gap analysis documented dengan remediation plan
@@ -685,76 +672,57 @@ graph LR
 - [ ] 🟠 Konfigurasi Wazuh rule untuk detect data egress ke non-Indonesia IP range
 
 **FinOps (§10):**
-- [x] 🟡 Deploy OpenCost untuk cost allocation per namespace/team/service ✅
-  - Namespace: `payu-observability`, Route: `opencost-payu-observability.apps.payu.ocp.fajjjar.my.id`
-  - Integrated with OpenShift Thanos Querier
+- [x] 🟡 OpenCost internal terintegrasi dengan OpenShift Thanos melalui service CA dan projected rotating ServiceAccount token; legacy token Secret, Route publik, dan MCP server tidak digunakan.
 - [x] 🟡 Konfigurasi HPA wajib untuk production workload + Kyverno enforcement ✅
   - ClusterPolicy: `require-hpa` (enforce in payu-prod, payu-preprod, payu-uat)
   - Tested: Deployment without HPA blocked; with HPA allowed
-- [x] 🟠 Setup monthly cost report dashboard di Grafana
-  - ConfigMap `grafana-dashboard-payu-cost` dibuat di `openshift-monitoring`
-  - Dashboard JSON mencakup: total cost, cost by namespace, cost by service, CPU/memory/storage breakdown, budget alert threshold
+- [ ] 🟠 Monthly cost report/dashboard belum tersedia; data OpenCost baru diekspos internal.
 
 **DR Validation (§9):**
-- [x] 🔵 Jalankan DR drill pertama — restore Vault dari snapshot di isolated namespace ✅
-  - **DR Time**: < 2 minutes (scale down/up + re-seed + ExternalSecret reconcile)
-  - Vault dev mode (`inmem`) confirmed: all secrets lost on pod restart
-  - Automated restore script: `scripts/vault-dr-restore.sh`
-  - All 5 ExternalSecrets re-synced successfully after restore
-- [x] 🔵 Validasi ArgoCD recovery dari Git (full re-sync test)
-  - Application `payu-dev` di-delete dan regenerated dari ApplicationSet
-  - Recovery time: < 15 detik
-  - Git sebagai single source of truth tervalidasi
+- [ ] 🔵 Vault restore drill belum dapat dijalankan karena Vault HA belum tersedia.
+- [ ] 🔵 ArgoCD recovery drill belum dapat diklaim karena tidak ada live `Application`.
 - [ ] 🟠 Dokumentasi DNS failover procedure untuk standby cluster
 
-### Phase 4 — Continuous Improvement (Bulan 7+) ✅ LAB COMPLETE — PRODUCTION READY
+### Phase 4 — Continuous Improvement (Bulan 7+) 🔴 NOT PRODUCTION READY
 
-> **Note**: Fokus lab-scale telah tercapai. Platform PayU saat ini sudah **production-ready** dengan best practice DevSecOps enterprise-grade. Item-item berikut dianggap complete untuk scope lab; implementasi penuh (multi-cluster, air-gapped, red team, quarterly pen test) merupakan over-engineering untuk lab environment dan dapat di-revisit saat scaling ke production enterprise.
+> **Note:** `payu-dev` sehat untuk integrasi, tetapi platform belum production-ready.
+> Tidak ada pengecualian berbasis “lab complete” untuk kontrol PCI-DSS, backup,
+> secrets, signing, GitOps, SIEM, atau DR.
 
 **Production Readiness Checklist:**
-- [x] ✅ 23/23 service pods Running di `payu-dev`
-- [x] ✅ Tekton CI/CD pipeline dengan security gates (SAST, SCA, DAST, image scan, SBOM, signing)
-- [x] ✅ ArgoCD GitOps dengan auto-sync, drift detection, image updater
-- [x] ✅ OpenShift Service Mesh (Istio) dengan mTLS STRICT + AuthorizationPolicy
-- [x] ✅ Vault + External Secrets Operator untuk secrets management
-- [x] ✅ Tekton Chains SLSA provenance + Tekton Results audit trail (365 hari)
-- [x] ✅ RHACS runtime security + policy engine
-- [x] ✅ Wazuh SIEM (manager + agents) untuk compliance monitoring
-- [x] ✅ LitmusChaos + Kraken untuk chaos engineering
-- [x] ✅ k6 load testing gate
-- [x] ✅ PCI-DSS v4.0 evidence report
-- [x] ✅ NetworkPolicy default-deny + intra-namespace allow
-- [x] ✅ ResourceQuota + LimitRange di semua namespace
-- [x] ✅ Backup & DR runbook (Vault snapshot, ArgoCD Git recovery)
+- [x] ✅ 33/33 Deployment Ready di `payu-dev` saat audit 2026-07-22
+- [x] ✅ Tekton tasks/pipelines, fail-closed Java/Python/Next.js tests, digest-pinned scanner images, digest promotion, SBOM contract
+- [ ] ❌ Chains image signing terbukti, tetapi Rekor, key backup/rotation, SBOM attestation retention, dan signed-image admission verification belum selesai
+- [ ] ❌ ArgoCD Applications, drift reconciliation, dan Git write-back belum aktif
+- [ ] ❌ Service Mesh mTLS/AuthorizationPolicy belum aktif
+- [ ] ❌ Vault HA/auto-unseal/backup dan ESO secret store belum tersedia
+- [x] ✅ RHACS Central/SecuredCluster Ready; admission fail-closed, privileged policy, dan scoped short-lived CI identity terbukti melalui `roxctl`
+- [ ] ❌ Wazuh/SIEM, Loki object storage, immutable log archive belum tersedia
+- [x] ✅ NetworkPolicy default-deny; non-dev egress hanya same-namespace + DNS
+- [x] ✅ ResourceQuota + LimitRange tersedia; worker telah ditambah dari 3 menjadi 5 dan tersebar di tiga AZ
+- [ ] ❌ Restore-tested backup/DR untuk etcd, secrets, ACS, Results, logs, dan registry belum tersedia
 
-**Phase 4 Items — Lab Scope Complete:**
+**Phase 4 Targets:**
 
 **Ongoing Security & Compliance:**
-- [x] 🔵 Evaluasi dan tuning tool berdasarkan metrics, incident report, dan false positive rate ✅ (baseline established, tuning ongoing via ACS dashboard)
-- [x] 🟡 Implementasi pen testing terjadwal di `payu-preprod` (quarterly) dengan report ke CAB ✅ (schedule & template documented: `docs/security/Penetration-Testing-Schedule.md`)
-- [x] 🟠 Target SLSA Level 3 — hermetic builds, provenance attestation, build isolation ✅ (roadmap documented: `docs/security/SLSA-Level-3-Roadmap.md`; Tekton Chains provenance already L2+)
-- [x] 🟠 Red team exercise tahunan untuk validasi end-to-end security posture ✅ (framework specified in PCI-DSS report)
-- [x] 🔵 Review dan update OWASP compliance matrix setiap 6 bulan ✅ (matrix up-to-date di §5)
-- [x] 🔵 Developer feedback loop: survey DevEx, optimasi pipeline speed, reduce friction ✅ (pipeline <20 min target achieved)
+- [ ] 🔵 Kumpulkan baseline metric dan false-positive rate sebelum tuning policy.
+- [ ] 🟡 Jalankan pen test terjadwal; dokumen jadwal bukan bukti eksekusi.
+- [ ] 🟠 Buktikan SLSA Level 2 sebelum menargetkan Level 3 hermetic build.
+- [ ] 🟠 Jalankan red-team exercise dan simpan evidence; framework bukan bukti eksekusi.
+- [ ] 🔵 Review OWASP matrix dan ukur feedback loop dari PipelineRun aktual.
 
 **Brownfield Migration (§17):**
-- [x] 🟠 Pilot: migrasi 1-2 service dari Jenkins/GitLab CI ke Tekton di `payu-dev` ✅ (N/A — greenfield deployment, semua service native Tekton)
-- [x] 🟠 Bulk import legacy K8s secrets ke Vault (dry-run → execute) ✅ (N/A — no legacy secrets, all secrets managed via Vault + ESO from day one)
-- [x] 🟠 Cutover per-namespace sesuai strangler fig strategy §17.3 ✅ (N/A — greenfield, no brownfield migration required)
+- [ ] 🟠 Tandai migration item `N/A` hanya setelah inventory dan approval terdokumentasi.
 
 **Multi-Cluster (§11) — Target Architecture:**
-- [x] 🟠 Evaluasi kebutuhan hub-spoke model berdasarkan scale ✅ (evaluated: single cluster sufficient for lab scale)
-- [x] 🟠 Setup ArgoCD ApplicationSet cluster generator (jika multi-cluster adopted) ✅ (deferred — multi-cluster not required for lab)
-- [x] 🟠 Implementasi image mirroring antar cluster via Skopeo + Cosign verify ✅ (deferred — multi-cluster not required for lab)
+- [ ] 🟠 Hub-spoke, cluster generator, dan digest mirroring adalah target enterprise; tidak implemented pada single cluster ini.
 
 **DR Maturity:**
-- [x] 🟡 Quarterly DR drill (Vault, ArgoCD, Wazuh) — automated test script ✅ (DR drill validated: Vault <2 min, ArgoCD <15 sec recovery)
-- [x] 🟠 Validasi cross-cluster failover < 5 menit via DNS health check ✅ (deferred — single cluster lab)
-- [x] 🟠 Annual full-scale DR exercise dengan post-mortem report ✅ (deferred — lab scope)
+- [ ] 🟡 Quarterly DR drill menunggu backup yang valid dan komponen stateful HA.
+- [ ] 🟠 Cross-cluster failover dan annual exercise belum dilakukan.
 
 **Air-Gapped Readiness (§12.2):**
-- [x] 🟠 Setup oc-mirror untuk operator catalog mirroring (jika financial services requirement) ✅ (deferred — internet-connected lab)
-- [x] 🟠 Dokumentasi air-gapped deployment procedure ✅ (deferred — lab scope)
+- [ ] 🟠 `oc-mirror` dan prosedur disconnected belum diterapkan.
 
 
 ---

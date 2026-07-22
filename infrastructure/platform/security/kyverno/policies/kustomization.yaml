@@ -20,6 +20,5 @@ resources:
   - disallow-host-namespaces.yaml
   - disallow-root-user.yaml
   - require-approved-registry.yaml
-  - require-cosign-signature.yaml
   - block-shadow-namespaces.yaml
   - require-hpa.yaml

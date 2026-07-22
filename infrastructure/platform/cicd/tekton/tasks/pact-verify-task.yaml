@@ -19,14 +19,14 @@ spec:
       default: "$(context.pipelineRun.name)"
     - name: FAIL_ON_NO_PACTS
       type: string
-      default: "false"
+      default: "true"
       description: "Fail if no pacts found for this provider"
   workspaces:
     - name: source
       description: "Source code workspace"
   steps:
     - name: verify
-      image: registry.access.redhat.com/ubi9/nodejs-18:latest
+      image: registry.redhat.io/ubi9/nodejs-22@sha256:31bfcab9be031dfa4ea06cc7cbe79d467d8f4eef783b7c8a05704aae9e3d8311
       workingDir: $(workspaces.source.path)
       script: |
         #!/bin/bash
@@ -40,8 +40,8 @@ spec:
         # Check if pact verification script exists in the service
         SERVICE_DIR="backend/$(params.SERVICE_NAME)"
         if [ ! -d "$SERVICE_DIR" ]; then
-          echo "Warning: Service directory $SERVICE_DIR not found"
-          exit 0
+          echo "Service directory $SERVICE_DIR not found"
+          exit 1
         fi
         
         # Look for pact verification config or script
@@ -55,12 +55,12 @@ spec:
         elif [ -f "$SERVICE_DIR/package.json" ] && grep -q '"pact"' "$SERVICE_DIR/package.json" 2>/dev/null; then
           echo "Running npm pact:verify..."
           cd "$SERVICE_DIR"
-          npm ci --silent 2>/dev/null || true
+          npm ci --silent
           npx pact-verify \
             --provider "$(params.SERVICE_NAME)" \
             --provider-app-version "$(params.SERVICE_VERSION)" \
             --pact-broker-base-url "$(params.PACT_BROKER_URL)" \
-            --publish-verification-results || true
+            --publish-verification-results
         else
           echo "No pact verification configuration found for $(params.SERVICE_NAME)"
           if [ "$(params.FAIL_ON_NO_PACTS)" = "true" ]; then

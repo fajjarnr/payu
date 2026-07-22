@@ -29,14 +29,14 @@ spec:
         type: RuntimeDefault
   steps:
     - name: scan
-      image: docker.io/trufflesecurity/trufflehog:3.90.5
+      image: docker.io/trufflesecurity/trufflehog@sha256:214da7bcbf60f71db229bc5b6d790bf46eb1e8d068faa59838c1dba59738bc85
       workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -eu
 
         if [ -d "$(workspaces.source.path)/.git" ]; then
-          trufflehog git "file://$(workspaces.source.path)" --results=$(params.RESULTS) --no-update || echo "WARNING: TruffleHog found potential secrets, but lab mode allows continuation"
+          trufflehog git "file://$(workspaces.source.path)" --results=$(params.RESULTS) --no-update --fail
         else
-          trufflehog filesystem "$(workspaces.source.path)/$(params.CONTEXT_DIR)" --results=$(params.RESULTS) --no-update || echo "WARNING: TruffleHog found potential secrets, but lab mode allows continuation"
+          trufflehog filesystem "$(workspaces.source.path)/$(params.CONTEXT_DIR)" --results=$(params.RESULTS) --no-update --fail
         fi

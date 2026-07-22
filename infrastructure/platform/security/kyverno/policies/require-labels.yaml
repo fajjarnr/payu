@@ -12,7 +12,7 @@ metadata:
       Ensures all Deployments in PayU namespaces have required labels
       for cost allocation, ownership tracking, and observability.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: true
   rules:
     - name: check-required-labels

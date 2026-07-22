@@ -27,7 +27,7 @@ spec:
     - name: MAVEN_IMAGE
       description: Maven image to use
       type: string
-      default: "maven:3.9-eclipse-temurin-21"
+      default: "registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf"
 
     - name: FAILURE_THRESHOLD
       description: Security issue threshold for failing the build
@@ -60,7 +60,7 @@ spec:
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       script: |
         #!/bin/bash
-        set -e
+        set -euo pipefail
 
         echo "Running SpotBugs SAST scan..."
 
@@ -70,17 +70,18 @@ spec:
           cp $(workspaces.maven-settings.path)/settings.xml ~/.m2/
         fi
 
-        # Run SpotBugs with FindSecBugs plugin (skip if not configured)
+        # Missing plugin/configuration is a build failure, not a bypass.
         mvn spotbugs:check \
           -Dspotbugs.effort=Max \
           -Dspotbugs.threshold=Low \
-          -Dspotbugs.failOnError=false \
-          -Dspotbugs.includeFilterFile=$(workspaces.source.path)/infrastructure/platform/devsecops-tooling/sast-dast/spotbugs-filter.xml \
-          || echo "WARNING: SpotBugs plugin not found or failed, skipping"
+          -Dspotbugs.failOnError=true \
+          -Dspotbugs.includeFilterFile=$(workspaces.source.path)/scripts/security/spotbugs-filter.xml
 
         # Copy report to output
         mkdir -p $(workspaces.source.path)/reports
-        cp -r target/spotbugs* $(workspaces.source.path)/reports/ || true
+        if compgen -G "target/spotbugs*" > /dev/null; then
+          cp -r target/spotbugs* $(workspaces.source.path)/reports/
+        fi
 
         echo "SpotBugs scan completed"
         echo -n "$(workspaces.source.path)/reports/spotbugs-report.html" > $(results.security-report-path.path)
@@ -90,18 +91,19 @@ spec:
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       script: |
         #!/bin/bash
-        set -e
+        set -euo pipefail
 
         echo "Running OWASP Dependency Check..."
 
-        # Run OWASP Dependency Check (skip if not configured)
+        # CVSS 7+ and scanner errors fail the task.
         mvn org.owasp:dependency-check-maven:check \
-          -DfailBuildOnCVSS=7 \
-          || echo "WARNING: Dependency Check plugin not found or failed, skipping"
+          -DfailBuildOnCVSS=7
 
         # Copy report to output
         mkdir -p $(workspaces.source.path)/reports
-        cp target/dependency-check-report.html $(workspaces.source.path)/reports/ || true
+        if [ -f target/dependency-check-report.html ]; then
+          cp target/dependency-check-report.html $(workspaces.source.path)/reports/
+        fi
 
         echo "Dependency check completed"
 
@@ -110,21 +112,19 @@ spec:
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       script: |
         #!/bin/bash
-        set -e
+        set -euo pipefail
 
         echo "Running security-focused unit tests..."
 
-        # Run tests with security profile (skip if not configured)
-        mvn test -Dsecurity-tests=true \
-          || echo "WARNING: Security tests failed or not found, skipping"
+        mvn test -Dsecurity-tests=true
 
         echo "Security tests completed"
 
     - name: aggregate-results
-      image: alpine:3.19
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:34880b64c07f28f64d95737f82f891516de9a3b43583f39970f7bf8e4cfa48b7
       script: |
         #!/bin/sh
-        set -e
+        set -eu
 
         REPORTS_DIR="$(workspaces.source.path)/reports"
 
@@ -135,8 +135,8 @@ spec:
         MEDIUM_COUNT=0
 
         if [ -f "$REPORTS_DIR/spotbugs-report.xml" ]; then
-          HIGH_COUNT=$(grep -c 'High"' "$REPORTS_DIR/spotbugs-report.xml" 2>/dev/null || echo "0")
-          MEDIUM_COUNT=$(grep -c 'Medium"' "$REPORTS_DIR/spotbugs-report.xml" 2>/dev/null || echo "0")
+          HIGH_COUNT=$(awk '/High"/{count++} END{print count+0}' "$REPORTS_DIR/spotbugs-report.xml")
+          MEDIUM_COUNT=$(awk '/Medium"/{count++} END{print count+0}' "$REPORTS_DIR/spotbugs-report.xml")
         fi
 
         echo -n "$HIGH_COUNT" > $(results.high-severity-count.path)
@@ -147,13 +147,17 @@ spec:
         echo "  Medium Severity: $MEDIUM_COUNT"
         echo "  Report: $(cat $(results.security-report-path.path))"
 
-        # Lab: do not fail build on security scan threshold (report only)
-        # FAILURE_THRESHOLD="$(params.FAILURE_THRESHOLD)"
-        # if [ "$FAILURE_THRESHOLD" = "high" ] && [ "$HIGH_COUNT" -gt 0 ]; then
-        #   echo "FAIL: Found $HIGH_COUNT high severity issues"
-        #   exit 1
-        # fi
-        echo "INFO: Lab mode — security scan threshold enforcement disabled"
+        case "$(params.FAILURE_THRESHOLD)" in
+          high)
+            [ "$HIGH_COUNT" -eq 0 ] || exit 1
+            ;;
+          medium)
+            [ "$HIGH_COUNT" -eq 0 ] && [ "$MEDIUM_COUNT" -eq 0 ] || exit 1
+            ;;
+          *)
+            echo "FAIL: unsupported FAILURE_THRESHOLD=$(params.FAILURE_THRESHOLD)"
+            exit 1
+            ;;
+        esac
 
         echo "SUCCESS: Security scan passed threshold"
-

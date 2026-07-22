@@ -15,7 +15,7 @@ spec:
     - name: MAVEN_IMAGE
       type: string
       description: Maven builder image
-      default: "registry.redhat.io/ubi9/openjdk-21:1.20"
+      default: "registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf"
     - name: CONTEXT_DIR
       type: string
       description: Directory containing pom.xml
@@ -50,7 +50,7 @@ spec:
           memory: "2Gi"
           cpu: "2"
     - name: extract-version
-      image: "registry.redhat.io/ubi9/ubi-minimal:9.4"
+      image: "registry.redhat.io/ubi9/ubi-minimal@sha256:c0e70387664f30cd9cf2795b547e4a9a51002c44a4a86aa9335ab030134bf392"
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       script: |
         #!/bin/bash

@@ -36,7 +36,7 @@ spec:
       description: "The previous semantic version tag (e.g., v1.2.3)"
   steps:
     - name: generate-version
-      image: registry.access.redhat.com/ubi9-minimal:latest
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
       workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh

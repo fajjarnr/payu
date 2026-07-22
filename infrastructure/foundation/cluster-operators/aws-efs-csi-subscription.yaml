@@ -1,0 +1,19 @@
+# The supported EFS CSI Operator must be installed here; its generated
+# CredentialsRequests also target this namespace.
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: aws-efs-csi-driver-operator
+  namespace: openshift-cluster-csi-drivers
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: aws-efs-csi-driver-operator
+  namespace: openshift-cluster-csi-drivers
+spec:
+  channel: stable
+  name: aws-efs-csi-driver-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

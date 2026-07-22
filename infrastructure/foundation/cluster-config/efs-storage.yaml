@@ -1,0 +1,31 @@
+apiVersion: operator.openshift.io/v1
+kind: ClusterCSIDriver
+metadata:
+  name: efs.csi.aws.com
+spec:
+  managementState: Managed
+  logLevel: Normal
+  operatorLogLevel: Normal
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-csi
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: efs.csi.aws.com
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - tls
+  - iam
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-03dead26b790d17fd
+  directoryPerms: "750"
+  basePath: /payu
+  ensureUniqueDirectory: "true"
+  reuseAccessPoint: "false"
+  gidRangeStart: "10000"
+  gidRangeEnd: "20000"

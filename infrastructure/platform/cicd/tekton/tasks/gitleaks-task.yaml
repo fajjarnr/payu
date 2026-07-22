@@ -20,7 +20,7 @@ spec:
         type: RuntimeDefault
   steps:
     - name: scan
-      image: "zricethezav/gitleaks:v8.18.2"
+      image: "docker.io/zricethezav/gitleaks@sha256:eadfe256fa18d6a78a717abc9ed454c8e03865d1c46d627bca83977f4424901a"
       workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh

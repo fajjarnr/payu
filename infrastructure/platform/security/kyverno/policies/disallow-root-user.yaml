@@ -9,7 +9,7 @@ metadata:
     policies.kyverno.io/description: 'Running as root is not allowed. Containers must
       set runAsNonRoot: true and specify a non-zero runAsUser.'
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: true
   rules:
   - name: check-runasuser

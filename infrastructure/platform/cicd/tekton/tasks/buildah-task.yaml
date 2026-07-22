@@ -38,13 +38,13 @@ spec:
       description: Docker registry credentials
       optional: true
   results:
-    - name: IMAGE_DIGEST
+    - name: BUILT_IMAGE_DIGEST
       description: SHA digest of the built image
-    - name: IMAGE_URL
+    - name: BUILT_IMAGE_URL
       description: Full URL of the pushed image
   steps:
     - name: build-and-push
-      image: "registry.redhat.io/rhel9/buildah:9.4"
+      image: "registry.redhat.io/rhel9/buildah@sha256:c62b2318eb4709c216ad25969abae5ff6b56e9879d266b539a46fdfc99e8361e"
       workingDir: $(workspaces.source.path)
       securityContext:
         capabilities:
@@ -109,8 +109,10 @@ spec:
           $(params.IMAGE)
 
         DIGEST=$(cat /tmp/image-digest)
-        echo -n "$DIGEST" | tee $(results.IMAGE_DIGEST.path)
-        echo -n "$(params.IMAGE)@$DIGEST" | tee $(results.IMAGE_URL.path)
+        echo -n "$DIGEST" | tee $(results.BUILT_IMAGE_DIGEST.path)
+        echo -n "$(params.IMAGE)" | tee $(results.BUILT_IMAGE_URL.path)
+        mkdir -p "$(workspaces.source.path)/.tekton-results"
+        echo -n "$(params.IMAGE)@$DIGEST" > "$(workspaces.source.path)/.tekton-results/image-url"
 
         echo ""
         echo "[✓] Image pushed: $(params.IMAGE)@$DIGEST"

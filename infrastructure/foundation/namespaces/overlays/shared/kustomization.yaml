@@ -8,5 +8,6 @@ resources:
   - ../../base
   - payu-cicd.yaml
   - allow-intra-namespace.yaml
+  - allow-dns-egress.yaml
   - allow-external-secrets-to-vault.yaml
   - allow-openshift-router.yaml

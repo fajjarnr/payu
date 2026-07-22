@@ -61,6 +61,8 @@ spec:
                 - istio-system
                 # RHACS
                 - stackrox
+                # Red Hat Trusted Artifact Signer operand namespace
+                - trusted-artifact-signer
                 # Chaos Engineering
                 - litmus
           - subjects:

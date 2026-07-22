@@ -1,0 +1,98 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: rhtas-postgres
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-postgres
+    app.kubernetes.io/part-of: payu
+    environment: production
+spec:
+  description: RHTAS Trillian PostgreSQL HA cluster
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8@sha256:ed9bd4a26b152cf35f2c64e15f48126e3477ad222cfb04794562bdc999b8f0be
+  enablePDB: true
+  enableSuperuserAccess: false
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: topology.kubernetes.io/zone
+  bootstrap:
+    initdb:
+      database: trillian
+      owner: trillian
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: 256MB
+      effective_cache_size: 768MB
+      work_mem: 8MB
+      maintenance_work_mem: 128MB
+      wal_level: replica
+      ssl_min_protocol_version: TLSv1.3
+    synchronous:
+      method: any
+      number: 1
+      dataDurability: required
+      failoverQuorum: true
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  storage:
+    size: 20Gi
+    storageClass: gp3-csi
+  walStorage:
+    size: 10Gi
+    storageClass: gp3-csi
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: rhtas-postgres-backup
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rhtas-postgres-backup
+  namespace: trusted-artifact-signer
+spec:
+  retentionPolicy: 30d
+  configuration:
+      destinationPath: s3://payu-payu-ghxd9-backups-339712853697/rhtas-postgres
+      endpointURL: https://s3.ap-southeast-1.amazonaws.com
+      s3Credentials:
+        accessKeyId:
+          name: rhtas-postgres-aws-credentials
+          key: aws_access_key_id
+        secretAccessKey:
+          name: rhtas-postgres-aws-credentials
+          key: aws_secret_access_key
+      data:
+        compression: gzip
+        jobs: 2
+      wal:
+        compression: gzip
+        maxParallel: 2
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: rhtas-postgres-daily
+  namespace: trusted-artifact-signer
+spec:
+  schedule: "0 15 2 * * *"
+  backupOwnerReference: self
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  target: prefer-standby
+  immediate: true
+  cluster:
+    name: rhtas-postgres

@@ -1,0 +1,356 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhtas-redis-headless
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-redis
+    app.kubernetes.io/part-of: payu
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: rhtas-redis
+  ports:
+    - name: redis
+      port: 6379
+    - name: sentinel
+      port: 26379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhtas-redis-sentinel
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-redis
+    app.kubernetes.io/part-of: payu
+spec:
+  selector:
+    app.kubernetes.io/name: rhtas-redis
+  ports:
+    - name: sentinel
+      port: 26379
+      targetPort: sentinel
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rhtas-redis
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-redis
+    app.kubernetes.io/part-of: payu
+spec:
+  serviceName: rhtas-redis-headless
+  replicas: 3
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rhtas-redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rhtas-redis
+        app.kubernetes.io/part-of: payu
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: rhtas-redis
+              topologyKey: topology.kubernetes.io/zone
+      containers:
+        - name: redis
+          image: registry.redhat.io/rhel9/redis-7@sha256:e364b5de039b15ced065827f9443961684def710a29c4a745366ab960a97ce1f
+          command: ["/bin/bash", "-ec"]
+          args:
+            - |
+              replica_args=()
+              current_master="$(redis-cli --no-auth-warning -h rhtas-redis-sentinel -p 26379 -a "${REDIS_PASSWORD}" --raw SENTINEL get-master-addr-by-name rhtas-master 2>/dev/null | head -n1 || true)"
+              if [[ -n "${current_master}" && "${current_master}" != "${HOSTNAME}.rhtas-redis-headless.trusted-artifact-signer.svc.cluster.local" ]]; then
+                replica_args=(--replicaof "${current_master}" 6379)
+              elif [[ -z "${current_master}" && "${HOSTNAME}" != "rhtas-redis-0" ]]; then
+                replica_args=(--replicaof rhtas-redis-0.rhtas-redis-headless.trusted-artifact-signer.svc.cluster.local 6379)
+              fi
+              exec redis-server \
+                --bind 0.0.0.0 --protected-mode yes \
+                --port 6379 --dir /var/lib/redis/data \
+                --appendonly yes --appendfsync everysec \
+                --save 900 1 --save 300 10 --save 60 10000 \
+                --requirepass "${REDIS_PASSWORD}" --masterauth "${REDIS_PASSWORD}" \
+                "${replica_args[@]}"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rhtas-redis-auth
+                  key: password
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["/bin/bash", "-ec", "redis-cli --no-auth-warning -a \"${REDIS_PASSWORD}\" ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["/bin/bash", "-ec", "redis-cli --no-auth-warning -a \"${REDIS_PASSWORD}\" ping | grep -q PONG"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/redis/data
+        - name: sentinel
+          image: registry.redhat.io/rhel9/redis-7@sha256:e364b5de039b15ced065827f9443961684def710a29c4a745366ab960a97ce1f
+          command: ["/bin/bash", "-ec"]
+          args:
+            - |
+              cat > /sentinel/sentinel.conf <<EOF
+              port 26379
+              bind 0.0.0.0
+              protected-mode yes
+              dir /sentinel
+              requirepass ${REDIS_PASSWORD}
+              sentinel resolve-hostnames yes
+              sentinel announce-hostnames yes
+              sentinel monitor rhtas-master rhtas-redis-0.rhtas-redis-headless.trusted-artifact-signer.svc.cluster.local 6379 2
+              sentinel auth-pass rhtas-master ${REDIS_PASSWORD}
+              sentinel down-after-milliseconds rhtas-master 5000
+              sentinel failover-timeout rhtas-master 60000
+              sentinel parallel-syncs rhtas-master 1
+              EOF
+              exec redis-sentinel /sentinel/sentinel.conf
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rhtas-redis-auth
+                  key: password
+          ports:
+            - name: sentinel
+              containerPort: 26379
+          readinessProbe:
+            exec:
+              command: ["/bin/bash", "-ec", "redis-cli --no-auth-warning -p 26379 -a \"${REDIS_PASSWORD}\" ping | grep -q PONG"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: sentinel-state
+              mountPath: /sentinel
+      volumes:
+        - name: sentinel-state
+          emptyDir:
+            sizeLimit: 16Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: gp3-csi
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rhtas-redis
+  namespace: trusted-artifact-signer
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rhtas-redis
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhtas-redis-proxy-config
+  namespace: trusted-artifact-signer
+data:
+  haproxy.cfg.template: |
+    global
+      log stdout format raw local0
+    defaults
+      log global
+      mode tcp
+      timeout connect 5s
+      timeout client 30s
+      timeout server 30s
+    resolvers kube-dns
+      nameserver dns 172.30.0.10:53
+      accepted_payload_size 8192
+      resolve_retries 3
+      timeout resolve 1s
+      timeout retry 1s
+      hold valid 10s
+    frontend redis
+      bind :6379
+      default_backend redis_master
+    backend redis_master
+      option tcp-check
+      tcp-check connect
+      tcp-check send AUTH\ REDIS_PASSWORD\r\n
+      tcp-check expect string +OK
+      tcp-check send ROLE\r\n
+      tcp-check expect string master
+      server-template redis 3 rhtas-redis-headless.trusted-artifact-signer.svc.cluster.local:6379 check resolvers kube-dns init-addr none inter 2s fall 2 rise 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rhtas-redis-proxy
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-redis-proxy
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rhtas-redis-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rhtas-redis-proxy
+        app.kubernetes.io/part-of: payu
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: rhtas-redis-proxy
+              topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: render-config
+          image: registry.redhat.io/ubi9/ubi-minimal@sha256:907b68736aa798b2d38255b7aa070b2a70acb90803864a40f05d0ec47556ddd0
+          command: ["/bin/sh", "-ec"]
+          args:
+            - sed "s/REDIS_PASSWORD/${REDIS_PASSWORD}/g" /template/haproxy.cfg.template > /config/haproxy.cfg
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rhtas-redis-auth
+                  key: password
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          volumeMounts:
+            - name: template
+              mountPath: /template
+              readOnly: true
+            - name: config
+              mountPath: /config
+      containers:
+        - name: haproxy
+          image: docker.io/library/haproxy@sha256:68d20e9f9f1d825c4eb8e72a80e36643bb84bf3ffa61bb1059b804f69700a83a
+          args: ["haproxy", "-W", "-db", "-f", "/config/haproxy.cfg"]
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: template
+          configMap:
+            name: rhtas-redis-proxy-config
+        - name: config
+          emptyDir:
+            sizeLimit: 1Mi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rhtas-redis-proxy
+  namespace: trusted-artifact-signer
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rhtas-redis-proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhtas-redis
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: rhtas-redis-proxy
+    app.kubernetes.io/part-of: payu
+spec:
+  selector:
+    app.kubernetes.io/name: rhtas-redis-proxy
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis

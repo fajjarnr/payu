@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: node-unit-tests
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: Run deterministic Node.js type, lint, and unit-test gates.
+  params:
+    - name: CONTEXT_DIR
+      type: string
+    - name: NODE_IMAGE
+      type: string
+      default: registry.redhat.io/ubi9/nodejs-24@sha256:c1070591044b1d5ed4267d974b22762598a19ca8d0d8cafa8f21ef4c686961cb
+  workspaces:
+    - name: source
+  steps:
+    - name: test
+      image: $(params.NODE_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      env:
+        - name: HOME
+          value: $(workspaces.source.path)/.node-home
+        - name: npm_config_cache
+          value: $(workspaces.source.path)/.npm-cache
+        - name: TMPDIR
+          value: $(workspaces.source.path)/.node-tmp
+      securityContext:
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+        mkdir -p "$HOME" "$npm_config_cache" "$TMPDIR"
+        npm ci
+        npm run type-check
+        npm run lint
+        npm run test -- --run

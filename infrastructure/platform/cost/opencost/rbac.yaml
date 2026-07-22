@@ -13,13 +13,3 @@ subjects:
   - kind: ServiceAccount
     name: opencost
     namespace: payu-observability
----
-# Service-account token secret for OpenCost to authenticate to Thanos
-apiVersion: v1
-kind: Secret
-metadata:
-  name: opencost-prometheus-token
-  namespace: payu-observability
-  annotations:
-    kubernetes.io/service-account.name: opencost
-type: kubernetes.io/service-account-token

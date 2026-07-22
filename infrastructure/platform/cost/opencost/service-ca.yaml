@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencost-service-ca
+  namespace: payu-observability
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"

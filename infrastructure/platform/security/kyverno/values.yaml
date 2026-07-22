@@ -9,74 +9,56 @@ namespace: kyverno
 # Do not create namespace via Helm; we manage it separately
 createNamespace: false
 
-# Cleanup CronJobs image override
-# https://github.com/kyverno/kyverno/blob/main/charts/kyverno/values.yaml
-cleanupJobs:
-  admissionReports:
-    image:
-      registry: image-registry.openshift-image-registry.svc:5000
-      repository: openshift/cli
-      tag: latest
-    securityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-  clusterAdmissionReports:
-    image:
-      registry: image-registry.openshift-image-registry.svc:5000
-      repository: openshift/cli
-      tag: latest
-    securityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-  clusterEphemeralReports:
-    image:
-      registry: image-registry.openshift-image-registry.svc:5000
-      repository: openshift/cli
-      tag: latest
-    securityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-  ephemeralReports:
-    image:
-      registry: image-registry.openshift-image-registry.svc:5000
-      repository: openshift/cli
-      tag: latest
-    securityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-  updateRequests:
-    image:
-      registry: image-registry.openshift-image-registry.svc:5000
-      repository: openshift/cli
-      tag: latest
-    securityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-
 # Kyverno admission controller — disable Helm hooks if running on OpenShift
 # (hooks may conflict with OLM or ArgoCD sync)
 admissionController:
   initContainer:
     image:
       registry: ""  # use chart default
+    securityContext:
+      runAsUser: null
+      runAsGroup: null
   container:
     image:
       registry: ""  # use chart default
-  replicas: 1
+    securityContext:
+      runAsUser: null
+      runAsGroup: null
+  replicas: 3
 
 backgroundController:
-  replicas: 1
+  replicas: 2
+  securityContext:
+    runAsUser: null
+    runAsGroup: null
 
 cleanupController:
-  replicas: 1
+  replicas: 2
+  securityContext:
+    runAsUser: null
+    runAsGroup: null
 
 reportsController:
-  replicas: 1
+  replicas: 2
+  securityContext:
+    runAsUser: null
+    runAsGroup: null
+
+crds:
+  migration:
+    securityContext:
+      runAsUser: null
+      runAsGroup: null
+
+webhooksCleanup:
+  securityContext:
+    runAsUser: null
+    runAsGroup: null
+
+test:
+  securityContext:
+    runAsUser: null
+    runAsGroup: null
 
 # Pod security — align with OpenShift restricted-v2 SCC
 # Kyverno pods run as non-root but OpenShift assigns random UID

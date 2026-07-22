@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: resolve-image-digest
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: Return the immutable image reference emitted by the successful Buildah branch.
+  workspaces:
+    - name: source
+  results:
+    - name: IMAGE_URL
+      description: Full image reference pinned to a sha256 digest
+  steps:
+    - name: validate-digest
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        result_file="$(workspaces.source.path)/.tekton-results/image-url"
+        test -s "$result_file"
+        image_url=$(cat "$result_file")
+
+        if ! [[ "$image_url" =~ @sha256:[0-9a-f]{64}$ ]]; then
+          echo "Image reference is not digest-pinned: $image_url" >&2
+          exit 1
+        fi
+
+        echo -n "$image_url" | tee "$(results.IMAGE_URL.path)"

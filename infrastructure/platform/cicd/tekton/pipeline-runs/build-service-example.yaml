@@ -19,12 +19,10 @@ spec:
       value: main
     - name: service-type
       value: spring-boot
-    - name: build-image-tag
-      value: latest
     - name: registry-url
       value: image-registry.openshift-image-registry.svc:5000
     - name: registry-namespace
-      value: payu
+      value: payu-dev
   workspaces:
     - name: source
       volumeClaimTemplate:
@@ -36,7 +34,4 @@ spec:
               storage: 5Gi
     - name: maven-settings
       emptyDir: {}
-    - name: dockerconfig
-      secret:
-        secretName: internal-registry-auth
   timeout: 1h30m

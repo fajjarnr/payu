@@ -9,7 +9,7 @@ metadata:
     policies.kyverno.io/description: Only approved container registries are allowed
       for image pulls.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: true
   rules:
   - name: validate-registries

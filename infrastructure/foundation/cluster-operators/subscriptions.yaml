@@ -33,11 +33,11 @@ data:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: infinispan
+  name: datagrid
   namespace: openshift-operators
 spec:
   channel: stable
-  name: infinispan
+  name: datagrid
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
@@ -313,6 +313,20 @@ metadata:
 spec:
   channel: 7.14.x
   name: amq-broker-rhel9
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 22. Red Hat Trusted Artifact Signer 1.4
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhtas-operator
+  namespace: openshift-operators
+spec:
+  channel: stable-v1.4
+  name: rhtas-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic

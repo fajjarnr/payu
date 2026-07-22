@@ -21,7 +21,7 @@ spec:
     - name: source
   steps:
     - name: zap-web-scan
-      image: ghcr.io/zaproxy/zaproxy:stable
+      image: ghcr.io/zaproxy/zaproxy@sha256:8d387b1a63e3425beef4846e39719f5af2a787753af2d8b6558c6257d7a577a2
       script: |
         #!/bin/sh
         set -eu
@@ -33,7 +33,7 @@ spec:
           zap-baseline.py -t "$(params.TARGET_URL)" -J "$REPORT_DIR/zap-baseline.json" -r "$REPORT_DIR/zap-baseline.html" -I
         fi
     - name: zap-api-scan
-      image: ghcr.io/zaproxy/zaproxy:stable
+      image: ghcr.io/zaproxy/zaproxy@sha256:8d387b1a63e3425beef4846e39719f5af2a787753af2d8b6558c6257d7a577a2
       when:
         - input: "$(params.API_SPEC_URL)"
           operator: notin

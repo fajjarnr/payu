@@ -29,7 +29,7 @@ spec:
         type: RuntimeDefault
   steps:
     - name: scan
-      image: docker.io/returntocorp/semgrep:1.75.0
+      image: docker.io/returntocorp/semgrep@sha256:550dfdac1ec5d4a757d1c2ac0197a6360ef3ac8e3d0a804731eab07242e91b4c
       workingDir: $(workspaces.source.path)
       env:
         - name: HOME
@@ -43,5 +43,5 @@ spec:
           --exclude node_modules \
           --exclude target \
           --exclude dist \
-          "$(workspaces.source.path)/$(params.CONTEXT_DIR)" || true
-        echo "Semgrep scan completed. Review findings above."
+          "$(workspaces.source.path)/$(params.CONTEXT_DIR)"
+        echo "Semgrep security gate passed."

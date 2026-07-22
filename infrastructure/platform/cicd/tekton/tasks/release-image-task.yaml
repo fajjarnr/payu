@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: release-image-for-signing
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: release-image-for-signing
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: supply-chain-security
+spec:
+  description: Emit Tekton Chains canonical results only after all mandatory gates pass.
+  params:
+    - name: IMAGE
+      type: string
+      description: Immutable image reference in image@sha256 form.
+  results:
+    - name: IMAGE_URL
+      description: Image repository without digest.
+    - name: IMAGE_DIGEST
+      description: Verified SHA-256 digest.
+  steps:
+    - name: release
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:34880b64c07f28f64d95737f82f891516de9a3b43583f39970f7bf8e4cfa48b7
+      computeResources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+      script: |
+        #!/bin/sh
+        set -eu
+        image="$(params.IMAGE)"
+        repository="${image%@*}"
+        digest="${image##*@}"
+
+        [ "$repository" != "$image" ]
+        if ! printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+          echo "Invalid immutable image digest: $digest" >&2
+          exit 1
+        fi
+
+        printf '%s' "$repository" > "$(results.IMAGE_URL.path)"
+        printf '%s' "$digest" > "$(results.IMAGE_DIGEST.path)"

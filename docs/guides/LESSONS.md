@@ -2,6 +2,27 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-133: HA RHTAS Requires Dependency Ordering and Explicit Default-Deny Paths (2026-07-22)
+
+**Date**: 2026-07-22
+**Domain**: OpenShift, RHTAS, CloudNativePG, Redis Sentinel, EFS CSI, External Secrets, CCO
+**Context**: RHTAS 1.4 was deployed with three-replica PostgreSQL, Redis/Sentinel, Trillian, Rekor, Fulcio, CTLog, TUF, and TSA. The namespace-wide Kyverno default-deny policy initially blocked DNS and CNPG control traffic. EFS was first installed from the global Operator namespace, while its generated credential Secrets lived in the supported CSI namespace. External Secrets was running but scoped to watch only its own namespace.
+
+**Lesson**:
+- Install the AWS EFS CSI Operator in `openshift-cluster-csi-drivers`; installing it globally separates the operand from its CCO Secret and leaves the controller unready.
+- `ExternalSecretsConfig.spec.appConfig.operatingNamespace` limits the watched workload namespace. Omit it for cluster-wide reconciliation; the controller still runs in `external-secrets`.
+- Under default-deny, allow OpenShift DNS endpoint port 5353 as well as Service port 53, Kubernetes API access, CNPG instance-manager ingress on 8000, and only required S3/KMS HTTPS egress.
+- CCO AWS `CredentialsRequest` statement entries accept one resource string per entry, not an ARN array.
+- Apply database schema before RHTAS tree creation. A failed Rekor/CTLog create-tree job is terminal in the child CR; after prerequisites recover, recreate only the failed child control resources so the operator generates fresh jobs.
+- Validate the exact HAProxy image and configuration with Podman before rollout. HAProxy 3.0.25 rejected DNS server addresses behind an experimental parser gate; the digest-pinned official HAProxy 2.8 LTS image accepted the documented `server-template` configuration.
+
+**Applied evidence**:
+- EFS CSI reports controller and node services Available; the retained TUF PVC is `Bound` with RWX.
+- RHTAS PostgreSQL is healthy at 3/3 across three AZs; Redis/Sentinel is 3/3 and its proxy is 2/2.
+- Trillian schema and create-tree jobs completed. Rekor returned HTTP 200 through `oc port-forward`, with an initialized empty transparency log.
+
+---
+
 ## L-132: Cluster Cache Recovery Must Validate Runtime Contract Before App Rollout (2026-07-22)
 
 **Date**: 2026-07-22
@@ -4085,3 +4106,21 @@ synchronized (lock) {
 4. Analytics can briefly report missing topics/group coordinator while a new KRaft broker creates metadata; judge the final state from a steady-state log scan.
 
 **Prevention**: For a local application gate, rebuild artifacts before images, validate advertised listener names against container DNS, wait for dependency health, then scan a fresh 30-second steady-state log window.
+
+### L-128: Architecture Documents Are Constraints, Not Deployment Checklists (2026-07-22)
+
+**Context**: Production-hardening `DEVSECOPS_ARCHITECTURE.md` against the live OpenShift cluster exposed obsolete APIs, duplicated policy ownership, placeholder secrets, and components whose prerequisites did not exist.
+
+**Prevention**: Deploy a documented component only when it has a necessary role, non-overlapping ownership, current API/operator compatibility, real prerequisites, fail-closed behavior, and an executable readiness gate. Remove or defer obsolete, duplicate, placeholder, and unverifiable resources; never claim architecture completeness from manifest presence alone.
+
+### L-129: Prefer Supported Red Hat Container Images on OpenShift (2026-07-22)
+
+**Context**: A Tekton signing task initially used a third-party Cosign image although Red Hat Trusted Artifact Signer provides a supported image.
+
+**Prevention**: For OpenShift workloads, check `registry.redhat.io` first with `skopeo` or `podman`. Pin the selected image by digest. Use another registry only when no suitable Red Hat image exists, and record that exception.
+
+### L-130: Use Port-Forward for Interactive RHACS Administration (2026-07-22)
+
+**Context**: Interactive `roxctl` validation initially used the public Central Route even though direct external exposure was unnecessary.
+
+**Prevention**: For operator/admin access from a workstation, use `oc port-forward` to the Central Service with its CA and SNI, then stop the forward after validation. In-cluster CI uses `central.stackrox.svc` directly with a scoped token; never place the RHACS admin password in pipeline Secrets.

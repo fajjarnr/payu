@@ -193,19 +193,29 @@ spec:
                   key: url
           restartPolicy: OnFailure
 ---
-apiVersion: v1
-kind: Secret
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
 metadata:
   name: drift-detection-webhook
   namespace: openshift-gitops
   labels:
     app: payu
     type: drift-detection
-stringData:
-  # WARNING: Replace with actual Slack webhook URL before deploying
-  # Use ExternalSecrets or Vault in production
-  url: "${SLACK_WEBHOOK_URL}"
-type: Opaque
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
+    name: drift-detection-webhook
+    creationPolicy: Owner
+    template:
+      type: Opaque
+  data:
+    - secretKey: url
+      remoteRef:
+        key: payu/argocd
+        property: drift-webhook-url
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

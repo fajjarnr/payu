@@ -182,18 +182,28 @@ data:
   policy.default: role:''
   scopes: "[groups,cn]"
 ---
-apiVersion: v1
-kind: Secret
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
 metadata:
   name: argocd-secret
   namespace: openshift-gitops
   labels:
     app: payu
     type: argocd-secret
-stringData:
-  # Admin password - MUST be replaced via ExternalSecrets or Vault in production
-  # WARNING: Placeholder value below - DO NOT use in production
-  admin.password: "${ARGOCD_ADMIN_PASSWORD_BCRYPT}"
-  # OIDC client secret - MUST be replaced via ExternalSecrets or Vault
-  oidc.clientSecret: "${ARGOCD_OIDC_CLIENT_SECRET}"
-type: Opaque
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
+    name: argocd-secret
+    creationPolicy: Merge
+  data:
+    - secretKey: admin.password
+      remoteRef:
+        key: payu/argocd
+        property: admin-password-bcrypt
+    - secretKey: oidc.clientSecret
+      remoteRef:
+        key: payu/argocd
+        property: oidc-client-secret

@@ -19,7 +19,7 @@ spec:
       description: "Workspace used to persist reports"
   steps:
     - name: run
-      image: docker.io/schemathesis/schemathesis:3.39.16
+      image: docker.io/schemathesis/schemathesis@sha256:4ba658e6a309d51d76efb64697b695660fc565e159e5e269633521e9b486d759
       script: |
         #!/bin/sh
         set -eu

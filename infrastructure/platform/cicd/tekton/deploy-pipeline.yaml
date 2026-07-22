@@ -62,6 +62,10 @@ spec:
       type: string
       description: Repository-relative k6 script path for UAT load testing
       default: tests/performance/k6/crud-load-test.js
+    - name: contract-tests-required
+      type: string
+      description: Require Pact verification for services that publish provider contracts
+      default: "false"
   workspaces:
     - name: source
       description: Workspace to hold the cloned infrastructure git repository
@@ -178,11 +182,15 @@ spec:
       workspaces:
         - name: source
           workspace: source
+      when:
+        - input: "$(params.contract-tests-required)"
+          operator: in
+          values: ["true"]
       params:
         - name: SERVICE_NAME
           value: $(params.service-name)
         - name: FAIL_ON_NO_PACTS
-          value: "false"
+          value: "true"
 
     # ── Step 4A: Security Gate (DEV) - DAST ──
     - name: dev-zap-baseline

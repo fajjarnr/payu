@@ -17,9 +17,9 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.26, 7 nodes Ready. `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-22 (cache recovery complete: Data Grid `WellFormed=True`, mTLS and Hot Rod verified; 24-hour canary remains) |
+| **Last Updated** | 2026-07-22 (RHTAS core services, EFS RWX, S3/KMS, and multi-AZ workers live; TUF/Vault/Loki/Results remain) |
 
 ---
 
@@ -65,6 +65,26 @@
 | DEVSECOPS-007 | P3 | Security | LUKS encryption PV + Vault DEK rotation |
 | DEVSECOPS-012 | P3 | Cost | Monthly cost report workflow |
 
+## 🛡️ DEVSECOPS-017 — Production-Ready Architecture Implementation
+
+Success criteria: every mandatory control in `infrastructure/DEVSECOPS_ARCHITECTURE.md`
+has repository tests plus live-cluster evidence. A manifest existing in Git is not
+completion evidence.
+
+- [x] Add failing infrastructure contract tests for Kustomize rendering, secret hygiene, fail-closed Java/Python/Next.js gates, digest-pinned Task images, immutable image promotion, and policy ownership. (`34/34` green on 2026-07-22.)
+- [x] Repair `payu-dev` rendering and workload port contracts before enabling GitOps reconciliation. (Web route verified HTTP 200.)
+- [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
+- [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
+- [ ] Bootstrap Argo CD Applications/ApplicationSets with Git/live parity before enabling prune and self-heal.
+- [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity is live; finish Rekor-backed strict verification, SBOM attestation retention, signed-image admission, and provider opt-in for the Pact gate.
+- [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days.
+- [ ] Enforce security controls in ACS and operational controls in Kyverno without overlapping ownership. RHACS Central/SecuredCluster and nine Kyverno policies are Ready. Host-namespace denial remains enforced; root-user, approved-registry, and required-label controls remain Audit until 7, 8, and 6 live `payu-dev` violations respectively are remediated and negative admission tests pass.
+- [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.
+- [ ] Finish RHTAS 1.4 aggregate readiness. CNPG PostgreSQL 3/3, Redis/Sentinel 3/3, EFS-backed retained TUF storage, S3/KMS-backed Rekor/backups, and Rekor HTTP 200 are verified; the Securesign CR remains Pending until TUF reconciliation completes.
+- [x] Measure scheduler pressure and MachineSet topology; add workers only for a verified constraint. Required zone anti-affinity exposed the single-AZ worker layout, so workers were added in `1b/1c`; five workers are currently Ready across three AZs.
+- [ ] After workload redistribution and a disruption-budget review, rightsize the original `1a` MachineSet from three replicas to one so steady state is one worker per AZ.
+- [ ] Run positive and negative E2E security gates, DR/rollback exercises, reviewer audit, then reconcile architecture and PCI evidence documents with runtime truth.
+
 ---
 
 ## 🔍 Ponytail Audit — Over-Engineering & Dead Code (2026-07-02)
@@ -91,8 +111,8 @@
 * **Status**: Pinned to ArchUnit 1.2.1 in these 3 services until remediation. Parent POM keeps `<archunit.version>1.4.2</archunit.version>` for services that already pass (compliance, partner, gateway, etc.).
 * **Created**: 2026-07-13.
 
-### 🔐 SEC-020: Remediate CIS platform failures (platform-security)
-* **Problem**: Hasil pemindaian Compliance Operator untuk profile `ocp4-cis` (non-compliant) mendeteksi 9 temuan kegagalan (FAIL):
+### 🔐 SEC-020: Remediate CIS/PCI platform failures (platform-security)
+* **Problem**: Scan live `ocp4-cis-1-9` + `ocp4-pci-dss-4-0` pada 2026-07-22 berstatus `NON-COMPLIANT`. Terdapat 25 FAIL (16 kontrol unik); sembilan kontrol bersama adalah:
   1. `ocp4-cis-api-server-encryption-provider-cipher`: Cipher enkripsi API server tidak aman.
   2. `ocp4-cis-audit-log-forwarding-enabled`: Audit log forwarding ke SIEM eksternal belum diaktifkan.
   3. `ocp4-cis-audit-profile-set`: Profil audit API server belum dikonfigurasi.
@@ -102,8 +122,9 @@
   7. `ocp4-cis-ocp-allowed-registries`: Daftar registry eksternal yang diizinkan belum didefinisikan.
   8. `ocp4-cis-ocp-allowed-registries-for-import`: Aturan import image registry belum dibatasi.
   9. `ocp4-cis-scc-limit-container-allowed-capabilities`: Security Context Constraints (SCC) belum membatasi capabilities container secara ketat.
+* **PCI-only gaps**: Container Security Operator, File Integrity Operator + notification, OAuth inactivity timeout, non-HTPasswd IDP, TLS on every Route, dan Security Profiles Operator.
 * **Impact**: Platform OpenShift rentan terhadap celah keamanan CIS Benchmark dan tidak memenuhi kepatuhan regulasi OJK/PCI-DSS.
-* **Fix**: Terapkan perbaikan konfigurasi pada level cluster (APIServer, IngressController, OAuth, Image, SCC) sesuai dengan rekomendasi remediasi dari masing-masing aturan kepatuhan Compliance Operator.
+* **Fix**: Susun MOP per kontrol dengan backup, diff, canary, dan rollback. Jangan aktifkan `autoApplyRemediations`; perubahan APIServer, IngressController, OAuth, Image, SCC, dan audit forwarding memerlukan review dampak cluster.
 
 ### 🧭 ARCH-007: Migrate Data Grid access from RESP compatibility mode to Hot Rod native client
 * **Context7 evidence**:

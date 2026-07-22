@@ -11,10 +11,7 @@ spec:
   central:
     exposure:
       route:
-        enabled: true
-    persistence:
-      persistentVolumeClaim:
-        claimName: payu-rhacs-pvc
+        enabled: false
     resources:
       limits:
         cpu: "2"
@@ -22,7 +19,7 @@ spec:
       requests:
         cpu: 500m
         memory: 1Gi
-  # Disable legacy scanner, use Scanner V4 only
+  # Keep the operator-supported scanner alongside Scanner V4.
   scanner:
     analyzer:
       scaling:
@@ -46,6 +43,8 @@ spec:
       persistence:
         persistentVolumeClaim:
           claimName: scanner-v4-db
+          storageClassName: gp3-csi
+          size: 50Gi
 ---
 # SecuredCluster: registers this OpenShift cluster to ACS Central
 # Uses cluster-registration-secret created from ACS UI/API
@@ -57,12 +56,10 @@ metadata:
 spec:
   clusterName: payu-openshift
   centralEndpoint: central.stackrox.svc:443
-  registrationSecret:
-    name: cluster-registration-secret
   admissionControl:
-    listenOnCreates: true
-    listenOnUpdates: true
-    listenOnEvents: true
+    enforcement: Enabled
+    failurePolicy: Fail
+    bypass: BreakGlassAnnotation
   perNode:
     collector:
       collection: EBPF

@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  generateName: chains-signing-proof-
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: chains-signing-proof
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: supply-chain-security
+spec:
+  serviceAccountName: pipeline
+  taskSpec:
+    results:
+      - name: IMAGE_URL
+        description: Existing internal image tag used only for signing verification.
+      - name: IMAGE_DIGEST
+        description: Immutable digest corresponding to IMAGE_URL.
+    steps:
+      - name: emit-image-results
+        image: registry.redhat.io/ubi9/ubi-minimal@sha256:34880b64c07f28f64d95737f82f891516de9a3b43583f39970f7bf8e4cfa48b7
+        computeResources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001
+        script: |
+          #!/bin/sh
+          set -eu
+          printf '%s' 'image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:1.8.83' > "$(results.IMAGE_URL.path)"
+          printf '%s' 'sha256:d4e0e633a3131712b12e7ac8545a087fb3a3936c6625b6060b78c24734193620' > "$(results.IMAGE_DIGEST.path)"

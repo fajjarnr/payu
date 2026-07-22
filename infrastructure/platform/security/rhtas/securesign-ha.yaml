@@ -1,0 +1,143 @@
+apiVersion: rhtas.redhat.com/v1alpha1
+kind: Securesign
+metadata:
+  name: securesign-ha
+  namespace: trusted-artifact-signer
+  labels:
+    app.kubernetes.io/name: securesign-ha
+    app.kubernetes.io/part-of: payu
+    environment: production
+spec:
+  trillian:
+    database:
+      create: false
+      provider: postgresql
+      uri: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=require"
+    auth:
+      env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-postgres-app
+              key: host
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-postgres-app
+              key: port
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-postgres-app
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-postgres-app
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-postgres-app
+              key: dbname
+    server:
+      replicas: 3
+      resources:
+        requests: {cpu: 500m, memory: 256Mi}
+        limits: {cpu: "1", memory: 512Mi}
+    signer:
+      replicas: 3
+      resources:
+        requests: {cpu: 100m, memory: 128Mi}
+        limits: {cpu: 250m, memory: 256Mi}
+  rekor:
+    replicas: 3
+    externalAccess:
+      enabled: false
+    resources:
+      requests: {cpu: 500m, memory: 256Mi}
+      limits: {cpu: "1", memory: 512Mi}
+    attestations:
+      enabled: true
+      url: s3://payu-payu-ghxd9-rhtas-339712853697?region=ap-southeast-1
+      maxSize: 100Ki
+    searchIndex:
+      create: false
+      provider: redis
+      url: "redis://:$(REDIS_PASSWORD)@rhtas-redis.trusted-artifact-signer.svc.cluster.local:6379"
+    backFillRedis:
+      enabled: true
+      schedule: "0 0 * * *"
+    auth:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-aws-credentials
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-aws-credentials
+              key: aws_secret_access_key
+        - name: AWS_REGION
+          value: ap-southeast-1
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rhtas-redis-auth
+              key: password
+  fulcio:
+    replicas: 3
+    externalAccess:
+      enabled: false
+    resources:
+      requests: {cpu: 250m, memory: 128Mi}
+      limits: {cpu: 500m, memory: 256Mi}
+    trustedCA:
+      name: rhtas-service-ca
+    config:
+      OIDCIssuers:
+        - Issuer: https://kubernetes.default.svc
+          IssuerURL: https://kubernetes.default.svc
+          ClientID: trusted-artifact-signer
+          Type: kubernetes
+    certificate:
+      organizationName: PayU Digital Banking
+      organizationEmail: platform@payu.fajjjar.my.id
+  ctlog:
+    replicas: 3
+    resources:
+      requests: {cpu: 100m, memory: 128Mi}
+      limits: {cpu: 250m, memory: 256Mi}
+  tuf:
+    replicas: 3
+    externalAccess:
+      enabled: false
+    resources:
+      requests: {cpu: 100m, memory: 128Mi}
+      limits: {cpu: 250m, memory: 256Mi}
+    pvc:
+      name: rhtas-tuf
+      retain: true
+      accessModes: [ReadWriteMany]
+      size: 1Gi
+      storageClass: efs-csi
+  tsa:
+    replicas: 3
+    externalAccess:
+      enabled: false
+    resources:
+      requests: {cpu: 100m, memory: 128Mi}
+      limits: {cpu: 250m, memory: 256Mi}
+    signer:
+      certificateChain:
+        rootCA:
+          organizationName: PayU Digital Banking Root CA
+          organizationEmail: platform@payu.fajjjar.my.id
+        intermediateCA:
+          - organizationName: PayU Digital Banking Intermediate CA
+            organizationEmail: platform@payu.fajjjar.my.id
+        leafCA:
+          organizationName: PayU Digital Banking Timestamp CA
+          organizationEmail: platform@payu.fajjjar.my.id

@@ -12,7 +12,8 @@ spec:
     Supports Spring Boot, Quarkus (Java) and Python services.
     Security gate order:
     Gitleaks → TruffleHog → Semgrep → service-specific SAST/SCA → Buildah build
-    → Trivy → RHACS scan/policy → Syft SBOM → License Compliance → Grype → Cosign signing.
+    → Trivy → RHACS scan/policy → Syft SBOM → License Compliance → Grype.
+    Tekton Chains signs the resulting image and provenance after completion.
   params:
     - name: service-name
       type: string
@@ -147,6 +148,42 @@ spec:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
 
+    - name: python-unit-tests
+      runAfter:
+        - secret-scan
+        - deep-secret-scan
+        - semgrep-scan
+      taskRef:
+        name: pytest
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["python"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: TEST_DIR
+          value: $(params.service-base-dir)/$(params.service-path)
+
+    - name: node-unit-tests
+      runAfter:
+        - secret-scan
+        - deep-secret-scan
+        - semgrep-scan
+      taskRef:
+        name: node-unit-tests
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["nextjs"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: CONTEXT_DIR
+          value: $(params.service-base-dir)/$(params.service-path)
+
     # ── Step 2a: Maven build (Spring Boot / Quarkus) — JDK 21 ──
     - name: build-java
       runAfter:
@@ -175,7 +212,6 @@ spec:
             - -am
             - clean
             - package
-            - -DskipTests
             - -T1C
 
     # ── Step 3a: Buildah image (Java services) ──
@@ -201,7 +237,7 @@ spec:
         - name: CONTAINERFILE
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
-          value: "false"
+          value: "true"
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
@@ -211,6 +247,8 @@ spec:
         - secret-scan
         - deep-secret-scan
         - semgrep-scan
+        - python-unit-tests
+        - node-unit-tests
       taskRef:
         name: buildah
       when:
@@ -230,15 +268,25 @@ spec:
         - name: CONTAINERFILE
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
-          value: "false"
+          value: "true"
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
-    # ── Step 4: Image Scan (Trivy) ──
-    - name: trivy-image-scan
+    # ── Step 4: Resolve immutable image reference from the successful build branch ──
+    - name: resolve-image-digest
       runAfter:
         - build-push-image
         - build-push-direct
+      taskRef:
+        name: resolve-image-digest
+      workspaces:
+        - name: source
+          workspace: source
+
+    # ── Step 5: Image Scan (Trivy) ──
+    - name: trivy-image-scan
+      runAfter:
+        - resolve-image-digest
       taskRef:
         name: trivy
       workspaces:
@@ -246,11 +294,11 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
+          value: $(tasks.resolve-image-digest.results.IMAGE_URL)
         - name: SEVERITY
           value: "CRITICAL,HIGH"
         - name: EXIT_CODE
-          value: "0"
+          value: "1"
 
     # ── Step 5: RHACS Image Scan (CVE vulnerability report) ──
     - name: rhacs-image-scan
@@ -260,7 +308,7 @@ spec:
         name: rhacs-image-scan
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
+          value: $(tasks.resolve-image-digest.results.IMAGE_URL)
         - name: OUTPUT_FORMAT
           value: table
 
@@ -272,7 +320,7 @@ spec:
         name: rhacs-image-check
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
+          value: $(tasks.resolve-image-digest.results.IMAGE_URL)
 
     # ── Step 7: SBOM Generation (Syft) ──
     - name: generate-sbom
@@ -287,7 +335,7 @@ spec:
           workspace: dockerconfig
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
+          value: $(tasks.resolve-image-digest.results.IMAGE_URL)
         - name: OUTPUT_FILE
           value: $(workspaces.source.path)/reports/$(params.service-name)-sbom.cdx.json
 
@@ -310,23 +358,23 @@ spec:
     - name: grype-sbom-check
       runAfter:
         - license-compliance-check
-      onError: continue
       taskRef:
         name: grype-scan
+      workspaces:
+        - name: source
+          workspace: source
       params:
         - name: TARGET
           value: sbom:$(tasks.generate-sbom.results.SBOM_PATH)
         - name: FAIL_ON
           value: critical
 
-    # ── Step 9: Image Signing (Cosign Sigstore) ──
-    - name: sign-image
+    # Only this post-gate Task emits canonical Chains image results.
+    - name: release-signed-image
       runAfter:
         - grype-sbom-check
       taskRef:
-        name: cosign-sign
+        name: release-image-for-signing
       params:
         - name: IMAGE
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(tasks.generate-semver.results.version)
-        - name: SBOM_PATH
-          value: $(tasks.generate-sbom.results.SBOM_PATH)
+          value: $(tasks.resolve-image-digest.results.IMAGE_URL)

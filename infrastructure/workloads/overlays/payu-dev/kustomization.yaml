@@ -622,14 +622,9 @@ patches:
 - target:
     kind: Deployment
     labelSelector: app.kubernetes.io/component=backend
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            - name: SPRING_MAIN_SOURCES
-              value: id.payu.cache.config.HotRodCacheConfig
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: SPRING_MAIN_SOURCES
+        value: id.payu.cache.config.HotRodCacheConfig

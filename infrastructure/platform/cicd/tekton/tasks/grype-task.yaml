@@ -15,6 +15,9 @@ spec:
       type: string
       description: "Minimum severity that should fail the task"
       default: "critical"
+  workspaces:
+    - name: source
+      description: Workspace containing the generated SBOM file.
   stepTemplate:
     securityContext:
       runAsNonRoot: true
@@ -34,7 +37,7 @@ spec:
         value: "true"
   steps:
     - name: prepare-cache-dirs
-      image: registry.access.redhat.com/ubi9-minimal:latest
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
       command:
         - /bin/sh
       args:
@@ -42,22 +45,18 @@ spec:
         - |
           mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
     - name: update-db
-      image: docker.io/anchore/grype:v0.82.0
+      image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       command:
         - /grype
       args:
         - db
         - update
     - name: scan
-      image: docker.io/anchore/grype:v0.82.0
+      image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -eu
         echo "[*] Running Grype scan on: $(params.TARGET)"
-        # Tekton v1.9 does not support onError: continue at pipeline level.
-        # Always exit 0 so the pipeline continues to image signing.
-        /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)" || {
-          echo "WARNING: Grype scan found vulnerabilities or encountered an error."
-          echo "         This is a non-blocking gate. Pipeline will continue."
-        }
-        echo "[*] Grype scan step completed."
+        /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)"
+        echo "[✓] Grype vulnerability gate passed."

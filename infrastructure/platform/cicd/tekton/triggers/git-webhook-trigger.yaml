@@ -52,9 +52,6 @@ spec:
           - name: maven-settings
             configMap:
               name: maven-settings
-          - name: dockerconfig
-            secret:
-              secretName: registry-credentials
         timeout: 1h30m
 ---
 apiVersion: triggers.tekton.dev/v1beta1

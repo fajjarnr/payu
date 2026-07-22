@@ -22,6 +22,8 @@ podSecurityContext:
 
 opencost:
   exporter:
+    extraEnv:
+      KUBE_RBAC_PROXY_ENABLED: "true"
     resources:
       requests:
         cpu: 50m
@@ -67,10 +69,10 @@ opencost:
       port: 9091
     username_key: ""
     password_key: ""
-    bearer_token: "placeholder"
-    bearer_token_key: token
-    existingSecretName: opencost-prometheus-token
-    insecureSkipVerify: true
+    bearer_token: ""
+    bearer_token_key: ""
+    existingSecretName: ""
+    insecureSkipVerify: false
 
 networkPolicies:
   enabled: false

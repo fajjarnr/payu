@@ -7,7 +7,8 @@ kind: Kustomization
 
 resources:
   - oauth.yaml
+  - apiserver-encryption.yaml
+  - efs-storage.yaml
   - machines/cluster-autoscaler.yaml
   - machines/worker-machineautoscalers.yaml
-  - machines/worker-machineconfigpool.yaml
-  - machines/worker-machineset-2c.yaml
+  - machines/machinesets/workers-multi-az.yaml

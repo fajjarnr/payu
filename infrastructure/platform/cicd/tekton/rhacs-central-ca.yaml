@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhacs-central-ca
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/name: rhacs-central-ca
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: supply-chain-security
+data:
+  ca.pem: |
+    -----BEGIN CERTIFICATE-----
+    MIIB0jCCAXigAwIBAgIUVSarJjIAMnelzZfomTnurCoYs9AwCgYIKoZIzj0EAwIw
+    RzEnMCUGA1UEAxMeU3RhY2tSb3ggQ2VydGlmaWNhdGUgQXV0aG9yaXR5MRwwGgYD
+    VQQFExMyNDg0OTcyNzkyODA5NDM5OTEyMB4XDTI2MDcyMjEwNDIwMFoXDTMxMDcy
+    MTEwNDIwMFowRzEnMCUGA1UEAxMeU3RhY2tSb3ggQ2VydGlmaWNhdGUgQXV0aG9y
+    aXR5MRwwGgYDVQQFExMyNDg0OTcyNzkyODA5NDM5OTEyMFkwEwYHKoZIzj0CAQYI
+    KoZIzj0DAQcDQgAEZSDGvAqS1Qd+NDIklqYIu+VYweqCugj0Qf+hqbH/Kwlt67Yo
+    /k3TXyqqZLhEUPM+XUiS4j4wY03So9ri4Rqa8aNCMEAwDgYDVR0PAQH/BAQDAgEG
+    MA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFA99n1Fpl8+8Y3IFdeqp9hm3Rx5T
+    MAoGCCqGSM49BAMCA0gAMEUCIQCsqSixgoyI+SaXYqX24BbCKv9QnpWrilflRTKb
+    4azpPQIgWQ3MB1Bnrtt568BwivXYAn96NORjNNCroNGjax833g8=
+    -----END CERTIFICATE-----

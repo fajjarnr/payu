@@ -2,10 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  # OpenShift Pipelines operator configuration
+  - pipelines.yaml
+  - rhacs-central-ca.yaml
+
   # Tasks
   - tasks/argocd-sync-task.yaml
   - tasks/buildah-task.yaml
-  - tasks/cosign-task.yaml
   - tasks/deploy-task.yaml
   - tasks/gitleaks-task.yaml
   - tasks/grype-task.yaml
@@ -14,8 +17,11 @@ resources:
   - tasks/litmus-gate-task.yaml
   - tasks/maven-task.yaml
   - tasks/maven-java21-task.yaml
+  - tasks/node-test-task.yaml
   - tasks/pact-verify-task.yaml
   - tasks/pytest-task.yaml
+  - tasks/resolve-image-digest-task.yaml
+  - tasks/release-image-task.yaml
   - tasks/rhacs-tasks.yaml
   - tasks/schemathesis-task.yaml
   - tasks/security-scan-task.yaml
@@ -40,7 +46,3 @@ resources:
 
   # NetworkPolicies
   - networkpolicy-allow-egress.yaml
-
-  # Triggers and Webhooks (require triggers.tekton.dev/v1beta1)
-  - triggers/git-webhook-trigger.yaml
-  - triggers/tekton-triggers-rbac.yaml

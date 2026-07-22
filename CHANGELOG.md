@@ -9,8 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a production RHTAS 1.4 stack with HA CloudNativePG, Redis/Sentinel, Trillian, Rekor, Fulcio, CTLog, TUF, TSA, and strict namespace network policies.
+- Added dedicated KMS-encrypted and versioned S3 buckets for RHTAS, PostgreSQL backups, and Loki, plus encrypted multi-AZ EFS storage and a retained RWX TUF claim.
+- Added multi-AZ worker MachineSets for `ap-southeast-1b` and `1c`, the supported AWS EFS CSI Operator placement, External Secrets operand configuration, and Barman Cloud 0.13.
+
 ### Changed
 
+- Hardened Tekton build and deployment gates around immutable image digests, RHACS checks, SBOM generation, release signing, and digest-pinned task images.
+- Expanded OpenShift security controls, compliance scans, namespace network policies, internal OpenCost TLS, and RHACS policy configuration.
 - Migrated backend cache access to Infinispan Data Grid 16.2.1: Java and Quarkus use native Hot Rod; Python KYC and analytics use authenticated REST.
 - Replaced the local Redis/RESP cache service with Data Grid REST/Hot Rod and configured the shared `payu` cache for UTF-8 JSON text interoperability.
 - Secured the local Data Grid REST/Hot Rod endpoint with TLS/mTLS and aligned every gateway Infinispan runtime module to 16.2.1.
@@ -22,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Corrected EFS CSI Operator placement so its operand consumes CCO credentials from `openshift-cluster-csi-drivers`.
+- Allowed the exact DNS, Kubernetes API, and CNPG manager paths required inside the RHTAS default-deny namespace; corrected CCO policy resource encoding and cluster-wide External Secrets reconciliation.
+- Recovered RHTAS bootstrap after dependency ordering failures and replaced an incompatible HAProxy 3 DNS parser path with a Podman-validated, digest-pinned HAProxy 2.8 LTS image.
 - Recovered `payu-dev` Data Grid by aligning its custom configuration with the active Infinispan 16.0 runtime and restoring valid dev mTLS Secret material.
 - Added explicit constructor injection for `RateLimitInterceptor` and a missing-bean `ConcurrentMapCacheManager` fallback for Spring `@EnableCaching` workloads.
 - Restored billing V3 and backoffice V8 Flyway migration sources to their existing database checksums; deployed backoffice `1.8.83` and billing `1.8.84`.
@@ -34,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Verification
 
+- OpenShift reports eight Ready nodes with workers in three AZs; RHTAS PostgreSQL is healthy 3/3, Redis/Sentinel is 3/3, its proxy is 2/2, and the TUF EFS claim is Bound RWX.
+- Trillian schema and tree-creation jobs completed. Rekor returned HTTP 200 through port-forward with an initialized transparency log.
+- AWS CloudFormation validation and deployment completed for the retained KMS, S3, and EFS resources; EFS CSI controller and node conditions report Available.
 - `RateLimitInterceptorTest` passed (2 tests); `HotRodCacheConfigTest` passed (9 tests); backoffice and billing Maven package builds completed with `BUILD SUCCESS`.
 - OpenShift final audit: 33/33 deployments Ready, 46/46 pods Running, `payu-cache` `WellFormed=True`, and no non-ready pod.
 - Podman Compose renders; Infinispan 16.2.1 is healthy. mTLS REST succeeds with the client certificate and is rejected without it; the fresh server log has no application WARN/ERROR/FATAL/exception entries.

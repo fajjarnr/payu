@@ -41,7 +41,7 @@ spec:
         type: RuntimeDefault
   steps:
     - name: scan
-      image: "aquasec/trivy:0.58.0"
+      image: "docker.io/aquasec/trivy@sha256:b88012e2a0a309d6a8a00463d4e63e5e513377fb74eccbc8f9b0f8f81940ebeb"
       env:
         - name: HOME
           value: /tmp
@@ -78,7 +78,7 @@ spec:
             --exit-code 0 \
             --format json \
             --output /tmp/trivy-report.json \
-            $(params.IMAGE) 2>/dev/null || true
+            $(params.IMAGE)
 
           if [ -f /tmp/trivy-report.json ]; then
             VULN_COUNT=$(grep -o '"VulnerabilityID"' /tmp/trivy-report.json | wc -l || echo "0")

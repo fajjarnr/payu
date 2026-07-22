@@ -10,3 +10,6 @@ kind: Kustomization
 resources:
   - subscriptions.yaml
   - namespace-operatorgroup.yaml
+  - aws-efs-csi-subscription.yaml
+  - external-secrets-config.yaml
+  - barman-cloud

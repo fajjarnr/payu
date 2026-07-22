@@ -91,7 +91,7 @@ This report documents the implementation status of PCI-DSS v4.0 requirements for
 
 ### 6.1 SAST / SCA Pipeline
 - **Control:** Semgrep, SpotBugs+FindSecBugs, Grype, Syft SBOM
-- **Evidence:** Tekton `build-pipeline.yaml` — Gitleaks → TruffleHog → Semgrep → SAST → Build → Trivy → RHACS → Syft → Grype → Cosign
+- **Evidence:** Tekton `build-pipeline.yaml` — Gitleaks → TruffleHog → Semgrep → SAST → Build → Trivy → RHACS → Syft → Grype; Tekton Chains performs automatic image/provenance signing after the run.
 
 ### 6.2 Secure Coding Guidelines
 - **Evidence:** `docs/guides/LESSONS.md`, `AGENTS.md` security guidelines
@@ -132,21 +132,18 @@ This report documents the implementation status of PCI-DSS v4.0 requirements for
 ## Requirement 10: Log and Monitor All Access
 
 ### 10.1 Audit Logging
-- **Control:** Vector audit agent DaemonSet
-- **Sources:** kube-apiserver audit logs, pod logs, host syslog
-- **Evidence:** `infrastructure/platform/observability/vector/vector-audit-daemonset.yaml`
+- **Status:** Gap — the Compliance Operator reports `audit-log-forwarding-enabled` as FAIL.
+- **Repository artifact:** `infrastructure/platform/observability/vector/vector-audit-daemonset.yaml` is not live evidence.
 
 ### 10.2 Log Retention
-- **Control:** Tekton Results retention policy = **365 days**
-- **Evidence:** ConfigMap `tekton-results-config-results-retention-policy` patched to `defaultRetention: 365`
+- **Status:** Partial — live Tekton Results retention policy is **365 days** and its public Route is disabled, but the operator-managed internal database is not the required HA/backup design.
+- **Required evidence:** External PostgreSQL capacity plan, encrypted backups, and a successful restore test; application/audit logs still require dedicated object storage.
 
 ### 10.3 Signed Audit Logs
-- **Control:** Rekor transparency log for audit log hashes
-- **Evidence:** `infrastructure/platform/observability/rekor/rekor-deployment.yaml`
+- **Status:** Gap — Rekor is live (3/3 replicas), but cluster audit logs are not integrated with it. Tekton Chains signs PipelineRun and TaskRun provenance to OCI; that does not sign cluster audit logs.
 
 ### 10.4 SIEM
-- **Control:** Wazuh manager + agent
-- **Evidence:** Wazuh namespace, 4/4 agents Running
+- **Status:** Gap — Wazuh is not deployed and audit forwarding is not configured. RHACS Central and SecuredCluster are live for workload/runtime security, but are not a replacement for a PCI audit-log SIEM.
 
 ---
 

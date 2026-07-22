@@ -3,4 +3,4 @@ kind: Kustomization
 
 resources:
   - rhacs.yaml
-  - rhacs-secrets.yaml
+  - security-policies.yaml

@@ -1,6 +1,7 @@
 # RHACS (StackRox) Tekton Tasks for DevSecOps Pipeline
 # Tasks: image-check, image-scan, deployment-check
-# Requires: rox-admin-password secret in payu-cicd namespace
+# Uses a 10-minute projected ServiceAccount OIDC token mapped by RHACS to the
+# Continuous Integration role, plus the public Central CA ConfigMap.
 # ============================================================
 apiVersion: tekton.dev/v1
 kind: Task
@@ -21,14 +22,11 @@ spec:
     - name: ROX_CENTRAL_ENDPOINT
       type: string
       description: ACS Central endpoint (host:port)
-      default: central-stackrox.apps.payu.ocp.fajjjar.my.id:443
+      default: central.stackrox.svc:443
     - name: OUTPUT_FORMAT
       type: string
       description: Output format (table, csv, json, junit)
       default: table
-    - name: INSECURE_SKIP_TLS_VERIFY
-      type: string
-      default: "true"
   stepTemplate:
     securityContext:
       runAsNonRoot: true
@@ -39,13 +37,8 @@ spec:
         type: RuntimeDefault
   steps:
     - name: scan-image
-      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
       env:
-        - name: ROX_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: rox-admin-password
-              key: password
         - name: ROX_CENTRAL_ADDRESS
           value: $(params.ROX_CENTRAL_ENDPOINT)
       script: |
@@ -56,19 +49,34 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        INSECURE_FLAG=""
-        if [ "$(params.INSECURE_SKIP_TLS_VERIFY)" = "true" ]; then
-          INSECURE_FLAG="--insecure-skip-tls-verify"
-        fi
-
-        timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
+        timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
           image scan \
           --image "$(params.IMAGE)" \
           --output "$(params.OUTPUT_FORMAT)" \
-          --force || true
+          --force
 
         echo ""
         echo "✅ Image scan complete"
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca
 ---
 apiVersion: tekton.dev/v1
 kind: Task
@@ -88,10 +96,7 @@ spec:
       description: Full image reference to check
     - name: ROX_CENTRAL_ENDPOINT
       type: string
-      default: central-stackrox.apps.payu.ocp.fajjjar.my.id:443
-    - name: INSECURE_SKIP_TLS_VERIFY
-      type: string
-      default: "true"
+      default: central.stackrox.svc:443
   results:
     - name: check-result
       description: Pass or fail result of the image check
@@ -105,30 +110,22 @@ spec:
         type: RuntimeDefault
   steps:
     - name: check-image
-      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
       env:
-        - name: ROX_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: rox-admin-password
-              key: password
         - name: ROX_CENTRAL_ADDRESS
           value: $(params.ROX_CENTRAL_ENDPOINT)
       script: |
         #!/usr/bin/env bash
-        set -uo pipefail
+        set -euo pipefail
 
         echo "🛡️ RHACS Image Policy Check: $(params.IMAGE)"
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        INSECURE_FLAG=""
-        if [ "$(params.INSECURE_SKIP_TLS_VERIFY)" = "true" ]; then
-          INSECURE_FLAG="--insecure-skip-tls-verify"
-        fi
-
         set +e
-        output=$(timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
+        output=$(timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
           image check \
           --image "$(params.IMAGE)" \
           --output table 2>&1)
@@ -141,11 +138,6 @@ spec:
           echo "PASS" | tee $(results.check-result.path)
           echo ""
           echo "✅ Image passes all ACS build-time policies"
-        elif printf '%s' "${output}" | grep -Eq 'token validation failed|Unauthenticated|image enrichment error|status=401|credentials not found|connection refused|no such host|timeout|dial tcp|handshake failed|ALPN|Unavailable'; then
-          echo "WARN" | tee $(results.check-result.path)
-          echo ""
-          echo "⚠️ RHACS policy gate unavailable due to connection, auth, or registry integration failure"
-          echo "   Continuing build so delivery is not blocked by platform security wiring."
         else
           echo "FAIL" | tee $(results.check-result.path)
           echo ""
@@ -153,6 +145,24 @@ spec:
           echo "   Review violations above and fix before deploying."
           exit 1
         fi
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca
 ---
 apiVersion: tekton.dev/v1
 kind: Task
@@ -172,10 +182,7 @@ spec:
       description: Path to deployment YAML within the workspace
     - name: ROX_CENTRAL_ENDPOINT
       type: string
-      default: central-stackrox.apps.payu.ocp.fajjjar.my.id:443
-    - name: INSECURE_SKIP_TLS_VERIFY
-      type: string
-      default: "true"
+      default: central.stackrox.svc:443
   workspaces:
     - name: source
       description: Workspace containing deployment manifests
@@ -189,39 +196,44 @@ spec:
         type: RuntimeDefault
   steps:
     - name: check-deployment
-      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.7
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
       workingDir: $(workspaces.source.path)
       env:
-        - name: ROX_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: rox-admin-password
-              key: password
         - name: ROX_CENTRAL_ADDRESS
           value: $(params.ROX_CENTRAL_ENDPOINT)
       script: |
         #!/usr/bin/env bash
-        set -uo pipefail
+        set -euo pipefail
 
         echo "📋 RHACS Deployment Policy Check"
         echo "   File: $(params.DEPLOYMENT_FILE)"
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        INSECURE_FLAG=""
-        if [ "$(params.INSECURE_SKIP_TLS_VERIFY)" = "true" ]; then
-          INSECURE_FLAG="--insecure-skip-tls-verify"
-        fi
-
-        if roxctl -e "${ROX_CENTRAL_ADDRESS}" ${INSECURE_FLAG} \
+        roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
           deployment check \
           --file "$(params.DEPLOYMENT_FILE)" \
-          --output table; then
-          echo ""
-          echo "✅ Deployment passes all ACS deploy-time policies"
-        else
-          echo ""
-          echo "⚠️ Deployment has policy violations (review above)"
-          echo "   Pipeline continues — violations are warnings only"
-          # Don't exit 1 for deploy check, just warn
-        fi
+          --output table
+
+        echo ""
+        echo "✅ Deployment passes all ACS deploy-time policies"
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca

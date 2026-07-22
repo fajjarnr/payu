@@ -5,14 +5,10 @@ namespace: payu-observability
 
 resources:
   - namespace.yaml
+  - service-ca.yaml
   - rbac.yaml
   - networkpolicy.yaml
   - opencost-generated.yaml
-  - route.yaml
-
-commonLabels:
-  app.kubernetes.io/part-of: payu
-  payu.io/managed-by: platform-team
 
 labels:
   - includeSelectors: false

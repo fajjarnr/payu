@@ -10,7 +10,7 @@ metadata:
     app: payu
     type: build
 spec:
-  description: Maven build task with JDK 25 support for PayU services.
+  description: Maven build task with Red Hat OpenJDK 21 for PayU services.
   params:
     - name: GOALS
       type: array
@@ -28,7 +28,7 @@ spec:
     - name: MAVEN_IMAGE
       type: string
       description: Maven image to use
-      default: docker.io/library/maven:3.9-eclipse-temurin-25
+      default: registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf
   workspaces:
     - name: source
       description: Workspace with source code
@@ -66,4 +66,3 @@ spec:
         limits:
           memory: "4Gi"
           cpu: "1000m"
-

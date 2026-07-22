@@ -6,10 +6,42 @@ spec:
   profile: all
   targetNamespace: openshift-pipelines
   addon:
-    enablePipelinesAsCode: true
+    params:
+      - name: pipelineTemplates
+        value: "true"
+      - name: resolverTasks
+        value: "true"
+      - name: resolverStepActions
+        value: "true"
+      - name: communityResolverTasks
+        value: "true"
+  chain:
+    disabled: false
+    generateSigningSecret: true
+    artifacts.oci.format: simplesigning
+    artifacts.oci.storage: oci
+    artifacts.pipelinerun.format: in-toto
+    artifacts.pipelinerun.storage: oci
+    artifacts.taskrun.format: in-toto
+    artifacts.taskrun.storage: oci
+    performance:
+      disable-ha: false
+  result:
+    disabled: false
+    is_external_db: false
+    route_enabled: false
+    performance:
+      disable-ha: false
+    options:
+      configMaps:
+        tekton-results-config-results-retention-policy:
+          data:
+            defaultRetention: "365d"
+            runAt: "5 5 * * 0"
   pipeline:
     default-service-account: pipeline
-    enable-api-fields: alpha
+    enable-api-fields: beta
+    enable-provenance-in-status: true
   trigger:
     default-service-account: pipeline
-    enable-api-fields: alpha
+    enable-api-fields: stable

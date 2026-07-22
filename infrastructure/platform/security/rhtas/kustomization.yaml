@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - network-policies.yaml
+  - service-ca.yaml
+  - credentials-request.yaml
+  - redis-credentials.yaml
+  - postgresql.yaml
+  - trillian-schema-job.yaml
+  - redis-ha.yaml
+  - tuf-pvc.yaml
+  - securesign-ha.yaml

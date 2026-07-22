@@ -30,6 +30,3 @@ spec:
               storage: 5Gi
     - name: maven-settings
       emptyDir: {}
-    - name: dockerconfig
-      secret:
-        secretName: internal-registry-auth

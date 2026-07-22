@@ -14,22 +14,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: opencost/templates/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: opencost
-  namespace: payu-observability
-  labels:
-    helm.sh/chart: opencost-2.5.14
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: opencost
-    app.kubernetes.io/version: "1.120.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-data:
-  token: "cGxhY2Vob2xkZXI="
----
 # Source: opencost/templates/clusterrole.yaml
 # Cluster role giving opencost to get, list, watch required resources
 # No write permissions are required
@@ -214,8 +198,6 @@ spec:
           ports:
             - containerPort: 9003
               name: http
-            - containerPort: 8081
-              name: mcp-server
           resources:
             limits:
               cpu: 500m
@@ -253,6 +235,12 @@ spec:
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
+          volumeMounts:
+            - name: service-ca
+              mountPath: /var/run/configmaps/service-ca
+              readOnly: true
+            - name: pricing-config
+              mountPath: /var/configs
           env:
             - name: LOG_LEVEL
               value: info
@@ -267,14 +255,13 @@ spec:
             - name: PROMETHEUS_SERVER_ENDPOINT
               value: "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091"
             - name: INSECURE_SKIP_VERIFY
-              value: "true"
+              value: "false"
+            - name: SSL_CERT_FILE
+              value: /var/run/configmaps/service-ca/service-ca.crt
             - name: CLUSTER_ID
               value: "default-cluster"
-            - name: DB_BEARER_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: opencost-prometheus-token
-                  key: token
+            - name: KUBE_RBAC_PROXY_ENABLED
+              value: "true"
             - name: RESOLUTION_1D_RETENTION
               value: "15"
             - name: RESOLUTION_1H_RETENTION
@@ -292,6 +279,13 @@ spec:
             # Add any additional provided variables
             # MCP Server Configuration
             - name: MCP_SERVER_ENABLED
-              value: "true"
-            - name: MCP_HTTP_PORT
-              value: "8081"
+              value: "false"
+      volumes:
+        - name: service-ca
+          configMap:
+            name: opencost-service-ca
+            items:
+              - key: service-ca.crt
+                path: service-ca.crt
+        - name: pricing-config
+          emptyDir: {}

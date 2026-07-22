@@ -12,22 +12,34 @@
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
 | Services Deployed        | 🟢 33/33 deployments Ready               | `payu-dev` workloads manually recovered and verified. GitOps ApplicationSet reconciliation remains open. |
 | Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
-| OpenShift Cluster        | 🟢 Active                                | OCP 4.20.26, 7 nodes Ready (3 control-plane + 4 worker). |
-| Operators Installed      | 🟢 Core platform ready                    | OpenShift GitOps 1.21.1, OpenShift Pipelines 1.22.4, 3scale operator 2.16 channel, CNPG 1.30.0, Redis Enterprise 8.0.20-23.0, Vault Secrets 1.4.0, Tempo 0.21.0-2, Compliance 1.9.1. |
+| OpenShift Cluster        | 🟢 Active, multi-AZ workers               | OCP 4.20.29, 8 nodes Ready (3 control-plane + 5 worker); workers span `ap-southeast-1a/b/c`. |
+| Operators Installed      | 🟢 Core platform ready                    | GitOps 1.21.1, Pipelines 1.23.0, RHACS 4.11.1, RHTAS 1.4.2, AWS EFS CSI 4.20, External Secrets 1.2.0, Compliance 1.9.1, Service Mesh 3.4.0, CNPG 1.30.0. |
 | Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid Hot Rod/mTLS, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |
 | Maven Build              | 🟢 44/44                                 | `clean package -DskipTests -T 1C` BUILD SUCCESS on 2026-07-17. |
 | Cache                    | 🟢 Hot Rod/mTLS healthy                  | JVM workloads use Data Grid Hot Rod; Redis-native rate limiting remains on redis-3scale. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
-| **Production Readiness** | 🟡 Bootstrap in progress                  | Local frontend and six-service Podman smoke are green; backoffice architecture remediation remains. |
-| Last Status Update       | 2026-07-22                               | Cache recovery and all `payu-dev` workload readiness verified. |
+| **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS core services, Kyverno, Compliance, fail-closed Tekton, EFS, and OpenCost are live. TUF reconciliation, Vault, durable Loki/Results, SIEM, DR, and compliance remediations remain gated. |
+| Last Status Update       | 2026-07-22                               | RHTAS HA dependencies and multi-AZ worker topology verified live. |
 
 > ✅ **2026-07-22 — `payu-dev` cache and workload recovery completed**:
 > - The active Data Grid server reports Infinispan 16.0.14.redhat; the custom XML schema now matches 16.0. Zero-byte TLS key/certificate data was replaced with valid dev mTLS Secret material, and the `payu-cache` CR reached `WellFormed=True`.
 > - Added the `payu-dev` Hot Rod Spring-source compatibility overlay, explicit `RateLimitInterceptor` constructor injection, and a fallback `CacheManager` for `@EnableCaching` workloads.
 > - Restored billing V3 and backoffice V8 Flyway sources to their DB-applied checksums. Backoffice `1.8.83` and billing `1.8.84` rollouts succeeded.
 > - Final audit: 33/33 deployments Ready; 46/46 pods Running (`1/1`, Kafka entity operator `2/2`); no non-ready pod.
+
+> 🟡 **2026-07-22 — DevSecOps production-hardening runtime evidence**:
+> - Deployed RHTAS 1.4.2 with internal-only endpoints: CNPG PostgreSQL 3/3, Redis/Sentinel 3/3, Redis proxy 2/2, Trillian 3+3, Fulcio 3, Rekor 3, CTLog 3, TSA 3, and retained TUF RWX storage. Trillian schema and tree-creation jobs completed; Rekor returned HTTP 200 through port-forward. The aggregate Securesign CR remains Pending while TUF reconciles, so full RHTAS readiness is not yet claimed.
+> - Created dedicated versioned, KMS-encrypted S3 buckets for RHTAS, backups, and Loki plus encrypted EFS with mount targets in three private AZs. Installed Barman Cloud 0.13 and the supported EFS CSI Operator in `openshift-cluster-csi-drivers`; EFS controller/node conditions are Available.
+> - Added workers in `ap-southeast-1b` and `1c`; all eight nodes are Ready and stateful RHTAS replicas span `1a/1b/1c`. Five workers are retained during rollout; rightsizing the three original `1a` replicas remains a controlled FinOps follow-up after workload redistribution.
+> - Fixed the web-app 3000/8080 port contract; live Deployment is Ready, Service endpoint is 8080, and external Route returns HTTP 200.
+> - Installed 5 Tekton Pipelines and 28 deployed Tasks. Java, Python, and Next.js unit-test gates plus mandatory scanners fail closed; all deployed Task images are digest-pinned, and post-build controls consume the Buildah-produced `image@sha256` reference. AES-GCM etcd encryption completed; Tekton Chains generated its ECDSA key and a TaskRun proof reached `chains_signed=true`. Public-key Cosign verification passed; strict pipeline verification still needs wiring to the new internal Rekor endpoint. Duplicate manual signing was removed. RHACS CI Tasks now require a scoped API token and trusted CA, never the admin password.
+> - RHACS Central and SecuredCluster 4.11.1 are Available. Tekton RHACS gates use a 10-minute projected Kubernetes ServiceAccount token mapped to the built-in `Continuous Integration` role; the pipeline identity passed and the default identity was rejected. Kyverno 1.18.2 runs HA (3 admission replicas, 2 each for other controllers) with nine policies Ready.
+> - Weekly Compliance Operator scan uses CIS 1.9 and PCI-DSS 4.0 profiles with manual remediation. Result is NON-COMPLIANT: 25 FAIL across 16 unique controls, tracked in SEC-020.
+> - Hardened internal OpenCost is Ready and queries OpenShift Thanos over verified TLS with its projected rotating ServiceAccount token; the legacy non-expiring token Secret, public Route, and MCP endpoint are absent. Cluster Logging Operator 6.6.0 is Ready and a dedicated KMS/S3 Loki bucket now exists, but LokiStack credentials/storage wiring and SIEM forwarding remain open.
+> - Capacity/topology decision: CPU was not the constraint, but three workers in one AZ could not satisfy required zone anti-affinity. Two `m6a.4xlarge` workers were added in `1b/1c`; no stateful replica remains Pending.
+> - Argo auto-sync remains intentionally disabled until these workspace changes exist on `origin/main`; Vault root-token placeholders, community non-FIPS Loki, duplicate runtime agents, and unsafe mesh-wide rollout were not deployed.
 
 > ✅ **2026-07-19 — ARCH-007 local Data Grid migration completed**:
 > - Java and Quarkus backend cache clients now use native Infinispan Hot Rod 16.2.1; direct Redis/RESP client paths were removed.
