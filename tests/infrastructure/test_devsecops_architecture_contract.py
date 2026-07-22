@@ -486,6 +486,13 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks/grype-task.yaml"
         )[0]
         self.assertIn("source", {item["name"] for item in task["spec"]["workspaces"]})
+        scan = next(step for step in task["spec"]["steps"] if step["name"] == "scan")
+        self.assertEqual(["/grype"], scan["command"])
+        self.assertEqual(
+            ["$(params.TARGET)", "--fail-on", "$(params.FAIL_ON)"],
+            scan["args"],
+        )
+        self.assertNotIn("script", scan)
 
         pipeline = load_documents(
             REPO_ROOT / "infrastructure/platform/cicd/tekton/build-pipeline.yaml"

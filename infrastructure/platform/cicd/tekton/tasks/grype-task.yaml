@@ -54,9 +54,9 @@ spec:
     - name: scan
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       workingDir: $(workspaces.source.path)
-      script: |
-        #!/bin/sh
-        set -eu
-        echo "[*] Running Grype scan on: $(params.TARGET)"
-        /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)"
-        echo "[✓] Grype vulnerability gate passed."
+      command:
+        - /grype
+      args:
+        - $(params.TARGET)
+        - --fail-on
+        - $(params.FAIL_ON)
