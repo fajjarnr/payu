@@ -445,6 +445,28 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertIn("python3-3.9.25-7.el9_8.2", containerfile)
         self.assertIn("<postgresql.version>42.7.12</postgresql.version>", backend_pom)
 
+    def test_buildah_merges_red_hat_and_openshift_registry_auth(self) -> None:
+        buildah = load_documents(
+            REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks/buildah-task.yaml"
+        )[0]
+        script = buildah["spec"]["steps"][0]["script"]
+        self.assertIn("cp \"$(workspaces.dockerconfig.path)/.dockerconfigjson\"", script)
+        self.assertIn("buildah login", script)
+        self.assertIn("--password-stdin", script)
+
+        pipeline_run = load_documents(
+            REPO_ROOT
+            / "infrastructure/platform/cicd/tekton/pipeline-runs/account-service-pipelinerun.yaml"
+        )[0]
+        dockerconfig = next(
+            workspace for workspace in pipeline_run["spec"]["workspaces"]
+            if workspace["name"] == "dockerconfig"
+        )
+        self.assertEqual(
+            "redhat-registry-pull",
+            dockerconfig["secret"]["secretName"],
+        )
+
     def test_rhacs_registry_reader_is_least_privilege(self) -> None:
         acs = REPO_ROOT / "infrastructure/platform/security/acs"
         kustomization = load_documents(acs / "kustomization.yaml")[0]
@@ -734,10 +756,15 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
                     "signing-secrets",
                     {workspace["name"] for workspace in run_spec["workspaces"]},
                 )
-                self.assertNotIn(
-                    "dockerconfig",
-                    {workspace["name"] for workspace in run_spec["workspaces"]},
-                )
+                dockerconfigs = [
+                    workspace for workspace in run_spec["workspaces"]
+                    if workspace["name"] == "dockerconfig"
+                ]
+                for dockerconfig in dockerconfigs:
+                    self.assertEqual(
+                        "redhat-registry-pull",
+                        dockerconfig["secret"]["secretName"],
+                    )
 
     def test_unauthenticated_webhook_trigger_is_not_deployed(self) -> None:
         root = REPO_ROOT / "infrastructure/platform/cicd/tekton"

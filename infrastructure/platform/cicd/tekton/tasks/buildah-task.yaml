@@ -56,19 +56,23 @@ spec:
         image_registry="$(params.IMAGE)"
         image_registry="${image_registry%%/*}"
 
-        # Internal OpenShift registry auth is derived from the PipelineRun service account
-        # token so pushes keep working even if a static dockerconfig secret goes stale.
+        export REGISTRY_AUTH_FILE=/tmp/registry-auth.json
+        if [[ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]]; then
+          cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$REGISTRY_AUTH_FILE"
+        else
+          printf '{"auths":{}}' > "$REGISTRY_AUTH_FILE"
+        fi
+
+        # Merge the short-lived PipelineRun service-account token without
+        # discarding the Red Hat registry credential used for the base image.
         if [[ "$image_registry" == *"openshift-image-registry"* ]] && [[ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]]; then
           token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-          auth=$(printf 'unused:%s' "$token" | base64 -w0)
-
-          cat > /tmp/internal-registry-auth.json <<EOF
-        {"auths":{"$image_registry":{"auth":"$auth"}}}
-        EOF
-
-          export REGISTRY_AUTH_FILE=/tmp/internal-registry-auth.json
-        elif [[ -d "$(workspaces.dockerconfig.path)" && -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]]; then
-          export REGISTRY_AUTH_FILE="$(workspaces.dockerconfig.path)/.dockerconfigjson"
+          printf '%s' "$token" | buildah login \
+            --authfile "$REGISTRY_AUTH_FILE" \
+            --tls-verify=$(params.TLSVERIFY) \
+            --username unused \
+            --password-stdin \
+            "$image_registry"
         fi
 
         # Extract reproducible build metadata from source
