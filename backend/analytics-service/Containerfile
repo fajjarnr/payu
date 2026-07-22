@@ -21,7 +21,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 
 # Copy requirements and install Python dependencies into an explicit target.
 COPY requirements.txt ./
-RUN uv pip install --target /opt/payu-python --no-cache -r requirements.txt
+RUN uv pip install --target /opt/payu-python --extra-index-url https://download.pytorch.org/whl/cpu --no-cache -r requirements.txt
 
 # Copy application source
 COPY src/ /app/src/

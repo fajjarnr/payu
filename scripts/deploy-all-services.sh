@@ -20,7 +20,7 @@ trigger_pipeline() {
   echo "Triggering $svc_name (Type: $svc_type, Path: $base_dir/$svc_path)..."
   
   cat <<EOF | oc create -f -
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   generateName: build-${safe_name}-

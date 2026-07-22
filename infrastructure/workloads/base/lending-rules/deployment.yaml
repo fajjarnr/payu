@@ -66,7 +66,7 @@ spec:
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 4
-          failureThreshold: 30
+          failureThreshold: 90
         resources:
           requests:
             cpu: 100m

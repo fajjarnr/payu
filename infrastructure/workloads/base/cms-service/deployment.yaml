@@ -38,7 +38,7 @@ spec:
         emptyDir: {}
       - name: datagrid-client-tls
         secret:
-          name: payu-cache-client-tls
+          secretName: payu-cache-client-tls
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.81
@@ -79,7 +79,7 @@ spec:
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 5
-          failureThreshold: 30
+          failureThreshold: 90
         resources:
           requests:
             cpu: 100m

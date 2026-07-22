@@ -168,3 +168,5 @@ docs/operations/OPENSHIFT_BACKUP_EVALUATION.md
 infrastructure/foundation/hostedcluster/
 .codegraph/
 .gemini/
+
+graphify-out
