@@ -4349,6 +4349,16 @@ synchronized (lock) {
 
 **Prevention**: Endpoint dengan `@PreAuthorize` scope → verifikasi scope di token nyata (bukan asumsi); resilience4j TimeLimiter hanya untuk async return; setiap proxy internal butuh route + public-path + URL env yang valid; verifikasi nama service + port simulator sebelum debug 503.
 
+### L-156: Env Live Hack Mematikan OIDC Quarkus — "Not Authenticated" Semua Endpoint (2026-07-31)
+
+**Context**: notification-service `GET /api/v1/notifications` selalu 401 "Not Authenticated" walau Bearer valid; `/q/health` 200.
+
+**Root cause**: Env `QUARKUS_OIDC_TENANT_ENABLED=false` terpasang LIVE (tidak ada di repo) → tenant OIDC default dimatikan → Quarkus tak verifikasi token → `@Authenticated` gagal untuk semua request.
+
+**Fix**: `oc set env deploy/notification-service QUARKUS_OIDC_TENANT_ENABLED-` (hapus) → `notification-health.sh` ALL 3 PASSED.
+
+**Prevention**: Saat service "Not Authenticated" dengan token valid, cek env `*_TENANT_ENABLED`/disable flags di deployment live vs repo (`oc set env` hack sering tak ter-repo-kan); audit `oc get deploy -o json | grep TENANT` saat debugging OIDC.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
