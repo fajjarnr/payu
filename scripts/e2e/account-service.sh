@@ -108,7 +108,7 @@ T2=$(run_test "T2: Phone lookup (GET /api/v1/accounts/lookup?phone=...)" \
 assert_http "T2 lookup" "200" "$T2"
 
 T3=$(run_test "T3: Account IDs by user (inter-service, GET /api/v1/accounts/users/{id}/account-ids)" \
-    "$BASE/api/v1/accounts/users/15ded37b-d5a2-46c5-a68d-f11dc36d4f6a/account-ids$UP" \
+    "$BASE/api/v1/accounts/users/7753193d-b7e7-4e1e-bcb8-f9e4612e9207/account-ids$UP" \
     -H "Authorization: Bearer $JWT")
 assert_http "T3 account-ids" "200" "$T3"
 

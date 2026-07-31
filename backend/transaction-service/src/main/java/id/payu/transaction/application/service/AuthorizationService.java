@@ -1,5 +1,6 @@
 package id.payu.transaction.application.service;
 
+import id.payu.api.common.exception.BusinessException;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
@@ -52,7 +53,7 @@ public class AuthorizationService {
      */
     public void verifyTransactionAccess(java.util.UUID transactionId, String userId) {
         TransactionEntity transaction = transactionPersistencePort.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("TransactionEntity not found"));
+                .orElseThrow(() -> new BusinessException("TXN_404", "TransactionEntity not found"));
 
         // Get all account IDs for the user (multi-account support)
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);

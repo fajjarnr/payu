@@ -19,7 +19,7 @@ JWT=$(oc exec -n payu-dev gateway-service-58dbc4cfbb-c8zbc -- cat /tmp/cust1-jwt
 # Use the INTERNAL account-service URL (port 8080, in-cluster DNS)
 ACCT_URL="http://account-service.payu-dev.svc.cluster.local:8080"
 USERKEY="${USERKEY:-04dc03f2e2a776bffcb9b16eb9f93796}"
-ACCT_ID="7a51ced3-5602-40fb-96e7-1703e9243ed5"
+ACCT_ID="7753193d-b7e7-4e1e-bcb8-f9e4612e9207"
 NIK="3201234567890001"
 
 run_test() {

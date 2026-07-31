@@ -9,7 +9,7 @@ set -e
 GATEWAY_MODE="${GATEWAY_MODE:-internal}"
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
-ACCT="${ACCT:-15ded37b-d5a2-46c5-a68d-f11dc36d4f6a}"
+ACCT="${ACCT:-7753193d-b7e7-4e1e-bcb8-f9e4612e9207}"
 TMPFILE=/tmp/r.json
 FAILED=0
 

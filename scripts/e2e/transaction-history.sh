@@ -6,7 +6,7 @@
 #
 # Pre-reqs:
 #   1. Same as cards-crud.sh (JWT, user_key, customer1)
-#   2. wallet-service has wallet for accountId=7a51ced3... with
+#   2. wallet-service has wallet for accountId=7753193d... with
 #      balance from wallet-bootstrap.sql
 #   3. For T5 (transfer POST): a second test account must exist
 #      with a known account number as recipient.
@@ -18,7 +18,7 @@ set -e
 
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
-ACCT="${ACCT:-7a51ced3-5602-40fb-96e7-1703e9243ed5}"
+ACCT="${ACCT:-7753193d-b7e7-4e1e-bcb8-f9e4612e9207}"
 RECIPIENT_ACCT="${RECIPIENT_ACCT:-}"
 TMPFILE=/tmp/r.json
 FAILED=0
@@ -97,36 +97,48 @@ run_test() {
     local label="$1"; shift
     sleep 0.5
     local code
-    code=$(curl -skS -o "$TMPFILE" -w "%{http_code}" "$@" 2>/dev/null)
+    if [ "$GATEWAY_MODE" = "apicast" ]; then
+        code=$(curl -skS -o "$TMPFILE" -w "%{http_code}" "$@" 2>/dev/null)
+    else
+        code=$(oc exec -n payu-dev "$GATEWAY_POD" -- \
+            curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null)
+        oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
+    fi
     local body
     body=$(head -c 500 "$TMPFILE" 2>/dev/null)
-    printf "\n=== %s ===\n" "$label"
-    printf "HTTP=%s\nBODY: %s\n" "$code" "$body"
+    printf "\n=== %s ===\n" "$label" >&2
+    printf "HTTP=%s\nBODY: %s\n" "$code" "$body" >&2
     echo "$code"
 }
+
+if [ "$GATEWAY_MODE" = "apicast" ]; then
+    BASE="$HOST"
+else
+    BASE="http://localhost:8080"
+fi
 
 # ============================================
 echo
 echo "========== PHASE 1: Transaction History (Read-only) =========="
 
 T1=$(run_test "T1: List transactions for account (GET /api/v1/transactions?accountId=...)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T1 list" "200" "$T1"
 assert_json "T1 success" "success" "True"
 
 T2=$(run_test "T2: List with pagination (GET /api/v1/transactions?page=0&size=5)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&page=0&size=5&user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&page=0&size=5&user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T2 paginated" "200" "$T2"
 
 T3=$(run_test "T3: List with status filter (GET /api/v1/transactions?status=SUCCESS)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&status=SUCCESS&user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&status=SUCCESS&user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T3 status filter" "200" "$T3"
 
 T4=$(run_test "T4: List with date range (GET /api/v1/transactions?startDate=...&endDate=...)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&startDate=2026-01-01&endDate=2026-12-31&user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&startDate=2026-01-01&endDate=2026-12-31&user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T4 date range" "200" "$T4"
 
@@ -136,7 +148,7 @@ echo "========== PHASE 2: Transfer Initiation =========="
 
 if [ -n "$RECIPIENT_ACCT" ]; then
     T5=$(run_test "T5: Initiate transfer (POST /api/v1/transactions/transfer)" \
-        -X POST "${HOST}/api/v1/transactions/transfer?user_key=$USERKEY" \
+        -X POST "${BASE}/api/v1/transactions/transfer?user_key=$USERKEY" \
         -H "Authorization: Bearer $JWT" \
         -H "Content-Type: application/json" \
         -H "X-Idempotency-Key: $(uuidgen)" \
@@ -162,7 +174,7 @@ print((d.get('data') or {}).get('id', d.get('data', {}).get('transactionId', 'NO
     if [ -n "$TX_ID" ] && [ "$TX_ID" != "NO_ID" ]; then
         sleep 1
         T6=$(run_test "T6: Get transaction by ID (GET /api/v1/transactions/{id})" \
-            "${HOST}/api/v1/transactions/${TX_ID}?user_key=$USERKEY" \
+            "${BASE}/api/v1/transactions/${TX_ID}?user_key=$USERKEY" \
             -H "Authorization: Bearer $JWT")
         assert_http "T6 get tx" "200" "$T6"
     fi
@@ -177,28 +189,28 @@ echo
 echo "========== PHASE 3: Error Flows =========="
 
 T7=$(run_test "T7: Get nonexistent transaction (GET /api/v1/transactions/{uuid})" \
-    "${HOST}/api/v1/transactions/00000000-0000-0000-0000-000000000000?user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions/00000000-0000-0000-0000-000000000000?user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T7 not found" "404" "$T7"
 
 T8=$(run_test "T8: List transactions without JWT (401)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY")
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY")
 assert_http "T8 no JWT" "401" "$T8"
 
 T9=$(run_test "T9: Invalid JWT (401)" \
-    "${HOST}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY" \
+    "${BASE}/api/v1/transactions?accountId=${ACCT}&user_key=$USERKEY" \
     -H "Authorization: Bearer dead.token.here")
 assert_http "T9 invalid JWT" "401" "$T9"
 
 T10=$(run_test "T10: Transfer with missing required fields (400)" \
-    -X POST "${HOST}/api/v1/transactions/transfer?user_key=$USERKEY" \
+    -X POST "${BASE}/api/v1/transactions/transfer?user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
     -d '{"amount":1000}')
 assert_http "T10 validation" "400" "$T10"
 
 T11=$(run_test "T11: Transfer without idempotency key (400)" \
-    -X POST "${HOST}/api/v1/transactions/transfer?user_key=$USERKEY" \
+    -X POST "${BASE}/api/v1/transactions/transfer?user_key=$USERKEY" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
     -d "{

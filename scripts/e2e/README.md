@@ -85,7 +85,7 @@ curl -skS -X POST \
 | `GATEWAY_MODE` | `internal` | `internal` (via oc exec) atau `apicast` (external URL) |
 | `USERKEY` | `9a3f2bf...` | 3scale user_key (Application key di payu-product) |
 | `HOST` | `https://payu-product-payu-apicast-production...` | APIcast production endpoint |
-| `ACCT` | `15ded37b-...` | Account ID (Keycloak `sub` customer1) |
+| `ACCT` | `7753193d-...` | Account ID (Keycloak `sub` customer1) |
 | `WALLET_ID` | `33333333-...` | Wallet ID (untuk wallet-balance.sh) |
 | `RECIPIENT_ACCT` | (kosong) | Recipient account number untuk transfer test |
 

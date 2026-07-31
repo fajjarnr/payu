@@ -1,5 +1,6 @@
 package id.payu.transaction.application.cqrs.query;
 
+import id.payu.api.common.exception.BusinessException;
 import id.payu.transaction.application.cqrs.QueryHandler;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
@@ -36,6 +37,6 @@ public class GetTransactionQueryHandler implements QueryHandler<GetTransactionQu
         authorizationService.verifyTransactionAccess(query.transactionId(), query.userId());
 
         return transactionPersistencePort.findById(query.transactionId())
-                .orElseThrow(() -> new IllegalArgumentException("TransactionEntity not found: " + query.transactionId()));
+                .orElseThrow(() -> new BusinessException("TXN_404", "TransactionEntity not found: " + query.transactionId()));
     }
 }

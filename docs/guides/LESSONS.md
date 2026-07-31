@@ -4290,6 +4290,16 @@ synchronized (lock) {
 
 **Prevention**: Jangan andalkan default property untuk memenuhi `@ConditionalOnProperty` tanpa `matchIfMissing`; setelah migrasi provider, jalankan `mvn test` penuh (bukan hanya service yang diubah) untuk menangkap profil test yang belum dimigrasi.
 
+### L-151: E2E Menangkap 400-vs-404 — Missing Resource Harus BusinessException, Bukan IllegalArgumentException (2026-07-31)
+
+**Context**: `transaction-history.sh` T7 mengharapkan 404 untuk transaction tak dikenal, runtime balas 400 `INVALID_ARGUMENT`.
+
+**Root cause**: `AuthorizationService.verifyTransactionAccess` dan `GetTransactionQueryHandler` melempar `IllegalArgumentException("TransactionEntity not found")` → global handler RFC 9457 memetakan ke 400. Controller `getTransaction` sudah punya catch `BusinessException` → 404, tapi handler tak pernah melempar tipe itu.
+
+**Fix**: Lempar `BusinessException("TXN_404", ...)` di kedua titik; test `AuthorizationServiceTest` (Mockito) mengunci kontrak (RED→GREEN). `transaction-history.sh`: T7 kini 404.
+
+**Prevention**: Untuk resource-scoped lookup, lempar `BusinessException` ber-code (bukan `IllegalArgumentException`); E2E script harus menyegarkan JWT (TTL 5m) dan mendukung `GATEWAY_MODE=internal` (curl via gateway pod, bukan route publik yang strip Bearer).
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
