@@ -19,7 +19,7 @@
 
 -- customer1 is the default test user created in Keycloak payu realm
 -- password: customer1-test-pass  (reset before first E2E run via Admin API)
-\set acct_id '\'7a51ced3-5602-40fb-96e7-1703e9243ed5\''
+\set acct_id '\'7753193d-b7e7-4e1e-bcb8-f9e4612e9207\''
 \set wallet_id '\'33333333-3333-3333-3333-333333333333\''
 
 -- Old schema: V1__create_wallet_tables.sql (Optional<Wallet> lookup)
