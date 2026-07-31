@@ -9,7 +9,7 @@ metadata:
   labels:
     app: litmus-portal
 spec:
-  host: litmus.apps.payu.ocp.fajjjar.my.id
+  host: litmus.apps.fajjjar.my.id
   port:
     targetPort: 8080
   tls:

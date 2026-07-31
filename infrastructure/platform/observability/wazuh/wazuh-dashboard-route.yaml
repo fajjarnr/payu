@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: wazuh-dashboard
     app.kubernetes.io/component: dashboard
 spec:
-  host: ""
+  host: wazuh.apps.fajjjar.my.id
   to:
     kind: Service
     name: wazuh-dashboard

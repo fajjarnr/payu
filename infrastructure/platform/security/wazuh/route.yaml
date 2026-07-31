@@ -10,7 +10,7 @@ metadata:
   labels:
     app: wazuh-dashboard
 spec:
-  host: wazuh.apps.payu.ocp.fajjjar.my.id
+  host: wazuh.apps.fajjjar.my.id
   port:
     targetPort: 5601
   tls:

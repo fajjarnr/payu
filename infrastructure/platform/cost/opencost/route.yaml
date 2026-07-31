@@ -10,6 +10,7 @@ metadata:
     app.kubernetes.io/part-of: payu
     payu.io/managed-by: platform-team
 spec:
+  host: opencost.apps.fajjjar.my.id
   to:
     kind: Service
     name: opencost

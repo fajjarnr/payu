@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/version: "2.112.0"
     team: platform
 spec:
-  host: pact-broker.apps.payu.ocp.fajjjar.my.id
+  host: pact-broker.apps.fajjjar.my.id
   to:
     kind: Service
     name: pact-broker
