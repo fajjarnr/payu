@@ -48,7 +48,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "BalanceChanged",
-                envelopeToMap(envelope), null, "wallet.balance.changed");
+                envelopeToMap(envelope), null, "payu.wallet.balance-changed.v1");
         log.debug("Created CloudEvent outbox event for balance-changed: accountId={}", accountId);
     }
 
@@ -68,7 +68,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "BalanceReserved",
-                envelopeToMap(envelope), null, "wallet.balance.reserved");
+                envelopeToMap(envelope), null, "payu.wallet.balance-reserved.v1");
         log.debug("Created CloudEvent outbox event for balance-reserved: accountId={}", accountId);
     }
 
@@ -88,7 +88,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "ReservationCommitted",
-                envelopeToMap(envelope), null, "wallet.reservation.committed");
+                envelopeToMap(envelope), null, "payu.wallet.reservation-committed.v1");
         log.debug("Created CloudEvent outbox event for reservation-committed: accountId={}", accountId);
     }
 
@@ -108,7 +108,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "ReservationReleased",
-                envelopeToMap(envelope), null, "wallet.reservation.released");
+                envelopeToMap(envelope), null, "payu.wallet.reservation-released.v1");
         log.debug("Created CloudEvent outbox event for reservation-released: accountId={}", accountId);
     }
 
@@ -127,7 +127,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "WalletCreated",
-                envelopeToMap(envelope), null, "wallet.created");
+                envelopeToMap(envelope), null, "payu.wallet.created.v1");
         log.debug("Created CloudEvent outbox event for wallet-created: accountId={}", accountId);
     }
 
@@ -157,7 +157,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowHeld",
-                envelopeToMap(envelope), null, "escrow.held");
+                envelopeToMap(envelope), null, "payu.wallet.escrow-held.v1");
         log.debug("Created outbox event for escrow-held: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 
@@ -178,7 +178,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowReleased",
-                envelopeToMap(envelope), null, "escrow.released");
+                envelopeToMap(envelope), null, "payu.wallet.escrow-released.v1");
         log.debug("Created outbox event for escrow-released: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 
@@ -201,7 +201,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowSettled",
-                envelopeToMap(envelope), null, "escrow.settled");
+                envelopeToMap(envelope), null, "payu.wallet.escrow-settled.v1");
         log.debug("Created outbox event for escrow-settled: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 
@@ -225,7 +225,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowRefunded",
-                envelopeToMap(envelope), null, "escrow.refunded");
+                envelopeToMap(envelope), null, "payu.wallet.escrow-refunded.v1");
         log.debug("Created outbox event for escrow-refunded: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 
@@ -246,7 +246,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 .build();
 
         outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowExpired",
-                envelopeToMap(envelope), null, "escrow.expired");
+                envelopeToMap(envelope), null, "payu.wallet.escrow-expired.v1");
         log.debug("Created outbox event for escrow-expired: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 

@@ -4,7 +4,9 @@ import id.payu.grpc.starter.interceptor.GrpcAuthInterceptor;
 import id.payu.grpc.starter.interceptor.GrpcErrorHandlingInterceptor;
 import id.payu.grpc.starter.interceptor.GrpcRetryInterceptor;
 import id.payu.grpc.starter.interceptor.GrpcTracingInterceptor;
+import io.grpc.BindableService;
 import io.grpc.ClientInterceptor;
+import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
 import io.grpc.netty.NettyServerBuilder;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -129,6 +132,32 @@ public class GrpcStarterAutoConfiguration {
         }
 
         return serverBuilder;
+    }
+
+    /**
+     * Starts the gRPC server explicitly. spring-grpc's server auto-configuration
+     * does not start a server from the builder in this setup, so the starter owns
+     * the server lifecycle (FX-002: wallet gRPC was never reachable).
+     */
+    @Bean(destroyMethod = "shutdown")
+    @ConditionalOnProperty(prefix = "payu.grpc.server", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnBean(BindableService.class)
+    @ConditionalOnMissingBean(name = "grpcServer")
+    public Server grpcServer(ServerBuilder<?> serverBuilder,
+                             @Autowired(required = false) List<ServerInterceptor> interceptors,
+                             List<BindableService> services) throws IOException {
+        if (interceptors != null) {
+            for (ServerInterceptor interceptor : interceptors) {
+                serverBuilder.intercept(interceptor);
+            }
+        }
+        for (BindableService service : services) {
+            serverBuilder.addService(service);
+        }
+        Server server = serverBuilder.build();
+        server.start();
+        log.info("gRPC server started on port {}", properties.getServer().getPort());
+        return server;
     }
 
     // ==================== Client Interceptor Provider ====================

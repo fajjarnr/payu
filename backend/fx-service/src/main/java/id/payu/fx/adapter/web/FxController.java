@@ -227,7 +227,11 @@ public class FxController extends BaseController {
             @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String accountId = jwt.getClaim("account_id");
+        // BUG-AUTH-013: 'account_id' claim with 'sub' fallback.
+        String accountId = jwt.getClaimAsString("account_id");
+        if (accountId == null) {
+            accountId = jwt.getSubject();
+        }
         FxConversion conversion = fxConversionService.getConversion(conversionId);
 
         if (!conversion.getAccountId().equals(accountId)) {
@@ -266,5 +270,12 @@ public class FxController extends BaseController {
         response.setConversionDate(conversion.getConversionDate());
         response.setStatus(conversion.getStatus().name());
         return response;
+    }
+
+    @ExceptionHandler(id.payu.fx.application.service.FxRateNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleFxRateNotFound(
+            id.payu.fx.application.service.FxRateNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("FX_404", ex.getMessage()));
     }
 }

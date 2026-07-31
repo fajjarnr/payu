@@ -51,6 +51,7 @@ payu:
 spring:
   grpc:
     server:
+      enabled: false  # grpc-starter owns the Netty server lifecycle
       port: ${payu.grpc.server.port:9090}
     client:
       wallet-service:

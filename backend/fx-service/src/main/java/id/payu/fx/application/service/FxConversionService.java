@@ -171,6 +171,7 @@ public class FxConversionService implements FxConversionUseCase {
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
                 || ex instanceof HttpMessageNotReadableException
+                || ex instanceof FxRateNotFoundException
                 || ex instanceof AccessDeniedException) {
             throw (RuntimeException) ex;
         }

@@ -29,7 +29,8 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
 
     @Override
     public Optional<FxRate> findLatestRate(String fromCurrency, String toCurrency, LocalDateTime timestamp) {
-        return repository.findLatestValidRate(fromCurrency, toCurrency, timestamp)
+        return repository.findFirstByFromCurrencyAndToCurrencyAndValidFromLessThanEqualAndValidUntilGreaterThanEqualOrderByValidFromDesc(
+                        fromCurrency, toCurrency, timestamp, timestamp)
                 .map(this::toDomain);
     }
 

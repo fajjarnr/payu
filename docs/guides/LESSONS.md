@@ -4313,6 +4313,18 @@ synchronized (lock) {
 
 **Prevention**: E2E alur create/persist jalankan sampai error database hilang satu per satu; untuk endpoint "estimasi" jangan reuse method yang menulis; verifikasi klaim JWT (`account_id` vs `sub`) sebelum dipakai di NOT NULL column; cek keberadaan server upstream (gRPC) sebelum menulis client.
 
+### L-153: gRPC Server Tak Pernah Start + Topic Outbox Melanggar Kontrak (2026-07-31)
+
+**Context**: T7 fx berubah 503 → ConnectTimeout walau `WalletGrpcService` + proto + starter sudah ada; `statement-service` (pakai `profiles.include: grpc`) juga tak punya listener 9090.
+
+**Findings**:
+- spring-grpc server auto-config tidak pernah menstart server dari `ServerBuilder` bean starter di setup ini (tidak ada listener 9090 di pod mana pun). Fix: `grpc-starter` menambah bean `grpcServer` yang `build().start()` (destroy `shutdown`), conditional pada `BindableService`; `spring.grpc.server.enabled: false` di `application-grpc.yml` agar tak dobel-bind.
+- `WalletGrpcService` hanya `@Service` (tanpa `@GrpcService`) — service tak terdaftar di server.
+- Outbox topic wallet (`wallet.balance.reserved`, `escrow.held`, dll.) melanggar pola `payu.<domain>.<event-type>.v<n>` (AGENTS #4) → `OutboxService.validateDestinationTopic` menolak. Fix semua 10 topic ke `payu.wallet.*.v1`; scan seluruh backend: hanya wallet yang melanggar.
+- Reverse conversion pakai `jwt.getClaim("account_id")` (null) → 403; `getCurrentRate` bad pair → fallback membungkus `FxRateNotFoundException` → 500. Fix fallback rethrow + handler lokal `FX_404`.
+
+**Prevention**: Setelah menambah gRPC client/server, verifikasi listener port di pod (`/proc/net/tcp6`, state 0A) sebelum E2E; semua topic outbox wajib lulus pola kontrak (scan script); fallback resilience jangan membungkus exception bisnis yang harus terlihat handler.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.

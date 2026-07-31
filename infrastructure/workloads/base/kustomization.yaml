@@ -113,6 +113,8 @@ patches:
                       secretKeyRef:
                         name: payu-cache-client-tls
                         key: keystore-password
+                  - name: WALLET_GRPC_ADDRESS
+                    value: static://wallet-service:9090
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
                     value: payu-cache.payu-dev.svc.cluster.local
                   - name: PAYU_CACHE_REDIS_HOST

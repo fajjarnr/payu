@@ -10,6 +10,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.grpc.server.service.GrpcService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@GrpcService
 @RequiredArgsConstructor
 public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
