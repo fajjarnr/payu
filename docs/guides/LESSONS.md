@@ -4257,6 +4257,19 @@ synchronized (lock) {
 
 **Prevention**: Health check pakai jalur layanan cache (lazy-start + cache bernama) bukan `RemoteCacheManager` mentah; dev overlay (bukan live patch) untuk endpoint/selector drift; sebelum rollout massal verifikasi render kustomize per service (env lengkap); data grid manual harus dicatat sebagai drift sampai ARCH-007 TLS wiring selesai.
 
+### L-148: Operator-Managed Data Grid mTLS — Secret Contract & Identity Literal Password (2026-07-31)
+
+**Context**: Migrasi dev dari deployment manual `infinispan/server:15.0` (plaintext) ke Infinispan Operator CR (`payu-cache`, mTLS) gagal bertahap: CR stuck `PreliminaryChecksPassed`, lalu SASL `Invalid credentials`, lalu `ELY05009: No authentication mechanism password was given`.
+
+**Findings**:
+- Operator butuh `identities.yaml` (atau `identities.cli`) di secret `payu-cache-credentials` — sekadar `username`/`password` plaintext tidak cukup; error operator: "missing required file 'identities.cli'".
+- Identitas server dibangun via `user create developer --realm default -p <value>`; nilai `<value>` diperlakukan sebagai **password literal** (bukan digest). Bukti: client berhasil login hanya saat password = string 64-hex yang sama dengan isi `identities.yaml`. SIT memakai pola sama (password key = literal hex). Jangan pasang SHA-256 digest; pasang literal yang sama di `identities.yaml` dan key `password`.
+- `oc set env deploy/X VAR-` menghapus env dari live spec — jika env itu datang dari patch kustomize (base `hotrod-client-workload`), rollout berikutnya memakai spec tanpa env → `ELY05009` (password kosong). Verifikasi env live sebelum rollout (`oc exec ... printenv`), lalu `oc apply -k` untuk konvergen.
+- Service `payu-cache` selector di-owner operator (pod label `app=infinispan-pod`); deployment manual dengan label beda tak pernah punya endpoints dari service itu. Setelah CR `WellFormed=True`, hapus deployment manual + service `payu-cache-resp` agar tidak ada dua runtime.
+- Gate mTLS: koneksi tanpa client cert → `SSLHandshakeException: certificate_required` (negatif), dengan client keystore/truststore → CLI/Hot Rod berhasil (positif). SAN server cert harus mencakup `payu-cache.payu-dev.svc[.cluster.local]` (SNI client).
+
+**Prevention**: Untuk operator-managed Data Grid, jaga kontrak secret: `identities.yaml` + `username`/`password` dengan literal yang sama; jangan hapus env via `oc set env` tanpa re-apply overlay; verifikasi `printenv` di pod baru; gunakan satu runtime (operator CR), bukan deployment manual paralel.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
