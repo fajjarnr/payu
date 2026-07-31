@@ -13,7 +13,9 @@
 
 set -e
 
-JWT=$(oc exec -n payu-dev gateway-service-58dbc4cfbb-c8zbc -- cat /tmp/cust1-jwt.txt 2>/dev/null)
+GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+ACCOUNT_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=account-service -o jsonpath='{.items[0].metadata.name}')
+JWT=$(oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/cust1-jwt.txt 2>/dev/null)
 [ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
 
 # Use the INTERNAL account-service URL (port 8080, in-cluster DNS)
@@ -26,7 +28,7 @@ run_test() {
     local label="$1"; shift
     sleep 1
     local out
-    out=$(oc exec -n payu-dev account-service-6f85f48d64-k5z4p -- \
+    out=$(oc exec -n payu-dev "$ACCOUNT_POD" -- \
         curl -s -o /tmp/r.json -w "HTTP=%{http_code} TIME=%{time_total}s" \
         -X POST "$ACCT_URL/api/v1/accounts/verify-nik" \
         -H "Authorization: Bearer $JWT" \
