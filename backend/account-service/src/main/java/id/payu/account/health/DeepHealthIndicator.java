@@ -1,5 +1,6 @@
 package id.payu.account.health;
 
+import id.payu.cache.util.HotRodCacheSupport;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
@@ -112,7 +113,7 @@ public class DeepHealthIndicator implements HealthIndicator {
     private Health checkDataGrid() {
         long start = System.currentTimeMillis();
         try {
-            remoteCacheManager.getCache().containsKey("__payu_health__");
+            HotRodCacheSupport.cache(remoteCacheManager).containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
 
             return Health.up()

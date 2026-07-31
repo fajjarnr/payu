@@ -1,6 +1,7 @@
 package id.payu.api.common.controller;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.cache.util.HotRodCacheSupport;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -100,7 +101,7 @@ public class HealthController extends BaseController {
         }
         long start = System.currentTimeMillis();
         try {
-            remoteCacheManager.getCache().containsKey("__payu_health__");
+            HotRodCacheSupport.cache(remoteCacheManager).containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
             details.put("datagrid", "UP");
             details.put("datagrid.latency_ms", duration);

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import id.payu.cache.util.HotRodCacheSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -87,7 +88,7 @@ public class HealthController {
         }
         long start = System.currentTimeMillis();
         try {
-            remoteCacheManager.getCache().containsKey("__payu_health__");
+            HotRodCacheSupport.cache(remoteCacheManager).containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
             details.put("datagrid", "UP");
             details.put("datagrid.latency_ms", duration);

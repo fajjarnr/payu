@@ -103,6 +103,11 @@ patches:
     data:
       KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
       KEYCLOAK_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+      # Dev Data Grid is the manual infinispan/server:15.0 deployment; the
+      # Operator-owned `payu-cache` Service (CR selector app=infinispan-pod)
+      # has no endpoints for it, so dev points at the manual Service until
+      # ARCH-007 production TLS/mTLS wiring makes the CR the real runtime.
+      DATAGRID_HOTROD_SERVER_LIST: payu-cache-resp:11222
 # Web app route uses shared ingress domain (apps.fajjjar.my.id)
 - target:
     kind: Route
@@ -579,26 +584,10 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
-            # Dev Data Grid (infinispan/server:15.0) runs plaintext on 11222.
-            - name: PAYU_CACHE_HOTROD_USE_SSL
-              value: "false"
-- target:
-    kind: Deployment
-    name: auth-service
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: auth-service
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            # Dev Data Grid (infinispan/server:15.0) runs plaintext on 11222.
-            - name: PAYU_CACHE_HOTROD_USE_SSL
-              value: "false"
+# Dev Data Grid (infinispan/server:15.0) runs plaintext on 11222; base mTLS
+# defaults are production-intent. Override for every backend workload until
+# ARCH-007 production TLS/mTLS wiring lands.
+- path: use-ssl-false-patch.yaml
 - target:
     kind: Deployment
     name: notification-service

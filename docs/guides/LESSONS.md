@@ -4245,6 +4245,18 @@ synchronized (lock) {
 
 **Follow-up (2026-07-31, ARCH-007 rollout)**: Semua ClusterPolicy yang match pod/deployment PayU (`require-cosign-signature`, `set-readonly-root-filesystem`, `require-resource-limits`, `require-approved-registry`, `disallow-root-user`, `disallow-host-namespaces`, `require-payu-labels`) memakai exclusion yang sama (`app.kubernetes.io/managed-by: Exists`). Rollout massal memicu denial `require-cosign-signature` (401 registry token) pada 21 deployment yang template-nya belum punya label tersebut. Fix durable: label ditambahkan ke metadata + pod template semua deployment di `infrastructure/workloads/base/` (25 backend + 5 simulator) — bukan patch live per service. Sebelum rollout massal, audit dulu label template semua workload PayU, bukan hanya yang baru diubah.
 
+### L-147: Dev Data Grid Contract Drift — Operator Service, Lazy Manager, dan Kustomize Pitfalls (2026-07-31)
+
+**Context**: ARCH-007 canary mengungkap empat masalah beruntun setelah `SPRING_MAIN_SOURCES` bridge dihapus.
+
+**Findings**:
+- `RemoteCacheManager` dibuat lazy (`start=false`). Health indicator yang memanggil `remoteCacheManager.getCache()` langsung (tanpa start) melempar `ISPN004002 ... unstarted RemoteCacheManager` sampai operasi cache pertama. Fix: helper `HotRodCacheSupport.cache(manager)` di `cache-starter` — lazy-start + pilih cache bernama tunggal yang terkonfigurasi (`payu`), bukan default cache (`CacheNotFoundException: Default cache requested but not configured`).
+- Dev `payu-cache` Service di-revert selector ke `app=infinispan-pod` oleh Infinispan Operator (CR `payu-cache` ada, belum `WellFormed` karena secret mTLS belum ada). Service manual `payu-cache-resp` (selector `app=payu-cache`) tetap punya endpoints — dev overlay harus mengarahkan `DATAGRID_HOTROD_SERVER_LIST` ke service manual sampai CR jadi runtime nyata. Jangan patch Service yang di-owner operator secara live; itu akan di-revert.
+- Cache `payu` di server manual hilang saat pod restart (config tidak dipersist); recreate via CLI `drop cache payu` + `create cache payu --file=<xml text/plain>`.
+- Kustomize: SM patch dengan `env:` kosong MENGGANTI seluruh env container (bukan merge) → `SPRING_DATASOURCE_URL` hilang → Flyway connect `localhost:5432`. SM patch multi-doc tidak bisa dikombinasi dengan `patches.target` (harus `path:` saja). JSON patch `- op: add ... /env/-` gagal di kustomize versi ini.
+
+**Prevention**: Health check pakai jalur layanan cache (lazy-start + cache bernama) bukan `RemoteCacheManager` mentah; dev overlay (bukan live patch) untuk endpoint/selector drift; sebelum rollout massal verifikasi render kustomize per service (env lengkap); data grid manual harus dicatat sebagai drift sampai ARCH-007 TLS wiring selesai.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.

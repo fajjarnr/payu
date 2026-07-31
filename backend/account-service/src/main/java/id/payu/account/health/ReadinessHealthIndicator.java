@@ -1,5 +1,6 @@
 package id.payu.account.health;
 
+import id.payu.cache.util.HotRodCacheSupport;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,7 @@ public class ReadinessHealthIndicator implements HealthIndicator {
     private boolean isDataGridReady(Map<String, Object> details) {
         long start = System.currentTimeMillis();
         try {
-            remoteCacheManager.getCache().containsKey("__payu_health__");
+            HotRodCacheSupport.cache(remoteCacheManager).containsKey("__payu_health__");
             long duration = System.currentTimeMillis() - start;
             details.put("datagrid", "UP");
             details.put("datagrid.latency", duration + "ms");
