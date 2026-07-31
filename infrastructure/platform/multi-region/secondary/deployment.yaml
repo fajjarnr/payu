@@ -1,16 +1,6 @@
 ---
 # Secondary Region Deployment - Passive/DR Region
 # All services deployed but scaled to zero (hot standby)
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: payu
-  labels:
-    env: prod
-    region: secondary
-    role: passive
-
----
 # Account Service - Secondary (scaled to 0)
 apiVersion: apps/v1
 kind: Deployment

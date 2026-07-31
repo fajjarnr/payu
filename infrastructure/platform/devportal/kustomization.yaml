@@ -5,7 +5,6 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/devportal/
 
 resources:
-  - backstage/app-config.yaml
   - backstage/deployment.yaml
   - backstage/rbac.yaml
   - backstage/rhdh.yaml

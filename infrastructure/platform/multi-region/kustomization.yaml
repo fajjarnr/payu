@@ -6,7 +6,6 @@ kind: Kustomization
 
 resources:
   - primary/deployment.yaml
-  - secondary/deployment.yaml
   - replication/postgres-replication.yaml
   - replication/kafka-mirroring.yaml
   - failover/failover-job.yaml

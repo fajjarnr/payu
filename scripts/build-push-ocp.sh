@@ -39,7 +39,7 @@ to_push_ref() {
   printf '%s/%s/%s\n' "$REGISTRY" "$ns" "$repo_tag"
 }
 
-podman login -u "$(oc whoami)" -p "$(oc whoami -t)" --tls-verify="$TLS_VERIFY" "$REGISTRY" >/dev/null
+podman login -u "$(oc whoami | tr -d ':')" -p "$(oc whoami -t)" --tls-verify="$TLS_VERIFY" "$REGISTRY" >/dev/null
 
 mapfile -t images < <(oc kustomize "$OVERLAY" | awk '/^[[:space:]]*image: /{print $2}' | sort -u)
 

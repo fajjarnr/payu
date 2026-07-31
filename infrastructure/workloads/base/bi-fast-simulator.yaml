@@ -28,7 +28,7 @@ spec:
         emptyDir: {}
       containers:
       - name: bi-fast-simulator
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/bi-fast-simulator:1.8.80
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.80
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

@@ -3,3 +3,5 @@ kind: Kustomization
 
 # Deprecated compatibility stub.
 # Use infrastructure/platform/identity/ or the environment overlays instead.
+resources:
+  - ../keycloak

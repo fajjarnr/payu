@@ -28,7 +28,7 @@ spec:
         emptyDir: {}
       containers:
       - name: biller-simulator
-        image: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/biller-simulator:1.8.80
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.80
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

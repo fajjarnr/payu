@@ -65,6 +65,10 @@ patches:
                   secretName: payu-cache-client-tls
             containers:
               - name: app
+                resources:
+                  requests:
+                    cpu: 20m
+                    memory: 128Mi
                 startupProbe:
                   failureThreshold: 90
                 volumeMounts:

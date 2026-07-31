@@ -11,8 +11,8 @@ metadata:
   namespace: payu-dev
 spec:
   hard:
-    requests.cpu: "8"
-    requests.memory: 20Gi
+    requests.cpu: "16"
+    requests.memory: 32Gi
     limits.cpu: "36"
     limits.memory: 64Gi
     persistentvolumeclaims: "30"

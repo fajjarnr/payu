@@ -5,19 +5,11 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/data/base/
 
 resources:
-  - current/cnpg-cluster.yaml
-  - current/cnpg-databases.yaml
-  - current/cnpg-network-policy.yaml
-  - current/outbox-bootstrap-job.yaml
-  - current/shedlock-bootstrap-job.yaml
-  - current/datagrid.yaml
-  - kafka-amqstreams.yaml
+  - cnpg-cluster.yaml
+  - cnpg-databases.yaml
+  - cnpg-network-policy.yaml
+  - outbox-bootstrap-job.yaml
+  - shedlock-bootstrap-job.yaml
+  - post-deploy-db-grants.yaml
+  - datagrid.yaml
   - network-policy-egress.yaml
-  # SUPERSEDED (READY-027 -> READY-076):
-  # - postgres-statefulset.yaml
-  # - postgres-cluster.yaml  # Crunchy HA spec kept as future-migration reference only
-  # - kafka-console.yaml
-  # - kyverno-exception-kafka.yaml
-  # - kyverno-exception-kafka-deployments.yaml
-  # kafka-config is managed by workload overlays per environment
-  # - kafka-config.yaml
