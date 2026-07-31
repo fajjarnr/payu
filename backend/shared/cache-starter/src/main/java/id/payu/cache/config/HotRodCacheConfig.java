@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @RequiredArgsConstructor
 @EnableConfigurationProperties(CacheProperties.class)
 @ConditionalOnClass(RemoteCacheManager.class)
-@ConditionalOnProperty(prefix = "payu.cache", name = "provider", havingValue = "hotrod")
+@ConditionalOnProperty(prefix = "payu.cache", name = "provider", havingValue = "hotrod", matchIfMissing = true)
 public class HotRodCacheConfig {
 
     private static final int NEAR_CACHE_MAX_ENTRIES = 10_000;

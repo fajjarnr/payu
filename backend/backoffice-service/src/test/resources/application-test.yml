@@ -18,9 +18,6 @@ spring:
     show-sql: false
   flyway:
     enabled: false
-  data:
-    redis:
-      port: 6379
   security:
     oauth2:
       resourceserver:
@@ -34,6 +31,12 @@ logging:
     org.hibernate.SQL: WARN
 
 payu:
+  cache:
+    enabled: true
+    provider: hotrod
+    hotrod:
+      server-list: localhost:11222
+      cache-name: payu
   security:
     blind-index-key: backoffice-test-blind-index-key-value-32
     blind-index-key-version: test-v1

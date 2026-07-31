@@ -4280,6 +4280,16 @@ synchronized (lock) {
 
 **Prevention**: Setelah import realm, verifikasi grant langsung (password flow) sebelum E2E; jangan trust partial import untuk credential; cek hardcoded host di skrip E2E saat domain/infra berubah.
 
+### L-150: @ConditionalOnProperty Tidak Melihat Default @ConfigurationProperties — Test Context Patah Massal (2026-07-31)
+
+**Context**: Setelah migrasi Hot Rod, `mvn test` penuh gagal di billing (25 error context) dan backoffice (50 error): `No qualifying bean of type RemoteCacheManager`.
+
+**Root cause**: `CacheProperties.provider` punya default `"hotrod"`, tapi `@ConditionalOnProperty(prefix="payu.cache", name="provider", havingValue="hotrod")` di `HotRodCacheConfig` mengevaluasi properti mentah — absent ≠ default → bean RemoteCacheManager tidak dibuat di profil test yang tidak menyetel `payu.cache.provider`. Service dengan `@SpringBootTest` full-context gagal load; service sliced test lolos.
+
+**Fix**: `matchIfMissing = true` di kondisi `HotRodCacheConfig` — konsisten dengan default `provider=hotrod` dan keputusan ARCH-007 (Hot Rod satu-satunya). Test `shouldLoadHotRodConfigByDefaultWhenProviderNotSet` di cache-starter mengunci kontrak. Test profile backoffice juga dimigrasi (`payu.cache.provider=hotrod`, hapus `spring.data.redis.*`).
+
+**Prevention**: Jangan andalkan default property untuk memenuhi `@ConditionalOnProperty` tanpa `matchIfMissing`; setelah migrasi provider, jalankan `mvn test` penuh (bukan hanya service yang diubah) untuk menangkap profil test yang belum dimigrasi.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.

@@ -30,10 +30,10 @@ class HotRodCacheConfigTest {
                     CacheAutoConfiguration.class));
 
     @Test
-    void shouldNotLoadHotRodConfigByDefault() {
+    void shouldLoadHotRodConfigByDefaultWhenProviderNotSet() {
         contextRunner.run(context -> {
-            assertThat(context).doesNotHaveBean(HotRodCacheConfig.class);
-            assertThat(context).doesNotHaveBean(RemoteCacheManager.class);
+            assertThat(context).hasSingleBean(HotRodCacheConfig.class);
+            assertThat(context).hasSingleBean(RemoteCacheManager.class);
         });
     }
 
