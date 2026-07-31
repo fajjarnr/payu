@@ -5,7 +5,7 @@ metadata:
   namespace: payu-api-management
 type: Opaque
 stringData:
-  adminURL: https://payu-admin.apps.payu.ocp.fajjjar.my.id
+  adminURL: https://payu-admin.apps.fajjjar.my.id
   token: adminaccesstoken12345
 ---
 apiVersion: capabilities.3scale.net/v1beta1

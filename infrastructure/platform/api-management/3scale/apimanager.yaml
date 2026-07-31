@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/part-of: payu-api-management
     app.kubernetes.io/managed-by: 3scale-operator
 spec:
-  wildcardDomain: apps.payu.ocp.fajjjar.my.id
+  wildcardDomain: apps.fajjjar.my.id
   appLabel: payu-3scale
   tenantName: payu
   resourceRequirementsEnabled: true
