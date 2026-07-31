@@ -1,0 +1,135 @@
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: controller
+spec:
+  replicas: 3
+  storage:
+    type: persistent-claim
+    size: 5Gi
+    class: gp3-csi
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: "1"
+  template:
+    pod:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: strimzi.io/pool-name
+                    operator: In
+                    values:
+                      - controller
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: broker
+spec:
+  replicas: 3
+  storage:
+    type: persistent-claim
+    size: 10Gi
+    class: gp3-csi
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 500m
+    limits:
+      memory: 2Gi
+      cpu: "2"
+  template:
+    pod:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: strimzi.io/pool-name
+                    operator: In
+                    values:
+                      - broker
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: payu-broker
+  namespace: payu-dev
+spec:
+  console:
+    expose: false
+  deploymentPlan:
+    size: 2
+    clustered: true
+    messageMigration: true
+    persistenceEnabled: true
+    journalType: NIO
+    requireLogin: true
+    storage:
+      size: 5Gi
+      storageClassName: gp3-csi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    podDisruptionBudget:
+      minAvailable: 1
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: ActiveMQArtemis
+                  operator: In
+                  values:
+                    - payu-broker
+            topologyKey: kubernetes.io/hostname
+---
+apiVersion: console.streamshub.github.com/v1alpha1
+kind: Console
+metadata:
+  name: payu-kafka-console
+spec:
+  replicas: null
+  containers:
+    api:
+      spec:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+    ui:
+      spec:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+  kafkaClusters:
+    - name: payu-kafka
+      namespace: payu-dev
+      metricsSource: openshift-monitoring
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: payu-kafka-kafka-bootstrap:9093
+      listener: tls
+      credentials:
+        kafkaUser:
+          name: payu-kafka-console-user

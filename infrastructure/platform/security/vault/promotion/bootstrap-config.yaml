@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-bootstrap-config
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+data:
+  configure.sh: |
+    #!/bin/sh
+    set -eu
+
+    : "${VAULT_TOKEN:?VAULT_TOKEN must contain the one-time initialization root token}"
+    export VAULT_ADDR="https://127.0.0.1:8200"
+    export VAULT_CACERT="/vault/ca/service-ca.crt"
+    export VAULT_TLS_SERVER_NAME="vault.payu-vault.svc.cluster.local"
+
+    vault secrets list -format=json | grep -q '"secret/"' ||
+      vault secrets enable -path=secret kv-v2
+
+    vault auth list -format=json | grep -q '"kubernetes/"' ||
+      vault auth enable kubernetes
+
+    vault write auth/kubernetes/config \
+      kubernetes_host="https://kubernetes.default.svc" \
+      kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+    for env in sit uat preprod prod; do
+      cat >"/tmp/payu-${env}.hcl" <<EOF
+    path "secret/data/payu/${env}/*" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/payu/${env}/*" {
+      capabilities = ["read", "list"]
+    }
+    EOF
+      vault policy write "payu-${env}" "/tmp/payu-${env}.hcl"
+    done
+
+    vault write auth/kubernetes/role/payu-sit \
+      bound_service_account_names=vault-eso \
+      bound_service_account_namespaces=payu-sit \
+      audience=vault \
+      policies=payu-sit \
+      token_ttl=15m \
+      token_max_ttl=30m
+
+    vault write auth/kubernetes/role/payu-uat \
+      bound_service_account_names=vault-eso \
+      bound_service_account_namespaces=payu-uat \
+      audience=vault \
+      policies=payu-uat \
+      token_ttl=15m \
+      token_max_ttl=30m
+
+    vault write auth/kubernetes/role/payu-preprod \
+      bound_service_account_names=vault-eso \
+      bound_service_account_namespaces=payu-preprod \
+      audience=vault \
+      policies=payu-preprod \
+      token_ttl=15m \
+      token_max_ttl=30m
+
+    vault write auth/kubernetes/role/payu-prod \
+      bound_service_account_names=vault-eso \
+      bound_service_account_namespaces=payu \
+      audience=vault \
+      policies=payu-prod \
+      token_ttl=15m \
+      token_max_ttl=30m
+
+    cat >/tmp/vault-snapshot.hcl <<EOF
+    path "sys/storage/raft/snapshot" {
+      capabilities = ["read"]
+    }
+    EOF
+    vault policy write vault-snapshot /tmp/vault-snapshot.hcl
+    vault write auth/kubernetes/role/vault-snapshot \
+      bound_service_account_names=vault-snapshot \
+      bound_service_account_namespaces=payu-vault \
+      audience=vault \
+      policies=vault-snapshot \
+      token_ttl=15m \
+      token_max_ttl=15m
+
+    cat >/tmp/vault-admin.hcl <<EOF
+    path "*" {
+      capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo"]
+    }
+    EOF
+    vault policy write vault-admin /tmp/vault-admin.hcl
+    vault write auth/kubernetes/role/vault-admin \
+      bound_service_account_names=vault-admin \
+      bound_service_account_namespaces=payu-vault \
+      audience=vault \
+      policies=vault-admin \
+      token_ttl=15m \
+      token_max_ttl=30m

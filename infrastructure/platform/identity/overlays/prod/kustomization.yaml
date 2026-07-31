@@ -2,11 +2,19 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ../../operator
   - ../common
 
 namespace: payu
 
 patches:
+  - target:
+      kind: OperatorGroup
+      name: rhbk-operator-group
+    patch: |
+      - op: replace
+        path: /spec/targetNamespaces/0
+        value: payu
   - target:
       kind: Keycloak
       name: payu-keycloak
@@ -14,6 +22,13 @@ patches:
       - op: add
         path: /spec/hostname/hostname
         value: https://sso.payu.fajjjar.my.id
+  - target:
+      kind: Keycloak
+      name: payu-keycloak
+    patch: |
+      - op: replace
+        path: /spec/instances
+        value: 3
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import
@@ -27,3 +42,29 @@ patches:
         value:
           - https://payu.fajjjar.my.id
           - "+"
+  - target:
+      kind: ExternalSecret
+      name: payu-keycloak-admin
+    patch: |
+      - op: replace
+        path: /spec/secretStoreRef/name
+        value: payu-vault-prod
+      - op: replace
+        path: /spec/data/0/remoteRef/key
+        value: payu/prod/keycloak/credentials
+      - op: replace
+        path: /spec/data/1/remoteRef/key
+        value: payu/prod/keycloak/credentials
+  - target:
+      kind: ExternalSecret
+      name: payu-keycloak-db
+    patch: |
+      - op: replace
+        path: /spec/secretStoreRef/name
+        value: payu-vault-prod
+      - op: replace
+        path: /spec/data/0/remoteRef/key
+        value: payu/prod/keycloak/database
+      - op: replace
+        path: /spec/data/1/remoteRef/key
+        value: payu/prod/keycloak/database

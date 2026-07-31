@@ -1140,3 +1140,37 @@ Closed 3 high-priority tickets in a single session:
 - `docs/roadmap/PROGRESS.md` (this section)
 - `CHANGELOG.md` ([1.8.68] entry)
 - `docs/roadmap/TODOS.md` (Sprint 1 GAP-27 ✓, Sprint 3 GAP-31 ✓)
+
+## 3scale Development Deployment (2026-07-31)
+
+- Deployed Red Hat 3scale 2.16.4 in `payu-api-management`.
+- Connected mandatory external System PostgreSQL, System Redis, and Backend
+  Redis; System storage uses ODF CephFS.
+- `APIManager/payu-apimanager` reports `Available=True`, `Preflights=True`, and
+  all 12 managed deployments ready.
+- Six default 3scale routes are admitted by `shared-ingress` under
+  `apps.fajjjar.my.id`; HTTPS certificate verification succeeds.
+- Removed the committed provider token and moved provider-account credentials
+  behind a required external Secret.
+- Enabled the Red Hat External Secrets operand and migrated seven 3scale
+  runtime Secrets to the `payu-vault` ClusterSecretStore; all ExternalSecrets
+  report `Ready=True`.
+
+## Development Promotion Gate (2026-07-31)
+
+- Reproduced the Kafka Console embedded Prometheus failure: cluster-wide
+  cAdvisor and kubelet scraping every 10 seconds OOM-killed at both 512Mi and
+  1Gi.
+- Replaced the embedded metrics source with OpenShift monitoring. The
+  operator removed the duplicate Prometheus deployment; Kafka Console reports
+  `Ready=True` and both Console containers are ready with zero restarts.
+- Migrated the Kafka Console OIDC client secret to Vault through an
+  `ExternalSecret`; the Console CR now uses `secretKeyRef` and contains no
+  literal client secret.
+- Development 3scale remains healthy: `Available=True`, `Preflights=True`,
+  all 12 managed deployments ready, and all seven 3scale ExternalSecrets
+  `Ready=True`.
+- Promotion stopped before SIT. The target environments have no
+  environment-isolated Vault, databases, Kafka, Data Grid, image streams, or
+  runtime secrets. Existing overlays also retain dev endpoints/secrets, have
+  quota and production namespace/RBAC defects, and are not safe to apply.

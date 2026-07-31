@@ -1,0 +1,67 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: payu-database
+  namespace: payu-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  instances: 3
+  storage:
+    storageClass: gp3-csi
+    size: 20Gi
+  walStorage:
+    storageClass: gp3-csi
+    size: 5Gi
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 500m
+    limits:
+      memory: 4Gi
+      cpu: "2"
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+  backup:
+    target: prefer-standby
+    volumeSnapshot:
+      className: csi-aws-vsc
+      walClassName: csi-aws-vsc
+      online: true
+      snapshotOwnerReference: backup
+---
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: payu-cache
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  replicas: 3
+  container:
+    cpu: 500m
+    memory: 2Gi
+  service:
+    container:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-cache-custom-config
+data:
+  infinispan-config.xml: |
+    <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="urn:infinispan:config:16.0 https://infinispan.org/schemas/infinispan-config-16.0.xsd"
+                xmlns="urn:infinispan:config:16.0">
+      <cache-container name="default" statistics="true">
+        <distributed-cache name="payu" mode="SYNC" owners="2" statistics="true">
+          <encoding>
+            <key media-type="text/plain"/>
+            <value media-type="text/plain"/>
+          </encoding>
+        </distributed-cache>
+      </cache-container>
+    </infinispan>

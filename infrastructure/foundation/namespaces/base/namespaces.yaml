@@ -11,6 +11,7 @@ metadata:
     payu.io/environment: dev
     payu.io/managed-by: platform-team
     payu.io/tier: non-production
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
@@ -24,6 +25,7 @@ metadata:
     payu.io/environment: sit
     payu.io/managed-by: platform-team
     payu.io/tier: non-production
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
@@ -37,6 +39,7 @@ metadata:
     payu.io/environment: uat
     payu.io/managed-by: platform-team
     payu.io/tier: non-production
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
@@ -50,6 +53,7 @@ metadata:
     payu.io/environment: preprod
     payu.io/managed-by: platform-team
     payu.io/tier: pre-production
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
@@ -63,6 +67,7 @@ metadata:
     payu.io/environment: prod
     payu.io/managed-by: platform-team
     payu.io/tier: production
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted

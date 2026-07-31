@@ -91,6 +91,18 @@ images:
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
   newTag: "1.8.80"
 patches:
+# Development still consumes the shared Keycloak instance in payu-sso.
+- target:
+    kind: ConfigMap
+    name: service-endpoints
+  patch: |-
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: service-endpoints
+    data:
+      KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+      KEYCLOAK_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
 # Replica count patches
 - target:
     kind: Deployment

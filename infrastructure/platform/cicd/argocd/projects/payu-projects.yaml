@@ -168,8 +168,46 @@ spec:
       kind: ConfigMap
     - group: ""
       kind: Secret
+    - group: ""
+      kind: ServiceAccount
     - group: "autoscaling"
       kind: HorizontalPodAutoscaler
+    - group: "route.openshift.io"
+      kind: Route
+    - group: "external-secrets.io"
+      kind: ExternalSecret
+    - group: "batch"
+      kind: Job
+    - group: "networking.k8s.io"
+      kind: NetworkPolicy
+    - group: "postgresql.cnpg.io"
+      kind: Cluster
+    - group: "postgresql.cnpg.io"
+      kind: Database
+    - group: "postgresql.cnpg.io"
+      kind: ScheduledBackup
+    - group: "infinispan.org"
+      kind: Infinispan
+    - group: "broker.amq.io"
+      kind: ActiveMQArtemis
+    - group: "kafka.strimzi.io"
+      kind: Kafka
+    - group: "kafka.strimzi.io"
+      kind: KafkaNodePool
+    - group: "kafka.strimzi.io"
+      kind: KafkaTopic
+    - group: "kafka.strimzi.io"
+      kind: KafkaUser
+    - group: "console.streamshub.github.com"
+      kind: Console
+    - group: "k8s.keycloak.org"
+      kind: Keycloak
+    - group: "k8s.keycloak.org"
+      kind: KeycloakRealmImport
+    - group: "operators.coreos.com"
+      kind: OperatorGroup
+    - group: "operators.coreos.com"
+      kind: Subscription
   roles:
     - name: sre-prod
       description: "Production SRE access (break-glass only)"

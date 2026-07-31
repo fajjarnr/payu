@@ -17,22 +17,27 @@ spec:
             path: infrastructure/workloads/overlays/payu-dev
             namespace: payu-dev
             project: payu-dev
+            promotionOrder: "0"
           - name: sit
             path: infrastructure/workloads/overlays/payu-sit
             namespace: payu-sit
             project: payu-sit
+            promotionOrder: "1"
           - name: uat
             path: infrastructure/workloads/overlays/payu-uat
             namespace: payu-uat
             project: payu-uat
+            promotionOrder: "2"
           - name: preprod
             path: infrastructure/workloads/overlays/payu-preprod
             namespace: payu-preprod
             project: payu-preprod
+            promotionOrder: "3"
           - name: prod
             path: infrastructure/workloads/overlays/payu-prod
             namespace: payu
             project: payu
+            promotionOrder: "4"
 
   template:
     metadata:
@@ -42,9 +47,9 @@ spec:
         app.kubernetes.io/component: environment
         payu.io/environment: "{{.name}}"
       annotations:
-        argocd-image-updater.argoproj.io/update-strategy: "digest"
-        argocd-image-updater.argoproj.io/write-back-method: "argocd"
-        argocd-image-updater.argoproj.io/write-back-target: "kustomization"
+        payu.io/deployment-stage: workloads
+        payu.io/promotion-order: "{{.promotionOrder}}"
+        payu.io/promotion-mode: manual
     spec:
       project: "{{.project}}"
       source:
@@ -55,10 +60,6 @@ spec:
         namespace: "{{.namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-          allowEmpty: false
         syncOptions:
           - CreateNamespace=true
           - PrunePropagationPolicy=foreground
@@ -77,6 +78,7 @@ spec:
             payu.io/environment: "{{.name}}"
             payu.io/environment-class: stable
             payu.io/managed-by: platform-team
+            payu.fajjjar.my.id/ingress: shared
           annotations:
             argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
       ignoreDifferences:
@@ -186,6 +188,72 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
+  name: payu-environment-platform
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: environment-platform
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - name: sit
+                  namespace: payu-sit
+                  project: payu-sit
+                  promotionOrder: "1"
+                - name: uat
+                  namespace: payu-uat
+                  project: payu-uat
+                  promotionOrder: "2"
+                - name: preprod
+                  namespace: payu-preprod
+                  project: payu-preprod
+                  promotionOrder: "3"
+                - name: prod
+                  namespace: payu
+                  project: payu
+                  promotionOrder: "4"
+          - list:
+              elements:
+                - component: data
+                  path: infrastructure/platform/data
+                - component: messaging
+                  path: infrastructure/platform/messaging
+  template:
+    metadata:
+      name: "{{.component}}-{{.name}}"
+      labels:
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: "{{.component}}"
+        payu.io/environment: "{{.name}}"
+      annotations:
+        payu.io/deployment-stage: platform
+        payu.io/promotion-mode: manual
+        payu.io/promotion-order: "{{.promotionOrder}}"
+    spec:
+      project: "{{.project}}"
+      source:
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{.path}}/overlays/{{.name}}"
+      destination:
+        namespace: "{{.namespace}}"
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
   name: payu-identity
   namespace: openshift-gitops
   labels:
@@ -199,22 +267,27 @@ spec:
             path: infrastructure/platform/identity/overlays/dev
             namespace: payu-dev
             project: payu-dev
+            promotionOrder: "0"
           - name: sit
             path: infrastructure/platform/identity/overlays/sit
             namespace: payu-sit
             project: payu-sit
+            promotionOrder: "1"
           - name: uat
             path: infrastructure/platform/identity/overlays/uat
             namespace: payu-uat
             project: payu-uat
+            promotionOrder: "2"
           - name: preprod
             path: infrastructure/platform/identity/overlays/preprod
             namespace: payu-preprod
             project: payu-preprod
+            promotionOrder: "3"
           - name: prod
             path: infrastructure/platform/identity/overlays/prod
             namespace: payu
             project: payu
+            promotionOrder: "4"
 
   template:
     metadata:
@@ -223,6 +296,10 @@ spec:
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: identity
         payu.io/environment: "{{name}}"
+      annotations:
+        payu.io/deployment-stage: platform
+        payu.io/promotion-mode: manual
+        payu.io/promotion-order: "{{promotionOrder}}"
     spec:
       project: "{{project}}"
       source:
@@ -233,9 +310,6 @@ spec:
         namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
         syncOptions:
           - CreateNamespace=true
           - SkipDryRunOnMissingResource=true

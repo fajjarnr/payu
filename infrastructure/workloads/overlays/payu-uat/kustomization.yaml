@@ -4,6 +4,9 @@ namespace: payu-uat
 resources:
 - namespace.yaml
 - ../../base
+- runtime-secrets.yaml
+components:
+- ../promotion-common
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/account-service
@@ -53,7 +56,59 @@ images:
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/wallet-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/web-app
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/biller-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dukcapil-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/qris-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/lending-rules
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/loan-origination-process
 patches:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service|web-app)$"
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: environment-endpoints
+    spec:
+      template:
+        spec:
+          containers:
+            - name: app
+              env:
+                - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
+                  value: payu-cache.payu-uat.svc.cluster.local
+                - name: OIDC_ISSUER
+                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
+                - name: OIDC_JWK_SET_URI
+                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
+                - name: QUARKUS_OIDC_AUTH_SERVER_URL
+                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
+                - name: QUARKUS_OIDC_TOKEN_ISSUER
+                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
+- target:
+    kind: Route
+    name: web-app
+  patch: |-
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: web-app
+      labels:
+        ingress.payu.io/class: shared
+    spec:
+      host: app-uat.apps.fajjjar.my.id
 - target:
     kind: Deployment
     name: account-service

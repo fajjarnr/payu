@@ -6,6 +6,9 @@ metadata:
   annotations:
     ingress.operator.openshift.io/auto-delete-load-balancer: "true"
 spec:
+  namespaceSelector:
+    matchLabels:
+      payu.fajjjar.my.id/ingress: shared
   clientTLS:
     clientCA:
       name: ""

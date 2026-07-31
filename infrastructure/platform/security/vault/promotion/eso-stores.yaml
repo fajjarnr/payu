@@ -1,0 +1,246 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-eso
+  namespace: payu-sit
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-eso
+  namespace: payu-uat
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-eso
+  namespace: payu-preprod
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-eso
+  namespace: payu
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-payu-vault
+  namespace: external-secrets
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: external-secrets
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-vault
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: payu-vault-eso-token-requester
+  labels:
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    resourceNames:
+      - vault-eso
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-vault-eso-token-requester
+  namespace: payu-sit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: payu-vault-eso-token-requester
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-vault-eso-token-requester
+  namespace: payu-uat
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: payu-vault-eso-token-requester
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-vault-eso-token-requester
+  namespace: payu-preprod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: payu-vault-eso-token-requester
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-vault-eso-token-requester
+  namespace: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: payu-vault-eso-token-requester
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: payu-vault-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: sit
+spec:
+  conditions:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: payu-sit
+  provider:
+    vault:
+      server: https://vault.payu-vault.svc.cluster.local:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: ConfigMap
+        name: vault-service-ca
+        namespace: payu-vault
+        key: service-ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: payu-sit
+          serviceAccountRef:
+            name: vault-eso
+            namespace: payu-sit
+            audiences:
+              - vault
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: payu-vault-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: uat
+spec:
+  conditions:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: payu-uat
+  provider:
+    vault:
+      server: https://vault.payu-vault.svc.cluster.local:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: ConfigMap
+        name: vault-service-ca
+        namespace: payu-vault
+        key: service-ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: payu-uat
+          serviceAccountRef:
+            name: vault-eso
+            namespace: payu-uat
+            audiences:
+              - vault
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: payu-vault-preprod
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: preprod
+spec:
+  conditions:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: payu-preprod
+  provider:
+    vault:
+      server: https://vault.payu-vault.svc.cluster.local:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: ConfigMap
+        name: vault-service-ca
+        namespace: payu-vault
+        key: service-ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: payu-preprod
+          serviceAccountRef:
+            name: vault-eso
+            namespace: payu-preprod
+            audiences:
+              - vault
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: payu-vault-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: prod
+spec:
+  conditions:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: payu
+  provider:
+    vault:
+      server: https://vault.payu-vault.svc.cluster.local:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: ConfigMap
+        name: vault-service-ca
+        namespace: payu-vault
+        key: service-ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: payu-prod
+          serviceAccountRef:
+            name: vault-eso
+            namespace: payu
+            audiences:
+              - vault

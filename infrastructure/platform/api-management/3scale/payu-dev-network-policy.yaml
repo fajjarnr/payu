@@ -1,16 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-3scale-to-dev-db-cache
+  name: allow-3scale-to-dev-postgres
   namespace: payu-dev
 spec:
   podSelector:
-    matchExpressions:
-      - key: app.kubernetes.io/name
-        operator: In
-        values:
-          - payu-postgres
-          - payu-cache
+    matchLabels:
+      app.kubernetes.io/name: payu-postgres
   policyTypes:
     - Ingress
   ingress:
@@ -21,8 +17,6 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
-        - protocol: TCP
-          port: 6379
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

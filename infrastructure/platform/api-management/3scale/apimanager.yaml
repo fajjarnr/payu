@@ -1,16 +1,17 @@
 # 3scale APIManager Custom Resource for PayU
 # Deploys the full 3scale API Management platform on OpenShift via the 3scale Operator.
 #
-# Prerequisites:
+# Development deployment:
 #   - 3scale Operator installed from OperatorHub (threescale-2.16 channel)
 #   - Namespace: payu-api-management
-#   - Secrets: system-seed, system-database, backend-redis, system-redis
+#   - External PostgreSQL and Redis connection secrets
+#   - ODF CephFS for shared System file storage
 #
 # Usage:
 #   oc apply -f apimanager.yaml -n payu-api-management
 #
-# NOTE: This is a TEMPLATE. Replace all <PLACEHOLDER> values before deploying.
-# See README.md for full setup instructions.
+# Production must use dedicated external PostgreSQL/Redis and Vault-managed
+# secrets. See README.md for the production boundary.
 ---
 apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
@@ -27,31 +28,23 @@ spec:
   tenantName: payu
   resourceRequirementsEnabled: true
 
+  # External system PostgreSQL and Redis are mandatory since 3scale 2.16.
+  # Zync remains operator-managed in development.
   externalComponents:
     system:
       database: true
       redis: true
     backend:
       redis: true
-    zync:
-      database: true
 
   system:
     fileStorage:
       persistentVolumeClaim:
-        storageClassName: gp3-csi  # Adjust to your cluster's StorageClass
+        storageClassName: ocs-storagecluster-cephfs
         resources:
           requests: 5Gi
     appSpec:
-      # PRODUCTION: Increase to 2+ replicas for HA
       replicas: 2
-      resources:
-        requests:
-          cpu: 250m
-          memory: 512Mi
-        limits:
-          cpu: "1"
-          memory: 1Gi
     sidekiqSpec:
       replicas: 1
       resources:

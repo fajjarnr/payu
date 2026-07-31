@@ -1,0 +1,9 @@
+- op: replace
+  path: /spec/kafka/listeners
+  value:
+    - name: tls
+      port: 9093
+      type: internal
+      tls: true
+      authentication:
+        type: scram-sha-512

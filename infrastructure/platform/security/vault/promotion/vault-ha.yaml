@@ -1,0 +1,415 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-admin
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault-admin
+    app.kubernetes.io/part-of: payu
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: payu-vault-token-reviewer
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault
+    namespace: payu-vault
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-service-ca
+  namespace: payu-vault
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+data: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-config
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+data:
+  vault.hcl: |
+    ui = false
+    disable_mlock = true
+    log_level = "info"
+    log_format = "json"
+
+    storage "raft" {
+      path = "/vault/data"
+
+      retry_join {
+        leader_api_addr = "https://vault.payu-vault.svc.cluster.local:8200"
+        leader_ca_cert_file = "/vault/ca/service-ca.crt"
+      }
+    }
+
+    seal "awskms" {
+      region = "us-east-1"
+      kms_key_id = "arn:aws:kms:us-east-1:390403884108:key/610f3f85-0e82-4a7a-930b-64d7a3e05af4"
+    }
+
+    listener "tcp" {
+      address = "0.0.0.0:8200"
+      cluster_address = "0.0.0.0:8201"
+      tls_disable = false
+      tls_cert_file = "/vault/tls/tls.crt"
+      tls_key_file = "/vault/tls/tls.key"
+      tls_min_version = "tls13"
+    }
+
+    telemetry {
+      prometheus_retention_time = "30s"
+      disable_hostname = true
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-internal
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: vault
+  ports:
+    - name: https
+      port: 8200
+      targetPort: https
+    - name: cluster
+      port: 8201
+      targetPort: cluster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: payu-vault
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: vault-internal-tls
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: vault
+  ports:
+    - name: https
+      port: 8200
+      targetPort: https
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+    app.kubernetes.io/version: "2.0.3"
+spec:
+  replicas: 3
+  serviceName: vault-internal
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: secrets
+        app.kubernetes.io/version: "2.0.3"
+    spec:
+      serviceAccountName: vault
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: vault
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vault
+          image: docker.io/hashicorp/vault@sha256:db6a5f78749204d0a8d002be1cc6e9a2a6de53dffce41a894c4a06d309dca360
+          imagePullPolicy: IfNotPresent
+          args:
+            - server
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_RAFT_NODE_ID
+              value: $(POD_NAME)
+            - name: VAULT_API_ADDR
+              value: https://vault.payu-vault.svc.cluster.local:8200
+            - name: VAULT_CLUSTER_ADDR
+              value: https://$(POD_NAME).vault-internal.payu-vault.svc.cluster.local:8201
+            - name: VAULT_ADDR
+              value: https://127.0.0.1:8200
+            - name: VAULT_CACERT
+              value: /vault/ca/service-ca.crt
+            - name: SKIP_SETCAP
+              value: "1"
+            - name: SKIP_CHOWN
+              value: "1"
+            - name: HOME
+              value: /tmp
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: vault-aws-config
+                  key: aws-region
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vault-kms-credentials
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vault-kms-credentials
+                  key: aws_secret_access_key
+          ports:
+            - name: https
+              containerPort: 8200
+            - name: cluster
+              containerPort: 8201
+          startupProbe:
+            httpGet:
+              scheme: HTTPS
+              port: https
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              port: https
+              path: /v1/sys/health?standbyok=true&sealedcode=204
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              port: https
+              path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 4
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -ec
+                  - vault operator step-down || true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /vault/data
+            - name: config
+              mountPath: /vault/config
+              readOnly: true
+            - name: tls
+              mountPath: /vault/tls
+              readOnly: true
+            - name: service-ca
+              mountPath: /vault/ca/service-ca.crt
+              subPath: service-ca.crt
+              readOnly: true
+            - name: bootstrap
+              mountPath: /vault/bootstrap
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: vault-config
+        - name: tls
+          secret:
+            secretName: vault-internal-tls
+        - name: service-ca
+          configMap:
+            name: vault-service-ca
+        - name: bootstrap
+          configMap:
+            name: vault-bootstrap-config
+            defaultMode: 0550
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: vault
+          app.kubernetes.io/part-of: payu
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ocs-storagecluster-ceph-rbd
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vault
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vault-default-deny
+  namespace: payu-vault
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vault-allowed-traffic
+  namespace: payu-vault
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+        - protocol: TCP
+          port: 8201
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: external-secrets
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: external-secrets
+      ports:
+        - protocol: TCP
+          port: 8200
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault-snapshot
+      ports:
+        - protocol: TCP
+          port: 8200
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+        - protocol: TCP
+          port: 8201
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+    - to:
+        - ipBlock:
+            cidr: 172.30.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443

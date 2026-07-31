@@ -5,3 +5,4 @@ metadata:
   labels:
     app.kubernetes.io/part-of: payu
     environment: dev
+    payu.fajjjar.my.id/ingress: shared

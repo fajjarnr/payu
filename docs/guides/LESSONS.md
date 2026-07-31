@@ -4132,3 +4132,15 @@ synchronized (lock) {
 **Root cause**: The RHTAS namespace default-deny policy allowed the RHTAS operator, but not the Tekton Chains controller, to reach Rekor on TCP 3000.
 
 **Prevention**: Enable `transparency.enabled` with the internal Rekor Service URL and allow only the `tekton-chains-controller` pod from `openshift-pipelines` to TCP 3000. Completion evidence must include the `chains.tekton.dev/signed=true` annotation, a Rekor entry URL, and an increased Rekor tree size.
+
+### L-132: Direct Execution Requests Are Scoped Approval (2026-07-31)
+
+**Context**: User explicitly requested implementation with cluster-admin access, then rejected a second approval gate.
+
+**Prevention**: Treat an explicit instruction to execute directly as approval for safe, scoped implementation steps. State assumptions briefly, preserve destructive-action safeguards, and ask only when a new decision materially expands scope.
+
+### L-133: Runtime Secrets Must Have an Active Reconciler (2026-07-31)
+
+**Context**: 3scale initially ran from manually created Secrets even though the platform standard requires Vault and External Secrets Operator.
+
+**Prevention**: A Vault-backed design is complete only when the ESO operand, SecretStore, ExternalSecrets, and generated Secret ownership are all live and `Ready=True`. Manifest presence or installed CRDs alone is insufficient.

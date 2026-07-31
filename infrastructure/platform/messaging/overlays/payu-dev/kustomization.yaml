@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../base
+  - external-secret.yaml

@@ -49,16 +49,16 @@ metadata:
   namespace: payu-uat
 spec:
   hard:
-    requests.cpu: "4"
-    requests.memory: 8Gi
-    limits.cpu: "6"
-    limits.memory: 12Gi
-    persistentvolumeclaims: "8"
-    requests.storage: 40Gi
-    pods: "40"
-    services: "15"
-    secrets: "40"
-    configmaps: "40"
+    requests.cpu: "16"
+    requests.memory: 40Gi
+    limits.cpu: "72"
+    limits.memory: 96Gi
+    persistentvolumeclaims: "30"
+    requests.storage: 200Gi
+    pods: "120"
+    services: "60"
+    secrets: "120"
+    configmaps: "120"
 ---
 # --- payu-preprod ---
 apiVersion: v1
@@ -68,16 +68,16 @@ metadata:
   namespace: payu-preprod
 spec:
   hard:
-    requests.cpu: "6"
-    requests.memory: 12Gi
-    limits.cpu: "12"
-    limits.memory: 24Gi
-    persistentvolumeclaims: "12"
-    requests.storage: 80Gi
-    pods: "60"
-    services: "25"
-    secrets: "60"
-    configmaps: "60"
+    requests.cpu: "16"
+    requests.memory: 40Gi
+    limits.cpu: "72"
+    limits.memory: 96Gi
+    persistentvolumeclaims: "30"
+    requests.storage: 200Gi
+    pods: "120"
+    services: "60"
+    secrets: "120"
+    configmaps: "120"
 ---
 # --- payu (production) ---
 apiVersion: v1
@@ -87,13 +87,13 @@ metadata:
   namespace: payu
 spec:
   hard:
-    requests.cpu: "8"
-    requests.memory: 16Gi
-    limits.cpu: "16"
-    limits.memory: 32Gi
-    persistentvolumeclaims: "15"
-    requests.storage: 100Gi
-    pods: "80"
-    services: "30"
-    secrets: "80"
-    configmaps: "80"
+    requests.cpu: "32"
+    requests.memory: 80Gi
+    limits.cpu: "160"
+    limits.memory: 128Gi
+    persistentvolumeclaims: "40"
+    requests.storage: 400Gi
+    pods: "200"
+    services: "100"
+    secrets: "200"
+    configmaps: "200"

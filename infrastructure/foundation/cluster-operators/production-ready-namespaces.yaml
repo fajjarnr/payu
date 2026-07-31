@@ -7,6 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/component: api-management
     payu.io/managed-by: platform-team
+    payu.fajjjar.my.id/ingress: shared
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
 ---

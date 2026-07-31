@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: payu-database-daily
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: payu-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: backup
+spec:
+  schedule: "0 0 1 * * *"
+  backupOwnerReference: cluster
+  cluster:
+    name: payu-database
+  immediate: true
+  method: volumeSnapshot
+  online: true
+  target: prefer-standby

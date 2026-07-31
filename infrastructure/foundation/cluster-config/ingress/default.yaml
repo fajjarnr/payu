@@ -4,6 +4,10 @@ metadata:
   name: default
   namespace: openshift-ingress-operator
 spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: payu.fajjjar.my.id/ingress
+        operator: DoesNotExist
   idleConnectionTerminationPolicy: Deferred
   closedClientConnectionPolicy: Continue
   routeSelector:

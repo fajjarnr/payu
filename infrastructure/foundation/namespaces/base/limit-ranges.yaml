@@ -53,7 +53,7 @@ spec:
         memory: 32Mi
     - type: PersistentVolumeClaim
       max:
-        storage: 10Gi
+        storage: 20Gi
       min:
         storage: 1Gi
 ---
@@ -80,7 +80,7 @@ spec:
         memory: 32Mi
     - type: PersistentVolumeClaim
       max:
-        storage: 10Gi
+        storage: 20Gi
       min:
         storage: 1Gi
 ---

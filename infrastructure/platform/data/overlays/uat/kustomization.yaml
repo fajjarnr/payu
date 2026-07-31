@@ -1,0 +1,107 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: payu-uat
+resources:
+  - ../common
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: promotion-environment
+    literals:
+      - environment=uat
+      - namespace=payu-uat
+      - secretStore=payu-vault-uat
+patches:
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-all-egress
+    patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-all-egress
+      $patch: delete
+replacements:
+  - source:
+      kind: ConfigMap
+      name: promotion-environment
+      fieldPath: data.environment
+    targets:
+      - select:
+          group: external-secrets.io
+          version: v1
+          kind: ExternalSecret
+          labelSelector: payu.io/vault-environment-path=true
+        fieldPaths:
+          - spec.dataFrom.0.extract.key
+        options:
+          delimiter: /
+          index: 1
+  - source:
+      kind: ConfigMap
+      name: promotion-environment
+      fieldPath: data.namespace
+    targets:
+      - select:
+          group: batch
+          version: v1
+          kind: Job
+          name: outbox-bootstrap
+        fieldPaths:
+          - spec.template.spec.containers.[name=psql].env.[name=PGHOST].value
+        options:
+          delimiter: .
+          index: 1
+      - select:
+          group: batch
+          version: v1
+          kind: Job
+          name: shedlock-bootstrap
+        fieldPaths:
+          - spec.template.spec.containers.[name=psql].env.[name=PGHOST].value
+        options:
+          delimiter: .
+          index: 1
+      - select:
+          group: batch
+          version: v1
+          kind: Job
+          name: post-deploy-db-grants
+        fieldPaths:
+          - spec.template.spec.containers.[name=db-grants].env.[name=PGHOST].value
+        options:
+          delimiter: .
+          index: 1
+      - select:
+          group: networking.k8s.io
+          version: v1
+          kind: NetworkPolicy
+          name: allow-payu-namespaces-to-cnpg
+        fieldPaths:
+          - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
+      - select:
+          group: networking.k8s.io
+          version: v1
+          kind: NetworkPolicy
+          labelSelector: payu.io/environment-selector=true
+        fieldPaths:
+          - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
+          - spec.egress.0.to.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
+  - source:
+      kind: ConfigMap
+      name: promotion-environment
+      fieldPath: data.secretStore
+    targets:
+      - select:
+          group: external-secrets.io
+          version: v1
+          kind: ExternalSecret
+          labelSelector: payu.io/vault-environment-path=true
+        fieldPaths:
+          - spec.secretStoreRef.name
+labels:
+  - pairs:
+      environment: uat
+    includeSelectors: false

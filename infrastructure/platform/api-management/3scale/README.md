@@ -1,6 +1,8 @@
-# Red Hat 3scale API Management — PayU Deployment Template
+# Red Hat 3scale API Management — PayU Development Deployment
 
-> **Status**: Template only — deploy when >=5 partners are active (see ADR-0014)
+> **Status**: Deployable development configuration using external PostgreSQL
+> and Redis, mandatory since 3scale 2.16. Production requires HA backing stores
+> and Vault-managed secrets.
 
 ## Overview
 
@@ -40,17 +42,21 @@ Partner Apps
 
 - OpenShift 4.20+ cluster with admin access
 - Red Hat 3scale Operator installed from OperatorHub
-- PostgreSQL (for 3scale system database, can reuse Crunchy Postgres Operator)
-- Redis-native `redis-3scale` (for 3scale backend storage and mesh/Kong rate limiting; do not use Data Grid RESP)
+- External PostgreSQL and Redis
+- ODF CephFS StorageClass `ocs-storagecluster-cephfs`
 - Wildcard DNS configured for developer portal and APIcast routes
+- Shared IngressController for `apps.fajjjar.my.id`
 
 ## Files
 
 | File                  | Description                                          |
 | :-------------------- | :--------------------------------------------------- |
 | `operator-install.yaml` | 3scale Operator install pinned to `threescale-2.16` |
-| `apimanager.yaml`     | 3scale APIManager Custom Resource (Operator-managed) |
-| `secrets-3scale.example.yaml` | Example secret shape only; copy to a private manifest or create secrets via CLI/Vault |
+| `kustomization.yaml` | Deployable 3scale runtime resources |
+| `apimanager.yaml`     | Development APIManager using external PostgreSQL/Redis |
+| `redis.yaml`          | RHEL 9 Redis 7 development backing store |
+| `externalsecrets.yaml` | Vault-backed runtime secrets managed by ESO |
+| `secrets-3scale.example.yaml` | Vault key-shape reference; never apply this file |
 | `apicast-policy.yaml` | Custom APIcast policy for PayU header forwarding     |
 
 ## Installation Steps
@@ -62,48 +68,53 @@ oc apply -f operator-install.yaml
 oc get csv -n payu-api-management | grep 3scale
 ```
 
-### 2. Create Namespace and Secrets
+### 2. Deploy 3scale Platform
+
+Seed these Vault KV-v2 paths before applying the runtime:
+
+- `secret/payu/dev/3scale/system-seed`
+- `secret/payu/dev/3scale/system-events-hook`
+- `secret/payu/dev/3scale/redis-3scale-credentials`
+- `secret/payu/dev/3scale/backend-redis`
+- `secret/payu/dev/3scale/system-redis`
+- `secret/payu/dev/3scale/system-database`
+- `secret/payu/dev/3scale/apicast-payu-env`
+
+The `payu-vault` ClusterSecretStore must report `Ready=True`. Set
+`system-seed.MASTER_DOMAIN` to `master` (a prefix, not a fully qualified
+domain). System file storage uses CephFS because two System replicas require
+shared storage.
 
 ```bash
-# Create namespace
-oc new-project payu-api-management
-
-# Create required secrets (replace placeholders with actual values)
-oc create secret generic system-seed \
-  --from-literal=MASTER_DOMAIN=master.payu-api.example.com \
-  --from-literal=MASTER_USER=admin \
-  --from-literal=MASTER_PASSWORD=<MASTER_PASSWORD> \
-  --from-literal=MASTER_ACCESS_TOKEN=<MASTER_ACCESS_TOKEN> \
-  --from-literal=ADMIN_ACCESS_TOKEN=<ADMIN_ACCESS_TOKEN> \
-  --from-literal=TENANT_NAME=payu \
-  -n payu-api-management
-
-oc create secret generic system-database \
-  --from-literal=URL=postgresql://threescale:<DB_PASSWORD>@crunchy-primary.payu-db.svc:5432/threescale \
-  -n payu-api-management
-
-oc create secret generic backend-redis \
-  --from-literal=REDIS_STORAGE_URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/0 \
-  --from-literal=REDIS_QUEUES_URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/1 \
-  -n payu-api-management
-
-oc create secret generic system-redis \
-  --from-literal=URL=redis://:<REDIS_PASSWORD>@redis-3scale.payu-api-management.svc.cluster.local:6379/2 \
-  -n payu-api-management
+oc get clustersecretstore payu-vault
+oc apply -k .
+oc wait --for=condition=Ready externalsecret --all \
+  -n payu-api-management --timeout=3m
+oc wait --for=condition=Available apimanager/payu-apimanager \
+  -n payu-api-management --timeout=30m
 ```
 
-### 3. Deploy 3scale Platform
+Generated routes use `*.apps.fajjjar.my.id`. The shared IngressController
+admits this domain automatically; no Route-specific ingress annotation is
+required.
 
-Apply only after replacing all secret placeholders and verifying target DB/cache/gateway services exist:
+If Redis was unavailable during initial seeding, restore Redis first, then
+republish the domain events:
 
 ```bash
-oc apply -f system-storage-pvc.yaml
-oc apply -f apicast-policy.yaml
-oc apply -f 3scale-network-policy.yaml
-oc apply -f apimanager.yaml
+oc exec -n payu-api-management deployment/system-sidekiq \
+  -c system-sidekiq -- bundle exec rake zync:resync:domains
 ```
 
-### 5. Configure PayU Gateway as Backend
+### 3. Create Provider Account Secret
+
+Do not commit provider tokens. Create `threescale-provider-account` from Vault
+before applying `payu-capabilities.yaml`. Required keys:
+
+- `adminURL`: `https://payu-admin.apps.fajjjar.my.id`
+- `token`: scoped 3scale provider access token
+
+### 4. Configure PayU Gateway as Backend
 
 In the 3scale Admin Portal:
 
@@ -124,8 +135,14 @@ In the 3scale Admin Portal:
 
 ## Security Notes
 
-- All secrets use `<PLACEHOLDER>` values — replace before deployment
-- mTLS between 3scale APIcast and PayU gateway is enforced via OpenShift Service Mesh
+- Never commit 3scale passwords or provider access tokens
+- Production secrets must come from Vault through External Secrets
+- The in-cluster development Vault uses ephemeral dev-mode storage and is not a
+  promotion target; SIT and above require HA Vault, durable storage, auto-unseal,
+  backup, and environment-isolated paths
+- Production must replace development PostgreSQL/Redis with dedicated HA external services
+- Production must enforce mTLS between APIcast and the PayU gateway through
+  OpenShift Service Mesh; this development overlay uses cluster-internal HTTP
 - API keys are managed by 3scale; HMAC signing keys are managed by PayU gateway
 - Never expose the 3scale Admin Portal externally in production
 

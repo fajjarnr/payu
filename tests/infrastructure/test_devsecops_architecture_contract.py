@@ -539,6 +539,148 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertNotIn("dev-env-secrets.yaml", resources)
         self.assertNotIn("dev-secrets-patch.yaml", resources)
 
+    def test_promoted_workloads_are_environment_isolated(self) -> None:
+        environments = {
+            "payu-sit": "payu-sit",
+            "payu-uat": "payu-uat",
+            "payu-preprod": "payu-preprod",
+            "payu-prod": "payu",
+        }
+        for overlay, namespace in environments.items():
+            with self.subTest(environment=overlay):
+                result = self.render(
+                    f"infrastructure/workloads/overlays/{overlay}"
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertNotIn("payu-dev", result.stdout)
+                documents = [
+                    item
+                    for item in yaml.safe_load_all(result.stdout)
+                    if isinstance(item, dict)
+                ]
+                namespace_document = next(
+                    item for item in documents if item.get("kind") == "Namespace"
+                )
+                self.assertEqual(namespace, namespace_document["metadata"]["name"])
+                static_secrets = [
+                    item["metadata"]["name"]
+                    for item in documents
+                    if item.get("kind") == "Secret"
+                    and (item.get("data") or item.get("stringData"))
+                ]
+                self.assertEqual([], static_secrets)
+
+    def test_production_identity_has_no_test_users_or_inline_credentials(self) -> None:
+        result = self.render("infrastructure/platform/identity/overlays/prod")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("payu-dev", result.stdout)
+        documents = [
+            item
+            for item in yaml.safe_load_all(result.stdout)
+            if isinstance(item, dict)
+        ]
+        realm_import = next(
+            item for item in documents
+            if item.get("kind") == "KeycloakRealmImport"
+        )
+        realm = realm_import["spec"]["realm"]
+        self.assertEqual([], realm.get("users", []))
+        expected_placeholders = {
+            "payu-web-app": "PAYU_WEB_CLIENT_SECRET",
+            "payu-backend": "PAYU_BACKEND_CLIENT_SECRET",
+        }
+        for client in realm.get("clients", []):
+            client_id = client["clientId"]
+            if client_id in expected_placeholders:
+                self.assertEqual(
+                    f"${{{expected_placeholders[client_id]}}}",
+                    client.get("secret"),
+                )
+            else:
+                self.assertNotIn("secret", client)
+        placeholders = realm_import["spec"].get("placeholders", {})
+        for placeholder in expected_placeholders.values():
+            self.assertEqual(
+                "payu-keycloak-client-secrets",
+                placeholders[placeholder]["secret"]["name"],
+            )
+        for external_secret in (
+            item for item in documents
+            if item.get("kind") == "ExternalSecret"
+        ):
+            remote_keys = [
+                entry["remoteRef"]["key"]
+                for entry in external_secret["spec"].get("data", [])
+            ]
+            self.assertTrue(
+                all(key.startswith("payu/prod/") for key in remote_keys),
+                remote_keys,
+            )
+
+    def test_promoted_database_pvc_fits_namespace_limit_range(self) -> None:
+        limits = {
+            item["metadata"]["namespace"]: item
+            for item in load_documents(
+                REPO_ROOT / "infrastructure/foundation/namespaces/base/limit-ranges.yaml"
+            )
+        }
+        for environment, namespace in (
+            ("sit", "payu-sit"),
+            ("uat", "payu-uat"),
+            ("preprod", "payu-preprod"),
+            ("prod", "payu"),
+        ):
+            with self.subTest(environment=environment):
+                result = self.render(
+                    f"infrastructure/platform/data/overlays/{environment}"
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                cluster = next(
+                    item
+                    for item in yaml.safe_load_all(result.stdout)
+                    if isinstance(item, dict)
+                    and item.get("kind") == "Cluster"
+                    and item.get("apiVersion", "").startswith("postgresql.cnpg.io/")
+                )
+                requested = int(cluster["spec"]["storage"]["size"].removesuffix("Gi"))
+                pvc_limit = next(
+                    entry
+                    for entry in limits[namespace]["spec"]["limits"]
+                    if entry["type"] == "PersistentVolumeClaim"
+                )
+                maximum = int(pvc_limit["max"]["storage"].removesuffix("Gi"))
+                self.assertLessEqual(requested, maximum)
+
+    def test_platform_network_policies_allow_kube_api_after_service_dnat(self) -> None:
+        policy_path = (
+            REPO_ROOT
+            / "infrastructure/platform/data/overlays/common/network-policy-egress.yaml"
+        )
+        for policy in load_documents(policy_path):
+            with self.subTest(policy=policy["metadata"]["name"]):
+                self.assertTrue(
+                    any(
+                        rule.get("to") == [{"ipBlock": {"cidr": "10.0.0.0/8"}}]
+                        and {"protocol": "TCP", "port": 6443}
+                        in rule.get("ports", [])
+                        for rule in policy["spec"]["egress"]
+                    )
+                )
+
+    def test_promoted_datagrid_storage_is_not_smaller_than_memory(self) -> None:
+        result = self.render("infrastructure/platform/data/overlays/sit")
+        self.assertEqual(0, result.returncode, result.stderr)
+        datagrid = next(
+            item
+            for item in yaml.safe_load_all(result.stdout)
+            if isinstance(item, dict) and item.get("kind") == "Infinispan"
+        )
+        memory = int(datagrid["spec"]["container"]["memory"].removesuffix("Gi"))
+        storage = int(
+            datagrid["spec"]["service"]["container"]["storage"].removesuffix("Gi")
+        )
+        self.assertGreaterEqual(storage, memory)
+
     def test_security_controls_remain_enforced_during_acs_migration(self) -> None:
         policy_root = REPO_ROOT / "infrastructure/platform/security/kyverno/policies"
         kustomization = load_documents(policy_root / "kustomization.yaml")[0]

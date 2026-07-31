@@ -1,59 +1,114 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: payu-prod
+namespace: payu
 resources:
 - namespace.yaml
 - ../../base
+- runtime-secrets.yaml
+components:
+- ../promotion-common
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/account-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/account-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/analytics-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/analytics-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/api-portal-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/api-portal-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/auth-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/auth-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/backoffice-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/backoffice-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/billing-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/billing-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/cms-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/cms-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/compliance-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/compliance-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/dispute-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/dispute-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/fx-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/fx-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/gateway-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/gateway-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/integration-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/integration-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/investment-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/investment-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/kyc-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/kyc-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/lending-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/lending-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/notification-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/notification-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/partner-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/partner-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/product-catalog-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/product-catalog-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/promotion-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/promotion-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/statement-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/statement-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/support-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/support-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/transaction-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/transaction-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/wallet-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu/wallet-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newName: image-registry.openshift-image-registry.svc:5000/payu-prod/web-app
+  newName: image-registry.openshift-image-registry.svc:5000/payu/web-app
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu/bi-fast-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu/biller-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu/dukcapil-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu/qris-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu/va-simulator
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
+  newName: image-registry.openshift-image-registry.svc:5000/payu/lending-rules
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
+  newName: image-registry.openshift-image-registry.svc:5000/payu/loan-origination-process
 patches:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service|web-app)$"
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: environment-endpoints
+    spec:
+      template:
+        spec:
+          containers:
+            - name: app
+              env:
+                - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
+                  value: payu-cache.payu.svc.cluster.local
+                - name: OIDC_ISSUER
+                  value: https://sso.payu.fajjjar.my.id/realms/payu
+                - name: OIDC_JWK_SET_URI
+                  value: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
+                - name: QUARKUS_OIDC_AUTH_SERVER_URL
+                  value: https://sso.payu.fajjjar.my.id/realms/payu
+                - name: QUARKUS_OIDC_TOKEN_ISSUER
+                  value: https://sso.payu.fajjjar.my.id/realms/payu
+- target:
+    kind: Route
+    name: web-app
+  patch: |-
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: web-app
+      labels:
+        ingress.payu.io/class: shared
+    spec:
+      host: app.apps.fajjjar.my.id
 # Replica count patches (3 replicas for production HA)
 - target:
     kind: Deployment
@@ -177,59 +232,6 @@ patches:
               limits:
                 cpu: 2000m
                 memory: 1536Mi
-# Production OIDC (HTTPS endpoints)
-- target:
-    kind: Deployment
-    labelSelector: app.kubernetes.io/component=backend
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: not-important
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            - name: OIDC_ISSUER
-              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
-            - name: OIDC_JWK_SET_URI
-              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
-            - name: QUARKUS_OIDC_AUTH_SERVER_URL
-              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
-            - name: QUARKUS_OIDC_TOKEN_ISSUER
-              value: "https://sso-payu.apps.payu.ocp.fajjjar.my.id/realms/payu"
-# Production secrets — override hardcoded dev passwords with secretKeyRef
-- target:
-    kind: Deployment
-    labelSelector: app.kubernetes.io/component=backend
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: not-important
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: payu-db-credentials
-                  key: password
-            - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: payu-cache-credentials
-                  key: password
-            - name: ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: payu-secrets
-                  key: ENCRYPTION_KEY
 labels:
 - pairs:
     environment: prod

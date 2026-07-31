@@ -29,6 +29,9 @@ spec:
   replicas: 1
   # OCP auto-generates route host: <svc>-<ns>.apps.<cluster-domain>
   hostname: payu-kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id
+  metricsSources:
+    - name: openshift-monitoring
+      type: openshift-monitoring
   # OIDC auth via Keycloak payu realm. Reuses the existing payu-backend client
   # for now (its redirect-uris may need to be widened to include this console
   # URL via a KeycloakClient CRD or admin API — TODO: create dedicated
@@ -39,11 +42,15 @@ spec:
       authServerUrl: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
       clientId: payu-backend
       clientSecret:
-        value: payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c
+        valueFrom:
+          secretKeyRef:
+            name: payu-kafka-console-oidc
+            key: client-secret
       scopes: "openid profile email"
   kafkaClusters:
     - name: payu-kafka
       namespace: payu-dev
+      metricsSource: openshift-monitoring
       # Strimzi Kafka 4.1's status.listeners is empty (operator doesn't auto-populate
       # the bootstrap URL in this version). Set explicit bootstrap.servers via
       # the properties field so the console can connect.

@@ -91,12 +91,12 @@ stringData:
     end
 
     -- Inject headers after 3scale authentication has resolved the application
-    function _M:rewrite(context)
+    function _M:access(context)
       local service = context.service or {}
       local credentials = context.credentials or {}
 
       -- Extract partner info from 3scale application context
-      local app_id = credentials.app_id or credentials.user_key or 'unknown'
+      local app_id = credentials.app_id or 'unknown'
       local plan_name = service.plan_name or 'default'
 
       -- Generate request ID for end-to-end tracing

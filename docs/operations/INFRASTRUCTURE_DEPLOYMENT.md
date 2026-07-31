@@ -250,13 +250,28 @@ This root intentionally excludes:
 - `3scale/apimanager.yaml`
 - `3scale/payu-capabilities.yaml`
 
-Apply the full APIManager only after external 3scale backing-store, storage, and Vault-managed secrets exist:
+For the development cluster, deploy the runtime after ODF CephFS, shared
+ingress, external PostgreSQL/Redis, and their connection secrets are ready.
+External system PostgreSQL, system Redis, and backend Redis are mandatory
+since 3scale 2.16:
 
 ```bash
-rtk oc get secret system-seed system-database zync apicast-payu-env system-events-hook -n payu-api-management
-rtk oc apply -f infrastructure/platform/api-management/3scale/system-storage-pvc.yaml
-rtk oc apply -f infrastructure/platform/api-management/3scale/apimanager.yaml
+rtk oc get storageclass ocs-storagecluster-cephfs
+rtk oc wait --for=condition=Ready clustersecretstore/payu-vault --timeout=2m
+rtk oc apply -k infrastructure/platform/api-management/3scale
+rtk oc wait --for=condition=Ready externalsecret --all \
+  -n payu-api-management --timeout=3m
+rtk oc wait --for=condition=Available apimanager/payu-apimanager \
+  -n payu-api-management --timeout=30m
+rtk oc get pods,pvc,route -n payu-api-management
 ```
+
+`system-seed.MASTER_DOMAIN` must be the `master` prefix, not an FQDN; 3scale
+appends `spec.wildcardDomain`.
+
+Production remains gated on dedicated external PostgreSQL/Redis and
+Vault-managed secrets. Never reuse application databases or commit provider
+tokens.
 
 ### 8. Deploy Shared Ingress & Cert-Manager TLS (`*.apps.fajjjar.my.id`)
 
