@@ -4248,3 +4248,9 @@ synchronized (lock) {
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
 
 **Fix (dev)**: patch Service selector ke pod label, server PASS samakan dengan secret (`payu-cache-dev-pass`), `PAYU_CACHE_HOTROD_USE_SSL=false` di gateway + auth-service, buat cache `payu` via REST digest (`PUT /rest/v2/caches/payu`). Catatan: perubahan ini live-only; manifest Data Grid dev belum di-repo-kan.
+
+### L-148: Keycloak Realm Drift — Cek `partialImport` Bukan Asumsi (2026-07-31)
+
+**Context**: Login API 500 "invalid_client" padahal `payu-realm.json` punya `payu-backend` client. Setelah admin token valid, query `/admin/realms/payu/clients` menunjukkan realm hanya berisi default clients (account, admin-cli, dsb.) dan `users?username=customer1` kosong — realm live tidak pernah di-import.
+
+**Fix**: `jq -c '{ifResourceExists:"FAIL", clients:.clients, users:.users}' payu-realm.json` → `POST /admin/realms/payu/partialImport` dengan admin token (creds dari secret `payu-keycloak-admin` di `payu-sso`). Verify dengan admin API sebelum test login. Selalu verifikasi state live, bukan asumsi dari file manifest.

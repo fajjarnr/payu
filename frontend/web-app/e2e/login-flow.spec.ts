@@ -238,8 +238,8 @@ test.describe('Login Flow - Success Path', () => {
 
     // Verify we landed on the dashboard
     await expect(page).toHaveURL(/\/dashboard/);
-    // Dashboard should show the main navigation or welcome content
-    await expect(page.getByText('Selamat Datang')).toBeVisible({ timeout: 10000 });
+    // Dashboard should show the main navigation or time-based greeting
+    await expect(page.getByText(/Selamat (Datang|Pagi|Siang|Sore|Malam)/)).toBeVisible({ timeout: 10000 });
   });
 });
 

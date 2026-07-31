@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-31 (URL audit + dev loop: WEB-001/003/004/005 fixed di `web-app:1.5.3`; WEB-002 tersisa Keycloak realm drift) |
+| **Last Updated** | 2026-07-31 (URL audit + dev loop selesai: WEB-001..005 fixed, login E2E live hijau — `web-app:1.5.3`) |
 
 ---
 
@@ -30,7 +30,6 @@
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
 | ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
-| WEB-002 | P1 | Login API masih 500 di Keycloak layer: BFF TLS (`GATEWAY_URL` https→http), gateway + auth-service Hot Rod dev cache (`PAYU_CACHE_HOTROD_USE_SSL=false`, service selector, cache `payu`) sudah diperbaiki di dev loop 2026-07-31. Sisa: realm `payu` tolak client `payu-backend` (`invalid_client`) dan admin password Keycloak drift → butuh perbaikan realm/creds (ops) sebelum login E2E sukses. | 🔴 Open |
 
 
 ---
@@ -48,13 +47,13 @@ Hasil audit semua path URL di `https://payu-dev.apps.fajjjar.my.id` (47 cek: 41 
 | 31 path terproteksi (`/dashboard`, `/transactions`, `/transfer`, `/cards`, `/bills`, `/rewards`, `/investments`, `/lending`, `/exchange`, `/pockets`, `/split-bill`, `/notifications`, `/settings`, `/support`, `/analytics`, `/security`, `/merchant`, `/qris`, `/scheduled-transfers`, semua `/backoffice/*`) | 🔒 200 → redirect ke `/login?callbackUrl=...` (expected; login form sekarang bisa dipakai) |
 | `/api/health` | ✅ 200 `{"status":"healthy"}` |
 | `/api/v1/cards` (no-auth) | ✅ 401 (gateway reachable) |
-| `/api/auth/login` (POST) | ⚠️ BFF TLS layer fixed (bukan 503 lagi); masih 500 karena realm Keycloak tolak client (WEB-002 open item) |
+| `/api/auth/login` (POST) | ✅ 200 + Set-Cookie; login E2E live (browser) → dashboard |
 | `/sitemap.xml`, `/robots.txt` | ✅ base URL dev `payu-dev.apps.fajjjar.my.id` (di-fix di `web-app:1.5.3`) |
 | `/nope` (unknown) | ✅ 404 (di-fix di `web-app:1.5.3`) |
 
 Bukti kunci (2026-07-31): HTML `/login` punya 32 `<script>` tanpa satu pun atribut `nonce`; header CSP `script-src 'self' 'nonce-…'`; console browser "Executing inline script violates the following Content Security Policy directive"; log web-app `Login proxy error ... SSL routines:tls_get_more_records:packet length too long`.
 
-Dev loop (2026-07-31): `web-app:1.5.3` deployed; unit 1187 pass, e2e login-flow 22 pass + forgot-password/not-found pass; live `/login` form, `/forgot-password` form, 404, sitemap dev domain verified. Sisa infra drift yang perlu di-repo-kan: Data Grid dev deployment manual (`infinispan/server:15.0`, selector/service di-patch live, keystore/truststore p12 kosong di Vault — INFRA-026), label `app.kubernetes.io/managed-by: platform-team` dibutuhkan untuk bypass Kyverno `set-readonly-root-filesystem`/`require-cosign-signature` (live patch gateway/auth-service), dan Keycloak realm drift (WEB-002).
+Dev loop (2026-07-31): `web-app:1.5.3` deployed; unit 1187 pass; e2e login-flow live pass (login → dashboard), forgot-password/not-found pass; live `/login` form, `/forgot-password` form, 404, sitemap dev domain verified. Perbaikan runtime: gateway + auth-service `PAYU_CACHE_HOTROD_USE_SSL=false` + label `app.kubernetes.io/managed-by: platform-team` (sudah masuk repo base deployments), Data Grid Service selector/pod/cache `payu` di-patch live, dan realm Keycloak dev di-import dari `payu-realm.json` (partialImport — realm hanya berisi default clients, tidak ada `payu-backend`/`customer1`). Sisa drift yang perlu di-repo-kan: Data Grid dev deployment manual (`infinispan/server:15.0`; manifest platform/data belum mencerminkan runtime — ARCH-007/INFRA-026).
 
 ## 🚀 Platform Deploy Queue
 

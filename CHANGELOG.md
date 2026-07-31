@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `sitemap.xml`/`robots.txt` advertising the production domain in dev (WEB-004): `payu-dev` overlay sets `NEXT_PUBLIC_BASE_URL=https://payu-dev.apps.fajjjar.my.id`.
 - Fixed unknown paths redirecting to login instead of returning 404 (WEB-005): middleware now redirects only known protected route prefixes.
 - Aligned the dev Data Grid runtime with gateway/auth cache clients: cache Service selector now matches the running pod, and gateway + auth-service use plaintext Hot Rod (`PAYU_CACHE_HOTROD_USE_SSL=false`) against the plaintext dev server; `payu` cache created. Dev Keycloak realm client/credential drift remains an open item (see TODOS.md).
+- Restored the dev Keycloak realm clients and users from `payu-realm.json` via `partialImport` (realm only contained default clients; `payu-backend`/`customer1` were missing), unblocking real login E2E: `POST /api/auth/login` returns 200 + session cookies and the browser journey lands on `/dashboard`.
 - Allowed only the Tekton Chains controller to submit signed release records to the internal Rekor API through the RHTAS default-deny network policy.
 - Corrected Java build security gates, OpenShift registry authentication, scanner exceptions, and non-root release execution so the account-service pipeline completes fail closed.
 - Corrected EFS CSI Operator placement so its operand consumes CCO credentials from `openshift-cluster-csi-drivers`.
