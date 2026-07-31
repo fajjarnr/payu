@@ -27,7 +27,12 @@ Hot Rod 16.2.1 native clients, `payu-cache:11222`, dev overlay tanpa `SPRING_MAI
 2026-07-31 22:36:01Z errs=0 backend_ready=23/23
 2026-07-31 22:51:04Z errs=0 backend_ready=23/23
 2026-07-31 23:06:07Z errs=0 backend_ready=22/23   (mid-rollout notification; errs 0)
+2026-07-31 23:21:10Z errs=0 backend_ready=23/23
 ```
+
+> **Gap 2026-07-31 23:35Z**: kredensial cluster (`jay`, token 24h) expire; monitor
+> dihentikan. Checkpoint valid terakhir 23:21Z (≈2j34m dari 24j). Lanjut canary
+> butuh kubeconfig/login baru; checkpoint berikutnya di-resume dari titik ini.
 
 ## Latency sampler (live)
 
