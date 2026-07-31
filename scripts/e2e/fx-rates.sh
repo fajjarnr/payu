@@ -85,22 +85,22 @@ echo
 echo "========== FX Status & Rate Queries =========="
 
 T1=$(run_test "T1: Service status (GET /v1)" \
-    "http://localhost:8080/v1" \
+    "http://localhost:8080/api/v1/fx" \
     -H "Authorization: Bearer $JWT")
 assert_http "T1 status" "200" "$T1"
 
 T2=$(run_test "T2: Get all FX rates (GET /v1/rates)" \
-    "http://localhost:8080/v1/rates" \
+    "http://localhost:8080/api/v1/fx/rates" \
     -H "Authorization: Bearer $JWT")
 assert_http "T2 all rates" "200" "$T2"
 
 T3=$(run_test "T3: Get USD→IDR rate (GET /v1/rates/USD/IDR)" \
-    "http://localhost:8080/v1/rates/USD/IDR" \
+    "http://localhost:8080/api/v1/fx/rates/USD/IDR" \
     -H "Authorization: Bearer $JWT")
 assert_http "T3 USD/IDR" "200" "$T3"
 
 T4=$(run_test "T4: Get EUR→IDR rate (GET /v1/rates/EUR/IDR)" \
-    "http://localhost:8080/v1/rates/EUR/IDR" \
+    "http://localhost:8080/api/v1/fx/rates/EUR/IDR" \
     -H "Authorization: Bearer $JWT")
 assert_http "T4 EUR/IDR" "200" "$T4"
 
@@ -108,16 +108,18 @@ echo
 echo "========== Conversion Estimate (No Money Moved) =========="
 
 T5=$(run_test "T5: Estimate USD→IDR (POST /v1/conversions/estimate)" \
-    -X POST "http://localhost:8080/v1/conversions/estimate" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions/estimate" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
+    -H "X-Idempotency-Key: fx-e2e-est-1" \
     -d '{"fromCurrency":"USD","toCurrency":"IDR","amount":100}')
 assert_http "T5 estimate" "200" "$T5"
 
 T6=$(run_test "T6: Estimate EUR→IDR (POST /v1/conversions/estimate)" \
-    -X POST "http://localhost:8080/v1/conversions/estimate" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions/estimate" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
+    -H "X-Idempotency-Key: fx-e2e-est-2" \
     -d '{"fromCurrency":"EUR","toCurrency":"IDR","amount":50}')
 assert_http "T6 estimate EUR" "200" "$T6"
 
@@ -125,7 +127,7 @@ echo
 echo "========== Real Conversion =========="
 
 T7=$(run_test "T7: Convert USD 10→IDR (POST /v1/conversions)" \
-    -X POST "http://localhost:8080/v1/conversions" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
     -H "X-Idempotency-Key: $(uuidgen)" \
@@ -143,17 +145,17 @@ echo "$CONV_ID" > /tmp/conv_id.txt
 
 sleep 1
 T8=$(run_test "T8: Read conversion (GET /v1/conversions/{id})" \
-    "http://localhost:8080/v1/conversions/${CONV_ID}" \
+    "http://localhost:8080/api/v1/fx/conversions/${CONV_ID}" \
     -H "Authorization: Bearer $JWT")
 assert_http "T8 read conversion" "200" "$T8"
 
 T9=$(run_test "T9: List conversions (GET /v1/conversions)" \
-    "http://localhost:8080/v1/conversions" \
+    "http://localhost:8080/api/v1/fx/conversions" \
     -H "Authorization: Bearer $JWT")
 assert_http "T9 list conversions" "200" "$T9"
 
 T10=$(run_test "T10: Reverse conversion (POST /v1/conversions/{id}/reverse)" \
-    -X POST "http://localhost:8080/v1/conversions/${CONV_ID}/reverse" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions/${CONV_ID}/reverse" \
     -H "Authorization: Bearer $JWT" \
     -H "X-Idempotency-Key: $(uuidgen)")
 assert_http "T10 reverse" "200" "$T10"
@@ -162,18 +164,18 @@ echo
 echo "========== Error Flows =========="
 
 T11=$(run_test "T11: Nonexistent rate pair (GET /v1/rates/XXX/YYY)" \
-    "http://localhost:8080/v1/rates/XXX/YYY" \
+    "http://localhost:8080/api/v1/fx/rates/XXX/YYY" \
     -H "Authorization: Bearer $JWT")
 assert_http "T11 bad pair" "404" "$T11"
 
 T12=$(run_test "T12: No JWT (POST /v1/conversions/estimate)" \
-    -X POST "http://localhost:8080/v1/conversions/estimate" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions/estimate" \
     -H "Content-Type: application/json" \
     -d '{"fromCurrency":"USD","toCurrency":"IDR","amount":100}')
 assert_http "T12 no JWT" "401" "$T12"
 
 T13=$(run_test "T13: Missing idempotency key (POST /v1/conversions)" \
-    -X POST "http://localhost:8080/v1/conversions" \
+    -X POST "http://localhost:8080/api/v1/fx/conversions" \
     -H "Authorization: Bearer $JWT" \
     -H "Content-Type: application/json" \
     -d '{"fromCurrency":"USD","toCurrency":"IDR","amount":1}')
