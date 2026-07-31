@@ -37,7 +37,7 @@ refresh_jwt() {
     fi
     local result
     result=$(curl -skS -X POST \
-        "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \

@@ -4,7 +4,7 @@
 set -e
 FAILED=0; POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
 CS=$(tr -d '[:space:]' < /tmp/client-secret.txt)
-JWT=$(curl -skS -X POST "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+JWT=$(curl -skS -X POST "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data-urlencode "client_id=payu-backend" --data-urlencode "client_secret=$CS" \
   --data-urlencode "grant_type=password" --data-urlencode "username=customer1" \

@@ -45,7 +45,7 @@ done
 
 ```bash
 ADMIN_TOKEN=$(curl -skS -X POST \
-  "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/master/protocol/openid-connect/token" \
+  "https://sso-dev.apps.fajjjar.my.id/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=admin-cli" \
   -d "grant_type=password" \
@@ -59,7 +59,7 @@ echo "$ADMIN_TOKEN" > /tmp/admin-master-jwt.txt
 
 ```bash
 CLIENT_SECRET=$(curl -skS \
-  "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/admin/realms/payu/clients/42e4097d-fad7-4a98-9562-6880fbc49da7/client-secret" \
+  "https://sso-dev.apps.fajjjar.my.id/admin/realms/payu/clients/42e4097d-fad7-4a98-9562-6880fbc49da7/client-secret" \
   -H "Authorization: Bearer $(cat /tmp/admin-master-jwt.txt)" | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
 
 echo "$CLIENT_SECRET" > /tmp/client-secret.txt
@@ -69,7 +69,7 @@ echo "$CLIENT_SECRET" > /tmp/client-secret.txt
 
 ```bash
 curl -skS -X POST \
-  "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+  "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=payu-backend" \
   -d "client_secret=$(cat /tmp/client-secret.txt)" \

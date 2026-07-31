@@ -23,7 +23,7 @@ refresh_jwt() {
     [ -z "$client_secret" ] && { echo "ERROR: /tmp/client-secret.txt not found" >&2; exit 1; }
     local token
     token=$(curl -skS -X POST \
-        "https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
