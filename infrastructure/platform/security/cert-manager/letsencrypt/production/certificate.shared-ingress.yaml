@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: shared-ingress-cert
+  namespace: openshift-ingress
+spec:
+  secretName: shared-ingress-cert
+  duration: 720h # 30d
+  renewBefore: 168h # 7d
+  privateKey:
+    rotationPolicy: Never
+  dnsNames:
+    - "apps.fajjjar.my.id"
+    - "*.apps.fajjjar.my.id"
+  issuerRef:
+    name: letsencrypt-prod-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

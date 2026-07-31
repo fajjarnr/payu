@@ -21,4 +21,6 @@ spec:
               name: cert-manager-aws-creds
         selector:
           dnsZones:
+            - 'fajjjar.my.id'
+            - 'apps.fajjjar.my.id'
             - 'ocp.fajjjar.my.id'

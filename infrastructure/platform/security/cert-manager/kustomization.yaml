@@ -19,3 +19,4 @@ resources:
   - letsencrypt/production/cluster-issuer.yaml
   - letsencrypt/production/certificate.apps.yaml
   - letsencrypt/production/certificate.api.yaml
+  - letsencrypt/production/certificate.shared-ingress.yaml
