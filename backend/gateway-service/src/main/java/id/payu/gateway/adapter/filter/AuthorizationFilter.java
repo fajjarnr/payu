@@ -72,7 +72,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/wallets/public/health",
         "/api/v1/transactions/public/health",
         "/api/v1/billing/public/health",
-        "/api/v1/notification/public/health"
+        "/api/v1/notification/public/health",
+        "/api/v1/simulator/dukcapil/verify"  // Internal account-service -> Dukcapil simulator path
     };
 
     // Exact match public endpoints (must match exactly)

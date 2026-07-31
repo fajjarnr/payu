@@ -4336,6 +4336,19 @@ synchronized (lock) {
 
 **Prevention**: Sebelum debug "connection refused" ke service headless, cek EndpointSlice/selector vs label pod nyata; operator-managed service jangan di-merge-patch (kelebihan key) — pakai replace; workload operator tanpa managed-by rawan kena policy mutation — audit label semua sts/deploy saat menambah policy Enforce.
 
+### L-155: NIK Verify Chain — Scope JWT, TimeLimiter Sync, dan Simulator Route/URL (2026-07-31)
+
+**Context**: `verify-nik-cache.sh` gagal beruntun: 403 scope, lalu CB open, lalu 401, lalu 503.
+
+**Findings**:
+- `@PreAuthorize("SCOPE_account:verify")` butuh scope di token; Keycloak client `payu-backend` tak punya client-scope `account:verify` (search `account:verify` malah menemukan `service_account`). Fix: buat client-scope `account:verify` (`include.in.token.scope: true`) + assign ke default-client-scopes client.
+- `@TimeLimiter` pada method adapter yang return sync (`VerifyNikResponse`) tidak didukung resilience4j → "has unsupported return type" → CB `dukcapilService` buka. Fix: hapus `@TimeLimiter` dari adapter (service level sudah async+TimeLimiter).
+- Gateway tak punya route `/api/v1/simulator/dukcapil/*` dan path itu tak ada di PUBLIC_ENDPOINTS → 401. Fix: route key `"simulator/dukcapil"` target `/api/v1` → `dukcapil-simulator`; public endpoint eksak.
+- Gateway simulator URL default `localhost:9091` (tidak ada listener) → 503. Fix: env `DUKCAPIL_SIMULATOR_URL=http://dukcapil-simulator:8080` (juga BIFAST/QRIS) di base kustomization.
+- Round-trip akhir: T1/T2 200, T2 respon asli Dukcapil (`DUK-…`, `status: VALID`, name mismatch = perilaku benar, tanpa ClassCastException).
+
+**Prevention**: Endpoint dengan `@PreAuthorize` scope → verifikasi scope di token nyata (bukan asumsi); resilience4j TimeLimiter hanya untuk async return; setiap proxy internal butuh route + public-path + URL env yang valid; verifikasi nama service + port simulator sebelum debug 503.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.

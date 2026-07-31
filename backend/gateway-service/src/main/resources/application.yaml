@@ -567,6 +567,10 @@ gateway:
       service: "cms-service"
       target-prefix: "/api/v1/public/contents"
       methods: ["GET"]
+    "simulator/dukcapil":
+      service: "dukcapil-simulator"
+      target-prefix: "/api/v1"
+      methods: ["POST"]
     statements:
       service: "statement-service"
       target-prefix: "/api/v1/statements"

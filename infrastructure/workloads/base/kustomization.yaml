@@ -115,6 +115,12 @@ patches:
                         key: keystore-password
                   - name: WALLET_GRPC_ADDRESS
                     value: static://wallet-service:9090
+                  - name: DUKCAPIL_SIMULATOR_URL
+                    value: http://dukcapil-simulator:8080
+                  - name: BIFAST_SIMULATOR_URL
+                    value: http://bi-fast-simulator:8080
+                  - name: QRIS_SIMULATOR_URL
+                    value: http://qris-simulator:8080
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
                     value: payu-cache.payu-dev.svc.cluster.local
                   - name: PAYU_CACHE_REDIS_HOST

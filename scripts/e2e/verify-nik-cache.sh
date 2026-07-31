@@ -15,6 +15,7 @@ set -e
 
 GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
 ACCOUNT_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=account-service -o jsonpath='{.items[0].metadata.name}')
+TMPFILE=/tmp/r.json.host
 JWT=$(oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/cust1-jwt.txt 2>/dev/null)
 [ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
 
@@ -34,8 +35,9 @@ run_test() {
         -H "Authorization: Bearer $JWT" \
         -H "Content-Type: application/json" \
         -d "{\"nik\":\"$NIK\",\"fullName\":\"E2E Test\",\"birthPlace\":\"Jakarta\",\"birthDate\":\"1990-01-15\"}" 2>&1)
+    oc exec -n payu-dev "$ACCOUNT_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     local body
-    body=$(cat /tmp/r.json 2>/dev/null | head -c 400)
+    body=$(head -c 400 "$TMPFILE" 2>/dev/null)
     printf "\n=== %s ===\n%s\nBODY: %s\n" "$label" "$out" "$body"
 }
 

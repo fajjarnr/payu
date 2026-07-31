@@ -7,7 +7,6 @@ import id.payu.account.dto.VerifyNikResponse;
 import id.payu.account.exception.AccountDomainException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -52,7 +51,6 @@ public class KycVerificationAdapter implements KycVerificationPort {
     @Override
     @CircuitBreaker(name = "dukcapilService", fallbackMethod = "verifyNikFallback")
     @Retry(name = "dukcapilService")
-    @TimeLimiter(name = "dukcapilService")
     @Cacheable(value = "nikVerification", key = "#request.nik()", unless = "#result == null")
     public VerifyNikResponse verifyNik(VerifyNikRequest request) {
         String requestId = UUID.randomUUID().toString();
