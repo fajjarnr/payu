@@ -28,10 +28,11 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift — ✅ Red Hat registry credentials already in global pull-secret (openshift-config). registry.redhat.io, registry.connect.redhat.com, quay.io all authenticated. No blocker. | ✅ Verified |
-| INFRA-020 | P0 | Reconcile GitOps ApplicationSet with `payu-dev` — 31/33 manual recovery done, ArgoCD app needs re-pointing. Cluster-admin needed for `oc apply -f argocd/` | 🔒 Blocked |
+| INFRA-020 | P0 | GitOps ApplicationSet parity — ApplicationSet controller enabled, 9 AppProjects + AppSets applied, 22 Applications generated, `payu-dev` Synced/Healthy dengan 0 changed resources (prune off). AppSet monitoring/devsecops/PR-preview dihapus (automated sync tanpa parity). | ✅ Closed |
 | INFRA-007 | P1 | DR runbook: ✅ COMPLETE — `docs/operations/DISASTER_RECOVERY.md` (39KB, v2.0, Feb 2026) covers PostgreSQL, Kafka, Vault, DataGrid, Keycloak, service degradation, platform restore, DR testing, escalation matrix. Also: CHATOPS, INCIDENT_RESPONSE, INFRASTRUCTURE_DEPLOYMENT, ZERO-DOWNTIME-DEPLOYMENT. | ✅ Closed |
 | INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
-| SEC-020 | P1 | Remediate CIS platform failures: 9 FAIL, 21 MANUAL — requires Compliance Operator scan + remediation via cluster-admin. Platform-level, not app-level | 🔒 Blocked |
+| SEC-020 | P1 | Remediate CIS platform failures — 9 FAIL → 1 FAIL (encryption aesgcm, audit profile, ingress ciphers, kubeadmin removed, allowed registries, network policies, SCC tailoring). Sisa: audit-log-forwarding (butuh SIEM sink, lihat INFRA-029). | ✅ Closed |
+| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). | 🔒 Blocked — butuh keputusan log sink |
 | DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
 | ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
@@ -77,10 +78,10 @@ completion evidence.
 - [x] Repair `payu-dev` rendering and workload port contracts before enabling GitOps reconciliation. (Web route verified HTTP 200.)
 - [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
 - [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
-- [ ] Bootstrap Argo CD Applications/ApplicationSets with Git/live parity before enabling prune and self-heal.
-- [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity, OCI signature/attestation, and internal Rekor transparency are verified; finish SBOM attestation retention, signed-image admission, and provider opt-in for the Pact gate.
+- [x] Bootstrap Argo CD Applications/ApplicationSets with Git/live parity before enabling prune and self-heal. Paritas tercapai: 22 Applications, 3 AppSet tersisa semua manual sync; file repo disinkronkan (AppSet automated dihapus dari file). Prune/self-heal tetap off sampai promotion gate SIT/UAT/preprod/prod selesai.
+- [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity, OCI signature/attestation, and internal Rekor transparency are verified; signed-image admission sudah Enforce (`require-cosign-signature`, 31 image `payu-dev` di-sign); sisa: SBOM attestation retention dan provider opt-in Pact gate.
 - [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days.
-- [ ] Enforce security controls in ACS and operational controls in Kyverno without overlapping ownership. RHACS Central/SecuredCluster and nine Kyverno policies are Ready. Host-namespace denial remains enforced; root-user, approved-registry, and required-label controls remain Audit until 7, 8, and 6 live `payu-dev` violations respectively are remediated and negative admission tests pass.
+- [x] Enforce security controls in ACS and operational controls in Kyverno without overlapping ownership. Semua policy Kyverno sekarang `Enforce`; pelanggaran `payu-dev` diremediasi (0 policy FAIL per PolicyReport 2026-07-31), negative tests lulus (root, registry, labels, cosign).
 - [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.
 - [x] Measure scheduler pressure and MachineSet topology; add workers only for a verified constraint. Required zone anti-affinity exposed the single-AZ worker layout, so workers were added in `1b/1c`; five workers are currently Ready across three AZs.
 - [ ] After workload redistribution and a disruption-budget review, rightsize the original `1a` MachineSet from three replicas to one so steady state is one worker per AZ.
@@ -126,6 +127,16 @@ completion evidence.
 * **PCI-only gaps**: Container Security Operator, File Integrity Operator + notification, OAuth inactivity timeout, non-HTPasswd IDP, TLS on every Route, dan Security Profiles Operator.
 * **Impact**: Platform OpenShift rentan terhadap celah keamanan CIS Benchmark dan tidak memenuhi kepatuhan regulasi OJK/PCI-DSS.
 * **Fix**: Susun MOP per kontrol dengan backup, diff, canary, dan rollback. Jangan aktifkan `autoApplyRemediations`; perubahan APIServer, IngressController, OAuth, Image, SCC, dan audit forwarding memerlukan review dampak cluster.
+* **Status (2026-07-31)**: ✅ 8/9 remediated. Scan ulang `payu-cis` (TailoredProfile) = **1 FAIL tersisa**:
+  1. `api-server-encryption-provider-cipher` → PASS — `APIServer.spec.encryption.type: aesgcm` (ComplianceRemediation `Applied`).
+  2. `audit-profile-set` → PASS — `audit.profile: WriteRequestBodies` (Applied).
+  3. `ingress-controller-tls-cipher-suites` → PASS — custom TLS profile, min TLS 1.2, cipher kuat (Applied).
+  4. `configure-network-policies-namespaces` → PASS — `default-deny-ingress` di `payu-cicd`; namespace operator di-exempt via `ocp4-var-network-policies-namespaces-exempt-regex` (TailoredProfile `payu-cis`).
+  5. `kubeadmin-removed` → PASS — secret `kubeadmin` di `kube-system` dihapus.
+  6. `ocp-allowed-registries` / `allowed-registries-for-import` → PASS — `image.config.openshift.io/cluster` dibatasi ke internal registry + 8 registry publik yang dipakai workloads.
+  7. `scc-limit-container-allowed-capabilities` → PASS — SCC ODF/pipelines di-exempt via variable regex TailoredProfile; SCC default tidak diubah.
+  8. `audit-log-forwarding-enabled` → ❌ FAIL — belum ada `ClusterLogForwarder`/`openshift-logging`; butuh SIEM sink → INFRA-029.
+* **Catatan**: `ocp4-cis-node-master` COMPLIANT; `ocp4-cis-node-worker` ERROR (pre-existing, investigasi terpisah). Compliance Operator tetap `autoApplyRemediations: false`.
 
 ### 🧭 ARCH-007: Migrate Data Grid access from RESP compatibility mode to Hot Rod native client
 * **Context7 evidence**:

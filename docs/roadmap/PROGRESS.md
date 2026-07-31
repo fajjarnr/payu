@@ -10,7 +10,7 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 33/33 deployments Ready               | `payu-dev` workloads manually recovered and verified. GitOps ApplicationSet reconciliation remains open. |
+| Services Deployed        | 🟢 35/35 deployments Ready               | `payu-dev` workloads recovered + GitOps ApplicationSet parity tercapai (22 Applications, Synced/Healthy, 0 changed). |
 | Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
 | OpenShift Cluster        | 🟢 Active, multi-AZ workers               | OCP 4.20.29, 8 nodes Ready (3 control-plane + 5 worker); workers span `ap-southeast-1a/b/c`. |
 | Operators Installed      | 🟢 Core platform ready                    | GitOps 1.21.1, Pipelines 1.23.0, RHACS 4.11.1, RHTAS 1.4.2, AWS EFS CSI 4.20, External Secrets 1.2.0, Compliance 1.9.1, Service Mesh 3.4.0, CNPG 1.30.0. |
@@ -20,7 +20,7 @@
 | Cache                    | 🟢 Hot Rod/mTLS healthy                  | JVM workloads use Data Grid Hot Rod; Redis-native rate limiting remains on redis-3scale. |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
-| **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno, Compliance, fail-closed Tekton with Rekor transparency, EFS, and OpenCost are live. Vault, durable Loki/Results, SIEM, DR, and compliance remediations remain gated. |
+| **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno (Enforce, 0 violations), Compliance (CIS 8/9), signed-image admission, EFS, OpenCost live. Vault, durable Loki/Results, SIEM (audit forwarding), DR remain gated. |
 | Last Status Update       | 2026-07-31                               | VSO secret migration rolled out SIT→UAT→preprod→prod; dev ESO restored. |
 
 > ✅ **2026-07-31 — Vault Secrets Operator migration completed across promotion environments**:
@@ -28,6 +28,13 @@
 > - Live verification: 60/60 `VaultStaticSecret` Ready (`SecretSynced=True`, 15 per env), `VaultConnection`+`VaultAuth` Ready in all four namespaces, Vault kubernetes roles bound to `vault-secrets-operator`.
 > - Dev recovery: dev Vault (inmem) restart wiped KV and broke 8 External Secrets; paths repopulated from surviving Secrets and all 8 synced (`0` ExternalSecret errors cluster-wide).
 > - SIT platform pods `payu-cache-config-listener` and `payu-kafka-console` remain in `CrashLoopBackOff` (pre-existing, unrelated to secrets); SIT/UAT/preprod/prod workload overlays are not deployed yet (DEPLOY-011 gate).
+
+> ✅ **2026-07-31 — GitOps parity, Kyverno Enforce, signed-image admission, CIS remediation**:
+> - GitOps: ApplicationSet controller diaktifkan (`applicationSet: {}`, kustomize `--enable-helm`), 9 AppProjects + 3 AppSet (environments/environment-platform/identity) applied; 22 Applications generated; `payu-dev` dry-run + real sync `Synced/Healthy` dengan 0 changed resources. AppSet `payu-monitoring`/`payu-devsecops-platform`/`payu-pr-previews` dihapus (automated sync tanpa parity) dan dihapus juga dari file repo.
+> - Kyverno 3.8.2 (v1.18.2): semua policy jadi `Enforce`; eksklusi operator-managed ditambahkan; `payu-dev` 0 policy FAIL (PolicyReport); negative tests (root user, registry tak disetujui, label kurang) lulus. Vault + simulator workloads di-hardening (`runAsNonRoot`, labels, emptyDir) tanpa `runAsUser` fixed (SCC restricted range).
+> - Signed-image admission: cosign keypair (Vault backup), 31 image `payu-dev` di-sign via internal registry; policy `require-cosign-signature` Enforce dengan `keys.publicKeys`, `ignoreTlog/ignoreSCT`, `imageRegistryCredentials` (registry-credentials), CA trust via `kyverno-certs` + `config-trusted-cabundle`. Positive (signed) lulus, negative (unsigned) ditolak.
+> - CIS (SEC-020): 9 FAIL → 1 FAIL. Remediasi: APIServer encryption `aesgcm`, audit profile `WriteRequestBodies`, ingress TLS ciphers, `kubeadmin` dihapus, allowed registries (internal + 8 publik), NetworkPolicy `payu-cicd`, TailoredProfile `payu-cis` (exempt SCC ODF/pipelines + operator namespaces). Sisa: `audit-log-forwarding-enabled` (butuh SIEM sink → INFRA-029).
+> - Catatan: `ocp4-cis-node-worker` scan ERROR pre-existing; Compliance `autoApplyRemediations: false`.
 
 > ✅ **2026-07-22 — `payu-dev` cache and workload recovery completed**:
 > - The active Data Grid server reports Infinispan 16.0.14.redhat; the custom XML schema now matches 16.0. Zero-byte TLS key/certificate data was replaced with valid dev mTLS Secret material, and the `payu-cache` CR reached `WellFormed=True`.

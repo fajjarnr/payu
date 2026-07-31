@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a production RHTAS 1.4 stack with HA CloudNativePG, Redis/Sentinel, Trillian, Rekor, Fulcio, CTLog, TUF, TSA, and strict namespace network policies.
 - Added dedicated KMS-encrypted and versioned S3 buckets for RHTAS, PostgreSQL backups, and Loki, plus encrypted multi-AZ EFS storage and a retained RWX TUF claim.
 - Added multi-AZ worker MachineSets for `ap-southeast-1b` and `1c`, the supported AWS EFS CSI Operator placement, External Secrets operand configuration, and Barman Cloud 0.13.
+- Added signed-image admission with Cosign: 31 `payu-dev` images signed, `require-cosign-signature` ClusterPolicy in `Enforce` (public key, `ignoreTlog`/`ignoreSCT`, registry credentials, internal CA trust mounts).
+- Added GitOps ApplicationSet parity: ApplicationSet controller, 9 AppProjects, 3 AppSets (environments/environment-platform/identity), 22 generated Applications, `payu-dev` Synced/Healthy with zero changed resources.
+- Added Kyverno CA trust (`kyverno-certs` + `config-trusted-cabundle` mounts), registry pull SA/secret for image verification, and CIS TailoredProfile `payu-cis` with operator-managed exemptions plus `default-deny-ingress` NetworkPolicy in `payu-cicd`.
 
 ### Changed
 
@@ -28,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Applied the Hot Rod/mTLS contract to every JVM workload overlay and removed rendered RESP environment variables from dev, SIT, UAT, preprod, and prod.
 - Moved mesh, Kong, and 3scale rate-limit configuration from Data Grid RESP to the dedicated `redis-3scale` service; removed inline mesh TLS Secret placeholders.
 - Migrated platform and workload secret delivery from External Secrets to the Vault Secrets Operator for SIT/UAT/preprod/prod with env-scoped KV paths, per-environment Kubernetes auth, and removed Git-tracked `runtime-secrets.yaml`.
+- Switched all Kyverno policies to `Enforce` (root user, approved registry, labels, cosign) with operator-managed exclusions; `payu-dev` policy reports now show 0 failures and negative admission tests pass.
+- Hardened vault/simulator workloads (`runAsNonRoot`, labels, emptyDir `/tmp`) without fixed UIDs (SCC restricted range); upgraded Kyverno to 3.8.2 (v1.18.2).
+- Remediated CIS platform controls: APIServer etcd encryption `aesgcm`, audit profile `WriteRequestBodies`, hardened Ingress TLS ciphers (min TLS 1.2), `image.config` `allowedRegistries`/`allowedRegistriesForImport` (internal + 8 approved public registries).
+- Replaced `openshift-compliance` ScanSetting/Binding manifests to match the flat CRD schema and reference the tailored profile (weekly schedule, `autoApplyRemediations: false`).
+
+### Removed
+
+- Deleted the `kubeadmin` bootstrap secret from `kube-system` (CIS `kubeadmin-removed`).
+- Removed automated ArgoCD AppSets `payu-monitoring`, `payu-devsecops-platform`, and `payu-pr-previews` (live and from repo) until they reach Git/live parity.
+- Removed the legacy `cis-scan.yaml` manifest that targeted the wrong namespace.
 
 ### Fixed
 

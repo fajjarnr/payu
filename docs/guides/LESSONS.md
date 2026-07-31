@@ -4172,3 +4172,41 @@ synchronized (lock) {
 **Context**: After a transient Vault HA failover, VaultStaticSecrets showed `Healthy/Ready=True` but `SecretSynced=False` with a stale failover error, and `refreshTime` never advanced.
 
 **Prevention**: Treat each VaultStaticSecret condition independently; gate on `SecretSynced=True`. If Ready is healthy but sync is stuck, bump `spec.refreshAfter` (or any spec change) to force an immediate reconcile instead of waiting on backoff, and confirm the Vault data path exists before changing CRDs.
+
+### L-138: Kyverno Helm Upgrade Fails on PolicyReport `storedVersions` (2026-07-31)
+
+**Context**: `helm upgrade kyverno` failed with `status.storedVersions[1]: Invalid value: "v1beta1": missing from spec.versions` on `policyreports.wgpolicyk8s.io`.
+
+**Root cause**: Chart 3.8.2 CRD serves only `v1alpha2` while the live CRD's status still listed `v1beta1` from a previous version.
+
+**Prevention**: Clear the stale storage version first: `oc patch crd policyreports.wgpolicyk8s.io --subresource=status --type=merge -p '{"status":{"storedVersions":["v1alpha2"]}}'`. Never set `crds.install=false` (uninstall-adjacent behavior deletes CRDs) and keep `crds.migration.enabled: false`.
+
+### L-139: Kyverno verifyImages Needs Policy-Level Registry Credentials on OpenShift (2026-07-31)
+
+**Context**: Cosign verifyImages failed with `UNAUTHORIZED: authentication required` even with `--imagePullSecrets` set.
+
+**Root cause**: OpenShift injects `default-dockercfg-*` into every pod's `imagePullSecrets`. Kyverno's secret lister only watches the kyverno namespace, so the workload-namespace secret is "not found" and the keychain falls back to anonymous — the global `--imagePullSecrets` client is bypassed because the resource has non-empty imagePullSecrets.
+
+**Prevention**: Declare credentials in the policy: `verifyImages[].imageRegistryCredentials.secrets: [<secret-in-kyverno-ns>]`, and grant that SA `system:image-puller` on target namespaces. Secret must live in the kyverno namespace.
+
+### L-140: Kyverno Cosign Verify + Custom CA: Mount Both Service CA and Cluster Trust Bundle (2026-07-31)
+
+**Context**: Internal registry TLS failed (`x509: certificate signed by unknown authority`), then S3 storage URL failed the same way after registry auth was fixed.
+
+**Root cause**: Go's system pool reads multiple paths — `/etc/ssl/certs/ca-certificates.crt` and `/etc/pki/tls/certs/ca-bundle.crt`. The image-registry service cert needs the service CA; the S3 egress endpoint needs the cluster trusted CA bundle (proxy).
+
+**Prevention**: Mount `kyverno-certs` (`service.beta.openshift.io/inject-cabundle: "true"`) at `/etc/ssl/certs/ca-certificates.crt` and the existing `config-trusted-cabundle` ConfigMap at `/etc/pki/tls/certs/ca-bundle.crt` via `extraVolumes`/`extraVolumeMounts`. Avoid baking CA bytes into repo — use operator-injected ConfigMaps. For local key signing (no Rekor), also set `rekor.ignoreTlog: true` and `ctlog.ignoreSCT: true` so Kyverno skips sigstore TUF network calls; `mutateDigest: true` with `verifyDigest: true` for immutable refs.
+
+### L-141: Compliance Operator CRDs Are Flat — No `spec` Wrapper (2026-07-31)
+
+**Context**: `ScanSetting`/`ScanSettingBinding` manifests wrapped fields in `spec:` were silently pruned by the API server (`roles`, `schedule` vanished; node scans never created).
+
+**Root cause**: compliance-operator 1.9 CRDs store fields at the top level (`roles`, `schedule`, `profiles`, `settingsRef`, …); `spec` is not in the ScanSetting schema and unknown fields are pruned, not rejected.
+
+**Prevention**: Inspect the live CRD (`oc get crd scansettings.compliance.openshift.io -o json | jq '.spec.versions[0].schema.openAPIV3Schema.properties | keys'`) before writing manifests; verify with `oc get -o json | jq '.roles'` after apply. In `ScanSettingBinding`, reference a tailored profile with `kind: TailoredProfile` (not `Profile`), or the controller errors `NamedObjectReference ... not found`.
+
+### L-142: CIS Remediation Choices — Remediation vs TailoredProfile (2026-07-31)
+
+**Context**: 9 CIS FAILs: 3 had operator remediations (`ComplianceRemediation.spec.apply: true`), 6 needed manual changes.
+
+**Prevention**: Prefer operator remediation for APIServer/Ingress; delete `kubeadmin` secret only after an OAuth admin exists; set `allowedRegistries` only after inventorying every registry actually used by workloads (missing one blocks pulls cluster-wide); exempt operator-managed SCCs/namespaces via TailoredProfile `setValues` instead of editing vendor SCCs; `autoApplyRemediations: false` always. Deleting the `ComplianceSuite` forces the binding to re-run the scan.
