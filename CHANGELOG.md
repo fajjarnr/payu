@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allowed the exact DNS, Kubernetes API, and CNPG manager paths required inside the RHTAS default-deny namespace; corrected CCO policy resource encoding and cluster-wide External Secrets reconciliation.
 - Recovered RHTAS bootstrap after dependency ordering failures and replaced an incompatible HAProxy 3 DNS parser path with a Podman-validated, digest-pinned HAProxy 2.8 LTS image.
 - Recovered `payu-dev` Data Grid by aligning its custom configuration with the active Infinispan 16.0 runtime and restoring valid dev mTLS Secret material.
+- Restored dev External Secrets after the in-memory dev Vault restart wiped KV paths; repopulated paths from surviving Secrets and verified all dev/3scale ExternalSecrets sync.
 - Added explicit constructor injection for `RateLimitInterceptor` and a missing-bean `ConcurrentMapCacheManager` fallback for Spring `@EnableCaching` workloads.
 - Restored billing V3 and backoffice V8 Flyway migration sources to their existing database checksums; deployed backoffice `1.8.83` and billing `1.8.84`.
 - Added a `payu-dev` Hot Rod Spring-source compatibility overlay until the starter auto-configuration metadata includes `HotRodCacheConfig`.

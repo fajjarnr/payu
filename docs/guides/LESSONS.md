@@ -4150,3 +4150,25 @@ synchronized (lock) {
 **Context**: VSO migration initially added repository unit tests for declarative infrastructure resources.
 
 **Prevention**: For OpenShift CR implementation, inspect the installed API with `oc explain`, render the manifests, use server-side dry-run, and verify live status conditions. Add repository tests only when explicitly requested or when they protect project-specific transformation logic that CRD validation cannot cover.
+
+### L-135: In-Memory Dev Vault Loses Everything on Restart (2026-07-31)
+
+**Context**: The dev-mode Vault (`vault.payu-dev`, `storage=inmem`) restarted and wiped every KV path, breaking all eight dev External Secrets with `could not get secret data from provider` for hours.
+
+**Root cause**: In-memory storage has no persistence; a pod restart reinitializes an empty Vault while the old root token and paths disappear.
+
+**Prevention**: Before relying on dev-mode Vault, confirm a durable storage/backup story. For recovery, repopulate the exact `remoteRef` paths from the surviving generated Secrets (`jq` → `vault kv put -mount=secret <path> @<json>`) and restart the ESO operand so it reloads the rotated root token. Long-term fix remains INFRA-026 (HA durable Vault).
+
+### L-136: Red Hat ESO Generic Errors Live in the Operand Logs (2026-07-31)
+
+**Context**: `could not get secret data from provider` on ExternalSecret status revealed nothing in `openshift-operators`; the real error was `Secret does not exist` in the managed operand.
+
+**Root cause**: The Red Hat External Secrets Operator is an operator-manager that deploys the actual controller as an operand in `external-secrets`; OLM also reverts direct deployment edits (env/rollout).
+
+**Prevention**: Debug in `oc logs -n external-secrets deployment/external-secrets`; restart the operand with `oc delete pod` (OLM-safe), never deployment patches. Force a re-reconcile by bumping `spec.refreshInterval` when status/`refreshTime` is stale.
+
+### L-137: VSO `Ready=True` Does Not Mean the Secret Synced (2026-07-31)
+
+**Context**: After a transient Vault HA failover, VaultStaticSecrets showed `Healthy/Ready=True` but `SecretSynced=False` with a stale failover error, and `refreshTime` never advanced.
+
+**Prevention**: Treat each VaultStaticSecret condition independently; gate on `SecretSynced=True`. If Ready is healthy but sync is stuck, bump `spec.refreshAfter` (or any spec change) to force an immediate reconcile instead of waiting on backoff, and confirm the Vault data path exists before changing CRDs.

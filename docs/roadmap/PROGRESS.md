@@ -21,7 +21,13 @@
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
 | **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno, Compliance, fail-closed Tekton with Rekor transparency, EFS, and OpenCost are live. Vault, durable Loki/Results, SIEM, DR, and compliance remediations remain gated. |
-| Last Status Update       | 2026-07-22                               | RHTAS HA dependencies and multi-AZ worker topology verified live. |
+| Last Status Update       | 2026-07-31                               | VSO secret migration rolled out SIT→UAT→preprod→prod; dev ESO restored. |
+
+> ✅ **2026-07-31 — Vault Secrets Operator migration completed across promotion environments**:
+> - Committed `aafa0b03` (`feat(platform): migrate promotion secrets to Vault Secrets Operator`): ESO → `VaultStaticSecret` for data, messaging, identity, and workload secrets in SIT/UAT/preprod/prod; Git-tracked `runtime-secrets.yaml` removed; VSO operator, per-environment `VaultAuth`, and env-scoped KV paths (`payu/<env>/...`) in place.
+> - Live verification: 60/60 `VaultStaticSecret` Ready (`SecretSynced=True`, 15 per env), `VaultConnection`+`VaultAuth` Ready in all four namespaces, Vault kubernetes roles bound to `vault-secrets-operator`.
+> - Dev recovery: dev Vault (inmem) restart wiped KV and broke 8 External Secrets; paths repopulated from surviving Secrets and all 8 synced (`0` ExternalSecret errors cluster-wide).
+> - SIT platform pods `payu-cache-config-listener` and `payu-kafka-console` remain in `CrashLoopBackOff` (pre-existing, unrelated to secrets); SIT/UAT/preprod/prod workload overlays are not deployed yet (DEPLOY-011 gate).
 
 > ✅ **2026-07-22 — `payu-dev` cache and workload recovery completed**:
 > - The active Data Grid server reports Infinispan 16.0.14.redhat; the custom XML schema now matches 16.0. Zero-byte TLS key/certificate data was replaced with valid dev mTLS Secret material, and the `payu-cache` CR reached `WellFormed=True`.

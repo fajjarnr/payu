@@ -48,8 +48,8 @@
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
 | DEPLOY-010 | P1 | API Management | ✅ Deploy 3scale APIManager — APIcast production routing + Keycloak OIDC introspection + E2E cards-crud verified. See PROGRESS.md and `infrastructure/platform/api-management/3scale/README.md`. | ✅ Closed |
-| DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid/ESO paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. | 🔄 Blocked before SIT |
-| INFRA-026 | P1 | Secrets | Replace ephemeral dev-mode Vault before SIT with HA durable Vault, auto-unseal, backup/restore evidence, and non-root short-lived ESO authentication. | 🔄 Planned |
+| DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. Secrets delivery is unblocked — VSO (VaultStaticSecret) is Ready 15/15 in all four envs (`aafa0b03`). | 🔄 Blocked before SIT workload deploy |
+| INFRA-026 | P1 | Secrets | Replace ephemeral dev-mode Vault before SIT with HA durable Vault, auto-unseal, backup/restore evidence, and non-root short-lived ESO authentication. Dev Vault inmem restart on 2026-07-31 wiped KV and broke 8 External Secrets; paths repopulated as recovery (L-135), durable replacement remains required. | 🔄 Planned |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
 | OPS-2026-04-08-01 | P2 | Ops | ✅ Validated — wallet-service cache config OK, /actuator/health/liveness UP, RESP PING reachable | ✅ Closed |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
