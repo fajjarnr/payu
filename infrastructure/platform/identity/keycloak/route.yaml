@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/component: sso
     app.kubernetes.io/part-of: payu
 spec:
+  host: sso-dev.apps.fajjjar.my.id
   to:
     kind: Service
     name: payu-keycloak-service
