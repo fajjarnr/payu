@@ -267,10 +267,10 @@ All application workloads and SSO routes use base domain `*.apps.fajjjar.my.id` 
    - Target domain: `apps.fajjjar.my.id`
    - Default certificate secret: `shared-ingress-cert`
 
-2. **Cert-Manager & Let's Encrypt Production ClusterIssuer**:
-   - Location: `infrastructure/platform/security/cert-manager/`
-   - Dedicated ClusterIssuer: `letsencrypt-prod-issuer` using AWS Route 53 DNS01 challenge solver (`hostedZoneID: Z04089013J3OEZ617CSS4`, region `us-east-1`).
-   - Wildcard Certificate: `infrastructure/platform/security/cert-manager/letsencrypt/production/certificate.shared-ingress.yaml` backing `shared-ingress-cert`.
+3. **AWS Route 53 Alias A-Record Configuration**:
+   - Hosted Zone: `apps.fajjjar.my.id.` (`hostedZoneID: Z04089013J3OEZ617CSS4`)
+   - Target NLB: `router-shared-ingress` LoadBalancer DNS (`HostedZoneId: Z26RNL4JYFTOTI`)
+   - Records: Apex `apps.fajjjar.my.id` and Wildcard `*.apps.fajjjar.my.id` Alias A records mapped to `router-shared-ingress` NLB.
 
 Apply shared IngressController and Cert-Manager TLS configuration:
 
@@ -280,15 +280,47 @@ rtk oc apply -f infrastructure/foundation/cluster-config/ingress/shared.yaml
 
 # Apply Cert-Manager production ClusterIssuer and Wildcard Certificate
 rtk oc apply -k infrastructure/platform/security/cert-manager/
+
+# Create Route 53 Wildcard and Apex Alias A-Records targeting shared Ingress NLB
+aws route53 change-resource-record-sets --hosted-zone-id Z04089013J3OEZ617CSS4 --change-batch '{
+  "Comment": "Add wildcard and apex alias A records for apps.fajjjar.my.id to shared ingress NLB",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "*.apps.fajjjar.my.id.",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "Z26RNL4JYFTOTI",
+          "DNSName": "a538a4695ab88463cb8376bb9891fea5-d3ccc74e421a7cc5.elb.us-east-1.amazonaws.com.",
+          "EvaluateTargetHealth": false
+        }
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "apps.fajjjar.my.id.",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "Z26RNL4JYFTOTI",
+          "DNSName": "a538a4695ab88463cb8376bb9891fea5-d3ccc74e421a7cc5.elb.us-east-1.amazonaws.com.",
+          "EvaluateTargetHealth": false
+        }
+      }
+    }
+  ]
+}'
 ```
 
-Verify IngressController and Cert-Manager status:
+Verify IngressController, Cert-Manager, and Route 53 status:
 
 ```bash
 rtk oc get crd ingresscontrollers.operator.openshift.io
 rtk oc get ingresscontroller shared-ingress -n openshift-ingress-operator
 rtk oc get clusterissuer letsencrypt-prod-issuer
 rtk oc get certificate shared-ingress-cert -n openshift-ingress
+aws route53 list-resource-record-sets --hosted-zone-id Z04089013J3OEZ617CSS4
 ```
 
 Expected result:
@@ -296,6 +328,7 @@ Expected result:
 - `ingresscontroller/shared-ingress` created in `openshift-ingress-operator` with 3 router replicas.
 - `clusterissuer/letsencrypt-prod-issuer` reports `READY=True`.
 - `certificate/shared-ingress-cert` issued in `openshift-ingress` for `apps.fajjjar.my.id` and `*.apps.fajjjar.my.id`.
+- Route 53 `*.apps.fajjjar.my.id` and `apps.fajjjar.my.id` Alias A records target `router-shared-ingress` NLB.
 
 ### 9. Build and Push Images
 
