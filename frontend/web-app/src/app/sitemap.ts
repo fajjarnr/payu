@@ -1,6 +1,14 @@
 import type { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// WEB-004: read request headers to opt into dynamic rendering so the base URL
+// is taken from the runtime environment instead of being baked in at build time.
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  try {
+    headers();
+  } catch {
+    // Static generation / unit tests: no request context available.
+  }
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://payu.fajjjar.my.id';
   const lastModified = new Date();
 

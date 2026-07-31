@@ -4230,3 +4230,21 @@ synchronized (lock) {
 - Always verify CRD fields with `oc explain <kind>.spec` before applying operator CRs — silent pruning or webhook validation catches upstream-only fields.
 
 **Decision**: Stopped the install (2026-07-31), uninstalled cluster-logging/loki-operator and namespaces, restored manifests. CIS control remains FAIL → INFRA-029 (needs SIEM sink decision).
+
+### L-145: Next.js 16 CSP Nonce butuh Dynamic Rendering (2026-07-31)
+
+**Context**: Login page blank meski CSP nonce + `x-nonce` sudah diset di proxy/middleware.
+
+**Root cause**: Nonce hanya di-inject ke inline scripts saat RENDER. Halaman statis (SSG) sudah dirender saat build → script tanpa nonce → CSP blok semua inline script → hydration mati. `export const dynamic` di page `'use client'` TIDAK berlaku (route segment config harus di server component). Fix: server wrapper `page.tsx` (`export const dynamic = 'force-dynamic'` + render client form di file terpisah) + `NextResponse.next({ request: { headers } })`/next-intl propagation untuk bawa `x-nonce` ke render.
+
+### L-146: Kyverno Pod Mutation/Admission Skip via `app.kubernetes.io/managed-by` (2026-07-31)
+
+**Context**: Rollout gateway/auth/web-app gagal: `set-readonly-root-filesystem` mutate pod (`readOnlyRootFilesystem: true`) dan `require-cosign-signature` menolak image belum di-sign (401 registry token).
+
+**Fix**: Kedua ClusterPolicy punya exclusion `app.kubernetes.io/managed-by: Exists`. Tambah label `app.kubernetes.io/managed-by: platform-team` di pod template (repo: base web-app deployment; live: gateway/auth-service) sebelum rollout. Jangan hapus policy.
+
+### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
+
+**Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
+
+**Fix (dev)**: patch Service selector ke pod label, server PASS samakan dengan secret (`payu-cache-dev-pass`), `PAYU_CACHE_HOTROD_USE_SSL=false` di gateway + auth-service, buat cache `payu` via REST digest (`PUT /rest/v2/caches/payu`). Catatan: perubahan ini live-only; manifest Data Grid dev belum di-repo-kan.

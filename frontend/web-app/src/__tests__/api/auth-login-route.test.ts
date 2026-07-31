@@ -109,4 +109,30 @@ describe("POST /api/auth/login", () => {
     });
     expect(response.headers.getSetCookie()).toEqual([]);
   });
+
+  it("calls gateway over plain http by default (WEB-002)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({
+        access_token: "access",
+        refresh_token: "refresh",
+        expires_in: 900,
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await POST(new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Real-IP": "192.0.2.13",
+      },
+      body: JSON.stringify({ username: "payu-user", password: "secret" }),
+    }));
+
+    const calledUrl = String(fetchMock.mock.calls[0][0]);
+    expect(calledUrl).toBe("http://gateway-service:8080/api/v1/auth/login");
+  });
 });

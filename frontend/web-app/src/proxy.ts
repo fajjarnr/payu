@@ -25,6 +25,34 @@ export async function proxy(request: NextRequest) {
   const hasRefreshToken = request.cookies.has('refreshToken');
   const hasPayuSession = request.cookies.has('payu_session');
 
+  // AUDIT-064: CSP nonce — generate per-request nonce for script-src.
+  // WEB-001: Next.js injects the nonce into inline scripts only when it can
+  // read `x-nonce` from the request headers during render, so propagate the
+  // nonce + CSP on the request (not just the response) before next-intl runs.
+  const nonce = crypto.randomUUID();
+  const isDev = process.env.NODE_ENV === 'development';
+  const scriptSrc = isDev
+    ? `'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}'`
+    : `'self' 'nonce-${nonce}'`;
+  const csp = [
+    `default-src 'self'`,
+    `script-src ${scriptSrc}`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' blob: data: https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id https://images.unsplash.com`,
+    `font-src 'self'`,
+    `connect-src 'self' https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id`,
+    `frame-ancestors 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+  ].join('; ');
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
+  const nextRequest = new NextRequest(request.url, {
+    headers: requestHeaders,
+    method: request.method,
+  });
+
   // BUG-AUTH-012: If accessToken is missing/expired but refreshToken exists,
   // trigger a server-side refresh before proceeding. This restores the session
   // after browser restart (refreshToken is a 7-day httpOnly cookie).
@@ -48,7 +76,7 @@ export async function proxy(request: NextRequest) {
         refreshSucceeded = true;
         edgeLogger.info('Session rehydrated successfully', { action: 'middleware' });
         // Forward the Set-Cookie headers from the refresh response to the client
-        response = intlMiddleware(request);
+        response = intlMiddleware(nextRequest);
         const setCookieHeaders = refreshRes.headers.getSetCookie();
         for (const cookie of setCookieHeaders) {
           response.headers.append('Set-Cookie', cookie);
@@ -110,17 +138,45 @@ export async function proxy(request: NextRequest) {
   // 2. Protect authenticated routes — everything except public pages
   const publicRoutes = [
     '/login',
+    '/forgot-password', // WEB-003: must stay reachable when the user cannot log in
     '/onboarding',
     '/legal/privacy',
     '/legal/terms',
     '/merchant/register',
   ];
 
+  // WEB-005: only redirect known app paths to login; unknown paths fall
+  // through to Next.js so they render a real 404 instead of masking it.
+  const protectedRoutePrefixes = [
+    '/analytics',
+    '/backoffice',
+    '/bills',
+    '/cards',
+    '/dashboard',
+    '/exchange',
+    '/investments',
+    '/lending',
+    '/merchant',
+    '/notifications',
+    '/pockets',
+    '/qris',
+    '/rewards',
+    '/scheduled-transfers',
+    '/security',
+    '/settings',
+    '/split-bill',
+    '/support',
+    '/transactions',
+    '/transfer',
+  ];
+
   // BUG-FE-046: Use exact match or segment boundary to prevent /login-debug, /onboarding-secret matching
   const isPublicRoute = pathWithoutLocale === '/' || 
     publicRoutes.some(route => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/'));
+  const isProtectedRoute =
+    protectedRoutePrefixes.some(route => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/'));
 
-  if (!isPublicRoute && !hasSession) {
+  if (!isPublicRoute && isProtectedRoute && !hasSession) {
     const localeMatch = pathname.match(localePattern);
     const locale = localeMatch ? localeMatch[0] : '';
     // Redirect to login, ensuring user doesn't bypass auth
@@ -136,25 +192,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Return the response from rehydration (with Set-Cookie headers) or default intl response
-  const finalResponse = response ?? intlMiddleware(request);
-
-  // AUDIT-064: CSP nonce — generate per-request nonce for script-src
-  const nonce = crypto.randomUUID();
-  const isDev = process.env.NODE_ENV === 'development';
-  const scriptSrc = isDev
-    ? `'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}'`
-    : `'self' 'nonce-${nonce}'`;
-  const csp = [
-    `default-src 'self'`,
-    `script-src ${scriptSrc}`,
-    `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id https://images.unsplash.com`,
-    `font-src 'self'`,
-    `connect-src 'self' https://cdn.payu.fajjjar.my.id https://assets.payu.fajjjar.my.id https://payu.fajjjar.my.id`,
-    `frame-ancestors 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-  ].join('; ');
+  const finalResponse = response ?? intlMiddleware(nextRequest);
 
   finalResponse.headers.set('Content-Security-Policy', csp);
   finalResponse.headers.set('x-nonce', nonce);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCorrelationId, withCorrelation } from "@/lib/logger";
 
-const GATEWAY_URL = process.env.GATEWAY_URL || "https://gateway-service:8080";
+const GATEWAY_URL = process.env.GATEWAY_URL || "http://gateway-service:8080";
 
 // AUDIT-071: Rate limiting for login endpoint (5 attempts per 5 minutes per IP)
 const RATE_LIMIT_MAX = 5;
