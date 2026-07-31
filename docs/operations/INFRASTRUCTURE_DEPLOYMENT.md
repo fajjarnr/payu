@@ -258,7 +258,46 @@ rtk oc apply -f infrastructure/platform/api-management/3scale/system-storage-pvc
 rtk oc apply -f infrastructure/platform/api-management/3scale/apimanager.yaml
 ```
 
-### 8. Build and Push Images
+### 8. Deploy Shared Ingress & Cert-Manager TLS (`*.apps.fajjjar.my.id`)
+
+All application workloads and SSO routes use base domain `*.apps.fajjjar.my.id` (e.g. `web-app.apps.fajjjar.my.id`, `sso.apps.fajjjar.my.id`).
+
+1. **Shared IngressController**:
+   - Location: `infrastructure/foundation/cluster-config/ingress/shared.yaml`
+   - Target domain: `apps.fajjjar.my.id`
+   - Default certificate secret: `shared-ingress-cert`
+
+2. **Cert-Manager & Let's Encrypt Production ClusterIssuer**:
+   - Location: `infrastructure/platform/security/cert-manager/`
+   - Dedicated ClusterIssuer: `letsencrypt-prod-issuer` using AWS Route 53 DNS01 challenge solver (`hostedZoneID: Z04089013J3OEZ617CSS4`, region `us-east-1`).
+   - Wildcard Certificate: `infrastructure/platform/security/cert-manager/letsencrypt/production/certificate.shared-ingress.yaml` backing `shared-ingress-cert`.
+
+Apply shared IngressController and Cert-Manager TLS configuration:
+
+```bash
+# Apply shared IngressController
+rtk oc apply -f infrastructure/foundation/cluster-config/ingress/shared.yaml
+
+# Apply Cert-Manager production ClusterIssuer and Wildcard Certificate
+rtk oc apply -k infrastructure/platform/security/cert-manager/
+```
+
+Verify IngressController and Cert-Manager status:
+
+```bash
+rtk oc get crd ingresscontrollers.operator.openshift.io
+rtk oc get ingresscontroller shared-ingress -n openshift-ingress-operator
+rtk oc get clusterissuer letsencrypt-prod-issuer
+rtk oc get certificate shared-ingress-cert -n openshift-ingress
+```
+
+Expected result:
+
+- `ingresscontroller/shared-ingress` created in `openshift-ingress-operator` with 3 router replicas.
+- `clusterissuer/letsencrypt-prod-issuer` reports `READY=True`.
+- `certificate/shared-ingress-cert` issued in `openshift-ingress` for `apps.fajjjar.my.id` and `*.apps.fajjjar.my.id`.
+
+### 9. Build and Push Images
 
 For `payu-dev`, build the exact images referenced by the rendered overlay:
 
