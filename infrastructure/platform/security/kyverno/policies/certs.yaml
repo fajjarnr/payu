@@ -1,0 +1,10 @@
+# CA certificates for Kyverno image verification
+# OpenShift injects and keeps this bundle fresh via service-ca operator,
+# so no CA bytes are baked into the repo (self-healing on rotation).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kyverno-certs
+  namespace: kyverno
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"

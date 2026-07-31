@@ -31,6 +31,8 @@ metadata:
     app.kubernetes.io/name: vault
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: secrets
+    app.kubernetes.io/version: "1.15"
+    team: platform
 spec:
   replicas: 1
   selector:
@@ -43,9 +45,18 @@ spec:
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: secrets
     spec:
+      securityContext:
+        runAsNonRoot: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: vault
           image: docker.io/hashicorp/vault:1.15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           env:
             - name: VAULT_ADDR
               value: http://127.0.0.1:8200
@@ -60,6 +71,9 @@ spec:
               value: "1"
             - name: HOME
               value: /tmp
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           ports:
             - containerPort: 8200
               name: http

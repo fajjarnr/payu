@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: va-simulator
     app.kubernetes.io/component: simulator
     app.kubernetes.io/part-of: payu
+    team: backend
     app.kubernetes.io/version: 1.8.80
 spec:
   replicas: 1
@@ -25,6 +26,8 @@ spec:
         prometheus.io/path: /metrics
         prometheus.io/port: '8085'
     spec:
+      securityContext:
+        runAsNonRoot: true
       volumes:
       - name: tmp
         emptyDir: {}

@@ -1,0 +1,24 @@
+# Tailored CIS profile: exempt operator-managed exceptions per CIS variables.
+# - SCC allowedCapabilities: ODF (rook/ceph/noobaa/odf) + pipelines SCCs are
+#   operator-managed and require extra capabilities.
+# - NetworkPolicies: operator/platform namespaces manage their own policies;
+#   the CIS variable explicitly allows an exemption regex.
+apiVersion: compliance.openshift.io/v1alpha1
+kind: TailoredProfile
+metadata:
+  name: payu-cis
+  namespace: openshift-compliance
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: compliance
+spec:
+  description: PayU CIS profile with operator-managed exemptions
+  extends: ocp4-cis
+  title: PayU CIS (Tailored)
+  setValues:
+  - name: ocp4-var-sccs-with-allowed-capabilities-regex
+    rationale: ODF and OpenShift Pipelines SCCs are operator-managed and need extra capabilities.
+    value: ^privileged$|^hostnetwork-v2$|^restricted-v2$|^restricted-v3$|^nonroot-v2$|^insights-runtime-extractor-scc|^nested-container$|^ceph-csi-op-scc$|^noobaa-endpoint$|^odf-blackbox-scc$|^pipelines-scc$|^rook-ceph$|^rook-ceph-csi$
+  - name: ocp4-var-network-policies-namespaces-exempt-regex
+    rationale: Operator-managed namespaces manage their own network policies.
+    value: ^(cert-manager|cert-manager-operator|default-broker|hypershift|kyverno|local-cluster|multicluster-engine|open-cluster-management.*|quay|rhacs-operator|rhdh-operator|showroom-.*|trusted-artifact-signer|vault-secrets-operator)$

@@ -9,7 +9,7 @@ metadata:
     policies.kyverno.io/description: Only approved container registries are allowed
       for image pulls.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   background: true
   rules:
   - name: validate-registries
@@ -39,6 +39,14 @@ spec:
       - resources:
           selector:
             matchLabels:
+              app: payu-cache
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: payu-kafka-console-console-deployment
+      - resources:
+          selector:
+            matchLabels:
               app.kubernetes.io/component: chaos-engineering
       - resources:
           selector:
@@ -52,9 +60,11 @@ spec:
           - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
               quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
               docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
-              | docker.io/grafana/* | docker.io/pactfoundation/*
+              | docker.io/grafana/* | docker.io/pactfoundation/* |
+              docker.io/infinispan/*
           containers:
           - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
               quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
               docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
-              | docker.io/grafana/* | docker.io/pactfoundation/*
+              | docker.io/grafana/* | docker.io/pactfoundation/* |
+              docker.io/infinispan/*

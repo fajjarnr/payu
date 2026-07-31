@@ -12,7 +12,7 @@ metadata:
       Ensures all Deployments in PayU namespaces have required labels
       for cost allocation, ownership tracking, and observability.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   background: true
   rules:
     - name: check-required-labels
@@ -34,6 +34,44 @@ spec:
               selector:
                 matchLabels:
                   app.kubernetes.io/component: cost-management
+          - resources:
+              selector:
+                matchExpressions:
+                - key: app.kubernetes.io/managed-by
+                  operator: Exists
+          - resources:
+              selector:
+                matchLabels:
+                  strimzi.io/cluster: ?*
+          - resources:
+              selector:
+                matchLabels:
+                  app: infinispan-pod
+          - resources:
+              selector:
+                matchLabels:
+                  app: payu-cache
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/component: cache
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/instance: payu-kafka-console-console-deployment
+          - resources:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/managed-by: keycloak-operator
+          - resources:
+              selector:
+                matchLabels:
+                  openshift.io/build.name: ?*
+          - resources:
+              namespaces:
+              - payu-cicd
+              - openshift-pipelines
+              - openshift-gitops
       validate:
         message: >-
           Deployments in PayU namespaces must have labels:

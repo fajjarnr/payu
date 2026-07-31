@@ -6,43 +6,58 @@ metadata:
   labels:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: compliance
-spec:
-  schedule: "0 3 * * 1"
-  roles:
-    - master
-    - worker
-  strictNodeScan: true
-  debug: false
-  autoApplyRemediations: false
-  rawResultStorage:
-    rotation: 5
-    size: 20Gi
-    storageClassName: gp3-csi
-    pvAccessModes:
-      - ReadWriteOnce
-  showNotApplicable: false
+# NOTE: ScanSetting CRD stores fields at top level (no `spec` wrapper);
+# wrapping them in `spec:` gets silently pruned by the API server.
+schedule: "0 3 * * 1"
+roles:
+  - master
+  - worker
+strictNodeScan: true
+debug: false
+autoApplyRemediations: false
+rawResultStorage:
+  enabled: true
+  nodeSelector:
+    node-role.kubernetes.io/master: ""
+  pvAccessModes:
+    - ReadWriteOnce
+  rotation: 5
+  size: 20Gi
+  storageClassName: gp3-csi
+  tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+scanTolerations:
+  - operator: Exists
+showNotApplicable: false
+suspend: false
+timeout: 30m
 ---
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSettingBinding
 metadata:
-  name: payu-weekly-binding
+  name: cis-compliance
   namespace: openshift-compliance
   labels:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: compliance
+# NOTE: ScanSettingBinding fields are top-level too (profiles/settingsRef).
 profiles:
-  - apiGroup: compliance.openshift.io/v1alpha1
-    kind: Profile
-    name: ocp4-cis
   - apiGroup: compliance.openshift.io/v1alpha1
     kind: Profile
     name: ocp4-cis-node
   - apiGroup: compliance.openshift.io/v1alpha1
-    kind: Profile
-    name: ocp4-moderate
-  - apiGroup: compliance.openshift.io/v1alpha1
-    kind: Profile
-    name: ocp4-moderate-node
+    kind: TailoredProfile
+    name: payu-cis
 settingsRef:
   apiGroup: compliance.openshift.io/v1alpha1
   kind: ScanSetting

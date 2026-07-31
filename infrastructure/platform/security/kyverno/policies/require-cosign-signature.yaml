@@ -9,7 +9,7 @@ metadata:
     policies.kyverno.io/description: Verify container images are signed with Cosign
       before deployment.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   background: false
   rules:
   - name: verify-image-signature
@@ -24,18 +24,30 @@ spec:
     verifyImages:
     - imageReferences:
       - image-registry.openshift-image-registry.svc:5000/payu*
-      - quay.io/payu*
-      mutateDigest: false
+      # Registry creds for verification. Secret lives in kyverno ns; without
+      # this, OpenShift-injected default-dockercfg secrets from the workload ns
+      # are invisible to kyverno's secret lister -> anonymous -> 401.
+      imageRegistryCredentials:
+        secrets:
+        - registry-credentials
+      mutateDigest: true
       verifyDigest: true
       required: true
       attestors:
       - count: 1
         entries:
-        - keyless:
-            issuer: https://token.actions.githubusercontent.com
-            subject: https://github.com/payu-platform/.github/workflows/build.yaml@refs/heads/main
+        - keys:
+            publicKeys: |-
+              -----BEGIN PUBLIC KEY-----
+              MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEqnLWMGXO/8pOLa3tIHy1v82WvmDB
+              TiGcTW0xfJyxetv9pEH4KV+ltDewSZ/D/DA3WMzkofG1m9Pnp5ro+ysVhw==
+              -----END PUBLIC KEY-----
+            # Signatures are stored in-registry only (no Rekor/CT log upload),
+            # so skip Tlog/SCT verification and avoid sigstore TUF network calls.
             rekor:
-              url: https://rekor.sigstore.dev
+              ignoreTlog: true
+            ctlog:
+              ignoreSCT: true
     exclude:
       any:
       - resources:
@@ -51,3 +63,36 @@ spec:
           selector:
             matchLabels:
               app: infinispan-pod
+      - resources:
+          selector:
+            matchLabels:
+              app: payu-cache
+      - resources:
+          selector:
+            matchLabels:
+              application: payu-broker-app
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: database
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: payu-kafka-console-console-deployment
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: chaos-engineering
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: cost-management
+      - resources:
+          selector:
+            matchLabels:
+              app.kubernetes.io/managed-by: keycloak-operator
+      - resources:
+          namespaces:
+          - payu-cicd
+          - openshift-pipelines
+          - openshift-gitops

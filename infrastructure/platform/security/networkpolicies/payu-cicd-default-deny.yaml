@@ -1,0 +1,15 @@
+# CIS ocp4-cis-configure-network-policies-namespaces: payu-cicd needs a
+# NetworkPolicy. Ingress default-deny only; egress stays open so Tekton
+# pipelines can reach git/registries/API.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: compliance
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress

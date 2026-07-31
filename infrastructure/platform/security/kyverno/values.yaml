@@ -24,28 +24,103 @@ admissionController:
     securityContext:
       runAsUser: null
       runAsGroup: null
-  replicas: 3
+  replicas: 1
+  # Trust OpenShift internal registry CA for cosign/verifyImages.
+  # ConfigMap kyverno-certs is created separately (see certs.yaml) and
+  # auto-refreshed by the service-ca operator.
+  extraVolumes:
+  - name: ca-certificates
+    configMap:
+      name: kyverno-certs
+      items:
+      - key: service-ca.crt
+        path: ca.crt
+  - name: cluster-ca-certificates
+    configMap:
+      name: config-trusted-cabundle
+      items:
+      - key: ca-bundle.crt
+        path: ca.crt
+  extraVolumeMounts:
+  - name: ca-certificates
+    mountPath: /etc/ssl/certs/ca-certificates.crt
+    subPath: ca.crt
+    readOnly: true
+  - name: cluster-ca-certificates
+    mountPath: /etc/pki/tls/certs/ca-bundle.crt
+    subPath: ca.crt
+    readOnly: true
+
+features:
+  policyExceptions:
+    enabled: true
 
 backgroundController:
-  replicas: 2
+  replicas: 1
   securityContext:
     runAsUser: null
     runAsGroup: null
+  extraVolumes:
+  - name: ca-certificates
+    configMap:
+      name: kyverno-certs
+      items:
+      - key: service-ca.crt
+        path: ca.crt
+  - name: cluster-ca-certificates
+    configMap:
+      name: config-trusted-cabundle
+      items:
+      - key: ca-bundle.crt
+        path: ca.crt
+  extraVolumeMounts:
+  - name: ca-certificates
+    mountPath: /etc/ssl/certs/ca-certificates.crt
+    subPath: ca.crt
+    readOnly: true
+  - name: cluster-ca-certificates
+    mountPath: /etc/pki/tls/certs/ca-bundle.crt
+    subPath: ca.crt
+    readOnly: true
 
 cleanupController:
-  replicas: 2
+  replicas: 1
   securityContext:
     runAsUser: null
     runAsGroup: null
 
 reportsController:
-  replicas: 2
+  replicas: 1
   securityContext:
     runAsUser: null
     runAsGroup: null
+  extraVolumes:
+  - name: ca-certificates
+    configMap:
+      name: kyverno-certs
+      items:
+      - key: service-ca.crt
+        path: ca.crt
+  - name: cluster-ca-certificates
+    configMap:
+      name: config-trusted-cabundle
+      items:
+      - key: ca-bundle.crt
+        path: ca.crt
+  extraVolumeMounts:
+  - name: ca-certificates
+    mountPath: /etc/ssl/certs/ca-certificates.crt
+    subPath: ca.crt
+    readOnly: true
+  - name: cluster-ca-certificates
+    mountPath: /etc/pki/tls/certs/ca-bundle.crt
+    subPath: ca.crt
+    readOnly: true
 
 crds:
+  install: true
   migration:
+    enabled: false
     securityContext:
       runAsUser: null
       runAsGroup: null
@@ -59,6 +134,12 @@ test:
   securityContext:
     runAsUser: null
     runAsGroup: null
+
+# Registry credentials for image verification (verifyImages).
+# Secret registry-credentials holds a pull token for internal registry;
+# SA kyverno-registry-puller is granted system:image-puller on payu-* namespaces.
+existingImagePullSecrets:
+- registry-credentials
 
 # Pod security — align with OpenShift restricted-v2 SCC
 # Kyverno pods run as non-root but OpenShift assigns random UID
