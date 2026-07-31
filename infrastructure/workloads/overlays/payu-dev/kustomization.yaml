@@ -666,16 +666,3 @@ patches:
       value:
         name: OTEL_ENDPOINT
         value: "http://localhost:4317"
-
-# Cache starter publishes CacheAutoConfiguration but HotRodCacheConfig is not
-# listed in the deployed starter's auto-configuration metadata. Register it as
-# an additional Spring source until images include the corrected metadata.
-- target:
-    kind: Deployment
-    labelSelector: app.kubernetes.io/component=backend
-  patch: |-
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: SPRING_MAIN_SOURCES
-        value: id.payu.cache.config.HotRodCacheConfig

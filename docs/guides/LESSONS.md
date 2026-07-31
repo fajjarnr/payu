@@ -32,7 +32,7 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 **Lesson**:
 - Match an Operator-managed custom configuration schema to the server actually running; manifest intent alone does not prove runtime compatibility.
 - A Secret key can exist yet be unusable. Validate certificate and key material before attributing an mTLS failure to client configuration.
-- A shared Hot Rod client configuration must be explicitly loaded by every Spring Boot workload. The `payu-dev` `SPRING_MAIN_SOURCES` overlay is a compatibility bridge until starter auto-configuration metadata includes `HotRodCacheConfig`.
+- A shared Hot Rod client configuration must be explicitly loaded by every Spring Boot workload. Resolved 2026-07-31: `cache-starter` auto-configuration metadata (`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`) now includes `HotRodCacheConfig`; the `payu-dev` `SPRING_MAIN_SOURCES` overlay bridge was removed.
 - `@EnableCaching` requires a `CacheManager` bean even when application cache operations use a native Hot Rod service.
 - Never change an applied Flyway migration. Restore its exact applied text; put schema changes in a new versioned migration.
 
@@ -4242,6 +4242,8 @@ synchronized (lock) {
 **Context**: Rollout gateway/auth/web-app gagal: `set-readonly-root-filesystem` mutate pod (`readOnlyRootFilesystem: true`) dan `require-cosign-signature` menolak image belum di-sign (401 registry token).
 
 **Fix**: Kedua ClusterPolicy punya exclusion `app.kubernetes.io/managed-by: Exists`. Tambah label `app.kubernetes.io/managed-by: platform-team` di pod template (repo: base web-app deployment; live: gateway/auth-service) sebelum rollout. Jangan hapus policy.
+
+**Follow-up (2026-07-31, ARCH-007 rollout)**: Semua ClusterPolicy yang match pod/deployment PayU (`require-cosign-signature`, `set-readonly-root-filesystem`, `require-resource-limits`, `require-approved-registry`, `disallow-root-user`, `disallow-host-namespaces`, `require-payu-labels`) memakai exclusion yang sama (`app.kubernetes.io/managed-by: Exists`). Rollout massal memicu denial `require-cosign-signature` (401 registry token) pada 21 deployment yang template-nya belum punya label tersebut. Fix durable: label ditambahkan ke metadata + pod template semua deployment di `infrastructure/workloads/base/` (25 backend + 5 simulator) — bukan patch live per service. Sebelum rollout massal, audit dulu label template semua workload PayU, bukan hanya yang baru diubah.
 
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 

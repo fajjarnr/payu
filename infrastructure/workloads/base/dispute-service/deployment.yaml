@@ -6,6 +6,7 @@ metadata:
     app.kubernetes.io/name: dispute-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: backend
+    app.kubernetes.io/managed-by: platform-team
     app.kubernetes.io/version: 1.9.4
     team: backend
 spec:
@@ -19,6 +20,7 @@ spec:
         app.kubernetes.io/name: dispute-service
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: backend
+        app.kubernetes.io/managed-by: platform-team
         app.kubernetes.io/version: 1.9.4
         team: backend
     spec:

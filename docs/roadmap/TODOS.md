@@ -29,7 +29,7 @@
 |:---|:---:|:---|:---|
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
-| ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
+| ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Dev `SPRING_MAIN_SOURCES` bridge replaced by durable starter auto-configuration metadata (2026-07-31); 24-hour `payu-dev` canary running since 19:22Z — evidence gate still open before promotion. | 🔄 In progress |
 
 
 ---
@@ -53,7 +53,7 @@ Hasil audit semua path URL di `https://payu-dev.apps.fajjjar.my.id` (47 cek: 41 
 
 Bukti kunci (2026-07-31): HTML `/login` punya 32 `<script>` tanpa satu pun atribut `nonce`; header CSP `script-src 'self' 'nonce-…'`; console browser "Executing inline script violates the following Content Security Policy directive"; log web-app `Login proxy error ... SSL routines:tls_get_more_records:packet length too long`.
 
-Dev loop (2026-07-31): `web-app:1.5.3` deployed; unit 1187 pass; e2e login-flow live pass (login → dashboard), forgot-password/not-found pass; live `/login` form, `/forgot-password` form, 404, sitemap dev domain verified. Perbaikan runtime: gateway + auth-service `PAYU_CACHE_HOTROD_USE_SSL=false` + label `app.kubernetes.io/managed-by: platform-team` (sudah masuk repo base deployments), Data Grid Service selector/pod/cache `payu` di-patch live, dan realm Keycloak dev di-import dari `payu-realm.json` (partialImport — realm hanya berisi default clients, tidak ada `payu-backend`/`customer1`). Sisa drift yang perlu di-repo-kan: Data Grid dev deployment manual (`infinispan/server:15.0`; manifest platform/data belum mencerminkan runtime — ARCH-007/INFRA-026).
+Dev loop (2026-07-31): `web-app:1.5.3` deployed; unit 1187 pass; e2e login-flow live pass (login → dashboard), forgot-password/not-found pass; live `/login` form, `/forgot-password` form, 404, sitemap dev domain verified. Perbaikan runtime: gateway + auth-service `PAYU_CACHE_HOTROD_USE_SSL=false` + label `app.kubernetes.io/managed-by: platform-team` (sudah masuk repo base deployments), Data Grid Service selector/pod/cache `payu` di-patch live, dan realm Keycloak dev di-import dari `payu-realm.json` (partialImport — realm hanya berisi default clients, tidak ada `payu-backend`/`customer1`). ARCH-007: `SPRING_MAIN_SOURCES` overlay bridge dihapus — `cache-starter` auto-config metadata kini include `HotRodCacheConfig`; label `app.kubernetes.io/managed-by: platform-team` ditambahkan ke template semua deployment backend + simulator (base) agar lulus Kyverno `require-cosign-signature`/mutate (L-146). Rollout 23 backend + 5 simulator selesai; Hot Rod init terverifikasi tanpa bridge; canary 24 jam dimulai 19:22Z. Sisa drift yang perlu di-repo-kan: Data Grid dev deployment manual (`infinispan/server:15.0`; manifest platform/data belum mencerminkan runtime — ARCH-007/INFRA-026).
 
 ## 🚀 Platform Deploy Queue
 
@@ -111,7 +111,7 @@ completion evidence.
 ### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration
 * **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.
 * **Status**: 🔄 IN PROGRESS. Local mTLS is verified for `cache-starter` and Quarkus gateway Hot Rod plus KYC/analytics REST. `cache-starter` uses Infinispan 16.2.1 native Hot Rod with a lazy `RemoteCacheManager`, 10,000-entry invalidated near cache, and explicit UTF-8 JSON-text values in the `payu` cache. Auth refresh tokens, partner SNAP-BI tokens, API-commons atomic paths, and Quarkus gateway paths use Hot Rod. KYC and analytics idempotency use authenticated Data Grid REST because the Python Hot Rod client is unmaintained.
-* **Remaining**: Production TLS/mTLS secret wiring and a 24-hour `payu-dev` canary. Do not claim ARCH-007 complete before those evidence gates pass.
+* **Remaining**: Production TLS/mTLS secret wiring and completion of the 24-hour `payu-dev` canary (started 2026-07-31 19:22Z; so far zero `RedisConnectionException`/`ISPN005061` across backend logs). Do not claim ARCH-007 complete before those evidence gates pass.
 * **Updated**: 2026-07-19.
 
 ### 🏗️ ARCH-008/009/010: ArchUnit 1.4.2 violations (billing, statement, promotion)
@@ -152,7 +152,7 @@ completion evidence.
   1. Infinispan/Data Grid menyediakan RESP endpoint agar RESP-compatible clients bisa terhubung tanpa perubahan besar.
   2. Hot Rod adalah client native Data Grid untuk remote access, dengan API sync/async/Mutiny dan opsi TTL/lifespan pada write operations.
   3. ProtoStream menyediakan schema `.proto`, adapter untuk tipe pihak ketiga, serializer/deserializer compile-time, dan compatibility check untuk perubahan schema.
-* **Status (2026-07-19)**: Java/Quarkus tidak lagi membawa Redis/Lettuce/Quarkus Redis client; cache bernama `payu` tersedia pada Data Grid lokal dengan media type `text/plain`. Focused build, Python REST round-trip, REST-write → Hot Rod-read, dan mTLS positive/negative gate lulus.
+* **Status (2026-07-31)**: Java/Quarkus tidak lagi membawa Redis/Lettuce/Quarkus Redis client; cache bernama `payu` tersedia pada Data Grid lokal dengan media type `text/plain`. Focused build, Python REST round-trip, REST-write → Hot Rod-read, dan mTLS positive/negative gate lulus. `SPRING_MAIN_SOURCES` bridge diganti metadata auto-config durable (`AutoConfiguration.imports` + `HotRodCacheConfig`); overlay bridge dihapus, semua deployment backend diberi label Kyverno exclusion (L-146), rollout dev selesai tanpa error cache, canary 24 jam berjalan sejak 19:22Z.
 * **Goal**: Migrasi cache/session/rate-limit/idempotency/lock/analytics dari RESP ke Hot Rod tanpa kehilangan key aktif dan tanpa regresi latency.
 * **Decision**: RESP dihapus dari runtime backend. Hot Rod 16.2.1 adalah satu-satunya client cache Java/Quarkus yang didukung; Python memakai Data Grid REST terautentikasi.
 * **Plan**:
@@ -161,7 +161,7 @@ completion evidence.
   3. **Completed**: migrate every `payu.cache.redis` profile block to `payu.cache.hotrod`; local profiles default to `localhost:11222`, while container/non-local profiles require `PAYU_CACHE_HOTROD_SERVER_LIST`.
   4. **Completed**: shared `payu` cache uses UTF-8 JSON-text values so Data Grid REST and Hot Rod address identical keys; Java uses `UTF8StringMarshaller`.
   5. **Completed**: Python KYC/analytics idempotency uses the authenticated Data Grid REST API; the unmaintained Python Hot Rod client is not introduced.
-  6. **In progress**: wire production TLS/mTLS secrets and run a 24-hour `payu-dev` canary with p95/error/duplicate-replay evidence before production promotion.
+  6. **In progress**: 24-hour `payu-dev` canary started 2026-07-31 19:22Z (p95/error/duplicate-replay evidence required); production TLS/mTLS secrets remain to be wired after canary passes.
 * **Done criteria**:
   1. Tidak ada business code yang inject `RedisTemplate`/`StringRedisTemplate` langsung.
   2. Java/Quarkus memakai Hot Rod dan Python memakai Data Grid REST, semuanya memakai secret refs tanpa inline credential.

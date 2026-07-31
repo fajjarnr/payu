@@ -1,1 +1,2 @@
 id.payu.cache.config.CacheAutoConfiguration
+id.payu.cache.config.HotRodCacheConfig

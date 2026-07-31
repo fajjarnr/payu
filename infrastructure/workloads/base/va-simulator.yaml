@@ -6,6 +6,7 @@ metadata:
     app: va-simulator
     app.kubernetes.io/name: va-simulator
     app.kubernetes.io/component: simulator
+    app.kubernetes.io/managed-by: platform-team
     app.kubernetes.io/part-of: payu
     team: backend
     app.kubernetes.io/version: 1.8.80
@@ -20,6 +21,7 @@ spec:
         app: va-simulator
         app.kubernetes.io/name: va-simulator
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/managed-by: platform-team
         app.kubernetes.io/version: 1.8.80
       annotations:
         prometheus.io/scrape: 'true'

@@ -6,6 +6,7 @@ metadata:
     app: qris-simulator
     app.kubernetes.io/name: qris-simulator
     app.kubernetes.io/component: simulator
+    app.kubernetes.io/managed-by: platform-team
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/version: "1.8.80"
     team: backend
@@ -20,6 +21,7 @@ spec:
         app: qris-simulator
         app.kubernetes.io/name: qris-simulator
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/managed-by: platform-team
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/path: /q/metrics
