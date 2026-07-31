@@ -38,6 +38,10 @@ spec:
       - resources:
           selector:
             matchLabels:
+              application: payu-broker-app
+      - resources:
+          selector:
+            matchLabels:
               app.kubernetes.io/component: chaos-engineering
       - resources:
           selector:

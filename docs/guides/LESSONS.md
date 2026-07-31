@@ -4325,6 +4325,17 @@ synchronized (lock) {
 
 **Prevention**: Setelah menambah gRPC client/server, verifikasi listener port di pod (`/proc/net/tcp6`, state 0A) sebelum E2E; semua topic outbox wajib lulus pola kontrak (scan script); fallback resilience jangan membungkus exception bisnis yang harus terlihat handler.
 
+### L-154: AMQ Broker CrashLoop — Kyverno Readonly-Root-FS + Operator Service Selector Drift (2026-07-31)
+
+**Context**: `payu-broker-ss-0` CrashLoop 20h+; notification-service Artemis health DOWN (503).
+
+**Findings**:
+- Broker pod tak punya label `app.kubernetes.io/managed-by` → Kyverno `set-readonly-root-filesystem` mutate `readOnlyRootFilesystem: true` → AMQ tak bisa `cp` config ke `/home/jboss/amq-broker` ("Read-only file system"). Fix: tambah exclusion `application: payu-broker-app` (label broker) di policy — konsisten dengan policy lain yang sudah exclude broker.
+- Service headless `payu-broker-hdls-svc` selector `{ActiveMQArtemis, app: payu-broker}` tapi pod operator 7.14 berlabel `application: payu-broker-app` → endpoints kosong → notification connect refused. Fix live: selector di-replace ke `{ActiveMQArtemis, application: payu-broker-app}`. Drift operator (service dibuat dengan selector versi lain); operator bisa revert saat reconcile.
+- Notification `/q/health` kembali 200 setelah broker stabil; `GET /api/v1/notifications` masih 401 karena service tak punya config resource-server JWT (NOTIF-001).
+
+**Prevention**: Sebelum debug "connection refused" ke service headless, cek EndpointSlice/selector vs label pod nyata; operator-managed service jangan di-merge-patch (kelebihan key) — pakai replace; workload operator tanpa managed-by rawan kena policy mutation — audit label semua sts/deploy saat menambah policy Enforce.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
