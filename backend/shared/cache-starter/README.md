@@ -4,11 +4,11 @@ Shared distributed caching module for PayU microservices with **stale-while-reva
 
 ## Features
 
-- **Multi-layer Caching**: Redis (distributed) + Caffeine (local fallback)
+- **Multi-layer Caching**: Data Grid Hot Rod (distributed) + Caffeine (local fallback)
 - **Stale-While-Revalidate**: Serve stale data while asynchronously refreshing
 - **Custom TTL per Cache**: Configure different TTLs for different data types
 - **Cache Stampede Prevention**: Synchronized cache access for hot keys
-- **Automatic Fallback**: Local cache when Redis is unavailable
+- **Automatic Fallback**: Local cache when Data Grid is unavailable
 - **Metrics Integration**: Built-in Micrometer metrics
 - **Spring Boot Auto-Configuration**: Zero configuration setup
 
@@ -32,9 +32,10 @@ Add the dependency to your service's `pom.xml`:
 payu:
   cache:
     enabled: true
-    redis:
-      host: localhost
-      port: 6379
+    provider: hotrod
+    hotrod:
+      server-list: localhost:11222
+      cache-name: payu
 ```
 
 ### Full Configuration
@@ -228,10 +229,10 @@ The cache starter exposes the following metrics:
 
 | Metric | Description |
 |--------|-------------|
-| `cache.distributed.hits` | Cache hits from Redis |
-| `cache.distributed.misses` | Cache misses from Redis |
+| `cache.distributed.hits` | Cache hits from Data Grid |
+| `cache.distributed.misses` | Cache misses from Data Grid |
 | `cache.distributed.stale` | Stale entries served |
-| `cache.distributed.errors` | Redis errors |
+| `cache.distributed.errors` | Data Grid errors |
 | `cache.distributed.get` | Time spent getting from cache |
 | `cache.distributed.put` | Time spent putting to cache |
 | `cache.local.fallback` | Fallbacks to local cache |
@@ -295,9 +296,11 @@ class CacheServiceTest {
 
 ## Production Considerations
 
-### 1. Redis Cluster Configuration
+### 1. Data Grid High Availability
 
-For production, use Redis Cluster for high availability:
+For production, use the Operator-managed Data Grid cluster (Infinispan CR) with
+`spec.replicas > 1` for high availability. Backend workloads connect over Hot
+Rod with mTLS; see `infrastructure/platform/data/base/datagrid.yaml`.
 
 ```yaml
 payu:

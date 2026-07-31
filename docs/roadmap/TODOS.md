@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-31 (URL audit + dev loop selesai: WEB-001..005 fixed, login E2E live hijau — `web-app:1.5.3`) |
+| **Last Updated** | 2026-07-31 (dev loop ARCH-007 selesai di dev: Data Grid operator-managed mTLS, login E2E 6/6 hijau, canary 24h berjalan sejak 20:47Z) |
 
 ---
 

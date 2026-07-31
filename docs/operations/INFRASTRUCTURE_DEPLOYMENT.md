@@ -27,7 +27,7 @@ Current state differs from older docs:
 | Operators | `infrastructure/foundation/cluster-operators/` | Installs CNPG, Data Grid, AMQ Streams, AMQ Broker, RHBK, 3scale, GitOps, Pipelines, Vault Secrets, Tempo, Compliance |
 | Database | `infrastructure/platform/data/base/current/cnpg-*.yaml` | CloudNativePG `payu-database` in `payu-dev`; not Crunchy |
 | Kafka | `infrastructure/platform/data/base/kafka-amqstreams.yaml` | AMQ Streams `payu-kafka` in `payu-dev` |
-| Cache | `infrastructure/platform/data/base/current/datagrid.yaml` | Infinispan `payu-cache`; RESP clients use `payu-cache-resp:11222`, not direct pod port `6379` |
+| Cache | `infrastructure/platform/data/base/datagrid.yaml` | Infinispan `payu-cache` (operator-managed, mTLS); clients use native Hot Rod `payu-cache:11222` with cache `payu` (RESP removed — ARCH-007) |
 | AMQ Broker | `infrastructure/platform/amq-broker/base/` | `payu-broker` with CORE, AMQP, and STOMP on `61616` |
 | Identity | `infrastructure/platform/identity/keycloak/` | RHBK `payu-keycloak` in `payu-sso`; verify CR conditions before declaring healthy |
 | API management | `infrastructure/platform/api-management/` | Operator/policy only by default; `APIManager` is gated until external backing-store and Vault secrets exist |
@@ -159,8 +159,8 @@ Expected result:
 
 - CNPG `payu-database` has 3 instances Ready.
 - Kafka `payu-kafka` reports `READY=True`.
-- Infinispan `payu-cache` pods are Running and using the custom XML configuration ConfigMap (`payu-cache-custom-config`) to enable the RESP connector.
-- `payu-cache-resp` service points to the Data Grid RESP connector and exposes service port `11222`.
+- Infinispan `payu-cache` pods are Running (`WellFormed=True`) using the custom XML configuration ConfigMap (`payu-cache-custom-config`) with the `payu` cache (text/plain) over the native Hot Rod endpoint.
+- `payu-cache` service exposes the Hot Rod port `11222` with mTLS; backend workloads use `payu-cache:11222` with `PAYU_CACHE_HOTROD_USE_SSL=true` (RESP/RESP-compat services are removed — ARCH-007).
 
 ### 4. Deploy AMQ Broker
 
@@ -508,7 +508,7 @@ Abort and roll back if any of these conditions occur:
 |:---|:---|
 | CNPG not Ready | `rtk oc describe cluster.postgresql.cnpg.io payu-database -n payu-dev`; check PVC and storage class |
 | Kafka not Ready | `rtk oc describe kafka payu-kafka -n payu-dev`; check AMQ Streams CSV and broker pods |
-| Cache connection fails | Confirm clients use `payu-cache-resp.payu-dev.svc.cluster.local:11222` and `payu-cache-credentials` |
+| Cache connection fails | Confirm clients use `payu-cache.payu-dev.svc.cluster.local:11222` with `PAYU_CACHE_HOTROD_USE_SSL=true` and `payu-cache-credentials` (mTLS contract, L-148) |
 | AMQ STOMP disconnects | Confirm broker acceptor includes `STOMP` on `61616` and clients send heartbeats |
 | Keycloak route works but CR unhealthy | Check `Keycloak` conditions and RHBK operator logs in `payu-sso` |
 | 3scale pods missing | Confirm only operator shell was applied; APIManager is gated by external secrets |
