@@ -103,6 +103,19 @@ patches:
     data:
       KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
       KEYCLOAK_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+# Web app route uses shared ingress domain (apps.fajjjar.my.id)
+- target:
+    kind: Route
+    name: web-app
+  patch: |-
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: web-app
+      labels:
+        ingress.payu.io/class: shared
+    spec:
+      host: payu-dev.apps.fajjjar.my.id
 # Replica count patches
 - target:
     kind: Deployment
