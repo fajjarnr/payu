@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
 | **Last Release** | `1.9.8` — Hot Rod cache canary support, observability and Vault platform manifests, and contract-test setup |
-| **Last Updated** | 2026-07-22 (RHTAS Ready and fail-closed Tekton release recorded in Rekor; Vault/Loki/Results remain) |
+| **Last Updated** | 2026-07-31 (URL audit payu-dev: login blank + auth API 503 + forgot-password protected; detail di section Web App Audit) |
 
 ---
 
@@ -30,9 +30,33 @@
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
 | ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
+| WEB-001 | P1 | Login page blank — CSP nonce tidak di-inject ke inline scripts: `src/proxy.ts` set `x-nonce`/CSP hanya di response headers, Next.js butuh via `NextResponse.next({ request: { headers } })` sebelum render. Semua inline script diblokir → hydration mati → form login tidak pernah render. Fix di `frontend/web-app/src/proxy.ts` + e2e `e2e/login-flow.spec.ts` hijau. | 🔴 Open |
+| WEB-002 | P1 | `/api/auth/login` 503 — BFF `login/refresh` default `GATEWAY_URL=https://gateway-service:8080` (TLS ke port HTTP) → error `packet length too long`; `logout`/`api/v1` pakai `http://`. Fix: konsisten `http://gateway-service:8080` atau set env `GATEWAY_URL` di deployment web-app. | 🔴 Open |
+| WEB-003 | P1 | `/forgot-password` ter-proteksi auth → redirect `/login?callbackUrl=%2Fforgot-password`; user lupa password tidak bisa akses. `publicRoutes` di `frontend/web-app/src/proxy.ts` belum include `/forgot-password`. | 🔴 Open |
+| WEB-004 | P2 | `sitemap.xml` + `robots.txt` pakai base URL prod `https://payu.fajjjar.my.id` — salah untuk env dev (`payu-dev.apps.fajjjar.my.id`) → crawler & hreflang salah domain. | 🔴 Open |
+| WEB-005 | P3 | Path tidak dikenal (mis. `/nope`) redirect ke `/login` untuk unauthenticated, bukan 404 — middleware auth menutupi error page. | 🔴 Open |
 
 
 ---
+
+## 🔍 Web App URL Audit — `payu-dev` (2026-07-31)
+
+Hasil audit semua path URL di `https://payu-dev.apps.fajjjar.my.id` (47 cek: 41 path halaman incl. locale `en`/`id` + API + sitemap/robots):
+
+| Path | Hasil |
+|:---|:---|
+| `/` | ✅ 200, konten statis tampil |
+| `/login` | ❌ 200 tapi blank — 0 `<input>`/`<form>`; semua inline script diblokir CSP (lihat WEB-001) |
+| `/forgot-password` | ❌ 307 → `/login?callbackUrl=%2Fforgot-password` (WEB-003) |
+| `/onboarding`, `/merchant/register`, `/legal/privacy`, `/legal/terms` | ✅ 200, konten server-rendered ada; JS-interactive bagian masih bergantung hydration (terkena WEB-001) |
+| 31 path terproteksi (`/dashboard`, `/transactions`, `/transfer`, `/cards`, `/bills`, `/rewards`, `/investments`, `/lending`, `/exchange`, `/pockets`, `/split-bill`, `/notifications`, `/settings`, `/support`, `/analytics`, `/security`, `/merchant`, `/qris`, `/scheduled-transfers`, semua `/backoffice/*`) | 🔒 200 → redirect ke `/login?callbackUrl=...` (expected, tapi login blank → dead-end, WEB-001) |
+| `/api/health` | ✅ 200 `{"status":"healthy"}` |
+| `/api/v1/cards` (no-auth) | ✅ 401 (gateway reachable) |
+| `/api/auth/login` (POST) | ❌ 503 `{"success":false,"message":"Authentication service unavailable"}` (WEB-002) |
+| `/sitemap.xml`, `/robots.txt` | ⚠️ base URL prod `payu.fajjjar.my.id` (WEB-004) |
+| `/nope` (unknown) | ⚠️ 307 → `/login`, bukan 404 (WEB-005) |
+
+Bukti kunci (2026-07-31): HTML `/login` punya 32 `<script>` tanpa satu pun atribut `nonce`; header CSP `script-src 'self' 'nonce-…'`; console browser "Executing inline script violates the following Content Security Policy directive"; log web-app `Login proxy error ... SSL routines:tls_get_more_records:packet length too long`.
 
 ## 🚀 Platform Deploy Queue
 
