@@ -9,18 +9,40 @@ spec:
       name: cluster-issuer-acme-production
     server: 'https://acme-v02.api.letsencrypt.org/directory'
     solvers:
+      # -----------------------------------------------------------------------
+      # Zone 1 (ACTIVE): apps.fajjjar.my.id → hostedZoneID Z04089013J3OEZ617CSS4
+      # Covers: *.apps.fajjjar.my.id, apps.fajjjar.my.id, fajjjar.my.id
+      # -----------------------------------------------------------------------
       - dns01:
           route53:
             accessKeyIDSecretRef:
               name: cert-manager-aws-creds
               key: aws_access_key_id
+            secretAccessKeySecretRef:
+              name: cert-manager-aws-creds
+              key: aws_secret_access_key
             hostedZoneID: 'Z04089013J3OEZ617CSS4'
             region: us-east-1
-            secretAccessKeySecretRef:
-              key: aws_secret_access_key
-              name: cert-manager-aws-creds
         selector:
           dnsZones:
             - 'fajjjar.my.id'
             - 'apps.fajjjar.my.id'
-            - 'ocp.fajjjar.my.id'
+
+      # -----------------------------------------------------------------------
+      # Zone 2 (EXAMPLE): Jika ada zone terpisah, duplikasi blok ini
+      # Contoh: ocp.fajjjar.my.id di hosted zone berbeda
+      # -----------------------------------------------------------------------
+      # - dns01:
+      #     route53:
+      #       accessKeyIDSecretRef:
+      #         name: cert-manager-aws-creds
+      #         key: aws_access_key_id
+      #       secretAccessKeySecretRef:
+      #         name: cert-manager-aws-creds
+      #         key: aws_secret_access_key
+      #       hostedZoneID: 'ZONE_ID_LAIN'   # ganti dengan hostedZoneID zone baru
+      #       region: us-east-1
+      #   selector:
+      #     dnsZones:
+      #       - 'ocp.fajjjar.my.id'            # domain yang dikover zone ini
+
