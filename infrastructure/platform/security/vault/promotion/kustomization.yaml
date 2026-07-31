@@ -7,4 +7,5 @@ resources:
   - vault-ha.yaml
   - bootstrap-config.yaml
   - eso-stores.yaml
+  - vso-auth.yaml
   - snapshot.yaml

@@ -10,7 +10,6 @@ configMapGenerator:
     literals:
       - environment=prod
       - namespace=payu
-      - secretStore=payu-vault-prod
 patches:
   - target:
       group: networking.k8s.io
@@ -30,12 +29,12 @@ replacements:
       fieldPath: data.environment
     targets:
       - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
           labelSelector: payu.io/vault-environment-path=true
         fieldPaths:
-          - spec.dataFrom.0.extract.key
+          - spec.path
         options:
           delimiter: /
           index: 1
@@ -89,18 +88,6 @@ replacements:
         fieldPaths:
           - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
           - spec.egress.0.to.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
-  - source:
-      kind: ConfigMap
-      name: promotion-environment
-      fieldPath: data.secretStore
-    targets:
-      - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
-          labelSelector: payu.io/vault-environment-path=true
-        fieldPaths:
-          - spec.secretStoreRef.name
 labels:
   - pairs:
       environment: prod

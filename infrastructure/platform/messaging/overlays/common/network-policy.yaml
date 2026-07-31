@@ -49,6 +49,12 @@ spec:
         - protocol: TCP
           port: 443
     - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-sso
@@ -110,6 +116,12 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 6443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -158,6 +170,12 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 6443
     - to:
         - namespaceSelector:
             matchLabels:

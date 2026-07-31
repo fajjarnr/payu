@@ -4,9 +4,29 @@ namespace: payu-sit
 resources:
 - namespace.yaml
 - ../../base
-- runtime-secrets.yaml
 components:
 - ../promotion-common
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: workload-environment
+  literals:
+  - environment=sit
+replacements:
+- source:
+    kind: ConfigMap
+    name: workload-environment
+    fieldPath: data.environment
+  targets:
+  - select:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+    fieldPaths:
+    - spec.path
+    options:
+      delimiter: /
+      index: 1
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/account-service

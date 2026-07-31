@@ -4144,3 +4144,9 @@ synchronized (lock) {
 **Context**: 3scale initially ran from manually created Secrets even though the platform standard requires Vault and External Secrets Operator.
 
 **Prevention**: A Vault-backed design is complete only when the ESO operand, SecretStore, ExternalSecrets, and generated Secret ownership are all live and `Ready=True`. Manifest presence or installed CRDs alone is insufficient.
+
+### L-134: Validate Infrastructure CRs Against the Live CRD (2026-07-31)
+
+**Context**: VSO migration initially added repository unit tests for declarative infrastructure resources.
+
+**Prevention**: For OpenShift CR implementation, inspect the installed API with `oc explain`, render the manifests, use server-side dry-run, and verify live status conditions. Add repository tests only when explicitly requested or when they protect project-specific transformation logic that CRD validation cannot cover.

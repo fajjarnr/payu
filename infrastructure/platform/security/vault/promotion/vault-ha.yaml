@@ -362,6 +362,9 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: external-secrets
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault-secrets-operator
       ports:
         - protocol: TCP
           port: 8200

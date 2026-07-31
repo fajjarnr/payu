@@ -3,6 +3,60 @@ kind: Kustomization
 namespace: payu-sit
 resources:
   - ../common
+patches:
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaNodePool
+      name: "^(controller|broker)$"
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/resources/requests/cpu
+        value: 50m
+  - target:
+      group: broker.amq.io
+      version: v1beta1
+      kind: ActiveMQArtemis
+      name: payu-broker
+    patch: |-
+      - op: replace
+        path: /spec/deploymentPlan/size
+        value: 1
+      - op: replace
+        path: /spec/deploymentPlan/resources/requests/cpu
+        value: 50m
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: Kafka
+      name: payu-kafka
+    patch: |-
+      - op: replace
+        path: /spec/kafka/config/default.replication.factor
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/min.insync.replicas
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/offsets.topic.replication.factor
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/transaction.state.log.min.isr
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/transaction.state.log.replication.factor
+        value: 1
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaTopic
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
@@ -10,7 +64,6 @@ configMapGenerator:
     literals:
       - environment=sit
       - namespace=payu-sit
-      - secretStore=payu-vault-sit
       - consoleHostname=payu-kafka-console-payu-sit.apps.payu.ocp.fajjjar.my.id
 replacements:
   - source:
@@ -19,22 +72,22 @@ replacements:
       fieldPath: data.environment
     targets:
       - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
           name: payu-kafka-console-oidc
         fieldPaths:
-          - spec.data.0.remoteRef.key
+          - spec.path
         options:
           delimiter: /
           index: 1
       - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
           name: payu-broker-credentials
         fieldPaths:
-          - spec.dataFrom.0.extract.key
+          - spec.path
         options:
           delimiter: /
           index: 1
@@ -70,18 +123,6 @@ replacements:
           name: payu-kafka-console
         fieldPaths:
           - spec.hostname
-  - source:
-      kind: ConfigMap
-      name: messaging-environment
-      fieldPath: data.secretStore
-    targets:
-      - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
-          labelSelector: payu.io/vault-environment-path=true
-        fieldPaths:
-          - spec.secretStoreRef.name
 labels:
   - pairs:
       environment: sit

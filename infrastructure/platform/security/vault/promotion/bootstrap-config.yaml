@@ -39,7 +39,7 @@ data:
     done
 
     vault write auth/kubernetes/role/payu-sit \
-      bound_service_account_names=vault-eso \
+      bound_service_account_names=vault-eso,vault-secrets-operator \
       bound_service_account_namespaces=payu-sit \
       audience=vault \
       policies=payu-sit \
@@ -47,7 +47,7 @@ data:
       token_max_ttl=30m
 
     vault write auth/kubernetes/role/payu-uat \
-      bound_service_account_names=vault-eso \
+      bound_service_account_names=vault-eso,vault-secrets-operator \
       bound_service_account_namespaces=payu-uat \
       audience=vault \
       policies=payu-uat \
@@ -55,7 +55,7 @@ data:
       token_max_ttl=30m
 
     vault write auth/kubernetes/role/payu-preprod \
-      bound_service_account_names=vault-eso \
+      bound_service_account_names=vault-eso,vault-secrets-operator \
       bound_service_account_namespaces=payu-preprod \
       audience=vault \
       policies=payu-preprod \
@@ -63,7 +63,7 @@ data:
       token_max_ttl=30m
 
     vault write auth/kubernetes/role/payu-prod \
-      bound_service_account_names=vault-eso \
+      bound_service_account_names=vault-eso,vault-secrets-operator \
       bound_service_account_namespaces=payu \
       audience=vault \
       policies=payu-prod \

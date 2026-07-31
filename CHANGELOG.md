@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated CMS cache configuration and its OpenShift workload manifest from Redis environment variables to the shared Hot Rod `payu` cache contract.
 - Applied the Hot Rod/mTLS contract to every JVM workload overlay and removed rendered RESP environment variables from dev, SIT, UAT, preprod, and prod.
 - Moved mesh, Kong, and 3scale rate-limit configuration from Data Grid RESP to the dedicated `redis-3scale` service; removed inline mesh TLS Secret placeholders.
+- Migrated platform and workload secret delivery from External Secrets to the Vault Secrets Operator for SIT/UAT/preprod/prod with env-scoped KV paths, per-environment Kubernetes auth, and removed Git-tracked `runtime-secrets.yaml`.
 
 ### Fixed
 

@@ -7,6 +7,28 @@ resources:
 
 namespace: payu-sit
 
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: identity-environment
+    literals:
+      - environment=sit
+replacements:
+  - source:
+      kind: ConfigMap
+      name: identity-environment
+      fieldPath: data.environment
+    targets:
+      - select:
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
+        fieldPaths:
+          - spec.path
+        options:
+          delimiter: /
+          index: 1
+
 patches:
   - target:
       kind: OperatorGroup
@@ -35,29 +57,3 @@ patches:
         value:
           - https://sit.payu.fajjjar.my.id
           - "+"
-  - target:
-      kind: ExternalSecret
-      name: payu-keycloak-admin
-    patch: |
-      - op: replace
-        path: /spec/secretStoreRef/name
-        value: payu-vault-sit
-      - op: replace
-        path: /spec/data/0/remoteRef/key
-        value: payu/sit/keycloak/credentials
-      - op: replace
-        path: /spec/data/1/remoteRef/key
-        value: payu/sit/keycloak/credentials
-  - target:
-      kind: ExternalSecret
-      name: payu-keycloak-db
-    patch: |
-      - op: replace
-        path: /spec/secretStoreRef/name
-        value: payu-vault-sit
-      - op: replace
-        path: /spec/data/0/remoteRef/key
-        value: payu/sit/keycloak/database
-      - op: replace
-        path: /spec/data/1/remoteRef/key
-        value: payu/sit/keycloak/database

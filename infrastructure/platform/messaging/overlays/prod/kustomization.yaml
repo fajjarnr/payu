@@ -10,7 +10,6 @@ configMapGenerator:
     literals:
       - environment=prod
       - namespace=payu
-      - secretStore=payu-vault-prod
       - consoleHostname=payu-kafka-console-payu.apps.payu.ocp.fajjjar.my.id
 replacements:
   - source:
@@ -19,22 +18,22 @@ replacements:
       fieldPath: data.environment
     targets:
       - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
           name: payu-kafka-console-oidc
         fieldPaths:
-          - spec.data.0.remoteRef.key
+          - spec.path
         options:
           delimiter: /
           index: 1
       - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
+          group: secrets.hashicorp.com
+          version: v1beta1
+          kind: VaultStaticSecret
           name: payu-broker-credentials
         fieldPaths:
-          - spec.dataFrom.0.extract.key
+          - spec.path
         options:
           delimiter: /
           index: 1
@@ -70,18 +69,6 @@ replacements:
           name: payu-kafka-console
         fieldPaths:
           - spec.hostname
-  - source:
-      kind: ConfigMap
-      name: messaging-environment
-      fieldPath: data.secretStore
-    targets:
-      - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
-          labelSelector: payu.io/vault-environment-path=true
-        fieldPaths:
-          - spec.secretStoreRef.name
 labels:
   - pairs:
       environment: prod
