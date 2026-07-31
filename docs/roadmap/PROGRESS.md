@@ -36,6 +36,10 @@
 > - CIS (SEC-020): 9 FAIL → 1 FAIL. Remediasi: APIServer encryption `aesgcm`, audit profile `WriteRequestBodies`, ingress TLS ciphers, `kubeadmin` dihapus, allowed registries (internal + 8 publik), NetworkPolicy `payu-cicd`, TailoredProfile `payu-cis` (exempt SCC ODF/pipelines + operator namespaces). Sisa: `audit-log-forwarding-enabled` (butuh SIEM sink → INFRA-029).
 > - Catatan: `ocp4-cis-node-worker` scan ERROR pre-existing; Compliance `autoApplyRemediations: false`.
 
+> 🟡 **2026-07-31 — LokiStack/Logging install dihentikan (INFRA-029 tetap open)**:
+> - Percobaan install Logging 6.6 (ClusterLogging + LokiStack + ClusterLogForwarder) untuk menutup kontrol CIS `audit-log-forwarding-enabled` dihentikan: API 6.6 berubah (CRD `ClusterLogging` hilang, CLF pindah ke `observability.openshift.io/v1`), `loki-operator` butuh AllNamespaces + ns khusus, dan Kyverno generator `default-deny-all` sempat memblokir egress operator (L-143/144).
+> - Operator cluster-logging/loki-operator di-uninstall, namespace + CRD dibersihkan, manifest logging dikembalikan ke state repo. Audit log forwarding tetap terbuka → INFRA-029.
+
 > ✅ **2026-07-22 — `payu-dev` cache and workload recovery completed**:
 > - The active Data Grid server reports Infinispan 16.0.14.redhat; the custom XML schema now matches 16.0. Zero-byte TLS key/certificate data was replaced with valid dev mTLS Secret material, and the `payu-cache` CR reached `WellFormed=True`.
 > - Added the `payu-dev` Hot Rod Spring-source compatibility overlay, explicit `RateLimitInterceptor` constructor injection, and a fallback `CacheManager` for `@EnableCaching` workloads.

@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleted the `kubeadmin` bootstrap secret from `kube-system` (CIS `kubeadmin-removed`).
 - Removed automated ArgoCD AppSets `payu-monitoring`, `payu-devsecops-platform`, and `payu-pr-previews` (live and from repo) until they reach Git/live parity.
 - Removed the legacy `cis-scan.yaml` manifest that targeted the wrong namespace.
+- Stopped the OpenShift Logging/LokiStack install attempt (Logging 6.6 API changes, `loki-operator` AllNamespaces constraint, Kyverno `default-deny-all` egress block); cluster-logging/loki-operator uninstalled, manifests restored. Audit log forwarding remains open (`INFRA-029`).
 
 ### Fixed
 

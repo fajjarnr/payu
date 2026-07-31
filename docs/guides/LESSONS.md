@@ -4210,3 +4210,23 @@ synchronized (lock) {
 **Context**: 9 CIS FAILs: 3 had operator remediations (`ComplianceRemediation.spec.apply: true`), 6 needed manual changes.
 
 **Prevention**: Prefer operator remediation for APIServer/Ingress; delete `kubeadmin` secret only after an OAuth admin exists; set `allowedRegistries` only after inventorying every registry actually used by workloads (missing one blocks pulls cluster-wide); exempt operator-managed SCCs/namespaces via TailoredProfile `setValues` instead of editing vendor SCCs; `autoApplyRemediations: false` always. Deleting the `ComplianceSuite` forces the binding to re-run the scan.
+
+### L-143: Kyverno `default-deny-all` Generator Blocks Platform Operators (2026-07-31)
+
+**Context**: The Red Hat Loki operator installed fine but its pods could not reach the API server (`dial tcp 172.30.0.1:443: i/o timeout` in leader election) and its validating webhook timed out (`context deadline exceeded` on every `LokiStack` apply).
+
+**Root cause**: Kyverno `generate-default-deny-networkpolicy` auto-generates a `default-deny-all` NetworkPolicy (Ingress+Egress) into any namespace labeled `app.kubernetes.io/part-of: payu`. The operator namespace carried that label, so all egress — including kube-apiserver — was blocked.
+
+**Prevention**: Never label operator/platform namespaces with `app.kubernetes.io/part-of: payu`; that label means "PayU workload namespace" to the policy set. When an operator misbehaves after install, check `oc get networkpolicy -n <ns>` for a generated `default-deny-all` before debugging connectivity. Delete the NP and remove the label (the generator only fires on Namespace creation).
+
+### L-144: OpenShift Logging 6.6 Breaking Changes (LokiStack attempt stopped) (2026-07-31)
+
+**Context**: Attempted the LOKISTACK.md MOP (ClusterLogging + LokiStack + ClusterLogForwarder) to close CIS `audit-log-forwarding-enabled`. The install was stopped after multiple incompatibilities.
+
+**Findings**:
+- Logging 6.6 no longer ships a `ClusterLogging` CRD (`logging.openshift.io/v1` gone); collection is driven by `ClusterLogForwarder`, which moved to `observability.openshift.io/v1` with a new schema (`lokiStack` output type, `authentication.token.from: serviceAccount`).
+- Red Hat `loki-operator` supports AllNamespaces install mode only; it fails with `OwnNamespace InstallModeType not supported` under an own-namespace OperatorGroup, and its dependencies conflict with `openshift-operators` (unreferenced older CSV), so it needs a dedicated namespace with an empty OperatorGroup.
+- The Red Hat LokiStack CRD has **no `visualization` field** (upstream-only) and requires an existing StorageClass (`standard` does not exist; use `gp3-csi`); PVCs/StatefulSets must be recreated after a StorageClass change.
+- Always verify CRD fields with `oc explain <kind>.spec` before applying operator CRs — silent pruning or webhook validation catches upstream-only fields.
+
+**Decision**: Stopped the install (2026-07-31), uninstalled cluster-logging/loki-operator and namespaces, restored manifests. CIS control remains FAIL → INFRA-029 (needs SIEM sink decision).

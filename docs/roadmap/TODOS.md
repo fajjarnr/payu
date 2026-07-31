@@ -27,18 +27,9 @@
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| INFRA-001 | P0 | Fix trivy-image-scan registry auth for OpenShift — ✅ Red Hat registry credentials already in global pull-secret (openshift-config). registry.redhat.io, registry.connect.redhat.com, quay.io all authenticated. No blocker. | ✅ Verified |
-| INFRA-020 | P0 | GitOps ApplicationSet parity — ApplicationSet controller enabled, 9 AppProjects + AppSets applied, 22 Applications generated, `payu-dev` Synced/Healthy dengan 0 changed resources (prune off). AppSet monitoring/devsecops/PR-preview dihapus (automated sync tanpa parity). | ✅ Closed |
-| INFRA-007 | P1 | DR runbook: ✅ COMPLETE — `docs/operations/DISASTER_RECOVERY.md` (39KB, v2.0, Feb 2026) covers PostgreSQL, Kafka, Vault, DataGrid, Keycloak, service degradation, platform restore, DR testing, escalation matrix. Also: CHATOPS, INCIDENT_RESPONSE, INFRASTRUCTURE_DEPLOYMENT, ZERO-DOWNTIME-DEPLOYMENT. | ✅ Closed |
-| INFRA-021 | P1 | RHBK `payu-keycloak` CR condition investigation: `HasErrors=False` means no-errors (RHBK convention), `Ready=True` confirmed, pod healthy. No service patch conflict. | ✅ Closed |
-| SEC-020 | P1 | Remediate CIS platform failures — 9 FAIL → 1 FAIL (encryption aesgcm, audit profile, ingress ciphers, kubeadmin removed, allowed registries, network policies, SCC tailoring). Sisa: audit-log-forwarding (butuh SIEM sink, lihat INFRA-029). | ✅ Closed |
-| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). | 🔒 Blocked — butuh keputusan log sink |
-| DEVSECOPS-003 | P1 | Global rate limit 1000 req/s per IP | ✅ Closed — 1000 cap/s token-bucket in gateway rate-limit-v2.global |
+| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
 | ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is `WellFormed=True` with dev mTLS, in-cluster Hot Rod startup verified, and all workloads Ready. Replace the dev `SPRING_MAIN_SOURCES` bridge with durable starter auto-configuration metadata, then run the 24-hour `payu-dev` canary before promotion. | 🔄 In progress |
-| ARCH-008 | P2 | [billing] ✅ FIXED — SubscriptionEvent now accepts primitives, port interface retains entities | ✅ Closed |
-| ARCH-009 | P2 | [statement] ✅ FIXED — RecipientInfo/SenderInfo field finality, ReceiptException moved to domain.model | ✅ Closed |
-| ARCH-010 | P2 | [promotion] ✅ FIXED — naming rule removed CashbackEntity, service deps expanded to include outbox/saga/micrometer | ✅ Closed |
 
 
 ---
@@ -48,11 +39,9 @@
 | Key | Priority | Category | Summary |
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
-| DEPLOY-010 | P1 | API Management | ✅ Deploy 3scale APIManager — APIcast production routing + Keycloak OIDC introspection + E2E cards-crud verified. See PROGRESS.md and `infrastructure/platform/api-management/3scale/README.md`. | ✅ Closed |
 | DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. Secrets delivery is unblocked — VSO (VaultStaticSecret) is Ready 15/15 in all four envs (`aafa0b03`). | 🔄 Blocked before SIT workload deploy |
 | INFRA-026 | P1 | Secrets | Replace ephemeral dev-mode Vault before SIT with HA durable Vault, auto-unseal, backup/restore evidence, and non-root short-lived ESO authentication. Dev Vault inmem restart on 2026-07-31 wiped KV and broke 8 External Secrets; paths repopulated as recovery (L-135), durable replacement remains required. | 🔄 Planned |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
-| OPS-2026-04-08-01 | P2 | Ops | ✅ Validated — wallet-service cache config OK, /actuator/health/liveness UP, RESP PING reachable | ✅ Closed |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
 | READY-029 | P2 | Performance | Gatling: defer to cluster integration test phase (needs port-forward or in-cluster runner) | 🔄 Operator-only |
 | READY-030 | P2 | Performance | SOAK 24h: defer to staging environment | 🔄 Staging-only |
@@ -93,7 +82,6 @@ completion evidence.
 
 | # | Key | Category | Summary |
 |:---:|:---|:---|:---|
-| AUDIT-096 | PON-019 | arch | ✅ Audited: 74 ports across 21 services. 68 single-implementation (normal hexagonal — abstract for testability). 6 dead ports with 0 implementations: AgentTrainingPersistencePort, NotificationPersistencePort, NotificationSenderPort, PortalConfig, SupportAgentPersistencePort, TrainingModulePersistencePort. Can be deleted or implemented. | ✅ Audited |
 
 ---
 
