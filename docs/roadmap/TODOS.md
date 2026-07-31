@@ -29,7 +29,7 @@
 |:---|:---:|:---|:---|
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
 | INFRA-025 | P2 | [cache] RESP cursor leak remediation: shared cache invalidation no longer exposes a RESP cursor; full RESP removal still depends on ARCH-007. | 🔄 In progress |
-| ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is operator-managed, `WellFormed=True`, mTLS wired (server TLS + client CA + client keystore, identities literal-password contract), workloads connect via `payu-cache:11222` with SSL. Dev `SPRING_MAIN_SOURCES` bridge replaced by durable starter auto-configuration metadata (2026-07-31); 24-hour `payu-dev` canary running since 20:47Z — evidence gate still open before production promotion. | 🔄 In progress |
+| ARCH-007 | P2 | [cache] Java/Quarkus use native Hot Rod; Python KYC/analytics use authenticated Data Grid REST. `payu-dev` Data Grid is operator-managed, `WellFormed=True`, mTLS wired (server TLS + client CA + client keystore, identities literal-password contract), workloads connect via `payu-cache:11222` with SSL. Dev `SPRING_MAIN_SOURCES` bridge replaced by durable starter auto-configuration metadata (2026-07-31); 24-hour `payu-dev` canary running since 20:47Z — checkpoint 0 error, Hot Rod round-trip 2ms (p95 evidence accumulating via `/actuator/health` detail sampler) — evidence gate still open before production promotion. | 🔄 In progress |
 
 
 ---

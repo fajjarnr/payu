@@ -123,6 +123,24 @@ patches:
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
+    name: account-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: account-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            # Dev-only: expose Hot Rod round-trip latency for the ARCH-007
+            # 24-hour canary p95 evidence.
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+- target:
+    kind: Deployment
     name: analytics-service
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
