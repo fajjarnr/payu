@@ -4300,6 +4300,19 @@ synchronized (lock) {
 
 **Prevention**: Untuk resource-scoped lookup, lempar `BusinessException` ber-code (bukan `IllegalArgumentException`); E2E script harus menyegarkan JWT (TTL 5m) dan mendukung `GATEWAY_MODE=internal` (curl via gateway pod, bukan route publik yang strip Bearer).
 
+### L-152: E2E Rantai Bug FX — Id Preset, Klaim JWT, dan Estimate yang Menggerakkan Uang (2026-07-31)
+
+**Context**: `fx-rates.sh` T5-T7 500/400 beruntun; tiap fix membuka error berikutnya.
+
+**Findings**:
+- Controller preset `.id(UUID.randomUUID())` pada entitas `@GeneratedValue` → Hibernate "detached entity ... uninitialized version value null". Fix: biarkan JPA generate id; pada update path adapter salin `version` dari DB.
+- JWT tidak punya klaim `account_id` → `jwt.getClaim("account_id")` null → `account_id` NOT NULL violation. Fix: fallback `sub` (BUG-AUTH-013).
+- `conversion_date` tidak pernah diset → NOT NULL violation ketiga. Fix: set `LocalDateTime.now()` di service.
+- `/conversions/estimate` memanggil `createConversion` dengan `accountId="estimate"` → endpoint estimasi menggerakkan uang wallet! Fix: metode `estimateConversion` terpisah (hitung rate, tanpa persist/wallet). Uji Mockito `verify(never())` untuk save/debit/credit mengunci money-safety.
+- T7 terakhir gagal karena `wallet-service` tidak punya gRPC server (ConnectTimeout) — gap integrasi pre-existing (FX-002), bukan cache.
+
+**Prevention**: E2E alur create/persist jalankan sampai error database hilang satu per satu; untuk endpoint "estimasi" jangan reuse method yang menulis; verifikasi klaim JWT (`account_id` vs `sub`) sebelum dipakai di NOT NULL column; cek keberadaan server upstream (gRPC) sebelum menulis client.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.

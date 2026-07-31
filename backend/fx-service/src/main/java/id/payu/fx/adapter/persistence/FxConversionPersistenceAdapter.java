@@ -47,7 +47,13 @@ public class FxConversionPersistenceAdapter implements FxConversionRepositoryPor
 
     private FxConversionEntity toEntity(FxConversion conversion) {
         FxConversionEntity entity = new FxConversionEntity();
-        entity.setId(conversion.getId());
+        if (conversion.getId() != null) {
+            entity.setId(conversion.getId());
+            // Preserve optimistic-lock version for detached-entity updates
+            // (JPA merge rejects a generated-id entity with null version).
+            repository.findById(conversion.getId())
+                    .ifPresent(existing -> entity.setVersion(existing.getVersion()));
+        }
         entity.setAccountId(conversion.getAccountId());
         entity.setFromCurrency(conversion.getFromCurrency());
         entity.setToCurrency(conversion.getToCurrency());

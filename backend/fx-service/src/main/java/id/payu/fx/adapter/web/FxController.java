@@ -118,10 +118,8 @@ public class FxController extends BaseController {
             @Valid @RequestBody ConvertCurrencyRequest request) {
 
         rateQueryCounter.increment();
-        FxConversion conversion = fxConversionService.createConversion(
+        FxConversion conversion = fxConversionService.estimateConversion(
                 FxConversion.builder()
-                        .id(UUID.randomUUID())
-                        .accountId("estimate")
                         .fromCurrency(request.getFromCurrency())
                         .toCurrency(request.getToCurrency())
                         .fromAmount(request.getAmount())
@@ -152,11 +150,14 @@ public class FxController extends BaseController {
         conversionCounter.increment();
 
         return conversionTimer.record(() -> {
-            String accountId = jwt.getClaim("account_id");
+            // BUG-AUTH-013: 'account_id' claim with 'sub' fallback.
+            String accountId = jwt.getClaimAsString("account_id");
+            if (accountId == null) {
+                accountId = jwt.getSubject();
+            }
 
             FxConversion conversion = fxConversionService.createConversion(
                     FxConversion.builder()
-                            .id(UUID.randomUUID())
                             .accountId(accountId)
                             .fromCurrency(request.getFromCurrency())
                             .toCurrency(request.getToCurrency())

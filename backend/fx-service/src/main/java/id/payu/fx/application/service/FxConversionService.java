@@ -52,6 +52,7 @@ public class FxConversionService implements FxConversionUseCase {
         conversion.setToAmount(convertedAmount);
         conversion.setExchangeRate(rate.getRate());
         conversion.setStatus(ConversionStatus.PENDING);
+        conversion.setConversionDate(java.time.LocalDateTime.now());
         
         FxConversion saved = conversionRepository.save(conversion);
         String txId = saved.getId().toString();
@@ -85,6 +86,15 @@ public class FxConversionService implements FxConversionUseCase {
 
         saved.markCompleted();
         return conversionRepository.save(saved);
+    }
+
+    @Override
+    public FxConversion estimateConversion(FxConversion conversion) {
+        FxRate rate = fxRateUseCase.getCurrentRate(conversion.getFromCurrency(), conversion.getToCurrency());
+        conversion.setToAmount(conversion.getFromAmount().multiply(rate.getRate()));
+        conversion.setExchangeRate(rate.getRate());
+        conversion.setStatus(ConversionStatus.PENDING);
+        return conversion;
     }
 
     @Override

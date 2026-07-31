@@ -11,6 +11,8 @@ public interface FxConversionUseCase {
 
     FxConversion createConversion(FxConversion conversion);
 
+    FxConversion estimateConversion(FxConversion conversion);
+
     FxConversion getConversion(UUID conversionId);
 
     List<FxConversion> getConversionsByAccount(String accountId);
