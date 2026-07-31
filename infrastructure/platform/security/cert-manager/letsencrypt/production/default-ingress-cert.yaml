@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-ingress-cert
+  namespace: openshift-ingress
+spec:
+  secretName: app-router-certs
+  issuerRef:
+    name: letsencrypt-prod-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - '*.apps.cluster-9xtfg.9xtfg.sandbox5612.opentlc.com'
+    - 'apps.cluster-9xtfg.9xtfg.sandbox5612.opentlc.com'
