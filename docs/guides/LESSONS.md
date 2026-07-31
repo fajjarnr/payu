@@ -4270,6 +4270,16 @@ synchronized (lock) {
 
 **Prevention**: Untuk operator-managed Data Grid, jaga kontrak secret: `identities.yaml` + `username`/`password` dengan literal yang sama; jangan hapus env via `oc set env` tanpa re-apply overlay; verifikasi `printenv` di pod baru; gunakan satu runtime (operator CR), bukan deployment manual paralel.
 
+### L-149: Keycloak Partial Import — User Ada tapi Password Tidak Terbawa; E2E Script Host Stale (2026-07-31)
+
+**Context**: `scripts/e2e/auth-login.sh` kembali gagal di dev: login lewat web-app 500, padahal client `payu-backend` dan user `customer1` sudah ada di realm Keycloak dev.
+
+**Findings**:
+- Partial import realm (partialImport) membuat client + user, tapi password user TIDAK ikut (grant langsung → `invalid_grant / Invalid user credentials`). Reset via admin API `PUT /admin/realms/payu/users/{id}/reset-password` memperbaiki. Validasi user punya password yang benar sebelum menyalahkan client/config.
+- `scripts/e2e/auth-login.sh` masih hardcode host SSO lama (`sso-payu-dev.apps.payu.ocp.fajjjar.my.id`); host aktif dev = `sso-dev.apps.fajjjar.my.id`. Host SSO berubah tanpa update skrip E2E.
+
+**Prevention**: Setelah import realm, verifikasi grant langsung (password flow) sebelum E2E; jangan trust partial import untuk credential; cek hardcoded host di skrip E2E saat domain/infra berubah.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
