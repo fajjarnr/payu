@@ -67,7 +67,12 @@ spec:
             - |
               for db in $DB_LIST; do
                 echo "Post-migration outbox_events owner+grants in ${db}"
-                psql -w -v ON_ERROR_STOP=1 -d "$db" -c "
+                # lock_timeout: fail fast instead of hanging hours when an app
+                # session leaks an open transaction on outbox_events
+                # (idle-in-transaction holding RowExclusiveLock → ALTER blocked,
+                # OPS-2026-08-01-06). Redeploy gate must see a failure, not a hang.
+                psql -w -v ON_ERROR_STOP=1 -d "$db" \
+                  -c "SET lock_timeout TO '15s'" -c "
                   DO \$\$
                   BEGIN
                     IF to_regclass('public.outbox_events') IS NOT NULL THEN

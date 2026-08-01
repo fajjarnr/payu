@@ -4615,3 +4615,11 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 **Fix**: Tambah `app.kubernetes.io/part-of: payu` + `app.kubernetes.io/component: database` di `spec.template.metadata.labels` post-deploy-db-grants (mengikuti sibling). Juga tambah pod-level `runAsNonRoot` + container `allowPrivilegeEscalation:false, readOnlyRootFilesystem:true` di base (bukan hanya overlay dev) supaya semua env admission-safe.
 
 **Prevention**: Saat menambah Job apa pun: cek kyverno exclude selector berlaku di **template labels**; verifikasi admission via `kustomize build` + lihat events FailedCreate penuh (`.items[-1].message` dari `oc get events -o json`).
+
+### L-195: Bootstrap Job lock timeout — `idle in transaction` app leak blokir ALTER (2026-08-01)
+
+**Context**: `outbox-bootstrap` hang berjam-jam di DB `payu_fx` (tiga run berturut-turut). `pg_stat_activity` → pid 15125 `PostgreSQL JDBC Driver` **idle in transaction 1h16m** (`update outbox_events oe1_0 set retry_count=...`) memegang RowExclusiveLock+RowShareLock di `outbox_events` → semua INSERT/SELECT/ALTER (termasuk job DO block) antri. `pg_terminate_backend(15125)` unblock sesaat, tapi app langsung buat leak baru (pola berulang) — bug app outbox dispatcher.
+
+**Fix**: `SET lock_timeout TO '15s'` di sesi psql job (per-`-c` sebelum DO block) → job fail fast + terlihat di pipeline gate, bukan hang 4h. Root cause app tetap ditrack (OPS-2026-08-01-06): JDBC transaction leak harus di-fix di service (timeout/commit/reconnect).
+
+**Prevention**: Bootstrap/migration Job apa pun yang menulis DDL/DML wajib `lock_timeout` + `PGCONNECT_TIMEOUT`; diagnosa hang DB: `SELECT pid,state,now()-xact_start,query FROM pg_stat_activity WHERE state<>'idle'` + `pg_locks` untuk cari holder `idle in transaction`.
