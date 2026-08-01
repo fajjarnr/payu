@@ -406,6 +406,21 @@ spec:
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
+  name: payu-tekton-results
+  labels:
+    app.kubernetes.io/name: payu-tekton-results
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: tekton_results
+  owner: payu
+  ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
   name: payu-transaction
   labels:
     app.kubernetes.io/name: payu-transaction
