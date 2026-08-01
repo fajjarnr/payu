@@ -1,0 +1,154 @@
+# DR Drill — Vault Raft snapshot restore verification (INFRA-026 / DEVSECOPS-017)
+# Scratch instance, same awskms seal (auto-unseal), restore latest S3 snapshot,
+# verify KV data. Runtime steps (no secrets in Git):
+#   1. oc create ns payu-drill
+#   2. Copy secrets: vault-kms-credentials (payu-vault) -> payu-drill
+#      + aws-creds (kube-system) -> payu-drill/aws-creds
+#   3. oc apply -f this manifest
+#   4. Download snapshot + restore (see docs/operations/INFRASTRUCTURE_DEPLOYMENT.md DR section)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-drill
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: dr
+    payu.io/managed-by: platform-team
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-drill-config
+  namespace: payu-drill
+data:
+  vault.hcl: |
+    disable_mlock = true
+    ui = false
+    listener "tcp" {
+      address = "0.0.0.0:8200"
+      tls_disable = true
+    }
+    storage "raft" {
+      path = "/vault/data"
+      node_id = "drill-1"
+    }
+    seal "awskms" {
+      region = "us-east-1"
+      kms_key_id = "arn:aws:kms:us-east-1:390403884108:key/610f3f85-0e82-4a7a-930b-64d7a3e05af4"
+    }
+    api_addr = "http://127.0.0.1:8200"
+    cluster_addr = "http://127.0.0.1:8201"
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-drill-egress
+  namespace: payu-drill
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: dr
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-drill
+  namespace: payu-drill
+  labels:
+    app.kubernetes.io/name: vault-drill
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: dr
+    app.kubernetes.io/version: "1.15"
+    team: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault-drill
+  template:
+    metadata:
+      labels:
+        app: vault-drill
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: dr
+        app.kubernetes.io/managed-by: platform-team
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: vault
+          image: docker.io/hashicorp/vault@sha256:db6a5f78749204d0a8d002be1cc6e9a2a6de53dffce41a894c4a06d309dca360
+          command: ["vault"]
+          args: ["server", "-config=/etc/vault/vault.hcl"]
+          env:
+            - name: VAULT_ADDR
+              value: http://127.0.0.1:8200
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vault-kms-credentials
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vault-kms-credentials
+                  key: aws_secret_access_key
+            - name: AWS_REGION
+              value: us-east-1
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vault
+            - name: data
+              mountPath: /vault/data
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: config
+          configMap:
+            name: vault-drill-config
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

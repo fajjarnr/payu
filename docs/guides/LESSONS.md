@@ -4535,6 +4535,12 @@ synchronized (lock) {
 
 **Fix**: Patch `TektonConfig.spec.result` (is_external_db, db_host, db_name, db_secret_name, db_sslmode, db_enable_auto_migration) → operator propagate ke TektonResult + deployment API. Verifikasi: `oc get tektonresult result -o jsonpath='{.spec.is_external_db}'` + env `DB_HOST` di pod API + count records di DB target.
 
+### L-187: Vault DR drill — awskms seal butuh egress + entrypoint lama override config (2026-08-01)
+
+**Context**: Scratch vault (restore drill) hang "connection refused" di 8200: (1) image entrypoint lama (`docker-entrypoint.sh`) mengabaikan `-config` dan jalan `-dev` args → override `command: ["vault"]`; (2) `storage "raft"` + `seal "awskms"` → vault block menunggu AWS KMS; ns punya `default-deny-all` → butuh egress NP (0.0.0.0/0:443 + DNS 5353/53 ke openshift-dns, pola `vault-allowed-traffic` payu-vault); (3) exec/log ke node baru `no route to host` (subnet kubelet tak terjangkau shell ini) — verifikasi restore pending.
+
+**Next**: Setelah exec access/pod di node reachable: `vault operator raft snapshot restore /tmp/drill.snap` → `vault kv list secret/payu/...` + compare. Manifest: `infrastructure/platform/security/vault/promotion/dr-drill.yaml`.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.
