@@ -151,6 +151,23 @@ metadata:
     app.kubernetes.io/part-of: payu
 spec:
   description: "PayU Production — SRE Only (Break-Glass)"
+  syncWindows:
+    - kind: deny
+      schedule: "* * * * *"
+      duration: 1h
+      applications:
+        - "payu-prod"
+        - "data-prod"
+        - "identity-prod"
+        - "messaging-prod"
+    - kind: allow
+      schedule: "0 0 * * 0"
+      duration: 6h
+      applications:
+        - "payu-prod"
+        - "data-prod"
+        - "identity-prod"
+        - "messaging-prod"
   sourceRepos:
     - "https://github.com/fajjarnr/payu.git"
   destinations:
