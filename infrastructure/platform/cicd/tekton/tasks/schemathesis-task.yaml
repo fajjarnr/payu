@@ -30,4 +30,5 @@ spec:
         schemathesis run \
           "$(params.SCHEMA_URL)" \
           --base-url "$(params.BASE_URL)" \
-          --checks all
+          --checks all \
+          --experimental=openapi-3.1
