@@ -4359,6 +4359,16 @@ synchronized (lock) {
 
 **Prevention**: Saat service "Not Authenticated" dengan token valid, cek env `*_TENANT_ENABLED`/disable flags di deployment live vs repo (`oc set env` hack sering tak ter-repo-kan); audit `oc get deploy -o json | grep TENANT` saat debugging OIDC.
 
+### L-157: Monitor Canary Harus Guard Auth — Data Sampah Saat Token Expire (2026-08-01)
+
+**Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
+
+**Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.
+
+**Fix**: Guard `oc whoami` per iterasi; saat gagal tulis `status=AUTH_ERR errs=N/A backend_ready=N/A` (bukan angka). Checkpoint valid = `status=OK` saja.
+
+**Prevention**: Monitor apa pun yang menghasilkan evidence harus menulis status eksplisit (OK/AUTH_ERR/ERROR) dan tidak pernah menerbitkan angka dari output kosong; audit bukti canary hanya menerima baris `status=OK`.
+
 ### L-147: Dev Data Grid Runtime Drift vs Manifest (2026-07-31)
 
 **Context**: `payu-cache` Service selector `app: infinispan-pod,clusterName: payu-cache` tapi deployment dev manual pakai `app: payu-cache` → endpoints kosong. Gateway/auth Hot Rod dikonfig `USE_SSL=true` + keystore p12 (isi secret kosong, Vault wiped — INFRA-026) padahal server dev plaintext `infinispan/server:15.0` (developer/password). Cache `payu` juga belum ada di server.
