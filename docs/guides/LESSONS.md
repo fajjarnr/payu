@@ -4385,6 +4385,18 @@ synchronized (lock) {
 
 **Fix**: Commit manifest → `oc apply -f` (Application dengan `spec.operation.sync`) atau `argocd app sync`.
 
+### L-162: Tekton writeback — image `ose-cli` tanpa `git`; pakai `pipelines-git-init` (2026-08-01)
+
+**Context**: Task `gitops-writeback` gagal `git: command not found` (registry.redhat.io/openshift4/ose-cli-rhel9 tidak punya git), `gcr.io/tektoncd/pipeline/cmd/git-init` pull 403, dan cluster task `git-cli` workspace mount kosong. Repo clone di workspace root owned root → `dubious ownership`.
+
+**Fix**: Image `registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:cbd89c...` (punya git + awk), plus `git config --global --add safe.directory "$(workspaces.source.path)"`. Task `payu-deploy-gitops-pipeline` `gitops-writeback` = edit kustomization (awk) + commit + conditional push.
+
+### L-163: ArgoCD gate drift — app `payu-dev` OutOfSync walaupun sync Succeeded (2026-08-01)
+
+**Context**: `argocd-sync-wait` gate loop `sync=Unknown` karena SA `pipeline` tak punya RBAC `get applications`; setelah RBAC, `payu-dev` tetap OutOfSync (ConfigMaps/Namespace/Service drift dari appset metadata + render).
+
+**Fix**: RBAC `argocd-application-reader` (RoleBinding openshift-gitops → SA pipeline). Drift dev app perlu audit terpisah sebelum gate dipakai.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

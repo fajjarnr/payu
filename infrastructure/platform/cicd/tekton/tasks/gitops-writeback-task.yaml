@@ -35,7 +35,7 @@ spec:
       description: "Cloned GitOps repository"
   steps:
     - name: writeback
-      image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978578dd8c57b2c131adff663df26
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:cbd89c531953a43b8055bda72f7696be80f57fd1d782567a91d82e0fbcb3d26d
       script: |
         #!/bin/sh
         set -eu
@@ -77,6 +77,7 @@ spec:
           { print }
         ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
 
+        git config --global --add safe.directory "$(workspaces.source.path)"
         git config --global user.email "gitops-bot@payu.internal"
         git config --global user.name "Tekton GitOps Bot"
         git add kustomization.yaml
@@ -92,3 +93,4 @@ spec:
         else
           echo "[*] push-changes=false, commit retained locally in workspace only"
         fi
+        echo "[✓] Updated $(params.service-name) image to ${IMAGE_REF} in $(params.environment)"

@@ -47,3 +47,6 @@ resources:
 
   # NetworkPolicies
   - networkpolicy-allow-egress.yaml
+
+  # RBAC (ArgoCD Application read for sync-wait gate)
+  - argocd-sync-rbac.yaml
