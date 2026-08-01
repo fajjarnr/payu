@@ -24,11 +24,31 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: post-deploy-db-grants
+        # Match sibling bootstrap jobs: `component: database` triggers the
+        # Kyverno disallow-root-user exclusion. Without it, admission webhook
+        # denies pod creation ("rule check-runasuser failed at path
+        # /spec/containers/0/securityContext/runAsNonRoot") → Job stuck
+        # Running 0/1 → ArgoCD Progressing on redeploy.
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: database
     spec:
       restartPolicy: Never
+      # Kyverno disallow-root-user (Enforce) denies Jobs without runAsNonRoot.
+      # Base-level securityContext so every env overlay (incl. preprod, which
+      # does not carry overlays/common/jobs-patch.yaml) is admission-safe.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: db-grants
           image: registry.redhat.io/rhel9/postgresql-16:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: PGHOST
               value: payu-database-rw.payu-dev.svc.cluster.local

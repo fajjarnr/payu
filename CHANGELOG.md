@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kraken job rootfs read-only** (OPS-2026-08-01-05): emptyDir `/home/krkn/kraken` + `/tmp` di-mount ke init `fixperms` + container `kraken` → `kraken.report` write aman walau CRI-O mount rootfs `ro`.
 - **Job immutable vs ArgoCD** (L-190): anotasi `argocd.argoproj.io/sync-options: Replace=true` di `outbox-bootstrap-job.yaml` + `post-deploy-db-grants.yaml` → sync tidak gagal `field is immutable` saat spec berubah antar deploy.
 - **psql bootstrap hang** (L-191): `PGCONNECT_TIMEOUT=10` + `-w` + per-DB skip pada `post-deploy-db-grants` (sebelumnya bisa "Running 0/1" >3h saat DB tak terjangkau).
+- **Kyverno admission deny Job pod** (L-194): `post-deploy-db-grants` pod template labels kurang `app.kubernetes.io/component: database` (exclusion disallow-root-user) → `FailedCreate: rule check-runasuser failed` → Job stuck + ArgoCD Progressing. Fix: label + pod-level `runAsNonRoot`/container security di base.
 - **DR drill** (INFRA-026): init awskms wajib `-recovery-shares/-recovery-threshold` (bukan `-key-shares`, 400); `vault-drill` SA + `system:auth-delegator` binding utk kubernetes login (L-192). Restore snapshot `20260801T005422Z.snap` verified: `restore -force` RC=0, state prod (recovery 5/3, peers vault-0/1/2, auth roles) live.
 
 ### Known

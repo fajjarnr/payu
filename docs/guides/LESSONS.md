@@ -4605,3 +4605,13 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 3. **Gateway RBAC**: setelah TLS OK, `403 Forbidden` — `loki-gateway` ConfigMap di-render operator 6.5.1 dgn `lokistack-gateway.rego` + `rbac.yaml` **0 bytes** utk `tenants.mode: openshift-logging` (reproduksi: delete cm + recreate LokiStack → tetap kosong). SAR `logcollector` collect `logs/audit` di `logging.openshift.io`/`observability.openshift.io` = allowed, SA `loki-gateway` punya tokenreviews+SAR — RBAC chain benar; tersangka bug operator (keluarga LOG-2236).
 
 **Fix/Prevention**: Verifikasi delivery bertahap (DNS → TLS → authz), jangan klaim "log delivered" hanya krn CLF Ready. Cek `oc get cm loki-gateway -n openshift-logging -o jsonpath='{.binaryData}'` — rego/rbac kosong = belum deliver. Bug operator: butuh RH support / upgrade 6.5.x; workaround tenant `static`/`dynamic` bila mendesak.
+
+### L-194: Kyverno exclude label harus ada di pod TEMPLATE labels, bukan Job metadata (2026-08-01)
+
+**Context**: Setelah Job `Replace=true` di-deploy, `post-deploy-db-grants` stuck "Running 0/1" — admission webhook `validate.kyverno.svc-fail` deny pod: `check-runasuser: Running as root is not allowed ... rule check-runasuser failed at path /spec/containers/0/securityContext/runAsNonRoot/`. Event di `oc get events -n payu-preprod` (FailedCreate, message terpotong di console — cek via JSON).
+
+**Root cause**: `disallow-root-user` match pods di ns `part-of: payu` DENGAN exclusion `app.kubernetes.io/component: database`. Sibling jobs (outbox/shedlock) punya label itu di **pod template labels**; `post-deploy-db-grants` hanya di Job metadata — label metadata TIDAK propagate ke pod → pod tidak kena exclusion → denied.
+
+**Fix**: Tambah `app.kubernetes.io/part-of: payu` + `app.kubernetes.io/component: database` di `spec.template.metadata.labels` post-deploy-db-grants (mengikuti sibling). Juga tambah pod-level `runAsNonRoot` + container `allowPrivilegeEscalation:false, readOnlyRootFilesystem:true` di base (bukan hanya overlay dev) supaya semua env admission-safe.
+
+**Prevention**: Saat menambah Job apa pun: cek kyverno exclude selector berlaku di **template labels**; verifikasi admission via `kustomize build` + lihat events FailedCreate penuh (`.items[-1].message` dari `oc get events -o json`).
