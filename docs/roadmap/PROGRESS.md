@@ -8,6 +8,12 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-01 — SIT promotion pipeline FULLY GREEN; LitmusChaos + automated GitOps live**:
+> - `payu-deploy-gitops-pipeline` SIT run `SUCCEEDED` (14m54s): fetch-infra-repo → gitops-writeback → argocd-sync-wait → ZAP baseline (0 FAIL) → Schemathesis (OpenAPI 3.1, `status_code_conformance` excluded) → Litmus gate (pod-delete **Pass**, account-service auto-recovered; pod-network-latency Pass) → k6 smoke (`/api/health`, 0% failed).
+> - ArgoCD: appset `automated` sync (no prune/self-heal) di 3 ApplicationSet; controller sized 6Gi/repo-server 2Gi/server 512Mi (OOM 137 selama sync storm 20+ app — L-171); `payu-sit` Synced `main`; argocd CLI admin auth live.
+> - LitmusChaos 3.28.0 execution plane di `litmus` ns; images digest-pinned via `mirror.gcr.io` (Docker Hub rate limit); `mirror.gcr.io` masuk allowedRegistries cluster (backup + MOP); NP `allow-chaos-platform-traffic` + Kyverno chaos-engineering labels (L-175/176); `payu-sit` 40/40 pods Running.
+> - SIT gateway Route (edge TLS) `gateway-sit.apps.fajjjar.my.id` untuk DAST/fuzzing/E2E; `spec.port.targetPort` top-level (OpenShift Route schema).
+
 > ✅ **2026-08-01 — SIT workloads deployed; Vault HA + worker autoscaling live**:
 > - DEPLOY-011: overlay promo deploy-safe (hapus dev Secrets/KogitoRuntime di promo, auth key align, per-env OIDC/cache/VSS path). ArgoCD `payu-sit` synced `85cf79bb`; 37/41 app pods Running. Fix runtime: DB role `payu` password (ALTER USER + Vault `payu/sit/database/app`), asyncpg URL (`+asyncpg://...payu_analytics/kyc`), OTEL disable (belum ada collector per env), flyway baseline reset 4 DB.
 > - INFRA-026: HA Vault 3/3 (Raft + awskms auto-unseal, TLS, PDB), snapshot CronJob verified ke S3, kubernetes auth non-root short-lived (15m), VSS 60/60 Ready. Restore drill → DEVSECOPS-017 DR.

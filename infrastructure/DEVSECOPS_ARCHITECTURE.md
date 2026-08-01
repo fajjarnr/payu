@@ -4,9 +4,9 @@
 
 | Field               | Value                                               |
 | ------------------- | --------------------------------------------------- |
-| **Versi**           | **1.3.0** _(Updated from 1.2.0)_                    |
-| **Status**          | Draft — Internal Review                             |
-| **Tanggal**         | April 2026                                          |
+| **Versi**           | **1.3.1** _(Updated from 1.3.0)_                    |
+| **Status**          | Implementasi berjalan — SIT gates live (2026-08-01) |
+| **Tanggal**         | 2026-08-01                                          |
 | **Author**          | Platform Engineering Team                           |
 | **Klasifikasi**     | CONFIDENTIAL _(Internal Personal Project Use Only)_ |
 | **Target Audience** | Engineering Lead, CISO, Platform Team               |

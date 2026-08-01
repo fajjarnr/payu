@@ -4439,6 +4439,48 @@ synchronized (lock) {
 
 **Fix**: Recreate pod (delete) → admission ulang → exclusion berlaku. Cek `creationTimestamp` pod vs policy `lastApplied` sebelum debug panjang.
 
+### L-171: `oc get application` salah resolve — `app.k8s.io` shadow ArgoCD CRD (2026-08-01)
+
+**Context**: Tekton `argocd-sync-wait` loop `sync=Unknown` terus, padahal RBAC `can-i` yes. `oc get application` resolve ke `applications.app.k8s.io` (kubernetes-sigs Application CRD), bukan `applications.argoproj.io` → Forbidden, error ditelan `2>/dev/null || true`.
+
+**Fix**: Gunakan grup eksplisit: `oc get applications.argoproj.io`. Jangan pernah parse error dari command yang membuang stderr diam-diam.
+
+### L-172: ZAP automation framework dobel-prefix report path `/zap/wrk/zap/wrk` (2026-08-01)
+
+**Context**: `zap-baseline.py -J /zap/wrk/zap-baseline.json` menghasilkan `NoSuchFileException /zap/wrk/zap/wrk/zap-baseline.html` → exit 1 walau `FAIL-NEW: 0`. Wrapper docker selalu menulis ke `/zap/wrk`; path absolut di-prefix lagi.
+
+**Fix**: Beri path relatif (`-J zap-baseline.json`) + mount emptyDir `/zap/wrk` + `cp` hasil ke workspace.
+
+### L-173: Schemathesis CLI drift — flags `--phases`/`--report-junit` hilang, OpenAPI 3.1 eksperimental (2026-08-01)
+
+**Context**: Image pinned schemathesis terbaru: `--phases` dan `--report-junit` sudah tidak ada; schema Quarkus gateway `openapi: 3.1.0` ditolak ("not fully supported"); endpoint auth-protected 401 → `status_code_conformance` gagal (901/1317).
+
+**Fix**: `--checks all --exclude-checks status_code_conformance --experimental=openapi-3.1`. Verifikasi flag via `schemathesis run --help` dari image (bukan asumsi memory).
+
+### L-174: Image dengan user non-numeric + `runAsNonRoot` → CreateContainerConfigError (2026-08-01)
+
+**Context**: k6 TaskRun `Failed to create pod due to config error`; detail: `image has non-numeric user (k6), cannot verify user is non-root`. OpenShift butuh `runAsUser` numerik.
+
+**Fix**: `securityContext.runAsUser: 1001` di task. Log `describe` TaskRun status untuk message asli — jangan tebak dari "config error".
+
+### L-175: Litmus runner egress ke API server diblok default-deny NetworkPolicy (2026-08-01)
+
+**Context**: ChaosEngine stuck `initialized`, runner pod `Running` tapi idle (1m CPU); `/proc/net/tcp` menunjukkan `SYN_SENT` ke `172.30.0.1:443`. Payu-sit `default-deny-all` blok egress API server untuk pod chaos.
+
+**Fix**: NP `allow-chaos-platform-traffic` (podSelector `app.kubernetes.io/component: chaos-engineering`) dengan egress: intra-ns + DNS + `172.30.0.1:443` + `6443`. Diagnosa idle pod: cek koneksi TCP aktif (`/proc/net/tcp` state `02` = SYN_SENT).
+
+### L-176: Litmus runner/experiment pods — Kyverno exclusion butuh label aktual dari operator (2026-08-01)
+
+**Context**: Runner pod diblok Kyverno (`disallow-root-user`, `require-approved-registry`) walau policy sudah exclude `app.kubernetes.io/component: chaos-engineering` — runner pod punya label `component: chaos-runner` (dari source `getChaosRunnerLabels`), bukan chaos-engineering.
+
+**Fix**: Set `spec.components.runner.runnerLabels.app.kubernetes.io/component: chaos-engineering` di ChaosEngine + label sama di `ChaosExperiment.spec.definition.labels` → pod chaos masuk exclusion semua policy (registry mirror.gcr.io, root, cosign, resource limits).
+
+### L-177: Kubernetes role-escalation — CI SA bikin Role dgn perms lebih lebar dari dirinya (2026-08-01)
+
+**Context**: `oc apply -k` litmus overlay gagal: pipeline SA "attempting to grant RBAC permissions not currently held" saat create Role `litmus-admin` (pods/secrets create/delete).
+
+**Fix**: Beri pipeline SA Role `payu-tekton-litmus-gate` di payu-sit dengan perms yang SAMA dengan yang mau di-grant (pods, secrets, services, configmaps, events, apps patch/update, batch jobs) — scoped test env, bukan cluster-admin.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

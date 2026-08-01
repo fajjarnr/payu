@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
-| **Last Release** | `1.10.1` (2026-08-01) — SIT runtime fixes: lending Flyway reset, broker/console/config-listener CrashLoop, Kyverno controller sizing |
-| **Last Updated** | 2026-08-01 (SIT 40/40 pods Running; OPS-2026-08-01-01 ditutup) |
+| **Last Release** | `1.10.2` (2026-08-01) — SIT promotion pipeline full green: ArgoCD automated sync, ZAP/Schemathesis/Litmus/k6 gates live, LitmusChaos deployed |
+| **Last Updated** | 2026-08-01 (pipeline `payu-deploy-gitops-pipeline` SIT SUCCEEDED; OPS-2026-08-01-02 ditutup) |
 
 ---
 
@@ -58,9 +58,8 @@ Dev loop (2026-07-31 → 2026-08-01): `web-app:1.5.3` deployed; unit 1187 pass; 
 | Key | Priority | Category | Summary |
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
-| DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. **2026-08-01**: overlays deploy-safe + SIT workloads deployed (37/41 app pods Running; sisa CrashLoop = infra pre-existing: broker, kafka-console, cache-config-listener). Sisa: promotion UAT→preprod→prod via Tekton `payu-deploy-gitops-pipeline` + digest pinning + E2E gates. | 🟢 SIT deployed — UAT/preprod/prod pending pipeline promotion |
+| DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. **2026-08-01**: overlays deploy-safe + SIT workloads deployed (40/40 pods Running) + Tekton `payu-deploy-gitops-pipeline` SIT pilot SUCCEEDED (argocd-sync-wait, ZAP baseline, Schemathesis, Litmus pod-delete Pass, k6 smoke). Sisa: UAT→preprod→prod promotion via pipeline (digest pinning + E2E gates per env). | 🟢 SIT pilot green — UAT/preprod/prod pending |
 | INFRA-026 | P1 | Secrets | Replace ephemeral dev-mode Vault before SIT with HA durable Vault, auto-unseal, backup/restore evidence, and non-root short-lived ESO authentication. **2026-08-01**: HA Vault live 3/3 (Raft+awskms, TLS, PDB, anti-affinity), kubernetes auth roles short-lived (15m), snapshot CronJob verified ke S3, `payu-database-app` password + asyncpg DB URLs di-sync. Sisa: restore drill (masuk DEVSECOPS-017 DR exercise). | 🟢 Live — restore drill pending |
-| OPS-2026-08-01-02 | P1 | CI/CD | ArgoCD automation blocker untuk pipeline gate: appset strip `spec.operation`, resolve revision `main` stale (`6d978cfd` vs `bd65f8ef`), CLI `--core` NOAUTH redis. Next: setup `argocd` CLI auth (admin/SSO token) ATAU enable `automated` syncPolicy di ApplicationSet + re-run `payu-deploy-gitops-pipeline` pilot. | 🔄 Blocked — butuh keputusan auth/sync mode |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
 | READY-029 | P2 | Performance | Gatling: defer to cluster integration test phase (needs port-forward or in-cluster runner) | 🔄 Operator-only |

@@ -10,10 +10,10 @@
 |:---|:---|
 | Scope | Infrastructure bootstrap, platform services, workload deployment, verification, rollback |
 | Target platform | Red Hat OpenShift 4.20+ |
-| Last verified cluster | OCP 4.20.26, Kubernetes v1.33.12, 7 Ready nodes |
-| Last verified date | 2026-07-08 |
+| Last verified cluster | OCP 4.20.29, Kubernetes v1.35.6, 8 Ready nodes (3 control-plane + 5 workers, 3 AZs) |
+| Last verified date | 2026-08-01 |
 | Primary namespace | `payu-dev` for current data, messaging, cache, and application workloads |
-| Change mode | Manual bootstrap first; GitOps only after ApplicationSet reconciliation is complete |
+| Change mode | GitOps (ArgoCD `automated` sync, no prune/self-heal) after bootstrap; manual `oc apply` only for operator-managed resources (ArgoCD CR, Image config) |
 
 ## Critical Drift Notes
 
@@ -41,7 +41,34 @@ Current state differs from older docs:
 4. Apply in dependency order: namespaces, operators, data/messaging, identity, API management shell, images, workloads.
 5. Stop the deployment if any infrastructure CR reports `Ready=False`, `HasErrors=True`, CrashLoopBackOff, or recent Warning events.
 6. Do not apply `3scale/apimanager.yaml` until external backing-store, storage, and Vault-managed secrets are available.
-7. Do not enable automated GitOps sync until `INFRA-020` is closed and the live `payu-dev` image tags match the overlay.
+7. Automated GitOps sync (`syncPolicy.automated`, no prune/self-heal) is enabled on `payu-environments`, `payu-environment-platform`, and `payu-identity` ApplicationSets (2026-08-01). Prune/self-heal remain OFF until the promotion gate sequence SIT→UAT→preprod→prod completes.
+8. ArgoCD Application objects are resolved with the explicit group `applications.argoproj.io` — `oc get application` resolves to the `app.k8s.io` shadow CRD (L-171).
+9. LitmusChaos execution plane: `infrastructure/platform/security/litmus/` (operator bundle) + `infrastructure/platform/security/chaos/litmus/` (SIT overlay: RBAC, experiments, ChaosEngine, NetworkPolicy). Images are digest-pinned via `mirror.gcr.io`; the registry must stay in `image.config.openshift.io/cluster` allowedRegistries.
+10. SIT exposes a gateway Route (`gateway-sit.apps.fajjjar.my.id`, edge TLS) for DAST/fuzzing/E2E; OpenShift Route port uses `spec.port.targetPort` at top level (not nested under `to`, and no `name` field — L-172/173 lessons).
+
+## Promotion Pipeline (SIT → UAT → preprod → prod)
+
+`payu-deploy-gitops-pipeline` (Tekton, `payu-cicd`) is the sole promotion path:
+
+```bash
+tkn pipeline start payu-deploy-gitops-pipeline -n payu-cicd \
+  -w name=source,claimName=tekton-workspace-pvc \
+  -p service-name=<service> -p environment=<sit|uat|preprod|prod> \
+  -p image-tag=<tag> -p push-changes=true \
+  -p environment-base-url=<env-url> -p schema-url=<gateway>/q/openapi \
+  --use-param-defaults
+```
+
+Gate sequence per environment (2026-08-01 status):
+
+| Environment | Gates | Status |
+|:---|:---|:---|
+| SIT | Argo sync-wait → ZAP baseline → Schemathesis → LitmusChaos → k6 smoke | ✅ green (pilot SUCCEEDED) |
+| UAT | Argo sync-wait → Schemathesis → k6 load | pending |
+| PREPROD | Argo sync-wait → Kraken/Cerberus chaos | pending (Kraken not installed) |
+| PROD | Argo sync-wait → canary | pending (CAB/CISO sign-off) |
+
+Prereqs for UAT/preprod/prod runs: overlay secrets via VaultStaticSecret per env (done), registry `newName` entries per env (done), digest pinning (`image-digest` param), and E2E gate scripts for each environment.
 
 ## Environment Map
 

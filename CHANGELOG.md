@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.2] - 2026-08-01
+
+### Added
+
+- LitmusChaos execution plane (chaos-operator 3.28.0) + SIT ChaosEngine (`payu-sit-chaos`) with pod-delete and pod-network-latency experiments; runner/experiment images digest-pinned via `mirror.gcr.io` (Docker Hub anonymous rate limit hit on nodes); `allow-chaos-platform-traffic` NetworkPolicy so the runner can reach the API server under `default-deny-all`; Kyverno admission aligned via `app.kubernetes.io/component: chaos-engineering` runner labels (`components.runner.runnerLabels`).
+- SIT gateway Route (edge TLS) so DAST (ZAP), Schemathesis, and E2E can target the API directly; OpenShift Route `spec.port.targetPort` (top-level, not nested under `to`).
+- `mirror.gcr.io` added to `image.config.openshift.io/cluster` allowedRegistries (backup saved; reversible cluster MOP) for digest-pinned Litmus images.
+
+### Changed
+
+- ArgoCD ApplicationSets (`payu-environments`, `payu-environment-platform`, `payu-identity`): `syncPolicy.automated` enabled (no prune, no self-heal) so promotion syncs are triggered by Git changes; `argocd-sync-wait` gate now waits for Synced/Healthy instead of timing out (L-164 resolution).
+- ArgoCD instance sizing: application-controller 6Gi (was 2Gi — OOMKilled exit 137 during the 20+ app sync storm), repo-server 2Gi, server 512Mi (operator-managed ArgoCD CR, `oc patch`).
+- Kyverno `background-controller`/`reports-controller` resources 512Mi limits (L-166); policy exclusions for `app: infinispan-config-listener-pod` (L-169).
+
+### Fixed
+
+- `payu-deploy-gitops-pipeline` SIT run fully green (2026-08-01): fetch → gitops-writeback → `argocd-sync-wait` (explicit `applications.argoproj.io` group — `oc get application` resolved to `app.k8s.io` shadow CRD, L-171) → ZAP baseline (0 FAIL, report written via relative path under `/zap/wrk`, L-172) → Schemathesis (OpenAPI 3.1 flag; `status_code_conformance` excluded for auth-protected 4xx, L-173) → Litmus gate (pod-delete Pass, account-service auto-recovered; network-latency verified) → k6 smoke (`/api/health` via BFF, 0% failed; numeric `runAsUser` for non-numeric image user, L-174).
+- Tekton task fixes: k6 numeric `runAsUser: 1001`; ZAP `/zap/wrk` emptyDir volume; Schemathesis `--experimental=openapi-3.1` + `--exclude-checks status_code_conformance` + dropped unsupported `--phases`/`--report-junit`; litmus gate overlay path corrected to `infrastructure/platform/security/chaos/litmus`.
+- Tekton pipeline SA RBAC: `payu-tekton-litmus-gate` Role (payu-sit, chaos + rbac + pods + jobs scoped) so the gate can apply the chaos overlay without role-escalation denials; ArgoCD application read restored after fresh Pipelines install.
+- SIT `payu-sit` Application `Synced` to `main` with automated policy; stale revision cache worked around via repo-server restart + refresh (L-164).
+
 ## [1.10.1] - 2026-08-01
 
 ### Fixed
