@@ -73,6 +73,14 @@ spec:
           port: 53
     - to:
         - ipBlock:
+            cidr: 172.30.0.10/32
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
             cidr: 172.30.0.1/32
       ports:
         - protocol: TCP
