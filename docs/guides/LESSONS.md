@@ -4517,6 +4517,12 @@ synchronized (lock) {
 
 **Fix/Next**: Jangan mount emptyDir di atas direktori kerja image; bereskan kubeconfig cerberus (env KUBECONFIG / in-cluster) + verify user efektif (`id` via debug) + pin image digest. Track: OPS-2026-08-01-05.
 
+### L-184: Kustomize — `newName` dgn `@sha256` + base image bertag = ref invalid (2026-08-01)
+
+**Context**: Overlay `images` pakai `newName: .../payu-uat/<svc>@sha256:<digest>` sementara base deployment image `...:1.8.83` (bertag) → render `@sha256:<digest>:1.8.83` (invalid). Kustomize selalu append tag base ke newName.
+
+**Fix**: Untuk promote-by-digest, base image harus TANPA tag (`repo/<svc>`), lalu overlay set `newName: repo/<svc>@sha256:<digest>`. Atau pertahankan tag-based promotion (status quo) + pipeline param `image-digest` (writeback task sudah support). Revert digest-pinning UAT (commit `e94a9ab8` → revert `741cfbb1`).
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.
