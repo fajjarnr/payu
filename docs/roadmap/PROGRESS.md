@@ -23,7 +23,7 @@
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
 | Services Deployed        | 🟢 35/35 deployments Ready               | `payu-dev` workloads recovered + GitOps ApplicationSet parity tercapai (22 Applications, Synced/Healthy, 0 changed). |
 | Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
-| OpenShift Cluster        | 🟢 Active, multi-AZ workers               | OCP 4.20.29, 8 nodes Ready (3 control-plane + 5 worker); workers span `ap-southeast-1a/b/c`. |
+| OpenShift Cluster        | 🟡 Active, single-AZ worker pool (autoscaled) | OCP 4.20.29; 3 control-plane + worker pool `us-east-1f` (MachineAutoscaler min 5 max 10); nodes 9-10 saat beban pipeline (autoscaler aktif). Zona worker lain belum ada — gap vs claim multi-AZ sebelumnya (koreksi 2026-08-01). |
 | Operators Installed      | 🟢 Core platform ready                    | GitOps 1.21.1, Pipelines 1.23.0, RHACS 4.11.1, RHTAS 1.4.2, AWS EFS CSI 4.20, External Secrets 1.2.0, Compliance 1.9.1, Service Mesh 3.4.0, CNPG 1.30.0. |
 | Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid Hot Rod/mTLS, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |

@@ -27,6 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LokiStack components partially Pending on CPU (autoscaler will settle); vector collector → Loki gateway still reports DNS lookup errors — log delivery follow-up tracked in TODOS.
 - VSO egress anomaly persists (OPS-2026-08-01-03): fresh `openshift-logging` ns with identical NP config recovered, `vault-secrets-operator` did not — suspected stale OVN state keyed by namespace name.
 
+## [1.10.5] - 2026-08-01
+
+### Added
+
+- Preprod workloads Synced+Healthy via ArgoCD (`payu-preprod` app `Synced to main`, all 31 Deployments + 31 HPAs + routes Healthy) — promotion evidence for DEPLOY-011 preprod leg. Preprod web/gateway routes live (HTTP 200).
+- Preprod pipeline run reached `argocd-sync-wait` Succeeded; blocked at `preprod-kraken-gate` (runtime tuning pending, OPS-2026-08-01-05).
+
+### Fixed
+
+- Kyverno `require-hpa` exclude AND-bug: `namespaces` + `selector` in one `resources` entry are AND-ed, so chaos-labeled Deployments in `payu-preprod` were still blocked; split into separate `exclude.any` entries (L-182). Negative test (chaos-labeled Deployment in preprod) passes.
+- Kraken/cerberus admission + runtime progress: `require-hpa` chaos exclusion, SCC `anyuid` for `cerberus`/`kraken-chaos` SAs, `runAsUser: 0`, krkn entrypoint (no `run_kraken.py` in image), cerberus KUBECONFIG bootstrap (init container). Remaining runtime issues tracked (L-183, OPS-2026-08-01-05).
+- `kraken-chaos-gate` task default `KUSTOMIZE_DIR` corrected to `infrastructure/platform/security/chaos/kraken` (applied to cluster).
+- PROGRESS.md cluster topology corrected: single worker pool `us-east-1f` (MachineAutoscaler min 5 max 10), not multi-AZ as previously claimed.
+
 ## [1.10.3] - 2026-08-01
 
 ### Changed

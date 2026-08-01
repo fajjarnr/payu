@@ -95,6 +95,40 @@ spec:
       serviceAccountName: cerberus
       securityContext:
         runAsUser: 0
+      initContainers:
+        - name: kubeconfig
+          image: quay.io/krkn-chaos/krkn:latest
+          command:
+            - sh
+            - -c
+            - |
+              cat > /tmp/kubeconfig <<'EOF'
+              apiVersion: v1
+              clusters:
+              - cluster:
+                  certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  server: https://kubernetes.default.svc
+                name: in-cluster
+              contexts:
+              - context:
+                  cluster: in-cluster
+                  user: in-cluster
+                name: in-cluster
+              current-context: in-cluster
+              users:
+              - name: in-cluster
+                user:
+                  tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              EOF
+          volumeMounts:
+            - name: kubeconfig
+              mountPath: /tmp
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: cerberus
           image: quay.io/redhat-chaos/cerberus:latest
@@ -112,6 +146,11 @@ spec:
             - name: config
               mountPath: /root/cerberus/config/config.yaml
               subPath: config.yaml
+            - name: kubeconfig
+              mountPath: /tmp
+          env:
+            - name: KUBECONFIG
+              value: /tmp/kubeconfig
           readinessProbe:
             httpGet:
               path: /
@@ -135,6 +174,8 @@ spec:
         - name: config
           configMap:
             name: cerberus-config
+        - name: kubeconfig
+          emptyDir: {}
 ---
 apiVersion: batch/v1
 kind: Job
