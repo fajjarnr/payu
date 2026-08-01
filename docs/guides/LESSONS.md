@@ -4361,6 +4361,30 @@ synchronized (lock) {
 
 ### L-157: Monitor Canary Harus Guard Auth — Data Sampah Saat Token Expire (2026-08-01)
 
+### L-158: Vault kubernetes auth — SA token wajib `--audience=vault` (2026-08-01)
+
+**Context**: `vault login -method=kubernetes` / `vault write auth/kubernetes/login` dari pod gagal 403 `invalid audience (aud) claim`. Token default `oc create token` memakai audience API server, bukan `vault`. VSO/ESO jalan karena `audiences: [vault]` eksplisit.
+
+**Fix**: `oc create token <sa> -n <ns> --audience=vault`. CLI `-method=kubernetes` di Vault 2.0.3 kadang report "Unknown auth method" padahal mount ada — pakai `vault write -format=json auth/kubernetes/login role=... jwt=...` + ekstrak `client_token` via sed.
+
+### L-159: Flyway baseline conflict — outbox-bootstrap skip app V1.. (2026-08-01)
+
+**Context**: SIT service DBs gagal migration (`relation "deposits"/"partners"/"agent_training" does not exist`). `flyway_schema_history` berisi `<< Flyway Baseline >>` v1 + `add outbox events table` v2 → app migrations V1..Vn di-skip, versi lanjutan fail.
+
+**Fix**: Untuk fresh env DB (hanya `outbox_events` + history), reset: `DROP TABLE IF EXISTS outbox_events; DELETE FROM flyway_schema_history;` lalu biarkan app migrate penuh. Root fix jangka panjang: outbox-bootstrap jangan baseline sebelum app migration selesai.
+
+### L-160: Kustomize 5.4 — YAML-list patch = strategic merge, bukan JSON6902 (2026-08-01)
+
+**Context**: `patches: patch: |-` berisi `- op: add` (YAML list) di-render kustomize sebagai strategic merge → container kehilangan `name`/`image` → ArgoCD sync fail `containers[0].image: Required value`.
+
+**Fix**: Tulis JSON6902 sebagai JSON array satu baris: `[{"op":"add","path":"...","value":{...}}]`.
+
+### L-161: ArgoCD sync — prefer `oc apply` Application / argocd CLI, bukan `oc patch operation` (2026-08-01)
+
+**Context**: Trigger sync lewat `oc patch applications ... operation` non-deklaratif dan bisa konflik dengan operator.
+
+**Fix**: Commit manifest → `oc apply -f` (Application dengan `spec.operation.sync`) atau `argocd app sync`.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

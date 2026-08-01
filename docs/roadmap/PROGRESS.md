@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-01 — SIT workloads deployed; Vault HA + worker autoscaling live**:
+> - DEPLOY-011: overlay promo deploy-safe (hapus dev Secrets/KogitoRuntime di promo, auth key align, per-env OIDC/cache/VSS path). ArgoCD `payu-sit` synced `85cf79bb`; 37/41 app pods Running. Fix runtime: DB role `payu` password (ALTER USER + Vault `payu/sit/database/app`), asyncpg URL (`+asyncpg://...payu_analytics/kyc`), OTEL disable (belum ada collector per env), flyway baseline reset 4 DB.
+> - INFRA-026: HA Vault 3/3 (Raft + awskms auto-unseal, TLS, PDB), snapshot CronJob verified ke S3, kubernetes auth non-root short-lived (15m), VSS 60/60 Ready. Restore drill → DEVSECOPS-017 DR.
+> - MachineAutoscaler: ClusterAutoscaler `default` (max 15 nodes/240 cores/960Gi) + MachineAutoscaler `payu-worker-us-east-1f` min 5 max 10 (m6a.4xlarge); menggantikan manifest stale payu-hxftx/payu-ghxd9.
+
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
 | Services Deployed        | 🟢 35/35 deployments Ready               | `payu-dev` workloads recovered + GitOps ApplicationSet parity tercapai (22 Applications, Synced/Healthy, 0 changed). |
