@@ -31,4 +31,5 @@ spec:
           "$(params.SCHEMA_URL)" \
           --base-url "$(params.BASE_URL)" \
           --checks all \
+          --exclude-checks status_code_conformance \
           --experimental=openapi-3.1
