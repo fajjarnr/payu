@@ -21,7 +21,7 @@ spec:
     kind: Deployment
     name: account-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -45,7 +45,7 @@ spec:
     kind: Deployment
     name: analytics-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -69,7 +69,7 @@ spec:
     kind: Deployment
     name: api-portal-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -93,7 +93,7 @@ spec:
     kind: Deployment
     name: auth-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -117,7 +117,7 @@ spec:
     kind: Deployment
     name: backoffice-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -189,7 +189,7 @@ spec:
     kind: Deployment
     name: billing-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -213,7 +213,7 @@ spec:
     kind: Deployment
     name: cms-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -237,7 +237,7 @@ spec:
     kind: Deployment
     name: compliance-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -261,7 +261,7 @@ spec:
     kind: Deployment
     name: dispute-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -309,7 +309,7 @@ spec:
     kind: Deployment
     name: fx-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -333,7 +333,7 @@ spec:
     kind: Deployment
     name: gateway-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -357,7 +357,7 @@ spec:
     kind: Deployment
     name: integration-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -381,7 +381,7 @@ spec:
     kind: Deployment
     name: investment-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -405,7 +405,7 @@ spec:
     kind: Deployment
     name: kyc-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -429,7 +429,7 @@ spec:
     kind: Deployment
     name: lending-rules
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -453,7 +453,7 @@ spec:
     kind: Deployment
     name: lending-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -477,7 +477,7 @@ spec:
     kind: Deployment
     name: loan-origination-process
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -501,7 +501,7 @@ spec:
     kind: Deployment
     name: notification-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -525,7 +525,7 @@ spec:
     kind: Deployment
     name: partner-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -549,7 +549,7 @@ spec:
     kind: Deployment
     name: product-catalog-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -573,7 +573,7 @@ spec:
     kind: Deployment
     name: promotion-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -621,7 +621,7 @@ spec:
     kind: Deployment
     name: statement-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -645,7 +645,7 @@ spec:
     kind: Deployment
     name: support-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -669,7 +669,7 @@ spec:
     kind: Deployment
     name: transaction-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -717,7 +717,7 @@ spec:
     kind: Deployment
     name: wallet-service
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -741,7 +741,7 @@ spec:
     kind: Deployment
     name: web-app
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:

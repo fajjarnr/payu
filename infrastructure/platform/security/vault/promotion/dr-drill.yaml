@@ -102,6 +102,8 @@ spec:
         app.kubernetes.io/component: dr
         app.kubernetes.io/managed-by: platform-team
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: ip-10-0-7-27.ec2.internal
       securityContext:
         runAsNonRoot: true
       containers:
