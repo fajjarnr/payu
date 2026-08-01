@@ -67,6 +67,7 @@ spec:
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
+                runAsNonRoot: true
                 capabilities:
                   drop:
                     - ALL
@@ -134,6 +135,7 @@ spec:
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
+                runAsNonRoot: true
                 capabilities:
                   drop:
                     - ALL

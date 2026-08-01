@@ -61,10 +61,10 @@ spec:
               quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
               docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
               | docker.io/grafana/* | docker.io/pactfoundation/* |
-              docker.io/infinispan/*
+              docker.io/infinispan/* | docker.io/amazon/*
           containers:
           - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
               quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
               docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
               | docker.io/grafana/* | docker.io/pactfoundation/* |
-              docker.io/infinispan/*
+              docker.io/infinispan/* | docker.io/amazon/*
