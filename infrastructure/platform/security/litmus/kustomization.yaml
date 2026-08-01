@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: litmus
 
 resources:
+  - operator.yaml
   - scc.yaml
   - scc-portal.yaml
   - rbac.yaml

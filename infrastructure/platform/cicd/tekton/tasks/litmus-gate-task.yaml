@@ -11,7 +11,7 @@ spec:
     - name: KUSTOMIZE_DIR
       type: string
       description: "Path to the Litmus Kustomize overlay"
-      default: infrastructure/platform/devsecops-tooling/chaos/litmus
+      default: infrastructure/platform/security/chaos/litmus
     - name: NAMESPACE
       type: string
       description: "Namespace where the ChaosEngine is created"

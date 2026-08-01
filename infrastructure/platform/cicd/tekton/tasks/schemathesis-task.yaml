@@ -31,5 +31,4 @@ spec:
           "$(params.SCHEMA_URL)" \
           --base-url "$(params.BASE_URL)" \
           --checks all \
-          --phases examples,coverage,fuzzing \
           --report-junit "$REPORT_DIR/schemathesis.junit.xml"

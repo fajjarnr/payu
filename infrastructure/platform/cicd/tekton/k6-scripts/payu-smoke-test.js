@@ -13,7 +13,7 @@ export const options = {
 const baseUrl = __ENV.BASE_URL || 'http://account-service.payu-sit.svc.cluster.local:8080';
 
 export default function () {
-  const res = http.get(`${baseUrl}/actuator/health`);
+  const res = http.get(`${baseUrl}/api/health`);
   check(res, {
     'status is 200': (r) => r.status === 200,
     'response time < 500ms': (r) => r.timings.duration < 500,

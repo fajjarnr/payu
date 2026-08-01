@@ -16,7 +16,7 @@ spec:
       - apiGroups: ["apps"]
         resources: ["deployments", "replicasets"]
         verbs: ["get", "list"]
-    image: litmuschaos/go-runner:latest
+    image: mirror.gcr.io/litmuschaos/go-runner@sha256:ac859acc9ae965afa1822b427b13c46a768e2fef8ee1273302b0907f1ae885ff
     args:
       - -c
       - ./experiments -name pod-delete

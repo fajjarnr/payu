@@ -1,0 +1,91 @@
+# LitmusChaos execution-plane operator (minimal, app-level chaos only).
+# Source: litmuschaos/litmus litmus-operator-v3.28.0.yaml, trimmed to
+# Namespace/SA/ClusterRole/ClusterRoleBinding/Deployment. Images are
+# digest-pinned and mirrored via mirror.gcr.io (Docker Hub anonymous
+# pull rate limit hit on the nodes, 2026-08-01).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: litmus
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: litmus
+  namespace: litmus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: litmus
+rules:
+  - apiGroups: ["", "apps", "batch"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: litmus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: litmus
+subjects:
+  - kind: ServiceAccount
+    name: litmus
+    namespace: litmus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-operator-ce
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: chaos-operator-ce
+    app.kubernetes.io/part-of: litmus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: chaos-operator
+  template:
+    metadata:
+      labels:
+        name: chaos-operator
+    spec:
+      serviceAccountName: litmus
+      containers:
+        - name: chaos-operator
+          image: mirror.gcr.io/litmuschaos/chaos-operator@sha256:0d76845f4edd44ed046187a45c5d7f4e80dc0d6fbc43dc3c7a2158f74487ac01
+          command:
+            - chaos-operator
+          env:
+            - name: CHAOS_RUNNER_IMAGE
+              value: mirror.gcr.io/litmuschaos/chaos-runner@sha256:c605d2cbd7917ea49e41834d5ed500c3a1e2c162d33e98cf2be4cd659cc07801
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_NAME
+              value: chaos-operator
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true

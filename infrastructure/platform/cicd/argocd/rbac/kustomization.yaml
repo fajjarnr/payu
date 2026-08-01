@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - argocd-sa-supplement.yaml
+  - argocd-pipeline-reader.yaml

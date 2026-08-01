@@ -28,8 +28,8 @@ spec:
 
         deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
         while [ "$(date +%s)" -lt "$deadline" ]; do
-          sync_status=$(oc get application "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
-          health_status=$(oc get application "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.health.status}' 2>/dev/null || true)
+          sync_status=$(oc get applications.argoproj.io "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
+          health_status=$(oc get applications.argoproj.io "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.health.status}' 2>/dev/null || true)
 
           echo "[*] sync=${sync_status:-Unknown} health=${health_status:-Unknown}"
           if [ "$sync_status" = "Synced" ] && [ "$health_status" = "Healthy" ]; then

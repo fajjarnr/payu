@@ -14,13 +14,20 @@ spec:
   workspaces:
     - name: source
       description: "Workspace used to persist reports"
+  volumes:
+    - name: zap-wrk
+      emptyDir: {}
   steps:
     - name: scan
       image: ghcr.io/zaproxy/zaproxy@sha256:8d387b1a63e3425beef4846e39719f5af2a787753af2d8b6558c6257d7a577a2
+      volumeMounts:
+        - name: zap-wrk
+          mountPath: /zap/wrk
       script: |
         #!/bin/sh
         set -eu
 
         REPORT_DIR="$(workspaces.source.path)/reports"
         mkdir -p "$REPORT_DIR"
-        zap-baseline.py -t "$(params.TARGET_URL)" -J "$REPORT_DIR/zap-baseline.json" -r "$REPORT_DIR/zap-baseline.html" -I
+        zap-baseline.py -t "$(params.TARGET_URL)" -J zap-baseline.json -r zap-baseline.html -I
+        cp /zap/wrk/zap-baseline.json /zap/wrk/zap-baseline.html "$REPORT_DIR/"
