@@ -1,0 +1,63 @@
+# PayU worker MachineSet — current cluster (cluster-9xtfg, us-east-1, AZ us-east-1f)
+# Single-AZ IPI cluster; MachineAutoscaler (min 5 / max 10) scales this group.
+# Source of truth: live MachineSet `cluster-9xtfg-jk2m5-worker-us-east-1f`.
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: cluster-9xtfg-jk2m5-worker-us-east-1f
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: cluster-9xtfg-jk2m5
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: cluster-9xtfg-jk2m5
+      machine.openshift.io/cluster-api-machineset: cluster-9xtfg-jk2m5-worker-us-east-1f
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: cluster-9xtfg-jk2m5
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: cluster-9xtfg-jk2m5-worker-us-east-1f
+    spec:
+      providerSpec:
+        value:
+          ami:
+            id: ami-0980843632a1c3a66
+          apiVersion: machine.openshift.io/v1beta1
+          blockDevices:
+            - ebs:
+                encrypted: true
+                iops: 0
+                kmsKey:
+                  arn: ""
+                volumeSize: 250
+                volumeType: gp3
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: cluster-9xtfg-jk2m5-worker-profile
+          instanceType: m6a.4xlarge
+          kind: AWSMachineProviderConfig
+          placement:
+            availabilityZone: us-east-1f
+            region: us-east-1
+          securityGroups:
+            - filters:
+                - name: tag:Name
+                  values: [cluster-9xtfg-jk2m5-node]
+            - filters:
+                - name: tag:Name
+                  values: [cluster-9xtfg-jk2m5-lb]
+          subnet:
+            filters:
+              - name: tag:Name
+                values: [cluster-9xtfg-jk2m5-subnet-private-us-east-1f]
+          tags:
+            - name: kubernetes.io/cluster/cluster-9xtfg-jk2m5
+              value: owned
+          userDataSecret:
+            name: worker-user-data

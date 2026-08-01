@@ -1,58 +1,19 @@
+# PayU MachineAutoscaler — current cluster (cluster-9xtfg, us-east-1)
+# Worker pool: m6a.4xlarge (16 vCPU / 64 GiB) in AZ us-east-1f.
+# Min 5 = current baseline (46+ pods in payu-dev + promotion environments).
+# Max 10 = 160 vCPU / 640 GiB ceiling for SIT/UAT/preprod/prod + k6 load runs.
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
-  name: payu-worker-us-east-2a
+  name: payu-worker-us-east-1f
   namespace: openshift-machine-api
   annotations:
-    # Updated for k6 distributed performance testing (April 2026)
-    # k6 stress TestRun (parallelism=4, 1.5 CPU/pod) may need 1-2 extra nodes.
-    # r6a.4xlarge = 16 vCPU / 128 GiB RAM per node.
-    payu.io/updated-at: "2026-04-09"
-    payu.io/reason: "k6 distributed load testing autoscaling support"
+    payu.io/updated-at: "2026-08-01"
+    payu.io/reason: "worker pool growth for promotion environments (DEPLOY-011) and k6 performance runs"
 spec:
-  # Minimum 2 — baseline for PayU services on this AZ (was 1)
-  minReplicas: 2
-  # Maximum 5 — supports PayU services + 2 extra nodes for k6 runners during stress
-  # 5 nodes × 16 CPU = 80 CPU ceiling per AZ
-  maxReplicas: 5
+  minReplicas: 5
+  maxReplicas: 10
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: payu-hxftx-worker-us-east-2a
----
-apiVersion: autoscaling.openshift.io/v1beta1
-kind: MachineAutoscaler
-metadata:
-  name: payu-worker-us-east-2b
-  namespace: openshift-machine-api
-  annotations:
-    payu.io/updated-at: "2026-04-09"
-    payu.io/reason: "k6 distributed load testing autoscaling support — AZ 2b now active"
-spec:
-  # Minimum 1 — required because EBS PVs (postgres, datagrid, mysql, redis) are bound to us-east-2b
-  # Without at least 1 worker in 2b, these stateful pods cannot schedule (PV node affinity)
-  minReplicas: 1
-  # Maximum 4 — secondary AZ for k6 overflow and PayU service HA
-  maxReplicas: 4
-  scaleTargetRef:
-    apiVersion: machine.openshift.io/v1beta1
-    kind: MachineSet
-    name: payu-hxftx-worker-us-east-2b
----
-apiVersion: autoscaling.openshift.io/v1beta1
-kind: MachineAutoscaler
-metadata:
-  name: payu-worker-us-east-2c
-  namespace: openshift-machine-api
-  annotations:
-    payu.io/updated-at: "2026-04-09"
-    payu.io/reason: "k6 distributed load testing autoscaling support — AZ 2c now active"
-spec:
-  # Allow scale from 0 — tertiary AZ for extreme burst scenarios
-  minReplicas: 0
-  # Maximum 4 — balanceSimilarNodeGroups ensures fair distribution across AZs
-  maxReplicas: 4
-  scaleTargetRef:
-    apiVersion: machine.openshift.io/v1beta1
-    kind: MachineSet
-    name: payu-hxftx-worker-us-east-2c
+    name: cluster-9xtfg-jk2m5-worker-us-east-1f

@@ -3,38 +3,27 @@ kind: ClusterAutoscaler
 metadata:
   name: default
   annotations:
-    # Updated for k6 distributed performance testing (April 2026)
-    # k6 stress TestRun uses parallelism=4 × 1.5 CPU = 6 CPU burst demand.
-    # r6a.4xlarge workers: 16 vCPU, 128 GiB RAM each.
-    # maxNodesTotal raised from 24→32 to accommodate k6 runner + PayU service burst.
     payu.io/updated-by: "platform-engineer"
-    payu.io/updated-at: "2026-04-09"
-    payu.io/reason: "k6 distributed load testing autoscaling support"
+    payu.io/updated-at: "2026-08-01"
+    payu.io/reason: "cluster-9xtfg worker autoscaling (us-east-1f, m6a.4xlarge)"
 spec:
-  # Allow k6 pods (priority=-10) to trigger scale-up — same as batch workloads
+  # Allow k6/batch pods (priority=-10) to trigger scale-up
   podPriorityThreshold: -10
   resourceLimits:
-    # Raised ceiling: 3 master + 2 infra + up to 9 worker nodes = 14 total
-    # (was 24; lowered to a realistic ceiling matching 3 worker MachineSets × 3 max each)
-    maxNodesTotal: 14
+    # 3 control-plane + up to 12 workers = 15 nodes
+    maxNodesTotal: 15
     cores:
-      # 3 masters (16 CPU each) + 2 infra (16 each) + 9 workers (16 each) = 224 cores max
+      # 3 masters (16 each) + 12 workers (16 each) = 240 cores max
       min: 48
-      max: 224
+      max: 240
     memory:
-      # Units: GiB. 3 master (128) + 2 infra (128) + 9 worker (128) = 1664 GiB
+      # Units: GiB. 3 master (64 each) + 12 workers (64 each) = 960 GiB max
       min: 256
-      max: 1536
-  # Spread k6 runner pods evenly — ensures autoscaling fires across all 3 AZs
+      max: 960
   balanceSimilarNodeGroups: true
   scaleDown:
     enabled: true
-    # Wait 10m after adding a node before scaling down — gives k6 run time to finish
     delayAfterAdd: 10m
-    # Standard post-delete cooldown
     delayAfterDelete: 5m
-    # Longer failure cooldown to avoid rapid re-attempt loops during k6 spikes
     delayAfterFailure: 5m
-    # Node must be idle for 10m before scale-down (was 5m)
-    # Prevents premature teardown during k6 ramp-down phases
     unneededTime: 10m
