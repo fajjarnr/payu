@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LokiStack components partially Pending on CPU (autoscaler will settle); vector collector → Loki gateway still reports DNS lookup errors — log delivery follow-up tracked in TODOS.
 - VSO egress anomaly persists (OPS-2026-08-01-03): fresh `openshift-logging` ns with identical NP config recovered, `vault-secrets-operator` did not — suspected stale OVN state keyed by namespace name.
 
+## [1.10.6] - 2026-08-01
+
+### Changed
+
+- Tekton Results migrated from operator-internal PostgreSQL to HA CloudNativePG (`tekton_results` DB on `payu-database`, dev 3-instance cluster): 17 pipeline records migrated (`pg_dump`/restore), `TektonConfig.spec.result` external DB config (is_external_db + CNPG RW host + sslmode require + secret), API verified OK (DEVSECOPS-017 durable stores / DEPLOY-009).
+- DEVSECOPS_ARCHITECTURE.md §7 roadmap reconciled with live evidence (2026-08-01): Vault HA/KMS/snapshot, ArgoCD automated sync, INFRA-029, Results, promotion statuses.
+
+### Added
+
+- `Database` CR `payu-tekton-results` (CNPG) + `infrastructure/platform/cicd/tekton/results-external-db.md` (MOP: TektonConfig field is `result` singular; operator reverts direct `TektonResult` patches — L-186).
+
 ## [1.10.5] - 2026-08-01
 
 ### Added

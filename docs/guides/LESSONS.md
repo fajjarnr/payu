@@ -4529,6 +4529,12 @@ synchronized (lock) {
 
 **Fix**: Tambah `kubeconfig_path: /tmp/kubeconfig` di `cerberus-config.yaml` → cerberus start ("client set"). Plus temuan: chaos pod (label `chaos-engineering`) TETAP kena mutasi `set-readonly-root-filesystem` (`readOnlyRootFilesystem: true` + caps drop CHOWN/DAC_OVERRIDE) walau exclusion ada → krkn/cerberus report write `Read-only file system`. Root cause krkn gate masih open (OPS-2026-08-01-05).
 
+### L-186: TektonResult CR dikelola operator — patch langsung di-revert (2026-08-01)
+
+**Context**: `oc patch tektonresult result ... is_external_db: true` diterima lalu di-revert operator (`is_external_db=false` kembali). TektonResult punya `ownerReferences` ke TektonConfig; config Results harus lewat `TektonConfig.spec.result` (SINGULAR — `results` tidak ada di CRD schema).
+
+**Fix**: Patch `TektonConfig.spec.result` (is_external_db, db_host, db_name, db_secret_name, db_sslmode, db_enable_auto_migration) → operator propagate ke TektonResult + deployment API. Verifikasi: `oc get tektonresult result -o jsonpath='{.spec.is_external_db}'` + env `DB_HOST` di pod API + count records di DB target.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

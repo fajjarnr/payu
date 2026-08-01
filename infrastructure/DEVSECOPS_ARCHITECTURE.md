@@ -521,6 +521,17 @@ graph LR
 
 ## 7. Implementation Roadmap
 
+> **Status update 2026-08-01 (evidence-based):** SIT & UAT promotion pipeline
+> hijau (`payu-deploy-gitops-pipeline`: sync-wait, ZAP, Schemathesis, Litmus
+> pod-delete Pass, k6; UAT SUCCEEDED 11m50s). Preprod workloads live
+> (31 deployment Synced/Healthy), preprod pipeline diblok `preprod-kraken-gate`
+> (chaos runtime — OPS-2026-08-01-05). INFRA-029 audit forwarding live
+> (Logging 6.5 + LokiStack S3/KMS + ClusterLogForwarder audit→lokiStack,
+> CLF Ready). Tekton Results dimigrasi ke HA PostgreSQL (CNPG `tekton_results`,
+> 17 records). Vault HA + auto-unseal (awskms) + snapshot S3 live. ArgoCD
+> appset automated sync (prod sync window). VSO egress anomaly masih open
+> (OPS-2026-08-01-03).
+
 ### Phase 1 — Foundation (Bulan 1–2) 🟡 PARTIAL
 
 > **Live audit 2026-07-22:** status di roadmap ini berdasarkan resource yang
@@ -535,15 +546,15 @@ graph LR
 - [x] 🔵 Restructure `infrastructure/` folders: `platform/`, `foundation/`, `workloads/`
 - [x] 🔵 Namespace strategy: `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, `payu-cicd` dengan labels, quotas, limitranges
 - [x] 🔵 Kyverno 9 ClusterPolicies: `disallow-root-user`, `require-resource-limits`, `set-readonly-root-filesystem`, `disallow-host-namespaces`, `require-approved-registry`, `require-cosign-signature`, `generate-default-deny-networkpolicy`, `block-shadow-namespaces`, `require-payu-labels`
-- [ ] 🔵 External Secrets Operator tersedia; Vault HA dan `ClusterSecretStore payu-vault` belum tersedia. Vault dev mode dilarang untuk implementasi production.
-- [ ] 🔵 Sinkronisasi secret melalui ESO menunggu secret store HA, audit, backup, dan auto-unseal yang disetujui.
+- [x] 🔵 Vault HA (Raft 3/3 + awskms auto-unseal + TLS + PDB) live; sinkronisasi secret via Vault Secrets Operator (`VaultStaticSecret`, 60/60 Ready per env) — pengganti ESO ClusterSecretStore `payu-vault` (INFRA-026). Vault dev mode (inmem) masih ada di `payu-dev` dan dilarang untuk production.
+- [x] 🔵 Sinkronisasi secret via VSO live untuk SIT/UAT/preprod/prod (env-isolated `payu/<env>/...` paths); refresh terganggu oleh egress anomaly VSO (OPS-2026-08-01-03).
 - [x] 🔵 Tekton Tasks: Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken + Pipelines + Triggers
-- [ ] 🔵 Manifest ArgoCD tersedia, tetapi live cluster belum memiliki `Application`; auto-sync ditahan sampai perubahan Git tersedia di remote dan secret store sehat.
+- [x] 🔵 ArgoCD live: 3 ApplicationSets + 22 Applications, appset `automated` sync (tanpa prune/self-heal) + prod sync window; `payu-sit`/`payu-uat`/`payu-preprod` Synced/Healthy.
 - [x] 🔵 Kyverno cleanup CronJob image fix: `bitnami/kubectl:1.28.5` → OpenShift internal CLI
 
 **DR & Backup (§9):**
-- [ ] 🔵 Konfigurasi Vault Raft auto-snapshot (1 jam interval) ke S3 bucket terenkripsi
-- [ ] 🔵 Konfigurasi Vault auto-unseal (Transit atau KMS)
+- [x] 🔵 Vault Raft auto-snapshot CronJob (tiap 6 jam) ke S3 bucket terenkripsi (KMS SSE) — restore drill pending (DEVSECOPS-017 DR)
+- [x] 🔵 Vault auto-unseal via AWS KMS live
 - [ ] 🔵 Dokumentasi DR runbook untuk semua critical components (Vault, ArgoCD, ACS, Wazuh)
 
 **FinOps (§10):**
