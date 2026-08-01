@@ -1,0 +1,94 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: gitops-writeback
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Update the environment overlay image entry and commit the GitOps write-back."
+  params:
+    - name: service-name
+      type: string
+    - name: environment
+      type: string
+    - name: image-tag
+      type: string
+      default: ""
+    - name: image-digest
+      type: string
+      default: ""
+    - name: registry-url
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      default: payu-dev
+    - name: git-revision
+      type: string
+      default: main
+    - name: push-changes
+      type: string
+      default: "false"
+  workspaces:
+    - name: source
+      description: "Cloned GitOps repository"
+  steps:
+    - name: writeback
+      image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978578dd8c57b2c131adff663df26
+      script: |
+        #!/bin/sh
+        set -eu
+
+        cd "$(workspaces.source.path)"
+        case "$(params.environment)" in
+          dev|sit|uat|preprod|prod)
+            OVERLAY_DIR="payu-$(params.environment)"
+            ;;
+          *)
+            echo "[X] Unsupported environment $(params.environment). Expected one of: dev, sit, uat, preprod, prod"
+            exit 1
+            ;;
+        esac
+
+        TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}"
+        if [ ! -d "$TARGET_DIR" ]; then
+          echo "[X] Overlay directory $TARGET_DIR not found!"
+          exit 1
+        fi
+        if [ -z "$(params.image-tag)" ] && [ -z "$(params.image-digest)" ]; then
+          echo "[X] Either image-tag or image-digest must be provided"
+          exit 1
+        fi
+
+        IMAGE_NAME="$(params.registry-url)/$(params.registry-namespace)/$(params.service-name)"
+        if [ -n "$(params.image-digest)" ]; then
+          IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
+        else
+          IMAGE_REF="${IMAGE_NAME}:$(params.image-tag)"
+        fi
+
+        cd "$TARGET_DIR"
+        # Replace the newName of the matching images entry without requiring kustomize.
+        awk -v name="$IMAGE_NAME" -v ref="$IMAGE_REF" '
+          found && /newName:/ { sub(/newName:.*/, "newName: " ref); print; found=0; next }
+          /^[[:space:]]*- name:[[:space:]]*image-registry/ { found=0 }
+          $0 ~ ("- name: " name "$") { found=1 }
+          { print }
+        ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+
+        git config --global user.email "gitops-bot@payu.internal"
+        git config --global user.name "Tekton GitOps Bot"
+        git add kustomization.yaml
+        if git diff --cached --quiet; then
+          echo "[*] No image change for $(params.service-name) in $(params.environment)"
+        else
+          git commit -m "chore(gitops): promote $(params.service-name) to ${IMAGE_REF} in $(params.environment)"
+        fi
+
+        if [ "$(params.push-changes)" = "true" ]; then
+          git push origin HEAD:$(params.git-revision)
+          echo "[✓] GitOps write-back pushed to $(params.git-revision)"
+        else
+          echo "[*] push-changes=false, commit retained locally in workspace only"
+        fi

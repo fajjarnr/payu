@@ -8,6 +8,7 @@ resources:
 
   # Tasks
   - tasks/argocd-sync-task.yaml
+  - tasks/gitops-writeback-task.yaml
   - tasks/buildah-task.yaml
   - tasks/deploy-task.yaml
   - tasks/gitleaks-task.yaml
