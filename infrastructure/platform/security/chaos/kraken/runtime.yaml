@@ -102,6 +102,7 @@ spec:
             - sh
             - -c
             - |
+              TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
               cat > /tmp/kubeconfig <<'EOF'
               apiVersion: v1
               clusters:
@@ -118,8 +119,9 @@ spec:
               users:
               - name: in-cluster
                 user:
-                  tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  token: PLACEHOLDER_TOKEN
               EOF
+              sed -i "s/PLACEHOLDER_TOKEN/$TOKEN/" /tmp/kubeconfig
           volumeMounts:
             - name: kubeconfig
               mountPath: /tmp
