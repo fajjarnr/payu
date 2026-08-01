@@ -93,6 +93,7 @@ spec:
               app.kubernetes.io/managed-by: keycloak-operator
       - resources:
           namespaces:
-          - payu-cicd
-          - openshift-pipelines
-          - openshift-gitops
+            - payu-cicd
+            - openshift-pipelines
+            - openshift-gitops
+            - openshift-logging

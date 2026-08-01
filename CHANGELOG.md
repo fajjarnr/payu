@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.4] - 2026-08-01
+
+### Added
+
+- **Audit log forwarding (INFRA-029 / SEC-020)**: Red Hat OpenShift Logging 6.5 + Loki Operator + LokiStack (S3-backed `payu-loki-390403884108-cluster-9xtfg`, KMS-encrypted, `tenants.mode: openshift-logging`) + `ClusterLogForwarder` `instance` with `inputRefs: [audit]` → `lokiStack` output. CLF `Authorized=True/Valid=True/Ready=True`; vector collectors 9/9 on nodes. This closes the last open CIS control (`ocp4-cis-audit-log-forwarding-enabled`) — SEC-020 9/9.
+- **NetworkPolicy lesson applied (L-180)**: default-deny-all (Ingress+Egress, empty rules) requires allow NetworkPolicies to declare BOTH `Ingress` and `Egress` — an Egress-only allow does not take effect (VSO case). `allow-logging-platform-egress` also allows ingress from node/service network (`10.0.0.0/8`, `172.30.0.0/16`) so kube-apiserver reaches the LokiStack webhook.
+- UAT promotion pipeline run **SUCCEEDED** (2026-08-01, 11m50s): sync-wait → Schemathesis → k6 load (`BASE_URL` param fix) → k6 smoke. UAT workloads live (31 deployments, 0 CrashLoop).
+- Preprod workloads deployed (31 deployments): images mirrored dev→preprod, DB schemas reset for clean Flyway, `db-secrets` URLs fixed to `payu_analytics`/`payu_kyc` (Vault `payu/preprod/database/services` v2), gateway route live.
+
+### Fixed
+
+- Kyverno policy exclusions for `openshift-logging` (operator-managed): `require-payu-labels`, `disallow-root-user`, `require-approved-registry`, `require-resource-limits`, `require-cosign-signature`.
+- ArgoCD appset `ignoreDifferences`: `.spec.replicas` for Deployments — HPA-managed replica drift no longer shows OutOfSync.
+- `uat-k6-load-test` now passes `BASE_URL` (was defaulting to SIT internal service).
+
+### Known
+
+- LokiStack components partially Pending on CPU (autoscaler will settle); vector collector → Loki gateway still reports DNS lookup errors — log delivery follow-up tracked in TODOS.
+- VSO egress anomaly persists (OPS-2026-08-01-03): fresh `openshift-logging` ns with identical NP config recovered, `vault-secrets-operator` did not — suspected stale OVN state keyed by namespace name.
+
 ## [1.10.3] - 2026-08-01
 
 ### Changed

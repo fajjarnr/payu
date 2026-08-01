@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
-| **Last Release** | `1.10.3` (2026-08-01) — UAT workloads live (31/31, 0 CrashLoop), redeploy-safe bootstrap + sync-wave fixes, prod sync window |
-| **Last Updated** | 2026-08-01 (UAT promoted dev→uat images + DB reset + HPA; VSO egress issue OPS-2026-08-01-03) |
+| **Last Release** | `1.10.4` (2026-08-01) — INFRA-029 audit forwarding live (CLF+Logging 6.5+LokiStack S3/KMS); UAT pipeline SUCCEEDED; preprod workloads live |
+| **Last Updated** | 2026-08-01 (UAT + preprod promoted; INFRA-029 deployed; OPS-2026-08-01-03 VSO egress; log delivery follow-up) |
 
 ---
 
@@ -27,7 +27,7 @@
 
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
-| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). Percobaan Logging 6.6 (2026-07-31) dihentikan: API 6.6 berubah + Kyverno NP block (L-143/144). | 🔒 Blocked — butuh keputusan log sink |
+| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
 
 
 ---

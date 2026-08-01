@@ -4493,6 +4493,18 @@ synchronized (lock) {
 
 **Fix**: Bootstrap job sekarang cuma `ALTER TABLE ... OWNER` + `GRANT` di dalam `IF to_regclass(...) IS NOT NULL` — tanpa CREATE/ALTER struktur. App Flyway migrasi dari schema kosong; bootstrap jadi post-hoc idempotent. Plus sync-wave -10 untuk semua platform NetworkPolicy biar initdb/config-listener punya API egress saat deploy pertama.
 
+### L-180: OVN — allow NetworkPolicy harus Ingress+Egress, Egress-only tidak jalan (2026-08-01)
+
+**Context**: Pod di ns dengan `default-deny-all` (Ingress+Egress, tanpa rule) timeout ke API server walau ada allow NP egress-only dengan `172.30.0.1:443`. Setelah allow NP diubah ke `policyTypes: [Ingress, Egress]` + ingress rule, ns `openshift-logging` langsung sembuh (loki-operator leader election OK); `vault-secrets-operator` (nama ns reuse) tetap broken — indikasi stale OVN state keyed by ns name.
+
+**Fix**: Untuk ns yang dikelola Kyverno default-deny, tulis allow NP dengan BOTH Ingress+Egress; tambahkan ingress dari `10.0.0.0/8` + `172.30.0.0/16` kalau kube-apiserver harus reach webhook pod (LokiStack webhook). Jangan pernah rebuild ns dengan nama yang sama kalau egress masih broken — buat nama baru atau bersihkan OVN entity dulu.
+
+### L-181: Logging 6.5 — API/CRD drift vs 5.x/6.4 (2026-08-01)
+
+**Context**: `ClusterLogForwarder` pindah group ke `observability.openshift.io/v1` (bukan `logging.openshift.io/v1`); output type `lokiStack` (camelCase, bukan `lokistack`); butuh `spec.serviceAccount.name` + ClusterRoles `collect-audit-logs`/`collect-application-logs`/`collect-infrastructure-logs`; LokiStack `tenants.mode` enum: `static|dynamic|openshift-logging|openshift-network`; channel `stable-6.5` (bukan `stable`).
+
+**Fix**: Verifikasi enum/group via CRD schema (`oc get crd ... -o json | jq`) + Context7 sebelum tulis manifest. Kunci juga: jangan pakai `--phases`/flag lama di tool lain (L-173 pola sama).
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

@@ -94,6 +94,7 @@ spec:
           - openshift-pipelines
           - openshift-gitops
           - vault-secrets-operator
+          - openshift-logging
     validate:
       message: 'Running as root is not allowed. Set runAsNonRoot: true and ensure
         a non-zero runAsUser.'
