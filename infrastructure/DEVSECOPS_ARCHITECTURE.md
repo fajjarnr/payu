@@ -287,6 +287,7 @@ graph LR
 - **Kraken** — digunakan di `payu-preprod` untuk **infrastructure-level chaos** spesifik OpenShift:
   - Kill etcd pod, disrupt openshift-apiserver, node crash/reboot, cluster network partition
   - Terintegrasi dengan **Cerberus** sebagai cluster health guardian: memberikan sinyal _go/no-go_ apakah cluster sudah recover sebelum lanjut ke skenario chaos berikutnya
+  - Runtime hardening (2026-08-01): manifest `infrastructure/platform/security/chaos/kraken/runtime.yaml` mount emptyDir di `/home/krkn/kraken` + `/tmp` (init `fixperms` + container `kraken`) — OCP CRI-O pernah mount rootfs image `ro` walau `readOnlyRootFilesystem: false` → `kraken.report` write gagal (OPS-2026-08-01-05, L-188).
 - _(Chaos Mesh dihapus untuk menghindari redundansi dengan LitmusChaos)_
 
 ---
@@ -329,6 +330,8 @@ graph LR
 | No host namespace          | ACS/Kyverno | Blokir `hostNetwork`, `hostPID`, `hostIPC`                     |
 | NetworkPolicy default deny | Kyverno     | Auto-generate default-deny NetworkPolicy per namespace         |
 | Block shadow namespaces    | Kyverno     | Tolak pembuatan namespace tanpa label `payu.io/managed-by: platform-team` |
+
+> 🧭 **Egress pattern (reconciled 2026-08-01, L-188)**: Kyverno `generate-default-deny-networkpolicy` membuat `default-deny-all` (Ingress+Egress) di namespace berlabel `app.kubernetes.io/part-of: payu`. OVN-Kubernetes di cluster ini tidak meng-enforce fine-grained egress rules (`namespaceSelector`/`ipBlock` + port) secara andal — terbukti DNS vector→Loki (`OPS-2026-08-01-04`) dan VSO API egress (`OPS-2026-08-01-03`) timeout walau NP allow rinci sudah ada, sementara rule `- {}` (allow-all) langsung bekerja. **Pola**: namespace aplikasi PayU pakai egress allow-all (pola `payu-dev`); platform/operator namespace (`openshift-logging`, `vault-secrets-operator`, `payu-drill`) pakai NP dengan egress `- {}` + ingress zero-trust. Jangan klaim "NP benar" tanpa bukti test egress nyata.
 
 > 🛡️ **Pencegahan Rogue Namespace**: Terapkan Validating Webhook (Kyverno) untuk menolak pembuatan namespace apa pun yang tidak sesuai dengan pola (`payu-dev-*`, `payu-*`) atau dibuat oleh entitas tanpa otorisasi. Hanya izinkan namespace dengan label `payu.io/managed-by: platform-team`.
 

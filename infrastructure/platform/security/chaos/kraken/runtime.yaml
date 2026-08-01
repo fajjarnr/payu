@@ -222,6 +222,11 @@ spec:
             capabilities:
               drop:
                 - ALL
+          volumeMounts:
+            - name: work
+              mountPath: /home/krkn/kraken
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: kraken
           image: quay.io/krkn-chaos/krkn:latest
@@ -236,6 +241,10 @@ spec:
             - name: config
               mountPath: /root/kraken/config/config.yaml
               subPath: config.yaml
+            - name: work
+              mountPath: /home/krkn/kraken
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 100m
@@ -247,3 +256,11 @@ spec:
         - name: config
           configMap:
             name: kraken-config
+        # Writabe emptyDir over the report/temp paths: OCP CRI-O mounted the
+        # krkn image rootfs read-only (OPS-2026-08-01-05) even with
+        # readOnlyRootFilesystem:false, so `kraken.report` write failed.
+        # Mounting writable volumes keeps the job runnable on any cluster.
+        - name: work
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

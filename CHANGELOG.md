@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.7] - 2026-08-01
+
+### Fixed (redeploy-hardening — destroy + redeploy tanpa error yang sama)
+
+- **OVN-Kubernetes fine-grained egress rules tidak ter-enforce** (L-188): rule rinci (`namespaceSelector`/`ipBlock` + port) gagal walau terlihat benar — kyverno `default-deny-all` (Ingress+Egress) di namespace berlabel `part-of: payu` + NP allow rinci = egress timeout. Ganti ke egress allow-all (`- {}`, ingress tetap zero-trust) di:
+  - `allow-logging-platform-egress` (`infrastructure/platform/security/logging/cluster-logging.yaml`) → vector collector resolve `loki-gateway-http.openshift-logging.svc` (172.30.74.72).
+  - `allow-vso-platform-egress` (`infrastructure/platform/security/networkpolicy-vso-egress.yaml`) → VSO manager berhenti CrashLoopBackOff (`dial tcp 172.30.0.1:443: i/o timeout`), pod 2/2 Running. **OPS-2026-08-01-03 closed**.
+- **CLF lokiStack TLS CA** (OPS-2026-08-01-04): output `loki` dgn `tls.ca` → `loki-gateway-ca-bundle/service-ca.crt` — vector berhenti error `certificate verify failed: self-signed certificate in certificate chain` (generated vector config kini punya `ca_file`).
+- **Kraken job rootfs read-only** (OPS-2026-08-01-05): emptyDir `/home/krkn/kraken` + `/tmp` di-mount ke init `fixperms` + container `kraken` → `kraken.report` write aman walau CRI-O mount rootfs `ro`.
+- **Job immutable vs ArgoCD** (L-190): anotasi `argocd.argoproj.io/sync-options: Replace=true` di `outbox-bootstrap-job.yaml` + `post-deploy-db-grants.yaml` → sync tidak gagal `field is immutable` saat spec berubah antar deploy.
+- **psql bootstrap hang** (L-191): `PGCONNECT_TIMEOUT=10` + `-w` + per-DB skip pada `post-deploy-db-grants` (sebelumnya bisa "Running 0/1" >3h saat DB tak terjangkau).
+- **DR drill** (INFRA-026): init awskms wajib `-recovery-shares/-recovery-threshold` (bukan `-key-shares`, 400); `vault-drill` SA + `system:auth-delegator` binding utk kubernetes login (L-192). Restore snapshot `20260801T005422Z.snap` verified: `restore -force` RC=0, state prod (recovery 5/3, peers vault-0/1/2, auth roles) live.
+
+### Known
+
+- `preprod-kraken-gate`: re-run menunggu kapasitas CPU cluster (HPA max 5→3 dikomit 2026-08-01).
+- Log delivery ke Loki masih diblok gateway `403 Forbidden`: loki-operator 6.5.1 render `lokistack-gateway.rego` + `rbac.yaml` kosong (0 bytes) utk `tenants.mode: openshift-logging` (reproduksi setelah delete cm + recreate LokiStack). SAR utk logcollector = allowed; dugaan bug operator (keluarga LOG-2236) — butuh RH support/upgrade 6.5.x. Tracked OPS-2026-08-01-04.
+- DR drill `kv get` readback via k8s auth masih 403 — snapshot 00:54 pre-date token-reviewer context saat ini; refresh snapshot pasca-HA-migration lalu re-verify.
+
 ## [1.10.4] - 2026-08-01
 
 ### Added

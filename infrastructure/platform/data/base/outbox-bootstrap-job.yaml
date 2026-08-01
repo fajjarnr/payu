@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/name: outbox-bootstrap
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: database
+  annotations:
+    # Jobs are immutable: ArgoCD cannot patch a spec change. Replace=true lets
+    # GitOps delete+recreate on spec drift instead of failing sync
+    # ("field is immutable") on redeploy.
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   ttlSecondsAfterFinished: 300
   template:
@@ -54,13 +59,15 @@ spec:
                 payu_lending payu_loan_origination payu_partner payu_products
                 payu_promotion payu_statement payu_support payu_transaction
                 payu_wallet
+            - name: PGCONNECT_TIMEOUT
+              value: "10"
           command:
             - /bin/bash
             - -ceu
             - |
               for db in $DB_LIST; do
                 echo "Post-migration outbox_events owner+grants in ${db}"
-                psql -v ON_ERROR_STOP=1 -d "$db" -c "
+                psql -w -v ON_ERROR_STOP=1 -d "$db" -c "
                   DO \$\$
                   BEGIN
                     IF to_regclass('public.outbox_events') IS NOT NULL THEN

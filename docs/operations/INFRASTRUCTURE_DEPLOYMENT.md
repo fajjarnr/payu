@@ -529,6 +529,29 @@ Abort and roll back if any of these conditions occur:
 | Data integrity | Any ledger, outbox, or migration error |
 | Events | New persistent Warning events tied to changed resources |
 
+## Redeploy-Safe Hardening (2026-08-01, L-188..L-192)
+
+Destroy + redeploy ulang cluster **tidak boleh** mengulang error berikut (root cause sudah di-fix di manifest):
+
+| Error lama | Root cause | Fix di manifest |
+|:---|:---|:---|
+| VSO CrashLoopBackOff `dial tcp 172.30.0.1:443: i/o timeout` (OPS-2026-08-01-03) | kyverno `generate-default-deny-networkpolicy` membuat `default-deny-all` di ns `vault-secrets-operator`; OVN-K tidak enforce rule egress rinci | `networkpolicy-vso-egress.yaml` egress `- {}` (allow-all), ingress tetap deny |
+| vector→Loki DNS lookup timeout (OPS-2026-08-01-04) | sama, di `openshift-logging` | `cluster-logging.yaml` `allow-logging-platform-egress` egress `- {}` |
+| `kraken.report` Read-only (OPS-2026-08-01-05) | CRI-O mount rootfs image `ro` walau `readOnlyRootFilesystem: false` | `chaos/kraken/runtime.yaml`: emptyDir `/home/krkn/kraken` + `/tmp` (init `fixperms` + container `kraken`) |
+| ArgoCD sync `field is immutable` pada Job | Job spec immutable antar deploy | anotasi `argocd.argoproj.io/sync-options: Replace=true` di `outbox-bootstrap-job.yaml` + `post-deploy-db-grants.yaml` |
+| bootstrap Job "Running 0/1" >3h | `psql` tanpa timeout + DB tak terjangkau | `PGCONNECT_TIMEOUT=10` + `-w` + per-DB skip (L-191) |
+
+**Pola egress**: namespace platform/operator (`openshift-logging`, `vault-secrets-operator`, `payu-drill`) pakai NP dengan egress `- {}` + ingress zero-trust; namespace aplikasi PayU pakai pola `payu-dev` (allow-all egress). Jangan kembalikan ke rule egress rinci tanpa bukti `getent`/`curl` nyata (L-188).
+
+### Vault DR drill (INFRA-026)
+
+MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/dr-drill.yaml` di-apply:
+
+1. `vault operator init -recovery-shares=1 -recovery-threshold=1` — **jangan** `-key-shares` (awskms auto-unseal → 400, L-189). Simpan output (`> /tmp/init.out`) utk root token sementara.
+2. `aws s3 cp s3://payu-vault-snapshots-390403884108-cluster-9xtfg/raft/<snapshot>.snap /tmp/drill.snap` (host) → `oc cp` ke pod.
+3. `vault operator raft snapshot restore -force /tmp/drill.snap` (pakai token dari init.out).
+4. Verifikasi: `vault kv list secret/payu` via kubernetes login (`role=vault-admin`) — pod drill harus punya `system:auth-delegator` utk TokenReview (L-192). Catatan: snapshot yang diambil sebelum perubahan kubernetes auth config akan menolak JWT saat ini → ambil snapshot FRESH pasca-migrasi sebelum drill.
+
 ## Troubleshooting Quick Checks
 
 | Symptom | First checks |
@@ -541,6 +564,10 @@ Abort and roll back if any of these conditions occur:
 | 3scale pods missing | Confirm only operator shell was applied; APIManager is gated by external secrets |
 | Workload ImagePullBackOff | Confirm internal registry route, ImageStreamTags, and image pull permissions |
 | GitOps does nothing | Check `oc get application -n openshift-gitops`; ApplicationSet may not be installed yet |
+| VSO CrashLoopBackOff / egress timeout | Cek NP `allow-vso-platform-egress` egress `- {}` (jangan rule rinci) + `oc get pods -n vault-secrets-operator` |
+| Collector DNS lookup timeout | Cek `allow-logging-platform-egress` egress `- {}`; verifikasi `oc exec -n openshift-logging <collector> -- getent hosts loki-gateway-http.openshift-logging.svc` |
+| Vector `403 Forbidden` ke loki gateway | Cek `oc get cm loki-gateway -n openshift-logging -o jsonpath='{.binaryData}'` — `lokistack-gateway.rego`/`rbac.yaml` kosong = bug loki-operator 6.5.1 (L-193); SAR `logcollector` harus `allowed`; butuh RH support/upgrade |
+| Kraken job `kraken.report` error | Verifikasi emptyDir `/home/krkn/kraken` + `/tmp` ter-mount di pod (L-188) |
 
 ## Current Known Gates
 

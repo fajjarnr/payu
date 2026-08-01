@@ -6,6 +6,13 @@
 #      + aws-creds (kube-system) -> payu-drill/aws-creds
 #   3. oc apply -f this manifest
 #   4. Download snapshot + restore (see docs/operations/INFRASTRUCTURE_DEPLOYMENT.md DR section)
+# Runtime notes:
+#   - awskms seal = auto-unseal: `vault operator init -key-shares=1 -key-threshold=1`
+#     fails 400 "secret_shares,secret_threshold not applicable to seal type awskms".
+#     Use `vault operator init -recovery-shares=1 -recovery-threshold=1` instead.
+#   - Egress to AWS (KMS unseal + S3 snapshot download) = HTTPS 443, covered by
+#     allow-drill-egress 0.0.0.0/0:443 rule (Kyverno default-deny-all is harmless
+#     as long as this allow policy exists).
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -14,6 +21,34 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: dr
     payu.io/managed-by: platform-team
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-drill
+  namespace: payu-drill
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: dr
+---
+# Vault kubernetes auth must call the TokenReview API to validate JWTs during
+# DR verification (`vault login -method=kubernetes`). Without auth-delegator
+# the login fails 403 "permission denied" even with a valid token.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-drill-token-reviewer
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: dr
+subjects:
+  - kind: ServiceAccount
+    name: vault-drill
+    namespace: payu-drill
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
 ---
 apiVersion: v1
 kind: ConfigMap

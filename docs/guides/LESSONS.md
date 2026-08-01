@@ -4560,3 +4560,48 @@ synchronized (lock) {
 **Context**: Login API 500 "invalid_client" padahal `payu-realm.json` punya `payu-backend` client. Setelah admin token valid, query `/admin/realms/payu/clients` menunjukkan realm hanya berisi default clients (account, admin-cli, dsb.) dan `users?username=customer1` kosong — realm live tidak pernah di-import.
 
 **Fix**: `jq -c '{ifResourceExists:"FAIL", clients:.clients, users:.users}' payu-realm.json` → `POST /admin/realms/payu/partialImport` dengan admin token (creds dari secret `payu-keycloak-admin` di `payu-sso`). Verify dengan admin API sebelum test login. Selalu verifikasi state live, bukan asumsi dari file manifest.
+
+### L-188: OVN-Kubernetes fine-grained egress rules tidak ter-enforce — pakai allow-all egress utk platform ns (2026-08-01)
+
+**Context**: Dua namespace platform mengalami egress timeout walau NP "benar":
+- `openshift-logging`: vector collector `getent hosts loki-gateway-http.openshift-logging.svc` timeout (rc=124) walau egress DNS sudah diizinkan via `namespaceSelector: openshift-dns:53` + `ipBlock: 172.30.0.10/32:53` (OPS-2026-08-01-04). Payu-dev pods resolve OK karena punya `allow-all-egress`.
+- `vault-secrets-operator`: manager CrashLoopBackOff `Get https://172.30.0.1:443/api: dial tcp ... i/o timeout` walau egress `ipBlock 172.30.0.1/32:443` + DNS + vault 8200 sudah ada (OPS-2026-08-01-03).
+
+Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]` → DNS langsung resolve (`172.30.74.72`) dan VSO pod 2/2 Running. Root cause kedua kasus: kyverno `generate-default-deny-networkpolicy` membuat `default-deny-all` (Ingress+Egress) di namespace yang berlabel `app.kubernetes.io/part-of: payu` (termasuk openshift-logging & vault-secrets-operator) — union NP ternyata hanya efektif utk rule `- {}`, rule rinci (namespaceSelector/ipBlock+port) tidak ter-enforce di cluster ini.
+
+**Fix**: Ganti egress rule rinci dgn `- {}` (allow-all) di `allow-logging-platform-egress` (cluster-logging.yaml) & `allow-vso-platform-egress` (networkpolicy-vso-egress.yaml). Ingress tetap zero-trust. Verifikasi: `getent hosts loki-gateway-http...` → IP; `oc get pods -n vault-secrets-operator` 2/2 Running; VSO restart berhenti.
+
+**Prevention**: Platform/system namespace (logging, operator, DR scratch) pakai egress allow-all + ingress deny; fine-grained egress rule rinci hanya di namespace aplikasi yang sudah terbukti (pola `payu-dev`). Sebelum klaim "NP benar", buktikan dengan test egress nyata (`getent`/`curl`), bukan hanya membaca YAML.
+
+### L-189: Vault awskms (auto-unseal) — init pakai recovery keys, bukan key shares (2026-08-01)
+
+**Context**: DR drill scratch vault (`seal "awskms"`) — `vault operator init -key-shares=1 -key-threshold=1` gagal: `400 parameters secret_shares,secret_threshold not applicable to seal type awskms`.
+
+**Fix**: `vault operator init -recovery-shares=1 -recovery-threshold=1` (auto-unseal pakai recovery keys). Setelah restore snapshot, recovery shares berubah mengikuti state snapshot (drill 1/1 → prod 5/3) — tanda restore berhasil. Simpan output init (`> /tmp/init.out`) sebelum restore; root token dari init TIDAK berlaku setelah restore (state snapshot menimpa auth) — verifikasi data via auth yang ada di snapshot (mis. kubernetes login role `vault-admin`).
+
+### L-190: Job K8s immutable — ArgoCD butuh `Replace=true` utk redeploy-safe (2026-08-01)
+
+**Context**: Job (bootstrap/grant) punya `spec` immutable. Jika manifest berubah antar deploy (PGHOST, image, script), ArgoCD sync gagal `Invalid: spec.template: field is immutable` → pipeline sync-wait stuck.
+
+**Fix**: Anotasi `argocd.argoproj.io/sync-options: Replace=true` di metadata Job (`outbox-bootstrap-job.yaml`, `post-deploy-db-grants.yaml`). ArgoCD delete+recreate saat spec drift, tanpa re-run saat spec sama.
+
+### L-191: psql bootstrap job — wajib `-w` + `PGCONNECT_TIMEOUT` (2026-08-01)
+
+**Context**: `post-deploy-db-grants` di payu-preprod "Running 0/1" selama 3h55m tanpa pod aktif (job controller stuck menunggu pod yang di-evict) dan pod lama bisa hang di `psql` (tanpa timeout) saat DB tak terjangkau — pipeline gate keblokir.
+
+**Fix**: Tambah env `PGCONNECT_TIMEOUT=10` + flag `-w` (no password prompt) + per-DB `|| { echo WARN; continue; }` pada grants (skip DB yang gagal, jangan hang). Job idempotent: re-run aman.
+
+### L-192: Vault kubernetes auth di DR scratch butuh `system:auth-delegator` utk TokenReview (2026-08-01)
+
+**Context**: Setelah restore snapshot, `vault login -method=kubernetes role=vault-admin` di drill pod gagal `403 permission denied` — bukan karena auth hilang (prod vault login OK dgn JWT sama), tapi SA default payu-drill tidak punya izin TokenReview → vault tidak bisa validasi JWT.
+
+**Fix**: Bind `ClusterRole system:auth-delegator` ke SA pod (manifest dr-drill.yaml `vault-drill-token-reviewer`). Verifikasi: `oc auth can-i create tokenreviews.authentication.k8s.io --as=system:serviceaccount:payu-drill:default` → yes.
+
+### L-193: Log delivery chain punya 3 gate — DNS, TLS CA, gateway RBAC (2026-08-01)
+
+**Context**: OPS-2026-08-01-04 "log audit belum sampai Loki" ternyata 3 lapis:
+1. **DNS**: vector `getent hosts loki-gateway-http...` timeout — fixed egress allow-all (L-188).
+2. **TLS**: setelah DNS OK, vector `certificate verify failed: self-signed certificate in certificate chain` — generated vector config tidak punya `ca_file`; fixed dgn `tls.ca` di CLF output (`configMapName: loki-gateway-ca-bundle, key: service-ca.crt`) → vector config kini `ca_file=/var/run/ocp-collector/config/loki-gateway-ca-bundle/service-ca.crt`.
+3. **Gateway RBAC**: setelah TLS OK, `403 Forbidden` — `loki-gateway` ConfigMap di-render operator 6.5.1 dgn `lokistack-gateway.rego` + `rbac.yaml` **0 bytes** utk `tenants.mode: openshift-logging` (reproduksi: delete cm + recreate LokiStack → tetap kosong). SAR `logcollector` collect `logs/audit` di `logging.openshift.io`/`observability.openshift.io` = allowed, SA `loki-gateway` punya tokenreviews+SAR — RBAC chain benar; tersangka bug operator (keluarga LOG-2236).
+
+**Fix/Prevention**: Verifikasi delivery bertahap (DNS → TLS → authz), jangan klaim "log delivered" hanya krn CLF Ready. Cek `oc get cm loki-gateway -n openshift-logging -o jsonpath='{.binaryData}'` — rego/rbac kosong = belum deliver. Bug operator: butuh RH support / upgrade 6.5.x; workaround tenant `static`/`dynamic` bila mendesak.

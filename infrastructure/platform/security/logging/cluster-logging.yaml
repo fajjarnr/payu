@@ -60,37 +60,12 @@ spec:
         - ipBlock:
             cidr: 172.30.0.0/16
   egress:
-    - to:
-        - podSelector: {}
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - ipBlock:
-            cidr: 172.30.0.10/32
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - ipBlock:
-            cidr: 172.30.0.1/32
-      ports:
-        - protocol: TCP
-          port: 443
-    - to:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-      ports:
-        - protocol: TCP
-          port: 6443
+    # Allow-all egress: fine-grained egress rules (namespaceSelector/ipBlock +
+    # port) are not enforced by OVN-Kubernetes in this cluster — vector DNS to
+    # openshift-dns/172.30.0.10:53 timed out with specific rules but works with
+    # `- {}` (OPS-2026-08-01-04, L-188). Infra namespace: system operators need
+    # arbitrary egress; ingress stays zero-trust.
+    - {}
 ---
 apiVersion: loki.grafana.com/v1
 kind: LokiStack
@@ -133,6 +108,14 @@ spec:
         authentication:
           token:
             from: serviceAccount
+      # Vector sink must trust the loki gateway serving cert (signed by the
+      # OpenShift service CA). Without this the generated vector config has no
+      # ca_file → "certificate verify failed: self-signed certificate in
+      # certificate chain" (OPS-2026-08-01-04, L-188).
+      tls:
+        ca:
+          configMapName: loki-gateway-ca-bundle
+          key: service-ca.crt
   pipelines:
     - name: audit-logs
       inputRefs:
