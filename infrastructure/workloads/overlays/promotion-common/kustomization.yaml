@@ -79,22 +79,21 @@ patches:
       kind: Deployment
       name: "^(bi-fast-simulator|biller-simulator|dukcapil-simulator|qris-simulator|va-simulator)$"
     patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: simulator-otel-disable
-      spec:
-        template:
-          spec:
-            containers:
-              - name: app
-                env:
-                  - name: OTEL_ENDPOINT
-                    value: ""
-                  - name: OTEL_SDK_DISABLED
-                    value: "true"
-                  - name: QUARKUS_OTEL_SDK_DISABLED
-                    value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OTEL_ENDPOINT
+          value: "http://localhost:4317"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OTEL_SDK_DISABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: QUARKUS_OTEL_SDK_DISABLED
+          value: "true"
   - target:
       group: apps
       version: v1
