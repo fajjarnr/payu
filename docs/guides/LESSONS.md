@@ -4505,6 +4505,18 @@ synchronized (lock) {
 
 **Fix**: Verifikasi enum/group via CRD schema (`oc get crd ... -o json | jq`) + Context7 sebelum tulis manifest. Kunci juga: jangan pakai `--phases`/flag lama di tool lain (L-173 pola sama).
 
+### L-182: Kyverno exclude — `namespaces` + `selector` dalam SATU entry = AND (2026-08-01)
+
+**Context**: `require-hpa` exclude menaruh `namespaces: [...]` DAN `selector: {matchLabels: {component: chaos-engineering}}` dalam satu `resources` entry → Kyverno AND-kan keduanya → exclusion cuma berlaku di ns system/operator, chaos-labeled Deployment di `payu-preprod` tetap diblok (`check-hpa-exists`).
+
+**Fix**: Pisah jadi entry terpisah di `exclude.any`: satu entry `namespaces`, satu entry `selector`. Test negatif: deployment chaos-label di payu-preprod harus lolos.
+
+### L-183: Chaos tooling (kraken/cerberus) — runtime tuning (2026-08-01)
+
+**Context**: Setelah admission lolos (labels + `require-hpa` exclusion L-182): (1) krkn image `latest` tanpa `run_kraken.py` di `/root/kraken` (entrypoint bawaan jalan dari `/home/krkn/kraken/containers/entrypoint.sh`); (2) report path `/home/krkn/kraken/kraken.report` + `/root/cerberus/cerberus.report` PermissionError — emptyDir mount di `/root`/`/home/krkn` NUTUP file image (entrypoint hilang); `runAsUser: 0` + SCC anyuid masih PermissionError (kemungkinan SELinux/MCS atau entrypoint pakai user lain); (3) cerberus butuh KUBECONFIG ("Proper kubeconfig not set").
+
+**Fix/Next**: Jangan mount emptyDir di atas direktori kerja image; bereskan kubeconfig cerberus (env KUBECONFIG / in-cluster) + verify user efektif (`id` via debug) + pin image digest. Track: OPS-2026-08-01-05.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

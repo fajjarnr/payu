@@ -11,7 +11,7 @@ spec:
     - name: KUSTOMIZE_DIR
       type: string
       description: "Path to the Kraken Kustomize overlay"
-      default: infrastructure/platform/devsecops-tooling/chaos/kraken
+      default: infrastructure/platform/security/chaos/kraken
     - name: NAMESPACE
       type: string
       description: "Namespace where the Kraken resources are created"

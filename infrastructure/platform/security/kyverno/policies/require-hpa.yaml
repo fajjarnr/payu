@@ -54,6 +54,7 @@ spec:
                 - istio-system
                 - stackrox
                 - litmus
+          - resources:
               selector:
                 matchLabels:
                   app.kubernetes.io/component: chaos-engineering
