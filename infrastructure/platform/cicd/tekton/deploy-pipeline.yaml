@@ -253,6 +253,8 @@ spec:
           value: "50"
         - name: DURATION
           value: "5m"
+        - name: BASE_URL
+          value: $(params.environment-base-url)
 
     # ── Step 4D: Security Gate (PREPROD) - Infra Chaos ──
     - name: preprod-kraken-gate
