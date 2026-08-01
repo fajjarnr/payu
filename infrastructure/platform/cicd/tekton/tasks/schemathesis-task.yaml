@@ -30,5 +30,4 @@ spec:
         schemathesis run \
           "$(params.SCHEMA_URL)" \
           --base-url "$(params.BASE_URL)" \
-          --checks all \
-          --report-junit "$REPORT_DIR/schemathesis.junit.xml"
+          --checks all
