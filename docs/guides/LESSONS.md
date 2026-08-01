@@ -4397,6 +4397,12 @@ synchronized (lock) {
 
 **Fix**: RBAC `argocd-application-reader` (RoleBinding openshift-gitops → SA pipeline). Drift dev app perlu audit terpisah sebelum gate dipakai.
 
+### L-164: ArgoCD appset apps — `spec.operation` di-strip, revision resolve cache stale (2026-08-01)
+
+**Context**: `oc apply` Application + `spec.operation.sync.revision` (main / commit eksplisit) tidak efektif: ApplicationSet controller menghapus `spec.operation`, dan `status.operationState.syncResult.revision` stuck `6d978cfd` padahal `status.sync.revision=bd65f8ef` setelah repo-server restart. `argocd app diff --core` gagal `NOAUTH` (CLI redis creds tak sama dengan controller).
+
+**Fix**: Sync appset-managed app wajib `argocd app sync` dengan auth (login admin/SSO + token). Opsi lain: enable `automated` syncPolicy di ApplicationSet template (prune/self-heal) — gate `argocd-sync-wait` baru valid setelah itu.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.
