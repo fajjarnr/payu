@@ -1,6 +1,8 @@
 # ARCH-007 — 24h `payu-dev` Canary Evidence Pack
 
-**Canary window**: 2026-07-31 20:47Z → 2026-08-01 20:47Z (final operator-managed mTLS stack)
+**Canary window**: 2026-08-01 00:32Z → 2026-08-02 00:32Z (final operator-managed mTLS stack;
+window di-resume setelah kredensial cluster dipulihkan. Fase pertama 20:47Z→23:21Z
+(2j34m, errs 0, 23/23) tercatat di bawah sebagai pra-gap.)
 **Stack**: Data Grid Infinispan CR (`WellFormed=True`, mTLS), cache `payu` text/plain,
 Hot Rod 16.2.1 native clients, `payu-cache:11222`, dev overlay tanpa `SPRING_MAIN_SOURCES`.
 
@@ -33,6 +35,10 @@ Hot Rod 16.2.1 native clients, `payu-cache:11222`, dev overlay tanpa `SPRING_MAI
 > **Gap 2026-07-31 23:35Z**: kredensial cluster (`jay`, token 24h) expire; monitor
 > dihentikan. Checkpoint valid terakhir 23:21Z (≈2j34m dari 24j). Lanjut canary
 > butuh kubeconfig/login baru; checkpoint berikutnya di-resume dari titik ini.
+
+> **Resume 2026-08-01 00:32Z**: akses cluster pulih (kubeconfig baru); monitor 24h
+> di-restart (15m errs + 5m latency). Verifikasi awal: 23/23 deploy Ready, Data Grid
+> `WellFormed=True`, account health UP, datagrid latency 2ms.
 
 ## Latency sampler (live)
 
