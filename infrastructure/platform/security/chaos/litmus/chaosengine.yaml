@@ -12,7 +12,7 @@ spec:
   engineState: active
   appinfo:
     appns: payu-sit
-    applabel: app.kubernetes.io/part-of=payu
+    applabel: app.kubernetes.io/name=account-service
     appkind: deployment
   chaosServiceAccount: litmus-admin
   monitoring: true
@@ -25,7 +25,7 @@ spec:
             type: httpProbe
             mode: Continuous
             httpProbe/inputs:
-              url: "http://gateway-service.payu-sit:8000/q/health"
+              url: "http://gateway-service.payu-sit:8080/q/health"
               insecureSkipVerify: false
               method:
                 get:
