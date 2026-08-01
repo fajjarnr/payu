@@ -11,11 +11,11 @@ metadata:
     ingress.payu.io/class: shared
 spec:
   host: gateway-sit.apps.fajjjar.my.id
+  port:
+    targetPort: http
   to:
     kind: Service
     name: gateway-service
-    port:
-      targetPort: http
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
