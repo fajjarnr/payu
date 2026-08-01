@@ -161,7 +161,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: payu-keycloak-client-secrets
-              key: payu-backend
+              key: payu-backend-client-secret
         - name: PAYU_KEYCLOAK_ADMIN_USERNAME
           value: admin
         - name: PAYU_KEYCLOAK_ADMIN_PASSWORD
