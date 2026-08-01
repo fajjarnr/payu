@@ -13,6 +13,7 @@ data:
     cerberus:
       distribution: openshift
       port: 8080
+      kubeconfig_path: /tmp/kubeconfig
       watch_url_routes:
         - https://console-openshift-console.apps.payu.ocp.fajjjar.my.id
         - https://oauth-openshift.apps.payu.ocp.fajjjar.my.id

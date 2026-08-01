@@ -206,6 +206,19 @@ spec:
       serviceAccountName: kraken-chaos
       securityContext:
         runAsUser: 0
+      initContainers:
+        - name: fixperms
+          image: quay.io/krkn-chaos/krkn:latest
+          command:
+            - sh
+            - -c
+            - chmod -R 777 /home/krkn/kraken || true
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: kraken
           image: quay.io/krkn-chaos/krkn:latest

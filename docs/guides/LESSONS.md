@@ -4523,6 +4523,12 @@ synchronized (lock) {
 
 **Fix**: Untuk promote-by-digest, base image harus TANPA tag (`repo/<svc>`), lalu overlay set `newName: repo/<svc>@sha256:<digest>`. Atau pertahankan tag-based promotion (status quo) + pipeline param `image-digest` (writeback task sudah support). Revert digest-pinning UAT (commit `e94a9ab8` → revert `741cfbb1`).
 
+### L-185: Cerberus baca `kubeconfig_path` dari config YAML, bukan env (2026-08-01)
+
+**Context**: Cerberus CrashLoop "Proper kubeconfig not set" walau env `KUBECONFIG=/tmp/kubeconfig` + init container menulis file. Source `start_cerberus.py:88`: `kubeconfig_path = config["cerberus"].get("kubeconfig_path", "")` — baca dari config.yaml, env di-set BELAKANGAN (`os.environ["KUBECONFIG"] = kubeconfig_path`).
+
+**Fix**: Tambah `kubeconfig_path: /tmp/kubeconfig` di `cerberus-config.yaml` → cerberus start ("client set"). Plus temuan: chaos pod (label `chaos-engineering`) TETAP kena mutasi `set-readonly-root-filesystem` (`readOnlyRootFilesystem: true` + caps drop CHOWN/DAC_OVERRIDE) walau exclusion ada → krkn/cerberus report write `Read-only file system`. Root cause krkn gate masih open (OPS-2026-08-01-05).
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.
