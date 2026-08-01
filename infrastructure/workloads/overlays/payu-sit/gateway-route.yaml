@@ -16,6 +16,7 @@ spec:
     name: gateway-service
     port:
       name: http
+      targetPort: http
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

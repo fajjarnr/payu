@@ -60,6 +60,7 @@ spec:
         namespace: "{{.namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
+        automated: {}
         syncOptions:
           - CreateNamespace=true
           - PrunePropagationPolicy=foreground
@@ -147,6 +148,7 @@ spec:
         namespace: "{{.namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
+        automated: {}
         syncOptions:
           - CreateNamespace=true
           - PrunePropagationPolicy=foreground
@@ -212,6 +214,7 @@ spec:
         namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
+        automated: {}
         syncOptions:
           - CreateNamespace=true
           - SkipDryRunOnMissingResource=true
