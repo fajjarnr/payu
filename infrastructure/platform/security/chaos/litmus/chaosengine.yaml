@@ -10,6 +10,11 @@ metadata:
     app.kubernetes.io/component: chaos-engineering
 spec:
   engineState: active
+  components:
+    runner:
+      runnerLabels:
+        app.kubernetes.io/component: chaos-engineering
+        app.kubernetes.io/part-of: payu
   appinfo:
     appns: payu-sit
     applabel: app.kubernetes.io/name=account-service
