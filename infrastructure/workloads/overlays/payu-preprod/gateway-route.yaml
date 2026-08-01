@@ -1,0 +1,21 @@
+# Gateway route for preprod — used by DAST (ZAP), API fuzzing (Schemathesis)
+# and E2E integration tests. Edge TLS, restricted to preprod hostname.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gateway
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gateway
+    ingress.payu.io/class: shared
+spec:
+  host: gateway-preprod.apps.fajjjar.my.id
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: gateway-service
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
