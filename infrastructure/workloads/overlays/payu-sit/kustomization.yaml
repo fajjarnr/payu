@@ -117,6 +117,8 @@ patches:
                   value: https://sso-sit.payu.fajjjar.my.id/realms/payu
                 - name: QUARKUS_OIDC_TOKEN_ISSUER
                   value: https://sso-sit.payu.fajjjar.my.id/realms/payu
+                - name: PAYU_KEYCLOAK_SERVER_URL
+                  value: https://sso-sit.payu.fajjjar.my.id
 - target:
     kind: Route
     name: web-app

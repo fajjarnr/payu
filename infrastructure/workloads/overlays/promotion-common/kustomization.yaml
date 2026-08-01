@@ -15,6 +15,35 @@ patches:
         name: dev-env-secrets
       $patch: delete
   - target:
+      kind: Secret
+      name: db-secrets
+    patch: |-
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: db-secrets
+      $patch: delete
+  - target:
+      kind: Secret
+      name: payu-keycloak-client-secrets
+    patch: |-
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: payu-keycloak-client-secrets
+      $patch: delete
+  - target:
+      group: rhpam.kiegroup.org
+      version: v1
+      kind: KogitoRuntime
+      name: loan-origination-process
+    patch: |-
+      apiVersion: rhpam.kiegroup.org/v1
+      kind: KogitoRuntime
+      metadata:
+        name: loan-origination-process
+      $patch: delete
+  - target:
       group: apps
       version: v1
       kind: Deployment
