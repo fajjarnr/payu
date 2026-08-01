@@ -135,7 +135,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: payu-kafka-console
+      app.kubernetes.io/instance: payu-kafka-console-console-deployment
   policyTypes:
     - Ingress
     - Egress

@@ -43,6 +43,10 @@ spec:
       - resources:
           selector:
             matchLabels:
+              app: infinispan-config-listener-pod
+      - resources:
+          selector:
+            matchLabels:
               application: payu-broker-app
       - resources:
           selector:

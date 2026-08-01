@@ -54,6 +54,10 @@ spec:
           - resources:
               selector:
                 matchLabels:
+                  app: infinispan-config-listener-pod
+          - resources:
+              selector:
+                matchLabels:
                   app.kubernetes.io/component: cache
           - resources:
               selector:

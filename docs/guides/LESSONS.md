@@ -4403,6 +4403,42 @@ synchronized (lock) {
 
 **Fix**: Sync appset-managed app wajib `argocd app sync` dengan auth (login admin/SSO + token). Opsi lain: enable `automated` syncPolicy di ApplicationSet template (prune/self-heal) — gate `argocd-sync-wait` baru valid setelah itu.
 
+### L-165: SIT Flyway partial schema — tabel ada, history kosong (2026-08-01)
+
+**Context**: SIT `lending-service` CrashLoop: `relation "loans" already exists` saat V1, padahal `Current version ... << Empty Schema >>`. DB `payu_lending` cuma punya `loans` (0 rows) + `flyway_schema_history` kosong — schema partial tanpa history, V1 gagal di tengah (`paylater_accounts`, `credit_scores` tak ada).
+
+**Fix**: Env test kosong → reset schema: `DROP SCHEMA public CASCADE; CREATE SCHEMA public AUTHORIZATION payu;` (superuser) → rollout restart → Flyway apply 9 migrasi bersih. Jangan baseline manual ke tabel parsial; verifikasi jumlah tabel/row sebelum reset (evidence: hanya 2 relasi, 0 row).
+
+### L-166: Kyverno controller 128Mi limit → lease timeout CrashLoop (2026-08-01)
+
+**Context**: `kyverno-background-controller` + `reports-controller` CrashLoop (exit code 0, bukan OOM): leader election lease renew `context deadline exceeded` ke API server — GC thrash di chart-default `limits.memory: 128Mi`.
+
+**Fix**: Override resources di `kyverno/values.yaml` (`requests 128Mi`, `limits 512Mi`) → `helm upgrade`. Exit code 0 + timeout, bukan OOMKilled, adalah sinyal limit kekecilan.
+
+### L-167: NetworkPolicy selector vs label aktual pod operator (2026-08-01)
+
+**Context**: Kafka console api container CrashLoop `timeout ... 172.30.0.1:443`. NP `allow-kafka-console-platform` select `app.kubernetes.io/name: payu-kafka-console`, tapi pod aktual cuma punya `app.kubernetes.io/instance: payu-kafka-console-console-deployment` → `default-deny-all` blok egress.
+
+**Fix**: Samakan selector NP dengan label pod aktual (`oc get deployment -o jsonpath='{.spec.template.metadata.labels}'`), bukan label deployment metadata. Selalu cek selector match sebelum bilang "NP ada".
+
+### L-168: Operator pod tanpa NetworkPolicy → API timeout (2026-08-01)
+
+**Context**: `payu-cache-config-listener` CrashLoop `dial tcp 172.30.0.1:443: i/o timeout`. Tidak ada NP untuk `app: infinispan-config-listener-pod` (NP datagrid cuma select `app.kubernetes.io/name: payu-cache`).
+
+**Fix**: Tambah NP `allow-datagrid-config-listener-platform` (ingress/egress mirror datagrid). Aturan: tiap workload yang bicara ke API server (operator listener, informer) wajib egress NP ke `172.30.0.1:443` + `6443`.
+
+### L-169: PolicyException namespaced tak match deployment tanpa labels — pakai policy exclude (2026-08-01)
+
+**Context**: `PolicyException` payu-sit untuk config-listener tak berlaku: Deployment operator-created punya metadata labels KOSONG (labels cuma di template+selector), jadi `match.resources.selector` gagal; `names` juga tak diterapkan untuk rule `disallow-root-user` pada Pod.
+
+**Fix**: Tambah exclusion `app: infinispan-config-listener-pod` langsung di policy `require-payu-labels` + `disallow-root-user` (pola sama strimzi/console). PolicyException namespaced berguna saat resource punya labels stabil di metadata.
+
+### L-170: Pod yang dibuat sebelum policy change tetap bawa mutasi lama (2026-08-01)
+
+**Context**: SIT broker CrashLoop `Read-only file system` walau exclusion sudah ada — pod dibuat 17:37Z, exclusion di-patch 22:47Z; restart container TIDAK mengulang admission, pod spec lama dipertahankan.
+
+**Fix**: Recreate pod (delete) → admission ulang → exclusion berlaku. Cek `creationTimestamp` pod vs policy `lastApplied` sebelum debug panjang.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

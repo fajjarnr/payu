@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.1] - 2026-08-01
+
+### Fixed
+
+- SIT `lending-service` CrashLoopBackOff: `payu_lending` schema was partial (`loans` existed, `flyway_schema_history` empty, `paylater_accounts`/`credit_scores` missing). Reset the empty SIT test schema (`DROP SCHEMA public CASCADE`), Flyway re-applied all 9 migrations cleanly (L-165).
+- SIT AMQ broker CrashLoopBackOff: broker pod predated the `set-readonly-root-filesystem` exclusion for `application: payu-broker-app` and was stuck with `readOnlyRootFilesystem: true` (`cp: cannot create directory '/home/jboss/amq-broker': Read-only file system`). Recreated the pod to re-run admission (L-170).
+- SIT Kafka console CrashLoopBackOff: `allow-kafka-console-platform` NetworkPolicy selected `app.kubernetes.io/name: payu-kafka-console`, but operator pod labels are `app.kubernetes.io/instance: payu-kafka-console-console-deployment` — egress to the API server was denied, causing `172.30.0.1:443` timeouts. Aligned the selector to the real label (L-167).
+- SIT `payu-cache-config-listener` CrashLoopBackOff: no NetworkPolicy covered the operator config-listener pod (`app: infinispan-config-listener-pod`), so `default-deny-all` blocked the API server egress. Added `allow-datagrid-config-listener-platform` (L-168).
+- Kyverno `background-controller` and `reports-controller` crash loops: 128Mi chart-default memory limit caused lease-renewal timeouts (`context deadline exceeded` to the API server, clean exit 0). Raised to 512Mi in `kyverno/values.yaml`; both controllers stable (L-166).
+- Kyverno admission blocked the operator-managed `payu-cache-config-listener` Deployment/Pod on `require-payu-labels` + `disallow-root-user` (operator Deployment has no metadata labels and no security context). Added `app: infinispan-config-listener-pod` exclusions to both policies (namespaced `PolicyException` did not match — deployment metadata labels are empty, L-169).
+
 ## [1.10.0] - 2026-08-01
 
 ### Added
