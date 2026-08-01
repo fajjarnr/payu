@@ -87,6 +87,7 @@ spec:
           kind: Deployment
           jqPathExpressions:
             - .spec.template.metadata.annotations
+            - .spec.replicas
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
