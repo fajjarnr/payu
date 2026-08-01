@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
-## [1.10.0-rc.1] - 2026-08-01
+## [1.10.0] - 2026-08-01
 
 ### Added
 
@@ -32,7 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Notification OIDC: removed live `QUARKUS_OIDC_TENANT_ENABLED=false` hack — `@Authenticated` endpoints accept valid JWTs (NOTIF-001).
 - E2E scripts: SSO host refresh, account-id semantics, internal gateway mode, idempotency headers, dynamic pod resolution — 16 suites ALL PASS; full backend suite 44 modules BUILD SUCCESS.
 
-> **Gate**: 24h `payu-dev` canary (operator-managed mTLS stack) resumed 2026-08-01 00:32Z; evidence in `docs/roadmap/ARCH007_CANARY.md`. GA `1.10.0` after canary gates + promotion.
+> **Gate**: canary evidence accepted 2026-08-01 (pods 23/23 Running/Ready pada
+> stack final, checkpoint `status=OK` tanpa error cache, latency 1–2ms; detail
+> di `docs/roadmap/ARCH007_CANARY.md`). Promosi SIT→UAT→preprod→prod adalah
+> langkah deploy berikutnya.
 
 ## [1.9.9] - 2026-07-31
 

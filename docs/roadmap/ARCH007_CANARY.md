@@ -8,6 +8,14 @@ Hot Rod 16.2.1 native clients, `payu-cache:11222`, dev overlay tanpa `SPRING_MAI
 
 ## Evidence gates (AGENTS / TODOS ARCH-007 done criteria)
 
+## Final decision (2026-08-01)
+
+Gate diterima per keputusan user: seluruh pod backend Running/Ready 23/23 pada
+stack final operator-managed mTLS, checkpoint `status=OK` berlanjut tanpa error
+cache, Hot Rod round-trip steady 1–2ms. ARCH-007 ditutup; promosi ke SIT/UAT/
+preprod/prod adalah langkah deploy berikutnya (overlay render OK, kontrak
+terverifikasi).
+
 | Gate | Criterion | Evidence source |
 |---|---|---|
 | No cache errors | 0 `RedisConnectionException` / `ISPN005061` / `unclosed iterator` / `HotRodClientException` / `CacheNotFound` / `unstarted` / `Invalid cred` / `SSLHandshake` | `/tmp/arch007-canary.log` (checkpoint tiap 15m, setsid) |
