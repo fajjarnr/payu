@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. |
-| **Last Release** | `1.10.2` (2026-08-01) — SIT promotion pipeline full green: ArgoCD automated sync, ZAP/Schemathesis/Litmus/k6 gates live, LitmusChaos deployed |
-| **Last Updated** | 2026-08-01 (pipeline `payu-deploy-gitops-pipeline` SIT SUCCEEDED; OPS-2026-08-01-02 ditutup) |
+| **Last Release** | `1.10.3` (2026-08-01) — UAT workloads live (31/31, 0 CrashLoop), redeploy-safe bootstrap + sync-wave fixes, prod sync window |
+| **Last Updated** | 2026-08-01 (UAT promoted dev→uat images + DB reset + HPA; VSO egress issue OPS-2026-08-01-03) |
 
 ---
 
@@ -59,6 +59,7 @@ Dev loop (2026-07-31 → 2026-08-01): `web-app:1.5.3` deployed; unit 1187 pass; 
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
 | DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. **2026-08-01**: overlays deploy-safe + SIT workloads deployed (40/40 pods Running) + Tekton `payu-deploy-gitops-pipeline` SIT pilot SUCCEEDED (argocd-sync-wait, ZAP baseline, Schemathesis, Litmus pod-delete Pass, k6 smoke). Sisa: UAT→preprod→prod promotion via pipeline (digest pinning + E2E gates per env). | 🟢 SIT pilot green — UAT/preprod/prod pending |
+| OPS-2026-08-01-03 | P1 | Network | VSO egress anomaly: pods di `vault-secrets-operator` ns timeout SEMUA egress (API server, quay, vault) walau tanpa NetworkPolicy; ovnkube restart + ns recreate tidak menyembuhkan. VSS refresh degraded (secrets existing aman). Perlu investigasi OVN SB/NB + dukungan Red Hat. | 🔒 Investigate |
 | INFRA-026 | P1 | Secrets | Replace ephemeral dev-mode Vault before SIT with HA durable Vault, auto-unseal, backup/restore evidence, and non-root short-lived ESO authentication. **2026-08-01**: HA Vault live 3/3 (Raft+awskms, TLS, PDB, anti-affinity), kubernetes auth roles short-lived (15m), snapshot CronJob verified ke S3, `payu-database-app` password + asyncpg DB URLs di-sync. Sisa: restore drill (masuk DEVSECOPS-017 DR exercise). | 🟢 Live — restore drill pending |
 | DEPLOY-009 | P2 | CI/CD | Tekton Chains (INFRA-013) + Results (INFRA-014) + Renovate (DEVSECOPS-011) |
 | OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |

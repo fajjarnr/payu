@@ -4481,6 +4481,18 @@ synchronized (lock) {
 
 **Fix**: Beri pipeline SA Role `payu-tekton-litmus-gate` di payu-sit dengan perms yang SAMA dengan yang mau di-grant (pods, secrets, services, configmaps, events, apps patch/update, batch jobs) — scoped test env, bukan cluster-admin.
 
+### L-178: DB name drift — Vault URL `analytics` vs DB aktual `payu_analytics` (2026-08-01)
+
+**Context**: UAT analytics/kyc CrashLoop `database "analytics" does not exist` walau Database CR `payu-analytics` applied. Vault `payu/uat/database/services` berisi `:5432/analytics` + `:5432/kyc`, tapi CNPG Database CR bikin `payu_analytics`/`payu_kyc`. SIT benar (`payu_an...`/`payu_ky...`).
+
+**Fix**: Update Vault URL ke `payu_analytics`/`payu_kyc` (kv put, version 4) + re-sync secret. Selalu bandingkan nilai secret live antar-env sebelum debug koneksi DB.
+
+### L-179: Redeploy-safe bootstrap — jangan CREATE tabel sebelum app Flyway (2026-08-01)
+
+**Context**: `outbox-bootstrap`/`shedlock-bootstrap` Job (sync-wave 1, data app) bikin tabel SEBELUM workloads app migrasi → Flyway `baseline-on-migrate` mem-baseline di v1, V1..V3 app di-skip, DB partial (`loans` ada, `paylater_accounts` nggak) — error berulang di tiap env baru (L-159/165).
+
+**Fix**: Bootstrap job sekarang cuma `ALTER TABLE ... OWNER` + `GRANT` di dalam `IF to_regclass(...) IS NOT NULL` — tanpa CREATE/ALTER struktur. App Flyway migrasi dari schema kosong; bootstrap jadi post-hoc idempotent. Plus sync-wave -10 untuk semua platform NetworkPolicy biar initdb/config-listener punya API egress saat deploy pertama.
+
 **Context**: Token cluster (`jay`, 24h) expire di tengah canary; monitor loop terus menulis `errs=0 backend_ready=0/23` — terlihat seperti checkpoint bersih padahal `oc` gagal auth.
 
 **Root cause**: Loop tidak mengecek hasil `oc`; `grep -c` pada output kosong = 0 error, `oc get pods` gagal = 0 pod → angka palsu tertulis tanpa penanda kegagalan.

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.3] - 2026-08-01
+
+### Changed
+
+- Redeploy-safe bootstrap: `outbox-bootstrap` and `shedlock-bootstrap` jobs no longer pre-create tables — they only ALTER OWNER/GRANT when the table exists (L-159 root cause). App Flyway now migrates from an empty schema; no more partial-schema/baseline conflicts on fresh clusters (L-165/179).
+- Data/messaging NetworkPolicies get `argocd.argoproj.io/sync-wave: -10` so they exist before CNPG/Kafka/Data Grid resources (prevents initdb/config-listener API-server egress timeouts on first deploy).
+- UAT promotion: all 31 images mirrored `payu-dev → payu-uat`; UAT DB schemas reset for clean Flyway; `db-secrets` URLs corrected to `payu_analytics`/`payu_kyc` in Vault (`payu/uat/database/services` v4) — SIT pattern (L-178).
+- Vault Secrets Operator reinstall path hardened: `vault-secrets-operator` namespace exempted from `block-shadow-namespaces`/`require-payu-labels`/`disallow-root-user`/`require-approved-registry`; `allow-vso-platform-egress` NetworkPolicy; `registry.connect.redhat.com/*` added to approved-registry pattern.
+
+### Fixed
+
+- UAT workloads live (31 deployments, 0 CrashLoop): HPA for all 31 workloads (required by `require-hpa` in uat/preprod/prod, sync-wave -1 so HPAs apply before Deployments); lending/investment Flyway partial-schema resets; analytics/kyc asyncpg URL + DB-name fixes.
+- Production sync guard: `payu` AppProject sync window (deny all; allow Sun 00:00–06:00 UTC) so automated ArgoCD sync can never deploy prod outside the maintenance window.
+
+### Known
+
+- VSO egress: pods in `vault-secrets-operator` namespace time out on ALL egress (API server included) even with no NetworkPolicy — pre-existing (~19h), isolated from NPs; ovnkube control-plane/node restarts and namespace recreation did not clear it. VSS refresh is degraded cluster-wide (existing synced Secrets unaffected). Tracked in TODOS (OPS-2026-08-01-03).
+
 ## [1.10.2] - 2026-08-01
 
 ### Added
