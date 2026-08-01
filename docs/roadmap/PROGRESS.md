@@ -17,11 +17,16 @@
 | Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid Hot Rod/mTLS, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |
 | Maven Build              | 🟢 44/44                                 | `clean package -DskipTests -T 1C` BUILD SUCCESS on 2026-07-17. |
-| Cache                    | 🟢 Hot Rod/mTLS healthy                  | JVM workloads use Data Grid Hot Rod; Redis-native rate limiting remains on redis-3scale. |
+| Cache                    | 🟢 Hot Rod/mTLS (operator-managed)       | `payu-dev` Data Grid Infinispan CR `WellFormed=True`, mTLS penuh, cache `payu` text/plain; manual `infinispan/server:15.0` dihapus; 24h canary resumed 2026-08-01 00:32Z (ARCH-007). |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
 | **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno (Enforce, 0 violations), Compliance (CIS 8/9), signed-image admission, EFS, OpenCost live. Vault, durable Loki/Results, SIEM (audit forwarding), DR remain gated. |
-| Last Status Update       | 2026-07-31                               | VSO secret migration rolled out SIT→UAT→preprod→prod; dev ESO restored. |
+| Last Status Update       | 2026-08-01                               | ARCH-007 dev selesai: operator-managed Data Grid mTLS, 16 suite E2E hijau, full backend test hijau; canary 24h berjalan. |
+
+> ✅ **2026-08-01 — ARCH-007 Hot Rod/mTLS dev completion**:
+> - Data Grid dev dimigrasi ke Infinispan Operator CR (`WellFormed=True`, mTLS: server TLS + client CA + client keystore + identities literal-password — L-148); deployment manual + Service `payu-cache-resp` dihapus; semua workload pakai `payu-cache:11222` SSL.
+> - `SPRING_MAIN_SOURCES` bridge diganti auto-config metadata (`HotRodCacheConfig` + `matchIfMissing`); label `managed-by` di semua base deployment (Kyverno); health check lazy-start cache bernama; gRPC server lifecycle + wallet integration (FX-002); outbox topic `payu.wallet.*.v1`; AMQ broker + notification OIDC + FX/TXN error contract diperbaiki (L-150..156).
+> - E2E: 16 suite ALL PASS; backend: 44 module BUILD SUCCESS; canary 24h (final stack) berjalan sejak 2026-08-01 00:32Z, evidence di `ARCH007_CANARY.md`.
 
 > ✅ **2026-07-31 — Vault Secrets Operator migration completed across promotion environments**:
 > - Committed `aafa0b03` (`feat(platform): migrate promotion secrets to Vault Secrets Operator`): ESO → `VaultStaticSecret` for data, messaging, identity, and workload secrets in SIT/UAT/preprod/prod; Git-tracked `runtime-secrets.yaml` removed; VSO operator, per-environment `VaultAuth`, and env-scoped KV paths (`payu/<env>/...`) in place.

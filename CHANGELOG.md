@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.0-rc.1] - 2026-08-01
+
+### Added
+
+- Added operator-managed dev Data Grid with full mTLS (server TLS, client CA, client keystore, identities literal-password contract) — `WellFormed=True`, cache `payu` text/plain, manual `infinispan/server:15.0` deployment removed (ARCH-007).
+- Added `HotRodCacheSupport` (lazy-start + named `payu` cache) so health indicators no longer hit an unstarted `RemoteCacheManager`; dev health detail sampler for canary p95 evidence.
+- Added gRPC Netty server lifecycle to `grpc-starter` (spring-grpc server auto-config never started a listener) + `@GrpcService` on `WalletGrpcService` — wallet gRPC debit/credit live; Service/container port 9090 and `WALLET_GRPC_ADDRESS` wired.
+- Added Keycloak client-scope `account:verify` for dev E2E and Keycloak `customer1` password reset.
+
+### Changed
+
+- Registered `HotRodCacheConfig` in `cache-starter` auto-configuration metadata; removed the dev `SPRING_MAIN_SOURCES` overlay bridge (Hot Rod is the only supported cache client).
+- Applied `app.kubernetes.io/managed-by: platform-team` to all base backend/simulator deployments (Kyverno exclusion contract, L-146).
+- Aligned wallet outbox event topics to `payu.wallet.*.v1` (topic naming contract, AGENTS #4); scan confirms no remaining violations.
+- Wired simulator endpoint URLs (`DUKCAPIL/BIFAST/QRIS_SIMULATOR_URL`) instead of dead `localhost` defaults; gateway route `simulator/dukcapil` + public path.
+- Hot Rod auto-config now `matchIfMissing=true` — full-context `SpringBootTest` profiles no longer need explicit `provider` (test suites green across all services).
+
+### Fixed
+
+- FX conversion chain (FX-001/002): JPA detached-entity (preset id/null version), JWT `account_id`→`sub` fallback, missing `conversion_date`, estimate endpoint no longer moves wallet money (`estimateConversion`), rate-lookup `NonUniqueResult`, reverse ownership 403, bad-pair 404 (`FX_404`).
+- Transaction `GET /{id}` now returns 404 `TXN_404` (was 400 `INVALID_ARGUMENT`).
+- AMQ broker CrashLoop: Kyverno `set-readonly-root-filesystem` exclusion for `application: payu-broker-app` + `payu-broker-hdls-svc` selector aligned to operator pod labels; notification `/q/health` 200.
+- Notification OIDC: removed live `QUARKUS_OIDC_TENANT_ENABLED=false` hack — `@Authenticated` endpoints accept valid JWTs (NOTIF-001).
+- E2E scripts: SSO host refresh, account-id semantics, internal gateway mode, idempotency headers, dynamic pod resolution — 16 suites ALL PASS; full backend suite 44 modules BUILD SUCCESS.
+
+> **Gate**: 24h `payu-dev` canary (operator-managed mTLS stack) resumed 2026-08-01 00:32Z; evidence in `docs/roadmap/ARCH007_CANARY.md`. GA `1.10.0` after canary gates + promotion.
+
 ## [1.9.9] - 2026-07-31
 
 ### Added
