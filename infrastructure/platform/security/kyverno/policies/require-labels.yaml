@@ -76,6 +76,7 @@ spec:
               - payu-cicd
               - openshift-pipelines
               - openshift-gitops
+              - vault-secrets-operator
       validate:
         message: >-
           Deployments in PayU namespaces must have labels:

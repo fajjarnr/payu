@@ -52,19 +52,24 @@ spec:
           selector:
             matchLabels:
               app.kubernetes.io/component: cost-management
+      - resources:
+          namespaces:
+            - vault-secrets-operator
     validate:
       message: Only approved registries are allowed.
       pattern:
         spec:
           =(initContainers):
           - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
-              quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
-              docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
-              | docker.io/grafana/* | docker.io/pactfoundation/* |
-              docker.io/infinispan/* | docker.io/amazon/*
+              quay.io/* | registry.redhat.io/* | registry.connect.redhat.com/* |
+              ghcr.io/* | docker.io/library/* | docker.io/hashicorp/* |
+              docker.io/falcosecurity/* | docker.io/wazuh/* | docker.io/grafana/*
+              | docker.io/pactfoundation/* | docker.io/infinispan/* |
+              docker.io/amazon/*
           containers:
           - image: image-registry.openshift-image-registry.svc:5000/* | gcr.io/* |
-              quay.io/* | registry.redhat.io/* | ghcr.io/* | docker.io/library/* |
-              docker.io/hashicorp/* | docker.io/falcosecurity/* | docker.io/wazuh/*
-              | docker.io/grafana/* | docker.io/pactfoundation/* |
-              docker.io/infinispan/* | docker.io/amazon/*
+              quay.io/* | registry.redhat.io/* | registry.connect.redhat.com/* |
+              ghcr.io/* | docker.io/library/* | docker.io/hashicorp/* |
+              docker.io/falcosecurity/* | docker.io/wazuh/* | docker.io/grafana/*
+              | docker.io/pactfoundation/* | docker.io/infinispan/* |
+              docker.io/amazon/*

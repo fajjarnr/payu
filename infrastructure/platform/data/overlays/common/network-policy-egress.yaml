@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-cnpg-platform-traffic
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/name: allow-cnpg-platform-traffic
     app.kubernetes.io/part-of: payu
@@ -56,6 +58,8 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-datagrid-config-listener-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/name: allow-datagrid-config-listener-platform
     app.kubernetes.io/part-of: payu
@@ -110,6 +114,8 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-datagrid-platform-traffic
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/name: allow-datagrid-platform-traffic
     app.kubernetes.io/part-of: payu

@@ -65,6 +65,8 @@ spec:
                 - trusted-artifact-signer
                 # Chaos Engineering
                 - litmus
+                # Vault Secrets Operator operand namespace
+                - vault-secrets-operator
           - subjects:
               - kind: ServiceAccount
                 name: openshift-gitops-argocd-application-controller

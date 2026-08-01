@@ -93,6 +93,7 @@ spec:
           - payu-cicd
           - openshift-pipelines
           - openshift-gitops
+          - vault-secrets-operator
     validate:
       message: 'Running as root is not allowed. Set runAsNonRoot: true and ensure
         a non-zero runAsUser.'
