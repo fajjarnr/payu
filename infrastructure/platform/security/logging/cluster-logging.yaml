@@ -1,0 +1,69 @@
+# Red Hat OpenShift Logging — audit log forwarding (INFRA-029 / SEC-020)
+# ClusterLogForwarder inputRefs=[audit] → LokiStack (S3-backed, KMS-encrypted).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: observability
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-logging
+  namespace: openshift-logging
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-logging
+  namespace: openshift-logging
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: cluster-logging
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+---
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: loki
+  namespace: openshift-logging
+spec:
+  size: 1x.extra-small
+  storage:
+    schemas:
+      - version: v13
+        effectiveDate: "2024-01-01"
+    secret:
+      name: loki-s3
+      type: s3
+  storageClassName: gp3-csi
+  replicationFactor: 1
+  limits:
+    global:
+      queries:
+        maxQuerySeries: 500
+---
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  outputs:
+    - name: loki
+      type: lokistack
+      lokistack:
+        name: loki
+  pipelines:
+    - name: audit-logs
+      inputRefs:
+        - audit
+      labels:
+        log_type: audit
+      outputRefs:
+        - loki
