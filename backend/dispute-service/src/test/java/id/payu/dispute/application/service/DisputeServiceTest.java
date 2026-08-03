@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -253,6 +254,35 @@ class DisputeServiceTest {
 
             // Then
             assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should scope dispute lookup to customer")
+        void shouldScopeDisputeLookupToCustomer() {
+            Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
+                    DISPUTED_AMOUNT, CURRENCY, REASON);
+            dispute.setId(DISPUTE_ID);
+            when(disputePersistencePort.findByIdAndCustomerId(DISPUTE_ID, CUSTOMER_ID))
+                    .thenReturn(Optional.of(dispute));
+
+            Optional<Dispute> result = disputeService.getDisputeForCustomer(DISPUTE_ID, CUSTOMER_ID);
+
+            assertThat(result).containsSame(dispute);
+            verify(disputePersistencePort).findByIdAndCustomerId(DISPUTE_ID, CUSTOMER_ID);
+        }
+
+        @Test
+        @DisplayName("Should scope transaction lookup to customer")
+        void shouldScopeTransactionLookupToCustomer() {
+            Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
+                    DISPUTED_AMOUNT, CURRENCY, REASON);
+            when(disputePersistencePort.findByTransactionIdAndCustomerId(TRANSACTION_ID, CUSTOMER_ID))
+                    .thenReturn(java.util.List.of(dispute));
+
+            List<Dispute> result = disputeService.getDisputesByTransactionForCustomer(TRANSACTION_ID, CUSTOMER_ID);
+
+            assertThat(result).containsExactly(dispute);
+            verify(disputePersistencePort).findByTransactionIdAndCustomerId(TRANSACTION_ID, CUSTOMER_ID);
         }
     }
 }

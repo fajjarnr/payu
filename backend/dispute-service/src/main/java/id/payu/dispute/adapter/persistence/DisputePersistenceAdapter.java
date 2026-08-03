@@ -40,8 +40,21 @@ public class DisputePersistenceAdapter implements DisputePersistencePort {
     }
 
     @Override
+    public Optional<Dispute> findByIdAndCustomerId(UUID id, UUID customerId) {
+        return disputeJpaRepository.findByIdAndCustomerId(id, customerId).map(this::toDomain);
+    }
+
+    @Override
     public List<Dispute> findByTransactionId(UUID transactionId) {
         return disputeJpaRepository.findByTransactionId(transactionId)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Dispute> findByTransactionIdAndCustomerId(UUID transactionId, UUID customerId) {
+        return disputeJpaRepository.findByTransactionIdAndCustomerId(transactionId, customerId)
                 .stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());

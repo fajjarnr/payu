@@ -86,6 +86,8 @@ public interface DisputeUseCase {
      */
     Optional<Dispute> getDispute(UUID disputeId);
 
+    Optional<Dispute> getDisputeForCustomer(UUID disputeId, UUID customerId);
+
     /**
      * Gets all disputes for a transaction.
      *
@@ -93,6 +95,8 @@ public interface DisputeUseCase {
      * @return list of disputes
      */
     List<Dispute> getDisputesByTransaction(UUID transactionId);
+
+    List<Dispute> getDisputesByTransactionForCustomer(UUID transactionId, UUID customerId);
 
     /**
      * Gets disputes by customer.

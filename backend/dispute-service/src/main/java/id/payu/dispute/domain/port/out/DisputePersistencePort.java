@@ -10,7 +10,9 @@ import java.util.UUID;
 public interface DisputePersistencePort {
     Dispute save(Dispute dispute);
     Optional<Dispute> findById(UUID id);
+    Optional<Dispute> findByIdAndCustomerId(UUID id, UUID customerId);
     List<Dispute> findByTransactionId(UUID transactionId);
+    List<Dispute> findByTransactionIdAndCustomerId(UUID transactionId, UUID customerId);
     List<Dispute> findByCustomerId(UUID customerId);
     List<Dispute> findByMerchantId(UUID merchantId);
     List<Dispute> findByStatus(DisputeStatus status);

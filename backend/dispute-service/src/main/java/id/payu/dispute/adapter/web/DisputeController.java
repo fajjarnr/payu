@@ -18,9 +18,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,7 +43,7 @@ public class DisputeController {
     private final DisputeUseCase disputeUseCase;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "List disputes", description = "Lists all disputes in the system")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -51,7 +55,7 @@ public class DisputeController {
 
     @PostMapping
     @Idempotent(required = true)
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT', 'USER')")
     @Operation(summary = "Open a dispute", description = "Creates a new dispute for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Dispute created successfully",
@@ -60,12 +64,16 @@ public class DisputeController {
             @ApiResponse(responseCode = "404", description = "Transaction not found")
     })
     public ResponseEntity<DisputeResponse> openDispute(
-            @Valid @RequestBody OpenDisputeRequest request) {
+            @Valid @RequestBody OpenDisputeRequest request,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication) {
+        UUID customerId = isOperational(authentication)
+                ? request.getCustomerId()
+                : authenticatedCustomerId(authentication);
         log.info("Opening dispute for transaction: {} by customer: {}",
-                request.getTransactionId(), request.getCustomerId());
+                request.getTransactionId(), customerId);
         Dispute dispute = disputeUseCase.openDispute(
                 request.getTransactionId(),
-                request.getCustomerId(),
+                customerId,
                 request.getMerchantId(),
                 request.getDisputedAmount(),
                 request.getCurrency(),
@@ -75,7 +83,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/investigate")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Start investigation", description = "Transitions dispute from OPEN to INVESTIGATING")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Investigation started",
@@ -92,7 +100,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/resolve")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Resolve a dispute", description = "Transitions dispute from INVESTIGATING to RESOLVED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute resolved",
@@ -110,7 +118,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/reject")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Reject a dispute", description = "Transitions dispute to REJECTED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute rejected",
@@ -127,7 +135,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/escalate")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Escalate a dispute", description = "Transitions dispute from INVESTIGATING to ESCALATED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute escalated",
@@ -144,7 +152,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/evidence")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT', 'USER')")
     @Operation(summary = "Add evidence", description = "Adds evidence to a dispute")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Evidence added",
@@ -154,7 +162,12 @@ public class DisputeController {
     })
     public ResponseEntity<DisputeResponse> addEvidence(
             @Parameter(description = "Dispute ID") @PathVariable UUID disputeId,
-            @Valid @RequestBody AddEvidenceRequest request) {
+            @Valid @RequestBody AddEvidenceRequest request,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication) {
+        if (!isOperational(authentication)
+                && disputeUseCase.getDisputeForCustomer(disputeId, authenticatedCustomerId(authentication)).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         log.info("Adding evidence to dispute: {} - file: {}", disputeId, request.getFileName());
         Dispute dispute = disputeUseCase.addEvidence(
                 disputeId,
@@ -166,7 +179,7 @@ public class DisputeController {
     }
 
     @GetMapping("/{disputeId}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT', 'USER')")
     @Operation(summary = "Get dispute by ID", description = "Retrieves a dispute by its ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dispute found",
@@ -174,40 +187,56 @@ public class DisputeController {
             @ApiResponse(responseCode = "404", description = "Dispute not found")
     })
     public ResponseEntity<DisputeResponse> getDispute(
-            @Parameter(description = "Dispute ID") @PathVariable UUID disputeId) {
+            @Parameter(description = "Dispute ID") @PathVariable UUID disputeId,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication) {
         log.debug("Getting dispute: {}", disputeId);
-        return disputeUseCase.getDispute(disputeId)
+        Optional<Dispute> dispute = isOperational(authentication)
+                ? disputeUseCase.getDispute(disputeId)
+                : disputeUseCase.getDisputeForCustomer(disputeId, authenticatedCustomerId(authentication));
+        return dispute
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/transaction/{transactionId}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT', 'USER')")
     @Operation(summary = "Get disputes by transaction", description = "Retrieves all disputes for a transaction")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
     public ResponseEntity<DisputeListResponse> getDisputesByTransaction(
-            @Parameter(description = "Transaction ID") @PathVariable UUID transactionId) {
+            @Parameter(description = "Transaction ID") @PathVariable UUID transactionId,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication) {
         log.debug("Getting disputes for transaction: {}", transactionId);
-        List<Dispute> disputes = disputeUseCase.getDisputesByTransaction(transactionId);
+        List<Dispute> disputes = isOperational(authentication)
+                ? disputeUseCase.getDisputesByTransaction(transactionId)
+                : disputeUseCase.getDisputesByTransactionForCustomer(
+                        transactionId, authenticatedCustomerId(authentication));
         return ResponseEntity.ok(toListResponse(disputes));
     }
 
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent', 'user')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT', 'USER')")
     @Operation(summary = "Get disputes by customer", description = "Retrieves all disputes for a customer")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
     public ResponseEntity<DisputeListResponse> getDisputesByCustomer(
-            @Parameter(description = "Customer ID") @PathVariable UUID customerId) {
+            @Parameter(description = "Customer ID") @PathVariable UUID customerId,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication) {
+        if (!isOperational(authentication)) {
+            UUID authenticatedCustomerId = authenticatedCustomerId(authentication);
+            if (!authenticatedCustomerId.equals(customerId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            customerId = authenticatedCustomerId;
+        }
         log.debug("Getting disputes for customer: {}", customerId);
         List<Dispute> disputes = disputeUseCase.getDisputesByCustomer(customerId);
         return ResponseEntity.ok(toListResponse(disputes));
     }
 
     @GetMapping("/merchant/{merchantId}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Get disputes by merchant", description = "Retrieves all disputes for a merchant")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -219,7 +248,7 @@ public class DisputeController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Get disputes by status", description = "Retrieves disputes filtered by status")
     @ApiResponse(responseCode = "200", description = "List of disputes",
             content = @Content(schema = @Schema(implementation = DisputeListResponse.class)))
@@ -272,5 +301,33 @@ public class DisputeController {
                 .disputes(responses)
                 .total(responses.size())
                 .build();
+    }
+
+    private boolean isOperational(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> authority.equals("admin")
+                        || authority.equals("ROLE_ADMIN")
+                        || authority.equals("backoffice")
+                        || authority.equals("ROLE_BACKOFFICE")
+                        || authority.equals("dispute_agent")
+                        || authority.equals("ROLE_DISPUTE_AGENT"));
+    }
+
+    private UUID authenticatedCustomerId(Authentication authentication) {
+        String principalId = authentication.getName();
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            principalId = jwt.getClaimAsString("account_id");
+            if (principalId == null || principalId.isBlank()) {
+                principalId = jwt.getSubject();
+            }
+        }
+
+        try {
+            return UUID.fromString(principalId);
+        } catch (RuntimeException ex) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Authenticated customer identity is invalid", ex);
+        }
     }
 }

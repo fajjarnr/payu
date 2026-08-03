@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -21,6 +22,10 @@ public interface DisputeJpaRepository extends JpaRepository<DisputeEntity, UUID>
      * @return list of dispute entities
      */
     List<DisputeEntity> findByTransactionId(UUID transactionId);
+
+    Optional<DisputeEntity> findByIdAndCustomerId(UUID id, UUID customerId);
+
+    List<DisputeEntity> findByTransactionIdAndCustomerId(UUID transactionId, UUID customerId);
 
     /**
      * Finds disputes by customer.

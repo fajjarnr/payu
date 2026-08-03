@@ -131,9 +131,23 @@ public class DisputeService implements DisputeUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Dispute> getDisputeForCustomer(UUID disputeId, UUID customerId) {
+        log.debug("Getting dispute {} for customer {}", disputeId, customerId);
+        return disputePersistencePort.findByIdAndCustomerId(disputeId, customerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Dispute> getDisputesByTransaction(UUID transactionId) {
         log.debug("Getting disputes for transaction: {}", transactionId);
         return disputePersistencePort.findByTransactionId(transactionId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Dispute> getDisputesByTransactionForCustomer(UUID transactionId, UUID customerId) {
+        log.debug("Getting disputes for transaction {} and customer {}", transactionId, customerId);
+        return disputePersistencePort.findByTransactionIdAndCustomerId(transactionId, customerId);
     }
 
     @Override
