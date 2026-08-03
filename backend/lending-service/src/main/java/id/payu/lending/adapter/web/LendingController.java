@@ -79,7 +79,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/loans")
     @PreAuthorize("isAuthenticated()")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Audited(
             operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "Loan",
@@ -190,7 +190,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/repayment-schedules/{scheduleId}/pay")
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isRepaymentScheduleOwner(#scheduleId, T(java.util.UUID).fromString(authentication.name))")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Process repayment", description = "Make a repayment for a specific schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment processed successfully",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -254,7 +254,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/paylater/{userId}/purchase")
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, T(java.util.UUID).fromString(authentication.name))")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Audited(
             operation = id.payu.security.annotation.AuditOperation.OTHER,
             entityType = "PayLaterTransaction",
@@ -288,7 +288,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/paylater/{userId}/payment")
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, T(java.util.UUID).fromString(authentication.name))")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Record PayLater payment", description = "Record a payment transaction for PayLater")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment recorded successfully",
             content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))

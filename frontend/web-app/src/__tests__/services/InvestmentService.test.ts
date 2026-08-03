@@ -93,7 +93,9 @@ describe('InvestmentService', () => {
 
       const result = await InvestmentService.buyDeposit(request);
 
-      expect(api.post).toHaveBeenCalledWith('/investments/deposits', request);
+      expect(api.post).toHaveBeenCalledWith('/investments/deposits', request, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result.status).toBe('COMPLETED');
     });
   });
@@ -112,7 +114,9 @@ describe('InvestmentService', () => {
 
       const result = await InvestmentService.buyMutualFund(request);
 
-      expect(api.post).toHaveBeenCalledWith('/investments/mutual-funds', request);
+      expect(api.post).toHaveBeenCalledWith('/investments/mutual-funds', request, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result.status).toBe('COMPLETED');
     });
   });
@@ -128,7 +132,9 @@ describe('InvestmentService', () => {
 
       const result = await InvestmentService.buyGold(request);
 
-      expect(api.post).toHaveBeenCalledWith('/investments/gold', request);
+      expect(api.post).toHaveBeenCalledWith('/investments/gold', request, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result.amount).toBe(5000000);
     });
   });
@@ -146,7 +152,9 @@ describe('InvestmentService', () => {
 
       const result = await InvestmentService.sell(request);
 
-      expect(api.post).toHaveBeenCalledWith('/investments/sell', request);
+      expect(api.post).toHaveBeenCalledWith('/investments/sell', request, {
+        headers: { 'X-Idempotency-Key': expect.any(String) },
+      });
       expect(result.action).toBe('SELL');
     });
   });

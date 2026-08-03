@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 
 // --- Interfaces matching backend InvestmentController ---
 
@@ -120,25 +121,33 @@ class InvestmentService {
 
   /** POST /investments/deposits — Buy fixed deposit */
   async buyDeposit(request: BuyDepositRequest): Promise<InvestmentOrder> {
-    const response = await api.post('/investments/deposits', request);
+    const response = await api.post('/investments/deposits', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   /** POST /investments/mutual-funds — Buy mutual fund */
   async buyMutualFund(request: BuyMutualFundRequest): Promise<InvestmentOrder> {
-    const response = await api.post('/investments/mutual-funds', request);
+    const response = await api.post('/investments/mutual-funds', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   /** POST /investments/gold — Buy gold */
   async buyGold(request: BuyGoldRequest): Promise<InvestmentOrder> {
-    const response = await api.post('/investments/gold', request);
+    const response = await api.post('/investments/gold', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   /** POST /investments/sell — Sell investment */
   async sell(request: SellInvestmentRequest): Promise<InvestmentOrder> {
-    const response = await api.post('/investments/sell', request);
+    const response = await api.post('/investments/sell', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

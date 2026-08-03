@@ -212,4 +212,22 @@ class InvestmentControllerTest {
             verify(investmentApplicationService).sellInvestment(testAccountId, testTransactionId, testAmount);
         }
     }
+
+    @Test
+    @DisplayName("financial mutations should use the web idempotency header")
+    void financialMutationsUseXIdempotencyKey() throws NoSuchMethodException {
+        assertXIdempotencyKey("buyDeposit", BuyDepositRequest.class, String.class, Jwt.class);
+        assertXIdempotencyKey("buyMutualFund", BuyMutualFundRequest.class, String.class, Jwt.class);
+        assertXIdempotencyKey("buyGold", BuyGoldRequest.class, String.class, Jwt.class);
+        assertXIdempotencyKey("sellInvestment", SellInvestmentRequest.class, Jwt.class);
+    }
+
+    private static void assertXIdempotencyKey(String methodName, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        var method = InvestmentController.class.getMethod(methodName, parameterTypes);
+        var idempotent = method.getAnnotation(id.payu.commons.idempotency.Idempotent.class);
+
+        assertThat(idempotent).isNotNull();
+        assertThat(idempotent.headerName()).isEqualTo("X-Idempotency-Key");
+    }
 }

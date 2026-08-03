@@ -65,7 +65,9 @@ describe('LendingService', () => {
 
         const result = await service.applyLoan(mockRequest);
 
-        expect(api.post).toHaveBeenCalledWith('/lending/loans', mockRequest);
+        expect(api.post).toHaveBeenCalledWith('/lending/loans', mockRequest, {
+          headers: { 'X-Idempotency-Key': expect.any(String) },
+        });
         expect(result).toEqual(mockLoan);
         expect(result.status).toBe('PENDING');
       });
@@ -264,6 +266,8 @@ describe('LendingService', () => {
 
         expect(api.post).toHaveBeenCalledWith('/lending/repayment-schedules/schedule_1/pay', {
           amount: 888888.89,
+        }, {
+          headers: { 'X-Idempotency-Key': expect.any(String) },
         });
         expect(result.status).toBe('PAID');
       });
@@ -392,12 +396,12 @@ describe('LendingService', () => {
 
         const result = await service.recordPurchase('user_123', 'Tokopedia', 500000, 'Online shopping');
 
-        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_123/purchase', null, {
-          params: {
-            merchantName: 'Tokopedia',
-            amount: 500000,
-            description: 'Online shopping',
-          },
+        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_123/purchase', {
+          merchantName: 'Tokopedia',
+          amount: 500000,
+          description: 'Online shopping',
+        }, {
+          headers: { 'X-Idempotency-Key': expect.any(String) },
         });
         expect(result.type).toBe('PURCHASE');
         expect(result.balanceAfter).toBe(500000);
@@ -437,8 +441,8 @@ describe('LendingService', () => {
 
         const result = await service.recordPayment('user_789', 500000);
 
-        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_789/payment', null, {
-          params: { amount: 500000 },
+        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_789/payment', { amount: 500000 }, {
+          headers: { 'X-Idempotency-Key': expect.any(String) },
         });
         expect(result.type).toBe('PAYMENT');
         expect(result.balanceAfter).toBe(0);

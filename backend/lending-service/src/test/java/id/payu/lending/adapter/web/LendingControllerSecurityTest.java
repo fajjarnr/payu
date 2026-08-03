@@ -215,4 +215,23 @@ class LendingControllerSecurityTest {
         assertEquals(LoanApplicationCommand.class, method.getParameterTypes()[0],
                 "Request body should be LoanApplicationCommand (without userId field)");
     }
+
+    @Test
+    void financialMutationEndpoints_UseXIdempotencyKey() throws NoSuchMethodException {
+        assertXIdempotencyKey("applyLoan", LoanApplicationCommand.class, Principal.class);
+        assertXIdempotencyKey("processRepayment", UUID.class, String.class,
+                id.payu.lending.interfaces.dto.RepaymentRequest.class);
+        assertXIdempotencyKey("recordPurchase", UUID.class, java.util.Map.class);
+        assertXIdempotencyKey("recordPayment", UUID.class, java.util.Map.class);
+    }
+
+    private static void assertXIdempotencyKey(String methodName, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        var method = LendingController.class.getMethod(methodName, parameterTypes);
+        var idempotent = method.getAnnotation(id.payu.commons.idempotency.Idempotent.class);
+
+        assertNotNull(idempotent, methodName + " should be idempotent");
+        assertEquals("X-Idempotency-Key", idempotent.headerName(),
+                methodName + " should use the web financial mutation header");
+    }
 }

@@ -67,6 +67,21 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Zustand persistence was removed, legacy `payu-auth-storage` is deleted on client load, and `SessionBootstrap` remains the cookie-session bootstrap path.
 - Auth persistence/logout tests passed `8/8`; production-build browser inspection showed the key present before reload and `null` after reload.
 
+## L-201: Contract Tests Must Assert the Wire Shape (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Next.js, Axios, Spring MVC, idempotency
+**Context**: Lending clients sent financial fields as query parameters with a `null` POST body, while controllers read JSON bodies. Investment mutations omitted the required idempotency header, and affected backend annotations used a different header name from the web client.
+
+**Lesson**:
+- Assert Axios calls at all three positions: URL, JSON body, and config headers; a test that checks only the URL can leave the wire contract broken.
+- Keep one idempotency header across the boundary. The web app standard is `X-Idempotency-Key`; endpoint annotations and explicit `@RequestHeader` parameters must match it.
+- Validate unauthenticated responses after deployment so request-shape fixes do not accidentally weaken the auth boundary.
+
+**Applied evidence**:
+- Lending and investment FE contract tests passed `32/32`; backend controller contract tests passed as part of investment `52` and lending `86` test suites.
+- Deployed services returned `401` without authentication and remained healthy after manifest-based rollout.
+
 ## L-199: Security Defaults Must Be Enforced at the Shared Startup Boundary (2026-08-03)
 
 **Date**: 2026-08-03

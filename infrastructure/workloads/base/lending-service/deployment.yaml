@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.101
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.102
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -87,7 +87,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: lending-service
         - name: SERVICE_VERSION
-          value: 1.8.101
+          value: 1.8.102
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT

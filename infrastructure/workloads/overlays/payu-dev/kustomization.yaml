@@ -42,15 +42,15 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newTag: "1.8.103"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.88
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.89
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-  newTag: "1.8.88"
+  newTag: "1.8.89"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:1.8.8
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newTag: "1.8.89"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.101
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.102
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-  newTag: "1.8.101"
+  newTag: "1.8.102"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.5
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newTag: "1.0.5"
@@ -78,9 +78,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.101
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.101"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.13
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.14
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.5.13"
+  newTag: "1.5.14"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.8.80"

@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-028 web financial contract drift deployed**:
+> - Lending loan/repayment/PayLater purchase/payment calls now use JSON request bodies where the controllers read `@RequestBody`, and every affected required mutation sends `X-Idempotency-Key`. Investment buy/sell calls now send the same header; affected backend `@Idempotent` annotations and explicit request headers use that standard.
+> - Verification: focused FE contract suite `32/32`, full web Vitest `1203 passed | 1 skipped`, web type-check/build successful; backend reactor package tests passed with investment `52` tests (`2` skipped) and lending `86` tests; images investment `1.8.89` (`sha256:d71360993affa28682b7813f61680cdb2f2b1876471a569568f1bd283f0290d8`), lending `1.8.102` (`sha256:111c8ff30713c669f33e14482d817d2460b0534e0cd424aa79af00a68151cd94`), and web-app `1.5.14` (`sha256:e5e814b557397bcf884ac7b60174595efb83ddfbd3c2de86a69d3bfd453932f6`) live; all three pods Ready `1/1`, health `UP/healthy`, unauthenticated lending/investment mutations return `401`, and web route returns `200`.
+
 > ✅ **2026-08-03 — PROD-027 web auth state storage deployed**:
 > - `authStore` no longer uses Zustand `persist`; auth truth is held in memory and rehydrated from the httpOnly-cookie session through `SessionBootstrap`. Client load removes the legacy `payu-auth-storage` key without persisting PII or `isAuthenticated`.
 > - Verification: focused auth persistence/logout tests `8/8`, full web Vitest `1203 passed | 1 skipped`, type-check and production build successful; local production-build browser inspection confirmed the legacy key is removed on reload. Image `web-app:1.5.13` (`sha256:dc58b35d238686ec3d50b465c7484f29ac303fe468f2cf9d8d25cff162ffcd31`) live, pod Ready `1/1`, restart `0`, `/api/health` healthy, and route final response `200` via the cluster router. Browser login/logout navigation remains blocked in this runner by the existing CSP hydration error and BFF `503`; store-level logout regression passes.

@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 
 export type LoanStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISBURSED' | 'REPAID' | 'DEFAULTED';
 export type PayLaterStatus = 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
@@ -77,6 +78,16 @@ export interface PayLaterLimitRequest {
   employmentDurationMonths: number;
 }
 
+export interface PayLaterPurchaseRequest {
+  merchantName: string;
+  amount: number;
+  description?: string;
+}
+
+export interface PayLaterPaymentRequest {
+  amount: number;
+}
+
 export class LendingService {
   private static instance: LendingService;
 
@@ -90,7 +101,9 @@ export class LendingService {
   }
 
   async applyLoan(request: LoanApplicationRequest): Promise<Loan> {
-    const response = await api.post<Loan>('/lending/loans', request);
+    const response = await api.post<Loan>('/lending/loans', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
@@ -114,6 +127,8 @@ export class LendingService {
   async processRepayment(scheduleId: string, amount: number): Promise<RepaymentSchedule> {
     const response = await api.post<RepaymentSchedule>(`/lending/repayment-schedules/${scheduleId}/pay`, {
       amount
+    }, {
+      headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }
@@ -133,18 +148,24 @@ export class LendingService {
     return response.data;
   }
 
-  // BUG-CROSS-055: Backend recordPurchase takes merchantName, amount, description as @RequestParam, not body
+  // BUG-CROSS-055: Backend recordPurchase reads merchantName, amount, description from JSON body
   async recordPurchase(userId: string, merchantName: string, amount: number, description?: string): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, null, {
-      params: { merchantName, amount, description }
+    const request: PayLaterPurchaseRequest = {
+      merchantName,
+      amount,
+      ...(description === undefined ? {} : { description }),
+    };
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, request, {
+      headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }
 
-  // BUG-CROSS-056: Backend recordPayment takes amount as @RequestParam, not body
+  // BUG-CROSS-056: Backend recordPayment reads amount from JSON body
   async recordPayment(userId: string, amount: number): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, null, {
-      params: { amount }
+    const request: PayLaterPaymentRequest = { amount };
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, request, {
+      headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }

@@ -84,7 +84,7 @@ public class InvestmentController extends BaseController {
             maskData = true,
             level = AuditLevel.INFO
     )
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Buy deposit", description = "Purchases a time deposit product")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Deposit purchased successfully",
             content = @Content(schema = @Schema(implementation = Deposit.class)))
@@ -92,7 +92,7 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found")
     public CompletableFuture<ResponseEntity<ApiResponse<Deposit>>> buyDeposit(
             @Valid @RequestBody BuyDepositRequest request,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
@@ -109,7 +109,7 @@ public class InvestmentController extends BaseController {
             maskData = true,
             level = AuditLevel.INFO
     )
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Buy mutual fund", description = "Purchases a mutual fund product")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Mutual fund purchased successfully",
             content = @Content(schema = @Schema(implementation = InvestmentTransaction.class)))
@@ -117,7 +117,7 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account or fund not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentTransaction>>> buyMutualFund(
             @Valid @RequestBody BuyMutualFundRequest request,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
@@ -134,14 +134,14 @@ public class InvestmentController extends BaseController {
             maskData = true,
             level = AuditLevel.INFO
     )
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Buy gold", description = "Purchases gold investment")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Gold purchased successfully",
             content = @Content(schema = @Schema(implementation = Gold.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> buyGold(
             @Valid @RequestBody BuyGoldRequest request,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
@@ -158,7 +158,7 @@ public class InvestmentController extends BaseController {
             maskData = true,
             level = AuditLevel.INFO
     )
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Sell investment", description = "Sells an existing investment")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Investment sold successfully",
             content = @Content(schema = @Schema(implementation = InvestmentTransaction.class)))
