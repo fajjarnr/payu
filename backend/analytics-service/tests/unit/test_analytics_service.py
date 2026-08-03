@@ -301,12 +301,37 @@ class TestAnalyticsService:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_get_income_by_source(self, analytics_service):
+    async def test_get_income_by_source(self, analytics_service, mock_db_session):
         """Test income by source breakdown."""
+        mock_db_session.execute.return_value = mock_query_result(
+            [
+                create_mock_row(
+                    source="SALARY",
+                    total_amount=Decimal("10000000.0000"),
+                    transaction_count=1,
+                ),
+                create_mock_row(
+                    source="TRANSFER",
+                    total_amount=Decimal("2500000.0000"),
+                    transaction_count=2,
+                ),
+            ]
+        )
+
         result = await analytics_service._get_income_by_source("user_123", 30)
 
-        # Currently returns empty list as placeholder
-        assert result == []
+        assert result == [
+            {
+                "source": "SALARY",
+                "amount": Decimal("10000000.0000"),
+                "transaction_count": 1,
+            },
+            {
+                "source": "TRANSFER",
+                "amount": Decimal("2500000.0000"),
+                "transaction_count": 2,
+            },
+        ]
 
     @pytest.mark.asyncio
     async def test_get_expenses_by_category(self, analytics_service):

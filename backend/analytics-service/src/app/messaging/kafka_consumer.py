@@ -279,6 +279,7 @@ class KafkaConsumerService:
             currency=message.get('currency', 'IDR'),
             change_amount=change_amount,
             change_type=change_type,
+            event_metadata=message.get("metadata"),
             timestamp=timestamp
         )
 

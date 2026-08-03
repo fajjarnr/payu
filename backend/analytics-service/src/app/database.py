@@ -80,6 +80,48 @@ MONEY_COLUMN_MIGRATION = text(
     END $$;
     """
 )
+CURRENT_SCHEMA_VERSION = 5
+SCHEMA_VERSION_TABLE = text(
+    """
+    CREATE TABLE IF NOT EXISTS analytics_schema_version (
+        version INTEGER PRIMARY KEY,
+        applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+    """
+)
+SCHEMA_VERSION_QUERY = text(
+    "SELECT COALESCE(MAX(version), 0) FROM analytics_schema_version"
+)
+SCHEMA_VERSION_INSERT = text(
+    "INSERT INTO analytics_schema_version (version) VALUES (:version)"
+)
+PROCESSED_EVENTS_TABLE_MIGRATION = text(
+    """
+    CREATE TABLE IF NOT EXISTS analytics_processed_events (
+        source VARCHAR NOT NULL,
+        event_id VARCHAR NOT NULL,
+        topic VARCHAR NOT NULL,
+        event_type VARCHAR NOT NULL,
+        processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (source, event_id)
+    )
+    """
+)
+PROCESSED_EVENTS_INDEX_MIGRATION = text(
+    """
+    CREATE INDEX IF NOT EXISTS idx_analytics_processed_events_topic
+        ON analytics_processed_events (topic)
+    """
+)
+WALLET_METADATA_MIGRATION = text(
+    "ALTER TABLE wallet_balance_history ADD COLUMN IF NOT EXISTS metadata JSON"
+)
+SCHEMA_MIGRATIONS = {
+    2: MONEY_COLUMN_MIGRATION,
+    3: PROCESSED_EVENTS_TABLE_MIGRATION,
+    4: PROCESSED_EVENTS_INDEX_MIGRATION,
+    5: WALLET_METADATA_MIGRATION,
+}
 
 
 class TransactionAnalyticsEntity(Base):
@@ -115,6 +157,7 @@ class WalletBalanceEntity(Base):
     currency = Column(String, default="IDR")
     change_amount = Column(Numeric(19, 4), nullable=False)
     change_type = Column(String, nullable=False)
+    event_metadata = Column("metadata", JSON, nullable=True)
 
     timestamp = Column(DateTime, nullable=False, index=True)
 
@@ -233,8 +276,28 @@ async def init_db():
     async with engine.begin() as connection:
         await connection.execute(SCHEMA_INIT_LOCK)
         try:
-            await connection.run_sync(Base.metadata.create_all)
-            await connection.execute(MONEY_COLUMN_MIGRATION)
+            await connection.execute(SCHEMA_VERSION_TABLE)
+            version_result = await connection.execute(SCHEMA_VERSION_QUERY)
+            current_version = version_result.scalar() or 0
+
+            if current_version > CURRENT_SCHEMA_VERSION:
+                raise RuntimeError(
+                    f"Unsupported analytics schema version {current_version}; "
+                    f"application supports {CURRENT_SCHEMA_VERSION}"
+                )
+
+            if current_version == 0:
+                await connection.run_sync(Base.metadata.create_all)
+                await connection.execute(MONEY_COLUMN_MIGRATION)
+                await connection.execute(SCHEMA_VERSION_INSERT, {"version": 1})
+                current_version = 1
+
+            for version in range(current_version + 1, CURRENT_SCHEMA_VERSION + 1):
+                migration = SCHEMA_MIGRATIONS.get(version)
+                if migration is None:
+                    raise RuntimeError(f"Missing analytics schema migration {version}")
+                await connection.execute(migration)
+                await connection.execute(SCHEMA_VERSION_INSERT, {"version": version})
         finally:
             await connection.execute(SCHEMA_INIT_UNLOCK)
 

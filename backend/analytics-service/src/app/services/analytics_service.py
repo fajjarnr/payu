@@ -224,7 +224,39 @@ class AnalyticsService:
         ]
 
     async def _get_income_by_source(self, user_id: str, period_days: int) -> List[Dict]:
-        return []
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=period_days)
+        source = func.coalesce(
+            WalletBalanceEntity.event_metadata["source"].as_string(),
+            "UNKNOWN",
+        ).label("source")
+
+        result = await self.db.execute(
+            select(
+                source,
+                func.sum(WalletBalanceEntity.change_amount).label("total_amount"),
+                func.count(WalletBalanceEntity.event_id).label("transaction_count"),
+            )
+            .where(
+                and_(
+                    WalletBalanceEntity.user_id == user_id,
+                    WalletBalanceEntity.timestamp >= start_date,
+                    WalletBalanceEntity.timestamp <= end_date,
+                    WalletBalanceEntity.change_type == "CREDIT",
+                )
+            )
+            .group_by(source)
+            .order_by(desc("total_amount"))
+        )
+
+        return [
+            {
+                "source": row.source,
+                "amount": Decimal(str(row.total_amount or 0)),
+                "transaction_count": row.transaction_count,
+            }
+            for row in result
+        ]
 
     async def _get_expenses_by_category(self, user_id: str, period_days: int) -> List[SpendingPattern]:
         trends = await self.get_spending_trends(user_id, period_days)
