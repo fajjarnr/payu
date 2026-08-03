@@ -4,6 +4,7 @@ import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.model.DisputeStatus;
 import id.payu.dispute.domain.port.in.DisputeUseCase;
+import id.payu.dispute.domain.port.in.RefundUseCase;
 import id.payu.dispute.domain.port.out.DisputePersistencePort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -35,6 +36,7 @@ import java.util.UUID;
 public class DisputeService implements DisputeUseCase {
 
     private final DisputePersistencePort disputePersistencePort;
+    private final RefundUseCase refundUseCase;
 
     @Override
     @CircuitBreaker(name = "disputeService", fallbackMethod = "openDisputeFallback")
@@ -73,11 +75,12 @@ public class DisputeService implements DisputeUseCase {
         Dispute saved = disputePersistencePort.save(dispute);
         log.info("Resolved dispute: {} with type: {}", disputeId, resolutionType);
 
-        // Trigger refund if resolution type requires it
-        if (resolutionType == DisputeResolutionType.REFUND_CUSTOMER ||
-            resolutionType == DisputeResolutionType.PARTIAL_REFUND) {
-            // TODO: Trigger refund creation via event or direct call
-            log.info("Refund should be triggered for dispute: {}", disputeId);
+        String refundReason = "Dispute " + disputeId + ": " + resolution;
+        if (resolutionType == DisputeResolutionType.REFUND_CUSTOMER) {
+            refundUseCase.createFullRefund(dispute.getTransactionId(), refundReason);
+        } else if (resolutionType == DisputeResolutionType.PARTIAL_REFUND) {
+            refundUseCase.createPartialRefund(
+                    dispute.getTransactionId(), dispute.getDisputedAmount(), dispute.getCurrency(), refundReason);
         }
 
         return saved;

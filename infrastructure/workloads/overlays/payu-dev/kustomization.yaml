@@ -32,7 +32,7 @@ images:
   newTag: "1.8.80"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.87
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-  newTag: "1.8.87"
+  newTag: "1.8.90"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.84
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newTag: "1.8.84"

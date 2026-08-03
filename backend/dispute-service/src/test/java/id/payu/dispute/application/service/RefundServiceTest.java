@@ -4,6 +4,7 @@ import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.model.RefundStatus;
 import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
+import id.payu.dispute.domain.port.out.RefundEventPublisherPort;
 import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,9 @@ class RefundServiceTest {
     @Mock
     private TransactionLookupPort transactionLookupPort;
 
+    @Mock
+    private RefundEventPublisherPort refundEventPublisherPort;
+
     private RefundService refundService;
 
     private static final UUID TRANSACTION_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -48,7 +52,7 @@ class RefundServiceTest {
 
     @BeforeEach
     void setUp() {
-        refundService = new RefundService(refundPersistencePort, transactionLookupPort);
+        refundService = new RefundService(refundPersistencePort, refundEventPublisherPort, transactionLookupPort);
     }
 
     @Nested
@@ -75,6 +79,7 @@ class RefundServiceTest {
             assertThat(result.getReason()).isEqualTo(REASON);
             assertThat(result.getStatus()).isEqualTo(RefundStatus.PENDING);
             verify(refundPersistencePort).save(any(Refund.class));
+            verify(refundEventPublisherPort).publishRefundRequested(expectedRefund);
         }
 
         @Test
@@ -117,6 +122,21 @@ class RefundServiceTest {
                     TRANSACTION_ID, new BigDecimal("100000.01"), CURRENCY, REASON))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Refund amount cannot exceed transaction amount");
+            verify(refundPersistencePort, never()).save(any(Refund.class));
+        }
+
+        @Test
+        @DisplayName("Should reject a duplicate full refund while an earlier refund is active")
+        void shouldRejectDuplicateFullRefundWhileActive() {
+            Refund existingRefund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
+            when(transactionLookupPort.findById(TRANSACTION_ID))
+                    .thenReturn(Optional.of(new TransactionDetails(AMOUNT, CURRENCY)));
+            when(refundPersistencePort.findByTransactionId(TRANSACTION_ID))
+                    .thenReturn(java.util.List.of(existingRefund));
+
+            assertThatThrownBy(() -> refundService.createFullRefund(TRANSACTION_ID, REASON))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Refund amount exceeds the remaining refundable amount");
             verify(refundPersistencePort, never()).save(any(Refund.class));
         }
     }

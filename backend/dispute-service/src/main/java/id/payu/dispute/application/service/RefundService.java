@@ -4,6 +4,7 @@ import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.model.RefundStatus;
 import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.in.RefundUseCase;
+import id.payu.dispute.domain.port.out.RefundEventPublisherPort;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
 import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +30,18 @@ import java.util.UUID;
 public class RefundService implements RefundUseCase {
 
     private final RefundPersistencePort refundPersistencePort;
+    private final RefundEventPublisherPort refundEventPublisherPort;
     private final TransactionLookupPort transactionLookupPort;
 
     @Override
     public Refund createFullRefund(UUID transactionId, String reason) {
         log.info("Creating full refund for transaction: {}", transactionId);
         TransactionDetails transaction = getTransactionDetails(transactionId);
+        assertRefundable(transactionId, transaction.amount(), transaction.amount());
 
         Refund refund = Refund.createFullRefund(transactionId, transaction.amount(), transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
+        refundEventPublisherPort.publishRefundRequested(saved);
         log.info("Created refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
     }
@@ -53,9 +57,11 @@ public class RefundService implements RefundUseCase {
         if (amount == null || amount.compareTo(transaction.amount()) > 0) {
             throw new IllegalArgumentException("Refund amount cannot exceed transaction amount");
         }
+        assertRefundable(transactionId, amount, transaction.amount());
 
         Refund refund = Refund.createPartialRefund(transactionId, amount, transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
+        refundEventPublisherPort.publishRefundRequested(saved);
         log.info("Created partial refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
     }
@@ -142,5 +148,18 @@ public class RefundService implements RefundUseCase {
     private TransactionDetails getTransactionDetails(UUID transactionId) {
         return transactionLookupPort.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
+    }
+
+    private void assertRefundable(UUID transactionId, BigDecimal requestedAmount, BigDecimal transactionAmount) {
+        BigDecimal activeRefunds = refundPersistencePort.findByTransactionId(transactionId).stream()
+                .filter(refund -> refund.getStatus() == RefundStatus.PENDING
+                        || refund.getStatus() == RefundStatus.PROCESSING
+                        || refund.getStatus() == RefundStatus.COMPLETED)
+                .map(Refund::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (activeRefunds.add(requestedAmount).compareTo(transactionAmount) > 0) {
+            throw new IllegalArgumentException("Refund amount exceeds the remaining refundable amount");
+        }
     }
 }

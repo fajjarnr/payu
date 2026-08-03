@@ -3,6 +3,7 @@ package id.payu.dispute.application.service;
 import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.model.DisputeStatus;
+import id.payu.dispute.domain.port.in.RefundUseCase;
 import id.payu.dispute.domain.port.out.DisputePersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,9 @@ class DisputeServiceTest {
     @Mock
     private DisputePersistencePort disputePersistencePort;
 
+    @Mock
+    private RefundUseCase refundUseCase;
+
     private DisputeService disputeService;
 
     private static final UUID TRANSACTION_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -47,7 +51,7 @@ class DisputeServiceTest {
 
     @BeforeEach
     void setUp() {
-        disputeService = new DisputeService(disputePersistencePort);
+        disputeService = new DisputeService(disputePersistencePort, refundUseCase);
     }
 
     @Nested
@@ -134,6 +138,7 @@ class DisputeServiceTest {
             assertThat(result.getResolutionType()).isEqualTo(DisputeResolutionType.REFUND_CUSTOMER);
             assertThat(result.getResolution()).isEqualTo("Evidence supports customer");
             assertThat(result.getResolvedAt()).isNotNull();
+            verify(refundUseCase).createFullRefund(TRANSACTION_ID, "Dispute " + DISPUTE_ID + ": Evidence supports customer");
         }
 
         @Test
@@ -151,6 +156,8 @@ class DisputeServiceTest {
 
             // Then
             assertThat(result.getResolutionType()).isEqualTo(DisputeResolutionType.PARTIAL_REFUND);
+            verify(refundUseCase).createPartialRefund(
+                    TRANSACTION_ID, DISPUTED_AMOUNT, CURRENCY, "Dispute " + DISPUTE_ID + ": Partial liability");
         }
     }
 

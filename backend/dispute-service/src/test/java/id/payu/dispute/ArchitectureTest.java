@@ -40,6 +40,7 @@ class ArchitectureTest {
                 .layer("Adapter.Web").definedBy("..adapter.web..")
                 .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
                 .layer("Adapter.Client").definedBy("..adapter.client..")
+                .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
                 .layer("Application").definedBy("..application..")
                 .layer("Domain").definedBy("..domain..")
                 .layer("Config").definedBy("..config..")
@@ -47,8 +48,9 @@ class ArchitectureTest {
                 .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
                 .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
                 .whereLayer("Adapter.Client").mayNotBeAccessedByAnyLayer()
+                .whereLayer("Adapter.Messaging").mayNotBeAccessedByAnyLayer()
                 .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
-                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Persistence", "Adapter.Client", "Application", "Dto")
+                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Persistence", "Adapter.Client", "Adapter.Messaging", "Application", "Dto")
                 .whereLayer("Dto").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Client", "Application")
                 .check(classes);
     }

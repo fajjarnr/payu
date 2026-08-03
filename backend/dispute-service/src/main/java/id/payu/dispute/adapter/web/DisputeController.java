@@ -100,6 +100,7 @@ public class DisputeController {
     }
 
     @PostMapping("/{disputeId}/resolve")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
     @Operation(summary = "Resolve a dispute", description = "Transitions dispute from INVESTIGATING to RESOLVED")
     @ApiResponses({
