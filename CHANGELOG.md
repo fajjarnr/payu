@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (MVP money-safety — SNAP idempotency, webhook dedup, saga dead-code removal)
 
-- **SNAP-BI payment/refund idempotency (MVP-004)**: `SnapBiPaymentService.createPayment`/`createRefund` kini guard via natural-key — replay `partnerReferenceNo`/`partnerRefundNo` mengembalikan record existing, bukan membikin duplikat `PENDING`. Ditopang unique index `uq_snap_payment_partner_ref` (partner_id, partner_reference_no) + `uq_snap_refund_partner_ref` (partner_id, payu_reference_no, partner_refund_no) di migrasi `V15` (dedup row residual via `DELETE USING`).
+- **SNAP-BI payment/refund idempotency (MVP-004)**: `SnapBiPaymentService.createPayment`/`createRefund` kini guard via natural-key — replay `partnerReferenceNo`/`partnerRefundNo` mengembalikan record existing, bukan membikin duplikat `PENDING`. Ditopang unique index `uq_snap_payment_partner_ref` (partner_id, partner_reference_no) + `uq_snap_refund_partner_ref` (partner_id, payu_reference_no, partner_refund_no) di migrasi `V17` (dedup row residual via `DELETE USING`).
+- **Partner Flyway migration collision (MVP-004)**: image `1.8.93` CrashLoop karena dua file migration memakai versi `V15`; migration unique-index dipindahkan ke `V17`, ditambah regression test untuk uniqueness versi, lalu manifest diedit dan di-apply ulang ke image `1.8.94`.
 - **Webhook keluar idempotent (MVP-006)**: `WebhookDispatcherService.dispatch` skip re-dispatch bila event sudah terkirim ke subscription (`existsByEventIdAndSubscription_Id`); unique index `(event_id, subscription_id)` di migrasi `V16` mencegah double row dari outbox at-least-once replay.
 - **Remove dead-code saga (MVP-002)**: hapus `TransferSagaOrchestrator`/`TransferSagaContext` (nol pemanggil, duplikat logika uang vs `InitiateTransferCommandHandler`); `SagaConfig` javadoc di-update — satu source of truth untuk logika transfer.
 - **VA collection settlement (MVP-003)**: migrasi `V23` + callback `/api/v1/payments/va/callback` kini menyimpan target settlement wajib, menulis event outbox `payment.completed`, dan mengkredit wallet via `WalletServicePort` dengan transaksi/idempotensi callback; HMAC filter dan `permitAll` memakai path callback nyata, simulator mengirim signature + idempotency key dari secret environment.
@@ -24,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > **Verify**: partner-service + transaction-service `mvn test` BUILD SUCCESS, 235 tests 0 fail (2026-08-03, workaround `-Daether.connector.basic.threads=1` utk Maven 3.9.16/JDK 25 + L-196).
 > **Verify MVP-003**: transaction-service 131/131 tests + va-simulator 8/8 tests BUILD SUCCESS (2026-08-03).
 > **Verify MVP-001**: partner-service 237/237 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
-> **Verify MVP-004**: partner-service 240/240 + transaction-service 132/132 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
+> **Verify MVP-004**: partner-service 241/241 + transaction-service 132/132 tests BUILD SUCCESS; live partner-service `1.8.94` digest `sha256:a58077ef8e87667b7d3dc9cc3878f3b350d73500ea27130976e42b4a6e05ae80`, pod Ready 1/1, health 200, Flyway schema version 17. SNAP replay E2E blocked because cluster has no `payu` Keycloak realm and no VaultStaticSecret CRD (2026-08-03).
 > **Verify MVP-005**: transaction-service 135/135 tests BUILD SUCCESS; image `1.8.87` digest `sha256:fad545ed12d3a9e9a747beaff7d341b6041ff6106a650d1c8952fa0b744b14aa`, pod Ready 1/1, health 200, unsigned callback 401, Flyway validated/applied 24 migrations (2026-08-03).
 
 ## [1.10.7] - 2026-08-01
