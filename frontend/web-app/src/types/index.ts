@@ -54,13 +54,14 @@ export interface LoginResponse {
 // IMP-011 Fix: Consolidated pocket types to match backend API
 // Backend uses: SAVINGS, SHARED, GOAL (no MAIN/SAVING singular)
 export type PocketType = 'SAVINGS' | 'SHARED' | 'GOAL';
+export type Money = string;
 
 export interface Pocket {
   id: string;
   accountId: string;
   name: string;
   description?: string;
-  balance: number;
+  balance: Money;
   currency?: string;
   status?: 'ACTIVE' | 'FROZEN' | 'CLOSED';
   sharedMembers?: SharedMember[];
@@ -79,9 +80,9 @@ export interface SharedMember {
 
 export interface BalanceResponse {
   accountId: string;
-  balance: number;
-  availableBalance: number;
-  reservedBalance: number;
+  balance: Money;
+  availableBalance: Money;
+  reservedBalance: Money;
   currency: string;
 }
 
@@ -93,7 +94,7 @@ export type TransferScheduleType = 'NOW' | 'SCHEDULED' | 'RECURRING';
 export const transferSchema = z.object({
   fromAccountId: z.string().min(1, 'Source account is required'),
   toAccountId: z.string().min(1, 'Destination account is required'),
-  amount: z.number().positive('Amount must be positive'),
+  amount: z.string().regex(/^\d+(?:\.\d+)?$/, 'Amount must be a decimal string').refine((value) => Number(value) > 0, 'Amount must be positive'),
   description: z.string().optional(),
   transferType: z.enum(['INTERNAL_TRANSFER', 'BIFAST_TRANSFER', 'SKN_TRANSFER', 'RTGS_TRANSFER'] as const).optional().default('INTERNAL_TRANSFER'),
   scheduleType: z.enum(['NOW', 'SCHEDULED', 'RECURRING'] as const).optional().default('NOW'),
@@ -110,7 +111,7 @@ export type TransferRequestOutput = z.output<typeof transferSchema>;
 export interface InitiateTransferRequest {
   senderAccountId: string;
   recipientAccountNumber: string;
-  amount: number;
+  amount: Money;
   currency?: string;
   description: string;
   type: TransactionType;
@@ -127,7 +128,7 @@ export interface InitiateTransferResponse {
   transactionId: string;
   referenceNumber: string;
   status: string;
-  fee: number;
+  fee: Money;
   estimatedCompletionTime: string;
 }
 
@@ -137,7 +138,7 @@ export interface Transaction {
   senderAccountId: string;
   recipientAccountId: string;
   type: TransactionType;
-  amount: number;
+  amount: Money;
   currency: string;
   description: string;
   status: TransactionStatus;
@@ -153,8 +154,8 @@ export interface TransactionFilters {
   type?: TransactionType;
   startDate?: string;
   endDate?: string;
-  minAmount?: number;
-  maxAmount?: number;
+  minAmount?: Money;
+  maxAmount?: Money;
 }
 
 export interface WalletTransaction {
@@ -162,8 +163,8 @@ export interface WalletTransaction {
   walletId: string;
   referenceId: string;
   type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  balanceAfter: number;
+  amount: Money;
+  balanceAfter: Money;
   description: string;
   createdAt: string;
 }
@@ -179,7 +180,7 @@ export interface Biller {
 export interface CreatePaymentRequest {
   billerCode: string;
   customerId: string;
-  amount: number;
+  amount: Money;
   accountId: string;
   referenceNumber?: string;
 }
@@ -188,7 +189,7 @@ export interface PaymentResponse {
   id: string;
   billerCode: string;
   customerId: string;
-  amount: number;
+  amount: Money;
   currency: string;
   referenceNumber: string;
   status: string;
@@ -197,7 +198,7 @@ export interface PaymentResponse {
 
 export interface ProcessQrisPaymentRequest {
   qrCode: string;
-  amount: number;
+  amount: Money;
   accountId: string;
 }
 

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { formatCurrencyWithoutSymbol } from '@/lib/currency';
 
 const TRANSFER_TYPES: { type: TransferType; label: string; description: string; icon: React.ComponentType<{ className?: string }>; fee: string; maxLimit: string; processingTime: string }[] = [
   {
@@ -92,7 +93,7 @@ export default function TransferPage() {
   const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
     resolver: zodResolver(transferSchema),
     defaultValues: {
-      amount: 0,
+      amount: '0',
       transferType: 'INTERNAL_TRANSFER',
       scheduleType: 'NOW'
     }
@@ -117,11 +118,10 @@ export default function TransferPage() {
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
-    const numValue = parseInt(rawValue) || 0;
-    setValue('amount', numValue, { shouldValidate: true });
+    setValue('amount', rawValue || '0', { shouldValidate: true });
   };
 
-  const formattedAmount = amount === 0 ? '' : amount.toLocaleString('id-ID');
+  const formattedAmount = amount === '0' ? '' : formatCurrencyWithoutSymbol(amount);
 
   const onSubmit = (data: TransferRequest) => {
     let scheduledAt = undefined;
@@ -156,7 +156,7 @@ export default function TransferPage() {
           addToast(message, 'success');
           setShowReview(false);
           setSelectedContact(null);
-          setValue('amount', 0);
+          setValue('amount', '0');
           setValue('description', '');
         },
         onError: () => {
@@ -179,7 +179,7 @@ export default function TransferPage() {
   }), [amount, toAccountId, description, scheduleType, scheduledAt, recurringDay, recurringMonth, accountId]);
 
   const handleReview = useCallback(() => {
-    if (!formValues.toAccountId || formValues.amount <= 0) {
+    if (!formValues.toAccountId || Number(formValues.amount) <= 0) {
       addToast('Silakan pilih penerima dan masukkan jumlah transfer', 'warning');
       return;
     }
@@ -241,7 +241,7 @@ export default function TransferPage() {
                     </div>
                     <div className="text-left md:text-right">
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Jumlah Transfer</p>
-                      <p className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">Rp {amount.toLocaleString('id-ID')}</p>
+                      <p className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">Rp {formatCurrencyWithoutSymbol(amount)}</p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mt-2">Mata Uang IDR</p>
                     </div>
                   </div>

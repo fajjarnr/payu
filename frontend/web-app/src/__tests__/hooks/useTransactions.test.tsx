@@ -27,7 +27,7 @@ describe('useTransactions hook', () => {
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
       type: 'INTERNAL_TRANSFER' as TransactionType,
-      amount: 100000,
+      amount: '100000',
       currency: 'IDR',
       description: 'Test transfer',
       status: 'COMPLETED',
@@ -41,7 +41,7 @@ describe('useTransactions hook', () => {
       senderAccountId: 'account-1',
       recipientAccountId: 'account-3',
       type: 'BILL_PAYMENT' as TransactionType,
-      amount: 50000,
+      amount: '50000',
       currency: 'IDR',
       description: 'Bill payment',
       status: 'PENDING',
@@ -161,7 +161,7 @@ describe('useTransaction hook', () => {
     senderAccountId: 'account-1',
     recipientAccountId: 'account-2',
     type: 'INTERNAL_TRANSFER' as TransactionType,
-    amount: 100000,
+    amount: '100000',
     currency: 'IDR',
     description: 'Test transfer',
     status: 'COMPLETED',
@@ -230,7 +230,7 @@ describe('useInitiateTransfer hook', () => {
   const mockTransferRequest = {
     senderAccountId: 'account-1',
     recipientAccountNumber: '1234567890',
-    amount: 100000,
+    amount: '100000',
     description: 'Test transfer',
     type: 'INTERNAL_TRANSFER' as TransactionType,
     transactionPin: '123456'
@@ -240,7 +240,7 @@ describe('useInitiateTransfer hook', () => {
     transactionId: 'txn-new',
     referenceNumber: 'REF-NEW',
     status: 'PENDING',
-    fee: 5000,
+    fee: '5000',
     estimatedCompletionTime: '2024-01-01T10:05:00Z'
   };
 
@@ -360,7 +360,7 @@ describe('useProcessQrisPayment hook', () => {
 
   const mockQrisRequest = {
     qrCode: '00020101021226580016ID.CO.QRIS.WWW01189360052002000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200200000000303UMI5204581253033605802ID5910PayU Demo6007Jakarta6105101106304A1B2',
-    amount: 50000,
+    amount: '50000',
     accountId: 'account-1'
   };
 
@@ -483,7 +483,7 @@ describe('Transaction hooks integration', () => {
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
       type: 'INTERNAL_TRANSFER' as TransactionType,
-      amount: 100000,
+    amount: '100000',
       currency: 'IDR',
       description: 'Test transfer',
       status: 'COMPLETED',
@@ -496,7 +496,7 @@ describe('Transaction hooks integration', () => {
     transactionId: 'txn-new',
     referenceNumber: 'REF-NEW',
     status: 'PENDING',
-    fee: 5000,
+    fee: '5000',
     estimatedCompletionTime: '2024-01-01T10:05:00Z'
   };
 
@@ -532,7 +532,7 @@ describe('Transaction hooks integration', () => {
       await transferResult.current.mutateAsync({
         senderAccountId: 'account-1',
         recipientAccountNumber: '1234567890',
-        amount: 50000,
+        amount: '50000',
         description: 'Test',
         type: 'INTERNAL_TRANSFER' as TransactionType,
         transactionPin: '123456'
@@ -554,7 +554,7 @@ describe('Transaction hooks integration', () => {
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
       type: 'INTERNAL_TRANSFER' as TransactionType,
-      amount: 100000,
+      amount: '100000',
       currency: 'IDR',
       description: 'Test transfer',
       status: 'COMPLETED',

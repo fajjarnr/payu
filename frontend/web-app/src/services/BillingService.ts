@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
+import type { Money } from '@/types';
 
 export interface BillPayment {
   id: string;
@@ -7,9 +8,9 @@ export interface BillPayment {
   billerCode: string;
   billerName: string;
   customerId: string;
-  amount: number;
-  adminFee: number;
-  totalAmount: number;
+  amount: Money;
+  adminFee: Money;
+  totalAmount: Money;
   status: PaymentStatus;
   referenceNumber: string;
   createdAt: string;
@@ -28,14 +29,14 @@ export interface TopUpRequest {
   accountId: string;
   provider: string;
   walletNumber: string;
-  amount: number;
+  amount: Money;
 }
 
 export interface CreatePaymentRequest {
   accountId: string;
   billerCode: string;
   customerId: string;
-  amount: number;
+  amount: Money;
 }
 
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED' | 'EXPIRED';

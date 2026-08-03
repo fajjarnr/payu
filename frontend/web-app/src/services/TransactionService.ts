@@ -1,7 +1,7 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
 import { assertUUID } from '@/lib/validation';
-import type { TransactionType, TransactionStatus, TransferType, Transaction, TransactionFilters } from '@/types';
+import type { TransactionType, TransactionStatus, TransferType, Transaction, TransactionFilters, Money } from '@/types';
 
 // Re-export types for convenience
 export type { TransactionType, TransactionStatus };
@@ -13,7 +13,7 @@ export type { Transaction };
 export interface InitiateTransferRequest {
   senderAccountId: string;
   recipientAccountNumber: string;
-  amount: number;
+  amount: Money;
   currency?: string;
   description: string;
   type?: TransactionType;
@@ -27,13 +27,13 @@ export interface InitiateTransferResponse {
   transactionId: string;
   referenceNumber: string;
   status: string;
-  fee: number;
+  fee: Money;
   estimatedCompletionTime: string;
 }
 
 export interface ProcessQrisPaymentRequest {
   qrCode: string;
-  amount: number;
+  amount: Money;
   accountId: string;
 }
 

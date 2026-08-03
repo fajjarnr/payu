@@ -48,6 +48,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
+import { addCurrency, formatCurrency } from '@/lib/currency';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
@@ -83,8 +84,8 @@ export default function TransactionsPage() {
   const cancelTransaction = useCancelTransaction();
 
   // Compute stats from actual transaction data
-  const totalIn = transactions?.filter((t: Transaction) => isCreditType(t.type)).reduce((sum: number, t: Transaction) => sum + t.amount, 0) ?? 0;
-  const totalOut = transactions?.filter((t: Transaction) => !isCreditType(t.type)).reduce((sum: number, t: Transaction) => sum + t.amount, 0) ?? 0;
+  const totalIn = transactions?.filter((t: Transaction) => isCreditType(t.type)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
+  const totalOut = transactions?.filter((t: Transaction) => !isCreditType(t.type)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
   const pendingCount = transactions?.filter((t: Transaction) => t.status === 'PENDING' || t.status === 'PROCESSING').length ?? 0;
   const completedCount = transactions?.filter((t: Transaction) => t.status === 'COMPLETED').length ?? 0;
 
@@ -106,12 +107,8 @@ export default function TransactionsPage() {
     }
   };
 
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat(bcp47Locale, {
-      style: 'currency',
-      currency: currency || 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
+  const formatAmount = (amount: string, currency: string) => {
+    return formatCurrency(amount, { symbol: currency || 'Rp', locale: bcp47Locale });
   };
 
   const formatDate = (dateString: string) => {

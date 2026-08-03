@@ -1,12 +1,12 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
-import type { BalanceResponse, WalletTransaction, Pocket } from '@/types';
+import type { BalanceResponse, WalletTransaction, Pocket, Money } from '@/types';
 
 // IMP-014: Re-export types from centralized types/index.ts
 export type { BalanceResponse, WalletTransaction, Pocket };
 
 export interface ReserveBalanceRequest {
-  amount: number;
+  amount: Money;
   referenceId: string;
 }
 
@@ -18,7 +18,7 @@ export interface ReserveBalanceResponse {
 }
 
 export interface CreditRequest {
-  amount: number;
+  amount: Money;
   referenceId: string;
   description?: string;
 }
@@ -158,13 +158,13 @@ export class WalletService {
 
   /** POST /pockets/{pocketId}/credit — Credit pocket */
   // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
-  async creditPocket(pocketId: string, amount: number, referenceId: string): Promise<void> {
+  async creditPocket(pocketId: string, amount: Money, referenceId: string): Promise<void> {
     await api.post(`/pockets/${pocketId}/credit`, { amount, referenceId });
   }
 
   /** POST /pockets/{pocketId}/debit — Debit pocket */
   // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
-  async debitPocket(pocketId: string, amount: number, referenceId: string): Promise<void> {
+  async debitPocket(pocketId: string, amount: Money, referenceId: string): Promise<void> {
     await api.post(`/pockets/${pocketId}/debit`, { amount, referenceId });
   }
 
@@ -187,7 +187,7 @@ export class WalletService {
   }
 
   /** GET /pockets/total-balance/{targetCurrency} — Get total balance */
-  async getTotalPocketBalance(targetCurrency: string): Promise<{ totalBalance: number; currency: string }> {
+  async getTotalPocketBalance(targetCurrency: string): Promise<{ totalBalance: Money; currency: string }> {
     const response = await api.get(`/pockets/total-balance/${targetCurrency}`);
     return response.data;
   }
@@ -236,8 +236,8 @@ export interface LedgerEntry {
   accountId: string;
   transactionId: string;
   type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  balanceAfter: number;
+  amount: Money;
+  balanceAfter: Money;
   description: string;
   createdAt: string;
 }

@@ -13,6 +13,7 @@ import { ButtonMotion } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { formatCurrency, parseCurrencyExact } from '@/lib/currency';
 
 export default function BillsPage() {
  const { addToast } = useUIStore();
@@ -48,7 +49,7 @@ export default function BillsPage() {
    return api.post('/billing/payments', data);
   },
   onSuccess: () => {
-   addToast(`Pembayaran ${selectedBiller?.name} sebesar Rp ${parseFloat(amount).toLocaleString()} telah diproses.`, 'success');
+   addToast(`Pembayaran ${selectedBiller?.name} sebesar ${formatCurrency(amount)} telah diproses.`, 'success');
    setSelectedBiller(null);
    setCustomerId('');
    setAmount('');
@@ -60,7 +61,7 @@ export default function BillsPage() {
  });
 
  const handlePay = () => {
-  if (!selectedBiller || !customerId || !amount) {
+  if (!selectedBiller || !customerId || !amount || parseCurrencyExact(amount) === '0') {
    toast.warning('Silakan isi semua bidang yang diperlukan');
    return;
   }
@@ -69,7 +70,7 @@ export default function BillsPage() {
     accountId: authAccountId ?? '',
     billerCode: selectedBiller.code,
     customerId,
-    amount: parseFloat(amount),
+    amount: parseCurrencyExact(amount),
     referenceNumber: `REF-${Date.now()}`,
    };
 
@@ -209,7 +210,7 @@ export default function BillsPage() {
           </div>
          </div>
          <div className="text-right">
-          <div className="font-bold text-foreground text-base tabular-nums">Rp {bill.amount.toLocaleString('id-ID')}</div>
+          <div className="font-bold text-foreground text-base tabular-nums">{formatCurrency(bill.amount)}</div>
           <div className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase mt-1">{bill.status}</div>
          </div>
         </div>

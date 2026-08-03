@@ -25,7 +25,7 @@ describe('BillingService', () => {
         accountId: 'acc_123',
         billerCode: 'PLN',
         customerId: 'customer_456',
-        amount: 150000,
+        amount: '150000',
       };
 
       const mockPayment: BillPayment = {
@@ -34,9 +34,9 @@ describe('BillingService', () => {
         billerCode: 'PLN',
         billerName: 'PLN Electricity',
         customerId: 'customer_456',
-        amount: 150000,
-        adminFee: 2500,
-        totalAmount: 152500,
+        amount: '150000',
+        adminFee: '2500',
+        totalAmount: '152500',
         status: 'COMPLETED',
         referenceNumber: 'REF123',
         createdAt: '2026-02-18T10:00:00Z',
@@ -50,7 +50,7 @@ describe('BillingService', () => {
         headers: expect.any(Object),
       });
       expect(result).toEqual(mockPayment);
-      expect(result.totalAmount).toBe(152500);
+      expect(result.totalAmount).toBe('152500');
     });
   });
 
@@ -61,7 +61,7 @@ describe('BillingService', () => {
         accountId: 'acc_123',
         provider: 'TELKOMSEL',
         walletNumber: '08123456789',
-        amount: 50000,
+        amount: '50000',
       };
 
       const mockPayment: BillPayment = {
@@ -70,9 +70,9 @@ describe('BillingService', () => {
         billerCode: 'TELKOMSEL',
         billerName: 'Telkomsel Prepaid',
         customerId: '08123456789',
-        amount: 50000,
-        adminFee: 0,
-        totalAmount: 50000,
+        amount: '50000',
+        adminFee: '0',
+        totalAmount: '50000',
         status: 'COMPLETED',
         referenceNumber: 'TOP001',
         createdAt: '2026-02-18T10:00:00Z',
@@ -127,9 +127,9 @@ describe('BillingService', () => {
         billerCode: 'PDAM',
         billerName: 'PDAM Water',
         customerId: 'cust_001',
-        amount: 85000,
-        adminFee: 2500,
-        totalAmount: 87500,
+        amount: '85000',
+        adminFee: '2500',
+        totalAmount: '87500',
         status: 'COMPLETED',
         referenceNumber: 'REF456',
         createdAt: '2026-02-18T10:00:00Z',

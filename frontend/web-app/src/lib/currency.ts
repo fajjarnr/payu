@@ -3,6 +3,93 @@
  * Handles Indonesian Rupiah (IDR) formatting and parsing
  */
 
+export type Money = string;
+type CurrencyInput = number | string;
+
+function expandExponential(value: string): string {
+  const match = value.toLowerCase().match(/^(-?)(\d+)(?:\.(\d+))?e([+-]?\d+)$/);
+  if (!match) return value;
+  const [, sign, integer, fraction = '', exponentText] = match;
+  const digits = integer + fraction;
+  const decimalIndex = integer.length + Number(exponentText);
+  if (decimalIndex <= 0) return `${sign}0.${'0'.repeat(-decimalIndex)}${digits}`;
+  if (decimalIndex >= digits.length) return `${sign}${digits}${'0'.repeat(decimalIndex - digits.length)}`;
+  return `${sign}${digits.slice(0, decimalIndex)}.${digits.slice(decimalIndex)}`;
+}
+
+function decimalString(value: CurrencyInput): string | null {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return null;
+    return expandExponential(String(value));
+  }
+  const invalidCharacters = value.replace(/Rp/gi, '').replace(/[\d.,\s$€¥£-]/g, '');
+  if (invalidCharacters) return null;
+  let cleaned = value.trim().replace(/[^\d.,-]/g, '');
+  if (!cleaned || (cleaned.match(/-/g) || []).length > 1) return null;
+  const negative = cleaned.startsWith('-');
+  cleaned = cleaned.replace(/-/g, '');
+  const commaCount = (cleaned.match(/,/g) || []).length;
+  const dotCount = (cleaned.match(/\./g) || []).length;
+  if (commaCount && dotCount) {
+    cleaned = cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')
+      ? cleaned.replace(/\./g, '').replace(',', '.')
+      : cleaned.replace(/,/g, '');
+  } else if (commaCount > 1) {
+    cleaned = cleaned.replace(/,/g, '');
+  } else if (commaCount === 1) {
+    cleaned = cleaned.replace(',', '.');
+  } else if (dotCount > 1) {
+    cleaned = cleaned.replace(/\./g, '');
+  }
+  if (!/^\d+(?:\.\d+)?$/.test(cleaned)) return null;
+  let [integer, fraction = ''] = cleaned.split('.');
+  integer = integer.replace(/^0+(?=\d)/, '');
+  fraction = fraction.replace(/0+$/, '');
+  return `${negative ? '-' : ''}${integer || '0'}${fraction ? `.${fraction}` : ''}`;
+}
+
+function roundDecimal(value: string, decimals: number): string {
+  const negative = value.startsWith('-');
+  const unsigned = negative ? value.slice(1) : value;
+  let [integer, fraction = ''] = unsigned.split('.');
+  if (decimals < 0 || !Number.isInteger(decimals)) return value;
+  if (fraction.length > decimals) {
+    const retained = fraction.slice(0, decimals);
+    const discarded = fraction.slice(decimals);
+    const first = discarded[0];
+    const hasMore = /[1-9]/.test(discarded.slice(1));
+    const lastRetained = decimals > 0 ? retained[retained.length - 1] : integer[integer.length - 1];
+    const increment = first > '5' || (first === '5' && (hasMore || Number(lastRetained || '0') % 2 === 1));
+    let digits = `${integer}${retained}`.replace(/^0+(?=\d)/, '') || '0';
+    if (increment) {
+      const chars: string[] = digits.split('');
+      for (let i = chars.length - 1; i >= 0; i--) {
+        if (chars[i] === '9') chars[i] = '0';
+        else { chars[i] = String(Number(chars[i]) + 1); break; }
+      }
+      digits = chars.every((digit) => digit === '0') ? `1${chars.join('')}` : chars.join('');
+    }
+    integer = decimals === 0 ? digits : digits.slice(0, -decimals) || '0';
+    fraction = decimals === 0 ? '' : digits.slice(-decimals).padStart(decimals, '0');
+  } else {
+    fraction = fraction.padEnd(decimals, '0');
+  }
+  const result = `${integer}${decimals ? `.${fraction}` : ''}`;
+  return negative && result !== '0' && !/^0\.0+$/.test(result) ? `-${result}` : result;
+}
+
+function formatExact(value: CurrencyInput, decimals: number, locale: string): string | null {
+  const normalized = decimalString(value);
+  if (!normalized) return null;
+  const rounded = roundDecimal(normalized, decimals);
+  const negative = rounded.startsWith('-');
+  const unsigned = negative ? rounded.slice(1) : rounded;
+  let [integer, fraction = ''] = unsigned.split('.');
+  integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'id-ID' ? '.' : ',');
+  const decimalSeparator = locale === 'id-ID' ? ',' : '.';
+  return `${negative ? '-' : ''}${integer}${fraction ? decimalSeparator + fraction : ''}`;
+}
+
 /**
  * Format a number to Indonesian Rupiah currency string
  * @param amount - The amount to format
@@ -10,7 +97,7 @@
  * @returns Formatted currency string (e.g., "Rp 1.000.000" or "Rp 1.000.000,00")
  */
 export function formatCurrency(
-  amount: number | string | null | undefined,
+  amount: CurrencyInput | null | undefined,
   options: {
     withDecimals?: boolean;
     symbol?: string;
@@ -30,34 +117,19 @@ export function formatCurrency(
     return `${symbol} 0`;
   }
 
-  // Convert to number
-  const numAmount = typeof amount === 'string' ? Number(amount.replace(/,/g, '')) : amount;
-
-  // Handle NaN
-  if (isNaN(numAmount)) {
-    return `${symbol} 0`;
+  if (compact) {
+    const normalized = decimalString(amount);
+    if (!normalized) return `${symbol} 0`;
+    const formatter = new Intl.NumberFormat(locale, {
+      style: 'currency', currency: 'IDR', minimumFractionDigits: withDecimals ? 2 : 0,
+      maximumFractionDigits: withDecimals ? 2 : 0, notation: 'compact', compactDisplay: 'short',
+    });
+    return formatter.format(Number(normalized)).replace('Rp', symbol);
   }
 
-  // Indonesian number format: uses dot for thousands, comma for decimals
-  const formatter = new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: withDecimals ? 2 : 0,
-    maximumFractionDigits: withDecimals ? 2 : 0,
-    notation: compact ? 'compact' : 'standard',
-    compactDisplay: 'short',
-  });
-
-  let formatted = formatter.format(numAmount);
-
-  // Intl.NumberFormat adds "Rp" with a space, but we want custom formatting
-  // For standard Indonesian format: Rp 1.000.000 (without decimals) or Rp 1.000.000,00 (with decimals)
-  if (symbol !== 'Rp') {
-    // Replace default symbol if custom one provided
-    formatted = formatted.replace('Rp', symbol);
-  }
-
-  return formatted;
+  const formattedAmount = formatExact(amount, withDecimals ? 2 : 0, locale);
+  if (!formattedAmount) return `${symbol} 0`;
+  return `${formattedAmount.startsWith('-') ? '-' : ''}${symbol}\u00A0${formattedAmount.replace(/^-/, '')}`;
 }
 
 /**
@@ -67,7 +139,7 @@ export function formatCurrency(
  * @returns Formatted number string (e.g., "1.000.000")
  */
 export function formatCurrencyWithoutSymbol(
-  amount: number | string | null | undefined,
+  amount: CurrencyInput | null | undefined,
   options: { withDecimals?: boolean; locale?: string } = {}
 ): string {
   const { withDecimals = false, locale = 'id-ID' } = options;
@@ -76,18 +148,33 @@ export function formatCurrencyWithoutSymbol(
     return '0';
   }
 
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return formatExact(amount, withDecimals ? 2 : 0, locale) ?? '0';
+}
 
-  if (isNaN(numAmount)) {
-    return '0';
-  }
+/** Parse a formatted amount while retaining its decimal string representation. */
+export function parseCurrencyExact(value: CurrencyInput | null | undefined): Money {
+  if (value === null || value === undefined) return '0';
+  return decimalString(value) ?? '0';
+}
 
-  const formatter = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: withDecimals ? 2 : 0,
-    maximumFractionDigits: withDecimals ? 2 : 0,
-  });
-
-  return formatter.format(numAmount);
+/** Add decimal money values without passing through IEEE-754 numbers. */
+export function addCurrency(left: CurrencyInput, right: CurrencyInput): Money {
+  const leftValue = decimalString(left) ?? '0';
+  const rightValue = decimalString(right) ?? '0';
+  const scale = Math.max(leftValue.split('.')[1]?.length ?? 0, rightValue.split('.')[1]?.length ?? 0);
+  const scaled = (value: string): bigint => {
+    const negative = value.startsWith('-');
+    const unsigned = negative ? value.slice(1) : value;
+    const [integer, fraction = ''] = unsigned.split('.');
+    const result = BigInt(`${integer}${fraction.padEnd(scale, '0')}`);
+    return negative ? -result : result;
+  };
+  const sum = scaled(leftValue) + scaled(rightValue);
+  const negative = sum < BigInt(0);
+  const digits = (negative ? -sum : sum).toString().padStart(scale + 1, '0');
+  const integer = scale ? digits.slice(0, -scale) : digits;
+  const fraction = scale ? digits.slice(-scale).replace(/0+$/, '') : '';
+  return `${negative ? '-' : ''}${integer}${fraction ? `.${fraction}` : ''}`;
 }
 
 /**
@@ -123,9 +210,9 @@ export function parseCurrency(value: string | number | null | undefined): number
   // Replace comma with dot for decimal
   cleaned = cleaned.replace(/,/g, '.');
 
-  const parsed = parseFloat(cleaned);
+  const parsed = Number(cleaned);
 
-  return isNaN(parsed) ? 0 : parsed;
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
 /**
@@ -136,16 +223,17 @@ export function parseCurrency(value: string | number | null | undefined): number
  * @returns Object with formatted string and type (credit/debit)
  */
 export function formatTransactionAmount(
-  amount: number,
+  amount: CurrencyInput,
   options: { withDecimals?: boolean } = {}
 ): { formatted: string; type: 'credit' | 'debit'; isPositive: boolean } {
-  const absAmount = Math.abs(amount);
+  const normalized = decimalString(amount) ?? '0';
+  const absAmount = normalized.replace(/^-/, '');
   const formatted = formatCurrency(absAmount, options);
 
   return {
     formatted,
-    type: amount >= 0 ? 'credit' : 'debit',
-    isPositive: amount >= 0,
+    type: normalized.startsWith('-') ? 'debit' : 'credit',
+    isPositive: !normalized.startsWith('-'),
   };
 }
 
@@ -282,11 +370,13 @@ export function isValidCurrency(value: string | number): boolean {
  * @param decimals - Number of decimal places (default: 0 for IDR)
  * @returns Rounded amount
  */
-export function roundCurrency(amount: number, decimals: number = 0): number {
-  // BUG-FE-047: Math.round(amount * multiplier) / multiplier has floating point errors
-  // e.g., Math.round(1.005 * 100) / 100 = 1.00 (not 1.01)
-  const multiplier = 10 ** decimals;
-  return Math.round((amount + Number.EPSILON) * multiplier) / multiplier;
+export function roundCurrency(amount: number, decimals?: number): number;
+export function roundCurrency(amount: string, decimals?: number): string;
+export function roundCurrency(amount: CurrencyInput, decimals: number = 0): number | string {
+  const normalized = decimalString(amount);
+  if (!normalized) return typeof amount === 'string' ? '0' : 0;
+  const rounded = roundDecimal(normalized, decimals);
+  return typeof amount === 'string' ? rounded : Number(rounded);
 }
 
 /**

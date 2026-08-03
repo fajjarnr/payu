@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
+import { addCurrency, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
 
 interface SharedMember {
   accountId: string;
@@ -126,12 +127,12 @@ export default function PocketsPage() {
     };
 
     const handleCredit = async () => {
-        if (!selectedPocketForAction || !amount) return;
+        if (!selectedPocketForAction || !amount || parseCurrencyExact(amount) === '0') return;
 
         try {
             await creditPocket.mutateAsync({
                 pocketId: selectedPocketForAction.id,
-                amount: parseFloat(amount),
+                amount: parseCurrencyExact(amount),
                 description: 'Top up pocket'
             });
             toast.success('Berhasil menambah dana');
@@ -144,12 +145,12 @@ export default function PocketsPage() {
     };
 
     const handleDebit = async () => {
-        if (!selectedPocketForAction || !amount) return;
+        if (!selectedPocketForAction || !amount || parseCurrencyExact(amount) === '0') return;
 
         try {
             await debitPocket.mutateAsync({
                 pocketId: selectedPocketForAction.id,
-                amount: parseFloat(amount),
+                amount: parseCurrencyExact(amount),
                 description: 'Withdraw from pocket'
             });
             toast.success('Berhasil mengambil dana');
@@ -211,8 +212,8 @@ export default function PocketsPage() {
         {
             id: 1,
             name: 'Liburan Akhir Tahun',
-            target: 10000000,
-            current: 2500000,
+            target: '10000000',
+            current: '2500000',
             color: 'bank-green',
             icon: Target,
             isShared: false
@@ -220,8 +221,8 @@ export default function PocketsPage() {
         {
             id: 2,
             name: 'Dana Darurat',
-            target: 50000000,
-            current: 50000000,
+            target: '50000000',
+            current: '50000000',
             color: 'bank-emerald',
             icon: Lock,
             interestRate: '4.5% p.a',
@@ -235,7 +236,7 @@ export default function PocketsPage() {
             id: 'shared-1',
             accountId: accountId,
             name: 'Tabungan Keluarga',
-            balance: 15000000,
+            balance: '15000000',
             target: 50000000,
             type: 'SHARED',
             isShared: true,
@@ -251,7 +252,7 @@ export default function PocketsPage() {
             id: 'shared-2',
             accountId: accountId,
             name: 'Dana Rekreasi Kantor',
-            balance: 8500000,
+            balance: '8500000',
             target: 30000000,
             type: 'SHARED',
             isShared: true,
@@ -320,7 +321,7 @@ export default function PocketsPage() {
                                                 {balanceLoading ? (
                                                     <SkeletonBalance />
                                                 ) : (
-                                                    `Rp ${(balance?.balance ?? 0).toLocaleString(bcp47Locale)}`
+                                                    formatCurrency(balance?.balance ?? '0', { locale: bcp47Locale })
                                                 )}
                                             </h4>
                                         </div>
@@ -338,7 +339,7 @@ export default function PocketsPage() {
                                 <div className="bg-card p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
-                                    <p className="text-2xl font-bold text-foreground tabular-nums">Rp {(balance?.reservedBalance ?? 0).toLocaleString(bcp47Locale)}</p>
+                                    <p className="text-2xl font-bold text-foreground tabular-nums">{formatCurrency(balance?.reservedBalance ?? '0', { locale: bcp47Locale })}</p>
                                     <div className="h-1.5 w-full bg-muted rounded-full mt-4 overflow-hidden shadow-inner">
                                         <div className="h-full bg-emerald-500/40" style={{ width: '15%' }} />
                                     </div>
@@ -367,7 +368,7 @@ export default function PocketsPage() {
                             <div className="flex justify-between items-center mb-8">
                                 <h3 className="text-xl font-bold text-foreground">Kantong Saya</h3>
                                 <Badge variant="outline" className="font-mono">
-                                    Total: Rp {totalBalance?.totalBalance?.toLocaleString(bcp47Locale) || 0}
+                                    Total: {formatCurrency(totalBalance?.totalBalance ?? '0', { locale: bcp47Locale })}
                                 </Badge>
                             </div>
 
@@ -381,7 +382,7 @@ export default function PocketsPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {pocketsData.map((_pocket) => {
                                         const pocket = _pocket as PocketWithGoal;
-                                        const percentage = pocket.target ? Math.round((pocket.balance / pocket.target) * 100) : 0;
+                                        const percentage = pocket.target ? Math.round((Number(pocket.balance) / pocket.target) * 100) : 0;
                                         return (
                                             <div key={pocket.id} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-card transition-all group">
                                                 <div className="flex justify-between items-start mb-4">
@@ -435,7 +436,7 @@ export default function PocketsPage() {
 
                                                 <div className="space-y-3">
                                                     <div className="flex justify-between items-end">
-                                                        <p className="text-2xl font-bold text-foreground">Rp {pocket.balance.toLocaleString(bcp47Locale)}</p>
+                                                        <p className="text-2xl font-bold text-foreground">Rp {formatCurrencyWithoutSymbol(pocket.balance, { locale: bcp47Locale })}</p>
                                                         {pocket.target && <span className="text-xs font-bold text-primary">{percentage}%</span>}
                                                     </div>
                                                     {pocket.target && (
@@ -475,7 +476,7 @@ export default function PocketsPage() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
                                     {savingGoals.map((goal) => {
-                                        const percentage = Math.round((goal.current / goal.target) * 100);
+                                        const percentage = Math.round((Number(goal.current) / Number(goal.target)) * 100);
                                         const Icon = goal.icon;
                                         return (
                                             <div key={goal.id} className="bg-card rounded-xl p-8 border border-border shadow-sm group hover:shadow-card hover:-translate-y-1 transition-all duration-300">
@@ -488,14 +489,14 @@ export default function PocketsPage() {
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-foreground text-base">{goal.name}</h4>
-                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Target: Rp {goal.target.toLocaleString(bcp47Locale)}</p>
+                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Target: {formatCurrency(goal.target, { locale: bcp47Locale })}</p>
                                                     </div>
                                                 </div>
 
                                                 {goal.locked ? (
                                                     <div className="space-y-4">
                                                         <div className="flex justify-between items-end">
-                                                            <p className="text-2xl font-bold text-foreground">Rp {goal.current.toLocaleString(bcp47Locale)}</p>
+                                                            <p className="text-2xl font-bold text-foreground">{formatCurrency(goal.current, { locale: bcp47Locale })}</p>
                                                             <div className="bg-success-light text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/10">{goal.interestRate}</div>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-widest uppercase">
@@ -505,13 +506,13 @@ export default function PocketsPage() {
                                                 ) : (
                                                     <div className="space-y-4">
                                                         <div className="flex justify-between items-end mb-1">
-                                                            <p className="text-2xl font-bold text-foreground">Rp {goal.current.toLocaleString(bcp47Locale)}</p>
+                                                            <p className="text-2xl font-bold text-foreground">{formatCurrency(goal.current, { locale: bcp47Locale })}</p>
                                                             <span className="text-xs font-bold text-primary">+{percentage}%</span>
                                                         </div>
                                                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                                             <div className="h-full bg-primary rounded-full" style={{ width: `${percentage}%` }} />
                                                         </div>
-                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Sisa: Rp {(goal.target - goal.current).toLocaleString(bcp47Locale)}</p>
+                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Sisa: {formatCurrency(addCurrency(goal.target, `-${goal.current}`), { locale: bcp47Locale })}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -560,7 +561,7 @@ export default function PocketsPage() {
                                                             "text-sm font-bold tracking-tight",
                                                             tx.type === 'CREDIT' ? "text-primary" : "text-foreground"
                                                         )}>
-                                                            {tx.type === 'CREDIT' ? '+' : '-'} Rp {tx.amount.toLocaleString(bcp47Locale)}
+                                                            {tx.type === 'CREDIT' ? '+' : '-'} {formatCurrency(tx.amount, { locale: bcp47Locale })}
                                                         </p>
                                                     </div>
                                                 ))}
@@ -597,7 +598,7 @@ export default function PocketsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {sharedPockets.map((pocket) => {
-                                    const percentage = pocket.target ? Math.round((pocket.balance / pocket.target) * 100) : 0;
+                                    const percentage = pocket.target ? Math.round((Number(pocket.balance) / pocket.target) * 100) : 0;
                                     const isSelected = selectedPocket === pocket.id;
 
                                     return (
@@ -624,13 +625,13 @@ export default function PocketsPage() {
 
                                                 <div className="space-y-3">
                                                     <div className="flex justify-between items-end">
-                                                        <p className="text-2xl font-bold text-foreground">Rp {pocket.balance.toLocaleString(bcp47Locale)}</p>
+                                                        <p className="text-2xl font-bold text-foreground">Rp {formatCurrencyWithoutSymbol(pocket.balance, { locale: bcp47Locale })}</p>
                                                         <span className="text-xs font-bold text-primary">{percentage}%</span>
                                                     </div>
                                                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                                         <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
                                                     </div>
-                                                    {pocket.target && <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString(bcp47Locale)}</p>}
+                                                    {pocket.target && <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Target: {formatCurrency(pocket.target, { locale: bcp47Locale })}</p>}
                                                 </div>
                                             </div>
 
@@ -777,7 +778,7 @@ export default function PocketsPage() {
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-xl">
                             <p className="text-sm text-muted-foreground">Saldo Saat Ini</p>
-                            <p className="text-2xl font-bold">Rp {selectedPocketForAction?.balance.toLocaleString(bcp47Locale)}</p>
+                            <p className="text-2xl font-bold">{formatCurrency(selectedPocketForAction?.balance ?? '0', { locale: bcp47Locale })}</p>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="amount">Jumlah Dana</Label>
@@ -816,7 +817,7 @@ export default function PocketsPage() {
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-xl">
                             <p className="text-sm text-muted-foreground">Saldo Tersedia</p>
-                            <p className="text-2xl font-bold">Rp {selectedPocketForAction?.balance.toLocaleString(bcp47Locale)}</p>
+                            <p className="text-2xl font-bold">{formatCurrency(selectedPocketForAction?.balance ?? '0', { locale: bcp47Locale })}</p>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="debit-amount">Jumlah Dana</Label>

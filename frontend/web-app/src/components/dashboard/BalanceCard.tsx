@@ -6,9 +6,10 @@ import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import VIPBadge from '@/components/personalization/VIPBadge';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/currency';
 
 interface BalanceCardProps {
-  balance: number;
+  balance: string | number;
   percentage?: number;
   income?: number;
   expense?: number;
@@ -59,7 +60,7 @@ export default function BalanceCard({
           <CardContent>
             <div className="space-y-4">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tabular-nums leading-none tracking-tighter">
-                {currency} {balance.toLocaleString(bcp47Locale)}
+                {formatCurrency(balance, { symbol: currency, locale: bcp47Locale })}
               </h2>
               <div className="flex items-center gap-3">
                 {percentage != null ? (
@@ -91,7 +92,7 @@ export default function BalanceCard({
           <CardContent>
             <div className="space-y-4">
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
-                {currency} {(netWorth ?? 0).toLocaleString(bcp47Locale)}
+                {formatCurrency(netWorth ?? 0, { symbol: currency, locale: bcp47Locale })}
               </h3>
               <div className="flex items-center gap-2">
                 {netWorthChange != null ? (

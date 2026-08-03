@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import WalletService from '@/services/WalletService';
 import type { CreatePocketRequest } from '@/services/WalletService';
+import type { Money } from '@/types';
 
 export function usePockets() {
   return useQuery({
@@ -56,7 +57,7 @@ export function useCreditPocket() {
   const qc = useQueryClient();
   return useMutation({
     // BUG-FE-070: 3rd param is `description`, not `currency`
-    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: number; description?: string }) =>
+    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: Money; description?: string }) =>
       WalletService.creditPocket(pocketId, amount, description ?? ''),
     ...MutationPresets.financial,
     onSuccess: () => {
@@ -70,7 +71,7 @@ export function useDebitPocket() {
   const qc = useQueryClient();
   return useMutation({
     // BUG-FE-070: 3rd param is `description`, not `currency`
-    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: number; description?: string }) =>
+    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: Money; description?: string }) =>
       WalletService.debitPocket(pocketId, amount, description ?? ''),
     ...MutationPresets.financial,
     onSuccess: () => {

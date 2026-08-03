@@ -26,6 +26,7 @@ import {
 import { useTransactions, useCancelTransaction } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/currency';
 import type { Transaction } from '@/services/TransactionService';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -63,8 +64,8 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
 
   const canCancel = (status: string) => status === 'PENDING' || status === 'PROCESSING';
 
-  const formatAmount = (amount: number) => {
-    return `Rp ${Math.abs(amount).toLocaleString(bcp47Locale)}`;
+  const formatAmount = (amount: string) => {
+    return formatCurrency(amount.replace(/^-/, ''), { locale: bcp47Locale });
   };
 
   const formatDate = (dateString: string) => {

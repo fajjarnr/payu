@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   formatCurrency,
+  addCurrency,
   formatCurrencyWithoutSymbol,
   parseCurrency,
   formatTransactionAmount,
@@ -303,7 +304,7 @@ describe('currency.ts - isValidCurrency', () => {
 
 describe('currency.ts - roundCurrency', () => {
   it('should round to 0 decimals by default', () => {
-    expect(roundCurrency(1000.5)).toBe(1001);
+    expect(roundCurrency(1000.5)).toBe(1000);
     expect(roundCurrency(1000.4)).toBe(1000);
   });
 
@@ -387,6 +388,21 @@ describe('currency.ts - Edge Cases and Error Handling', () => {
 });
 
 describe('currency.ts - Precision Tests', () => {
+  it('adds decimal strings without floating-point drift', () => {
+    expect(addCurrency('0.1', '0.2')).toBe('0.3');
+    expect(addCurrency('9007199254740993', '7')).toBe('9007199254741000');
+  });
+
+  it('keeps decimal-string money exact beyond JavaScript safe integers', () => {
+    expect(formatCurrency('9007199254740993')).toBe('Rp\u00A09.007.199.254.740.993');
+    expect(formatCurrency('0.1', { withDecimals: true })).toBe('Rp\u00A00,10');
+  });
+
+  it('rounds decimal strings with decimal arithmetic', () => {
+    expect(roundCurrency('1.005', 2)).toBe('1.00');
+    expect(roundCurrency('9007199254740993')).toBe('9007199254740993');
+  });
+
   it('should maintain precision for large amounts', () => {
     const amount = 1234567890.12;
     const formatted = formatCurrency(amount, { withDecimals: true });
@@ -396,10 +412,8 @@ describe('currency.ts - Precision Tests', () => {
 
   it('should round correctly at .5 boundaries', () => {
     expect(roundCurrency(1.5)).toBe(2);
-    expect(roundCurrency(2.5)).toBe(3);
-    // Note: JavaScript's Math.round uses "round half up" for positive,
-    // but for negative it rounds toward zero
-    expect(roundCurrency(-1.5)).toBe(-1);
+    expect(roundCurrency(2.5)).toBe(2);
+    expect(roundCurrency(-1.5)).toBe(-2);
   });
 });
 
