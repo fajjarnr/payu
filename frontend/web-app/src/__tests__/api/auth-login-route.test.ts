@@ -135,4 +135,28 @@ describe("POST /api/auth/login", () => {
     const calledUrl = String(fetchMock.mock.calls[0][0]);
     expect(calledUrl).toBe("http://gateway-service:8080/api/v1/auth/login");
   });
+
+  it("does not keep a process-local attempt counter", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({ expires_in: 900, user: { id: "user-1" } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const responses = await Promise.all(Array.from({ length: 6 }, () => POST(
+      new Request("http://localhost/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Forwarded-For": "198.51.100.40",
+        },
+        body: JSON.stringify({ username: "payu-user", password: "secret" }),
+      }),
+    )));
+
+    expect(responses.every(response => response.status === 200)).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+  });
 });
