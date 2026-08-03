@@ -3,6 +3,7 @@ import json
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaError
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from uuid import uuid4
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_EVEN
@@ -16,7 +17,8 @@ from app.database import (
     WalletBalanceEntity,
     UserActivityEntity,
     UserMetricsEntity,
-    FraudScoreEntity
+    FraudScoreEntity,
+    ProcessedAnalyticsEventEntity,
 )
 from app.websocket.connection_manager import manager
 from app.models.schemas import (
@@ -37,6 +39,52 @@ MONEY_QUANTUM = Decimal("0.0001")
 
 def _to_money(value: Any) -> Decimal:
     return Decimal(str(value or 0)).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_EVEN)
+
+
+def _unpack_event(
+    topic: str, message: Dict[str, Any]
+) -> tuple[Dict[str, Any], str, str, str]:
+    is_cloud_event = (
+        isinstance(message.get("data"), dict)
+        and (message.get("specversion") == "1.0" or "source" in message)
+    )
+    payload = message.get("data") if is_cloud_event else message
+    if not isinstance(payload, dict):
+        payload = {}
+
+    source = str(message.get("source") or topic)
+    event_id = (
+        message.get("id")
+        or message.get("event_id")
+        or message.get("eventId")
+        or payload.get("event_id")
+        or payload.get("eventId")
+        or payload.get("verification_id")
+        or payload.get("transactionId")
+        or payload.get("transaction_id")
+    )
+    if not event_id:
+        raise ValueError(f"Event identity missing for topic {topic}")
+
+    event_type = str(message.get("type") or topic)
+    return dict(payload), source, str(event_id), event_type
+
+
+async def _claim_event(
+    session, source: str, event_id: str, topic: str, event_type: str
+) -> bool:
+    statement = (
+        insert(ProcessedAnalyticsEventEntity)
+        .values(
+            source=source,
+            event_id=event_id,
+            topic=topic,
+            event_type=event_type,
+        )
+        .on_conflict_do_nothing(index_elements=["source", "event_id"])
+    )
+    result = await session.execute(statement)
+    return result.rowcount == 1
 
 
 class KafkaConsumerService:
@@ -109,25 +157,42 @@ class KafkaConsumerService:
             logger.warning("Empty message received", topic=topic)
             return
 
+        try:
+            payload, source, event_id, event_type = _unpack_event(topic, message)
+        except ValueError as exc:
+            logger.error("Skipping Kafka message without event identity", error=str(exc))
+            return
+
         async with async_session_maker() as session:
+            if not await _claim_event(session, source, event_id, topic, event_type):
+                logger.info(
+                    "Skipping duplicate analytics event",
+                    source=source,
+                    event_id=event_id,
+                    topic=topic,
+                )
+                return
+
             if topic == "payu.transactions.completed":
-                await self._handle_transaction_completed(session, message)
+                await self._handle_transaction_completed(session, payload, event_id)
             elif topic == "payu.transactions.initiated":
-                await self._handle_transaction_initiated(session, message)
-                await self._handle_fraud_detection(session, message)
+                await self._handle_transaction_initiated(session, payload, event_id)
+                await self._handle_fraud_detection(session, payload)
             elif topic == "payu.wallet.balance.changed":
-                await self._handle_wallet_balance_changed(session, message)
+                await self._handle_wallet_balance_changed(session, payload, event_id)
             elif topic == "payu.kyc.verified":
-                await self._handle_kyc_verified(session, message)
+                await self._handle_kyc_verified(session, payload)
 
             await session.commit()
 
-    async def _handle_transaction_completed(self, session, message):
-        event_id = str(uuid4())
-        user_id = message.get('user_id')
+    async def _handle_transaction_completed(self, session, message, event_id=None):
+        event_id = event_id or message.get('event_id') or message.get('eventId') or message.get('transaction_id') or message.get('transactionId')
+        if not event_id:
+            raise ValueError("Transaction completed event identity missing")
+        user_id = message.get('user_id') or message.get('senderAccountId') or message.get('accountId')
         amount = _to_money(message.get('amount', 0))
         transaction_type = message.get('type', 'TRANSFER')
-        transaction_id = message.get('transaction_id')
+        transaction_id = message.get('transaction_id') or message.get('transactionId')
         timestamp = datetime.utcnow()
 
         entity = TransactionAnalyticsEntity(
@@ -174,15 +239,17 @@ class KafkaConsumerService:
             amount=amount
         )
 
-    async def _handle_transaction_initiated(self, session, message):
-        event_id = str(uuid4())
-        user_id = message.get('user_id')
+    async def _handle_transaction_initiated(self, session, message, event_id=None):
+        event_id = event_id or message.get('event_id') or message.get('eventId') or message.get('transaction_id') or message.get('transactionId')
+        if not event_id:
+            raise ValueError("Transaction initiated event identity missing")
+        user_id = message.get('user_id') or message.get('senderAccountId') or message.get('accountId')
         amount = _to_money(message.get('amount', 0))
 
         entity = TransactionAnalyticsEntity(
             event_id=event_id,
             user_id=user_id,
-            transaction_id=message.get('transaction_id'),
+            transaction_id=message.get('transaction_id') or message.get('transactionId'),
             amount=amount,
             currency=message.get('currency', 'IDR'),
             transaction_type=message.get('type', 'TRANSFER'),
@@ -193,11 +260,13 @@ class KafkaConsumerService:
 
         session.add(entity)
 
-    async def _handle_wallet_balance_changed(self, session, message):
-        event_id = str(uuid4())
-        user_id = message.get('user_id')
-        wallet_id = message.get('wallet_id')
-        balance = _to_money(message.get('balance', 0))
+    async def _handle_wallet_balance_changed(self, session, message, event_id=None):
+        event_id = event_id or message.get('event_id') or message.get('eventId') or message.get('wallet_id') or message.get('walletId')
+        if not event_id:
+            raise ValueError("Wallet balance event identity missing")
+        user_id = message.get('user_id') or message.get('accountId')
+        wallet_id = message.get('wallet_id') or message.get('walletId') or user_id
+        balance = _to_money(message.get('balance', message.get('newBalance', 0)))
         change_amount = _to_money(message.get('change_amount', 0))
         change_type = message.get('change_type', 'CREDIT')
         timestamp = datetime.utcnow()

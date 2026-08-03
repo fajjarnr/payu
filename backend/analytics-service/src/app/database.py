@@ -157,6 +157,20 @@ class UserMetricsEntity(Base):
     __table_args__ = (Index("idx_user_metrics_kyc", "kyc_status"),)
 
 
+class ProcessedAnalyticsEventEntity(Base):
+    __tablename__ = "analytics_processed_events"
+
+    source = Column(String, primary_key=True)
+    event_id = Column(String, primary_key=True)
+    topic = Column(String, nullable=False)
+    event_type = Column(String, nullable=False)
+    processed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        Index("idx_analytics_processed_events_topic", "topic"),
+    )
+
+
 class RecommendationEntity(Base):
     __tablename__ = "recommendations"
 

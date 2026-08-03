@@ -5,7 +5,7 @@ sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E
 import asyncio
 from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
-from app.messaging.kafka_consumer import KafkaConsumerService
+from app.messaging.kafka_consumer import KafkaConsumerService, _unpack_event
 from app.models.schemas import DashboardEventType
 
 
@@ -96,6 +96,54 @@ async def test_process_transaction_completed_message(kafka_consumer, mock_sessio
             call_args = mock_manager.broadcast_to_user.call_args
             broadcast_msg = call_args[0][0]
             assert broadcast_msg["event_type"] == DashboardEventType.TRANSACTION_COMPLETED
+
+
+def test_unpack_cloud_event_preserves_identity_and_payload():
+    payload, source, event_id, event_type = _unpack_event(
+        "payu.transactions.completed",
+        {
+            "specversion": "1.0",
+            "id": "evt-123",
+            "source": "transaction-service",
+            "type": "id.payu.transaction.completed",
+            "data": {"transactionId": "txn-456"},
+        },
+    )
+
+    assert payload == {"transactionId": "txn-456"}
+    assert source == "transaction-service"
+    assert event_id == "evt-123"
+    assert event_type == "id.payu.transaction.completed"
+
+
+@pytest.mark.asyncio
+async def test_replayed_cloud_event_is_processed_once(kafka_consumer, mock_session):
+    event = {
+        "specversion": "1.0",
+        "id": "evt-replay-1",
+        "source": "transaction-service",
+        "type": "id.payu.transaction.completed",
+        "data": {"transactionId": "txn-456"},
+    }
+    first_claim = MagicMock(rowcount=1)
+    duplicate_claim = MagicMock(rowcount=0)
+    mock_session.execute.side_effect = [first_claim, duplicate_claim]
+    session_context = MagicMock()
+    session_context.__aenter__ = AsyncMock(return_value=mock_session)
+    session_context.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("app.messaging.kafka_consumer.async_session_maker", return_value=session_context):
+        with patch.object(
+            kafka_consumer, "_handle_transaction_completed", new_callable=AsyncMock
+        ) as handler:
+            await kafka_consumer._process_message("payu.transactions.completed", event)
+            await kafka_consumer._process_message("payu.transactions.completed", event)
+
+    handler.assert_awaited_once_with(
+        mock_session,
+        {"transactionId": "txn-456"},
+        "evt-replay-1",
+    )
 
 
 @pytest.mark.asyncio

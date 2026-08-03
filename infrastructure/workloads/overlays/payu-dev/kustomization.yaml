@@ -9,9 +9,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
   newTag: "1.8.83"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.91
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.92
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-  newTag: "1.8.91"
+  newTag: "1.8.92"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newTag: "1.8.80"
