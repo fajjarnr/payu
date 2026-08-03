@@ -233,6 +233,34 @@ describe('FeedbackWidget', () => {
     });
   });
 
+  it('should clear the success timeout when unmounted', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const { unmount } = renderWithIntl(<FeedbackWidget />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Kirim Feedback'));
+    });
+
+    fireEvent.change(screen.getByLabelText('Subjek'), { target: { value: 'Test' } });
+    fireEvent.change(screen.getByLabelText('Pesan'), { target: { value: 'Test message' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Sekarang' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Terima Kasih!')).toBeInTheDocument();
+    });
+    const successTimeoutIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 3000);
+    const successTimeoutId = setTimeoutSpy.mock.results[successTimeoutIndex]?.value;
+    expect(successTimeoutId).toBeDefined();
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(successTimeoutId);
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   it('should close modal after success and delay', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 

@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Camera, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
 import { a11yUtils } from '@/lib/a11y';
 import { Button } from '@/components/ui/button';
@@ -68,7 +68,14 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   const [includeScreenshot, setIncludeScreenshot] = useState(true);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   a11yUtils.useFocusTrap(isOpen, modalRef);
+
+  useEffect(() => () => {
+    if (successTimeoutRef.current !== null) {
+      clearTimeout(successTimeoutRef.current);
+    }
+  }, []);
 
   // Capture screenshot using modern Screen Capture API
   const captureScreenshot = async () => {
@@ -145,7 +152,8 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
 
       setSubmitted(true);
 
-      setTimeout(() => {
+      successTimeoutRef.current = setTimeout(() => {
+        successTimeoutRef.current = null;
         setSubmitted(false);
         setIsOpen(false);
         resetForm();

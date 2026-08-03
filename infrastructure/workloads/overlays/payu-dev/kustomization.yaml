@@ -75,9 +75,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.55
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.81"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.2
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.4
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.5.3"
+  newTag: "1.5.4"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.8.80"
@@ -231,6 +231,19 @@ patches:
     kind: Deployment
     name: web-app
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
+
+# Keep the single dev replica deployable when the namespace CPU quota has no surge capacity.
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      strategy:
+        type: Recreate
 
 # OIDC Issuer patches - Spring Boot services (OIDC_ISSUER + OIDC_JWK_SET_URI)
 - target:

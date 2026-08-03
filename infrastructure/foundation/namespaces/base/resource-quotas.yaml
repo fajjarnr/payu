@@ -13,7 +13,7 @@ spec:
   hard:
     requests.cpu: "16"
     requests.memory: 32Gi
-    limits.cpu: "36"
+    limits.cpu: "40"
     limits.memory: 64Gi
     persistentvolumeclaims: "30"
     requests.storage: 200Gi
