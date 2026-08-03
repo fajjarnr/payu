@@ -198,6 +198,20 @@ class WebhookDispatcherServiceTest {
             assertTrue(finalState.getErrorMessage().contains("Connection refused"));
         }
 
+        @Test
+        @DisplayName("should skip re-dispatch when event already delivered to subscription (MVP-006)")
+        void shouldSkipDuplicateEvent() throws Exception {
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            // Existing delivery for this event+subscription → dedup guard skips creation/send.
+            when(deliveryRepository.existsByEventIdAndSubscription_Id("evt_dup001", 10L)).thenReturn(true);
+
+            dispatcher.dispatch("payment.completed", "evt_dup001", Map.of("test", true));
+
+            verify(deliveryRepository, never()).save(any(WebhookDeliveryEntity.class));
+            verify(httpClient, never()).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        }
+
         @SuppressWarnings("unchecked")
         @Test
         @DisplayName("should include correct headers in webhook request")

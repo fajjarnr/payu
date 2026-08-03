@@ -20,6 +20,11 @@ public interface SnapBiRefundRepository extends JpaRepository<SnapBiRefundEntity
 
     List<SnapBiRefundEntity> findByPayuReferenceNo(String payuReferenceNo);
 
+    // MVP-004: SNAP-BI refund idempotency via natural key partnerRefundNo (per partner+payment).
+    Optional<SnapBiRefundEntity> findByPartnerIdAndPayuReferenceNoAndPartnerRefundNo(
+            String partnerId, String payuReferenceNo, String partnerRefundNo);
+
+
     @Query("SELECT COALESCE(SUM(r.amount), 0) FROM SnapBiRefundEntity r WHERE r.payuReferenceNo = :payuReferenceNo")
     BigDecimal sumRefundedAmountByPayuReferenceNo(@Param("payuReferenceNo") String payuReferenceNo);
 }

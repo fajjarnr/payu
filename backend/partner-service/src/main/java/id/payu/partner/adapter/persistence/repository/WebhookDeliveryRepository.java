@@ -18,6 +18,10 @@ public interface WebhookDeliveryRepository extends JpaRepository<WebhookDelivery
 
     Page<WebhookDeliveryEntity> findBySubscriptionIdOrderByCreatedAtDesc(Long subscriptionId, Pageable pageable);
 
+    // MVP-006: idempotent delivery — true if this event was already dispatched to this subscription.
+    // Backed by unique index uq_webhook_delivery_event (V16).
+    boolean existsByEventIdAndSubscription_Id(String eventId, Long subscriptionId);
+
     /**
      * Find deliveries that are ready for retry (FAILED status, next_retry_at has passed).
      */

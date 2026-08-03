@@ -87,6 +87,32 @@ public class SnapBiPaymentServiceTest {
     }
 
     @Test
+    public void testCreatePaymentIdempotentReplay() {
+        // MVP-004: replaying the same partnerReferenceNo must return the same payment, not a duplicate.
+        String partnerId = "123";
+        PaymentRequest request = new PaymentRequest();
+        request.partnerReferenceNo = "REF-IDEMPOTENT-001";
+        request.amount = new PaymentRequest.Amount();
+        request.amount.value = new BigDecimal("5000.00");
+        request.amount.currency = "IDR";
+        request.beneficiaryAccountNo = "1234567890";
+        request.beneficiaryBankCode = "014";
+        request.sourceAccountNo = "0987654321";
+
+        var first = paymentService.createPayment(partnerId, request);
+        var second = paymentService.createPayment(partnerId, request);
+
+        assertNotNull(first);
+        assertNotNull(second);
+        assertEquals("2002500", first.responseCode);
+        assertEquals("2002500", second.responseCode);
+        assertEquals(first.referenceNo, second.referenceNo,
+                "replay must return the existing payment, not a new one");
+        assertEquals(1, paymentsByPartnerRef.size(),
+                "only one payment record should exist for a replayed partnerRef");
+    }
+
+    @Test
     public void testGetPaymentStatus() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();

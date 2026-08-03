@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Configuration;
  * <p>
  * Saga instances are persisted to PostgreSQL for recovery and audit trail.
  *
- * @see id.payu.transaction.application.saga.TransferSagaOrchestrator
+ * Note: the TransferSagaOrchestrator was removed (MVP-002) — it duplicated the
+ * live money path in {@code InitiateTransferCommandHandler} with zero callers.
+ * This config keeps the saga-starter enabled for the active Cashback/other sagas.
  */
 @Configuration
 @EnableSaga(

@@ -4623,3 +4623,23 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 **Fix**: `SET lock_timeout TO '15s'` di sesi psql job (per-`-c` sebelum DO block) → job fail fast + terlihat di pipeline gate, bukan hang 4h. Root cause app tetap ditrack (OPS-2026-08-01-06): JDBC transaction leak harus di-fix di service (timeout/commit/reconnect).
 
 **Prevention**: Bootstrap/migration Job apa pun yang menulis DDL/DML wajib `lock_timeout` + `PGCONNECT_TIMEOUT`; diagnosa hang DB: `SELECT pid,state,now()-xact_start,query FROM pg_stat_activity WHERE state<>'idle'` + `pg_locks` untuk cari holder `idle in transaction`.
+
+### L-196: MVP Money-Safety — idempotency natural-key + webhook dedup + dead-code saga removal (2026-08-03)
+
+**Domain**: SNAP-BI, webhook delivery, saga dead code, Flyway unique index, Maven
+
+**Context**: Tiga bug MVP money (004/006/002) diperbaiki bareng: (1) `SnapBiController` payment/refund tanpa idempotency — double-submit bikin duplikat PENDING; (2) `WebhookDispatcherService.dispatch` selalu buat delivery baru tanpa cek event& sudah terkirim (outbox at-least-once → duplicate); (3) `TransferSagaOrchestrator` dead code nol pemanggil, duplikat logika transfer vs `InitiateTransferCommandHandler`.
+
+**Lesson**:
+- **Idempotency natural-key di service + db constraint, bukan cuma `@Idempotent`**. Guard `findByPartnerIdAndPartnerReferenceNo` (payment) / `findByPartnerIdAndPayuReferenceNoAndPartnerRefundNo` (refund) mengembalikan record existing; unique index `uq_snap_payment_partner_ref` / `uq_snap_refund_partner_ref` (V15) mengunci race. Dedup row existing dulu (`DELETE USING` dgn `id > id`) sebelum `CREATE UNIQUE INDEX`.
+- **Webhook idempotency**: guard `existsByEventIdAndSubscription_Id` + unique index `(event_id, subscription_id)` (V16) — duplicate dispatch di-skip, tidak bikin row kedua/ulang kirim. Return existing bukan re-send.
+- **Dead code saga YAGNI**: dua implementasi logika uang paralel = risiko divergensi. Hapus yang nol pemanggil (`TransferSagaOrchestrator`/`TransferSagaContext`), satu source of truth (`InitiateTransferCommandHandler`).
+- **Maven transport rusak**: Maven 3.9.16 + JDK 25 gagal resolve dependency dengan `ClassCastException: BasicAuthCache cannot be cast to AuthCache` — workaround `-Daether.connector.basic.threads=1`; net reachable (`curl` 200) jadi ini bug resolver, bukan network.
+- **Test yang memanggil `HttpClient.send` di `verify()`**: `send` melempar checked `IOException` → method test wajib `throws Exception` (compile error `unreported exception`), konsisten dgn test lain.
+
+**Applied fix**:
+- `SnapBiPaymentService` / `SnapBiRefundRepository` / `SnapBiPaymentRepository` idempotent guard; `WebhookDispatcherService` + `WebhookDeliveryRepository` dedup guard; tambah `throws Exception` di `WebhookDispatcherServiceTest` baru.
+- Migrasi `V15__snap_payment_idempotency_unique.sql` + `V16__webhook_delivery_idempotency_unique.sql` (untracked, harus di-commit).
+- Hapus `TransferSagaOrchestrator`/`TransferSagaContext`; `SagaConfig` javadoc di-update.
+- Build verified: partner-service + transaction-service `mvn test` SUCCESS, 235 tests 0 fail (partner).
+

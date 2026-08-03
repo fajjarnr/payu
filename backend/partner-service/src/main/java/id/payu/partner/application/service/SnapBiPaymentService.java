@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -48,6 +49,23 @@ public class SnapBiPaymentService {
                 "Amount must be greater than zero",
                 request.partnerReferenceNo,
                 null
+            );
+        }
+
+        // MVP-004: SNAP-BI idempotency via natural key (partnerReferenceNo per partner).
+        // A replayed createPayment returns the existing record instead of minting a duplicate.
+        // Backed by unique index uq_snap_payment_partner_ref (V15).
+        Optional<SnapBiPaymentEntity> existing =
+                paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, request.partnerReferenceNo);
+        if (existing.isPresent()) {
+            SnapBiPaymentEntity e = existing.get();
+            LOG.info("Idempotent replay: returning existing payuRef={} for partnerRef={}",
+                    e.getPayuReferenceNo(), request.partnerReferenceNo);
+            return new PaymentResponse(
+                "2002500",
+                "Successful",
+                e.getPartnerReferenceNo(),
+                e.getPayuReferenceNo()
             );
         }
 
@@ -168,6 +186,25 @@ public class SnapBiPaymentService {
                 null,
                 null,
                 null
+            );
+        }
+
+        // MVP-004: refund idempotency via natural key (partnerRefundNo per partner+payment).
+        // Replayed refund returns the existing refund instead of creating a duplicate.
+        // Backed by unique index uq_snap_refund_partner_ref (V15).
+        Optional<SnapBiRefundEntity> existingRefund = refundRepository
+                .findByPartnerIdAndPayuReferenceNoAndPartnerRefundNo(
+                        partnerId, record.getPayuReferenceNo(), request.partnerRefundNo);
+        if (existingRefund.isPresent()) {
+            SnapBiRefundEntity re = existingRefund.get();
+            LOG.info("Idempotent refund replay: payuRefund={}", re.getPayuRefundNo());
+            return new RefundResponse(
+                "2002500",
+                "Successful",
+                re.getPartnerRefundNo(),
+                re.getPayuRefundNo(),
+                re.getPayuReferenceNo(),
+                re.getStatus()
             );
         }
 

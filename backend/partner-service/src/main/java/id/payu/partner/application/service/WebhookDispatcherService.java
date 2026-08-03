@@ -108,6 +108,15 @@ public class WebhookDispatcherService {
         for (WebhookSubscriptionEntity subscription : subscriptions) {
             if (!subscription.matchesEvent(eventType)) continue;
 
+            // MVP-006: idempotency — skip if this event was already dispatched to this subscription.
+            // Outbox is at-least-once (a re-consumed event can re-enter dispatch), so a duplicate
+            // dispatch must not create a second delivery row nor re-send the webhook.
+            // Backed by unique index uq_webhook_delivery_event (V16).
+            if (deliveryRepository.existsByEventIdAndSubscription_Id(eventId, subscription.getId())) {
+                log.info("Idempotent skip: event {} already delivered to subscription {}", eventId, subscription.getId());
+                continue;
+            }
+
             WebhookDeliveryEntity delivery = new WebhookDeliveryEntity(
                     subscription, eventId, eventType, payloadJson);
             delivery = deliveryRepository.save(delivery);
