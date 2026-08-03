@@ -7,7 +7,7 @@
  */
 
 const SERVICE_NAME = "web-app";
-const SERVICE_VERSION = "1.5.0";
+const SERVICE_VERSION = process.env.APP_VERSION || "unknown";
 const ENVIRONMENT = process.env.NODE_ENV || "dev";
 
 function format(

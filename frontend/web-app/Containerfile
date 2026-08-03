@@ -70,6 +70,7 @@ RUN npm run build
 # Stage 3: Minimal production runner
 ####
 FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:2de19f9aed8524187e52c146da60635a80adb06739f23519a5c8a16fda2850e5 AS runner
+ARG APP_VERSION=1.5.0
 
 WORKDIR /app
 
@@ -78,6 +79,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
+ENV APP_VERSION=${APP_VERSION}
 
 # Create non-root user directory and set permissions
 USER root

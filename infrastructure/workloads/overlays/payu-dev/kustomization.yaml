@@ -78,9 +78,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.55
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.81"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.9
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.10
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.5.9"
+  newTag: "1.5.10"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.8.80"
@@ -653,6 +653,28 @@ patches:
       value:
         name: NEXT_PUBLIC_BASE_URL
         value: "https://payu-dev.apps.fajjjar.my.id"
+
+# Dev-only: use the pre-provisioned runtime key in payu-dev.
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env-secrets
+                  key: encryption-key
+                  optional: false
 
 # Dev-only: Enable rate limit test mode for e2e testing
 - target:

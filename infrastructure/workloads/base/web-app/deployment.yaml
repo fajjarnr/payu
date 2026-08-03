@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/version: 1.5.9
+    app.kubernetes.io/version: 1.5.10
     app.kubernetes.io/managed-by: platform-team
     team: frontend
 spec:
@@ -20,7 +20,7 @@ spec:
         app.kubernetes.io/name: web-app
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: frontend
-        app.kubernetes.io/version: 1.5.9
+        app.kubernetes.io/version: 1.5.10
         app.kubernetes.io/managed-by: platform-team
         team: frontend
     spec:
@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.9
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.10
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -61,18 +61,27 @@ spec:
           httpGet:
             path: /api/health
             port: 8080
+            httpHeaders:
+            - name: X-Probe
+              value: readiness
           initialDelaySeconds: 30
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /api/health
             port: 8080
+            httpHeaders:
+            - name: X-Probe
+              value: liveness
           initialDelaySeconds: 60
           periodSeconds: 15
         startupProbe:
           httpGet:
             path: /api/health
             port: 8080
+            httpHeaders:
+            - name: X-Probe
+              value: liveness
           initialDelaySeconds: 30
           periodSeconds: 5
           failureThreshold: 90
@@ -94,6 +103,8 @@ spec:
           value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
         - name: NODE_ENV
           value: "production"
+        - name: APP_VERSION
+          value: "1.5.10"
         - name: GATEWAY_URL
           value: "http://gateway-service:8080"
         - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
@@ -101,4 +112,4 @@ spec:
             secretKeyRef:
               name: session-secrets
               key: next-server-actions-encryption-key
-              optional: true
+              optional: false

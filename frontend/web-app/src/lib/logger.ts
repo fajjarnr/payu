@@ -21,7 +21,7 @@ const logger = pino({
   }),
   base: {
     service_name: "web-app",
-    service_version: "1.5.0",
+    service_version: process.env.APP_VERSION || "unknown",
     environment: process.env.NODE_ENV || "dev",
   },
   timestamp: pino.stdTimeFunctions.isoTime,
