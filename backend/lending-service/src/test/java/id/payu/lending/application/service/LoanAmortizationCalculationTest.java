@@ -6,7 +6,10 @@ import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
+import id.payu.lending.domain.port.out.LoanEventPublisherPort;
+import id.payu.lending.domain.port.out.RepaymentPaymentPersistencePort;
 import id.payu.lending.domain.port.out.RepaymentSchedulePersistencePort;
+import id.payu.lending.domain.port.out.WalletPaymentPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,6 +47,15 @@ class LoanAmortizationCalculationTest {
 
     @Mock
     private RepaymentSchedulePersistencePort repaymentSchedulePersistencePort;
+
+    @Mock
+    private RepaymentPaymentPersistencePort repaymentPaymentPersistencePort;
+
+    @Mock
+    private WalletPaymentPort walletPaymentPort;
+
+    @Mock
+    private LoanEventPublisherPort loanEventPublisherPort;
 
     @InjectMocks
     private LoanManagementService service;
@@ -397,12 +409,12 @@ class LoanAmortizationCalculationTest {
     // Repayment overpayment edge case (not covered by existing tests)
     // ========================================================================
     @Nested
-    @DisplayName("processRepayment — overpayment caps at installment amount")
+    @DisplayName("processRepayment — rejects overpayment")
     class OverpaymentCapping {
 
         @Test
-        @DisplayName("overpayment is capped at installment amount")
-        void overpaymentCapped() {
+        @DisplayName("overpayment is rejected")
+        void overpaymentRejected() {
             UUID scheduleId = UUID.randomUUID();
             RepaymentSchedule schedule = new RepaymentSchedule();
             schedule.setId(scheduleId);
@@ -414,17 +426,12 @@ class LoanAmortizationCalculationTest {
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
 
-            when(repaymentSchedulePersistencePort.findById(scheduleId)).thenReturn(Optional.of(schedule));
-            when(repaymentSchedulePersistencePort.save(any(RepaymentSchedule.class)))
-                    .thenAnswer(inv -> inv.getArgument(0));
-
+            when(repaymentSchedulePersistencePort.findByIdForUpdate(scheduleId)).thenReturn(Optional.of(schedule));
             // Pay 1,500,000 on a 1,000,000 installment
-            RepaymentSchedule result = service.processRepayment(scheduleId, new BigDecimal("1500000"));
-
-            assertThat(result.getStatus()).isEqualTo(RepaymentStatus.FULLY_PAID);
-            // paidAmount should be capped at installmentAmount, not 1,500,000
-            assertThat(result.getPaidAmount()).isEqualByComparingTo(new BigDecimal("1000000"));
-            assertThat(result.getPaidDate()).isNotNull();
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.processRepayment(
+                    scheduleId, new BigDecimal("1500000"), "overpay-key"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("exceeds remaining");
         }
 
         @Test
@@ -441,11 +448,18 @@ class LoanAmortizationCalculationTest {
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
 
-            when(repaymentSchedulePersistencePort.findById(scheduleId)).thenReturn(Optional.of(schedule));
+            when(repaymentSchedulePersistencePort.findByIdForUpdate(scheduleId)).thenReturn(Optional.of(schedule));
             when(repaymentSchedulePersistencePort.save(any(RepaymentSchedule.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            RepaymentSchedule result = service.processRepayment(scheduleId, new BigDecimal("500000"));
+            when(loanPersistencePort.findById(loanId)).thenReturn(Optional.of(buildLoan(
+                    new BigDecimal("12000000"), new BigDecimal("0.14"), 12, new BigDecimal("1078000"))));
+            when(repaymentPaymentPersistencePort.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+            when(repaymentPaymentPersistencePort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(walletPaymentPort.collectRepayment(any(), any(), any(), any(), any(), any())).thenReturn("wallet-tx");
+
+            RepaymentSchedule result = service.processRepayment(
+                    scheduleId, new BigDecimal("500000"), "partial-key");
 
             assertThat(result.getStatus()).isEqualTo(RepaymentStatus.PARTIALLY_PAID);
             assertThat(result.getPaidAmount()).isEqualByComparingTo(new BigDecimal("500000"));

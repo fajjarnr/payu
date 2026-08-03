@@ -18,6 +18,7 @@ import id.payu.lending.dto.InstallmentCheckoutRequest;
 import id.payu.lending.dto.InstallmentCheckoutResponse;
 import id.payu.lending.dto.TenorOptionResponse;
 import id.payu.lending.dto.TenorOptionsRequest;
+import id.payu.lending.interfaces.dto.RepaymentRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -198,11 +199,11 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<RepaymentSchedule>> processRepayment(
             @Parameter(description = "Schedule ID", required = true) @PathVariable UUID scheduleId,
-            // BUG-BE-085: Changed from @RequestParam to @RequestBody — financial amounts must not be in URL
-            @RequestBody java.util.Map<String, BigDecimal> body) {
-        BigDecimal amount = body.get("amount");
+            @RequestHeader("X-Idempotency-Key") String idempotencyKey,
+            @Valid @RequestBody RepaymentRequest request) {
+        BigDecimal amount = request.amount();
         log.info("Processing repayment for schedule: {} with amount: {}", scheduleId, amount);
-        return ok(loanManagementService.processRepayment(scheduleId, amount));
+        return ok(loanManagementService.processRepayment(scheduleId, amount, idempotencyKey));
     }
 
     @PostMapping("/paylater/activate")

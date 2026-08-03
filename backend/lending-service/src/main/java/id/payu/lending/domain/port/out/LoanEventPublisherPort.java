@@ -1,6 +1,7 @@
 package id.payu.lending.domain.port.out;
 
 import id.payu.lending.dto.LoanApprovedEvent;
+import id.payu.lending.dto.LoanRepaymentProcessedEvent;
 import id.payu.lending.dto.LoanRejectedEvent;
 
 /**
@@ -22,4 +23,6 @@ public interface LoanEventPublisherPort {
      * @param event the loan rejected event
      */
     void publishLoanRejected(LoanRejectedEvent event);
+
+    void publishRepaymentProcessed(LoanRepaymentProcessedEvent event);
 }

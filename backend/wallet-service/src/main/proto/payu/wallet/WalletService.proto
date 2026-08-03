@@ -23,6 +23,11 @@ service WalletService {
   rpc Debit(DebitRequest) returns (TransactionResponse);
 
   /**
+   * Collect a loan repayment and post its balanced journal.
+   */
+  rpc RepayLoan(LoanRepaymentRequest) returns (TransactionResponse);
+
+  /**
    * Credit to wallet
    */
   rpc Credit(CreditRequest) returns (TransactionResponse);
@@ -83,6 +88,15 @@ message DebitRequest {
   payu.common.Money amount = 3;
   string reference_id = 4;
   string description = 5;
+}
+
+message LoanRepaymentRequest {
+  string wallet_id = 1;
+  string account_id = 2;
+  payu.common.Money amount = 3;
+  string reference_id = 4;
+  string loan_id = 5;
+  string description = 6;
 }
 
 message CreditRequest {

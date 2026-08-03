@@ -157,6 +157,47 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
     }
 
     @Override
+    public void repayLoan(LoanRepaymentRequest request, StreamObserver<TransactionResponse> responseObserver) {
+        try {
+            String accountId = request.getAccountId();
+            if (accountId == null || accountId.isEmpty()) {
+                Wallet wallet = walletService.getWallet(UUID.fromString(request.getWalletId()));
+                accountId = wallet.getAccountId();
+            }
+
+            BigDecimal amount = new BigDecimal(request.getAmount().getAmount());
+            String transactionId = walletService.repayLoan(
+                    accountId,
+                    request.getLoanId(),
+                    amount,
+                    request.getAmount().getCurrency(),
+                    request.getReferenceId(),
+                    request.getDescription());
+
+            Wallet wallet = walletService.getWalletByAccountId(accountId)
+                    .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
+
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setSuccess(true)
+                    .setTransactionId(transactionId)
+                    .setNewBalance(toMoney(wallet.getBalance(), wallet.getCurrency()))
+                    .setTimestamp(toTimestamp(LocalDateTime.now()))
+                    .build());
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid repayLoan request: {}", e.getMessage());
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        } catch (Exception e) {
+            log.error("Error in repayLoan: {}", e.getMessage(), e);
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
     public void credit(CreditRequest request, StreamObserver<TransactionResponse> responseObserver) {
         try {
             log.info("gRPC credit - accountId: {}, amount: {}",

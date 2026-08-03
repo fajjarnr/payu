@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface RepaymentSchedulePersistencePort {
     RepaymentSchedule save(RepaymentSchedule repaymentSchedule);
     Optional<RepaymentSchedule> findById(UUID id);
+    Optional<RepaymentSchedule> findByIdForUpdate(UUID id);
     List<RepaymentSchedule> findByLoanId(UUID loanId);
     void deleteByLoanId(UUID loanId);
 }

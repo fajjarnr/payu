@@ -1,0 +1,30 @@
+syntax = "proto3";
+package payu.wallet;
+
+import "payu/common/common.proto";
+
+option java_multiple_files = true;
+option java_package = "id.payu.wallet.grpc";
+option java_outer_classname = "WalletServiceProto";
+
+service WalletService {
+  rpc RepayLoan(LoanRepaymentRequest) returns (TransactionResponse);
+}
+
+message LoanRepaymentRequest {
+  string wallet_id = 1;
+  string account_id = 2;
+  payu.common.Money amount = 3;
+  string reference_id = 4;
+  string loan_id = 5;
+  string description = 6;
+}
+
+message TransactionResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  string ledger_entry_id = 3;
+  payu.common.Money new_balance = 4;
+  payu.common.Timestamp timestamp = 5;
+  payu.common.ErrorDetail error = 6;
+}

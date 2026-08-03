@@ -4,6 +4,7 @@ import id.payu.cache.service.CacheService;
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.model.LedgerEntry;
+import id.payu.wallet.domain.port.in.JournalUseCase;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
@@ -13,9 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.Objects;
@@ -31,14 +36,17 @@ public class WalletService implements WalletUseCase {
     private final WalletPersistencePort walletPersistencePort;
     private final WalletEventPublisherPort walletEventPublisher;
     private final CacheService cacheService;
+    private final JournalUseCase journalUseCase;
 
     public WalletService(
             WalletPersistencePort walletPersistencePort,
             WalletEventPublisherPort walletEventPublisher,
-            CacheService cacheService) {
+            CacheService cacheService,
+            JournalUseCase journalUseCase) {
         this.walletPersistencePort = walletPersistencePort;
         this.walletEventPublisher = walletEventPublisher;
         this.cacheService = cacheService;
+        this.journalUseCase = journalUseCase;
     }
 
     @Override
@@ -347,6 +355,96 @@ public class WalletService implements WalletUseCase {
         walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
 
         log.info("Credited {} to account {}, transactionId: {}", amount, accountId, transactionId);
+        return transactionId.toString();
+    }
+
+    @Override
+    @Transactional
+    public String repayLoan(String accountId, String loanId, BigDecimal amount, String currency,
+                            String referenceId, String description) {
+        if (accountId == null || accountId.isBlank() || loanId == null || loanId.isBlank()
+                || referenceId == null || referenceId.isBlank()) {
+            throw new IllegalArgumentException("Loan repayment account, loan, and reference are required");
+        }
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("Loan repayment amount must be positive with at most 4 decimals");
+        }
+
+        String normalizedCurrency = currency == null ? "" : currency.trim().toUpperCase(Locale.ROOT);
+        UUID transactionId = UUID.nameUUIDFromBytes(
+                ("LOAN_REPAYMENT:" + referenceId).getBytes(StandardCharsets.UTF_8));
+        List<LedgerEntry> existingEntries = walletPersistencePort.findByTransactionId(transactionId);
+        if (!existingEntries.isEmpty()) {
+            boolean sameCommand = existingEntries.stream().allMatch(entry ->
+                    referenceId.equals(entry.getReferenceId())
+                            && entry.getAmount() != null
+                            && entry.getAmount().compareTo(amount) == 0
+                            && normalizedCurrency.equals(entry.getCurrency()));
+            if (!sameCommand) {
+                throw new IllegalArgumentException("Repayment reference was already used for a different command");
+            }
+            return transactionId.toString();
+        }
+
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        if (!normalizedCurrency.equals(wallet.getCurrency())) {
+            throw new IllegalArgumentException("Wallet currency does not match repayment currency");
+        }
+
+        // ponytail: one wallet lock and one journal transaction; split settlement only if loan products diverge.
+        wallet.debit(amount);
+        walletPersistencePort.save(wallet);
+
+        walletPersistencePort.saveTransaction(WalletTransaction.builder()
+                .id(transactionId)
+                .walletId(wallet.getId())
+                .referenceId(referenceId)
+                .type(TransactionType.DEBIT)
+                .amount(amount)
+                .balanceAfter(wallet.getBalance())
+                .description(description)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        List<LedgerEntry> entries = new ArrayList<>();
+        entries.add(LedgerEntry.builder()
+                .transactionId(transactionId)
+                .accountId(accountId)
+                .coaCode("1100")
+                .entryType(EntryType.DEBIT)
+                .amount(amount)
+                .currency(normalizedCurrency)
+                .balanceAfter(wallet.getAvailableBalance())
+                .referenceType("LOAN_REPAYMENT")
+                .referenceId(referenceId)
+                .createdAt(LocalDateTime.now())
+                .build());
+        entries.add(LedgerEntry.builder()
+                .transactionId(transactionId)
+                .accountId("LOAN_RECEIVABLE:" + loanId)
+                .coaCode("1500")
+                .entryType(EntryType.CREDIT)
+                .amount(amount)
+                .currency(normalizedCurrency)
+                .balanceAfter(BigDecimal.ZERO.setScale(4, RoundingMode.HALF_EVEN))
+                .referenceType("LOAN_REPAYMENT")
+                .referenceId(referenceId)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        journalUseCase.createAndPostJournal(
+                "Loan repayment: " + loanId,
+                "LOAN_REPAYMENT",
+                referenceId,
+                entries,
+                "lending-service");
+
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
+        cacheService.invalidate("wallet:id:" + wallet.getId());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
         return transactionId.toString();
     }
 

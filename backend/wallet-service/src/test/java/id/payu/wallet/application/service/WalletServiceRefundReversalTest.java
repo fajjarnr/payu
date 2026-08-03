@@ -3,6 +3,7 @@ package id.payu.wallet.application.service;
 import id.payu.cache.service.CacheService;
 import id.payu.wallet.domain.model.EntryType;
 import id.payu.wallet.domain.model.Wallet;
+import id.payu.wallet.domain.port.in.JournalUseCase;
 import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,12 +31,14 @@ class WalletServiceRefundReversalTest {
     private WalletEventPublisherPort walletEventPublisher;
     @Mock
     private CacheService cacheService;
+    @Mock
+    private JournalUseCase journalUseCase;
 
     private WalletService walletService;
 
     @BeforeEach
     void setUp() {
-        walletService = new WalletService(walletPersistencePort, walletEventPublisher, cacheService);
+        walletService = new WalletService(walletPersistencePort, walletEventPublisher, cacheService, journalUseCase);
     }
 
     @Test

@@ -10,5 +10,6 @@ public interface LoanManagementUseCase {
     List<RepaymentSchedule> createRepaymentSchedule(UUID loanId);
     Optional<RepaymentSchedule> getRepaymentSchedule(UUID id);
     List<RepaymentSchedule> getRepaymentScheduleByLoanId(UUID loanId);
-    RepaymentSchedule processRepayment(UUID repaymentScheduleId, java.math.BigDecimal amount);
+    RepaymentSchedule processRepayment(UUID repaymentScheduleId, java.math.BigDecimal amount,
+                                       String idempotencyKey);
 }

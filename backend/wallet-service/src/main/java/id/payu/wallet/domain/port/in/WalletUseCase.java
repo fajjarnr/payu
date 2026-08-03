@@ -89,6 +89,9 @@ public interface WalletUseCase {
      */
     String credit(String accountId, BigDecimal amount, String referenceId, String description);
 
+    String repayLoan(String accountId, String loanId, BigDecimal amount, String currency,
+                     String referenceId, String description);
+
     /**
      * Atomically reverses an internal transfer: debit recipient and credit sender.
      */

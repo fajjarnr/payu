@@ -2,6 +2,7 @@ package id.payu.lending.adapter.messaging;
 
 import id.payu.lending.domain.port.out.LoanEventPublisherPort;
 import id.payu.lending.dto.LoanApprovedEvent;
+import id.payu.lending.dto.LoanRepaymentProcessedEvent;
 import id.payu.lending.dto.LoanRejectedEvent;
 import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,20 @@ public class KafkaLoanEventPublisherAdapter implements LoanEventPublisherPort {
                 event,
                 null,
                 "loan.rejected"
+        );
+    }
+
+    @Override
+    public void publishRepaymentProcessed(LoanRepaymentProcessedEvent event) {
+        log.info("Creating outbox event for repayment processed: repaymentId={}, loanId={}",
+                event.repaymentId(), event.loanId());
+        outboxService.createEventFromObject(
+                "LoanRepayment",
+                event.repaymentId().toString(),
+                "LoanRepaymentProcessed",
+                event,
+                null,
+                "payu.lending.loan-repayment-processed.v1"
         );
     }
 }

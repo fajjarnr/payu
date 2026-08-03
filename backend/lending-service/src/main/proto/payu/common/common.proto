@@ -1,0 +1,23 @@
+syntax = "proto3";
+package payu.common;
+
+option java_multiple_files = true;
+option java_package = "id.payu.grpc.common";
+option java_outer_classname = "CommonProto";
+
+message Money {
+  string currency = 1;
+  string amount = 2;
+}
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message ErrorDetail {
+  string code = 1;
+  string message = 2;
+  string field = 3;
+  map<string, string> metadata = 4;
+}

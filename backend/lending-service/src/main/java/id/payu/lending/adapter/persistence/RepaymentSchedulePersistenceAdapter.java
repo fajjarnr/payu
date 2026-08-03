@@ -35,6 +35,11 @@ public class RepaymentSchedulePersistenceAdapter implements RepaymentSchedulePer
     }
 
     @Override
+    public Optional<RepaymentSchedule> findByIdForUpdate(UUID id) {
+        return repository.findByIdForUpdate(id).map(this::toDomain);
+    }
+
+    @Override
     public List<RepaymentSchedule> findByLoanId(UUID loanId) {
         return repository.findByLoanId(loanId).stream()
                 .map(this::toDomain)
