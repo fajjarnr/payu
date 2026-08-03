@@ -30,9 +30,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newTag: "1.8.80"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.85
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.87
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-  newTag: "1.8.85"
+  newTag: "1.8.87"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newTag: "1.8.81"
@@ -69,9 +69,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newTag: "1.8.86"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.87
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.88
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newTag: "1.8.87"
+  newTag: "1.8.88"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.55
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.81"

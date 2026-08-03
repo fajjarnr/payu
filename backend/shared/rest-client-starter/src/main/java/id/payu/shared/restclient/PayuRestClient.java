@@ -71,6 +71,20 @@ public class PayuRestClient {
     }
 
     /**
+     * Performs a GET request with caller-provided headers.
+     */
+    public <T> ResponseEntity<T> getWithHeaders(String serviceName, String uri,
+                                                 HttpHeaders headers, Class<T> responseType) {
+        return executeWithResilience(serviceName, () ->
+                restClient.get()
+                        .uri(uri)
+                        .headers(h -> h.addAll(headers))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .toEntity(responseType));
+    }
+
+    /**
      * Performs a GET request returning a parameterized type (e.g., List&lt;Item&gt;).
      */
     public <T> ResponseEntity<T> get(String serviceName, String uri,

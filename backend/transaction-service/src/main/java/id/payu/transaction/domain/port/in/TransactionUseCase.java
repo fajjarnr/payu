@@ -6,6 +6,7 @@ import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
 import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.dto.TransactionRefundDetailsResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +55,11 @@ public interface TransactionUseCase {
      * @return the transaction
      */
     TransactionEntity getTransaction(GetTransactionQuery query);
+
+    /**
+     * Gets the amount and currency needed by dispute-service to create a refund.
+     */
+    TransactionRefundDetailsResponse getTransactionRefundDetails(UUID transactionId);
 
     /**
      * Gets transactions for an account with pagination.

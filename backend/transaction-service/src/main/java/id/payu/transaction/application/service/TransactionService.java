@@ -13,6 +13,7 @@ import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
+import id.payu.transaction.dto.TransactionRefundDetailsResponse;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -89,6 +90,24 @@ public class TransactionService implements TransactionUseCase {
     public TransactionEntity getTransaction(GetTransactionQuery query) {
         log.info("Delegating to GetTransactionQueryHandler");
         return getTransactionHandler.handle(query);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TransactionRefundDetailsResponse getTransactionRefundDetails(UUID transactionId) {
+        TransactionEntity transaction = transactionPersistencePort.findById(transactionId)
+                .orElseThrow(() -> new id.payu.api.common.exception.BusinessException(
+                        "TXN_404", "TransactionEntity not found: " + transactionId));
+        var money = transaction.getAmount();
+        var amount = money != null ? money.getAmount() : transaction.getAmountValue();
+        var currency = money != null
+                ? money.getCurrency().getCurrencyCode()
+                : transaction.getCurrencyCode();
+        if (amount == null || amount.signum() <= 0 || currency == null || currency.isBlank()) {
+            throw new id.payu.api.common.exception.BusinessException(
+                    "TXN_422", "Transaction has invalid refund details: " + transactionId);
+        }
+        return new TransactionRefundDetailsResponse(amount, currency);
     }
 
     @Override

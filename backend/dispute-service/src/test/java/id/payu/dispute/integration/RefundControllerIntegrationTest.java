@@ -3,7 +3,9 @@ package id.payu.dispute.integration;
 import id.payu.dispute.DisputeServiceApplication;
 import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.model.RefundStatus;
+import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
+import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import id.payu.dispute.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +17,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -64,6 +67,13 @@ class RefundControllerIntegrationTest {
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
+        }
+
+        @Bean
+        @Primary
+        TransactionLookupPort transactionLookupPort() {
+            return transactionId -> java.util.Optional.of(
+                    new TransactionDetails(new BigDecimal("100000.00"), "IDR"));
         }
     }
 

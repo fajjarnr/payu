@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.85
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.87
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -87,7 +87,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: dispute-service
         - name: SERVICE_VERSION
-          value: 1.8.85
+          value: 1.8.87
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT
@@ -107,6 +107,11 @@ spec:
             secretKeyRef:
               name: db-secrets
               key: DB_PASSWORD
+        - name: TRANSACTION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: TRANSACTION_SERVICE_URL
         - name: PAYU_CACHE_REDIS_HOST
           value: payu-cache-resp.payu-dev.svc.cluster.local
         - name: PAYU_CACHE_REDIS_PORT

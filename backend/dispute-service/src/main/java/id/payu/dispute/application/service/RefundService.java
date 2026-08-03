@@ -2,8 +2,10 @@ package id.payu.dispute.application.service;
 
 import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.model.RefundStatus;
+import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.in.RefundUseCase;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
+import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,16 +29,14 @@ import java.util.UUID;
 public class RefundService implements RefundUseCase {
 
     private final RefundPersistencePort refundPersistencePort;
+    private final TransactionLookupPort transactionLookupPort;
 
     @Override
     public Refund createFullRefund(UUID transactionId, String reason) {
         log.info("Creating full refund for transaction: {}", transactionId);
-        // In a real implementation, we would fetch the transaction amount from transaction-service
-        // For now, we use a placeholder that should be replaced with actual transaction lookup
-        BigDecimal transactionAmount = fetchTransactionAmount(transactionId);
-        String currency = "IDR"; // Should be fetched from transaction
+        TransactionDetails transaction = getTransactionDetails(transactionId);
 
-        Refund refund = Refund.createFullRefund(transactionId, transactionAmount, currency, reason);
+        Refund refund = Refund.createFullRefund(transactionId, transaction.amount(), transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
         log.info("Created refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
@@ -46,7 +46,15 @@ public class RefundService implements RefundUseCase {
     public Refund createPartialRefund(UUID transactionId, BigDecimal amount, String currency, String reason) {
         log.info("Creating partial refund for transaction: {} with amount: {} {}", transactionId, amount, currency);
 
-        Refund refund = Refund.createPartialRefund(transactionId, amount, currency, reason);
+        TransactionDetails transaction = getTransactionDetails(transactionId);
+        if (currency == null || !transaction.currency().equalsIgnoreCase(currency)) {
+            throw new IllegalArgumentException("Refund currency must match transaction currency");
+        }
+        if (amount == null || amount.compareTo(transaction.amount()) > 0) {
+            throw new IllegalArgumentException("Refund amount cannot exceed transaction amount");
+        }
+
+        Refund refund = Refund.createPartialRefund(transactionId, amount, transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
         log.info("Created partial refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
@@ -131,17 +139,8 @@ public class RefundService implements RefundUseCase {
         }
     }
 
-    /**
-     * Fetches the transaction amount from the transaction service.
-     * This is a placeholder that should be replaced with actual integration.
-     *
-     * @param transactionId the transaction ID
-     * @return the transaction amount
-     */
-    private BigDecimal fetchTransactionAmount(UUID transactionId) {
-        // TODO: Integrate with transaction-service to fetch actual transaction amount
-        // For now, return a placeholder
-        log.warn("Using placeholder transaction amount. Integrate with transaction-service.");
-        return new BigDecimal("0.00");
+    private TransactionDetails getTransactionDetails(UUID transactionId) {
+        return transactionLookupPort.findById(transactionId)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
     }
 }

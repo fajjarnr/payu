@@ -20,6 +20,7 @@ import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.InterbankTransferCallbackRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.dto.TransactionResponse;
+import id.payu.transaction.dto.TransactionRefundDetailsResponse;
 import id.payu.transaction.dto.UpdateTransactionTagsRequest;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
@@ -254,6 +255,16 @@ public class TransactionController extends BaseController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
+    }
+
+    /**
+     * Read-only transaction data required by the dispute service to create refunds.
+     */
+    @GetMapping("/internal/{transactionId}/refund-details")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
+    public ResponseEntity<TransactionRefundDetailsResponse> getTransactionRefundDetails(
+            @PathVariable UUID transactionId) {
+        return ResponseEntity.ok(transactionUseCase.getTransactionRefundDetails(transactionId));
     }
 
     /**

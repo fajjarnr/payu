@@ -2,7 +2,9 @@ package id.payu.dispute.application.service;
 
 import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.model.RefundStatus;
+import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
+import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,6 +35,9 @@ class RefundServiceTest {
     @Mock
     private RefundPersistencePort refundPersistencePort;
 
+    @Mock
+    private TransactionLookupPort transactionLookupPort;
+
     private RefundService refundService;
 
     private static final UUID TRANSACTION_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -43,7 +48,7 @@ class RefundServiceTest {
 
     @BeforeEach
     void setUp() {
-        refundService = new RefundService(refundPersistencePort);
+        refundService = new RefundService(refundPersistencePort, transactionLookupPort);
     }
 
     @Nested
@@ -55,6 +60,8 @@ class RefundServiceTest {
         void shouldCreatePartialRefundSuccessfully() {
             // Given
             Refund expectedRefund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
+            when(transactionLookupPort.findById(TRANSACTION_ID))
+                    .thenReturn(Optional.of(new TransactionDetails(AMOUNT, CURRENCY)));
             when(refundPersistencePort.save(any(Refund.class))).thenReturn(expectedRefund);
 
             // When
@@ -68,6 +75,49 @@ class RefundServiceTest {
             assertThat(result.getReason()).isEqualTo(REASON);
             assertThat(result.getStatus()).isEqualTo(RefundStatus.PENDING);
             verify(refundPersistencePort).save(any(Refund.class));
+        }
+
+        @Test
+        @DisplayName("Should use the transaction amount and currency for a full refund")
+        void shouldUseTransactionAmountAndCurrencyForFullRefund() {
+            // Given a transaction whose authoritative amount is 125000.00 USD
+            when(transactionLookupPort.findById(TRANSACTION_ID))
+                    .thenReturn(Optional.of(new TransactionDetails(new BigDecimal("125000.00"), "USD")));
+            when(refundPersistencePort.save(any(Refund.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            // When
+            Refund result = refundService.createFullRefund(TRANSACTION_ID, REASON);
+
+            // Then
+            assertThat(result.getAmount()).isEqualByComparingTo("125000.00");
+            assertThat(result.getCurrency()).isEqualTo("USD");
+        }
+
+        @Test
+        @DisplayName("Should reject a partial refund in a different currency")
+        void shouldRejectPartialRefundWithDifferentCurrency() {
+            when(transactionLookupPort.findById(TRANSACTION_ID))
+                    .thenReturn(Optional.of(new TransactionDetails(AMOUNT, CURRENCY)));
+
+            assertThatThrownBy(() -> refundService.createPartialRefund(
+                    TRANSACTION_ID, new BigDecimal("50000.00"), "USD", REASON))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Refund currency must match transaction currency");
+            verify(refundPersistencePort, never()).save(any(Refund.class));
+        }
+
+        @Test
+        @DisplayName("Should reject a partial refund above the transaction amount")
+        void shouldRejectPartialRefundAboveTransactionAmount() {
+            when(transactionLookupPort.findById(TRANSACTION_ID))
+                    .thenReturn(Optional.of(new TransactionDetails(AMOUNT, CURRENCY)));
+
+            assertThatThrownBy(() -> refundService.createPartialRefund(
+                    TRANSACTION_ID, new BigDecimal("100000.01"), CURRENCY, REASON))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Refund amount cannot exceed transaction amount");
+            verify(refundPersistencePort, never()).save(any(Refund.class));
         }
     }
 

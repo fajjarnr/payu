@@ -39,15 +39,17 @@ class ArchitectureTest {
                 .consideringOnlyDependenciesInAnyPackage("id.payu.dispute..")
                 .layer("Adapter.Web").definedBy("..adapter.web..")
                 .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                .layer("Adapter.Client").definedBy("..adapter.client..")
                 .layer("Application").definedBy("..application..")
                 .layer("Domain").definedBy("..domain..")
                 .layer("Config").definedBy("..config..")
                 .layer("Dto").definedBy("..dto..")
                 .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
                 .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
+                .whereLayer("Adapter.Client").mayNotBeAccessedByAnyLayer()
                 .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
-                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Persistence", "Application", "Dto")
-                .whereLayer("Dto").mayOnlyBeAccessedByLayers("Adapter.Web", "Application")
+                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Persistence", "Adapter.Client", "Application", "Dto")
+                .whereLayer("Dto").mayOnlyBeAccessedByLayers("Adapter.Web", "Adapter.Client", "Application")
                 .check(classes);
     }
 }
