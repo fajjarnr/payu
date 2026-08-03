@@ -228,16 +228,6 @@ public final class Money implements Serializable, Comparable<Money> {
     }
 
     /**
-     * Multiplies this Money by the specified multiplier.
-     *
-     * @param multiplier the multiplier
-     * @return a new Money instance with the product
-     */
-    public Money multiply(double multiplier) {
-        return multiply(BigDecimal.valueOf(multiplier));
-    }
-
-    /**
      * Divides this Money by the specified divisor.
      *
      * @param divisor the divisor (must not be null or zero)
@@ -267,17 +257,6 @@ public final class Money implements Serializable, Comparable<Money> {
         if (divisor == 0) {
             throw new ArithmeticException("Cannot divide by zero");
         }
-        return divide(BigDecimal.valueOf(divisor));
-    }
-
-    /**
-     * Divides this Money by the specified divisor.
-     *
-     * @param divisor the divisor (must not be zero)
-     * @return a new Money instance with the quotient
-     * @throws ArithmeticException if divisor is zero
-     */
-    public Money divide(double divisor) {
         return divide(BigDecimal.valueOf(divisor));
     }
 

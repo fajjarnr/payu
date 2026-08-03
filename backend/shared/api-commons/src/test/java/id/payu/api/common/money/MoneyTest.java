@@ -185,6 +185,17 @@ class MoneyTest {
     @DisplayName("Arithmetic Operations")
     class ArithmeticOperationsTest {
 
+        @Test
+        @DisplayName("Should not expose floating-point arithmetic overloads")
+        void shouldNotExposeFloatingPointArithmeticOverloads() {
+            assertThat(java.util.Arrays.stream(Money.class.getDeclaredMethods())
+                    .filter(method -> method.getName().equals("multiply") || method.getName().equals("divide"))
+                    .flatMap(method -> java.util.Arrays.stream(method.getParameterTypes()))
+                    .filter(double.class::equals)
+                    .toList())
+                    .isEmpty();
+        }
+
         @Nested
         @DisplayName("Addition")
         class AdditionTest {
@@ -298,16 +309,6 @@ class MoneyTest {
             }
 
             @Test
-            @DisplayName("Should multiply by double")
-            void shouldMultiplyByDouble() {
-                Money money = Money.of(new BigDecimal("100.00"), "IDR");
-
-                Money result = money.multiply(1.5);
-
-                assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
-            }
-
-            @Test
             @DisplayName("Should throw NullPointerException when multiplying by null")
             void shouldThrowExceptionWhenMultiplyingByNull() {
                 Money money = Money.of(new BigDecimal("100.00"), "IDR");
@@ -339,16 +340,6 @@ class MoneyTest {
                 Money money = Money.of(new BigDecimal("100.00"), "IDR");
 
                 Money result = money.divide(4L);
-
-                assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("25.00"));
-            }
-
-            @Test
-            @DisplayName("Should divide by double")
-            void shouldDivideByDouble() {
-                Money money = Money.of(new BigDecimal("100.00"), "IDR");
-
-                Money result = money.divide(4.0);
 
                 assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("25.00"));
             }
