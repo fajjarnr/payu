@@ -51,6 +51,22 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Billing `SubscriptionActor` is framework-free; `SubscriptionService` enforces partner/account ownership and cancel uses the platform idempotency header.
 - Billing reactor tests `113` passed with ArchUnit; image `1.8.102` rollout and health checks succeeded in `payu-dev`.
 
+## L-200: Cookie Sessions Are the Auth Source of Truth (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Next.js, Zustand, httpOnly cookies, browser storage
+**Context**: `authStore` persisted usernames, account IDs, roles, and `isAuthenticated` in localStorage even though the BFF already used an httpOnly-cookie session and `SessionBootstrap` refreshed it.
+
+**Lesson**:
+- Keep client auth state in memory; let the server session and cookie refresh establish truth after reload.
+- Remove the old storage key during module load so stale persisted identity cannot survive the migration.
+- Test both migration and the no-write invariant; logout must clear in-memory state and never require a storage write.
+- Browser login/logout E2E also depends on CSP hydration and BFF availability; record those blockers separately from the store regression.
+
+**Applied evidence**:
+- Zustand persistence was removed, legacy `payu-auth-storage` is deleted on client load, and `SessionBootstrap` remains the cookie-session bootstrap path.
+- Auth persistence/logout tests passed `8/8`; production-build browser inspection showed the key present before reload and `null` after reload.
+
 ## L-199: Security Defaults Must Be Enforced at the Shared Startup Boundary (2026-08-03)
 
 **Date**: 2026-08-03

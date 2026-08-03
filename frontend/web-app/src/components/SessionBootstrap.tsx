@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores';
  *
  * BUG-FE-012 FIX:
  * By deferring store reads to useEffect (client-only), we avoid hydration mismatches between
- * the server render (no localStorage) and client render (with localStorage data).
+ * the server render and the client render while the cookie session is bootstrapped.
  */
 export function SessionBootstrap() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

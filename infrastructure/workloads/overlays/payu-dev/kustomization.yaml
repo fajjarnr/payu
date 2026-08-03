@@ -78,9 +78,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.101
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.101"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.12
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.13
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.5.12"
+  newTag: "1.5.13"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.8.80"
