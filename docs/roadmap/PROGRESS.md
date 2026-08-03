@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-031 promo validation side effect deployed**:
+> - Validation now uses a pure `PromoCode.preview` path and a read-only service transaction, so GET validation does not increment usage or mark a user consumed; apply always uses the `X-Idempotency-Key` header and the shared required idempotency interceptor.
+> - Verification: focused domain/service/controller suite `25` passed, full promotion reactor `250` tests passed with `0` failures and `0` errors, package BUILD SUCCESS; image `1.8.106` (`sha256:f7ca040537139cb5534c3868111d29979bc89df6502d04b861f69fedc4c4aae5`) live, pod Ready `1/1`, restart `0`, health `UP`, and Flyway validated 10 migrations.
+
 > ✅ **2026-08-03 — PROD-030 promotion persistence deployed**:
 > - Promo codes, promo usage, cashback rules, and cashback records now use transactional Spring Data JPA adapters backed by the existing tables; JSON rule fields are mapped, idempotent inserts are database-safe, and Flyway V10 adds persisted usage type plus once-per-user and transaction/rule uniqueness constraints.
 > - Verification: promotion reactor `245` tests passed with `0` failures and `0` errors; package BUILD SUCCESS; image `1.8.105` (`sha256:64ad86b86e351d56163a9d3ba652426f9ad57304db9ba62a745857cba8556423`) live, pod Ready `1/1`, restart `0`, liveness/readiness `UP`, and Flyway validated/applied 10 migrations including V10.

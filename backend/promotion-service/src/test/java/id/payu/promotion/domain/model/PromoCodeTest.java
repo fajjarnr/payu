@@ -61,6 +61,23 @@ class PromoCodeTest {
     }
 
     @Test
+    @DisplayName("should preview a valid promo without consuming it")
+    void shouldPreviewWithoutSideEffects() {
+        PromoCode promo = PromoCode.builder()
+                .code("PREVIEW")
+                .discountValue(discount("10"))
+                .discountType(DiscountType.PERCENTAGE)
+                .usageType(UsageType.ONCE_PER_USER)
+                .build();
+
+        PromoResult result = promo.preview(createContext(new BigDecimal("100.00")));
+
+        assertTrue(result.isSuccess());
+        assertEquals(0, promo.getCurrentUsageCount());
+        assertFalse(promo.hasBeenUsedBy(USER_ID));
+    }
+
+    @Test
     @DisplayName("should reject expired promo code")
     void shouldRejectExpiredPromo() {
         // Given

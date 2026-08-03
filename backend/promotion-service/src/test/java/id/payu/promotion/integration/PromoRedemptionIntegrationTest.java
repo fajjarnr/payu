@@ -167,4 +167,30 @@ class PromoRedemptionIntegrationTest {
         assertEquals(response1.discountAmount(), response2.discountAmount());
         assertEquals(response1.finalAmount(), response2.finalAmount());
     }
+
+    @Test
+    @DisplayName("should validate a one-time promo without consuming it")
+    void shouldValidateWithoutConsumingPromo() {
+        PromoCode promo = PromoCode.builder()
+                .code("VALIDATE_ONLY")
+                .discountValue(BigDecimal.valueOf(10))
+                .discountType(DiscountType.PERCENTAGE)
+                .usageType(UsageType.ONCE_PER_USER)
+                .status(PromoStatus.ACTIVE)
+                .build();
+        promoCodeRepository.save(promo);
+
+        ApplyPromoRequest request = new ApplyPromoRequest(
+                "VALIDATE_ONLY", USER_ID, "validation-txn", new BigDecimal("100000"), PARTNER_ID
+        );
+
+        ApplyPromoResponse validation = promoRedemptionService.validatePromo(request);
+        PromoCode afterValidation = promoCodeRepository.findByCode("VALIDATE_ONLY").orElseThrow();
+
+        assertTrue(validation.success());
+        assertEquals(0, afterValidation.getCurrentUsageCount());
+        assertFalse(afterValidation.hasBeenUsedBy(USER_ID));
+
+        assertTrue(promoRedemptionService.applyPromo(request).success());
+    }
 }

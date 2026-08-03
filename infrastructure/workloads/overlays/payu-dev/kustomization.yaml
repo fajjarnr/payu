@@ -65,7 +65,7 @@ images:
   newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:1.8.51
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-  newTag: "1.8.105"
+  newTag: "1.8.106"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newTag: "1.8.84"

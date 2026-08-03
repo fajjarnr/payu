@@ -70,38 +70,17 @@ public class PromoRedemptionService {
         PromoCode promo = promoOpt.get();
 
         // Check if user already used this promo (for ONCE_PER_USER)
-        if (promo.getUsageType() == UsageType.ONCE_PER_USER) {
-            boolean alreadyUsed = promoUsageRepository.hasUserUsedPromo(request.userId(), request.promoCode());
-            if (alreadyUsed) {
-                LOG.warn("Promo already used by user: code={}, userId={}", request.promoCode(), request.userId());
-                return ApplyPromoResponse.failure("ALREADY_USED", "Promo code has already been used");
-            }
+        Optional<ApplyPromoResponse> alreadyUsedResponse = rejectIfAlreadyUsed(promo, request);
+        if (alreadyUsedResponse.isPresent()) {
+            return alreadyUsedResponse.get();
         }
-
-        // Build transaction context
-        TransactionContext context = TransactionContext.builder()
-                .userId(request.userId())
-                .amount(request.transactionAmount())
-                .partnerId(request.partnerId())
-                .transactionId(request.transactionId())
-                .build();
 
         // Apply promo
         PromoResult result;
         try {
-            result = promo.apply(context);
-        } catch (PromoExpiredException e) {
-            LOG.warn("Promo expired: {}", request.promoCode());
-            return ApplyPromoResponse.failure("EXPIRED", "Promo code has expired");
-        } catch (PromoAlreadyUsedException e) {
-            LOG.warn("Promo already used: {}", request.promoCode());
-            return ApplyPromoResponse.failure("ALREADY_USED", "Promo code has already been used");
-        } catch (MinimumAmountNotMetException e) {
-            LOG.warn("Minimum amount not met for promo: {}", request.promoCode());
-            return ApplyPromoResponse.failure("MIN_AMOUNT_NOT_MET", e.getMessage());
-        } catch (InvalidPromoException e) {
-            LOG.warn("Invalid promo: {}", e.getMessage());
-            return ApplyPromoResponse.failure("INVALID_PROMO", e.getMessage());
+            result = promo.apply(toContext(request));
+        } catch (RuntimeException e) {
+            return promoFailure(request, e);
         }
 
         if (!result.isSuccess()) {
@@ -142,5 +121,68 @@ public class PromoRedemptionService {
                 result.getDiscountAmount(),
                 result.getFinalAmount()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ApplyPromoResponse validatePromo(ApplyPromoRequest request) {
+        Optional<PromoCode> promoOpt = promoCodeRepository.findByCode(request.promoCode());
+        if (promoOpt.isEmpty()) {
+            return ApplyPromoResponse.failure("PROMO_NOT_FOUND", "Invalid promo code");
+        }
+
+        PromoCode promo = promoOpt.get();
+        Optional<ApplyPromoResponse> alreadyUsedResponse = rejectIfAlreadyUsed(promo, request);
+        if (alreadyUsedResponse.isPresent()) {
+            return alreadyUsedResponse.get();
+        }
+
+        try {
+            PromoResult result = promo.preview(toContext(request));
+            return ApplyPromoResponse.success(
+                    request.promoCode(),
+                    result.getOriginalAmount(),
+                    result.getDiscountAmount(),
+                    result.getFinalAmount());
+        } catch (RuntimeException e) {
+            return promoFailure(request, e);
+        }
+    }
+
+    private Optional<ApplyPromoResponse> rejectIfAlreadyUsed(PromoCode promo, ApplyPromoRequest request) {
+        if (promo.getUsageType() == UsageType.ONCE_PER_USER
+                && promoUsageRepository.hasUserUsedPromo(request.userId(), request.promoCode())) {
+            LOG.warn("Promo already used by user: code={}, userId={}", request.promoCode(), request.userId());
+            return Optional.of(ApplyPromoResponse.failure("ALREADY_USED", "Promo code has already been used"));
+        }
+        return Optional.empty();
+    }
+
+    private TransactionContext toContext(ApplyPromoRequest request) {
+        return TransactionContext.builder()
+                .userId(request.userId())
+                .amount(request.transactionAmount())
+                .partnerId(request.partnerId())
+                .transactionId(request.transactionId())
+                .build();
+    }
+
+    private ApplyPromoResponse promoFailure(ApplyPromoRequest request, RuntimeException exception) {
+        if (exception instanceof PromoExpiredException) {
+            LOG.warn("Promo expired: {}", request.promoCode());
+            return ApplyPromoResponse.failure("EXPIRED", "Promo code has expired");
+        }
+        if (exception instanceof PromoAlreadyUsedException) {
+            LOG.warn("Promo already used: {}", request.promoCode());
+            return ApplyPromoResponse.failure("ALREADY_USED", "Promo code has already been used");
+        }
+        if (exception instanceof MinimumAmountNotMetException) {
+            LOG.warn("Minimum amount not met for promo: {}", request.promoCode());
+            return ApplyPromoResponse.failure("MIN_AMOUNT_NOT_MET", exception.getMessage());
+        }
+        if (exception instanceof InvalidPromoException) {
+            LOG.warn("Invalid promo: {}", exception.getMessage());
+            return ApplyPromoResponse.failure("INVALID_PROMO", exception.getMessage());
+        }
+        throw exception;
     }
 }

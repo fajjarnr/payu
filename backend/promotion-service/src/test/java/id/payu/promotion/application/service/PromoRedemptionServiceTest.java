@@ -88,6 +88,26 @@ class PromoRedemptionServiceTest {
     }
 
     @Test
+    @DisplayName("should validate promo without recording usage or saving promo state")
+    void shouldValidatePromoWithoutSideEffects() {
+        String promoCode = "PREVIEW10";
+        PromoCode promo = createPromoCode(promoCode, 10, DiscountType.PERCENTAGE);
+        promo.setUsageType(UsageType.ONCE_PER_USER);
+        ApplyPromoRequest request = new ApplyPromoRequest(
+                promoCode, USER_ID, "validation", new BigDecimal("100000"), PARTNER_ID
+        );
+        when(promoCodeRepository.findByCode(promoCode)).thenReturn(Optional.of(promo));
+        when(promoUsageRepository.hasUserUsedPromo(USER_ID, promoCode)).thenReturn(false);
+
+        ApplyPromoResponse response = promoRedemptionService.validatePromo(request);
+
+        assertTrue(response.success());
+        assertEquals(0, promo.getCurrentUsageCount());
+        verify(promoUsageRepository, never()).recordUsage(any());
+        verify(promoCodeRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("should return error for invalid promo code")
     void shouldReturnErrorForInvalidPromo() {
         // Given

@@ -3,6 +3,7 @@ package id.payu.promotion.adapter.web;
 import id.payu.promotion.application.service.PromoRedemptionService;
 import id.payu.promotion.dto.ApplyPromoRequest;
 import id.payu.promotion.dto.ApplyPromoResponse;
+import id.payu.commons.idempotency.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,23 +59,22 @@ public class PromoRedemptionController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     public ResponseEntity<?> applyPromo(
             @Valid @RequestBody ApplyPromoRequest request,
-            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "X-Idempotency-Key", required = true) String idempotencyKey) {
 
         LOG.info("Applying promo code: {}, transaction: {}", request.promoCode(), request.transactionId());
 
         // Use header idempotency key if not provided in body
-        ApplyPromoRequest finalRequest = request.idempotencyKey() != null
-                ? request
-                : new ApplyPromoRequest(
-                        request.promoCode(),
-                        request.userId(),
-                        request.transactionId(),
-                        request.transactionAmount(),
-                        request.partnerId(),
-                        idempotencyKey
-                );
+        ApplyPromoRequest finalRequest = new ApplyPromoRequest(
+                request.promoCode(),
+                request.userId(),
+                request.transactionId(),
+                request.transactionAmount(),
+                request.partnerId(),
+                idempotencyKey
+        );
 
         ApplyPromoResponse response = promoRedemptionService.applyPromo(finalRequest);
 
@@ -116,7 +116,7 @@ public class PromoRedemptionController extends BaseController {
 
         // BUG-LOGIC-016 FIX: Perform actual validation instead of always returning {valid: true}
         try {
-            // Create a dry-run apply request to validate without side effects
+            // Create a read-only request; validation must not consume the promo.
             ApplyPromoRequest dryRunRequest = new ApplyPromoRequest(
                     promoCode,
                     userId,
@@ -126,7 +126,7 @@ public class PromoRedemptionController extends BaseController {
                     null
             );
 
-            ApplyPromoResponse result = promoRedemptionService.applyPromo(dryRunRequest);
+            ApplyPromoResponse result = promoRedemptionService.validatePromo(dryRunRequest);
 
             if (result.success()) {
                 return ok(Map.of(

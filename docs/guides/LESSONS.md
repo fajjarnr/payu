@@ -4781,3 +4781,7 @@ When a rollout change is requested, edit the base/overlay manifest, render it, a
 ### L-203: Process-local persistence is a production data-loss bug (2026-08-03)
 
 If Flyway already owns the tables, a `ConcurrentHashMap`/`CopyOnWriteArrayList` bean is a false persistence adapter: restart and replica failover erase state. Reuse Spring Data JPA repositories, keep the application service transaction boundary, and put replay/race guarantees in database constraints. For conditional once-per-user rules, persist the usage mode and use a partial unique index; an unconditional `(user_id, promo_code)` constraint would break unlimited promos.
+
+### L-204: Validation must be a pure read path (2026-08-03)
+
+A GET validation endpoint must never call an apply command: `apply` mutates usage state before the service persists it, so a dry-run can consume a one-time promo. Keep `preview`/validation separate from `apply`, mark the service read-only, and require the same distributed idempotency header on the real mutation boundary.

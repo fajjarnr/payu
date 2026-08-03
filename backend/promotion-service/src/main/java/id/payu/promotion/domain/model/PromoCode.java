@@ -50,15 +50,23 @@ public class PromoCode {
      * @throws InvalidPromoException if promo is inactive or user not eligible
      */
     public PromoResult apply(TransactionContext context) {
+        PromoResult result = preview(context);
+
+        // Mark as used
+        markUsedBy(context.getUserId());
+
+        return result;
+    }
+
+    /**
+     * Calculates the result without mutating usage state.
+     */
+    public PromoResult preview(TransactionContext context) {
         validateCanApply(context);
 
         BigDecimal originalAmount = context.getAmount();
         BigDecimal discountAmount = calculateDiscount(originalAmount);
         BigDecimal finalAmount = originalAmount.subtract(discountAmount);
-
-        // Mark as used
-        markUsedBy(context.getUserId());
-
         return PromoResult.success(code, originalAmount, discountAmount, finalAmount);
     }
 
