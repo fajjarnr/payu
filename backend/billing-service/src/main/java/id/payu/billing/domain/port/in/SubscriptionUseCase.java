@@ -3,6 +3,7 @@ package id.payu.billing.domain.port.in;
 import id.payu.billing.domain.model.Subscription;
 import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.SubscriptionPlan;
+import id.payu.billing.domain.model.SubscriptionActor;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,28 +16,28 @@ public interface SubscriptionUseCase {
 
     // --- Plan Management ---
 
-    SubscriptionPlan createPlan(String partnerId, String planName, String description,
+    SubscriptionPlan createPlan(SubscriptionActor actor, String partnerId, String planName, String description,
                                  BillingInterval interval,
                                  java.math.BigDecimal price, String currency,
                                  int trialDays, int gracePeriodDays);
 
-    SubscriptionPlan getPlan(UUID planId);
+    SubscriptionPlan getPlan(SubscriptionActor actor, UUID planId);
 
-    List<SubscriptionPlan> getPlansByPartner(String partnerId);
+    List<SubscriptionPlan> getPlansByPartner(SubscriptionActor actor, String partnerId);
 
-    void deactivatePlan(UUID planId);
+    void deactivatePlan(SubscriptionActor actor, UUID planId);
 
     // --- Subscription Lifecycle ---
 
-    Subscription subscribe(String accountId, UUID planId, String externalReferenceId);
+    Subscription subscribe(SubscriptionActor actor, String accountId, UUID planId, String externalReferenceId);
 
-    Subscription getSubscription(UUID subscriptionId);
+    Subscription getSubscription(SubscriptionActor actor, UUID subscriptionId);
 
-    List<Subscription> getSubscriptionsByAccount(String accountId);
+    List<Subscription> getSubscriptionsByAccount(SubscriptionActor actor, String accountId);
 
-    List<Subscription> getSubscriptionsByPartner(String partnerId);
+    List<Subscription> getSubscriptionsByPartner(SubscriptionActor actor, String partnerId);
 
-    Subscription cancelSubscription(UUID subscriptionId, String reason);
+    Subscription cancelSubscription(SubscriptionActor actor, UUID subscriptionId, String reason);
 
     // --- Charging ---
 
@@ -55,5 +56,5 @@ public interface SubscriptionUseCase {
 
     void processScheduledCharge(UUID subscriptionId);
 
-    List<SubscriptionCharge> getChargesBySubscription(UUID subscriptionId);
+    List<SubscriptionCharge> getChargesBySubscription(SubscriptionActor actor, UUID subscriptionId);
 }

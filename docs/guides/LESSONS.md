@@ -36,6 +36,21 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Disbursement callback HMAC path was already covered by `CallbackSignatureFilterTest`.
 - `partner-service` passed 240/240 and `transaction-service` 132/132 tests; only live wallet/OpenShift E2E remains open.
 
+## L-198: Authorization Context Must Stay Outside the Domain Core (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Billing, Spring Security, hexagonal architecture, OpenShift manifests
+**Context**: Subscription endpoints accepted caller-supplied partner/account identifiers while only some controller reads checked ownership. Passing a Spring security exception or an application-layer actor into the domain port broke ArchUnit isolation.
+
+**Lesson**:
+- Pass a framework-free actor value into the use case; keep ownership predicates pure in the domain model and translate failures to HTTP/security exceptions in the application service.
+- Enforce authorization at the service boundary so controller and future adapters cannot bypass it; scheduled internal flows must use private persistence loaders rather than an externally authorized read method.
+- For OpenShift changes, update the base/overlay manifests, render with Kustomize, then apply the overlay; never rely on imperative `oc patch` or `oc set` changes.
+
+**Applied evidence**:
+- Billing `SubscriptionActor` is framework-free; `SubscriptionService` enforces partner/account ownership and cancel uses the platform idempotency header.
+- Billing reactor tests `113` passed with ArchUnit; image `1.8.102` rollout and health checks succeeded in `payu-dev`.
+
 ## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
 
 **Date**: 2026-08-03

@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-025 billing subscription authorization deployed**:
+> - Subscription use cases now receive an authenticated actor, enforce partner role/partner ownership for plan and partner routes, and enforce account ownership for subscription/charge routes at the application-service boundary. Cancel now requires `X-Idempotency-Key`.
+> - Verification: billing reactor `113` tests passed with `1` skipped, including ArchUnit and cross-partner/cross-account negative tests; Maven package succeeded; billing image `1.8.102` (`sha256:8645d0161454e1192620c99c1fcedc281a938d6a33da706192e1a3d85e587054`) live, pod Ready `1/1`, restart `0`, `SERVICE_VERSION=1.8.102`, liveness/readiness `UP`, and Flyway schema v7 validated.
+
 > ✅ **2026-08-03 — PROD-023 investment distributed consistency deployed**:
 > - Investment purchases now persist idempotent operation state before wallet debit, use stable debit/compensation references, and reconcile debit/compensation recovery through a ShedLock-protected durable scheduler. Wallet reserve/commit/release/credit replays are reference-safe and backed by unique investment-reference indexes.
 > - Verification: selected investment tests `32/32` and wallet idempotency tests `2/2` passed; reactor package BUILD SUCCESS; images `investment-service:1.8.88` (`sha256:48ae79db4b2600400dff10b388de6d57c535a15e9dc1d684cd4d8ad79ad2a843`) and `wallet-service:1.8.101` (`sha256:d6b08751dc5fc5b9245e4fdcefc90c76ca563ecb316b585183f938a2c30fa227`) live; investment updated replicas are `2/3` Ready/restart 0 because the HPA third replica is rejected by the existing `payu-dev` CPU quota (`40/40`), wallet is `3/3` Ready/restart 0, and live liveness/readiness are `UP`; investment Flyway v5 and wallet Flyway v107 verified. No authenticated financial E2E was run without an isolated fixture.

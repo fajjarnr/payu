@@ -6,6 +6,7 @@ import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.ChargeStatus;
 import id.payu.billing.domain.model.SubscriptionPlan;
 import id.payu.billing.domain.model.BillingInterval;
+import id.payu.billing.domain.model.SubscriptionActor;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import id.payu.billing.exception.SubscriptionNotFoundException;
@@ -18,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -52,11 +54,13 @@ class SubscriptionServiceTest {
     private SubscriptionPlan samplePlan;
     private UUID planId;
     private UUID subscriptionId;
+    private SubscriptionActor actor;
 
     @BeforeEach
     void setup() {
         planId = UUID.randomUUID();
         subscriptionId = UUID.randomUUID();
+        actor = new SubscriptionActor("user-1", "acc-001", "partner-nobar", true, false);
 
         samplePlan = new SubscriptionPlan();
         samplePlan.setId(planId);
@@ -108,10 +112,20 @@ class SubscriptionServiceTest {
     class PlanManagementTests {
 
         @Test
+        @DisplayName("should reject creating a plan for another partner")
+        void shouldRejectCrossPartnerPlanCreation() {
+            assertThrows(AccessDeniedException.class, () -> subscriptionService.createPlan(
+                    actor, "partner-other", "Premium", "Full access",
+                    BillingInterval.MONTHLY, new BigDecimal("99000"), "IDR", 0, 0));
+
+            verifyNoInteractions(persistencePort);
+        }
+
+        @Test
         @DisplayName("should create subscription plan successfully")
         void shouldCreatePlanSuccessfully() {
             SubscriptionPlan result = subscriptionService.createPlan(
-                    "partner-nobar", "Premium Monthly", "Full access",
+                    actor, "partner-nobar", "Premium Monthly", "Full access",
                     BillingInterval.MONTHLY, new BigDecimal("99000"), "IDR", 7, 3);
 
             assertNotNull(result);
@@ -127,7 +141,7 @@ class SubscriptionServiceTest {
         @DisplayName("should default currency to IDR when null")
         void shouldDefaultCurrencyToIDR() {
             subscriptionService.createPlan(
-                    "partner-1", "Basic", null,
+                    actor, "partner-nobar", "Basic", null,
                     BillingInterval.WEEKLY, new BigDecimal("25000"), null, 0, 0);
 
             ArgumentCaptor<SubscriptionPlan> captor = ArgumentCaptor.forClass(SubscriptionPlan.class);
@@ -140,7 +154,7 @@ class SubscriptionServiceTest {
         void shouldGetPlanById() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            SubscriptionPlan result = subscriptionService.getPlan(planId);
+            SubscriptionPlan result = subscriptionService.getPlan(actor, planId);
             assertEquals(planId, result.getId());
             assertEquals("Premium Monthly", result.getPlanName());
         }
@@ -151,7 +165,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.empty());
 
             SubscriptionNotFoundException error = assertThrows(SubscriptionNotFoundException.class,
-                    () -> subscriptionService.getPlan(planId));
+                    () -> subscriptionService.getPlan(actor, planId));
             assertEquals("SubscriptionEntity plan not found: " + planId, error.getMessage());
         }
 
@@ -161,7 +175,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlansByPartnerId("partner-nobar"))
                     .thenReturn(List.of(samplePlan));
 
-            List<SubscriptionPlan> result = subscriptionService.getPlansByPartner("partner-nobar");
+            List<SubscriptionPlan> result = subscriptionService.getPlansByPartner(actor, "partner-nobar");
             assertEquals(1, result.size());
             assertEquals("Premium Monthly", result.get(0).getPlanName());
         }
@@ -171,7 +185,7 @@ class SubscriptionServiceTest {
         void shouldDeactivatePlan() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            subscriptionService.deactivatePlan(planId);
+            subscriptionService.deactivatePlan(actor, planId);
 
             assertFalse(samplePlan.isActive());
             verify(persistencePort).savePlan(samplePlan);
@@ -187,11 +201,20 @@ class SubscriptionServiceTest {
     class SubscriptionLifecycleTests {
 
         @Test
+        @DisplayName("should reject subscribing another account")
+        void shouldRejectCrossAccountSubscription() {
+            assertThrows(AccessDeniedException.class,
+                    () -> subscriptionService.subscribe(actor, "acc-other", planId, null));
+
+            verifyNoInteractions(persistencePort);
+        }
+
+        @Test
         @DisplayName("should create subscription with trial period")
         void shouldCreateSubscriptionWithTrial() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            Subscription result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+            Subscription result = subscriptionService.subscribe(actor, "acc-001", planId, "ext-ref-1");
 
             assertNotNull(result);
             assertEquals("acc-001", result.getAccountId());
@@ -208,7 +231,7 @@ class SubscriptionServiceTest {
             samplePlan.setTrialDays(0);
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            Subscription result = subscriptionService.subscribe("acc-002", planId, null);
+            Subscription result = subscriptionService.subscribe(actor, "acc-001", planId, null);
 
             assertEquals(SubscriptionStatus.ACTIVE, result.getStatus());
             assertNotNull(result.getCurrentPeriodStart());
@@ -223,7 +246,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
             IllegalStateException error = assertThrows(IllegalStateException.class,
-                    () -> subscriptionService.subscribe("acc-003", planId, null));
+                    () -> subscriptionService.subscribe(actor, "acc-001", planId, null));
             assertEquals("SubscriptionEntity plan is not active: " + planId, error.getMessage());
         }
 
@@ -233,7 +256,7 @@ class SubscriptionServiceTest {
             Subscription sub = createActiveSub();
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
-            Subscription result = subscriptionService.getSubscription(subscriptionId);
+            Subscription result = subscriptionService.getSubscription(actor, subscriptionId);
             assertEquals(subscriptionId, result.getId());
         }
 
@@ -243,7 +266,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.empty());
 
             SubscriptionNotFoundException error = assertThrows(SubscriptionNotFoundException.class,
-                    () -> subscriptionService.getSubscription(subscriptionId));
+                    () -> subscriptionService.getSubscription(actor, subscriptionId));
             assertEquals("SubscriptionEntity not found: " + subscriptionId, error.getMessage());
         }
 
@@ -254,7 +277,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findSubscriptionsByAccountId("acc-001"))
                     .thenReturn(List.of(sub));
 
-            List<Subscription> result = subscriptionService.getSubscriptionsByAccount("acc-001");
+            List<Subscription> result = subscriptionService.getSubscriptionsByAccount(actor, "acc-001");
             assertEquals(1, result.size());
         }
 
@@ -264,7 +287,7 @@ class SubscriptionServiceTest {
             Subscription sub = createActiveSub();
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
-            Subscription result = subscriptionService.cancelSubscription(subscriptionId, "Too expensive");
+            Subscription result = subscriptionService.cancelSubscription(actor, subscriptionId, "Too expensive");
 
             assertEquals(SubscriptionStatus.CANCELLED, result.getStatus());
             assertNotNull(result.getCancelledAt());
@@ -279,7 +302,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
 
             IllegalStateException error = assertThrows(IllegalStateException.class,
-                    () -> subscriptionService.cancelSubscription(subscriptionId, "second"));
+                    () -> subscriptionService.cancelSubscription(actor, subscriptionId, "second"));
             assertEquals("SubscriptionEntity is already cancelled", error.getMessage());
         }
     }
@@ -533,7 +556,7 @@ class SubscriptionServiceTest {
         void shouldPublishSubscriptionCreatedEvent() {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
 
-            subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+            subscriptionService.subscribe(actor, "acc-001", planId, "ext-ref-1");
 
             verify(eventPort).publishSubscriptionCreated(any(Subscription.class));
         }
@@ -593,7 +616,7 @@ class SubscriptionServiceTest {
             doThrow(new RuntimeException("Kafka unavailable"))
                     .when(eventPort).publishSubscriptionCreated(any(Subscription.class));
 
-            Subscription result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+            Subscription result = subscriptionService.subscribe(actor, "acc-001", planId, "ext-ref-1");
 
             assertNotNull(result);
             assertEquals("acc-001", result.getAccountId());
@@ -612,6 +635,8 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should get charges by subscription")
         void shouldGetChargesBySubscription() {
+            Subscription sub = createActiveSub();
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
             SubscriptionCharge charge = new SubscriptionCharge();
             charge.setId(UUID.randomUUID());
             charge.setSubscriptionId(subscriptionId);
@@ -622,7 +647,7 @@ class SubscriptionServiceTest {
                     .thenReturn(List.of(charge));
 
             List<SubscriptionCharge> result = subscriptionService
-                    .getChargesBySubscription(subscriptionId);
+                    .getChargesBySubscription(actor, subscriptionId);
 
             assertEquals(1, result.size());
             assertEquals(ChargeStatus.SUCCEEDED, result.get(0).getStatus());
@@ -631,11 +656,13 @@ class SubscriptionServiceTest {
         @Test
         @DisplayName("should return empty list when no charges")
         void shouldReturnEmptyWhenNoCharges() {
+            Subscription sub = createActiveSub();
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
             when(persistencePort.findChargesBySubscriptionId(subscriptionId))
                     .thenReturn(Collections.emptyList());
 
             List<SubscriptionCharge> result = subscriptionService
-                    .getChargesBySubscription(subscriptionId);
+                    .getChargesBySubscription(actor, subscriptionId);
 
             assertTrue(result.isEmpty());
         }

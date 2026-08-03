@@ -2,6 +2,7 @@ package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.billing.application.service.SubscriptionService;
+import id.payu.billing.domain.model.SubscriptionActor;
 import id.payu.billing.domain.model.Subscription;
 import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.SubscriptionPlan;
@@ -27,11 +28,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-
 import java.util.List;
 import java.util.UUID;
 import id.payu.security.annotation.AuditOperation;
+import org.springframework.security.access.AccessDeniedException;
 
 /**
  * REST Controller for subscription and recurring billing management.
@@ -46,15 +46,30 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
-    /**
-     * Extract authenticated user ID from JWT token.
-     */
-    private String extractUserId() {
+    private SubscriptionActor currentActor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getSubject();
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new AccessDeniedException("Authenticated JWT is required");
         }
-        return null;
+        boolean partner = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_PARTNER".equals(authority.getAuthority()));
+        boolean privileged = authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> switch (authority) {
+                    case "ROLE_ADMIN", "ROLE_BACKOFFICE", "ROLE_SYSTEM" -> true;
+                    default -> false;
+                });
+        String accountId = jwt.getClaimAsString("account_id");
+        String partnerId = jwt.getClaimAsString("partner_id");
+        if (partnerId == null) {
+            partnerId = jwt.getClaimAsString("partnerId");
+        }
+        if (partnerId == null && partner) {
+            partnerId = jwt.getSubject();
+        }
+        return new SubscriptionActor(jwt.getSubject(),
+                accountId != null ? accountId : jwt.getSubject(), partnerId, partner, privileged);
     }
 
     // ═══════════════════════════════════════════════════════
@@ -73,6 +88,7 @@ public class SubscriptionController {
             @Valid @RequestBody CreateSubscriptionPlanRequest request) {
         BillingInterval interval = BillingInterval.valueOf(request.billingInterval().toUpperCase());
         SubscriptionPlan plan = subscriptionService.createPlan(
+                currentActor(),
                 request.partnerId(), request.planName(), request.description(),
                 interval, request.price(), request.currency(),
                 request.trialDays(), request.gracePeriodDays());
@@ -84,7 +100,7 @@ public class SubscriptionController {
     @Operation(summary = "Get subscription plan by ID")
     public ApiResponse<SubscriptionPlanResponse> getPlan(
             @Parameter(description = "Plan UUID") @PathVariable UUID planId) {
-        SubscriptionPlan plan = subscriptionService.getPlan(planId);
+        SubscriptionPlan plan = subscriptionService.getPlan(currentActor(), planId);
         return ApiResponse.success(SubscriptionPlanResponse.from(plan));
     }
 
@@ -93,7 +109,7 @@ public class SubscriptionController {
     @Operation(summary = "List subscription plans for a partner")
     public ApiResponse<List<SubscriptionPlanResponse>> getPlansByPartner(
             @Parameter(description = "Partner ID") @PathVariable String partnerId) {
-        List<SubscriptionPlanResponse> plans = subscriptionService.getPlansByPartner(partnerId)
+        List<SubscriptionPlanResponse> plans = subscriptionService.getPlansByPartner(currentActor(), partnerId)
                 .stream()
                 .map(SubscriptionPlanResponse::from)
                 .toList();
@@ -108,7 +124,7 @@ public class SubscriptionController {
             description = "Soft-deletes a plan by marking it inactive")
     public ApiResponse<Void> deactivatePlan(
             @Parameter(description = "Plan UUID") @PathVariable UUID planId) {
-        subscriptionService.deactivatePlan(planId);
+        subscriptionService.deactivatePlan(currentActor(), planId);
         return ApiResponse.success(null);
     }
 
@@ -127,6 +143,7 @@ public class SubscriptionController {
     public ApiResponse<SubscriptionResponse> subscribe(
             @Valid @RequestBody SubscribeRequest request) {
         Subscription sub = subscriptionService.subscribe(
+                currentActor(),
                 request.accountId(), request.planId(), request.externalReferenceId());
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
@@ -136,12 +153,7 @@ public class SubscriptionController {
     @Operation(summary = "Get subscription by ID")
     public ApiResponse<SubscriptionResponse> getSubscription(
             @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId) {
-        Subscription sub = subscriptionService.getSubscription(subscriptionId);
-        // BUG-SECURITY-002 FIX: Validate authenticated user owns this subscription
-        String userId = extractUserId();
-        if (userId != null && sub.getAccountId() != null && !Objects.equals(sub.getAccountId(), userId)) {
-            throw new IllegalArgumentException("Subscription not found");
-        }
+        Subscription sub = subscriptionService.getSubscription(currentActor(), subscriptionId);
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
 
@@ -150,12 +162,7 @@ public class SubscriptionController {
     @Operation(summary = "List subscriptions for an account")
     public ApiResponse<List<SubscriptionResponse>> getSubscriptionsByAccount(
             @Parameter(description = "Account ID") @PathVariable String accountId) {
-        // BUG-SECURITY-002 FIX: Validate authenticated user is requesting their own account
-        String userId = extractUserId();
-        if (!Objects.equals(accountId, userId)) {
-            throw new IllegalArgumentException("Not authorized to access subscriptions for this account");
-        }
-        List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByAccount(accountId)
+        List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByAccount(currentActor(), accountId)
                 .stream()
                 .map(SubscriptionResponse::from)
                 .toList();
@@ -167,7 +174,7 @@ public class SubscriptionController {
     @Operation(summary = "List subscriptions for a partner")
     public ApiResponse<List<SubscriptionResponse>> getSubscriptionsByPartner(
             @Parameter(description = "Partner ID") @PathVariable String partnerId) {
-        List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByPartner(partnerId)
+        List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByPartner(currentActor(), partnerId)
                 .stream()
                 .map(SubscriptionResponse::from)
                 .toList();
@@ -177,13 +184,14 @@ public class SubscriptionController {
     @PostMapping("/{subscriptionId}/cancel")
     @Audited(operation = AuditOperation.UPDATE, entityType = "Subscription",
             maskData = true, level = AuditLevel.INFO)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cancel a subscription",
             description = "Immediately cancels the subscription with an optional reason")
     public ApiResponse<SubscriptionResponse> cancelSubscription(
             @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId,
             @RequestParam(required = false) String reason) {
-        Subscription sub = subscriptionService.cancelSubscription(subscriptionId, reason);
+        Subscription sub = subscriptionService.cancelSubscription(currentActor(), subscriptionId, reason);
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
 
@@ -197,7 +205,7 @@ public class SubscriptionController {
     public ApiResponse<List<SubscriptionChargeResponse>> getCharges(
             @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId) {
         List<SubscriptionChargeResponse> charges = subscriptionService
-                .getChargesBySubscription(subscriptionId)
+                .getChargesBySubscription(currentActor(), subscriptionId)
                 .stream()
                 .map(SubscriptionChargeResponse::from)
                 .toList();

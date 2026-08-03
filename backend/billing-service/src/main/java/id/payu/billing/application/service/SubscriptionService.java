@@ -6,6 +6,7 @@ import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.ChargeStatus;
 import id.payu.billing.domain.model.SubscriptionPlan;
 import id.payu.billing.domain.model.BillingInterval;
+import id.payu.billing.domain.model.SubscriptionActor;
 import id.payu.billing.domain.port.in.SubscriptionUseCase;
 import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
@@ -60,9 +61,10 @@ public class SubscriptionService implements SubscriptionUseCase {
     @CircuitBreaker(name = "billing", fallbackMethod = "createPlanFallback")
     @Retry(name = "billing")
     @Transactional
-    public SubscriptionPlan createPlan(String partnerId, String planName, String description,
+    public SubscriptionPlan createPlan(SubscriptionActor actor, String partnerId, String planName, String description,
                                         BillingInterval interval, BigDecimal price, String currency,
                                         int trialDays, int gracePeriodDays) {
+        requirePartnerOwner(actor, partnerId);
         log.info("Creating subscription plan: partner={}, name={}, interval={}, price={}",
                 partnerId, planName, interval, price);
 
@@ -84,21 +86,33 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public SubscriptionPlan getPlan(UUID planId) {
+    public SubscriptionPlan getPlan(SubscriptionActor actor, UUID planId) {
+        requireAuthenticated(actor);
+        return findPlan(planId);
+    }
+
+    private SubscriptionPlan findPlan(UUID planId) {
         return persistencePort.findPlanById(planId)
                 .orElseThrow(() -> new SubscriptionNotFoundException("SubscriptionEntity plan not found: " + planId));
     }
 
+    private Subscription findSubscription(UUID subscriptionId) {
+        return persistencePort.findSubscriptionById(subscriptionId)
+                .orElseThrow(() -> new SubscriptionNotFoundException("SubscriptionEntity not found: " + subscriptionId));
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public List<SubscriptionPlan> getPlansByPartner(String partnerId) {
+    public List<SubscriptionPlan> getPlansByPartner(SubscriptionActor actor, String partnerId) {
+        requirePartnerOwner(actor, partnerId);
         return persistencePort.findPlansByPartnerId(partnerId);
     }
 
     @Override
     @Transactional
-    public void deactivatePlan(UUID planId) {
-        SubscriptionPlan plan = getPlan(planId);
+    public void deactivatePlan(SubscriptionActor actor, UUID planId) {
+        SubscriptionPlan plan = findPlan(planId);
+        requirePartnerOwner(actor, plan.getPartnerId());
         plan.deactivate();
         persistencePort.savePlan(plan);
         log.info("Subscription plan deactivated: id={}", planId);
@@ -112,8 +126,9 @@ public class SubscriptionService implements SubscriptionUseCase {
     @CircuitBreaker(name = "billing", fallbackMethod = "subscribeFallback")
     @Retry(name = "billing")
     @Transactional
-    public Subscription subscribe(String accountId, UUID planId, String externalReferenceId) {
-        SubscriptionPlan plan = getPlan(planId);
+    public Subscription subscribe(SubscriptionActor actor, String accountId, UUID planId, String externalReferenceId) {
+        requireAccountOwner(actor, accountId);
+        SubscriptionPlan plan = findPlan(planId);
         if (!plan.isActive()) {
             throw new IllegalStateException("SubscriptionEntity plan is not active: " + planId);
         }
@@ -161,20 +176,23 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Subscription getSubscription(UUID subscriptionId) {
-        return persistencePort.findSubscriptionById(subscriptionId)
-                .orElseThrow(() -> new SubscriptionNotFoundException("SubscriptionEntity not found: " + subscriptionId));
+    public Subscription getSubscription(SubscriptionActor actor, UUID subscriptionId) {
+        Subscription sub = findSubscription(subscriptionId);
+        requireAccountOwner(actor, sub.getAccountId());
+        return sub;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Subscription> getSubscriptionsByAccount(String accountId) {
+    public List<Subscription> getSubscriptionsByAccount(SubscriptionActor actor, String accountId) {
+        requireAccountOwner(actor, accountId);
         return persistencePort.findSubscriptionsByAccountId(accountId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Subscription> getSubscriptionsByPartner(String partnerId) {
+    public List<Subscription> getSubscriptionsByPartner(SubscriptionActor actor, String partnerId) {
+        requirePartnerOwner(actor, partnerId);
         return persistencePort.findSubscriptionsByPartnerId(partnerId);
     }
 
@@ -182,8 +200,9 @@ public class SubscriptionService implements SubscriptionUseCase {
     @CircuitBreaker(name = "billing", fallbackMethod = "cancelSubscriptionFallback")
     @Retry(name = "billing")
     @Transactional
-    public Subscription cancelSubscription(UUID subscriptionId, String reason) {
-        Subscription sub = getSubscription(subscriptionId);
+    public Subscription cancelSubscription(SubscriptionActor actor, UUID subscriptionId, String reason) {
+        Subscription sub = findSubscription(subscriptionId);
+        requireAccountOwner(actor, sub.getAccountId());
         if (sub.getStatus() == SubscriptionStatus.CANCELLED) {
             throw new IllegalStateException("SubscriptionEntity is already cancelled");
         }
@@ -248,7 +267,7 @@ public class SubscriptionService implements SubscriptionUseCase {
             sub.setCurrentPeriodStart(now);
 
             // Look up plan for interval
-            SubscriptionPlan plan = getPlan(sub.getPlanId());
+            SubscriptionPlan plan = findPlan(sub.getPlanId());
             LocalDateTime periodEnd = advanceByInterval(now, plan.getBillingInterval());
             sub.setCurrentPeriodEnd(periodEnd);
             sub.setNextBillingAt(now); // charge immediately
@@ -266,15 +285,37 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SubscriptionCharge> getChargesBySubscription(UUID subscriptionId) {
+    public List<SubscriptionCharge> getChargesBySubscription(SubscriptionActor actor, UUID subscriptionId) {
+        Subscription sub = findSubscription(subscriptionId);
+        requireAccountOwner(actor, sub.getAccountId());
         return persistencePort.findChargesBySubscriptionId(subscriptionId);
+    }
+
+    private void requireAuthenticated(SubscriptionActor actor) {
+        if (actor == null || actor.subject() == null || actor.subject().isBlank()) {
+            throw new AccessDeniedException("Authenticated subject is required");
+        }
+    }
+
+    private void requirePartnerOwner(SubscriptionActor actor, String partnerId) {
+        requireAuthenticated(actor);
+        if (!actor.canManagePartner(partnerId)) {
+            throw new AccessDeniedException("Partner access denied");
+        }
+    }
+
+    private void requireAccountOwner(SubscriptionActor actor, String accountId) {
+        requireAuthenticated(actor);
+        if (!actor.canAccessAccount(accountId)) {
+            throw new AccessDeniedException("Account access denied");
+        }
     }
 
     // ═══════════════════════════════════════════════════════
     //  Resilience Fallback Methods
     // ═══════════════════════════════════════════════════════
 
-    private SubscriptionPlan createPlanFallback(String partnerId, String planName, String description,
+    private SubscriptionPlan createPlanFallback(SubscriptionActor actor, String partnerId, String planName, String description,
                                                 BillingInterval interval, BigDecimal price, String currency,
                                                 int trialDays, int gracePeriodDays, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
@@ -288,7 +329,7 @@ public class SubscriptionService implements SubscriptionUseCase {
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Subscription subscribeFallback(String accountId, UUID planId, String externalReferenceId, Exception ex) {
+    private Subscription subscribeFallback(SubscriptionActor actor, String accountId, UUID planId, String externalReferenceId, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
@@ -300,7 +341,7 @@ public class SubscriptionService implements SubscriptionUseCase {
         throw new RuntimeException("Billing service temporarily unavailable", ex);
     }
 
-    private Subscription cancelSubscriptionFallback(UUID subscriptionId, String reason, Exception ex) {
+    private Subscription cancelSubscriptionFallback(SubscriptionActor actor, UUID subscriptionId, String reason, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException
                 || ex instanceof ConstraintViolationException
@@ -361,7 +402,7 @@ public class SubscriptionService implements SubscriptionUseCase {
             persistencePort.saveCharge(charge);
 
             // Advance billing cycle
-            SubscriptionPlan plan = getPlan(sub.getPlanId());
+            SubscriptionPlan plan = findPlan(sub.getPlanId());
             LocalDateTime nextStart = sub.getCurrentPeriodEnd() != null
                     ? sub.getCurrentPeriodEnd()
                     : LocalDateTime.now();
