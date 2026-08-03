@@ -36,9 +36,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.84
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newTag: "1.8.84"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.6
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.7
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-  newTag: "1.9.6"
+  newTag: "1.9.7"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newTag: "1.8.95"
@@ -696,9 +696,15 @@ patches:
 
 - target:
     kind: Deployment
+    name: gateway-service
   patch: |-
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
-        name: OTEL_ENDPOINT
-        value: "http://localhost:4317"
+        name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
+        value: "http://otel-collector.payu-dev.svc.cluster.local:4317"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: QUARKUS_OTEL_SDK_DISABLED
+        value: "true"

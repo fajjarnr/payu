@@ -6,9 +6,10 @@ quarkus:
   oidc:
     enabled: false
 
-  # Disable health check dependency on external services
-  smallrye-health:
-    check-default-procedures: false
+  # Avoid exporting test traces without a collector.
+  otel:
+    sdk:
+      disabled: true
 
 # Gateway test overrides
 gateway:
