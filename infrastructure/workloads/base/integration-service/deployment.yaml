@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.81
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

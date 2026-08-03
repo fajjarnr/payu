@@ -1,11 +1,16 @@
 package id.payu.integration.architecture;
 
+import id.payu.integration.application.port.out.MessagePublisherPort;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * ArchUnit tests for hexagonal architecture compliance.
@@ -110,5 +115,11 @@ public class ArchitectureTest {
                 .allowEmptyShould(true);
 
         rule.check(classes);
+    }
+
+    @Test
+    void messagePublisherPortDoesNotExposeUnsupportedGrpcPlaceholder() {
+        assertFalse(Arrays.stream(MessagePublisherPort.class.getDeclaredMethods())
+                .anyMatch(method -> method.getName().equals("publishToGrpc")));
     }
 }

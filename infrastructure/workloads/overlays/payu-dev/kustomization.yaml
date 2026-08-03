@@ -39,9 +39,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.8.44
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newTag: "1.9.5"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.21
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
-  newTag: "1.8.80"
+  newTag: "1.8.95"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newTag: "1.8.86"

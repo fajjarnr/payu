@@ -8,8 +8,6 @@ public interface MessagePublisherPort {
 
     void publishToKafka(String topic, IntegrationMessage message);
 
-    String publishToGrpc(String serviceName, String operation, String payload);
-
     String sendHttp(String url, String payload);
 
     /**

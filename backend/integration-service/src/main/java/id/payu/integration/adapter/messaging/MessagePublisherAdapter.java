@@ -51,14 +51,6 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
     }
 
     @Override
-    public String publishToGrpc(String serviceName, String operation, String payload) {
-        log.debug("Publishing to gRPC service: {} operation: {}", serviceName, operation);
-        // gRPC implementation would use gRPC client stub
-        // For now, return a placeholder
-        return "gRPC response placeholder";
-    }
-
-    @Override
     public String sendHttp(String url, String payload) {
         log.debug("Sending HTTP request to: {}", url);
         try {
