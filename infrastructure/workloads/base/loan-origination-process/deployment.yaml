@@ -33,7 +33,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.0
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.5
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -100,6 +100,10 @@ spec:
               name: service-endpoints
         - name: LENDING_RULES_URL
           value: http://lending-rules.payu-dev.svc:8080
+        - name: OIDC_ISSUER
+          value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
+        - name: OIDC_JWK_SET_URI
+          value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
         - name: PAYU_SECURITY_ENCRYPTION_SALT

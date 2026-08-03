@@ -1,106 +1,106 @@
 package id.payu.loanorigination.adapter.web;
 
+import id.payu.loanorigination.adapter.persistence.LoanOriginationProcessEntity;
 import id.payu.loanorigination.domain.LoanOriginationRequest;
-import id.payu.loanorigination.service.CreditScoringService;
-import id.payu.loanorigination.service.DisbursementService;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import id.payu.loanorigination.service.LoanOriginationProcessService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/loan-origination")
 public class LoanOriginationController {
 
-    private static final Logger log = LoggerFactory.getLogger(LoanOriginationController.class);
+    private final LoanOriginationProcessService processService;
 
-    private final CreditScoringService creditScoring;
-    private final DisbursementService disbursement;
-    private final ConcurrentHashMap<String, Map<String, Object>> processStore = new ConcurrentHashMap<>();
-
-    public LoanOriginationController(CreditScoringService creditScoring, DisbursementService disbursement) {
-        this.creditScoring = creditScoring;
-        this.disbursement = disbursement;
+    public LoanOriginationController(LoanOriginationProcessService processService) {
+        this.processService = processService;
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> startProcess(@RequestBody LoanOriginationRequest request) {
-        var id = java.util.UUID.randomUUID().toString();
-        log.info("Starting process {}: userId={}, amount={}", id, request.userId(), request.principalAmount());
-
-        BigDecimal score = creditScoring.evaluate(request.principalAmount(), request.tenureMonths());
-
-        Map<String, Object> state = new HashMap<>();
-        state.put("processId", id);
-        state.put("userId", request.userId());
-        state.put("principalAmount", request.principalAmount());
-        state.put("tenureMonths", request.tenureMonths());
-        state.put("loanType", request.loanType());
-        state.put("purpose", request.purpose());
-        state.put("creditScore", score);
-        state.put("approved", null);
-
-        if (score.compareTo(new BigDecimal("600")) < 0) {
-            state.put("status", "REJECTED_LOW_SCORE");
-            state.put("message", "Credit score below minimum threshold (600)");
-        } else {
-            state.put("status", "PENDING_APPROVAL");
-            state.put("message", "Awaiting loan officer approval");
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> startProcess(
+            @RequestBody LoanOriginationRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        try {
+            return ResponseEntity.ok(toResponse(processService.startProcess(request, userId(jwt))));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-
-        processStore.put(id, state);
-        return ResponseEntity.ok(state);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getProcess(@PathVariable String id) {
-        var state = processStore.get(id);
-        if (state == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(state);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getProcess(@PathVariable UUID id) {
+        return processService.getProcess(id)
+                .map(process -> ResponseEntity.ok(toResponse(process)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('LOAN_OFFICER', 'ADMIN', 'BACKOFFICE')")
     public ResponseEntity<Map<String, Object>> approveTask(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestParam(defaultValue = "false") boolean approved,
-            @RequestParam(defaultValue = "") String comment) {
-
-        var state = processStore.get(id);
-        if (state == null) return ResponseEntity.notFound().build();
-
-        log.info("Approval for {}: approved={}, comment={}", id, approved, comment);
-
-        if (approved) {
-            String userId = (String) state.get("userId");
-            BigDecimal amount = (BigDecimal) state.get("principalAmount");
-            String loanType = (String) state.get("loanType");
-            Integer tenure = (Integer) state.get("tenureMonths");
-
-            disbursement.execute(userId, amount, loanType != null ? loanType : "PERSONAL_LOAN", tenure != null ? tenure : 0);
-
-            state.put("status", "APPROVED");
-            state.put("approved", true);
-            state.put("comment", comment);
-        } else {
-            state.put("status", "REJECTED");
-            state.put("approved", false);
-            state.put("comment", comment);
+            @RequestParam(defaultValue = "") String comment,
+            @AuthenticationPrincipal Jwt jwt) {
+        try {
+            return ResponseEntity.ok(toResponse(processService.approve(id, approved, comment, userId(jwt))));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
         }
-
-        return ResponseEntity.ok(state);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('LOAN_OFFICER', 'ADMIN', 'BACKOFFICE')")
     public ResponseEntity<Map<String, Object>> listProcesses() {
-        var result = new HashMap<String, Object>();
-        result.put("count", processStore.size());
-        result.put("processes", processStore.keySet().stream().sorted().toList());
+        var result = new LinkedHashMap<String, Object>();
+        var ids = processService.listProcessIds();
+        result.put("count", ids.size());
+        result.put("processes", ids.stream().map(UUID::toString).toList());
         return ResponseEntity.ok(result);
+    }
+
+    private static String userId(Jwt jwt) {
+        if (jwt == null) {
+            throw new IllegalArgumentException("Authenticated user is required");
+        }
+        String accountId = jwt.getClaimAsString("account_id");
+        if (accountId != null && !accountId.isBlank()) {
+            return accountId;
+        }
+        return jwt.getSubject();
+    }
+
+    private static Map<String, Object> toResponse(LoanOriginationProcessEntity process) {
+        var response = new LinkedHashMap<String, Object>();
+        response.put("processId", process.getId());
+        response.put("userId", process.getUserId());
+        response.put("principalAmount", process.getPrincipalAmount());
+        response.put("tenureMonths", process.getTenureMonths());
+        response.put("purpose", process.getPurpose());
+        response.put("loanType", process.getLoanType());
+        response.put("creditScore", process.getCreditScore());
+        response.put("status", process.getStatus());
+        response.put("approved", process.getApproved());
+        response.put("comment", process.getComment());
+        response.put("approvedBy", process.getApprovedBy());
+        response.put("disbursementReference", process.getDisbursementReference());
+        return response;
     }
 }
