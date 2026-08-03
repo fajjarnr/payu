@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/version: 1.5.11
+    app.kubernetes.io/version: 1.5.12
     team: frontend
 spec:
   to:

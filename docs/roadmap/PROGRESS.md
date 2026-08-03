@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-024 web investment truthfulness deployed**:
+> - Investments now renders only the authoritative investment-account balance/currency. Unsupported performance, risk, product, and advice data use explicit empty states; fabricated return/LPS/ROI/allocation claims and inactive actions were removed.
+> - Verification: focused page test `5/5`, full web Vitest `1201 passed | 1 skipped`, changed-file ESLint clean, type-check and production build successful; image `web-app:1.5.12` (`sha256:d76e1706a67f9351d65e9a80251da26bdbbd92d0fdf903b3d823b370c81d2496`) live, pod Ready 1/1/restart 0, health `healthy`, runtime `APP_VERSION=1.5.12`. Full lint still reports the pre-existing `src/lib/currency.ts:87` prefer-const error.
+
 > 🟡 **2026-08-03 — PROD-022 loan repayment money movement deployed**:
 > - Repayment is now a durable financial command with exact `BigDecimal` validation, schedule row-lock/unique guard, wallet gRPC debit, balanced ledger journal, outbox event, idempotent replay, and reconciliation retry.
 > - Verification: selected reactor tests `103/103` passed (wallet `18`, lending `85`); package BUILD SUCCESS; images `lending-service:1.8.101` (`sha256:d52f7b02350aee9bbc209b18dd83b7302242ac12e0e7d9524bed2093b6e9bc6a`) and `wallet-service:1.8.100` (`sha256:5fa702f39c3c752043809c3391995ac0e7958346f9c329117946e2fae282e89c`) live; both pods Ready 1/1, restart 0, health `UP`; lending Flyway V9, wallet V106, and repayment topic/DLQ Ready. Authenticated money E2E remains open pending an isolated financial fixture.

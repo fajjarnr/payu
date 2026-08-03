@@ -13,7 +13,6 @@ vi.mock('@/components/ui/Motion', () => ({
   PageTransition: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   StaggerContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   StaggerItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ButtonMotion: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/stores/authStore', () => ({
@@ -25,11 +24,7 @@ vi.mock('@/stores/authStore', () => ({
 
 vi.mock('@/hooks/useInvestments', () => ({
   useInvestmentAccount: () => ({
-    data: { id: 'acc_1', balance: 50000000, status: 'ACTIVE' },
-    isLoading: false,
-  }),
-  useGoldHoldings: () => ({
-    data: { totalWeightGrams: 10.5, totalValue: 11025000, holdings: [] },
+    data: { id: 'acc_1', balance: 50000000, currency: 'IDR', status: 'ACTIVE' },
     isLoading: false,
   }),
 }));
@@ -49,25 +44,27 @@ describe('InvestmentsPage', () => {
     expect(screen.getByText('Manajemen Kekayaan')).toBeInTheDocument();
   });
 
-  it('should render new investment button', () => {
+  it('should not render inactive investment actions', () => {
     renderWithIntl(<InvestmentsPage />);
-    expect(screen.getByTestId('new-investment-button')).toBeInTheDocument();
+    expect(screen.queryByTestId('new-investment-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('optimize-portfolio-button')).not.toBeInTheDocument();
   });
 
   it('should render portfolio overview', () => {
     renderWithIntl(<InvestmentsPage />);
-    expect(screen.getByText('Total Portofolio Bersih')).toBeInTheDocument();
+    expect(screen.getByText('Saldo akun investasi')).toBeInTheDocument();
+    expect(screen.getByTestId('portfolio-overview-card')).toHaveTextContent('50.000.000');
+    expect(screen.queryByText('+Rp 12,4 Jt (8.2%)')).not.toBeInTheDocument();
+    expect(screen.queryByText('Terjamin LPS')).not.toBeInTheDocument();
   });
 
-  it('should render risk profile', () => {
+  it('should show empty states when authoritative investment data is unavailable', () => {
     renderWithIntl(<InvestmentsPage />);
-    expect(screen.getByText('Profil Risiko')).toBeInTheDocument();
-    expect(screen.getByText('Moderat-Agresif')).toBeInTheDocument();
-  });
-
-  it('should render product catalog', () => {
-    renderWithIntl(<InvestmentsPage />);
-    expect(screen.getAllByTestId(/investment-product-/)).toHaveLength(3);
-    expect(screen.getByText('Emas Digital (XAU)')).toBeInTheDocument();
+    expect(screen.getByTestId('investment-performance-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('investment-risk-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('investment-products-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('investment-advice-empty')).toBeInTheDocument();
+    expect(screen.queryByTestId('investment-product-0')).not.toBeInTheDocument();
+    expect(screen.queryByText('Moderat-Agresif')).not.toBeInTheDocument();
   });
 });
