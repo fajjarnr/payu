@@ -1,7 +1,11 @@
 package id.payu.partner.adapter.persistence.repository;
 
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,6 +22,12 @@ public interface SnapBiPaymentRepository extends JpaRepository<SnapBiPaymentEnti
     Optional<SnapBiPaymentEntity> findByPartnerIdAndPayuReferenceNo(String partnerId, String payuReferenceNo);
 
     Optional<SnapBiPaymentEntity> findByPartnerIdAndPartnerReferenceNo(String partnerId, String partnerReferenceNo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM SnapBiPaymentEntity p WHERE p.partnerId = :partnerId "
+            + "AND (p.payuReferenceNo = :referenceNo OR p.partnerReferenceNo = :referenceNo)")
+    Optional<SnapBiPaymentEntity> findForUpdateByPartnerIdAndReferenceNo(
+            @Param("partnerId") String partnerId, @Param("referenceNo") String referenceNo);
 
     List<SnapBiPaymentEntity> findByPartnerId(String partnerId);
 }

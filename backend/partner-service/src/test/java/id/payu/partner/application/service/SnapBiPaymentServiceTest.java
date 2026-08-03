@@ -5,6 +5,7 @@ import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
 import id.payu.partner.domain.port.out.WalletSettlementPort;
 import id.payu.partner.dto.snap.PaymentRequest;
+import id.payu.partner.dto.snap.RefundRequest;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -167,6 +168,28 @@ public class SnapBiPaymentServiceTest {
                 "replay must return the existing payment, not a new one");
         assertEquals(1, paymentsByPartnerRef.size(),
                 "only one payment record should exist for a replayed partnerRef");
+    }
+
+    @Test
+    public void testCreateRefundLocksPaymentParentBeforeCumulativeCheck() {
+        SnapBiPaymentEntity payment = new SnapBiPaymentEntity(
+                "PAYU-REFUND-LOCK-001", "123", "PARTNER-REF-LOCK-001",
+                new BigDecimal("10000.00"), "IDR", "beneficiary-001", "014", "source-001", "COMPLETED");
+        when(paymentRepository.findForUpdateByPartnerIdAndReferenceNo("123", payment.getPayuReferenceNo()))
+                .thenReturn(Optional.of(payment));
+        when(refundRepository.sumRefundedAmountByPayuReferenceNo(payment.getPayuReferenceNo()))
+                .thenReturn(BigDecimal.ZERO);
+
+        RefundRequest request = new RefundRequest();
+        request.partnerRefundNo = "PARTNER-REFUND-LOCK-001";
+        request.amount = new RefundRequest.Amount();
+        request.amount.value = new BigDecimal("5000.00");
+        request.amount.currency = "IDR";
+
+        var response = paymentService.createRefund("123", payment.getPayuReferenceNo(), request);
+
+        assertEquals("2002500", response.responseCode);
+        verify(paymentRepository).findForUpdateByPartnerIdAndReferenceNo("123", payment.getPayuReferenceNo());
     }
 
     @Test

@@ -15,7 +15,7 @@
 
 > 🟡 **2026-08-03 — MVP-004 idempotency boundary hardened locally**:
 > - SNAP payment/refund and disbursement callback now require `@Idempotent(required=true)`; disbursement callback remains HMAC-protected by `CallbackSignatureFilter`.
-> - Verification: `partner-service` 238/238 and `transaction-service` 132/132 tests passed. Refund cumulative-sum locking and live E2E remain pending.
+> - Verification: `partner-service` 240/240 and `transaction-service` 132/132 tests passed. Live wallet/OpenShift E2E remains pending.
 
 > ✅ **2026-08-03 — MVP-003 VA settlement implementation completed (pre-deploy)**:
 > - VA creation now stores a required `settlementAccountId`; bank callbacks mark the VA paid only with a valid target, credit the wallet through `WalletServicePort`, and create `payment.completed` via the transactional outbox.

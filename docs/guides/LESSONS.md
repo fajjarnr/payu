@@ -29,12 +29,12 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 **Lesson**:
 - Put `@Idempotent(required=true)` at every payment, refund, and external callback boundary; service-level natural keys and database constraints remain the second layer.
 - HMAC authenticates the callback sender; it does not deduplicate retries. Keep both HMAC and idempotency.
-- A cumulative refund query is still race-prone after endpoint idempotency. Serialize the payment parent or reserve refund capacity in the database before declaring the flow complete.
+- A cumulative refund query is still race-prone after endpoint idempotency. Serialize the payment parent or reserve refund capacity in the database before declaring the flow complete; this service now uses a `PESSIMISTIC_WRITE` parent-row lock.
 
 **Applied evidence**:
 - SNAP payment/refund and disbursement callback annotations are now enforced by contract tests.
 - Disbursement callback HMAC path was already covered by `CallbackSignatureFilterTest`.
-- `partner-service` passed 238/238 and `transaction-service` 132/132 tests; refund locking and live E2E remain open.
+- `partner-service` passed 240/240 and `transaction-service` 132/132 tests; only live wallet/OpenShift E2E remains open.
 
 ## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
 

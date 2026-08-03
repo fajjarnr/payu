@@ -16,13 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Remove dead-code saga (MVP-002)**: hapus `TransferSagaOrchestrator`/`TransferSagaContext` (nol pemanggil, duplikat logika uang vs `InitiateTransferCommandHandler`); `SagaConfig` javadoc di-update — satu source of truth untuk logika transfer.
 - **VA collection settlement (MVP-003)**: migrasi `V23` + callback `/api/v1/payments/va/callback` kini menyimpan target settlement wajib, menulis event outbox `payment.completed`, dan mengkredit wallet via `WalletServicePort` dengan transaksi/idempotensi callback; HMAC filter dan `permitAll` memakai path callback nyata, simulator mengirim signature + idempotency key dari secret environment.
 - **SNAP-BI money flow (MVP-001)**: `SnapBiPaymentService.createPayment` kini settle source → beneficiary melalui `WalletSettlementPort` (reserve → commit → credit + kompensasi), menandai `COMPLETED`, dan menerbitkan webhook stabil-ID serta outbox topic `payu.partner.payment-completed.v1`; terminal/refund log-only stubs dihapus.
-- **Idempotency boundary (MVP-004)**: SNAP payment/refund dan disbursement callback kini wajib `@Idempotent(required=true)`; callback disbursement tetap melewati HMAC `CallbackSignatureFilter`. Sisa race cumulative refund dicatat untuk row-lock/serializable follow-up.
+- **Idempotency boundary (MVP-004)**: SNAP payment/refund dan disbursement callback kini wajib `@Idempotent(required=true)`; callback disbursement tetap melewati HMAC `CallbackSignatureFilter`, dan `createRefund` mengunci parent payment dengan `PESSIMISTIC_WRITE` sebelum cumulative-sum check.
 - **Test**: tambah `testCreatePaymentIdempotentReplay` (SnapBiPaymentServiceTest) + `shouldSkipDuplicateEvent` (WebhookDispatcherServiceTest, ✓ `throws Exception` untuk checked `IOException` dari `HttpClient.send`).
 
 > **Verify**: partner-service + transaction-service `mvn test` BUILD SUCCESS, 235 tests 0 fail (2026-08-03, workaround `-Daether.connector.basic.threads=1` utk Maven 3.9.16/JDK 25 + L-196).
 > **Verify MVP-003**: transaction-service 131/131 tests + va-simulator 8/8 tests BUILD SUCCESS (2026-08-03).
 > **Verify MVP-001**: partner-service 237/237 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
-> **Verify MVP-004**: partner-service 238/238 + transaction-service 132/132 tests BUILD SUCCESS (2026-08-03); refund locking dan live E2E masih pending.
+> **Verify MVP-004**: partner-service 240/240 + transaction-service 132/132 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
 
 ## [1.10.7] - 2026-08-01
 

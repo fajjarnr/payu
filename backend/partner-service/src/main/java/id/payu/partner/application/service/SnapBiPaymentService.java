@@ -193,8 +193,8 @@ public class SnapBiPaymentService {
 
     @Transactional
     public RefundResponse createRefund(String partnerId, String referenceNo, RefundRequest request) {
-        SnapBiPaymentEntity record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
-            .or(() -> paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, referenceNo))
+        // Serialize cumulative refund checks on the payment parent row.
+        SnapBiPaymentEntity record = paymentRepository.findForUpdateByPartnerIdAndReferenceNo(partnerId, referenceNo)
             .orElse(null);
 
         if (record == null) {
