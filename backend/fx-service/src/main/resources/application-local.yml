@@ -37,6 +37,10 @@ payu:
       server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}
       cache-name: payu
 
+fx:
+  providers:
+    default-provider: MOCK
+
 management:
   otlp:
     tracing:

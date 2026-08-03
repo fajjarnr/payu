@@ -2,17 +2,21 @@ package id.payu.fx.adapter.client;
 
 import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
+import id.payu.fx.application.service.FxRateNotFoundException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 // ponytail: stub provider. Replace with real API (XE/Reuters) when integration needed.
 @Component
+@Profile("local")
 @ConditionalOnMissingBean(name = "realFxRateProvider")
 public class StubFxRateProviderAdapter implements FxRateProviderPort {
 
@@ -26,10 +30,12 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
 
     @Override
     public FxRate fetchCurrentRate(String fromCurrency, String toCurrency) {
-        BigDecimal rate = RATES.getOrDefault(fromCurrency.toUpperCase(), BigDecimal.ONE);
+        String from = fromCurrency.toUpperCase(Locale.ROOT);
+        String to = toCurrency.toUpperCase(Locale.ROOT);
+        BigDecimal rate = resolveRate(from, to);
         return FxRate.builder()
-            .fromCurrency(fromCurrency)
-            .toCurrency(toCurrency)
+            .fromCurrency(from)
+            .toCurrency(to)
             .rate(rate)
             .inverseRate(BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN))
             .validFrom(LocalDateTime.now())
@@ -39,11 +45,39 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
 
     @Override
     public Map<String, BigDecimal> fetchAllRates(String baseCurrency) {
-        return new HashMap<>(RATES);
+        if (!"IDR".equalsIgnoreCase(baseCurrency)) {
+            throw new FxRateNotFoundException(
+                    "No stub rates available for base currency " + baseCurrency);
+        }
+        Map<String, BigDecimal> rates = new HashMap<>();
+        RATES.forEach((currency, idrRate) ->
+                rates.put(currency, BigDecimal.ONE.divide(idrRate, 10, RoundingMode.HALF_EVEN)));
+        return rates;
     }
 
     @Override
     public boolean isAvailable() {
         return true;
+    }
+
+    private BigDecimal resolveRate(String fromCurrency, String toCurrency) {
+        if ("IDR".equals(toCurrency)) {
+            BigDecimal idrRate = RATES.get(fromCurrency);
+            if (idrRate != null) {
+                return idrRate;
+            }
+        }
+        if ("IDR".equals(fromCurrency)) {
+            BigDecimal idrRate = RATES.get(toCurrency);
+            if (idrRate != null) {
+                return BigDecimal.ONE.divide(idrRate, 10, RoundingMode.HALF_EVEN);
+            }
+        }
+        return throwUnknownPair(fromCurrency, toCurrency);
+    }
+
+    private BigDecimal throwUnknownPair(String fromCurrency, String toCurrency) {
+        throw new FxRateNotFoundException(
+                "No stub rate available for " + fromCurrency + "-" + toCurrency);
     }
 }

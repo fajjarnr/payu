@@ -100,7 +100,7 @@ springdoc:
 
 fx:
   providers:
-    default-provider: MOCK
+    default-provider: ${FX_DEFAULT_PROVIDER:UNCONFIGURED}
     cache-ttl-minutes: 10
     supported-currencies: IDR,USD,EUR,SGD,JPY,GBP,AUD,CNY
     base-currency: IDR
