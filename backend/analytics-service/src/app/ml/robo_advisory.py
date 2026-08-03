@@ -104,7 +104,11 @@ class RoboAdvisoryEngine:
         experience_score = questions.investment_experience * 2
         risk_score += experience_score
 
-        savings_ratio = questions.total_savings / (questions.monthly_income * 6) if questions.monthly_income > 0 else 0
+        savings_ratio = (
+            float(questions.total_savings / (questions.monthly_income * Decimal("6")))
+            if questions.monthly_income > 0
+            else 0
+        )
         savings_score = min(savings_ratio, 1) * 15
         risk_score += savings_score
 
@@ -191,7 +195,7 @@ class RoboAdvisoryEngine:
         self,
         risk_profile: RiskProfile,
         portfolio_allocation: List[PortfolioAllocation],
-        monthly_investment: float,
+        monthly_investment: Decimal,
         questions: RiskAssessmentQuestions
     ) -> List[str]:
         recommendations = []
@@ -263,7 +267,7 @@ class RoboAdvisoryEngine:
         self,
         user_id: str,
         questions: RiskAssessmentQuestions,
-        monthly_investment_amount: float
+        monthly_investment_amount: Decimal
     ) -> RoboAdvisoryResponse:
         log = logger.bind(user_id=user_id, monthly_investment=monthly_investment_amount)
         log.info("Generating robo-advisory recommendations")

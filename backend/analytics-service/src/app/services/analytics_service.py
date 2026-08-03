@@ -78,7 +78,10 @@ class AnalyticsService:
                     )
                 )
 
-            total_spending = Decimal(sum(float(p.amount) for p in spending_by_category))
+            total_spending = sum(
+                (p.amount for p in spending_by_category),
+                Decimal("0.0000"),
+            )
 
             mom_change = await self._calculate_mom_change(user_id, period_days)
 
@@ -179,13 +182,13 @@ class AnalyticsService:
             )
         )
 
-        current = float(current_total.scalar() or 0)
-        previous = float(previous_total.scalar() or 0)
+        current = Decimal(str(current_total.scalar() or 0))
+        previous = Decimal(str(previous_total.scalar() or 0))
 
         if previous == 0:
             return 0.0
 
-        return ((current - previous) / previous) * 100
+        return float(((current - previous) / previous) * Decimal("100"))
 
     async def _get_top_merchants(self, user_id: str, period_days: int) -> List[Dict]:
         end_date = datetime.utcnow()
@@ -214,7 +217,7 @@ class AnalyticsService:
         return [
             {
                 "merchant_id": row.merchant_id,
-                "total_amount": float(row.total_amount),
+                "total_amount": Decimal(str(row.total_amount or 0)),
                 "transaction_count": row.transaction_count
             }
             for row in result

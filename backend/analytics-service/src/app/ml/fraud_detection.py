@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_EVEN
 from enum import Enum
 from structlog import get_logger
 import asyncio
@@ -8,12 +8,17 @@ import asyncio
 from app.models.schemas import FraudScore, FraudRiskLevel, FraudDetectionResult
 
 logger = get_logger(__name__)
+MONEY_QUANTUM = Decimal("0.0001")
+
+
+def _to_money(value) -> Decimal:
+    return Decimal(str(value or 0)).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_EVEN)
 
 
 class FraudDetectionEngine:
     def __init__(self):
         self.fraud_patterns = {
-            "high_amount_threshold": 100000000.0,
+            "high_amount_threshold": Decimal("100000000.0000"),
             "unusual_time_hours": [0, 1, 2, 3, 4, 5],
             "velocity_threshold": 5,
             "velocity_window_minutes": 5,
@@ -91,13 +96,13 @@ class FraudDetectionEngine:
         return result
 
     def _calculate_amount_risk(self, transaction_data: Dict[str, Any]) -> float:
-        amount = float(transaction_data.get("amount", 0))
+        amount = _to_money(transaction_data.get("amount", 0))
         transaction_type = transaction_data.get("type", "TRANSFER")
 
         if amount > self.fraud_patterns["high_amount_threshold"]:
-            return min(100.0, (amount / self.fraud_patterns["high_amount_threshold"]) * 40)
+            return float(min(Decimal("100"), (amount / self.fraud_patterns["high_amount_threshold"]) * Decimal("40")))
 
-        if transaction_type == "QRIS_PAYMENT" and amount > 50000000.0:
+        if transaction_type == "QRIS_PAYMENT" and amount > Decimal("50000000"):
             return 50.0
 
         return 0.0
@@ -137,7 +142,7 @@ class FraudDetectionEngine:
         if not user_history:
             return 20.0
 
-        amount = float(transaction_data.get("amount", 0))
+        amount = _to_money(transaction_data.get("amount", 0))
         transaction_type = transaction_data.get("type", "TRANSFER")
 
         recent_transactions = user_history.get("recent_transactions", [])
@@ -149,15 +154,18 @@ class FraudDetectionEngine:
         if not same_type_transactions:
             return 10.0
 
-        avg_amount = sum(txn["amount"] for txn in same_type_transactions) / len(same_type_transactions)
+        avg_amount = sum(
+            (_to_money(txn["amount"]) for txn in same_type_transactions),
+            Decimal("0.0000"),
+        ) / Decimal(len(same_type_transactions))
 
         if avg_amount > 0:
             deviation = abs(amount - avg_amount) / avg_amount
-            if deviation > 5.0:
+            if deviation > Decimal("5"):
                 return 80.0
-            elif deviation > 2.0:
+            elif deviation > Decimal("2"):
                 return 50.0
-            elif deviation > 1.0:
+            elif deviation > Decimal("1"):
                 return 30.0
 
         new_recipient = transaction_data.get("recipient_id") not in [

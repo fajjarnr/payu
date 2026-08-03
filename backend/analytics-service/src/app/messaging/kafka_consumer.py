@@ -5,6 +5,7 @@ from aiokafka.errors import KafkaError
 from sqlalchemy import select
 from uuid import uuid4
 from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_EVEN
 from structlog import get_logger
 from typing import Dict, Any
 
@@ -31,6 +32,11 @@ from app.ml.fraud_detection import FraudDetectionEngine
 
 logger = get_logger(__name__)
 settings = get_settings()
+MONEY_QUANTUM = Decimal("0.0001")
+
+
+def _to_money(value: Any) -> Decimal:
+    return Decimal(str(value or 0)).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_EVEN)
 
 
 class KafkaConsumerService:
@@ -119,7 +125,7 @@ class KafkaConsumerService:
     async def _handle_transaction_completed(self, session, message):
         event_id = str(uuid4())
         user_id = message.get('user_id')
-        amount = float(message.get('amount', 0))
+        amount = _to_money(message.get('amount', 0))
         transaction_type = message.get('type', 'TRANSFER')
         transaction_id = message.get('transaction_id')
         timestamp = datetime.utcnow()
@@ -156,11 +162,11 @@ class KafkaConsumerService:
                     category=message.get('category', 'OTHER'),
                     recipient_id=message.get('recipient_id'),
                     merchant_id=message.get('merchant_id')
-                ).model_dump()
+                ).model_dump(mode="json")
             }
         )
 
-        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.TRANSACTION_COMPLETED.value)
+        await manager.broadcast_to_user(dashboard_event.model_dump(mode="json"), user_id, DashboardEventType.TRANSACTION_COMPLETED.value)
 
         logger.info(
             "Transaction analytics recorded",
@@ -171,7 +177,7 @@ class KafkaConsumerService:
     async def _handle_transaction_initiated(self, session, message):
         event_id = str(uuid4())
         user_id = message.get('user_id')
-        amount = float(message.get('amount', 0))
+        amount = _to_money(message.get('amount', 0))
 
         entity = TransactionAnalyticsEntity(
             event_id=event_id,
@@ -191,8 +197,8 @@ class KafkaConsumerService:
         event_id = str(uuid4())
         user_id = message.get('user_id')
         wallet_id = message.get('wallet_id')
-        balance = float(message.get('balance', 0))
-        change_amount = float(message.get('change_amount', 0))
+        balance = _to_money(message.get('balance', 0))
+        change_amount = _to_money(message.get('change_amount', 0))
         change_type = message.get('change_type', 'CREDIT')
         timestamp = datetime.utcnow()
 
@@ -220,11 +226,11 @@ class KafkaConsumerService:
                     currency=message.get('currency', 'IDR'),
                     change_amount=change_amount,
                     change_type=change_type
-                ).model_dump()
+                ).model_dump(mode="json")
             }
         )
 
-        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.WALLET_BALANCE_CHANGED.value)
+        await manager.broadcast_to_user(dashboard_event.model_dump(mode="json"), user_id, DashboardEventType.WALLET_BALANCE_CHANGED.value)
 
     async def _handle_kyc_verified(self, session, message):
         user_id = message.get('user_id')
@@ -242,8 +248,8 @@ class KafkaConsumerService:
             new_metrics = UserMetricsEntity(
                 user_id=user_id,
                 total_transactions=0,
-                total_amount=0.0,
-                average_transaction=0.0,
+                total_amount=Decimal("0.0000"),
+                average_transaction=Decimal("0.0000"),
                 kyc_status='VERIFIED',
                 account_age_days=0
             )
@@ -257,13 +263,14 @@ class KafkaConsumerService:
                 "kyc": KycVerifiedEvent(
                     user_id=user_id,
                     kyc_status='VERIFIED'
-                ).model_dump()
+                ).model_dump(mode="json")
             }
         )
 
-        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+        await manager.broadcast_to_user(dashboard_event.model_dump(mode="json"), user_id)
 
-    async def _update_user_metrics(self, session, user_id: str, amount: float):
+    async def _update_user_metrics(self, session, user_id: str, amount: Decimal):
+        amount = _to_money(amount)
         metrics = await session.execute(
             select(UserMetricsEntity).where(UserMetricsEntity.user_id == user_id)
         )
@@ -272,8 +279,10 @@ class KafkaConsumerService:
 
         if user_metrics:
             user_metrics.total_transactions += 1
-            user_metrics.total_amount += amount
-            user_metrics.average_transaction = user_metrics.total_amount / user_metrics.total_transactions
+            user_metrics.total_amount = _to_money(user_metrics.total_amount) + amount
+            user_metrics.average_transaction = _to_money(
+                user_metrics.total_amount / user_metrics.total_transactions
+            )
             user_metrics.last_transaction_date = timestamp
 
             dashboard_event = DashboardEvent(
@@ -283,14 +292,14 @@ class KafkaConsumerService:
                 data={
                     "metrics": UserMetricsUpdatedEvent(
                         total_transactions=user_metrics.total_transactions,
-                        total_amount=float(user_metrics.total_amount),
-                        average_transaction=float(user_metrics.average_transaction),
+                        total_amount=user_metrics.total_amount,
+                        average_transaction=user_metrics.average_transaction,
                         last_transaction_date=timestamp
-                    ).model_dump()
+                    ).model_dump(mode="json")
                 }
             )
 
-            await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.USER_METRICS_UPDATED.value)
+            await manager.broadcast_to_user(dashboard_event.model_dump(mode="json"), user_id, DashboardEventType.USER_METRICS_UPDATED.value)
         else:
             new_metrics = UserMetricsEntity(
                 user_id=user_id,
@@ -376,8 +385,8 @@ class KafkaConsumerService:
 
             user_history = {
                 "total_transactions": user_metrics.total_transactions if user_metrics else 0,
-                "total_amount": float(user_metrics.total_amount) if user_metrics else 0.0,
-                "average_transaction": float(user_metrics.average_transaction) if user_metrics else 0.0,
+                "total_amount": user_metrics.total_amount if user_metrics else Decimal("0.0000"),
+                "average_transaction": user_metrics.average_transaction if user_metrics else Decimal("0.0000"),
                 "account_created_at": "2025-01-01T00:00:00",
                 "recent_transactions": [
                     {

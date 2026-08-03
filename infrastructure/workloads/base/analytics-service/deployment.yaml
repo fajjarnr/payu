@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.88
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.91
         imagePullPolicy: Always
         command:
         - python

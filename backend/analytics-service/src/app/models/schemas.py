@@ -129,7 +129,7 @@ class DashboardEvent(BaseModel):
 
 class TransactionCompletedEvent(BaseModel):
     transaction_id: str
-    amount: float
+    amount: Decimal
     currency: str = "IDR"
     transaction_type: str
     category: str = "OTHER"
@@ -139,9 +139,9 @@ class TransactionCompletedEvent(BaseModel):
 
 class WalletBalanceChangedEvent(BaseModel):
     wallet_id: str
-    balance: float
+    balance: Decimal
     currency: str = "IDR"
-    change_amount: float
+    change_amount: Decimal
     change_type: str = "CREDIT"
 
 
@@ -152,8 +152,8 @@ class KycVerifiedEvent(BaseModel):
 
 class UserMetricsUpdatedEvent(BaseModel):
     total_transactions: int
-    total_amount: float
-    average_transaction: float
+    total_amount: Decimal
+    average_transaction: Decimal
     last_transaction_date: Optional[datetime] = None
 
 
@@ -193,9 +193,9 @@ class PortfolioAllocation(BaseModel):
 
 class RiskAssessmentQuestions(BaseModel):
     age: int = Field(ge=18, le=100, description="User's age")
-    monthly_income: float = Field(gt=0, description="Monthly income in IDR")
-    monthly_expenses: float = Field(gt=0, description="Monthly expenses in IDR")
-    total_savings: float = Field(ge=0, description="Total savings in IDR")
+    monthly_income: Decimal = Field(gt=0, description="Monthly income in IDR")
+    monthly_expenses: Decimal = Field(gt=0, description="Monthly expenses in IDR")
+    total_savings: Decimal = Field(ge=0, description="Total savings in IDR")
     investment_experience: int = Field(ge=0, le=10, description="Years of investment experience (0-10)")
     risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, or high")
     investment_goal: str = Field(..., description="Investment goal: retirement, wealth_growth, or emergency_fund")
@@ -214,7 +214,7 @@ class RoboAdvisoryResponse(BaseModel):
     risk_assessment: RiskAssessmentResult
     portfolio_allocation: List[PortfolioAllocation]
     investment_recommendations: List[str]
-    monthly_investment_amount: float
+    monthly_investment_amount: Decimal
     expected_annual_return: float
     recommended_investment_products: List[dict]
 
@@ -248,7 +248,7 @@ class FraudDetectionResult(BaseModel):
 class GetFraudScoreRequest(BaseModel):
     transaction_id: str
     user_id: str
-    amount: float
+    amount: Decimal
     currency: str = "IDR"
     transaction_type: str = "TRANSFER"
     metadata: Optional[Dict[str, Any]] = None
@@ -257,4 +257,4 @@ class GetFraudScoreRequest(BaseModel):
 class GetRoboAdvisoryRequest(BaseModel):
     user_id: str
     risk_questions: RiskAssessmentQuestions
-    monthly_investment_amount: float = Field(gt=0, description="Monthly amount to invest in IDR")
+    monthly_investment_amount: Decimal = Field(gt=0, description="Monthly amount to invest in IDR")

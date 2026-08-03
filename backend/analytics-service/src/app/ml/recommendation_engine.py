@@ -1,5 +1,6 @@
 from uuid import uuid4
 from datetime import datetime, timedelta
+from decimal import Decimal
 from structlog import get_logger
 from typing import List, Dict, Any
 
@@ -9,7 +10,7 @@ logger = get_logger(__name__)
 class RecommendationEngine:
     def __init__(self):
         self.budget_threshold_percentage = 0.8
-        self.savings_goal_amount = 1000000
+        self.savings_goal_amount = Decimal("1000000.0000")
 
     def generate_recommendations(
         self,
@@ -113,7 +114,7 @@ class RecommendationEngine:
                 'description': 'Anda memiliki saldo yang cukup untuk mulai berinvestasi. Cek produk investasi kami!',
                 'priority': 4,
                 'action_url': '/investments',
-                'metadata': {'total_balance': float(user_metrics.total_amount)}
+                'metadata': {'total_balance': user_metrics.total_amount}
             })
 
         return recommendations

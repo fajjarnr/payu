@@ -36,5 +36,6 @@ async def test_init_db_creates_tables_before_hypertables(monkeypatch):
 
     assert "pg_advisory_lock" in calls[0]
     assert calls[1] == "create_all"
-    assert "pg_advisory_unlock" in calls[2]
-    assert calls[3] == "hypertables"
+    assert "NUMERIC(19,4)" in calls[2]
+    assert "pg_advisory_unlock" in calls[3]
+    assert calls[4] == "hypertables"

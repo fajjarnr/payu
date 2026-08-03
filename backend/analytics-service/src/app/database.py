@@ -5,6 +5,7 @@ from sqlalchemy import (
     String,
     DateTime,
     Float,
+    Numeric,
     Integer,
     BigInteger,
     JSON,
@@ -14,6 +15,7 @@ from sqlalchemy import (
     text,
 )
 from datetime import datetime
+from decimal import Decimal
 
 from app.config import get_settings
 import structlog
@@ -31,6 +33,53 @@ SCHEMA_INIT_LOCK = text(
 SCHEMA_INIT_UNLOCK = text(
     "SELECT pg_advisory_unlock(hashtext('analytics-service-schema-init'))"
 )
+MONEY_COLUMN_MIGRATION = text(
+    """
+    DO $$
+    BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = current_schema()
+                     AND table_name = 'transaction_analytics'
+                     AND column_name = 'amount'
+                     AND (data_type <> 'numeric' OR numeric_precision <> 19 OR numeric_scale <> 4)) THEN
+            ALTER TABLE transaction_analytics ALTER COLUMN amount
+                TYPE NUMERIC(19,4) USING amount::numeric(19,4);
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = current_schema()
+                     AND table_name = 'wallet_balance_history'
+                     AND column_name = 'balance'
+                     AND (data_type <> 'numeric' OR numeric_precision <> 19 OR numeric_scale <> 4)) THEN
+            ALTER TABLE wallet_balance_history ALTER COLUMN balance
+                TYPE NUMERIC(19,4) USING balance::numeric(19,4);
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = current_schema()
+                     AND table_name = 'wallet_balance_history'
+                     AND column_name = 'change_amount'
+                     AND (data_type <> 'numeric' OR numeric_precision <> 19 OR numeric_scale <> 4)) THEN
+            ALTER TABLE wallet_balance_history ALTER COLUMN change_amount
+                TYPE NUMERIC(19,4) USING change_amount::numeric(19,4);
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = current_schema()
+                     AND table_name = 'user_metrics'
+                     AND column_name = 'total_amount'
+                     AND (data_type <> 'numeric' OR numeric_precision <> 19 OR numeric_scale <> 4)) THEN
+            ALTER TABLE user_metrics ALTER COLUMN total_amount
+                TYPE NUMERIC(19,4) USING total_amount::numeric(19,4);
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = current_schema()
+                     AND table_name = 'user_metrics'
+                     AND column_name = 'average_transaction'
+                     AND (data_type <> 'numeric' OR numeric_precision <> 19 OR numeric_scale <> 4)) THEN
+            ALTER TABLE user_metrics ALTER COLUMN average_transaction
+                TYPE NUMERIC(19,4) USING average_transaction::numeric(19,4);
+        END IF;
+    END $$;
+    """
+)
 
 
 class TransactionAnalyticsEntity(Base):
@@ -39,7 +88,7 @@ class TransactionAnalyticsEntity(Base):
     event_id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False, index=True)
     transaction_id = Column(String, nullable=False)
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(19, 4), nullable=False)
     currency = Column(String, default="IDR")
     transaction_type = Column(String, nullable=False, index=True)
     category = Column(String, nullable=True, index=True)
@@ -62,9 +111,9 @@ class WalletBalanceEntity(Base):
     event_id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False, index=True)
     wallet_id = Column(String, nullable=False)
-    balance = Column(Float, nullable=False)
+    balance = Column(Numeric(19, 4), nullable=False)
     currency = Column(String, default="IDR")
-    change_amount = Column(Float, nullable=False)
+    change_amount = Column(Numeric(19, 4), nullable=False)
     change_type = Column(String, nullable=False)
 
     timestamp = Column(DateTime, nullable=False, index=True)
@@ -95,8 +144,8 @@ class UserMetricsEntity(Base):
 
     user_id = Column(String, primary_key=True)
     total_transactions = Column(BigInteger, default=0)
-    total_amount = Column(Float, default=0.0)
-    average_transaction = Column(Float, default=0.0)
+    total_amount = Column(Numeric(19, 4), default=Decimal("0.0000"))
+    average_transaction = Column(Numeric(19, 4), default=Decimal("0.0000"))
     last_transaction_date = Column(DateTime, nullable=True)
     account_age_days = Column(Integer, default=0)
     kyc_status = Column(String, nullable=True)
@@ -171,6 +220,7 @@ async def init_db():
         await connection.execute(SCHEMA_INIT_LOCK)
         try:
             await connection.run_sync(Base.metadata.create_all)
+            await connection.execute(MONEY_COLUMN_MIGRATION)
         finally:
             await connection.execute(SCHEMA_INIT_UNLOCK)
 
