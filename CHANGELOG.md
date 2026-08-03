@@ -18,12 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SNAP-BI money flow (MVP-001)**: `SnapBiPaymentService.createPayment` kini settle source → beneficiary melalui `WalletSettlementPort` (reserve → commit → credit + kompensasi), menandai `COMPLETED`, dan menerbitkan webhook stabil-ID serta outbox topic `payu.partner.payment-completed.v1`; terminal/refund log-only stubs dihapus.
 - **Idempotency boundary (MVP-004)**: SNAP payment/refund dan disbursement callback kini wajib `@Idempotent(required=true)`; callback disbursement tetap melewati HMAC `CallbackSignatureFilter`, dan `createRefund` mengunci parent payment dengan `PESSIMISTIC_WRITE` sebelum cumulative-sum check.
 - **Feedback widget timer cleanup (PROD-016)**: timeout success kini dibersihkan saat `FeedbackWidget` unmount, mencegah state update setelah teardown; regression test dan live `payu-dev` rollout `1.5.4` terverifikasi.
+- **Interbank settlement callback (MVP-005)**: BI-FAST/SKN/RTGS kini menyimpan `reservationId`, memanggil adapter clearing, dan menyelesaikan callback HMAC idempotent menjadi commit/release + event completed/failed; live `payu-dev` rollout `1.8.87` dan Flyway V24 terverifikasi.
 - **Test**: tambah `testCreatePaymentIdempotentReplay` (SnapBiPaymentServiceTest) + `shouldSkipDuplicateEvent` (WebhookDispatcherServiceTest, ✓ `throws Exception` untuk checked `IOException` dari `HttpClient.send`).
 
 > **Verify**: partner-service + transaction-service `mvn test` BUILD SUCCESS, 235 tests 0 fail (2026-08-03, workaround `-Daether.connector.basic.threads=1` utk Maven 3.9.16/JDK 25 + L-196).
 > **Verify MVP-003**: transaction-service 131/131 tests + va-simulator 8/8 tests BUILD SUCCESS (2026-08-03).
 > **Verify MVP-001**: partner-service 237/237 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
 > **Verify MVP-004**: partner-service 240/240 + transaction-service 132/132 tests BUILD SUCCESS (2026-08-03); live wallet/OpenShift E2E masih pending.
+> **Verify MVP-005**: transaction-service 135/135 tests BUILD SUCCESS; image `1.8.87` digest `sha256:fad545ed12d3a9e9a747beaff7d341b6041ff6106a650d1c8952fa0b744b14aa`, pod Ready 1/1, health 200, unsigned callback 401, Flyway validated/applied 24 migrations (2026-08-03).
 
 ## [1.10.7] - 2026-08-01
 

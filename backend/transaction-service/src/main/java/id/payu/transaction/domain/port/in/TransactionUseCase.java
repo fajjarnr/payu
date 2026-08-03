@@ -36,6 +36,8 @@ public interface TransactionUseCase {
      */
     InitiateTransferCommandResult initiateTransfer(InitiateTransferCommand command);
 
+    TransactionEntity settleInterbankTransfer(String referenceNumber, String status, String failureReason);
+
     /**
      * Processes a QRIS payment.
      *

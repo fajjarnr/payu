@@ -73,6 +73,11 @@ public class TransactionService implements TransactionUseCase {
     }
 
     @Override
+    public TransactionEntity settleInterbankTransfer(String referenceNumber, String status, String failureReason) {
+        return initiateTransferHandler.settleInterbankTransfer(referenceNumber, status, failureReason);
+    }
+
+    @Override
     public void processQrisPayment(ProcessQrisPaymentCommand command) {
         log.info("Delegating to ProcessQrisPaymentCommandHandler");
         processQrisPaymentHandler.handle(command);

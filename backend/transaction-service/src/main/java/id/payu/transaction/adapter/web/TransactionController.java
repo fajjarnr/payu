@@ -17,6 +17,7 @@ import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.InitiateTransferResponse;
+import id.payu.transaction.dto.InterbankTransferCallbackRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.dto.TransactionResponse;
 import id.payu.transaction.dto.UpdateTransactionTagsRequest;
@@ -202,6 +203,16 @@ public class TransactionController extends BaseController {
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
         // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
+    }
+
+    @PostMapping("/interbank/callback")
+    @Idempotent(required = true)
+    @Operation(summary = "Settle interbank transfer", description = "Applies a signed BI-FAST, SKN, or RTGS status callback")
+    public ResponseEntity<ApiResponse<TransactionResponse>> settleInterbankTransfer(
+            @Valid @RequestBody InterbankTransferCallbackRequest request) {
+        TransactionEntity transaction = transactionUseCase.settleInterbankTransfer(
+                request.referenceNumber(), request.status(), request.failureReason());
+        return ok(TransactionResponse.from(transaction));
     }
 
     /**

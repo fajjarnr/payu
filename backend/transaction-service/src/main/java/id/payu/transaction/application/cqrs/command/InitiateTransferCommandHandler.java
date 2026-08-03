@@ -8,13 +8,16 @@ import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.QrisPaymentRequest;
 import id.payu.transaction.dto.QrisPaymentResponse;
+import id.payu.transaction.dto.RgsTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
+import id.payu.transaction.dto.SknTransferRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 import id.payu.transaction.domain.model.TransactionStatus;
 import id.payu.transaction.domain.model.TransactionType;
@@ -92,6 +95,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
         String reservationId = balanceResponse.getReservationId();
 
+        transaction.setReservationId(reservationId);
         transaction.setStatus(TransactionStatus.VALIDATING);
         transactionPersistencePort.save(transaction);
 
@@ -143,6 +147,62 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 calculateFee(transaction.getType()),
                 getEstimatedCompletionTime(transaction.getType())
         );
+    }
+
+    @Transactional
+    public TransactionEntity settleInterbankTransfer(String referenceNumber, String status, String failureReason) {
+        TransactionEntity transaction = transactionPersistencePort.findByReferenceNumber(referenceNumber)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + referenceNumber));
+
+        if (transaction.getType() != TransactionType.BIFAST_TRANSFER
+                && transaction.getType() != TransactionType.SKN_TRANSFER
+                && transaction.getType() != TransactionType.RTGS_TRANSFER) {
+            throw new IllegalArgumentException("Transaction is not an interbank transfer: " + referenceNumber);
+        }
+
+        if (transaction.getStatus() == TransactionStatus.COMPLETED
+                || transaction.getStatus() == TransactionStatus.FAILED
+                || transaction.getStatus() == TransactionStatus.CANCELLED) {
+            return transaction;
+        }
+
+        String normalizedStatus = status.toUpperCase(Locale.ROOT);
+        switch (normalizedStatus) {
+            case "COMPLETED", "SUCCESS", "SETTLED" -> {
+                requireReservation(transaction);
+                walletServicePort.commitBalance(
+                        transaction.getSenderAccountId(),
+                        transaction.getId().toString(),
+                        transaction.getReservationId(),
+                        transaction.getAmount().getAmount());
+                transaction.setStatus(TransactionStatus.COMPLETED);
+                transaction.setCompletedAt(Instant.now());
+                eventPublisherPort.publishTransactionCompleted(transaction);
+            }
+            case "FAILED", "REJECTED", "CANCELLED" -> {
+                requireReservation(transaction);
+                walletServicePort.releaseBalance(
+                        transaction.getSenderAccountId(),
+                        transaction.getId().toString(),
+                        transaction.getReservationId(),
+                        transaction.getAmount().getAmount());
+                transaction.setStatus(TransactionStatus.FAILED);
+                transaction.setFailureReason(failureReason != null ? failureReason : "Interbank transfer failed");
+                eventPublisherPort.publishTransactionFailed(transaction, transaction.getFailureReason());
+            }
+            case "PENDING", "PROCESSING", "ACCEPTED" -> transaction.setStatus(TransactionStatus.PENDING);
+            default -> throw new IllegalArgumentException("Unsupported interbank status: " + status);
+        }
+
+        return transactionPersistencePort.save(transaction);
+    }
+
+    private void requireReservation(TransactionEntity transaction) {
+        if (transaction.getReservationId() == null || transaction.getReservationId().isBlank()) {
+            throw new IllegalStateException("Missing wallet reservation for transaction: " + transaction.getReferenceNumber());
+        }
     }
 
     private void processBiFastTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
@@ -244,11 +304,57 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * BUG-BE-007 fix: Previously, SKN and RTGS were left stuck in VALIDATING status.
      */
     private void processInterBankTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
-        // SKN/RTGS transfers are queued for batch/real-time clearing
-        // The actual clearing is handled by the downstream clearing system
-        transaction.setStatus(TransactionStatus.PENDING);
-        transactionPersistencePort.save(transaction);
-        log.info("{} transfer queued for clearing: {}", command.type(), transaction.getId());
+        try {
+            if (command.type() == id.payu.transaction.dto.TransactionType.SKN_TRANSFER) {
+                sknServicePort.initiateTransfer(SknTransferRequest.builder()
+                        .referenceNumber(transaction.getReferenceNumber())
+                        .amount(command.amount().getAmount())
+                        .currency(command.amount().getCurrency().getCurrencyCode())
+                        .beneficiaryAccountNumber(command.recipientAccountNumber())
+                        .beneficiaryBankCode("014")
+                        .beneficiaryAccountName("Beneficiary")
+                        .senderAccountNumber(command.senderAccountId().toString())
+                        .senderAccountName("Sender")
+                        .beneficiaryBankName("Bank")
+                        .purposeCode("OTHR")
+                        .beneficiaryTypeCode("001")
+                        .beneficiaryResidentCode("001")
+                        .build());
+            } else {
+                RgsTransferRequest request = new RgsTransferRequest();
+                request.setReferenceNumber(transaction.getReferenceNumber());
+                request.setAmount(command.amount().getAmount());
+                request.setCurrency(command.amount().getCurrency().getCurrencyCode());
+                request.setBeneficiaryAccountNumber(command.recipientAccountNumber());
+                request.setBeneficiaryBankCode("014");
+                request.setBeneficiaryAccountName("Beneficiary");
+                request.setBeneficiaryBankName("Bank");
+                request.setSenderAccountNumber(command.senderAccountId().toString());
+                request.setSenderAccountName("Sender");
+                request.setPurposeCode("OTHR");
+                request.setBeneficiaryTypeCode("001");
+                request.setBeneficiaryResidentCode("001");
+                rgsServicePort.initiateTransfer(request);
+            }
+
+            transaction.setStatus(TransactionStatus.PENDING);
+            log.info("{} transfer submitted for clearing: {}", command.type(), transaction.getId());
+        } catch (Exception e) {
+            try {
+                walletServicePort.releaseBalance(
+                        command.senderAccountId(),
+                        transaction.getId().toString(),
+                        reservationId,
+                        command.amount().getAmount());
+            } catch (Exception compensationError) {
+                log.error("Failed to release balance for interbank transfer: {}", transaction.getId(), compensationError);
+            }
+            transaction.setStatus(TransactionStatus.FAILED);
+            transaction.setFailureReason("Interbank transfer failed: " + e.getMessage());
+            eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
+        } finally {
+            transactionPersistencePort.save(transaction);
+        }
     }
     private String generateReferenceNumber() {
         return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();

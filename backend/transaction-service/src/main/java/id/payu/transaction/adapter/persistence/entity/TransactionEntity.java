@@ -21,7 +21,7 @@ public class TransactionEntity implements Persistable<UUID> {
     public TransactionEntity() {
     }
 
-    public TransactionEntity(UUID id, String referenceNumber, UUID senderAccountId, UUID recipientAccountId, TransactionType type, Money amount, BigDecimal amountValue, String currencyCode, String description, TransactionStatus status, String failureReason, String metadata, Instant createdAt, Instant updatedAt, Instant completedAt, String idempotencyKey, Instant expiresAt, String memo, String tags) {
+    public TransactionEntity(UUID id, String referenceNumber, UUID senderAccountId, UUID recipientAccountId, TransactionType type, Money amount, BigDecimal amountValue, String currencyCode, String description, TransactionStatus status, String failureReason, String metadata, Instant createdAt, Instant updatedAt, Instant completedAt, String idempotencyKey, String reservationId, Instant expiresAt, String memo, String tags) {
         this.id = id;
         this.referenceNumber = referenceNumber;
         this.senderAccountId = senderAccountId;
@@ -39,6 +39,7 @@ public class TransactionEntity implements Persistable<UUID> {
         this.updatedAt = updatedAt;
         this.completedAt = completedAt;
         this.idempotencyKey = idempotencyKey;
+        this.reservationId = reservationId;
         this.expiresAt = expiresAt;
         this.memo = memo;
         this.tags = tags;
@@ -67,6 +68,7 @@ public class TransactionEntity implements Persistable<UUID> {
         private Instant updatedAt;
         private Instant completedAt;
         private String idempotencyKey;
+        private String reservationId;
         private Instant expiresAt;
         private String memo;
         private String tags;
@@ -135,6 +137,10 @@ public class TransactionEntity implements Persistable<UUID> {
             this.idempotencyKey = idempotencyKey;
             return this;
         }
+        public TransactionBuilder reservationId(String reservationId) {
+            this.reservationId = reservationId;
+            return this;
+        }
         public TransactionBuilder expiresAt(Instant expiresAt) {
             this.expiresAt = expiresAt;
             return this;
@@ -149,7 +155,7 @@ public class TransactionEntity implements Persistable<UUID> {
         }
 
         public TransactionEntity build() {
-            return new TransactionEntity(id, referenceNumber, senderAccountId, recipientAccountId, type, amount, amountValue, currencyCode, description, status, failureReason, metadata, createdAt, updatedAt, completedAt, idempotencyKey, expiresAt, memo, tags);
+            return new TransactionEntity(id, referenceNumber, senderAccountId, recipientAccountId, type, amount, amountValue, currencyCode, description, status, failureReason, metadata, createdAt, updatedAt, completedAt, idempotencyKey, reservationId, expiresAt, memo, tags);
         }
     }
 
@@ -300,6 +306,14 @@ public class TransactionEntity implements Persistable<UUID> {
         this.idempotencyKey = idempotencyKey;
     }
 
+    public String getReservationId() {
+        return reservationId;
+    }
+
+    public void setReservationId(String reservationId) {
+        this.reservationId = reservationId;
+    }
+
     public Instant getExpiresAt() {
         return expiresAt;
     }
@@ -434,6 +448,9 @@ public class TransactionEntity implements Persistable<UUID> {
 
     @Column(name = "idempotency_key")
     private String idempotencyKey;
+
+    @Column(name = "reservation_id", length = 64)
+    private String reservationId;
 
     @Column(name = "expires_at")
     private Instant expiresAt;

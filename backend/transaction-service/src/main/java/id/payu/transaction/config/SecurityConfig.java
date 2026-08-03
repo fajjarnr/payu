@@ -66,6 +66,7 @@ public class SecurityConfig {
                         // not by user JWT.
                         .requestMatchers("/api/v1/disbursements/callback").permitAll()
                         .requestMatchers("/api/v1/payments/va/callback").permitAll()
+                        .requestMatchers("/api/v1/transactions/interbank/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

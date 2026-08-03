@@ -28,7 +28,8 @@ class CallbackSignatureFilterTest {
     private static final String SECRET = "test-callback-secret-key-do-not-use-in-prod";
     private static final List<String> PATHS = List.of(
             "/api/v1/disbursements/callback",
-            "/api/v1/payments/va/callback");
+            "/api/v1/payments/va/callback",
+            "/api/v1/transactions/interbank/callback");
 
     private CallbackSignatureFilter filter;
 

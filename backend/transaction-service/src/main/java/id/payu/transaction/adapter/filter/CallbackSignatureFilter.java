@@ -75,7 +75,7 @@ public class CallbackSignatureFilter extends OncePerRequestFilter {
     public CallbackSignatureFilter(
             @Value("${payu.callback.signature.secret:}") String secret,
             @Value("${payu.callback.signature.tolerance-seconds:300}") long toleranceSeconds,
-            @Value("${payu.callback.signature.paths:/api/v1/disbursements/callback,/api/v1/payments/va/callback}") List<String> protectedPaths,
+            @Value("${payu.callback.signature.paths:/api/v1/disbursements/callback,/api/v1/payments/va/callback,/api/v1/transactions/interbank/callback}") List<String> protectedPaths,
             @Value("${payu.callback.signature.enabled:true}") boolean enabled) {
         this.secret = secret;
         this.toleranceSeconds = toleranceSeconds;
