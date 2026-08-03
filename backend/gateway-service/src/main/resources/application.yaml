@@ -8,6 +8,15 @@ quarkus:
     port: 8080
     auth:
       proactive: false
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    jdbc:
+      url: ${QUARKUS_DATASOURCE_JDBC_URL}
+      max-size: 16
+  flyway:
+    migrate-at-start: true
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
     enabled: ${OIDC_ENABLED:false}

@@ -123,14 +123,12 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
         return null;
     }
 
-    private String derivePartnerFromApiKey(String apiKey) {
+    static String derivePartnerFromApiKey(String apiKey) {
         // Simplified mapping - in production, use a proper API key to partner mapping
         if (apiKey.startsWith("tokobapak_")) {
             return "tokobapak";
         } else if (apiKey.startsWith("nobar_")) {
             return "nobar";
-        } else if (apiKey.startsWith("demo_")) {
-            return "demo-partner";
         }
         return null;
     }
