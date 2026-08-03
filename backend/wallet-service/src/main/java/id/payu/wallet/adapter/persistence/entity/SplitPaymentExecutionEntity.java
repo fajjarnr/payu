@@ -51,7 +51,7 @@ public class SplitPaymentExecutionEntity {
     private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
+    @Column(nullable = false, length = 32)
     private SplitExecutionStatus status;
 
     @Column(length = 512)

@@ -8,6 +8,8 @@ import id.payu.wallet.domain.port.out.SplitPaymentPersistencePort;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -110,7 +112,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
     // --- Execution ---
 
     @Override
-    @Transactional
     public SplitPaymentExecution executeSplit(UUID ruleId, String payerAccountId,
                                               BigDecimal totalAmount,
                                               String externalReferenceId,
@@ -137,7 +138,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
     }
 
     @Override
-    @Transactional
     public SplitPaymentExecution executeAdHocSplit(String payerAccountId, String partnerId,
                                                     BigDecimal totalAmount, String currency,
                                                     List<SplitRecipient> recipients,
@@ -207,48 +207,60 @@ public class SplitPaymentService implements SplitPaymentUseCase {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // 2. Reserve payer's funds
+        // Persist before any wallet side effect; this is the saga checkpoint.
         execution.startProcessing();
-        String reservationId = walletUseCase.reserveBalance(
-                payerAccountId, totalAmount, executionId.toString());
-
-        boolean committed = false;
-        try {
-            // 3. Commit the reservation (deduct from payer)
-            walletUseCase.commitReservation(reservationId);
-            committed = true;
-
-            // 4. Credit each recipient
-            for (SplitPaymentLeg leg : legs) {
-                walletUseCase.credit(
-                        leg.getRecipientAccountId(),
-                        leg.getAmount(),
-                        executionId.toString(),
-                        "Split payment: " + (leg.getRecipientLabel() != null ? leg.getRecipientLabel() : "recipient"));
-                leg.markCredited(null);
-            }
-
-            // 5. Create balanced journal entry
-            createSplitJournal(execution);
-
-            // 6. Mark completed
-            execution.complete();
-        } catch (Exception e) {
-            log.error("Split payment failed: executionId={}", executionId, e);
-            // Only release reservation if not yet committed
-            if (!committed) {
-                try {
-                    walletUseCase.releaseReservation(reservationId);
-                } catch (Exception releaseEx) {
-                    log.warn("Failed to release reservation: {}", reservationId, releaseEx);
-                }
-            }
-            execution.fail(e.getMessage());
-        }
-
-        SplitPaymentExecution saved = persistencePort.saveExecution(execution);
+        persistencePort.saveExecution(execution);
+        SplitPaymentExecution saved = reconcileExecution(execution);
         log.info("Split payment execution: id={}, status={}", saved.getId(), saved.getStatus());
         return saved;
+    }
+
+    @Scheduled(fixedDelayString = "${payu.split-payment.reconcile-delay:60000}")
+    @SchedulerLock(name = "SplitPaymentService_reconcile", lockAtMostFor = "PT30S")
+    public void reconcile() {
+        persistencePort.findExecutionsByStatusIn(List.of(
+                        SplitExecutionStatus.PROCESSING,
+                        SplitExecutionStatus.RECONCILIATION_REQUIRED))
+                .forEach(this::reconcileExecution);
+    }
+
+    private SplitPaymentExecution reconcileExecution(SplitPaymentExecution execution) {
+        if (execution.getStatus() == SplitExecutionStatus.COMPLETED) {
+            return execution;
+        }
+        execution.setStatus(SplitExecutionStatus.PROCESSING);
+        for (SplitPaymentLeg leg : execution.getLegs()) {
+            if (leg.getStatus() == LegStatus.CREDITED) {
+                continue;
+            }
+            try {
+                walletUseCase.transfer(
+                        execution.getPayerAccountId(),
+                        leg.getRecipientAccountId(),
+                        leg.getAmount(),
+                        execution.getCurrency(),
+                        transferReference(execution, leg),
+                        "Split payment: " + (leg.getRecipientLabel() != null ? leg.getRecipientLabel() : "recipient"));
+                leg.markCredited(null);
+                persistencePort.saveExecution(execution);
+            } catch (Exception e) {
+                leg.markFailed();
+                execution.reconciliationRequired(e.getMessage());
+                return persistencePort.saveExecution(execution);
+            }
+        }
+
+        try {
+            createSplitJournal(execution);
+            execution.complete();
+        } catch (Exception e) {
+            execution.reconciliationRequired(e.getMessage());
+        }
+        return persistencePort.saveExecution(execution);
+    }
+
+    private String transferReference(SplitPaymentExecution execution, SplitPaymentLeg leg) {
+        return "SPLIT_TRANSFER:" + execution.getId() + ":" + leg.getId();
     }
 
     @Override
@@ -304,6 +316,9 @@ public class SplitPaymentService implements SplitPaymentUseCase {
     // --- Journal Helpers ---
 
     private void createSplitJournal(SplitPaymentExecution execution) {
+        if (!journalUseCase.getJournalsByReference(REFERENCE_TYPE, execution.getId().toString()).isEmpty()) {
+            return;
+        }
         List<LedgerEntry> entries = new ArrayList<>();
 
         // Debit payer

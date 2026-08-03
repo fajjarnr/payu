@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-033 wallet partial commit deployed**:
+> - Wallet gRPC transfer kini mendelegasikan ke satu transaksi debit+credit atomik dengan reference deterministik. Split payment dan settlement tidak lagi commit debit batch sebelum credit; tiap leg memakai transfer unik, disimpan sebelum/di antara side effect, dan direkonsiliasi oleh scheduler ShedLock dengan status durable `RECONCILIATION_REQUIRED`. Journal retry dilindungi lookup reference agar crash tidak menggandakan posting.
+> - Verification: focused failure/recovery suite `5` passed; full wallet reactor `25` passed with `0` failures/errors; package BUILD SUCCESS. Image `1.8.105` (`sha256:da1c679a3087acce90f644cc88f059815e5ab48d176a0e76c162b90beb0578fa`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, health `UP`; Flyway validated/applied v108–v110. No authenticated financial mutation was run.
+
 > ✅ **2026-08-03 — PROD-032 idempotency binding deployed**:
 > - Shared Spring idempotency now hashes a replayable canonical request body and binds the fingerprint to principal, tenant, and account; gateway cache entries carry the binding and reject legacy/unmatched replays with `409`.
 > - Financial gateway requests now fail closed with `503` when the idempotency cache cannot be read or written; non-financial requests retain the existing compatibility behavior.

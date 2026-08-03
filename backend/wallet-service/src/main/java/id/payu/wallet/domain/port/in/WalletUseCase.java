@@ -89,6 +89,12 @@ public interface WalletUseCase {
      */
     String credit(String accountId, BigDecimal amount, String referenceId, String description);
 
+    /**
+     * Atomically debit one wallet and credit another.
+     */
+    String transfer(String senderAccountId, String recipientAccountId, BigDecimal amount,
+                    String currency, String referenceId, String description);
+
     String repayLoan(String accountId, String loanId, BigDecimal amount, String currency,
                      String referenceId, String description);
 

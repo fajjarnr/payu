@@ -7,11 +7,13 @@ import id.payu.wallet.domain.model.SplitPaymentExecution;
 import id.payu.wallet.domain.model.SplitPaymentLeg;
 import id.payu.wallet.domain.model.SplitPaymentRule;
 import id.payu.wallet.domain.model.SplitRecipient;
+import id.payu.wallet.domain.model.SplitExecutionStatus;
 import id.payu.wallet.domain.port.out.SplitPaymentPersistencePort;
 
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,6 +74,15 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
     public List<SplitPaymentExecution> findExecutionsByPayerAccountId(String payerAccountId) {
         return executionRepository.findByPayerAccountIdOrderByCreatedAtDesc(payerAccountId)
                 .stream().map(this::toExecutionDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SplitPaymentExecution> findExecutionsByStatusIn(Collection<SplitExecutionStatus> statuses) {
+        List<id.payu.wallet.adapter.persistence.entity.SplitExecutionStatus> entityStatuses = statuses.stream()
+                .map(status -> id.payu.wallet.adapter.persistence.entity.SplitExecutionStatus.valueOf(status.name()))
+                .collect(Collectors.toList());
+        return executionRepository.findByStatusIn(entityStatuses).stream()
+                .map(this::toExecutionDomain).collect(Collectors.toList());
     }
 
     // --- Rule Mappers ---
@@ -144,7 +155,7 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         entity.setCurrency(domain.getCurrency());
         entity.setExternalReferenceId(domain.getExternalReferenceId());
         entity.setIdempotencyKey(domain.getIdempotencyKey());
-        entity.setStatus(SplitExecutionStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(id.payu.wallet.adapter.persistence.entity.SplitExecutionStatus.valueOf(domain.getStatus().name()));
         entity.setDescription(domain.getDescription());
         entity.setCompletedAt(domain.getCompletedAt());
         entity.setFailedAt(domain.getFailedAt());

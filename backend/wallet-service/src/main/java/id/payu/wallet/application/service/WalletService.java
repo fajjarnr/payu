@@ -426,6 +426,88 @@ public class WalletService implements WalletUseCase {
 
     @Override
     @Transactional
+    public String transfer(String senderAccountId, String recipientAccountId, BigDecimal amount,
+                           String currency, String referenceId, String description) {
+        if (senderAccountId == null || recipientAccountId == null
+                || senderAccountId.equals(recipientAccountId)
+                || referenceId == null || referenceId.isBlank()
+                || currency == null || currency.isBlank()) {
+            throw new IllegalArgumentException("Transfer requires distinct accounts and a reference");
+        }
+        String normalizedCurrency = currency.trim().toUpperCase(Locale.ROOT);
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("Transfer amount must be positive with at most 4 decimals");
+        }
+
+        UUID transactionId = UUID.nameUUIDFromBytes(
+                ("WALLET_TRANSFER:" + referenceId).getBytes(StandardCharsets.UTF_8));
+        List<LedgerEntry> existingEntries = walletPersistencePort.findByTransactionId(transactionId);
+        if (!existingEntries.isEmpty()) {
+            boolean sameCommand = existingEntries.stream().allMatch(entry ->
+                    "TRANSFER".equals(entry.getReferenceType())
+                            && referenceId.equals(entry.getReferenceId())
+                            && entry.getAmount() != null
+                            && entry.getAmount().compareTo(amount) == 0
+                            && normalizedCurrency.equals(entry.getCurrency()));
+            if (!sameCommand) {
+                throw new IllegalArgumentException("Transfer reference was already used for a different command");
+            }
+            return transactionId.toString();
+        }
+
+        String firstAccount = senderAccountId.compareTo(recipientAccountId) < 0
+                ? senderAccountId : recipientAccountId;
+        String secondAccount = firstAccount.equals(senderAccountId) ? recipientAccountId : senderAccountId;
+        Wallet firstWallet = walletPersistencePort.findByAccountIdForUpdate(firstAccount)
+                .orElseThrow(() -> new WalletNotFoundException(firstAccount));
+        Wallet secondWallet = walletPersistencePort.findByAccountIdForUpdate(secondAccount)
+                .orElseThrow(() -> new WalletNotFoundException(secondAccount));
+        Wallet sender = firstWallet.getAccountId().equals(senderAccountId) ? firstWallet : secondWallet;
+        Wallet recipient = firstWallet.getAccountId().equals(recipientAccountId) ? firstWallet : secondWallet;
+
+        if (!Objects.equals(normalizedCurrency, sender.getCurrency())
+                || !Objects.equals(normalizedCurrency, recipient.getCurrency())) {
+            throw new IllegalArgumentException("Transfer currency must match both wallet currencies");
+        }
+
+        sender.debit(amount);
+        recipient.credit(amount);
+        walletPersistencePort.save(sender);
+        walletPersistencePort.save(recipient);
+
+        LocalDateTime now = LocalDateTime.now();
+        walletPersistencePort.saveLedgerEntry(LedgerEntry.builder()
+                .transactionId(transactionId)
+                .accountId(sender.getAccountId())
+                .entryType(EntryType.DEBIT)
+                .amount(amount)
+                .currency(normalizedCurrency)
+                .balanceAfter(sender.getBalance())
+                .referenceType("TRANSFER")
+                .referenceId(referenceId)
+                .createdAt(now)
+                .build());
+        walletPersistencePort.saveLedgerEntry(LedgerEntry.builder()
+                .transactionId(transactionId)
+                .accountId(recipient.getAccountId())
+                .entryType(EntryType.CREDIT)
+                .amount(amount)
+                .currency(normalizedCurrency)
+                .balanceAfter(recipient.getBalance())
+                .referenceType("TRANSFER")
+                .referenceId(referenceId)
+                .createdAt(now)
+                .build());
+
+        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance());
+        invalidateWalletCaches(sender);
+        invalidateWalletCaches(recipient);
+        return transactionId.toString();
+    }
+
+    @Override
+    @Transactional
     public String repayLoan(String accountId, String loanId, BigDecimal amount, String currency,
                             String referenceId, String description) {
         if (accountId == null || accountId.isBlank() || loanId == null || loanId.isBlank()

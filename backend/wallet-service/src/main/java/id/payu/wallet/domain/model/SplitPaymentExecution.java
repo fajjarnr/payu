@@ -65,6 +65,12 @@ public class SplitPaymentExecution {
         this.failureReason = reason;
     }
 
+    public void reconciliationRequired(String reason) {
+        this.status = SplitExecutionStatus.RECONCILIATION_REQUIRED;
+        this.failedAt = LocalDateTime.now();
+        this.failureReason = reason;
+    }
+
     public void reverse() {
         if (this.status != SplitExecutionStatus.COMPLETED) {
             throw new IllegalStateException("Can only reverse from COMPLETED, current: " + status);

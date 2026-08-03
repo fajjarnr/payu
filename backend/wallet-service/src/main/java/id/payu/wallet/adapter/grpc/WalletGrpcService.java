@@ -244,13 +244,11 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
     public void transfer(TransferRequest request, StreamObserver<TransactionResponse> responseObserver) {
         try {
             log.info("gRPC transfer - from: {}, to: {}, amount: {}",
                     request.getFromAccountId(), request.getToAccountId(), request.getAmount().getAmount());
 
-            // Debit from source
             String fromAccountId = request.getFromAccountId();
             if (fromAccountId == null || fromAccountId.isEmpty()) {
                 Wallet wallet = walletService.getWallet(UUID.fromString(request.getFromWalletId()));
@@ -265,28 +263,16 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
             BigDecimal amount = new BigDecimal(request.getAmount().getAmount());
 
-            // Reserve and commit debit
-            String reservationId = walletService.reserveBalance(
-                    fromAccountId,
-                    amount,
-                    request.getReferenceId()
-            );
-            walletService.commitReservation(reservationId);
-
-            // Credit to destination
-            String creditTransactionId = walletService.credit(
-                    toAccountId,
-                    amount,
-                    request.getReferenceId(),
-                    request.getDescription()
-            );
+            String transferTransactionId = walletService.transfer(
+                    fromAccountId, toAccountId, amount, request.getAmount().getCurrency(),
+                    request.getReferenceId(), request.getDescription());
 
             Wallet fromWallet = walletService.getWalletByAccountId(fromAccountId)
                     .orElseThrow(() -> new IllegalArgumentException("Source wallet not found"));
 
             TransactionResponse response = TransactionResponse.newBuilder()
                     .setSuccess(true)
-                    .setTransactionId(creditTransactionId)
+                    .setTransactionId(transferTransactionId)
                     .setNewBalance(toMoney(fromWallet.getBalance(), fromWallet.getCurrency()))
                     .setTimestamp(toTimestamp(LocalDateTime.now()))
                     .build();

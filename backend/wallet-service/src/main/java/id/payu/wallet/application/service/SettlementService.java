@@ -2,7 +2,7 @@ package id.payu.wallet.application.service;
 
 import id.payu.wallet.domain.model.*;
 import id.payu.wallet.domain.port.in.SettlementUseCase;
-import id.payu.wallet.domain.port.in.WalletUseCase;
+import id.payu.wallet.domain.port.in.SplitPaymentUseCase;
 import id.payu.wallet.domain.port.out.SettlementPersistencePort;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
 
@@ -35,16 +35,16 @@ public class SettlementService implements SettlementUseCase {
 
     private final SettlementPersistencePort settlementPersistencePort;
     private final JournalPersistencePort journalPersistencePort;
-    private final WalletUseCase walletUseCase;
+    private final SplitPaymentUseCase splitPaymentUseCase;
     private final java.time.Clock clock;
 
     public SettlementService(SettlementPersistencePort settlementPersistencePort,
                              JournalPersistencePort journalPersistencePort,
-                             WalletUseCase walletUseCase,
+                             SplitPaymentUseCase splitPaymentUseCase,
                              java.time.Clock clock) {
         this.settlementPersistencePort = settlementPersistencePort;
         this.journalPersistencePort = journalPersistencePort;
-        this.walletUseCase = walletUseCase;
+        this.splitPaymentUseCase = splitPaymentUseCase;
         this.clock = clock;
     }
 
@@ -277,7 +277,6 @@ public class SettlementService implements SettlementUseCase {
     }
 
     @Override
-    @Transactional
     public void applyRevenueSplit(UUID settlementBatchId, UUID revenueSplitId) {
         log.info("Applying revenue split {} to settlement batch {}", revenueSplitId, settlementBatchId);
 
@@ -286,19 +285,19 @@ public class SettlementService implements SettlementUseCase {
 
         List<CalculatedSplit> calculatedSplits = split.calculateSplits(batch.getNetAmount());
 
-        // Reserve and commit the batch's net amount from the settlement source
-        String reservationId = walletUseCase.reserveBalance(
-                batch.getPartnerId(), batch.getNetAmount(), settlementBatchId.toString());
-        walletUseCase.commitReservation(reservationId);
-
-        // Credit each split recipient from the reserved amount
-        for (CalculatedSplit calc : calculatedSplits) {
-            log.info("Revenue split: {} ({}) -> {}", calc.getName(), calc.getAccountId(), calc.getAmount());
-            walletUseCase.credit(
-                    calc.getAccountId(),
-                    calc.getAmount(),
-                    settlementBatchId.toString(),
-                    "Revenue split: " + calc.getName());
+        List<SplitRecipient> recipients = calculatedSplits.stream()
+                .map(calc -> SplitRecipient.builder()
+                        .recipientAccountId(calc.getAccountId())
+                        .recipientLabel(calc.getName())
+                        .type(RecipientType.MERCHANT)
+                        .fixedAmount(calc.getAmount())
+                        .build())
+                .toList();
+        SplitPaymentExecution execution = splitPaymentUseCase.executeAdHocSplit(
+                batch.getPartnerId(), batch.getPartnerId(), batch.getNetAmount(), batch.getCurrency(),
+                recipients, settlementBatchId.toString(), "Revenue split", "SETTLEMENT:" + settlementBatchId);
+        if (execution.getStatus() != SplitExecutionStatus.COMPLETED) {
+            throw new IllegalStateException("Revenue split requires reconciliation: " + execution.getStatus());
         }
     }
 

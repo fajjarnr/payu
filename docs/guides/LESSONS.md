@@ -4791,3 +4791,7 @@ A GET validation endpoint must never call an apply command: `apply` mutates usag
 **Context**: Shared interceptor hanya memakai URI/method/header, sedangkan gateway memakai raw key dan fail-open ketika Hot Rod gagal. Key yang sama dapat me-replay response untuk body/account berbeda atau melewati validasi saat cache mati.
 
 **Fix**: Cache body sebelum interceptor, canonicalize JSON, dan bind fingerprint ke principal/tenant/account. Gateway menyimpan fingerprint bersama response, mismatch/entry lama ditolak `409`, dan operasi finansial menolak cache outage `503`. Verifikasi wajib mencakup body berbeda, principal/account berbeda, dan cache failure; jangan memakai live financial mutation sebagai smoke test saat fixture/cache belum sehat.
+
+### L-206: Cross-adapter money flow wajib per-leg durable (2026-08-03)
+
+`@Transactional` tidak menyatukan debit dan credit yang dipanggil melalui adapter berbeda, dan menyimpan execution setelah side effect membuat crash kehilangan recovery record. Gunakan primitive transfer atomik dengan reference deterministik, checkpoint execution sebelum setiap leg, persist status setelah setiap leg, dan scheduler retry ber-ShedLock. Pastikan journal retry idempotent berdasarkan reference; tambahkan migration untuk semua kolom entity yang belum ada di schema lama sebelum mengaktifkan query recovery.

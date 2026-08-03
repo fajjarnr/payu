@@ -5,5 +5,6 @@ public enum SplitExecutionStatus {
         PROCESSING,
         COMPLETED,
         FAILED,
+        RECONCILIATION_REQUIRED,
         REVERSED
     }
