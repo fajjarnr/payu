@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration gRPC placeholder (PROD-007)**: capability `publishToGrpc` generik tanpa proto, caller, auth, timeout, atau error contract dihapus dari `MessagePublisherPort` dan adapter; service tidak lagi mengembalikan sukses palsu.
 - **Durable gateway configuration (PROD-008)**: rate plans, partner assignments, transformation metadata, dan audit trail kini disimpan via Flyway/JDBC di `payu_gateway`; active assignment dilindungi unique key + PostgreSQL table lock, transformation cache refreshes from DB, dan API-key demo fallback dihapus. Image `1.9.6` live.
 - **Shared money API (PROD-009)**: hapus overload `multiply(double)`/`divide(double)` dari shared `Money`; callers tetap memakai `BigDecimal` atau integer scalar, dengan API reflection guard agar floating-point overload tidak kembali.
+- **Web auth/rendering (PROD-010)**: proxy kini memvalidasi `accessToken` ke gateway sebelum root/login/protected pages, hanya mencoba refresh setelah token invalid/missing, menghapus trust pada `payu_session`, dan memberi protected responses `private, no-store`; image `1.5.6` live.
 - **Interbank settlement callback (MVP-005)**: BI-FAST/SKN/RTGS kini menyimpan `reservationId`, memanggil adapter clearing, dan menyelesaikan callback HMAC idempotent menjadi commit/release + event completed/failed; live `payu-dev` rollout `1.8.87` dan Flyway V24 terverifikasi.
 - **Test**: tambah `testCreatePaymentIdempotentReplay` (SnapBiPaymentServiceTest) + `shouldSkipDuplicateEvent` (WebhookDispatcherServiceTest, ✓ `throws Exception` untuk checked `IOException` dari `HttpClient.send`).
 
@@ -49,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > **Verify PROD-007**: integration-service reactor tests `50 passed`, including ArchitectureTest `9/9`; image `1.8.95` digest `sha256:6b6bb2ca871317634211e03074cf8ed3140f9ac0e847ef32e4d12d8ca112a097`, pod Ready 1/1, restart 0, actuator health `UP`, and startup completed without errors (2026-08-03).
 > **Verify PROD-008**: gateway full Maven test suite and focused persistence/partner regression tests `3/3` BUILD SUCCESS; image `1.9.6` digest `sha256:f6cb989412de12688958de147654de1ef0fcff0a8575b316b15d535a0a65ff8d`, pod Ready 1/1, restart 0, readiness/DB health `UP`, Flyway v1 applied to PostgreSQL 16.8, four durable tables present, and rate-plan/assignment/transformation tables contain no demo seed rows (2026-08-03).
 > **Verify PROD-009**: shared `api-commons` `MoneyTest` `79 passed`, including the no-floating-point-overload API guard; Maven BUILD SUCCESS and no production caller required migration (2026-08-03).
+> **Verify PROD-010**: web-app type-check sukses, full Vitest `1190 passed | 1 skipped`, production build sukses; image `1.5.6` digest `sha256:c992ad120725229c2ddace1d25d4615ca2bf71b578617c1575039d3c63f497aa`, pod Ready 1/1, restart 0, health `healthy`, and live forged access cookie returns `307` to `/id/login` (2026-08-03).
 
 ## [1.10.7] - 2026-08-01
 

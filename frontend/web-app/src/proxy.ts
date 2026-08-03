@@ -13,6 +13,62 @@ const intlMiddleware = createMiddleware({
 // Dynamically build locale pattern from config instead of hardcoding
 const localePattern = new RegExp(`^/(${locales.join('|')})`);
 
+const publicRoutes = [
+  '/login',
+  '/forgot-password',
+  '/onboarding',
+  '/legal/privacy',
+  '/legal/terms',
+  '/merchant/register',
+];
+
+const protectedRoutePrefixes = [
+  '/analytics',
+  '/backoffice',
+  '/bills',
+  '/cards',
+  '/dashboard',
+  '/exchange',
+  '/investments',
+  '/lending',
+  '/merchant',
+  '/notifications',
+  '/pockets',
+  '/qris',
+  '/rewards',
+  '/scheduled-transfers',
+  '/security',
+  '/settings',
+  '/split-bill',
+  '/support',
+  '/transactions',
+  '/transfer',
+];
+
+function isProtectedPath(pathname: string): boolean {
+  return protectedRoutePrefixes.some(route =>
+    pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+async function validateAccessToken(token: string): Promise<boolean> {
+  const gatewayUrl = process.env.GATEWAY_URL || 'http://gateway-service:8080';
+  try {
+    const response = await fetch(new URL('/api/v1/auth/validate', gatewayUrl), {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    return response.ok;
+  } catch (error) {
+    edgeLogger.warn('Session validation request failed', {
+      action: 'middleware',
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -20,10 +76,13 @@ export async function proxy(request: NextRequest) {
   // Locale-agnostic check
   const pathWithoutLocale = pathname.replace(localePattern, '') || '/';
   
-  // Authentication check - verify existence of session tokens
-  const hasAccessToken = request.cookies.has('accessToken');
+  const needsSessionValidation =
+    isProtectedPath(pathWithoutLocale) || pathWithoutLocale === '/' || pathWithoutLocale === '/login';
+  const accessToken = request.cookies.get('accessToken')?.value;
   const hasRefreshToken = request.cookies.has('refreshToken');
-  const hasPayuSession = request.cookies.has('payu_session');
+  const hasAccessToken = needsSessionValidation && accessToken
+    ? await validateAccessToken(accessToken)
+    : false;
 
   // AUDIT-064: CSP nonce — generate per-request nonce for script-src.
   // WEB-001: Next.js injects the nonce into inline scripts only when it can
@@ -98,7 +157,7 @@ export async function proxy(request: NextRequest) {
 
   // Re-evaluate session status after potential rehydration
   const hasSession = // BUG-AUTH-014 FIX: Recalculate session after potential refresh failure
-    hasAccessToken || (hasRefreshToken && refreshSucceeded) || hasPayuSession;
+    hasAccessToken || (hasRefreshToken && refreshSucceeded);
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in
   if (pathWithoutLocale === '/' && hasSession) {
@@ -135,41 +194,8 @@ export async function proxy(request: NextRequest) {
     return redirectRes;
   }
 
-  // 2. Protect authenticated routes — everything except public pages
-  const publicRoutes = [
-    '/login',
-    '/forgot-password', // WEB-003: must stay reachable when the user cannot log in
-    '/onboarding',
-    '/legal/privacy',
-    '/legal/terms',
-    '/merchant/register',
-  ];
-
   // WEB-005: only redirect known app paths to login; unknown paths fall
   // through to Next.js so they render a real 404 instead of masking it.
-  const protectedRoutePrefixes = [
-    '/analytics',
-    '/backoffice',
-    '/bills',
-    '/cards',
-    '/dashboard',
-    '/exchange',
-    '/investments',
-    '/lending',
-    '/merchant',
-    '/notifications',
-    '/pockets',
-    '/qris',
-    '/rewards',
-    '/scheduled-transfers',
-    '/security',
-    '/settings',
-    '/split-bill',
-    '/support',
-    '/transactions',
-    '/transfer',
-  ];
-
   // BUG-FE-046: Use exact match or segment boundary to prevent /login-debug, /onboarding-secret matching
   const isPublicRoute = pathWithoutLocale === '/' || 
     publicRoutes.some(route => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/'));
@@ -199,6 +225,9 @@ export async function proxy(request: NextRequest) {
   finalResponse.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   finalResponse.headers.set('X-Frame-Options', 'DENY');
   finalResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  if (isProtectedRoute) {
+    finalResponse.headers.set('Cache-Control', 'private, no-store');
+  }
   // ponytail: X-Request-ID on client-side routes mirrors BFF API proxy header
   finalResponse.headers.set('X-Request-ID', crypto.randomUUID());
 
