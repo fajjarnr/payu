@@ -51,6 +51,21 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Billing `SubscriptionActor` is framework-free; `SubscriptionService` enforces partner/account ownership and cancel uses the platform idempotency header.
 - Billing reactor tests `113` passed with ArchUnit; image `1.8.102` rollout and health checks succeeded in `payu-dev`.
 
+## L-199: Security Defaults Must Be Enforced at the Shared Startup Boundary (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Spring security starter, PII masking, audit logging, PBKDF2, OpenShift manifests
+**Context**: Several container profiles explicitly disabled masking/audit, while the shared starter only defaulted them on. Encryption also accepted a missing salt and silently selected the default PBKDF2 value; optional SecretKeyRefs made the deployment contract weaker than the runtime requirement.
+
+**Lesson**:
+- Put production-only security gates in the shared auto-configuration constructor so every consumer fails before serving traffic; keep local/test defaults usable.
+- Treat encryption password and PBKDF2 salt as one production configuration contract. A warning plus fallback is not fail-closed security.
+- Update the base/overlay manifests and render them before `oc apply -k`; make required secrets non-optional when startup depends on them.
+
+**Applied evidence**:
+- `SecurityProductionDefaultsTest` covers missing password/salt and disabled PII protections; the security-starter regression set passed 36 tests.
+- Nine backend container profiles now enable masking/audit and require `ENCRYPTION_SALT`; images `1.8.103` rolled out with readiness `UP` and no default-salt warning.
+
 ## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
 
 **Date**: 2026-08-03

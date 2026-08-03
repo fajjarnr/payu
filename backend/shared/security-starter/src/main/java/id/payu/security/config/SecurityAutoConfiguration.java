@@ -18,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import javax.crypto.Cipher;
@@ -37,8 +38,9 @@ public class SecurityAutoConfiguration {
 
     private final SecurityProperties properties;
 
-    public SecurityAutoConfiguration(SecurityProperties properties) {
+    public SecurityAutoConfiguration(SecurityProperties properties, Environment environment) {
         this.properties = properties;
+        validateProductionDefaults(environment);
     }
 
     @Bean
@@ -49,10 +51,10 @@ public class SecurityAutoConfiguration {
         log.info("Initializing Encryption Service");
 
         String password = properties.getEncryption().getPassword();
-        boolean isProdProfile = java.util.Arrays.stream(environment.getActiveProfiles())
-                .anyMatch(p -> p.equals("container") || p.equals("prod") || p.equals("staging"));
+        boolean isProdProfile = isProductionProfile(environment);
 
-        if (password == null || password.isEmpty()) {
+        String salt = properties.getEncryption().getSalt();
+        if (password == null || password.isBlank()) {
             // GAP-30 fix: fail fast in production profiles instead of falling back
             // to a default key. The default key breaks multi-pod scaling (each pod
             // derives a different key after restart) and corrupts data after pod
@@ -68,7 +70,6 @@ public class SecurityAutoConfiguration {
             return new EncryptionService(generateDefaultKey());
         }
 
-        String salt = properties.getEncryption().getSalt();
         return new EncryptionService(
                 properties.getEncryption().getPassword(),
                 Collections.emptyList(),
@@ -136,6 +137,41 @@ public class SecurityAutoConfiguration {
                 objectMapper,
                 outboxServiceProvider.getIfAvailable()
         );
+    }
+
+    private void validateProductionDefaults(Environment environment) {
+        if (!isProductionProfile(environment)) {
+            return;
+        }
+        if (!properties.isMaskingEnabled()) {
+            throw new IllegalStateException(
+                    "Production security requires payu.security.masking-enabled=true");
+        }
+        if (!properties.isAuditEnabled()) {
+            throw new IllegalStateException(
+                    "Production security requires payu.security.audit-enabled=true");
+        }
+        if (properties.isEncryptionEnabled()) {
+            requireConfigured(properties.getEncryption().getPassword(),
+                    "payu.security.encryption.password");
+            requireConfigured(properties.getEncryption().getSalt(),
+                    "payu.security.encryption.salt");
+        }
+    }
+
+    private boolean isProductionProfile(Environment environment) {
+        return java.util.Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(profile -> switch (profile) {
+                    case "container", "prod", "staging", "sit", "uat", "preprod" -> true;
+                    default -> false;
+                });
+    }
+
+    private void requireConfigured(String value, String property) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(
+                    "Production security requires " + property + " to be configured");
+        }
     }
 
     /**

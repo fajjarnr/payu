@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.103
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -175,7 +175,7 @@ spec:
             secretKeyRef:
               name: dev-env-secrets
               key: ENCRYPTION_SALT
-              optional: true
+              optional: false
         - name: WEBHOOK_SECURITY_SECRET
           valueFrom:
             secretKeyRef:

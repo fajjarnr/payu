@@ -76,8 +76,8 @@ payu:
     encryption-enabled: true
     encryption:
       password: ${ENCRYPTION_KEY}
-    masking-enabled: false
-    audit-enabled: false
+    masking-enabled: true
+    audit-enabled: true
 
 server:
   port: 8080

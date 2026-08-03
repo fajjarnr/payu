@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:1.8.82
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:1.8.103
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -88,7 +88,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: promotion-service
         - name: SERVICE_VERSION
-          value: 1.8.82
+          value: 1.8.103
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT
@@ -159,7 +159,7 @@ spec:
             secretKeyRef:
               name: dev-env-secrets
               key: ENCRYPTION_SALT
-              optional: true
+              optional: false
         - name: WEBHOOK_SECURITY_SECRET
           valueFrom:
             secretKeyRef:

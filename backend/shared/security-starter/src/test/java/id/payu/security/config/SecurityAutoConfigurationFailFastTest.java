@@ -34,15 +34,16 @@ class SecurityAutoConfigurationFailFastTest {
         containerRunner.run(ctx -> {
             assertThat(ctx).hasFailed();
             assertThat(ctx.getStartupFailure())
-                .hasMessageContaining("ENCRYPTION_KEY")
-                .hasMessageContaining("encryption.password");
+                .hasStackTraceContaining("encryption.password");
         });
     }
 
     @Test
     void shouldStartWhenPasswordProvidedInContainerProfile() {
         containerRunner
-            .withPropertyValues("payu.security.encryption.password=test-password-not-empty-12345")
+            .withPropertyValues(
+                "payu.security.encryption.password=test-password-not-empty-12345",
+                "payu.security.encryption.salt=test-salt-not-empty-12345")
             .run(ctx -> {
                 assertThat(ctx).hasNotFailed();
                 assertThat(ctx).hasBean("encryptionService");
