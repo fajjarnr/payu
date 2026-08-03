@@ -126,6 +126,7 @@ public class FxRateService implements FxRateUseCase {
 
     private FxRate fetchAndCacheRate(String fromCurrency, String toCurrency) {
         FxRate rate = fxRateProvider.fetchCurrentRate(fromCurrency, toCurrency);
+        validateProviderRate(rate, fromCurrency, toCurrency);
         
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime validUntil = now.plusMinutes(RATE_VALIDITY_MINUTES);
@@ -134,6 +135,26 @@ public class FxRateService implements FxRateUseCase {
         rate.setValidUntil(validUntil);
         
         return fxRateRepository.save(rate);
+    }
+
+    private void validateProviderRate(FxRate rate, String fromCurrency, String toCurrency) {
+        if (rate == null
+                || !fromCurrency.equalsIgnoreCase(rate.getFromCurrency())
+                || !toCurrency.equalsIgnoreCase(rate.getToCurrency())) {
+            throw new IllegalArgumentException("FX provider returned a different currency pair");
+        }
+        if (rate.getRate() == null || rate.getRate().signum() <= 0
+                || rate.getInverseRate() == null || rate.getInverseRate().signum() <= 0) {
+            throw new IllegalArgumentException("FX provider returned an invalid rate");
+        }
+        if (rate.getSource() == null || rate.getSource().isBlank() || rate.getObservedAt() == null) {
+            throw new IllegalArgumentException("FX provider response is missing source or observation time");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (rate.getObservedAt().isAfter(now.plusMinutes(2))
+                || rate.getObservedAt().isBefore(now.minusMinutes(RATE_VALIDITY_MINUTES))) {
+            throw new IllegalArgumentException("FX provider rate is stale");
+        }
     }
 
     // ═══════════════════════════════════════════════════════

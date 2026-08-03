@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-// ponytail: stub provider. Replace with real API (XE/Reuters) when integration needed.
+// ponytail: local-only stub; production uses the configured provider or fails closed.
 @Component
 @Profile("local")
 @ConditionalOnMissingBean(name = "realFxRateProvider")
@@ -33,13 +33,16 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
         String from = fromCurrency.toUpperCase(Locale.ROOT);
         String to = toCurrency.toUpperCase(Locale.ROOT);
         BigDecimal rate = resolveRate(from, to);
+        LocalDateTime observedAt = LocalDateTime.now();
         return FxRate.builder()
             .fromCurrency(from)
             .toCurrency(to)
             .rate(rate)
             .inverseRate(BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN))
             .validFrom(LocalDateTime.now())
-            .validUntil(LocalDateTime.now().plusHours(1))
+            .validUntil(observedAt.plusHours(1))
+            .source("local-stub")
+            .observedAt(observedAt)
             .build();
     }
 

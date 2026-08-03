@@ -51,12 +51,15 @@ public class MockFxRateProviderAdapter implements FxRateProviderPort {
         BigDecimal rate = MOCK_RATES.get(key);
         BigDecimal inverseRate = BigDecimal.ONE.divide(rate, 8, java.math.RoundingMode.HALF_EVEN);
 
+        LocalDateTime observedAt = LocalDateTime.now();
         return FxRate.builder()
                 .id(UUID.randomUUID())
                 .fromCurrency(fromCurrency)
                 .toCurrency(toCurrency)
                 .rate(rate)
                 .inverseRate(inverseRate)
+                .source("test-provider")
+                .observedAt(observedAt)
                 .build();
     }
 

@@ -99,6 +99,11 @@ springdoc:
     operations-sorter: method
 
 fx:
+  provider:
+    api-key: ${FX_PROVIDER_API_KEY:}
+    source: ${FX_PROVIDER_SOURCE:}
+    timeout: ${FX_PROVIDER_TIMEOUT:3s}
+    max-age: ${FX_PROVIDER_MAX_AGE:15m}
   providers:
     default-provider: ${FX_DEFAULT_PROVIDER:UNCONFIGURED}
     cache-ttl-minutes: 10

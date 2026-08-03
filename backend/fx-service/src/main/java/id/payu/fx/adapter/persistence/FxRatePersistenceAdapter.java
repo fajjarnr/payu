@@ -66,6 +66,8 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
         entity.setValidUntil(fxRate.getValidUntil());
         entity.setVersion(fxRate.getVersion());
         entity.setCreatedAt(fxRate.getCreatedAt());
+        entity.setSource(fxRate.getSource());
+        entity.setObservedAt(fxRate.getObservedAt());
         entity.setNewEntity(fxRate.getVersion() == null);
         return entity;
     }
@@ -81,6 +83,8 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
                 .validUntil(entity.getValidUntil())
                 .version(entity.getVersion())
                 .createdAt(entity.getCreatedAt())
+                .source(entity.getSource())
+                .observedAt(entity.getObservedAt())
                 .build();
     }
 }

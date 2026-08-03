@@ -15,6 +15,8 @@ public class FxRate {
     private LocalDateTime validUntil;
     private Long version;
     private LocalDateTime createdAt;
+    private String source;
+    private LocalDateTime observedAt;
 
     public FxRate() {
     }
@@ -22,6 +24,13 @@ public class FxRate {
     public FxRate(UUID id, String fromCurrency, String toCurrency, BigDecimal rate, 
                    BigDecimal inverseRate, LocalDateTime validFrom, LocalDateTime validUntil, 
                    Long version, LocalDateTime createdAt) {
+        this(id, fromCurrency, toCurrency, rate, inverseRate, validFrom, validUntil,
+                version, createdAt, null, null);
+    }
+
+    public FxRate(UUID id, String fromCurrency, String toCurrency, BigDecimal rate,
+                  BigDecimal inverseRate, LocalDateTime validFrom, LocalDateTime validUntil,
+                  Long version, LocalDateTime createdAt, String source, LocalDateTime observedAt) {
         this.id = id;
         this.fromCurrency = fromCurrency;
         this.toCurrency = toCurrency;
@@ -31,6 +40,8 @@ public class FxRate {
         this.validUntil = validUntil;
         this.version = version;
         this.createdAt = createdAt;
+        this.source = source;
+        this.observedAt = observedAt;
     }
 
     public boolean isValidAt(LocalDateTime timestamp) {
@@ -68,6 +79,10 @@ public class FxRate {
     public void setVersion(Long version) { this.version = version; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
+    public LocalDateTime getObservedAt() { return observedAt; }
+    public void setObservedAt(LocalDateTime observedAt) { this.observedAt = observedAt; }
 
     public static class FxRateBuilder {
         private UUID id;
@@ -79,6 +94,8 @@ public class FxRate {
         private LocalDateTime validUntil;
         private Long version;
         private LocalDateTime createdAt;
+        private String source;
+        private LocalDateTime observedAt;
 
         FxRateBuilder() {}
 
@@ -91,9 +108,12 @@ public class FxRate {
         public FxRateBuilder validUntil(LocalDateTime validUntil) { this.validUntil = validUntil; return this; }
         public FxRateBuilder version(Long version) { this.version = version; return this; }
         public FxRateBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public FxRateBuilder source(String source) { this.source = source; return this; }
+        public FxRateBuilder observedAt(LocalDateTime observedAt) { this.observedAt = observedAt; return this; }
 
         public FxRate build() {
-            return new FxRate(id, fromCurrency, toCurrency, rate, inverseRate, validFrom, validUntil, version, createdAt);
+            return new FxRate(id, fromCurrency, toCurrency, rate, inverseRate, validFrom, validUntil,
+                    version, createdAt, source, observedAt);
         }
     }
 }

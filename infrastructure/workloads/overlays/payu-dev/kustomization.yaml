@@ -35,7 +35,7 @@ images:
   newTag: "1.8.90"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.84
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
-  newTag: "1.8.84"
+  newTag: "1.8.96"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.7
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newTag: "1.9.7"

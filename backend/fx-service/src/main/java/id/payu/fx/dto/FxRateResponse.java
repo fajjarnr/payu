@@ -16,6 +16,8 @@ public class FxRateResponse {
     private BigDecimal inverseRate;
     private LocalDateTime validFrom;
     private LocalDateTime validUntil;
+    private String source;
+    private LocalDateTime observedAt;
 
     public UUID getId() {
         return id;
@@ -71,5 +73,21 @@ public class FxRateResponse {
 
     public void setValidUntil(LocalDateTime validUntil) {
         this.validUntil = validUntil;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public LocalDateTime getObservedAt() {
+        return observedAt;
+    }
+
+    public void setObservedAt(LocalDateTime observedAt) {
+        this.observedAt = observedAt;
     }
 }

@@ -50,6 +50,8 @@ class FxRateServiceTest {
                 .inverseRate(new BigDecimal("15384.62"))
                 .validFrom(LocalDateTime.now())
                 .validUntil(LocalDateTime.now().plusMinutes(15))
+                .source("test-provider")
+                .observedAt(LocalDateTime.now())
                 .build();
     }
 
@@ -150,7 +152,14 @@ class FxRateServiceTest {
     @Test
     void updateRates_shouldUpdateAllSupportedCurrencies() {
         when(fxRateProvider.isAvailable()).thenReturn(true);
-        when(fxRateProvider.fetchCurrentRate(anyString(), anyString())).thenReturn(testRate);
+        when(fxRateProvider.fetchCurrentRate(anyString(), anyString())).thenAnswer(invocation -> FxRate.builder()
+                .fromCurrency(invocation.getArgument(0))
+                .toCurrency(invocation.getArgument(1))
+                .rate(testRate.getRate())
+                .inverseRate(testRate.getInverseRate())
+                .source("test-provider")
+                .observedAt(LocalDateTime.now())
+                .build());
         when(fxRateRepository.save(any(FxRate.class))).thenReturn(testRate);
 
         fxRateService.updateRates();
@@ -175,5 +184,17 @@ class FxRateServiceTest {
         assertThatThrownBy(() -> fxRateService.getCurrentRate("IDR", "XYZ"))
                 .isInstanceOf(id.payu.fx.application.service.FxRateNotFoundException.class)
                 .hasMessageContaining("Unsupported to currency");
+    }
+
+    @Test
+    void getCurrentRate_shouldRejectProviderRateForDifferentPair() {
+        when(fxRateRepository.findLatestRate(eq("USD"), eq("IDR"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+        when(fxRateProvider.fetchCurrentRate("USD", "IDR")).thenReturn(testRate);
+
+        assertThatThrownBy(() -> fxRateService.getCurrentRate("USD", "IDR"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("FX provider returned a different currency pair");
+        verify(fxRateRepository, never()).save(any(FxRate.class));
     }
 }

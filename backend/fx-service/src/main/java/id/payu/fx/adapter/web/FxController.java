@@ -253,6 +253,8 @@ public class FxController extends BaseController {
         response.setInverseRate(rate.getInverseRate());
         response.setValidFrom(rate.getValidFrom());
         response.setValidUntil(rate.getValidUntil());
+        response.setSource(rate.getSource());
+        response.setObservedAt(rate.getObservedAt());
         return response;
     }
 

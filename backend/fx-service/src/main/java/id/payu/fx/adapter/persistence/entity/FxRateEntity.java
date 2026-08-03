@@ -45,6 +45,12 @@ public class FxRateEntity implements Persistable<UUID> {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "source", length = 100, nullable = false)
+    private String source;
+
+    @Column(name = "observed_at", nullable = false)
+    private LocalDateTime observedAt;
+
     @Transient
     private boolean isNewEntity = false;
 
@@ -141,5 +147,21 @@ public class FxRateEntity implements Persistable<UUID> {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public LocalDateTime getObservedAt() {
+        return observedAt;
+    }
+
+    public void setObservedAt(LocalDateTime observedAt) {
+        this.observedAt = observedAt;
     }
 }
