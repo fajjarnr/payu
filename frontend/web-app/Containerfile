@@ -2,7 +2,7 @@
 # Base Image - Red Hat UBI9 Node.js 24
 ####
 FROM registry.access.redhat.com/ubi9/nodejs-24@sha256:2de19f9aed8524187e52c146da60635a80adb06739f23519a5c8a16fda2850e5 AS base
-ARG APP_VERSION=1.5.0
+ARG APP_VERSION=1.5.11
 
 # Metadata labels
 LABEL maintainer="frontend-team@payu.fajjjar.my.id"

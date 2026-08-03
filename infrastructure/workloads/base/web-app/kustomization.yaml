@@ -9,6 +9,6 @@ labels:
 - pairs:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.5.10
+    app.kubernetes.io/version: 1.5.11
   includeSelectors: false
   includeTemplates: true
