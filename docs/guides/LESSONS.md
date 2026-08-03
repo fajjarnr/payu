@@ -4697,3 +4697,7 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 - Migrasi `V15__snap_payment_idempotency_unique.sql` + `V16__webhook_delivery_idempotency_unique.sql` (untracked, harus di-commit).
 - Hapus `TransferSagaOrchestrator`/`TransferSagaContext`; `SagaConfig` javadoc di-update.
 - Build verified: partner-service + transaction-service `mvn test` SUCCESS, 235 tests 0 fail (partner).
+
+### L-197: OpenShift changes must flow through manifests (2026-08-03)
+
+When a rollout change is requested, edit the base/overlay manifest, render it, and run `oc apply -k`; do not use `oc patch` or `oc set`. Bump the image tag when an immutable rollout is required, then verify the live digest and probes.

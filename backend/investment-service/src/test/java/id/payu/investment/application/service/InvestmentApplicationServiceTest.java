@@ -7,6 +7,8 @@ import id.payu.investment.domain.model.FundStatus;
 import id.payu.investment.domain.model.FundType;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
+import id.payu.investment.domain.model.InvestmentOperation;
+import id.payu.investment.domain.model.InvestmentOperationType;
 import id.payu.investment.domain.model.InvestmentTransaction;
 import id.payu.investment.domain.model.InvestmentType;
 import id.payu.investment.domain.model.MutualFund;
@@ -135,6 +137,32 @@ class InvestmentApplicationServiceTest {
             verify(walletServicePort).deductBalance(testUserId, testAmount);
             verify(investmentPersistencePort).saveGold(any(Gold.class));
             verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
+        }
+
+        @Test
+        @DisplayName("should use a stable wallet reference for an idempotent purchase")
+        void shouldUseStableWalletReferenceForIdempotentPurchase() throws Exception {
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(new BigDecimal("1250000.00"));
+            given(investmentPersistencePort.findGoldByUserId(testUserId)).willReturn(Optional.empty());
+            InvestmentOperation operation = InvestmentOperation.requested(
+                    "idem-gold-001", testUserId, testUserId, InvestmentOperationType.GOLD_PURCHASE,
+                    "XAU", null, testAmount, new BigDecimal("1250000.00"), "IDR");
+            given(investmentPersistencePort.createInvestmentOperation(any(InvestmentOperation.class)))
+                    .willReturn(operation);
+
+            Gold gold = Gold.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .amount(new BigDecimal("0.8000"))
+                    .averageBuyPrice(new BigDecimal("1250000.00"))
+                    .currentPrice(new BigDecimal("1250000.00"))
+                    .currentValue(testAmount)
+                    .build();
+            given(investmentPersistencePort.saveGold(any(Gold.class))).willReturn(gold);
+
+            investmentApplicationService.buyGold(testUserId, testAmount, "idem-gold-001").get();
+
+            verify(walletServicePort).deductBalance(eq(testUserId), eq(testAmount), startsWith("INVESTMENT_DEBIT:"));
         }
     }
 

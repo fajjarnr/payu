@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -71,9 +70,8 @@ public class WalletGrpcAdapter implements WalletServicePort {
     }
 
     @Override
-    public void deductBalance(String userId, BigDecimal amount) {
-        log.info("gRPC deductBalance (reserve+commit): userId={}, amount={}", userId, amount);
-        String referenceId = UUID.randomUUID().toString();
+    public void deductBalance(String userId, BigDecimal amount, String referenceId) {
+        log.info("gRPC deductBalance (reserve+commit): userId={}, amount={}, referenceId={}", userId, amount, referenceId);
 
         try {
             // Step 1: Reserve balance
@@ -116,9 +114,8 @@ public class WalletGrpcAdapter implements WalletServicePort {
     }
 
     @Override
-    public void creditBalance(String userId, BigDecimal amount) {
-        log.info("gRPC creditBalance: userId={}, amount={}", userId, amount);
-        String referenceId = UUID.randomUUID().toString();
+    public void creditBalance(String userId, BigDecimal amount, String referenceId) {
+        log.info("gRPC creditBalance: userId={}, amount={}, referenceId={}", userId, amount, referenceId);
 
         try {
             CreditRequest request = CreditRequest.newBuilder()

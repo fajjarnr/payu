@@ -92,10 +92,11 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found")
     public CompletableFuture<ResponseEntity<ApiResponse<Deposit>>> buyDeposit(
             @Valid @RequestBody BuyDepositRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
-        return investmentApplicationService.buyDeposit(request.accountId(), userId, request.amount(), request.tenure())
+        return investmentApplicationService.buyDeposit(request.accountId(), userId, request.amount(), request.tenure(), idempotencyKey)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
@@ -116,10 +117,11 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account or fund not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentTransaction>>> buyMutualFund(
             @Valid @RequestBody BuyMutualFundRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
-        return investmentApplicationService.buyMutualFund(request.accountId(), userId, request.fundCode(), request.amount())
+        return investmentApplicationService.buyMutualFund(request.accountId(), userId, request.fundCode(), request.amount(), idempotencyKey)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
@@ -139,10 +141,11 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> buyGold(
             @Valid @RequestBody BuyGoldRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt) {
         // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
         String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
-        return investmentApplicationService.buyGold(userId, request.amount())
+        return investmentApplicationService.buyGold(userId, request.amount(), idempotencyKey)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }

@@ -5,10 +5,14 @@ import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
 import id.payu.investment.domain.model.MutualFund;
+import id.payu.investment.domain.model.InvestmentOperation;
+import id.payu.investment.domain.model.InvestmentOperationStatus;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Output port for investment persistence operations.
@@ -144,4 +148,19 @@ public interface InvestmentPersistencePort {
      * @return optional containing the transaction if found
      */
     Optional<InvestmentTransaction> findTransactionById(UUID id);
+
+    Optional<Gold> findGoldById(UUID id);
+
+    InvestmentOperation createInvestmentOperation(InvestmentOperation operation);
+
+    InvestmentOperation saveInvestmentOperation(InvestmentOperation operation);
+
+    Optional<InvestmentOperation> findInvestmentOperationByIdempotencyKey(String idempotencyKey);
+
+    List<InvestmentOperation> findInvestmentOperationsForReconciliation(
+            List<InvestmentOperationStatus> statuses, LocalDateTime now);
+
+    void markInvestmentOperationCompensationPending(UUID operationId, String reason);
+
+    void markInvestmentOperationRetry(UUID operationId, String reason);
 }

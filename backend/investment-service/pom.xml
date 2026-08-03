@@ -75,6 +75,15 @@
             <artifactId>resilience4j-spring-boot4</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+        </dependency>
+
         <!-- SB 4.0+: spring-boot-starter-aop removed (no @Aspect in this service) -->
 
         <dependency>

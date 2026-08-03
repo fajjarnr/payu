@@ -96,6 +96,11 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     }
 
     @Override
+    public Optional<WalletTransaction> findTransactionByReference(String referenceId) {
+        return transactionRepository.findByReferenceId(referenceId).map(this::toTransactionDomain);
+    }
+
+    @Override
     public java.util.List<WalletTransaction> findTransactionsByWalletId(UUID walletId, int page, int size) {
         return transactionRepository.findByWalletIdOrderByCreatedAtDesc(walletId, org.springframework.data.domain.PageRequest.of(page, size))
                 .stream()
@@ -107,6 +112,12 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     public LedgerEntry saveLedgerEntry(LedgerEntry entry) {
         LedgerEntryEntity savedEntity = ledgerEntryRepository.save(ledgerEntryMapper.toEntity(entry));
         return ledgerEntryMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<LedgerEntry> findReservationByReference(String referenceId) {
+        return ledgerEntryRepository.findFirstByReferenceTypeAndReferenceId("RESERVATION", referenceId)
+                .map(ledgerEntryMapper::toDomain);
     }
 
     @Override

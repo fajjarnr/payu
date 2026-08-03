@@ -27,10 +27,14 @@ public interface WalletPersistencePort {
     Optional<Wallet> findByAccountIdForUpdate(String accountId);
     
     WalletTransaction saveTransaction(WalletTransaction transaction);
+
+    Optional<WalletTransaction> findTransactionByReference(String referenceId);
     
     List<WalletTransaction> findTransactionsByWalletId(UUID walletId, int page, int size);
 
     LedgerEntry saveLedgerEntry(LedgerEntry entry);
+
+    Optional<LedgerEntry> findReservationByReference(String referenceId);
 
     List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(String accountId);
 

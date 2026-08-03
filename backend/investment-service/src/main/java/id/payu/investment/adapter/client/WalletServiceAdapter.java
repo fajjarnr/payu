@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -56,8 +55,7 @@ public class WalletServiceAdapter implements WalletServicePort {
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "deductBalanceFallback")
     @Retry(name = "walletService")
-    public void deductBalance(String userId, BigDecimal amount) {
-        String referenceId = UUID.randomUUID().toString();
+    public void deductBalance(String userId, BigDecimal amount, String referenceId) {
 
         // Step 1: Reserve balance
         String reserveUrl = walletServiceUrl + "/api/v1/wallets/" + userId + "/reserve";
@@ -99,9 +97,8 @@ public class WalletServiceAdapter implements WalletServicePort {
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "creditBalanceFallback")
     @Retry(name = "walletService")
-    public void creditBalance(String userId, BigDecimal amount) {
+    public void creditBalance(String userId, BigDecimal amount, String referenceId) {
         String creditUrl = walletServiceUrl + "/api/v1/wallets/" + userId + "/credit";
-        String referenceId = UUID.randomUUID().toString();
         log.info("Crediting balance for investment redemption: accountId={}, amount={}", userId, amount);
 
         HttpHeaders headers = new HttpHeaders();
@@ -161,12 +158,12 @@ public class WalletServiceAdapter implements WalletServicePort {
     }
 
     // Fallback methods for circuit breaker
-    private void deductBalanceFallback(String userId, BigDecimal amount, Exception e) {
+    private void deductBalanceFallback(String userId, BigDecimal amount, String referenceId, Exception e) {
         log.error("Circuit breaker fallback for deductBalance: userId={}, error={}", userId, e.getMessage());
         throw new RuntimeException("Wallet service unavailable for deduction", e);
     }
 
-    private void creditBalanceFallback(String userId, BigDecimal amount, Exception e) {
+    private void creditBalanceFallback(String userId, BigDecimal amount, String referenceId, Exception e) {
         log.error("Circuit breaker fallback for creditBalance: userId={}, error={}", userId, e.getMessage());
         throw new RuntimeException("Wallet service unavailable for credit", e);
     }

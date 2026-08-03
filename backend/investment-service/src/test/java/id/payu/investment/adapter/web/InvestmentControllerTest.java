@@ -106,16 +106,16 @@ class InvestmentControllerTest {
 
             BuyDepositRequest request = new BuyDepositRequest(testAccountId, testAmount, 6);
 
-            given(investmentApplicationService.buyDeposit(testAccountId, testUserId, testAmount, 6))
+            given(investmentApplicationService.buyDeposit(testAccountId, testUserId, testAmount, 6, "idem-deposit"))
                     .willReturn(CompletableFuture.completedFuture(deposit));
 
             ResponseEntity<ApiResponse<Deposit>> response =
-                    investmentController.buyDeposit(request, mockJwt)
+                    investmentController.buyDeposit(request, "idem-deposit", mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
-            verify(investmentApplicationService).buyDeposit(testAccountId, testUserId, testAmount, 6);
+            verify(investmentApplicationService).buyDeposit(testAccountId, testUserId, testAmount, 6, "idem-deposit");
         }
     }
 
@@ -139,16 +139,16 @@ class InvestmentControllerTest {
 
             BuyMutualFundRequest request = new BuyMutualFundRequest(testAccountId, fundCode, testAmount);
 
-            given(investmentApplicationService.buyMutualFund(testAccountId, testUserId, fundCode, testAmount))
+            given(investmentApplicationService.buyMutualFund(testAccountId, testUserId, fundCode, testAmount, "idem-fund"))
                     .willReturn(CompletableFuture.completedFuture(transaction));
 
             ResponseEntity<ApiResponse<InvestmentTransaction>> response =
-                    investmentController.buyMutualFund(request, mockJwt)
+                    investmentController.buyMutualFund(request, "idem-fund", mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
-            verify(investmentApplicationService).buyMutualFund(testAccountId, testUserId, fundCode, testAmount);
+            verify(investmentApplicationService).buyMutualFund(testAccountId, testUserId, fundCode, testAmount, "idem-fund");
         }
     }
 
@@ -169,16 +169,16 @@ class InvestmentControllerTest {
 
             BuyGoldRequest request = new BuyGoldRequest(testAmount);
 
-            given(investmentApplicationService.buyGold(testUserId, testAmount))
+            given(investmentApplicationService.buyGold(testUserId, testAmount, "idem-gold"))
                     .willReturn(CompletableFuture.completedFuture(gold));
 
             ResponseEntity<ApiResponse<Gold>> response =
-                    investmentController.buyGold(request, mockJwt)
+                    investmentController.buyGold(request, "idem-gold", mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getData().getUserId()).isEqualTo(testUserId);
-            verify(investmentApplicationService).buyGold(testUserId, testAmount);
+            verify(investmentApplicationService).buyGold(testUserId, testAmount, "idem-gold");
         }
     }
 

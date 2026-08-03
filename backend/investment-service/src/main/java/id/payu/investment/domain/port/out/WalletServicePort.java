@@ -1,7 +1,7 @@
 package id.payu.investment.domain.port.out;
 
 import java.math.BigDecimal;
-import java.util.concurrent.CompletionException;
+import java.util.UUID;
 
 /**
  * Output port for wallet service operations.
@@ -16,7 +16,11 @@ public interface WalletServicePort {
      * @param amount the amount to deduct
      * @throws CompletionException if deduction fails
      */
-    void deductBalance(String userId, BigDecimal amount);
+    default void deductBalance(String userId, BigDecimal amount) {
+        deductBalance(userId, amount, UUID.randomUUID().toString());
+    }
+
+    void deductBalance(String userId, BigDecimal amount, String referenceId);
 
     /**
      * Credit balance to user wallet from investment redemption/profit.
@@ -25,7 +29,11 @@ public interface WalletServicePort {
      * @param amount the amount to credit
      * @throws CompletionException if credit fails
      */
-    void creditBalance(String userId, BigDecimal amount);
+    default void creditBalance(String userId, BigDecimal amount) {
+        creditBalance(userId, amount, UUID.randomUUID().toString());
+    }
+
+    void creditBalance(String userId, BigDecimal amount, String referenceId);
 
     /**
      * Check if user has sufficient balance for investment.

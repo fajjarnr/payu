@@ -152,12 +152,27 @@ public class WalletService implements WalletUseCase {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
+        if (referenceId == null || referenceId.isBlank()) {
+            throw new IllegalArgumentException("Reference ID is required");
+        }
+
+        Optional<LedgerEntry> existingReservation = walletPersistencePort.findReservationByReference(referenceId);
+        if (existingReservation.isPresent()) {
+            validateReservationReplay(existingReservation.get(), accountId, amount);
+            return existingReservation.get().getTransactionId().toString();
+        }
 
         log.info("Reserving {} for account {} with reference {}", amount, accountId, referenceId);
 
         // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
         Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
+
+        existingReservation = walletPersistencePort.findReservationByReference(referenceId);
+        if (existingReservation.isPresent()) {
+            validateReservationReplay(existingReservation.get(), accountId, amount);
+            return existingReservation.get().getTransactionId().toString();
+        }
 
         if (!wallet.hasSufficientBalance(amount)) {
             throw new InsufficientBalanceException(accountId, amount, wallet.getAvailableBalance());
@@ -205,12 +220,21 @@ public class WalletService implements WalletUseCase {
                 .findFirst()
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
+        if (walletPersistencePort.findByTransactionId(UUID.fromString(reservationId)).stream()
+                .anyMatch(entry -> "COMMIT".equals(entry.getReferenceType()))) {
+            return;
+        }
+
         BigDecimal reservedAmount = debitEntry.getAmount();
         String accountId = debitEntry.getAccountId();
 
         // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
         Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
+        if (walletPersistencePort.findByTransactionId(UUID.fromString(reservationId)).stream()
+                .anyMatch(entry -> "COMMIT".equals(entry.getReferenceType()))) {
+            return;
+        }
         wallet.commitReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
@@ -250,12 +274,21 @@ public class WalletService implements WalletUseCase {
                 .findFirst()
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
+        if (walletPersistencePort.findByTransactionId(UUID.fromString(reservationId)).stream()
+                .anyMatch(entry -> "RELEASE".equals(entry.getReferenceType()))) {
+            return;
+        }
+
         BigDecimal reservedAmount = releaseEntry.getAmount();
         String accountId = releaseEntry.getAccountId();
 
         // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
         Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
+        if (walletPersistencePort.findByTransactionId(UUID.fromString(reservationId)).stream()
+                .anyMatch(entry -> "RELEASE".equals(entry.getReferenceType()))) {
+            return;
+        }
         wallet.releaseReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
@@ -303,12 +336,25 @@ public class WalletService implements WalletUseCase {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
+        if (referenceId == null || referenceId.isBlank()) {
+            throw new IllegalArgumentException("Reference ID is required");
+        }
+
+        Optional<WalletTransaction> existingTransaction = walletPersistencePort.findTransactionByReference(referenceId);
+        if (existingTransaction.isPresent()) {
+            return validateCreditReplay(existingTransaction.get(), accountId, amount);
+        }
 
         log.info("Crediting {} to account {} with reference {}", amount, accountId, referenceId);
 
         // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
         Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
+
+        existingTransaction = walletPersistencePort.findTransactionByReference(referenceId);
+        if (existingTransaction.isPresent()) {
+            return validateCreditReplay(existingTransaction.get(), accountId, amount);
+        }
 
         // Update wallet balance
         BigDecimal oldBalance = wallet.getBalance();
@@ -356,6 +402,26 @@ public class WalletService implements WalletUseCase {
 
         log.info("Credited {} to account {}, transactionId: {}", amount, accountId, transactionId);
         return transactionId.toString();
+    }
+
+    private void validateReservationReplay(LedgerEntry reservation, String accountId, BigDecimal amount) {
+        if (!accountId.equals(reservation.getAccountId())
+                || reservation.getAmount() == null
+                || reservation.getAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException("Reference ID was already used for a different reservation");
+        }
+    }
+
+    private String validateCreditReplay(WalletTransaction transaction, String accountId, BigDecimal amount) {
+        Wallet wallet = walletPersistencePort.findByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        if (!wallet.getId().equals(transaction.getWalletId())
+                || transaction.getType() != TransactionType.CREDIT
+                || transaction.getAmount() == null
+                || transaction.getAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException("Reference ID was already used for a different credit");
+        }
+        return transaction.getId().toString();
     }
 
     @Override

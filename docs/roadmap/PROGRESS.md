@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-023 investment distributed consistency deployed**:
+> - Investment purchases now persist idempotent operation state before wallet debit, use stable debit/compensation references, and reconcile debit/compensation recovery through a ShedLock-protected durable scheduler. Wallet reserve/commit/release/credit replays are reference-safe and backed by unique investment-reference indexes.
+> - Verification: selected investment tests `32/32` and wallet idempotency tests `2/2` passed; reactor package BUILD SUCCESS; images `investment-service:1.8.88` (`sha256:48ae79db4b2600400dff10b388de6d57c535a15e9dc1d684cd4d8ad79ad2a843`) and `wallet-service:1.8.101` (`sha256:d6b08751dc5fc5b9245e4fdcefc90c76ca563ecb316b585183f938a2c30fa227`) live, both pods Ready/restart 0, liveness/readiness `UP`; investment Flyway v5 and wallet Flyway v107 verified. No authenticated financial E2E was run without an isolated fixture.
+
 > ✅ **2026-08-03 — PROD-024 web investment truthfulness deployed**:
 > - Investments now renders only the authoritative investment-account balance/currency. Unsupported performance, risk, product, and advice data use explicit empty states; fabricated return/LPS/ROI/allocation claims and inactive actions were removed.
 > - Verification: focused page test `5/5`, full web Vitest `1201 passed | 1 skipped`, changed-file ESLint clean, type-check and production build successful; image `web-app:1.5.12` (`sha256:d76e1706a67f9351d65e9a80251da26bdbbd92d0fdf903b3d823b370c81d2496`) live, pod Ready 1/1/restart 0, health `healthy`, runtime `APP_VERSION=1.5.12`. Full lint still reports the pre-existing `src/lib/currency.ts:87` prefer-const error.

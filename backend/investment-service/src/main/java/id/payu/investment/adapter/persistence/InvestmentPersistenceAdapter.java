@@ -4,20 +4,26 @@ import id.payu.investment.adapter.persistence.repository.DepositRepository;
 import id.payu.investment.adapter.persistence.repository.GoldRepository;
 import id.payu.investment.adapter.persistence.repository.InvestmentAccountRepository;
 import id.payu.investment.adapter.persistence.repository.InvestmentTransactionRepository;
+import id.payu.investment.adapter.persistence.repository.InvestmentOperationRepository;
 import id.payu.investment.adapter.persistence.repository.MutualFundRepository;
 import id.payu.investment.domain.model.Deposit;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
 import id.payu.investment.domain.model.MutualFund;
+import id.payu.investment.domain.model.InvestmentOperation;
+import id.payu.investment.domain.model.InvestmentOperationStatus;
 import id.payu.investment.domain.port.out.InvestmentPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.List;
 import id.payu.investment.domain.model.AccountStatus;
 import id.payu.investment.domain.model.DepositStatus;
 import id.payu.investment.domain.model.FundStatus;
@@ -35,6 +41,7 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
     private final MutualFundRepository mutualFundRepository;
     private final GoldRepository goldRepository;
     private final InvestmentTransactionRepository transactionRepository;
+    private final InvestmentOperationRepository operationRepository;
 
     @Override
     @Transactional
@@ -99,6 +106,11 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
     }
 
     @Override
+    public Optional<Gold> findGoldById(UUID id) {
+        return goldRepository.findById(id).map(this::toGoldDomain);
+    }
+
+    @Override
     @Transactional
     public InvestmentTransaction saveTransaction(InvestmentTransaction transaction) {
         InvestmentTransactionEntity entity = toTransactionEntity(transaction);
@@ -109,6 +121,59 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
     @Override
     public Optional<InvestmentTransaction> findTransactionById(UUID id) {
         return transactionRepository.findById(id).map(this::toTransactionDomain);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public InvestmentOperation createInvestmentOperation(InvestmentOperation operation) {
+        return toOperationDomain(operationRepository.save(toOperationEntity(operation)));
+    }
+
+    @Override
+    @Transactional
+    public InvestmentOperation saveInvestmentOperation(InvestmentOperation operation) {
+        return toOperationDomain(operationRepository.save(toOperationEntity(operation)));
+    }
+
+    @Override
+    public Optional<InvestmentOperation> findInvestmentOperationByIdempotencyKey(String idempotencyKey) {
+        return operationRepository.findByIdempotencyKey(idempotencyKey).map(this::toOperationDomain);
+    }
+
+    @Override
+    public List<InvestmentOperation> findInvestmentOperationsForReconciliation(
+            List<InvestmentOperationStatus> statuses, LocalDateTime now) {
+        return operationRepository
+                .findByStatusInAndNextAttemptAtLessThanEqualOrderByNextAttemptAtAsc(statuses, now)
+                .stream()
+                .map(this::toOperationDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markInvestmentOperationCompensationPending(UUID operationId, String reason) {
+        operationRepository.findById(operationId).ifPresent(operation -> {
+            operation.setStatus(InvestmentOperationStatus.COMPENSATION_PENDING);
+            operation.setFailureReason(reason);
+            operation.setNextAttemptAt(LocalDateTime.now());
+            operation.setUpdatedAt(LocalDateTime.now());
+            operationRepository.save(operation);
+        });
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markInvestmentOperationRetry(UUID operationId, String reason) {
+        operationRepository.findById(operationId).ifPresent(operation -> {
+            InvestmentOperation domain = toOperationDomain(operation);
+            domain.scheduleRetry(reason);
+            operation.setRetryCount(domain.getRetryCount());
+            operation.setFailureReason(domain.getFailureReason());
+            operation.setNextAttemptAt(domain.getNextAttemptAt());
+            operation.setUpdatedAt(domain.getUpdatedAt());
+            operationRepository.save(operation);
+        });
     }
 
     @Override
@@ -292,6 +357,56 @@ public class InvestmentPersistenceAdapter implements InvestmentPersistencePort {
                 .referenceNumber(domain.getReferenceNumber())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
+                .build();
+    }
+
+    private InvestmentOperationEntity toOperationEntity(InvestmentOperation domain) {
+        return InvestmentOperationEntity.builder()
+                .id(domain.getId())
+                .idempotencyKey(domain.getIdempotencyKey())
+                .accountId(domain.getAccountId())
+                .userId(domain.getUserId())
+                .operationType(domain.getOperationType())
+                .productCode(domain.getProductCode())
+                .tenure(domain.getTenure())
+                .amount(domain.getAmount())
+                .price(domain.getPrice())
+                .currency(domain.getCurrency())
+                .status(domain.getStatus())
+                .targetId(domain.getTargetId())
+                .debitReference(domain.getDebitReference())
+                .compensationReference(domain.getCompensationReference())
+                .failureReason(domain.getFailureReason())
+                .retryCount(domain.getRetryCount())
+                .nextAttemptAt(domain.getNextAttemptAt())
+                .createdAt(domain.getCreatedAt())
+                .updatedAt(domain.getUpdatedAt())
+                .version(domain.getVersion())
+                .build();
+    }
+
+    private InvestmentOperation toOperationDomain(InvestmentOperationEntity entity) {
+        return InvestmentOperation.builder()
+                .id(entity.getId())
+                .idempotencyKey(entity.getIdempotencyKey())
+                .accountId(entity.getAccountId())
+                .userId(entity.getUserId())
+                .operationType(entity.getOperationType())
+                .productCode(entity.getProductCode())
+                .tenure(entity.getTenure())
+                .amount(entity.getAmount())
+                .price(entity.getPrice())
+                .currency(entity.getCurrency())
+                .status(entity.getStatus())
+                .targetId(entity.getTargetId())
+                .debitReference(entity.getDebitReference())
+                .compensationReference(entity.getCompensationReference())
+                .failureReason(entity.getFailureReason())
+                .retryCount(entity.getRetryCount())
+                .nextAttemptAt(entity.getNextAttemptAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .version(entity.getVersion())
                 .build();
     }
 }

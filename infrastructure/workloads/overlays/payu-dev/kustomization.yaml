@@ -42,9 +42,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newTag: "1.8.95"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.21
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.88
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-  newTag: "1.8.86"
+  newTag: "1.8.88"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:1.8.8
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newTag: "1.8.89"
@@ -75,9 +75,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.99
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newTag: "1.8.99"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.100
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.101
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-  newTag: "1.8.100"
+  newTag: "1.8.101"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.12
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newTag: "1.5.12"

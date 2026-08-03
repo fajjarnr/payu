@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for WalletTransactionEntity.
@@ -15,4 +16,6 @@ import java.util.UUID;
 public interface WalletTransactionJpaRepository extends JpaRepository<WalletTransactionEntity, UUID> {
 
     List<WalletTransactionEntity> findByWalletIdOrderByCreatedAtDesc(UUID walletId, Pageable pageable);
+
+    Optional<WalletTransactionEntity> findByReferenceId(String referenceId);
 }

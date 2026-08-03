@@ -5,6 +5,9 @@ import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
 import id.payu.investment.domain.model.MutualFund;
+import id.payu.investment.domain.model.InvestmentOperation;
+import id.payu.investment.domain.model.InvestmentOperationStatus;
+import id.payu.investment.domain.model.InvestmentOperationType;
 import id.payu.investment.domain.port.in.*;
 import id.payu.investment.domain.port.out.InvestmentEventPublisherPort;
 import id.payu.investment.domain.port.out.InvestmentPersistencePort;
@@ -108,9 +111,21 @@ public class InvestmentApplicationService implements
     @Transactional
     // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyDepositFallback")
-    @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
     public CompletableFuture<Deposit> buyDeposit(String accountId, String userId, BigDecimal amount, int tenure) {
+        return buyDepositInternal(accountId, userId, amount, tenure, null);
+    }
+
+    @Transactional
+    @CircuitBreaker(name = "walletService", fallbackMethod = "buyDepositWithKeyFallback")
+    @TimeLimiter(name = "walletService")
+    public CompletableFuture<Deposit> buyDeposit(String accountId, String userId, BigDecimal amount,
+                                                  int tenure, String idempotencyKey) {
+        return buyDepositInternal(accountId, userId, amount, tenure, idempotencyKey);
+    }
+
+    private CompletableFuture<Deposit> buyDepositInternal(String accountId, String userId, BigDecimal amount,
+                                                           int tenure, String idempotencyKey) {
         log.info("Processing deposit purchase for user: {}, amount: {}", userId, amount);
 
         InvestmentAccount account = investmentPersistencePort.findAccountById(UUID.fromString(accountId))
@@ -119,15 +134,24 @@ public class InvestmentApplicationService implements
         BigDecimal interestRate = calculateDepositInterestRate(tenure);
         BigDecimal maturityAmount = calculateMaturityAmount(amount, interestRate, tenure);
 
-        if (!walletServicePort.hasSufficientBalance(userId, amount)) {
+        InvestmentOperation operation = idempotencyKey == null ? null : prepareOperation(
+                idempotencyKey, accountId, userId, InvestmentOperationType.DEPOSIT_PURCHASE,
+                null, tenure, amount, BigDecimal.ZERO);
+        if (operation != null && operation.getStatus() == InvestmentOperationStatus.COMPLETED) {
+            return CompletableFuture.completedFuture(investmentPersistencePort.findDepositById(operation.getTargetId())
+                    .orElseThrow(() -> new IllegalStateException("Completed deposit operation has no deposit")));
+        }
+        ensureOperationCanContinue(operation);
+
+        if (operation == null && !walletServicePort.hasSufficientBalance(userId, amount)) {
             throw new IllegalArgumentException("Insufficient wallet balance");
         }
 
-        walletServicePort.deductBalance(userId, amount);
-
-        // BUG-BE-021 Fix: Saga compensation – if save fails after wallet deduction,
-        // credit the amount back. Without this, money is lost without a deposit record.
+        boolean walletDebitConfirmed = false;
         try {
+            debitWallet(userId, amount, operation);
+            walletDebitConfirmed = true;
+
             LocalDateTime now = LocalDateTime.now();
             Deposit deposit = Deposit.builder()
                     .id(UUID.randomUUID())
@@ -159,12 +183,19 @@ public class InvestmentApplicationService implements
                     .fee(BigDecimal.ZERO)
                     .currency("IDR")
                     .status(TransactionStatus.COMPLETED)
-                    .referenceNumber("DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
+                    .referenceNumber(operation == null
+                            ? "DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase()
+                            : "DEP-" + operation.getId())
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
 
             investmentPersistencePort.saveTransaction(transaction);
+
+            if (operation != null) {
+                operation.complete(savedDeposit.getId());
+                investmentPersistencePort.saveInvestmentOperation(operation);
+            }
 
             log.info("Deposit purchased successfully: {}", savedDeposit.getId());
 
@@ -179,15 +210,7 @@ public class InvestmentApplicationService implements
 
             return CompletableFuture.completedFuture(savedDeposit);
         } catch (Exception e) {
-            log.error("Deposit save failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
-            try {
-                walletServicePort.creditBalance(userId, amount);
-                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
-            } catch (Exception rollbackEx) {
-                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
-                        userId, amount, rollbackEx.getMessage());
-            }
-            throw new RuntimeException("Deposit purchase failed, wallet refunded: " + e.getMessage(), e);
+            return failedPurchase("Deposit", userId, amount, operation, walletDebitConfirmed, e);
         }
     }
 
@@ -195,10 +218,22 @@ public class InvestmentApplicationService implements
     @Transactional
     // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyMutualFundFallback")
-    @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
     public CompletableFuture<InvestmentTransaction> buyMutualFund(String accountId, String userId, 
             String fundCode, BigDecimal amount) {
+        return buyMutualFundInternal(accountId, userId, fundCode, amount, null);
+    }
+
+    @Transactional
+    @CircuitBreaker(name = "walletService", fallbackMethod = "buyMutualFundWithKeyFallback")
+    @TimeLimiter(name = "walletService")
+    public CompletableFuture<InvestmentTransaction> buyMutualFund(String accountId, String userId,
+            String fundCode, BigDecimal amount, String idempotencyKey) {
+        return buyMutualFundInternal(accountId, userId, fundCode, amount, idempotencyKey);
+    }
+
+    private CompletableFuture<InvestmentTransaction> buyMutualFundInternal(String accountId, String userId,
+            String fundCode, BigDecimal amount, String idempotencyKey) {
         log.info("Processing mutual fund purchase for user: {}, fund: {}, amount: {}", userId, fundCode, amount);
 
         InvestmentAccount account = investmentPersistencePort.findAccountById(UUID.fromString(accountId))
@@ -213,16 +248,27 @@ public class InvestmentApplicationService implements
             throw new IllegalArgumentException("Amount below minimum investment");
         }
 
-        if (!walletServicePort.hasSufficientBalance(userId, amount)) {
+        InvestmentOperation operation = idempotencyKey == null ? null : prepareOperation(
+                idempotencyKey, accountId, userId, InvestmentOperationType.MUTUAL_FUND_PURCHASE,
+                fundCode, null, amount, fund.getNavPerUnit());
+        if (operation != null && operation.getStatus() == InvestmentOperationStatus.COMPLETED) {
+            return CompletableFuture.completedFuture(investmentPersistencePort.findTransactionById(operation.getTargetId())
+                    .orElseThrow(() -> new IllegalStateException("Completed fund operation has no transaction")));
+        }
+        ensureOperationCanContinue(operation);
+
+        if (operation == null && !walletServicePort.hasSufficientBalance(userId, amount)) {
             throw new IllegalArgumentException("Insufficient wallet balance");
         }
 
-        walletServicePort.deductBalance(userId, amount);
-
-        // BUG-BE-172 FIX: Saga compensation – if save fails after wallet deduction,
-        // credit the amount back. Matches the buyDeposit pattern.
+        boolean walletDebitConfirmed = false;
         try {
-            BigDecimal units = amount.divide(fund.getNavPerUnit(), 4, RoundingMode.DOWN);
+            debitWallet(userId, amount, operation);
+            walletDebitConfirmed = true;
+
+            BigDecimal price = operation != null && operation.getPrice() != null
+                    ? operation.getPrice() : fund.getNavPerUnit();
+            BigDecimal units = amount.divide(price, 4, RoundingMode.DOWN);
             BigDecimal fee = amount.multiply(fund.getManagementFee());
 
             LocalDateTime now = LocalDateTime.now();
@@ -233,18 +279,25 @@ public class InvestmentApplicationService implements
                     .investmentType(InvestmentType.MUTUAL_FUND)
                     .investmentId(fundCode)
                     .amount(amount)
-                    .price(fund.getNavPerUnit())
+                    .price(price)
                     .units(units)
                     .fee(fee)
                     .currency("IDR")
                     .status(TransactionStatus.COMPLETED)
-                    .referenceNumber("MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
+                    .referenceNumber(operation == null
+                            ? "MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase()
+                            : "MF-" + operation.getId())
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
 
             InvestmentTransaction savedTransaction = investmentPersistencePort.saveTransaction(transaction);
             investmentPersistencePort.updateAccountBalance(account.getId(), amount);
+
+            if (operation != null) {
+                operation.complete(savedTransaction.getId());
+                investmentPersistencePort.saveInvestmentOperation(operation);
+            }
 
             log.info("Mutual fund purchased successfully: {}", savedTransaction.getId());
 
@@ -259,15 +312,7 @@ public class InvestmentApplicationService implements
 
             return CompletableFuture.completedFuture(savedTransaction);
         } catch (Exception e) {
-            log.error("Mutual fund purchase failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
-            try {
-                walletServicePort.creditBalance(userId, amount);
-                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
-            } catch (Exception rollbackEx) {
-                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
-                        userId, amount, rollbackEx.getMessage());
-            }
-            throw new RuntimeException("Mutual fund purchase failed, wallet refunded: " + e.getMessage(), e);
+            return failedPurchase("Mutual fund", userId, amount, operation, walletDebitConfirmed, e);
         }
     }
 
@@ -275,25 +320,47 @@ public class InvestmentApplicationService implements
     @Transactional
     // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyGoldFallback")
-    @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
     public CompletableFuture<Gold> buyGold(String userId, BigDecimal amount) {
+        return buyGoldInternal(userId, amount, null);
+    }
+
+    @Transactional
+    @CircuitBreaker(name = "walletService", fallbackMethod = "buyGoldWithKeyFallback")
+    @TimeLimiter(name = "walletService")
+    public CompletableFuture<Gold> buyGold(String userId, BigDecimal amount, String idempotencyKey) {
+        return buyGoldInternal(userId, amount, idempotencyKey);
+    }
+
+    private CompletableFuture<Gold> buyGoldInternal(String userId, BigDecimal amount, String idempotencyKey) {
         log.info("Processing gold purchase for user: {}, amount: {}", userId, amount);
 
-        BigDecimal currentPrice = investmentPersistencePort.getLatestGoldPrice();
+        InvestmentOperation existingOperation = idempotencyKey == null ? null
+                : investmentPersistencePort.findInvestmentOperationByIdempotencyKey(idempotencyKey).orElse(null);
+        BigDecimal currentPrice = existingOperation != null && existingOperation.getPrice() != null
+                ? existingOperation.getPrice() : investmentPersistencePort.getLatestGoldPrice();
         if (currentPrice == null) {
             throw new IllegalArgumentException("Gold price not available");
         }
 
-        if (!walletServicePort.hasSufficientBalance(userId, amount)) {
+        InvestmentOperation operation = idempotencyKey == null ? null : prepareOperation(
+                idempotencyKey, userId, userId, InvestmentOperationType.GOLD_PURCHASE,
+                "XAU", null, amount, currentPrice);
+        if (operation != null && operation.getStatus() == InvestmentOperationStatus.COMPLETED) {
+            return CompletableFuture.completedFuture(investmentPersistencePort.findGoldById(operation.getTargetId())
+                    .orElseThrow(() -> new IllegalStateException("Completed gold operation has no holding")));
+        }
+        ensureOperationCanContinue(operation);
+
+        if (operation == null && !walletServicePort.hasSufficientBalance(userId, amount)) {
             throw new IllegalArgumentException("Insufficient wallet balance");
         }
 
-        walletServicePort.deductBalance(userId, amount);
-
-        // BUG-BE-172 FIX: Saga compensation – if save fails after wallet deduction,
-        // credit the amount back. Matches the buyDeposit pattern.
+        boolean walletDebitConfirmed = false;
         try {
+            debitWallet(userId, amount, operation);
+            walletDebitConfirmed = true;
+
             Gold gold = investmentPersistencePort.findGoldByUserId(userId).orElse(null);
 
             if (gold == null) {
@@ -328,6 +395,11 @@ public class InvestmentApplicationService implements
 
             Gold savedGold = investmentPersistencePort.saveGold(gold);
 
+            if (operation != null) {
+                operation.complete(savedGold.getId());
+                investmentPersistencePort.saveInvestmentOperation(operation);
+            }
+
             log.info("Gold purchased successfully: {}", savedGold.getId());
 
             investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
@@ -341,15 +413,7 @@ public class InvestmentApplicationService implements
 
             return CompletableFuture.completedFuture(savedGold);
         } catch (Exception e) {
-            log.error("Gold purchase failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
-            try {
-                walletServicePort.creditBalance(userId, amount);
-                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
-            } catch (Exception rollbackEx) {
-                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
-                        userId, amount, rollbackEx.getMessage());
-            }
-            throw new RuntimeException("Gold purchase failed, wallet refunded: " + e.getMessage(), e);
+            return failedPurchase("Gold", userId, amount, operation, walletDebitConfirmed, e);
         }
     }
 
@@ -458,6 +522,67 @@ public class InvestmentApplicationService implements
         return principal.multiply(BigDecimal.ONE.add(rate));
     }
 
+    private InvestmentOperation prepareOperation(String idempotencyKey, String accountId, String userId,
+                                                  InvestmentOperationType type, String productCode, Integer tenure,
+                                                  BigDecimal amount, BigDecimal price) {
+        return investmentPersistencePort.findInvestmentOperationByIdempotencyKey(idempotencyKey)
+                .map(existing -> {
+                    if (!existing.matches(accountId, userId, type, productCode, tenure, amount)) {
+                        throw new IllegalArgumentException("Idempotency key was already used for a different investment operation");
+                    }
+                    return existing;
+                })
+                .orElseGet(() -> investmentPersistencePort.createInvestmentOperation(
+                        InvestmentOperation.requested(idempotencyKey, accountId, userId, type,
+                                productCode, tenure, amount, price, "IDR")));
+    }
+
+    private void ensureOperationCanContinue(InvestmentOperation operation) {
+        if (operation != null && (operation.getStatus() == InvestmentOperationStatus.COMPENSATION_PENDING
+                || operation.getStatus() == InvestmentOperationStatus.COMPENSATED)) {
+            throw new IllegalStateException("Investment operation is pending or has completed compensation");
+        }
+    }
+
+    private void debitWallet(String userId, BigDecimal amount, InvestmentOperation operation) {
+        if (operation == null) {
+            walletServicePort.deductBalance(userId, amount);
+            return;
+        }
+        if (operation.getStatus() == InvestmentOperationStatus.DEBIT_REQUESTED) {
+            walletServicePort.deductBalance(userId, amount, operation.getDebitReference());
+            operation.markDebited();
+            investmentPersistencePort.saveInvestmentOperation(operation);
+        }
+    }
+
+    private <T> CompletableFuture<T> failedPurchase(String kind, String userId, BigDecimal amount,
+                                                     InvestmentOperation operation, boolean walletDebitConfirmed,
+                                                     Exception error) {
+        if (operation == null) {
+            try {
+                walletServicePort.creditBalance(userId, amount);
+            } catch (Exception refundError) {
+                log.error("CRITICAL: {} purchase failed and wallet refund failed for user {}",
+                        kind, userId, refundError);
+            }
+            throw new RuntimeException(kind + " purchase failed, wallet refunded: " + error.getMessage(), error);
+        }
+
+        try {
+            if (walletDebitConfirmed) {
+                investmentPersistencePort.markInvestmentOperationCompensationPending(
+                        operation.getId(), error.getMessage());
+            } else {
+                investmentPersistencePort.markInvestmentOperationRetry(operation.getId(), error.getMessage());
+            }
+        } catch (Exception stateError) {
+            log.error("CRITICAL: could not persist investment operation recovery state for {}",
+                    operation.getId(), stateError);
+        }
+        throw new RuntimeException(kind + " purchase failed; recovery scheduled", error);
+    }
+
     public CompletableFuture<InvestmentAccount> createAccountFallback(String userId, Throwable t) {
         log.error("Wallet service unavailable during account creation. Error: {}", t.getMessage());
         // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
@@ -481,6 +606,24 @@ public class InvestmentApplicationService implements
     public CompletableFuture<Gold> buyGoldFallback(String userId, BigDecimal amount, Throwable t) {
         log.error("Wallet service unavailable during gold purchase. Error: {}", t.getMessage());
         // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
+    }
+
+    public CompletableFuture<Deposit> buyDepositWithKeyFallback(String accountId, String userId,
+            BigDecimal amount, int tenure, String idempotencyKey, Throwable t) {
+        log.error("Wallet service unavailable during idempotent deposit purchase. Error: {}", t.getMessage());
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
+    }
+
+    public CompletableFuture<InvestmentTransaction> buyMutualFundWithKeyFallback(String accountId, String userId,
+            String fundCode, BigDecimal amount, String idempotencyKey, Throwable t) {
+        log.error("Wallet service unavailable during idempotent mutual fund purchase. Error: {}", t.getMessage());
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
+    }
+
+    public CompletableFuture<Gold> buyGoldWithKeyFallback(String userId, BigDecimal amount,
+            String idempotencyKey, Throwable t) {
+        log.error("Wallet service unavailable during idempotent gold purchase. Error: {}", t.getMessage());
         return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 
