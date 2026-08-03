@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.7` (2026-08-01) — redeploy-hardening: OVN fine-grained egress → allow-all (VSO + logging NP), kraken writable mounts, Job Replace=true + psql timeouts, DR drill recovery-keys/TokenReview |
-| **Last Updated** | 2026-08-03 (MVP-003 VA settlement closed; OPS-2026-08-01-03/04 resolved — root cause kyverno default-deny + OVN egress, fix L-188; kraken gate pending capacity; DR restore verified) |
+| **Last Updated** | 2026-08-03 (MVP-003 VA settlement and PROD-019 refund authorization closed; OPS-2026-08-01-03/04 resolved — root cause kyverno default-deny + OVN egress, fix L-188; kraken gate pending capacity; DR restore verified) |
 
 ---
 
@@ -221,7 +221,6 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
-| PROD-019 | P0 | Refund authorization | `backend/dispute-service/.../RefundController.java:35-177` tidak memiliki `@PreAuthorize`; lifecycle `process/complete/fail/cancel` juga tidak memiliki `@Idempotent`, sementara endpoint read/status dapat dipanggil langsung berdasarkan ID/filter. | Tetapkan role/ownership eksplisit untuk setiap route, wajibkan idempotency pada semua mutation, lalu uji anonymous/role denial dan replay; pastikan global security tidak menjadi satu-satunya guard. |
 | PROD-020 | P0 | Dispute IDOR | `DisputeController.java:62-73,168-206` menerima `customerId` dari request dan mengizinkan authority `user` membaca dispute berdasarkan arbitrary `disputeId`, `transactionId`, atau `customerId` tanpa ownership check. | Ambil customer dari JWT, scope semua query user ke principal, pisahkan route operasional, dan tambahkan negative test lintas customer. |
 | PROD-021 | P0 | Dispute refund execution | `DisputeService.java:76-81` hanya menyimpan status resolved lalu menulis log “Refund should be triggered”; resolusi `REFUND_CUSTOMER/PARTIAL_REFUND` tidak membuat refund/event/outbox. | Buat durable refund command/outbox dengan retry, idempotency, reversal-ledger verification, dan reconciliation test; jangan menganggap log sebagai completion. |
 | PROD-022 | P0 | Loan repayment money movement | `LoanManagementService.java:65-97` hanya menambah `paidAmount` dan status schedule; tidak ada debit wallet, double-entry ledger, outbox, payment reference, batas amount positif/outstanding, atau guard null. `createRepaymentSchedule` juga dapat menggandakan schedule. | Jalankan repayment sebagai financial command yang ter-reconcile, validasi exact amount dengan `BigDecimal`, gunakan unique/idempotent schedule creation, dan uji duplicate/overpay/replay/failure recovery. |

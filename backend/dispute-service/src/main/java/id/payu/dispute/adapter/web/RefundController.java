@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,12 +33,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/refunds")
 @RequiredArgsConstructor
 @Tag(name = "Refunds", description = "Refund management endpoints")
+@PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
 public class RefundController {
 
     private final RefundUseCase refundUseCase;
 
     @PostMapping("/full")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Create a full refund", description = "Creates a full refund for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Refund created successfully",
@@ -56,7 +58,7 @@ public class RefundController {
     }
 
     @PostMapping("/partial")
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Create a partial refund", description = "Creates a partial refund for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Refund created successfully",
@@ -78,6 +80,7 @@ public class RefundController {
     }
 
     @PostMapping("/{refundId}/process")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Process a refund", description = "Transitions refund from PENDING to PROCESSING")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Refund processed successfully",
@@ -93,6 +96,7 @@ public class RefundController {
     }
 
     @PostMapping("/{refundId}/complete")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Complete a refund", description = "Transitions refund from PROCESSING to COMPLETED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Refund completed successfully",
@@ -108,6 +112,7 @@ public class RefundController {
     }
 
     @PostMapping("/{refundId}/fail")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Fail a refund", description = "Transitions refund from PROCESSING to FAILED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Refund marked as failed",
@@ -124,6 +129,7 @@ public class RefundController {
     }
 
     @PostMapping("/{refundId}/cancel")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @Operation(summary = "Cancel a refund", description = "Transitions refund from PENDING to CANCELLED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Refund cancelled successfully",

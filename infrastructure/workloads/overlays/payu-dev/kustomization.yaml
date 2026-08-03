@@ -30,9 +30,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newTag: "1.8.80"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.21
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.83
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-  newTag: "1.8.82"
+  newTag: "1.8.83"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newTag: "1.8.81"

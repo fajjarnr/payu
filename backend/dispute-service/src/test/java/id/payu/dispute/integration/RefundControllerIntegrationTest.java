@@ -10,9 +10,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -39,7 +49,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("integration")
+@Import(RefundControllerIntegrationTest.TestSecurityConfiguration.class)
+@WithMockUser(authorities = "dispute_agent")
 class RefundControllerIntegrationTest {
+
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class TestSecurityConfiguration {
+
+        @Bean
+        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                    .build();
+        }
+    }
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
@@ -85,6 +111,7 @@ class RefundControllerIntegrationTest {
         // Create refund
         String responseJson = mockMvc.perform(post("/api/v1/refunds/partial")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Idempotency-Key", "refund-create-partial")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.transactionId").value(TRANSACTION_ID.toString()))
@@ -112,12 +139,14 @@ class RefundControllerIntegrationTest {
         refund = refundPersistencePort.save(refund);
 
         // Process refund
-        mockMvc.perform(post("/api/v1/refunds/{refundId}/process", refund.getId()))
+        mockMvc.perform(post("/api/v1/refunds/{refundId}/process", refund.getId())
+                        .header("X-Idempotency-Key", "refund-process"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PROCESSING"));
 
         // Complete refund
-        mockMvc.perform(post("/api/v1/refunds/{refundId}/complete", refund.getId()))
+        mockMvc.perform(post("/api/v1/refunds/{refundId}/complete", refund.getId())
+                        .header("X-Idempotency-Key", "refund-complete"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
@@ -160,6 +189,7 @@ class RefundControllerIntegrationTest {
 
         mockMvc.perform(post("/api/v1/refunds/{refundId}/fail", refund.getId())
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Idempotency-Key", "refund-fail")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
@@ -179,8 +209,33 @@ class RefundControllerIntegrationTest {
 
         mockMvc.perform(post("/api/v1/refunds/{refundId}/cancel", refund.getId())
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Idempotency-Key", "refund-cancel")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("Should reject anonymous refund reads")
+    void shouldRejectAnonymousRefundReads() throws Exception {
+        mockMvc.perform(get("/api/v1/refunds/{refundId}", UUID.randomUUID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "user")
+    @DisplayName("Should reject customer refund processing")
+    void shouldRejectCustomerRefundProcessing() throws Exception {
+        mockMvc.perform(post("/api/v1/refunds/{refundId}/process", UUID.randomUUID())
+                        .header("X-Idempotency-Key", "refund-customer-process"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Should require idempotency key for refund processing")
+    void shouldRequireIdempotencyKeyForRefundProcessing() throws Exception {
+        mockMvc.perform(post("/api/v1/refunds/{refundId}/process", UUID.randomUUID()))
+                .andExpect(status().isBadRequest());
     }
 }
