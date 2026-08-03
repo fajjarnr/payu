@@ -65,7 +65,7 @@ public class SecurityConfig {
                         // authenticated by HMAC signature (see CallbackSignatureFilter),
                         // not by user JWT.
                         .requestMatchers("/api/v1/disbursements/callback").permitAll()
-                        .requestMatchers("/api/v1/virtual-accounts/callback").permitAll()
+                        .requestMatchers("/api/v1/payments/va/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

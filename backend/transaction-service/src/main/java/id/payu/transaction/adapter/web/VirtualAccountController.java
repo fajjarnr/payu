@@ -68,6 +68,7 @@ public class VirtualAccountController extends BaseController {
     }
 
     @PostMapping("/callback")
+    @Idempotent(required = true)
     @Operation(summary = "Bank callback for VA payment confirmation",
                description = "Called by bank (simulated) when customer pays to the VA number")
     @Audited(operation = AuditOperation.UPDATE, entityType = "VirtualAccountEntity", level = AuditLevel.INFO)

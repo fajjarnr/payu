@@ -28,7 +28,7 @@ class CallbackSignatureFilterTest {
     private static final String SECRET = "test-callback-secret-key-do-not-use-in-prod";
     private static final List<String> PATHS = List.of(
             "/api/v1/disbursements/callback",
-            "/api/v1/virtual-accounts/callback");
+            "/api/v1/payments/va/callback");
 
     private CallbackSignatureFilter filter;
 
@@ -173,7 +173,7 @@ class CallbackSignatureFilterTest {
     @Test
     @DisplayName("should reject callback for VA callback path with invalid signature")
     void shouldRejectVaCallback() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/virtual-accounts/callback");
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/payments/va/callback");
         request.setContent("{\"vaNumber\":\"123\",\"amount\":1000}".getBytes(StandardCharsets.UTF_8));
         request.addHeader("X-Timestamp", String.valueOf(Instant.now().getEpochSecond()));
         request.addHeader("X-Signature", "wrongsignature");

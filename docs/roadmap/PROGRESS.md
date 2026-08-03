@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — MVP-003 VA settlement implementation completed (pre-deploy)**:
+> - VA creation now stores a required `settlementAccountId`; bank callbacks mark the VA paid only with a valid target, credit the wallet through `WalletServicePort`, and create `payment.completed` via the transactional outbox.
+> - Callback security is aligned to `/api/v1/payments/va/callback`: HMAC timestamp/signature verification, required idempotency key, and simulator/deployment secret parity.
+> - Verification: `transaction-service` 131/131 tests and `va-simulator` 8/8 tests passed. OpenShift deployment and live E2E remain pending.
+
 > ✅ **2026-08-01 — SIT promotion pipeline FULLY GREEN; LitmusChaos + automated GitOps live**:
 > - `payu-deploy-gitops-pipeline` SIT run `SUCCEEDED` (14m54s): fetch-infra-repo → gitops-writeback → argocd-sync-wait → ZAP baseline (0 FAIL) → Schemathesis (OpenAPI 3.1, `status_code_conformance` excluded) → Litmus gate (pod-delete **Pass**, account-service auto-recovered; pod-network-latency Pass) → k6 smoke (`/api/health`, 0% failed).
 > - ArgoCD: appset `automated` sync (no prune/self-heal) di 3 ApplicationSet; controller sized 6Gi/repo-server 2Gi/server 512Mi (OOM 137 selama sync storm 20+ app — L-171); `payu-sit` Synced `main`; argocd CLI admin auth live.
@@ -32,7 +37,7 @@
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
 | **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno (Enforce, 0 violations), Compliance (CIS 8/9), signed-image admission, EFS, OpenCost live. Vault, durable Loki/Results, SIEM (audit forwarding), DR remain gated. |
-| Last Status Update       | 2026-08-01                               | ARCH-007 selesai: operator-managed Data Grid mTLS, 16 suite E2E hijau, full backend test hijau; canary gate accepted; promosi deploy berikutnya. |
+| Last Status Update       | 2026-08-03                               | MVP-003 implementation verified locally; ARCH-007 remains deployed and healthy; live promotion/E2E for the VA settlement path is pending. |
 
 > ✅ **2026-08-01 — ARCH-007 Hot Rod/mTLS dev completion**:
 > - Data Grid dev dimigrasi ke Infinispan Operator CR (`WellFormed=True`, mTLS: server TLS + client CA + client keystore + identities literal-password — L-148); deployment manual + Service `payu-cache-resp` dihapus; semua workload pakai `payu-cache:11222` SSL.

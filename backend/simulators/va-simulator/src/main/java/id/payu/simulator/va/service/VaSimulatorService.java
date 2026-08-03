@@ -18,10 +18,15 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.HexFormat;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import id.payu.simulator.va.entity.VaStatus;
 
 /**
@@ -47,6 +52,9 @@ public class VaSimulatorService {
 
     @ConfigProperty(name = "va.simulator.callback.timeout", defaultValue = "10")
     int callbackTimeoutSeconds;
+
+    @ConfigProperty(name = "payu.callback.signature.secret")
+    Optional<String> callbackSignatureSecret;
 
     private final HttpClient httpClient;
 
@@ -214,10 +222,17 @@ public class VaSimulatorService {
                 request.customerAccountName() != null ? request.customerAccountName() : ""
             );
 
+            String timestamp = String.valueOf(Instant.now().getEpochSecond());
+            String signature = calculateSignature(timestamp, jsonPayload);
+            String idempotencyKey = UUID.nameUUIDFromBytes(
+                paymentRef.getBytes(StandardCharsets.UTF_8)).toString();
+
             HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(callbackEndpoint))
                 .header("Content-Type", "application/json")
-                .header("X-PayU-Callback-Secret", "va-simulator-secret")
+                .header("X-Timestamp", timestamp)
+                .header("X-Signature", signature)
+                .header("X-Idempotency-Key", idempotencyKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .timeout(Duration.ofSeconds(callbackTimeoutSeconds))
                 .build();
@@ -236,6 +251,20 @@ public class VaSimulatorService {
         } catch (Exception e) {
             Log.errorf(e, "Callback error for VA %s", va.vaNumber);
             return "ERROR: " + e.getMessage();
+        }
+    }
+
+    private String calculateSignature(String timestamp, String body) {
+        if (callbackSignatureSecret.isEmpty() || callbackSignatureSecret.get().isBlank()) {
+            throw new IllegalStateException("PAYU_CALLBACK_SIGNATURE_SECRET is not configured");
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(callbackSignatureSecret.get().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            return HexFormat.of().formatHex(mac.doFinal(
+                (timestamp + "\n" + body).getBytes(StandardCharsets.UTF_8)));
+        } catch (java.security.GeneralSecurityException e) {
+            throw new IllegalStateException("Unable to sign VA callback", e);
         }
     }
 

@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SNAP-BI payment/refund idempotency (MVP-004)**: `SnapBiPaymentService.createPayment`/`createRefund` kini guard via natural-key — replay `partnerReferenceNo`/`partnerRefundNo` mengembalikan record existing, bukan membikin duplikat `PENDING`. Ditopang unique index `uq_snap_payment_partner_ref` (partner_id, partner_reference_no) + `uq_snap_refund_partner_ref` (partner_id, payu_reference_no, partner_refund_no) di migrasi `V15` (dedup row residual via `DELETE USING`).
 - **Webhook keluar idempotent (MVP-006)**: `WebhookDispatcherService.dispatch` skip re-dispatch bila event sudah terkirim ke subscription (`existsByEventIdAndSubscription_Id`); unique index `(event_id, subscription_id)` di migrasi `V16` mencegah double row dari outbox at-least-once replay.
 - **Remove dead-code saga (MVP-002)**: hapus `TransferSagaOrchestrator`/`TransferSagaContext` (nol pemanggil, duplikat logika uang vs `InitiateTransferCommandHandler`); `SagaConfig` javadoc di-update — satu source of truth untuk logika transfer.
+- **VA collection settlement (MVP-003)**: migrasi `V23` + callback `/api/v1/payments/va/callback` kini menyimpan target settlement wajib, menulis event outbox `payment.completed`, dan mengkredit wallet via `WalletServicePort` dengan transaksi/idempotensi callback; HMAC filter dan `permitAll` memakai path callback nyata, simulator mengirim signature + idempotency key dari secret environment.
 - **Test**: tambah `testCreatePaymentIdempotentReplay` (SnapBiPaymentServiceTest) + `shouldSkipDuplicateEvent` (WebhookDispatcherServiceTest, ✓ `throws Exception` untuk checked `IOException` dari `HttpClient.send`).
 
 > **Verify**: partner-service + transaction-service `mvn test` BUILD SUCCESS, 235 tests 0 fail (2026-08-03, workaround `-Daether.connector.basic.threads=1` utk Maven 3.9.16/JDK 25 + L-196).
+> **Verify MVP-003**: transaction-service 131/131 tests + va-simulator 8/8 tests BUILD SUCCESS (2026-08-03).
 
 ## [1.10.7] - 2026-08-01
 

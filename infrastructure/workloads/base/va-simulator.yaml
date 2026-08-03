@@ -68,6 +68,11 @@ spec:
           value: postgresql
         - name: VA_CALLBACK_URL
           value: http://transaction-service:8080/api/v1/payments/va/callback
+        - name: PAYU_CALLBACK_SIGNATURE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WEBHOOK_SECRET
         envFrom:
         - configMapRef:
             name: va-simulator-config

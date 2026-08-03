@@ -2,6 +2,27 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Transaction service, Virtual Account, Spring Security, Quarkus, Flyway, Outbox, Idempotency
+**Context**: The VA callback controller used `/api/v1/payments/va/callback`, while the HMAC filter default and Spring `permitAll` rule used `/api/v1/virtual-accounts/callback`. The simulator also sent a legacy secret header instead of the HMAC contract and had no idempotency key. VA creation did not persist an explicit settlement wallet target.
+
+**Lesson**:
+- Trace an external callback end-to-end: simulator URL → controller mapping → security matcher → signature filter → idempotency interceptor. A path typo can leave the real endpoint unprotected or reject valid bank traffic.
+- Bank callbacks need one authentication contract: HMAC `X-Timestamp` + `X-Signature`, `permitAll` only for the verified path, and required `X-Idempotency-Key`; a user JWT is not the bank identity.
+- Capture `settlementAccountId` when creating a VA and reject missing targets before marking it paid. Never turn a missing ledger destination into a warning/no-op.
+- Write the outbox event in the same transaction and propagate failures; swallowing an outbox exception after a money mutation can acknowledge an incomplete settlement.
+- Test simulators as protocol clients: read the shared secret from environment configuration and derive a stable UUID idempotency key from the bank payment reference. Do not hardcode callback secrets.
+- Add schema changes in a new Flyway migration (`V23`); never edit an applied migration.
+
+**Applied evidence**:
+- `VirtualAccountService` now credits `WalletServicePort`, writes `payment.completed` through `outbox-starter`, and requires a settlement account.
+- The callback filter, security matcher, simulator, and deployment config all use `/api/v1/payments/va/callback` and the shared `PAYU_CALLBACK_SIGNATURE_SECRET`.
+- `transaction-service` passed 131/131 tests; `va-simulator` passed 8/8 tests on 2026-08-03.
+
+---
+
 ## L-133: HA RHTAS Requires Dependency Ordering and Explicit Default-Deny Paths (2026-07-22)
 
 **Date**: 2026-07-22
@@ -4642,4 +4663,3 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 - Migrasi `V15__snap_payment_idempotency_unique.sql` + `V16__webhook_delivery_idempotency_unique.sql` (untracked, harus di-commit).
 - Hapus `TransferSagaOrchestrator`/`TransferSagaContext`; `SagaConfig` javadoc di-update.
 - Build verified: partner-service + transaction-service `mvn test` SUCCESS, 235 tests 0 fail (partner).
-

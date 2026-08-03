@@ -14,9 +14,10 @@ public class CreateVirtualAccountRequest {
     public CreateVirtualAccountRequest() {
     }
 
-    public CreateVirtualAccountRequest(String bankCode, UUID partnerId, BigDecimal amount, String currency, String description, String customerName, String customerEmail, String customerPhone, String externalId, String callbackUrl, Integer expiryHours) {
+    public CreateVirtualAccountRequest(String bankCode, UUID partnerId, String settlementAccountId, BigDecimal amount, String currency, String description, String customerName, String customerEmail, String customerPhone, String externalId, String callbackUrl, Integer expiryHours) {
         this.bankCode = bankCode;
         this.partnerId = partnerId;
+        this.settlementAccountId = settlementAccountId;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
@@ -35,6 +36,7 @@ public class CreateVirtualAccountRequest {
     public static class CreateVirtualAccountRequestBuilder {
         private String bankCode;
         private UUID partnerId;
+        private String settlementAccountId;
         private BigDecimal amount;
         private String currency;
         private String description;
@@ -51,6 +53,10 @@ public class CreateVirtualAccountRequest {
         }
         public CreateVirtualAccountRequestBuilder partnerId(UUID partnerId) {
             this.partnerId = partnerId;
+            return this;
+        }
+        public CreateVirtualAccountRequestBuilder settlementAccountId(String settlementAccountId) {
+            this.settlementAccountId = settlementAccountId;
             return this;
         }
         public CreateVirtualAccountRequestBuilder amount(BigDecimal amount) {
@@ -91,7 +97,7 @@ public class CreateVirtualAccountRequest {
         }
 
         public CreateVirtualAccountRequest build() {
-            return new CreateVirtualAccountRequest(bankCode, partnerId, amount, currency, description, customerName, customerEmail, customerPhone, externalId, callbackUrl, expiryHours);
+            return new CreateVirtualAccountRequest(bankCode, partnerId, settlementAccountId, amount, currency, description, customerName, customerEmail, customerPhone, externalId, callbackUrl, expiryHours);
         }
     }
 
@@ -109,6 +115,14 @@ public class CreateVirtualAccountRequest {
 
     public void setPartnerId(UUID partnerId) {
         this.partnerId = partnerId;
+    }
+
+    public String getSettlementAccountId() {
+        return settlementAccountId;
+    }
+
+    public void setSettlementAccountId(String settlementAccountId) {
+        this.settlementAccountId = settlementAccountId;
     }
 
     public BigDecimal getAmount() {
@@ -190,6 +204,9 @@ public class CreateVirtualAccountRequest {
 
     @NotNull(message = "Partner ID is required")
     private UUID partnerId;
+
+    @NotBlank(message = "Settlement account ID is required")
+    private String settlementAccountId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "1000", message = "Minimum amount is 1000")

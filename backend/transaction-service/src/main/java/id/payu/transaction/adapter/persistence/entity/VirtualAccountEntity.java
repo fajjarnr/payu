@@ -29,13 +29,14 @@ public class VirtualAccountEntity {
     public VirtualAccountEntity() {
     }
 
-    public VirtualAccountEntity(UUID id, String vaNumber, String bankCode, String bankName, UUID partnerId, String externalId, BigDecimal amount, String currency, String description, String customerName, String customerEmail, String customerPhone, VaStatus status, String callbackUrl, BigDecimal paidAmount, Instant paidAt, String paymentReference, Instant expiresAt, Instant createdAt, Instant updatedAt, String idempotencyKey) {
+    public VirtualAccountEntity(UUID id, String vaNumber, String bankCode, String bankName, UUID partnerId, String externalId, String settlementAccountId, BigDecimal amount, String currency, String description, String customerName, String customerEmail, String customerPhone, VaStatus status, String callbackUrl, BigDecimal paidAmount, Instant paidAt, String paymentReference, Instant expiresAt, Instant createdAt, Instant updatedAt, String idempotencyKey) {
         this.id = id;
         this.vaNumber = vaNumber;
         this.bankCode = bankCode;
         this.bankName = bankName;
         this.partnerId = partnerId;
         this.externalId = externalId;
+        this.settlementAccountId = settlementAccountId;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
@@ -64,6 +65,7 @@ public class VirtualAccountEntity {
         private String bankName;
         private UUID partnerId;
         private String externalId;
+        private String settlementAccountId;
         private BigDecimal amount;
         private String currency;
         private String description;
@@ -102,6 +104,10 @@ public class VirtualAccountEntity {
         }
         public VirtualAccountBuilder externalId(String externalId) {
             this.externalId = externalId;
+            return this;
+        }
+        public VirtualAccountBuilder settlementAccountId(String settlementAccountId) {
+            this.settlementAccountId = settlementAccountId;
             return this;
         }
         public VirtualAccountBuilder amount(BigDecimal amount) {
@@ -166,7 +172,7 @@ public class VirtualAccountEntity {
         }
 
         public VirtualAccountEntity build() {
-            return new VirtualAccountEntity(id, vaNumber, bankCode, bankName, partnerId, externalId, amount, currency, description, customerName, customerEmail, customerPhone, status, callbackUrl, paidAmount, paidAt, paymentReference, expiresAt, createdAt, updatedAt, idempotencyKey);
+            return new VirtualAccountEntity(id, vaNumber, bankCode, bankName, partnerId, externalId, settlementAccountId, amount, currency, description, customerName, customerEmail, customerPhone, status, callbackUrl, paidAmount, paidAt, paymentReference, expiresAt, createdAt, updatedAt, idempotencyKey);
         }
     }
 
@@ -216,6 +222,14 @@ public class VirtualAccountEntity {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
+    }
+
+    public String getSettlementAccountId() {
+        return settlementAccountId;
+    }
+
+    public void setSettlementAccountId(String settlementAccountId) {
+        this.settlementAccountId = settlementAccountId;
     }
 
     public BigDecimal getAmount() {
@@ -370,6 +384,9 @@ public class VirtualAccountEntity {
 
     @Column(name = "external_id", length = 200)
     private String externalId;
+
+    @Column(name = "settlement_account_id", length = 100)
+    private String settlementAccountId;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount; // AUDIT-042

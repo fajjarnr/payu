@@ -2,16 +2,20 @@ package id.payu.transaction.application.service;
 
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
+import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
 import id.payu.transaction.dto.VirtualAccountResponse;
-import lombok.extern.slf4j.Slf4j;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import id.payu.transaction.domain.model.BankCode;
@@ -29,15 +33,22 @@ public class VirtualAccountService {
 
 
     private final VirtualAccountPersistencePort virtualAccountPersistencePort;
+    private final WalletServicePort walletServicePort;
+    private final OutboxService outboxService;
 
-    public VirtualAccountService(VirtualAccountPersistencePort virtualAccountPersistencePort) {
+    public VirtualAccountService(VirtualAccountPersistencePort virtualAccountPersistencePort,
+                                 WalletServicePort walletServicePort,
+                                 OutboxService outboxService) {
         this.virtualAccountPersistencePort = virtualAccountPersistencePort;
+        this.walletServicePort = walletServicePort;
+        this.outboxService = outboxService;
     }
 
     /**
      * Create a new Virtual Account with a generated VA number.
      */
     public VirtualAccountResponse createVirtualAccount(CreateVirtualAccountRequest request) {
+        requireSettlementAccount(request.getSettlementAccountId());
         BankCode bank = BankCode.fromCode(request.getBankCode());
 
         String vaNumber = generateVaNumber(bank);
@@ -50,6 +61,7 @@ public class VirtualAccountService {
                 .bankName(bank.getBankName())
                 .partnerId(request.getPartnerId())
                 .externalId(request.getExternalId())
+                .settlementAccountId(request.getSettlementAccountId())
                 .amount(request.getAmount())
                 .currency(request.getCurrency() != null ? request.getCurrency() : "IDR")
                 .description(request.getDescription())
@@ -102,19 +114,72 @@ public class VirtualAccountService {
 
         // Validate callback amount matches VA expected amount (if fixed amount VA)
         if (va.getAmount() != null && callback.getAmount() != null
-                && va.getAmount().compareTo(java.math.BigDecimal.ZERO) > 0
+                && va.getAmount().compareTo(BigDecimal.ZERO) > 0
                 && callback.getAmount().compareTo(va.getAmount()) != 0) {
             throw new IllegalArgumentException(
                     "Callback amount " + callback.getAmount() + " does not match VA expected amount " + va.getAmount());
         }
 
+        requireSettlementAccount(va.getSettlementAccountId());
         va.markPaid(callback.getAmount(), callback.getPaymentReference());
         va = virtualAccountPersistencePort.save(va);
 
         log.info("VA {} paid: amount={}, ref={}", va.getVaNumber(),
                 callback.getAmount(), callback.getPaymentReference());
 
+        // MVP-003: settle collection to merchant's settlement wallet (explicit ledger target).
+        // Create the outbox row before the remote credit. If credit fails, the surrounding
+        // transaction rolls back both the VA update and the outbox row.
+        publishPaymentCompletedEvent(va);
+        creditSettlementWallet(va);
+
         return toResponse(va);
+    }
+
+    /**
+     * Credit the VA's settlement account via the shared wallet port (same money engine
+     * used by InitiateTransferCommandHandler).
+     */
+    private void creditSettlementWallet(VirtualAccountEntity va) {
+        String settlementAccountId = va.getSettlementAccountId();
+        if (va.getPaidAmount() == null) {
+            throw new IllegalStateException("Paid virtual account has no paid amount: " + va.getVaNumber());
+        }
+        walletServicePort.creditBalance(settlementAccountId, va.getId().toString(), va.getPaidAmount());
+        log.info("VA {} settled: credited wallet {} amount={}", va.getVaNumber(),
+                settlementAccountId, va.getPaidAmount());
+    }
+
+    /**
+     * Publish payment.completed via the outbox (at-least-once, CloudEvents).
+     */
+    private void publishPaymentCompletedEvent(VirtualAccountEntity va) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "payment.completed");
+        event.put("vaId", va.getId().toString());
+        event.put("vaNumber", va.getVaNumber());
+        event.put("partnerId", va.getPartnerId());
+        event.put("externalId", va.getExternalId());
+        event.put("settlementAccountId", va.getSettlementAccountId());
+        event.put("amount", va.getPaidAmount());
+        event.put("currency", va.getCurrency());
+        event.put("paymentReference", va.getPaymentReference());
+        event.put("paidAt", va.getPaidAt());
+        outboxService.createEvent(
+                "VirtualAccount",
+                va.getId().toString(),
+                "VirtualAccountPaymentCompleted",
+                event,
+                null,
+                "payu.transaction.va.paid.v1"
+        );
+        log.info("Published payment.completed outbox event for VA {}", va.getVaNumber());
+    }
+
+    private void requireSettlementAccount(String settlementAccountId) {
+        if (settlementAccountId == null || settlementAccountId.isBlank()) {
+            throw new IllegalStateException("Settlement account ID is required for virtual account settlement");
+        }
     }
 
     /**
