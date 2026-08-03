@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-029 royalty statement deployed**:
+> - Royalty statements now aggregate persisted partner settlement batches for the requested month, include only `COMPLETED`/`OVERRIDDEN` settlements and effective revenue splits, calculate the requested stakeholder's share from batch net amount, and report each settlement amount plus the total.
+> - Verification: new non-zero fixture `SettlementServiceTest` passes; full wallet reactor test suite `21` passed, package BUILD SUCCESS; wallet image `1.8.102` (`sha256:d355c6071b2887f0c320ebd086bb8e7276269d7cad14a61ab59b9e82d6f12f89`) live, pod Ready `1/1`, health `UP`, and unauthenticated royalty endpoint returns `401`. No authenticated financial mutation was run.
+
 > ✅ **2026-08-03 — PROD-028 web financial contract drift deployed**:
 > - Lending loan/repayment/PayLater purchase/payment calls now use JSON request bodies where the controllers read `@RequestBody`, and every affected required mutation sends `X-Idempotency-Key`. Investment buy/sell calls now send the same header; affected backend `@Idempotent` annotations and explicit request headers use that standard.
 > - Verification: focused FE contract suite `32/32`, full web Vitest `1203 passed | 1 skipped`, web type-check/build successful; backend reactor package tests passed with investment `52` tests (`2` skipped) and lending `86` tests; images investment `1.8.89` (`sha256:d71360993affa28682b7813f61680cdb2f2b1876471a569568f1bd283f0290d8`), lending `1.8.102` (`sha256:111c8ff30713c669f33e14482d817d2460b0534e0cd424aa79af00a68151cd94`), and web-app `1.5.14` (`sha256:e5e814b557397bcf884ac7b60174595efb83ddfbd3c2de86a69d3bfd453932f6`) live; all three pods Ready `1/1`, health `UP/healthy`, unauthenticated lending/investment mutations return `401`, and web route returns `200`.

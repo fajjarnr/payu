@@ -82,6 +82,21 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Lending and investment FE contract tests passed `32/32`; backend controller contract tests passed as part of investment `52` and lending `86` test suites.
 - Deployed services returned `401` without authentication and remained healthy after manifest-based rollout.
 
+## L-202: Statements Must Read Settled Financial State (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Wallet, settlement, revenue split, reporting
+**Context**: `generateRoyaltyStatement` loaded stakeholder configuration but never loaded settlement batches or added a calculated amount, so every report printed `Total Royalties: 0`.
+
+**Lesson**:
+- A financial report must aggregate persisted settled state for the requested period; configuration alone is not evidence of earned value.
+- Reuse the same split calculation used by payout execution so statement amounts and credited amounts cannot diverge.
+- Exclude pending/failed settlements and honor the split's effective window before adding amounts.
+
+**Applied evidence**:
+- `SettlementService` now queries partner settlement batches by month, calculates the requested account's net-settlement share, and prints a non-zero line/total.
+- Non-zero completed-vs-pending fixture passes; wallet full reactor tests pass `21/21`, and the deployed wallet endpoint remains auth-protected (`401` unauthenticated).
+
 ## L-199: Security Defaults Must Be Enforced at the Shared Startup Boundary (2026-08-03)
 
 **Date**: 2026-08-03

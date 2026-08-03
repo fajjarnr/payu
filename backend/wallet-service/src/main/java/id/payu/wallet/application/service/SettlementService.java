@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -304,35 +305,53 @@ public class SettlementService implements SettlementUseCase {
     @Override
     @Transactional(readOnly = true)
     public String generateRoyaltyStatement(String partnerId, String accountId, int year, int month) {
+        YearMonth period = YearMonth.of(year, month);
         StringBuilder statement = new StringBuilder();
         statement.append("=== ROYALTY STATEMENT ===\n");
         statement.append("Partner ID: ").append(partnerId).append("\n");
         statement.append("Account ID: ").append(accountId).append("\n");
-        statement.append("Period: ").append(year).append("-").append(String.format("%02d", month)).append("\n");
+        statement.append("Period: ").append(period).append("\n");
         statement.append("Generated: ").append(LocalDateTime.now(clock)).append("\n\n");
 
-        // Get revenue splits for partner
+        // Use persisted settlement batches as the source of settled royalty amounts.
+        List<SettlementBatch> batches = settlementPersistencePort.findSettlementBatchesByPartner(
+                partnerId, period.atDay(1), period.atEndOfMonth());
         List<RevenueSplit> splits = settlementPersistencePort.findRevenueSplitsByPartner(partnerId);
 
         BigDecimal totalRoyalties = BigDecimal.ZERO;
 
         for (RevenueSplit split : splits) {
-            Stakeholder stakeholder = split.getStakeholders().stream()
-                    .filter(s -> s.getAccountId().equals(accountId))
-                    .findFirst()
-                    .orElse(null);
+            for (SettlementBatch batch : batches) {
+                if (!isCompletedSettlement(batch)
+                        || batch.getSettlementDate() == null
+                        || batch.getNetAmount() == null
+                        || !split.isEffectiveAt(batch.getSettlementDate().atStartOfDay())) {
+                    continue;
+                }
 
-            if (stakeholder != null) {
+                CalculatedSplit calculated = split.calculateSplits(batch.getNetAmount()).stream()
+                        .filter(candidate -> accountId.equals(candidate.getAccountId()))
+                        .findFirst()
+                        .orElse(null);
+                if (calculated == null) {
+                    continue;
+                }
+
                 statement.append("Revenue Split: ").append(split.getName()).append("\n");
-                statement.append("  Percentage: ").append(stakeholder.getPercentage()).append("%\n");
-                statement.append("  Fixed Amount: ").append(stakeholder.getFixedAmount()).append("\n");
-                statement.append("\n");
+                statement.append("  Settlement Date: ").append(batch.getSettlementDate()).append("\n");
+                statement.append("  Amount: ").append(calculated.getAmount()).append("\n\n");
+                totalRoyalties = totalRoyalties.add(calculated.getAmount());
             }
         }
 
         statement.append("Total Royalties: ").append(totalRoyalties).append("\n");
 
         return statement.toString();
+    }
+
+    private boolean isCompletedSettlement(SettlementBatch batch) {
+        return batch.getStatus() == SettlementStatus.COMPLETED
+                || batch.getStatus() == SettlementStatus.OVERRIDDEN;
     }
 
     /**
