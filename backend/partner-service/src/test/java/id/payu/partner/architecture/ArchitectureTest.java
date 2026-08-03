@@ -47,6 +47,7 @@ class ArchitectureTest {
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Webhook").definedBy("..adapter.webhook..")
                     .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
+                    .layer("Adapter.Client").definedBy("..adapter.client..")
                     .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
                     .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
@@ -56,13 +57,14 @@ class ArchitectureTest {
                     .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Adapter.Webhook").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Adapter.Messaging").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Client").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers(
                             "Application", "Adapter.Web", "Adapter.Webhook")
                     .whereLayer("Application").mayOnlyBeAccessedByLayers(
                             "Adapter.Web", "Adapter.Webhook", "Adapter.Messaging")
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers(
                             "Application", "Adapter.Web", "Adapter.Webhook",
-                            "Adapter.Messaging", "Adapter.Persistence", "DTO")
+                            "Adapter.Messaging", "Adapter.Persistence", "Adapter.Client", "DTO")
 
                     .check(importedClasses);
         }

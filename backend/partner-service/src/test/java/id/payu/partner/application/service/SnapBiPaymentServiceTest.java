@@ -3,7 +3,9 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
+import id.payu.partner.domain.port.out.WalletSettlementPort;
 import id.payu.partner.dto.snap.PaymentRequest;
+import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +40,15 @@ public class SnapBiPaymentServiceTest {
 
     @Mock
     private SnapBiRefundRepository refundRepository;
+
+    @Mock
+    private WalletSettlementPort walletSettlementPort;
+
+    @Mock
+    private WebhookDispatcherService webhookDispatcher;
+
+    @Mock
+    private OutboxService outboxService;
 
     @InjectMocks
     private SnapBiPaymentService paymentService;
@@ -84,6 +100,47 @@ public class SnapBiPaymentServiceTest {
         assertEquals("Successful", response.responseMessage);
         assertNotNull(response.referenceNo);
         assertTrue(response.referenceNo.startsWith("PAYU-"));
+        assertEquals("COMPLETED", paymentsByPayuRef.get(response.referenceNo).getStatus());
+    }
+
+    @Test
+    public void testCreatePaymentSettlesFundsAndPublishesCompletedEvent() {
+        PaymentRequest request = new PaymentRequest();
+        request.partnerReferenceNo = "REF-SETTLE-001";
+        request.amount = new PaymentRequest.Amount();
+        request.amount.value = new BigDecimal("10000.00");
+        request.amount.currency = "IDR";
+        request.beneficiaryAccountNo = "beneficiary-001";
+        request.sourceAccountNo = "source-001";
+
+        var response = paymentService.createPayment("123", request);
+
+        verify(walletSettlementPort).settle(
+                eq("source-001"), eq("beneficiary-001"), eq(new BigDecimal("10000.00")),
+                eq("IDR"), eq(response.referenceNo));
+        verify(webhookDispatcher).dispatch(
+                eq("payment.completed"), eq(response.referenceNo + ":payment.completed"),
+                argThat(payload -> "COMPLETED".equals(payload.get("status"))));
+        verify(outboxService).createEvent(
+                eq("SnapBiPayment"), eq(response.referenceNo), eq("PaymentCompleted"),
+                argThat(payload -> "COMPLETED".equals(payload.get("status"))),
+                isNull(), eq("payu.partner.payment-completed.v1"));
+    }
+
+    @Test
+    public void testCreatePaymentRejectsNonIdrCurrency() {
+        PaymentRequest request = new PaymentRequest();
+        request.partnerReferenceNo = "REF-USD-001";
+        request.amount = new PaymentRequest.Amount();
+        request.amount.value = new BigDecimal("10000.00");
+        request.amount.currency = "USD";
+        request.beneficiaryAccountNo = "beneficiary-001";
+        request.sourceAccountNo = "source-001";
+
+        var response = paymentService.createPayment("123", request);
+
+        assertEquals("4002502", response.responseCode);
+        verifyNoInteractions(walletSettlementPort);
     }
 
     @Test
@@ -131,7 +188,7 @@ public class SnapBiPaymentServiceTest {
         assertEquals("2002500", statusResponse.responseCode);
         assertEquals("Successful", statusResponse.responseMessage);
         assertEquals(createResponse.referenceNo, statusResponse.referenceNo);
-        assertEquals("PENDING", statusResponse.status);
+        assertEquals("COMPLETED", statusResponse.status);
     }
 
     @Test

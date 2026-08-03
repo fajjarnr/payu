@@ -2,6 +2,24 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-135: Money Flow Needs a Port and a Runtime E2E Check (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: Partner service, SNAP-BI, wallet settlement, RestClient, outbox, webhook
+**Context**: `SnapBiPaymentService.createPayment` persisted `PENDING` and returned success without calling the money engine; terminal/refund notifications were log-only stubs.
+
+**Lesson**:
+- Keep the partner application dependent on a wallet port; put the wallet HTTP contract in an adapter so payment logic does not know transport details.
+- Use stable idempotency keys for reserve, commit, credit, and a stable event ID for webhook delivery. A random event ID defeats replay deduplication.
+- Do not mark a payment `COMPLETED` until the wallet settlement call succeeds. If beneficiary credit fails after source commit, attempt a deterministic source credit compensation and preserve the original failure.
+- Spring Boot 4.1 places `RestTemplateBuilder` in the optional `spring-boot-restclient` module; this service already has `spring-web`, so the minimal implementation uses the native `RestClient` API without adding a dependency.
+- Unit tests prove wiring, not runtime identity: live verification must still confirm wallet JWT propagation and account-ownership rules.
+
+**Applied evidence**:
+- `WalletSettlementPort` + `WalletSettlementAdapter` now execute reserve → commit → credit with idempotency headers.
+- SNAP payment terminal/refund events route through `WebhookDispatcherService` and `outbox-starter`.
+- `partner-service` passed 237/237 tests on 2026-08-03; OpenShift wallet E2E remains open.
+
 ## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
 
 **Date**: 2026-08-03

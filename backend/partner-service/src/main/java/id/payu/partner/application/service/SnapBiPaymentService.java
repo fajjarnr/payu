@@ -4,6 +4,7 @@ import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
 import id.payu.partner.adapter.persistence.entity.SnapBiRefundEntity;
+import id.payu.partner.domain.port.out.WalletSettlementPort;
 import id.payu.partner.dto.snap.PaymentRequest;
 import id.payu.partner.dto.snap.PaymentResponse;
 import id.payu.partner.dto.snap.PaymentStatusResponse;
@@ -13,8 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,24 +36,49 @@ public class SnapBiPaymentService {
 
     private final SnapBiPaymentRepository paymentRepository;
     private final SnapBiRefundRepository refundRepository;
+    private final WalletSettlementPort walletSettlementPort;
+    private final WebhookDispatcherService webhookDispatcher;
+    private final OutboxService outboxService;
 
     public SnapBiPaymentService(SnapBiPaymentRepository paymentRepository,
-                                SnapBiRefundRepository refundRepository) {
+                                SnapBiRefundRepository refundRepository,
+                                WalletSettlementPort walletSettlementPort,
+                                WebhookDispatcherService webhookDispatcher,
+                                OutboxService outboxService) {
         this.paymentRepository = paymentRepository;
         this.refundRepository = refundRepository;
+        this.walletSettlementPort = walletSettlementPort;
+        this.webhookDispatcher = webhookDispatcher;
+        this.outboxService = outboxService;
     }
 
     @Transactional
     public PaymentResponse createPayment(String partnerId, PaymentRequest request) {
         // BUG-BE-183 FIX: Validate payment amount is positive
-        if (request.amount == null || request.amount.value == null
+        if (request == null || request.amount == null || request.amount.value == null
                 || request.amount.value.compareTo(BigDecimal.ZERO) <= 0) {
             return new PaymentResponse(
                 "4002500",
                 "Amount must be greater than zero",
-                request.partnerReferenceNo,
+                request == null ? null : request.partnerReferenceNo,
                 null
             );
+        }
+
+        if (!"IDR".equalsIgnoreCase(request.amount.currency)) {
+            return new PaymentResponse(
+                    "4002502",
+                    "Only IDR payments are supported",
+                    request.partnerReferenceNo,
+                    null);
+        }
+
+        if (isBlank(request.sourceAccountNo) || isBlank(request.beneficiaryAccountNo)) {
+            return new PaymentResponse(
+                    "4002501",
+                    "Source and beneficiary accounts are required",
+                    request.partnerReferenceNo,
+                    null);
         }
 
         // MVP-004: SNAP-BI idempotency via natural key (partnerReferenceNo per partner).
@@ -84,6 +113,17 @@ public class SnapBiPaymentService {
         );
 
         paymentRepository.save(record);
+
+        walletSettlementPort.settle(
+                request.sourceAccountNo,
+                request.beneficiaryAccountNo,
+                request.amount.value,
+                request.amount.currency,
+                payuReferenceNo);
+
+        record.setStatus("COMPLETED");
+        paymentRepository.save(record);
+        publishPaymentEvent(record, "payment.completed");
 
         LOG.info("Payment initiated payuRef={} partnerRef={} amount={}",
                 payuReferenceNo, request.partnerReferenceNo, request.amount.value);
@@ -133,17 +173,20 @@ public class SnapBiPaymentService {
     public void updatePaymentStatus(String payuReferenceNo, String status) {
         SnapBiPaymentEntity record = paymentRepository.findByPayuReferenceNo(payuReferenceNo).orElse(null);
         if (record != null) {
+            if (status.equals(record.getStatus())) {
+                return;
+            }
             record.setStatus(status);
             paymentRepository.save(record);
 
             LOG.info("Payment status updated payuRef={} status={}", payuReferenceNo, status);
 
             if ("COMPLETED".equals(status)) {
-                sendWebhookNotification(record, "payment.completed");
+                publishPaymentEvent(record, "payment.completed");
             } else if ("FAILED".equals(status)) {
-                sendWebhookNotification(record, "payment.failed");
+                publishPaymentEvent(record, "payment.failed");
             } else if ("EXPIRED".equals(status)) {
-                sendWebhookNotification(record, "payment.expired");
+                publishPaymentEvent(record, "payment.expired");
             }
         }
     }
@@ -244,7 +287,7 @@ public class SnapBiPaymentService {
         LOG.info("Refund processed payuRefund={} paymentRef={} amount={}",
                 payuRefundNo, record.getPayuReferenceNo(), request.amount.value);
 
-        sendRefundWebhookNotification(refundRecord);
+        publishRefundEvent(refundRecord);
 
         return new RefundResponse(
             "2002500",
@@ -256,11 +299,64 @@ public class SnapBiPaymentService {
         );
     }
 
-    private void sendWebhookNotification(SnapBiPaymentEntity record, String eventType) {
-        LOG.info("Webhook notification sent for payment event payuRef={} eventType={}", record.getPayuReferenceNo(), eventType);
+    private void publishPaymentEvent(SnapBiPaymentEntity record, String eventType) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("event", eventType);
+        payload.put("payuReferenceNo", record.getPayuReferenceNo());
+        payload.put("partnerReferenceNo", record.getPartnerReferenceNo());
+        payload.put("partnerId", record.getPartnerId());
+        payload.put("amount", record.getAmount());
+        payload.put("currency", record.getCurrency());
+        payload.put("sourceAccountNo", record.getSourceAccountNo());
+        payload.put("beneficiaryAccountNo", record.getBeneficiaryAccountNo());
+        payload.put("status", record.getStatus());
+
+        String eventId = record.getPayuReferenceNo() + ":" + eventType;
+        webhookDispatcher.dispatch(eventType, eventId, payload);
+        outboxService.createEvent(
+                "SnapBiPayment",
+                record.getPayuReferenceNo(),
+                toOutboxEventType(eventType),
+                payload,
+                null,
+                toTopic(eventType));
     }
 
-    private void sendRefundWebhookNotification(SnapBiRefundEntity refundRecord) {
-        LOG.info("Webhook notification sent for completed refund refundRef={}", refundRecord.getPayuRefundNo());
+    private void publishRefundEvent(SnapBiRefundEntity refundRecord) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("event", "payment.refunded");
+        payload.put("payuRefundNo", refundRecord.getPayuRefundNo());
+        payload.put("payuReferenceNo", refundRecord.getPayuReferenceNo());
+        payload.put("partnerRefundNo", refundRecord.getPartnerRefundNo());
+        payload.put("amount", refundRecord.getAmount());
+        payload.put("currency", refundRecord.getCurrency());
+        payload.put("status", refundRecord.getStatus());
+
+        String eventId = refundRecord.getPayuRefundNo() + ":payment.refunded";
+        webhookDispatcher.dispatch("payment.refunded", eventId, payload);
+        outboxService.createEvent(
+                "SnapBiRefund",
+                refundRecord.getPayuRefundNo(),
+                "PaymentRefunded",
+                payload,
+                null,
+                "payu.partner.payment-refunded.v1");
+    }
+
+    private String toOutboxEventType(String eventType) {
+        return switch (eventType) {
+            case "payment.completed" -> "PaymentCompleted";
+            case "payment.failed" -> "PaymentFailed";
+            case "payment.expired" -> "PaymentExpired";
+            default -> throw new IllegalArgumentException("Unsupported payment event: " + eventType);
+        };
+    }
+
+    private String toTopic(String eventType) {
+        return "payu.partner." + eventType.replace('.', '-') + ".v1";
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

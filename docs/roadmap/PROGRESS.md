@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> 🟡 **2026-08-03 — MVP-001 SNAP-BI money flow implemented locally (pre-deploy)**:
+> - `SnapBiPaymentService.createPayment` now settles source → beneficiary through a hexagonal wallet port, persists `COMPLETED`, and publishes stable-ID `payment.completed` webhook + `payu.partner.payment-completed.v1` outbox event.
+> - Terminal status and refund notifications use `WebhookDispatcherService`/outbox instead of log-only stubs.
+> - Verification: `partner-service` 237/237 tests passed. Live wallet/OpenShift E2E remains pending, especially JWT/account-ownership behavior.
+
 > ✅ **2026-08-03 — MVP-003 VA settlement implementation completed (pre-deploy)**:
 > - VA creation now stores a required `settlementAccountId`; bank callbacks mark the VA paid only with a valid target, credit the wallet through `WalletServicePort`, and create `payment.completed` via the transactional outbox.
 > - Callback security is aligned to `/api/v1/payments/va/callback`: HMAC timestamp/signature verification, required idempotency key, and simulator/deployment secret parity.
