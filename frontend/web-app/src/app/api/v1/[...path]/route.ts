@@ -2,7 +2,71 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCorrelationId, withCorrelation } from '@/lib/logger';
 
-const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
+const DEFAULT_GATEWAY_URL = 'http://gateway-service:8080';
+const MAX_BODY_BYTES = 1_048_576;
+const UPSTREAM_TIMEOUT_MS = 10_000;
+
+class RequestBodyTooLargeError extends Error {}
+
+function getGatewayUrl(): string {
+  const configuredUrl = process.env.GATEWAY_URL?.trim();
+  if (configuredUrl) return configuredUrl;
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+    return DEFAULT_GATEWAY_URL;
+  }
+  throw new Error('GATEWAY_URL must be configured outside development and test');
+}
+
+function upstreamSignal(): AbortSignal {
+  return AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
+}
+
+async function readRequestBody(request: Request): Promise<string | undefined> {
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    return undefined;
+  }
+
+  const declaredLength = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    throw new RequestBodyTooLargeError();
+  }
+
+  if (!request.body) {
+    if (typeof request.text !== 'function') return undefined;
+    const body = await request.text();
+    if (new TextEncoder().encode(body).byteLength > MAX_BODY_BYTES) {
+      throw new RequestBodyTooLargeError();
+    }
+    return body || undefined;
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new RequestBodyTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  if (totalBytes === 0) return undefined;
+  const bodyBytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bodyBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bodyBytes);
+}
 
 const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
@@ -153,6 +217,7 @@ async function proxyRequest(
   const startTime = Date.now();
 
   try {
+    const gatewayUrl = getGatewayUrl();
     const cookieStore = await cookies();
     const token = cookieStore.get('accessToken')?.value;
 
@@ -179,7 +244,7 @@ async function proxyRequest(
       );
     }
 
-    const url = new URL(`/api/v1/${backendPath}`, GATEWAY_URL);
+    const url = new URL(`/api/v1/${backendPath}`, gatewayUrl);
 
     // Forward query parameters
     request.nextUrl.searchParams.forEach((v: string, k: string) => url.searchParams.set(k, v));
@@ -202,10 +267,7 @@ async function proxyRequest(
     // gateway to return 415 Unsupported Media Type. We now read the
     // body FIRST, then forward Content-Type only when the body is
     // non-empty.
-    const rawBody =
-      request.method === 'GET' || request.method === 'HEAD'
-        ? undefined
-        : await request.text();
+    const rawBody = await readRequestBody(request);
     const body = rawBody && rawBody.length > 0 ? rawBody : undefined;
 
     const contentType = request.headers.get('content-type');
@@ -243,6 +305,7 @@ async function proxyRequest(
       method: request.method,
       headers,
       body,
+      signal: upstreamSignal(),
     });
 
     // BUG-FE-001: Auto-retry on 401 by refreshing the access token via BFF
@@ -252,6 +315,7 @@ async function proxyRequest(
         const refreshRes = await fetch(new URL('/api/auth/refresh', request.nextUrl.origin).toString(), {
           method: 'POST',
           headers: { Cookie: request.headers.get('cookie') || '' },
+          signal: upstreamSignal(),
         });
         if (refreshRes.ok) {
           const setCookieHeaders = refreshRes.headers.getSetCookie();
@@ -267,6 +331,7 @@ async function proxyRequest(
               method: request.method,
               headers,
               body,
+              signal: upstreamSignal(),
             });
             const retryBody = await retryRes.text();
             
@@ -305,6 +370,12 @@ async function proxyRequest(
       },
     });
   } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json(
+        { error: 'Payload Too Large', message: 'Request body exceeds 1 MiB limit' },
+        { status: 413, headers: getSecurityHeaders(correlationId) },
+      );
+    }
     // Graceful fallback when gateway is unreachable.
     // All requests return 503 error so the UI can properly handle error states.
     // The _fallback flag allows FE to distinguish gateway offline vs other errors.

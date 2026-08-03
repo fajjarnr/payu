@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shared money API (PROD-009)**: hapus overload `multiply(double)`/`divide(double)` dari shared `Money`; callers tetap memakai `BigDecimal` atau integer scalar, dengan API reflection guard agar floating-point overload tidak kembali.
 - **Web auth/rendering (PROD-010)**: proxy kini memvalidasi `accessToken` ke gateway sebelum root/login/protected pages, hanya mencoba refresh setelah token invalid/missing, menghapus trust pada `payu_session`, dan memberi protected responses `private, no-store`; image `1.5.6` live.
 - **Web auth rate limit (PROD-011)**: hapus `Map` process-local dan pembacaan client IP dari BFF login/refresh; throttling kini single-source di auth-service `@RateLimit` memakai `DistributedAtomicCache` dengan TTL, sehingga restart/replica tidak mereset counter dan spoofed `x-forwarded-for` tidak memengaruhi BFF.
+- **Web BFF resilience (PROD-012)**: `GATEWAY_URL` kini eksplisit di deployment production, request body dibatasi 1 MiB dengan streaming read, dan gateway/refresh/retry fetch memakai timeout 10 detik; 401 tetap hanya melakukan satu refresh + retry. Image `1.5.8` live.
 - **Interbank settlement callback (MVP-005)**: BI-FAST/SKN/RTGS kini menyimpan `reservationId`, memanggil adapter clearing, dan menyelesaikan callback HMAC idempotent menjadi commit/release + event completed/failed; live `payu-dev` rollout `1.8.87` dan Flyway V24 terverifikasi.
 - **Test**: tambah `testCreatePaymentIdempotentReplay` (SnapBiPaymentServiceTest) + `shouldSkipDuplicateEvent` (WebhookDispatcherServiceTest, ✓ `throws Exception` untuk checked `IOException` dari `HttpClient.send`).
 
@@ -53,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > **Verify PROD-009**: shared `api-commons` `MoneyTest` `79 passed`, including the no-floating-point-overload API guard; Maven BUILD SUCCESS and no production caller required migration (2026-08-03).
 > **Verify PROD-010**: web-app type-check sukses, full Vitest `1190 passed | 1 skipped`, production build sukses; image `1.5.6` digest `sha256:c992ad120725229c2ddace1d25d4615ca2bf71b578617c1575039d3c63f497aa`, pod Ready 1/1, restart 0, health `healthy`, and live forged access cookie returns `307` to `/id/login` (2026-08-03).
 > **Verify PROD-011**: web-app type-check sukses, full Vitest `1192 passed | 1 skipped`, production build sukses; login/refresh route tests `6/6`, shared `RateLimitAspect`/`RateLimitInterceptor` tests `7/7`, auth-service reactor `70` tests + BUILD SUCCESS; image `1.5.7` digest `sha256:9ce7636616efd25245b54500d30275939f77e5ebc6d1f425a1ed32af75cf80ec`, pod Ready 1/1, restart 0, health `healthy` (2026-08-03).
+> **Verify PROD-012**: BFF SSRF/body-limit/401-retry suite `43/43`, full Vitest `1195 passed | 1 skipped`, type-check dan production build sukses; image `1.5.8` digest `sha256:4384e54c2d4540eb7c35785e4f92d816314a812b0a509ed5d23d991d51b41820`, pod Ready 1/1, restart 0, health `healthy`, explicit `GATEWAY_URL` live, and forged-cookie protected-page check returns `307` (2026-08-03).
 
 ## [1.10.7] - 2026-08-01
 

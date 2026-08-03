@@ -310,6 +310,58 @@ describe('BFF Proxy SSRF Prevention', () => {
     });
   });
 
+  describe('Upstream safety limits', () => {
+    it('rejects oversized request bodies before calling the gateway', async () => {
+      const request = new NextRequest('http://localhost:3000/api/v1/wallets', {
+        method: 'POST',
+        headers: { 'Content-Length': String(1_048_577) },
+        body: 'x',
+      });
+
+      const response = await POST(request, { params: createParams(['wallets']) });
+
+      expect(response.status).toBe(413);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('passes an abort signal to gateway requests', async () => {
+      const request = createMockRequest('/api/v1/wallets');
+
+      await GET(request, { params: createParams(['wallets']) });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/wallets'),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
+    });
+
+    it('refreshes and retries a 401 at most once', async () => {
+      mockCookieStore.get.mockReturnValue({ value: 'expired-token' });
+      mockFetch
+        .mockResolvedValueOnce({
+          status: 401,
+          headers: { get: vi.fn().mockReturnValue('application/json') },
+          text: vi.fn().mockResolvedValue('{"error":"unauthorized"}'),
+        })
+        .mockResolvedValueOnce(new Response(null, {
+          status: 200,
+          headers: { 'Set-Cookie': 'accessToken=new-token; Path=/' },
+        }))
+        .mockResolvedValueOnce({
+          status: 401,
+          headers: { get: vi.fn().mockReturnValue('application/json') },
+          text: vi.fn().mockResolvedValue('{"error":"unauthorized"}'),
+        });
+
+      const response = await GET(createMockRequest('/api/v1/wallets'), {
+        params: createParams(['wallets']),
+      });
+
+      expect(response.status).toBe(401);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+    });
+  });
+
   describe('Complex Attack Scenarios', () => {
     it('should block SSRF to internal metadata service', async () => {
       const request = createMockRequest('/api/v1/test');
