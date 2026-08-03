@@ -16,6 +16,7 @@ public class PromoUsage {
     private BigDecimal finalAmount;
     private Instant timestamp;
     private String idempotencyKey;
+    private UsageType usageType = UsageType.UNLIMITED;
 
     public PromoUsage() {
         this.timestamp = Instant.now();
@@ -84,5 +85,13 @@ public class PromoUsage {
 
     public void setIdempotencyKey(String idempotencyKey) {
         this.idempotencyKey = idempotencyKey;
+    }
+
+    public UsageType getUsageType() {
+        return usageType;
+    }
+
+    public void setUsageType(UsageType usageType) {
+        this.usageType = usageType;
     }
 }

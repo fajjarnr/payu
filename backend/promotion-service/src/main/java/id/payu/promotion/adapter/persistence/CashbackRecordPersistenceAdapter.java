@@ -1,34 +1,35 @@
 package id.payu.promotion.adapter.persistence;
 
+import id.payu.promotion.adapter.persistence.repository.CashbackRecordRepository;
 import id.payu.promotion.domain.model.CashbackRecord;
 import id.payu.promotion.domain.port.out.CashbackRecordRepositoryPort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * Persistence adapter for CashbackRecord.
- * Implements the domain port using in-memory storage (for testing/demo).
- * In production, this would use JPA repository.
- */
 @Component
 public class CashbackRecordPersistenceAdapter implements CashbackRecordRepositoryPort {
 
-    private final Set<String> processedTransactions = ConcurrentHashMap.newKeySet();
+    private final CashbackRecordRepository repository;
+    private final CashbackRecordPersistenceMapper mapper;
+
+    public CashbackRecordPersistenceAdapter(CashbackRecordRepository repository, CashbackRecordPersistenceMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
 
     @Override
     public boolean hasProcessedTransaction(String transactionId) {
-        return processedTransactions.contains(transactionId);
+        return repository.existsByTransactionId(transactionId);
     }
 
     @Override
+    @Transactional
     public CashbackRecord save(CashbackRecord record) {
-        processedTransactions.add(record.getTransactionId());
-        return record;
+        return mapper.toDomain(repository.save(mapper.toEntity(record)));
     }
 
+    @Transactional
     public void clear() {
-        processedTransactions.clear();
+        repository.deleteAllInBatch();
     }
 }

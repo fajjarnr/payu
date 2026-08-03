@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-030 promotion persistence deployed**:
+> - Promo codes, promo usage, cashback rules, and cashback records now use transactional Spring Data JPA adapters backed by the existing tables; JSON rule fields are mapped, idempotent inserts are database-safe, and Flyway V10 adds persisted usage type plus once-per-user and transaction/rule uniqueness constraints.
+> - Verification: promotion reactor `245` tests passed with `0` failures and `0` errors; package BUILD SUCCESS; image `1.8.105` (`sha256:64ad86b86e351d56163a9d3ba652426f9ad57304db9ba62a745857cba8556423`) live, pod Ready `1/1`, restart `0`, liveness/readiness `UP`, and Flyway validated/applied 10 migrations including V10.
+
 > ✅ **2026-08-03 — PROD-029 royalty statement deployed**:
 > - Royalty statements now aggregate persisted partner settlement batches for the requested month, include only `COMPLETED`/`OVERRIDDEN` settlements and effective revenue splits, calculate the requested stakeholder's share from batch net amount, and report each settlement amount plus the total.
 > - Verification: new non-zero fixture `SettlementServiceTest` passes; full wallet reactor test suite `21` passed, package BUILD SUCCESS; wallet image `1.8.102` (`sha256:d355c6071b2887f0c320ebd086bb8e7276269d7cad14a61ab59b9e82d6f12f89`) live, pod Ready `1/1`, health `UP`, and unauthenticated royalty endpoint returns `401`. No authenticated financial mutation was run.

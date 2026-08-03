@@ -4777,3 +4777,7 @@ Eksperimen: tambah NP sementara `podSelector:{} policyTypes:[Egress] egress:[{}]
 ### L-197: OpenShift changes must flow through manifests (2026-08-03)
 
 When a rollout change is requested, edit the base/overlay manifest, render it, and run `oc apply -k`; do not use `oc patch` or `oc set`. Bump the image tag when an immutable rollout is required, then verify the live digest and probes.
+
+### L-203: Process-local persistence is a production data-loss bug (2026-08-03)
+
+If Flyway already owns the tables, a `ConcurrentHashMap`/`CopyOnWriteArrayList` bean is a false persistence adapter: restart and replica failover erase state. Reuse Spring Data JPA repositories, keep the application service transaction boundary, and put replay/race guarantees in database constraints. For conditional once-per-user rules, persist the usage mode and use a partial unique index; an unconditional `(user_id, promo_code)` constraint would break unlimited promos.

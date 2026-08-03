@@ -1,46 +1,57 @@
 package id.payu.promotion.adapter.persistence;
 
+import id.payu.promotion.adapter.persistence.repository.PromoUsageRepository;
 import id.payu.promotion.domain.model.PromoUsage;
+import id.payu.promotion.domain.model.UsageType;
 import id.payu.promotion.domain.port.out.PromoUsageRepositoryPort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-/**
- * Persistence adapter for PromoUsage.
- * Implements the domain port using in-memory storage (for testing/demo).
- * In production, this would use JPA repository.
- */
 @Component
 public class PromoUsagePersistenceAdapter implements PromoUsageRepositoryPort {
 
-    private final Set<String> userPromoUsage = ConcurrentHashMap.newKeySet();
-    private final ConcurrentMap<String, PromoUsage> usagesByIdempotencyKey = new ConcurrentHashMap<>();
+    private final PromoUsageRepository repository;
+    private final PromoUsagePersistenceMapper mapper;
 
-    @Override
-    public boolean hasUserUsedPromo(String userId, String promoCode) {
-        return userPromoUsage.contains(userId + ":" + promoCode);
+    public PromoUsagePersistenceAdapter(PromoUsageRepository repository, PromoUsagePersistenceMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
+    public boolean hasUserUsedPromo(String userId, String promoCode) {
+        return repository.existsByUserIdAndPromoCode(userId, promoCode);
+    }
+
+    @Override
+    @Transactional
     public boolean recordUsage(PromoUsage usage) {
-        userPromoUsage.add(usage.getUserId() + ":" + usage.getPromoCode());
-        if (usage.getIdempotencyKey() != null) {
-            usagesByIdempotencyKey.put(usage.getIdempotencyKey(), usage);
+        if (usage.getUsageType() == UsageType.ONCE_PER_USER
+                && repository.existsByUserIdAndPromoCode(usage.getUserId(), usage.getPromoCode())) {
+            return false;
         }
-        return true;
+        UsageType usageType = usage.getUsageType() == null ? UsageType.UNLIMITED : usage.getUsageType();
+        return repository.insertIgnore(
+                usage.getId(),
+                usage.getUserId(),
+                usage.getPromoCode(),
+                usage.getTransactionId(),
+                usage.getDiscountAmount(),
+                usage.getFinalAmount(),
+                usage.getIdempotencyKey(),
+                usage.getTimestamp(),
+                usageType.name()) > 0;
     }
 
     @Override
     public Optional<PromoUsage> findByIdempotencyKey(String idempotencyKey) {
-        return Optional.ofNullable(usagesByIdempotencyKey.get(idempotencyKey));
+        return repository.findByIdempotencyKey(idempotencyKey).map(mapper::toDomain);
     }
 
+    @Transactional
     public void clear() {
-        userPromoUsage.clear();
-        usagesByIdempotencyKey.clear();
+        repository.deleteAllInBatch();
     }
 }

@@ -117,6 +117,7 @@ public class PromoRedemptionService {
         usage.setDiscountAmount(result.getDiscountAmount());
         usage.setFinalAmount(result.getFinalAmount());
         usage.setIdempotencyKey(request.idempotencyKey());
+        usage.setUsageType(promo.getUsageType());
 
         try {
             boolean recorded = promoUsageRepository.recordUsage(usage);
