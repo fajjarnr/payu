@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (MVP money-safety — SNAP idempotency, webhook dedup, saga dead-code removal)
 
+- **Idempotency binding (PROD-032)**: shared Spring idempotency kini meng-hash canonical body + principal/tenant/account; gateway menyimpan binding di cache dan menolak replay beda request dengan `409`. Financial path fail-closed `503` saat cache gagal; gateway `1.9.8` live.
+
 - **Promo validation side effect (PROD-031)**: GET validation kini memakai `PromoCode.preview` dan transaksi read-only sehingga tidak mengonsumsi promo one-time; apply wajib memakai header `X-Idempotency-Key` dan `@Idempotent(required=true)`. Promotion image `1.8.106` live.
 
 - **Promotion persistence (PROD-030)**: process-local promo/cashback collections kini diganti adapter Spring Data JPA transactional yang membaca/menulis tabel migrasi durable, dengan JSON rule mapping dan insert idempotent. Flyway V10 menyimpan usage type serta menambahkan unique once-per-user dan transaction/rule constraints; promotion image `1.8.105` live.

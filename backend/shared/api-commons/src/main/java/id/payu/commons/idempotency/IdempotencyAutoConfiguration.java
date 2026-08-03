@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -96,6 +97,16 @@ public class IdempotencyAutoConfiguration {
 
         log.info("Initializing IdempotencyInterceptor");
         return new IdempotencyInterceptor(idempotencyService, objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnBean(IdempotencyInterceptor.class)
+    public FilterRegistrationBean<IdempotencyRequestBodyFilter> idempotencyRequestBodyFilter() {
+        FilterRegistrationBean<IdempotencyRequestBodyFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new IdempotencyRequestBodyFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Integer.MIN_VALUE);
+        return registration;
     }
 
     /**

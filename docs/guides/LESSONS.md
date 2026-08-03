@@ -4785,3 +4785,9 @@ If Flyway already owns the tables, a `ConcurrentHashMap`/`CopyOnWriteArrayList` 
 ### L-204: Validation must be a pure read path (2026-08-03)
 
 A GET validation endpoint must never call an apply command: `apply` mutates usage state before the service persists it, so a dry-run can consume a one-time promo. Keep `preview`/validation separate from `apply`, mark the service read-only, and require the same distributed idempotency header on the real mutation boundary.
+
+### L-205: Idempotency key tanpa request binding bukan idempotency (2026-08-03)
+
+**Context**: Shared interceptor hanya memakai URI/method/header, sedangkan gateway memakai raw key dan fail-open ketika Hot Rod gagal. Key yang sama dapat me-replay response untuk body/account berbeda atau melewati validasi saat cache mati.
+
+**Fix**: Cache body sebelum interceptor, canonicalize JSON, dan bind fingerprint ke principal/tenant/account. Gateway menyimpan fingerprint bersama response, mismatch/entry lama ditolak `409`, dan operasi finansial menolak cache outage `503`. Verifikasi wajib mencakup body berbeda, principal/account berbeda, dan cache failure; jangan memakai live financial mutation sebagai smoke test saat fixture/cache belum sehat.

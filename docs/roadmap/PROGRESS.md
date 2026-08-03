@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-03 — PROD-032 idempotency binding deployed**:
+> - Shared Spring idempotency now hashes a replayable canonical request body and binds the fingerprint to principal, tenant, and account; gateway cache entries carry the binding and reject legacy/unmatched replays with `409`.
+> - Financial gateway requests now fail closed with `503` when the idempotency cache cannot be read or written; non-financial requests retain the existing compatibility behavior.
+> - Verification: api-commons full suite `179` passed; gateway full reactor test and focused idempotency suite `4/4` passed; package BUILD SUCCESS. Gateway image `1.9.8` (`sha256:bedb2f2c975c812ffc787f2c0e4998a982459e8c72a6e547d10a974ae86f6f3d`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, health `UP`. Live Hot Rod was connection-refused during smoke, so the financial cache-failure path was verified by regression test rather than a mutating E2E.
+
 > ✅ **2026-08-03 — PROD-031 promo validation side effect deployed**:
 > - Validation now uses a pure `PromoCode.preview` path and a read-only service transaction, so GET validation does not increment usage or mark a user consumed; apply always uses the `X-Idempotency-Key` header and the shared required idempotency interceptor.
 > - Verification: focused domain/service/controller suite `25` passed, full promotion reactor `250` tests passed with `0` failures and `0` errors, package BUILD SUCCESS; image `1.8.106` (`sha256:f7ca040537139cb5534c3868111d29979bc89df6502d04b861f69fedc4c4aae5`) live, pod Ready `1/1`, restart `0`, health `UP`, and Flyway validated 10 migrations.

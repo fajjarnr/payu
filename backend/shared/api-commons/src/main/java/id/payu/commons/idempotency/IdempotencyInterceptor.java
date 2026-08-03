@@ -1,30 +1,31 @@
 package id.payu.commons.idempotency;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.http.server.ServletServerHttpResponse;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.TreeMap;
 
 /**
  * Spring HandlerInterceptor for automatic idempotency handling.
@@ -63,6 +64,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class IdempotencyInterceptor implements HandlerInterceptor {
 
+    private static final int MAX_REQUEST_BODY_SIZE = 1024 * 1024;
     private static final String IDEMPOTENCY_KEY_ATTR = "idempotency.key";
     private static final String IDEMPOTENCY_REQUEST_BODY_ATTR = "idempotency.requestBody";
     private static final String IDEMPOTENCY_HANDLED_ATTR = "idempotency.handled";
@@ -120,7 +122,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         }
 
         // Extract request body for fingerprinting
-        Object requestBody = extractRequestBody(handlerMethod, request);
+        Object requestBody = extractRequestBody(request);
         request.setAttribute(IDEMPOTENCY_REQUEST_BODY_ATTR, requestBody);
         request.setAttribute(IDEMPOTENCY_KEY_ATTR, idempotencyKey);
 
@@ -229,45 +231,82 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
     /**
      * Extracts the request body from the handler method parameters.
      */
-    private Object extractRequestBody(HandlerMethod handlerMethod, HttpServletRequest request) {
+    private Object extractRequestBody(HttpServletRequest request) {
         try {
-            // Try to find @RequestBody parameter
-            MethodParameter[] parameters = handlerMethod.getMethodParameters();
-
-            for (MethodParameter parameter : parameters) {
-                if (parameter.hasParameterAnnotation(RequestBody.class)) {
-                    // We can't actually read the body here as it would consume the stream
-                    // Instead, we create a fingerprint from available request info
-                    return createRequestFingerprint(request);
-                }
-            }
-
-            // No @RequestBody found, use request info as fingerprint
-            return createRequestFingerprint(request);
+            byte[] body = request.getInputStream().readAllBytes();
+            return createRequestFingerprint(request, canonicalizeBody(body));
 
         } catch (Exception e) {
             log.warn("Failed to extract request body for idempotency: {}", e.getMessage());
-            return createRequestFingerprint(request);
+            return createRequestFingerprint(request, "body-read-failed");
         }
     }
 
-    /**
-     * Creates a fingerprint from request information.
-     */
-    private Map<String, Object> createRequestFingerprint(HttpServletRequest request) {
-        Map<String, Object> fingerprint = new HashMap<>();
+    private String canonicalizeBody(byte[] body) throws IOException {
+        if (body.length == 0) {
+            return "";
+        }
+        if (body.length > MAX_REQUEST_BODY_SIZE) {
+            try {
+                return "sha256:" + java.util.Base64.getEncoder().encodeToString(
+                        MessageDigest.getInstance("SHA-256").digest(body));
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException("SHA-256 algorithm not available", e);
+            }
+        }
+        try {
+            JsonNode json = objectMapper.readTree(body);
+            return json == null ? "" : canonicalize(json).toString();
+        } catch (IOException invalidJson) {
+            return new String(body, StandardCharsets.UTF_8).trim();
+        }
+    }
+
+    private JsonNode canonicalize(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode sorted = objectMapper.createObjectNode();
+            Iterator<String> names = node.fieldNames();
+            TreeMap<String, JsonNode> fields = new TreeMap<>();
+            while (names.hasNext()) {
+                String name = names.next();
+                fields.put(name, node.get(name));
+            }
+            fields.forEach((name, value) -> sorted.set(name, canonicalize(value)));
+            return sorted;
+        }
+        if (node.isArray()) {
+            ArrayNode sorted = objectMapper.createArrayNode();
+            node.forEach(value -> sorted.add(canonicalize(value)));
+            return sorted;
+        }
+        return node;
+    }
+
+    /** Creates a fingerprint from request metadata, identity, and canonical body. */
+    private Map<String, Object> createRequestFingerprint(HttpServletRequest request, String body) {
+        Map<String, Object> fingerprint = new LinkedHashMap<>();
         fingerprint.put("uri", request.getRequestURI());
         fingerprint.put("method", request.getMethod());
         fingerprint.put("queryString", request.getQueryString());
+        fingerprint.put("body", body);
+
+        Map<String, String> identity = new LinkedHashMap<>();
+        identity.put("principal", request.getUserPrincipal() == null
+                ? "anonymous" : request.getUserPrincipal().getName());
+        identity.put("tenant", request.getHeader("X-Tenant-Id"));
+        identity.put("account", request.getHeader("X-Account-Id"));
+        fingerprint.put("identity", identity);
 
         // Add relevant headers (excluding sensitive ones)
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String name = headerNames.nextElement();
-            // Skip sensitive and non-relevant headers
-            if (!isSensitiveHeader(name)) {
-                headers.put(name, request.getHeader(name));
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String name = headerNames.nextElement();
+                // Skip sensitive and non-relevant headers
+                if (!isSensitiveHeader(name)) {
+                    headers.put(name, request.getHeader(name));
+                }
             }
         }
         fingerprint.put("headers", headers);
@@ -333,7 +372,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        Map<String, Object> error = new HashMap<>();
+        Map<String, Object> error = new LinkedHashMap<>();
         error.put("error", status.getReasonPhrase());
         error.put("message", message);
         error.put("status", status.value());

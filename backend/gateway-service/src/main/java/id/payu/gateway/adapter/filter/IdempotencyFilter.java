@@ -1,5 +1,9 @@
 package id.payu.gateway.adapter.filter;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
@@ -12,7 +16,14 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -36,6 +47,7 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
     private static final String IDEMPOTENCY_PREFIX = "idempotency:";
     private static final String IDEMPOTENCY_KEY_PROPERTY = "idempotency-key";
     private static final String IDEMPOTENCY_REDIS_KEY_PROPERTY = "idempotency-redis-key";
+    private static final String IDEMPOTENCY_FINGERPRINT_PROPERTY = "idempotency-fingerprint";
 
     // Standard header name as per RFC 7239 and industry best practices
     private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
@@ -93,6 +105,9 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
 
     @Inject
     HotRodCacheClient cache;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @PostConstruct
     void init() {
@@ -164,10 +179,20 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         // Check if this key was already used
         String cacheKey = IDEMPOTENCY_PREFIX + idempotencyKey;
         try {
+            String requestFingerprint = requestFingerprint(requestContext);
             String cachedResponse = cache.get(cacheKey).await().atMost(java.time.Duration.ofSeconds(1));
             if (cachedResponse != null) {
                 Log.infof("Returning cached response for idempotency key: %s (header: %s)", idempotencyKey, headerUsed);
                 CachedResponse response = parseCachedResponse(cachedResponse);
+                if (response.fingerprint == null || !response.fingerprint.equals(requestFingerprint)) {
+                    requestContext.abortWith(
+                        Response.status(Response.Status.CONFLICT)
+                            .entity("{\"error\":\"IDEMPOTENCY_KEY_REUSE\",\"message\":\"Idempotency-Key was already used with a different request identity or body\",\"code\":\"GAT_IDM_002\"}")
+                            .header("Content-Type", "application/json")
+                            .build()
+                    );
+                    return;
+                }
                 requestContext.abortWith(
                     Response.status(response.status)
                         .entity(response.body)
@@ -179,10 +204,100 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             }
             requestContext.setProperty(IDEMPOTENCY_KEY_PROPERTY, idempotencyKey);
             requestContext.setProperty(IDEMPOTENCY_REDIS_KEY_PROPERTY, cacheKey);
+            requestContext.setProperty(IDEMPOTENCY_FINGERPRINT_PROPERTY, requestFingerprint);
             Log.debugf("Idempotency key registered: %s", idempotencyKey);
         } catch (Exception failure) {
-            Log.warnf(failure, "Failed to check idempotency key in Data Grid, allowing request");
+            if (isFinancialOperation) {
+                Log.errorf(failure, "Failed to check idempotency key in Data Grid, rejecting financial request");
+                requestContext.abortWith(
+                    Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                        .entity("{\"error\":\"IDEMPOTENCY_CACHE_UNAVAILABLE\",\"message\":\"Idempotency storage is unavailable\",\"code\":\"GAT_IDM_003\"}")
+                        .header("Content-Type", "application/json")
+                        .build()
+                );
+                return;
+            }
+            Log.warnf(failure, "Failed to check idempotency key in Data Grid, allowing non-financial request");
         }
+    }
+
+    private String requestFingerprint(ContainerRequestContext requestContext) throws IOException {
+        byte[] body = requestContext.hasEntity()
+                ? requestContext.getEntityStream().readAllBytes() : new byte[0];
+        if (requestContext.hasEntity()) {
+            requestContext.setEntityStream(new ByteArrayInputStream(body));
+        }
+
+        String principal = requestContext.getSecurityContext() != null
+                && requestContext.getSecurityContext().getUserPrincipal() != null
+                ? requestContext.getSecurityContext().getUserPrincipal().getName()
+                : (String) requestContext.getProperty("user-id");
+        principal = firstNonBlank(principal, "anonymous");
+        String tenant = firstNonBlank(
+                (String) requestContext.getProperty("tenant-id"),
+                requestContext.getHeaderString("X-Tenant-Id"),
+                "default");
+        String account = firstNonBlank(
+                (String) requestContext.getProperty("user-id"),
+                requestContext.getHeaderString("X-Account-Id"),
+                principal);
+        String query = requestContext.getUriInfo().getRequestUri().getRawQuery();
+        String material = requestContext.getMethod() + "\n"
+                + requestContext.getUriInfo().getRequestUri().getRawPath() + "\n"
+                + (query == null ? "" : query) + "\n"
+                + principal + "\n" + tenant + "\n" + account + "\n"
+                + canonicalBody(body);
+        try {
+            return java.util.Base64.getEncoder().encodeToString(
+                    MessageDigest.getInstance("SHA-256").digest(material.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    private String canonicalBody(byte[] body) throws IOException {
+        if (body.length == 0) {
+            return "";
+        }
+        try {
+            JsonNode json = objectMapper.readTree(body);
+            return json == null ? "" : canonicalize(json).toString();
+        } catch (IOException invalidJson) {
+            return new String(body, StandardCharsets.UTF_8).trim();
+        }
+    }
+
+    private JsonNode canonicalize(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode sorted = objectMapper.createObjectNode();
+            java.util.TreeMap<String, JsonNode> fields = new java.util.TreeMap<>();
+            Iterator<String> names = node.fieldNames();
+            while (names.hasNext()) {
+                String name = names.next();
+                fields.put(name, node.get(name));
+            }
+            fields.forEach((name, value) -> sorted.set(name, canonicalize(value)));
+            return sorted;
+        }
+        if (node.isArray()) {
+            ArrayNode array = objectMapper.createArrayNode();
+            node.forEach(value -> array.add(canonicalize(value)));
+            return array;
+        }
+        return node;
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
+    }
+
+    private boolean isFinancialOperation(String path) {
+        return FINANCIAL_PATHS.stream().anyMatch(path::startsWith);
     }
 
     /**
@@ -210,7 +325,21 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             return;
         }
 
-        storeResponse(idempotencyKey, status, entity);
+        try {
+            storeResponse(idempotencyKey, status, entity,
+                    (String) requestContext.getProperty(IDEMPOTENCY_FINGERPRINT_PROPERTY));
+        } catch (Exception failure) {
+            if (isFinancialOperation(requestContext.getUriInfo().getPath())) {
+                responseContext.setStatus(Response.Status.SERVICE_UNAVAILABLE.getStatusCode());
+                responseContext.getHeaders().putSingle("Content-Type", "application/json");
+                responseContext.setEntity(Map.of(
+                        "error", "IDEMPOTENCY_CACHE_UNAVAILABLE",
+                        "message", "Idempotency storage is unavailable",
+                        "code", "GAT_IDM_003"));
+            } else {
+                Log.warnf(failure, "Failed to store idempotent response for non-financial request: %s", idempotencyKey);
+            }
+        }
     }
 
     /**
@@ -218,19 +347,24 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
      * Called from the response filter after proxy returns.
      */
     public void storeResponse(String idempotencyKey, int status, Object body) {
+        storeResponse(idempotencyKey, status, body, null);
+    }
+
+    private void storeResponse(String idempotencyKey, int status, Object body, String fingerprint) {
         if (!config.idempotency().enabled()) {
             return;
         }
 
         String cacheKey = IDEMPOTENCY_PREFIX + idempotencyKey;
         String bodyStr = body != null ? body.toString() : "";
-        String responseJson = serializeCachedResponse(status, bodyStr);
-        cache.put(cacheKey, responseJson, config.idempotency().ttl())
-            .subscribe()
-            .with(
-                unused -> Log.debugf("Stored idempotent response for key: %s (status: %d)", idempotencyKey, status),
-                failure -> Log.warnf(failure, "Failed to store idempotent response for key: %s", idempotencyKey)
-            );
+        String responseJson = serializeCachedResponse(status, bodyStr, fingerprint);
+        try {
+            cache.put(cacheKey, responseJson, config.idempotency().ttl())
+                    .await().atMost(Duration.ofSeconds(1));
+            Log.debugf("Stored idempotent response for key: %s (status: %d)", idempotencyKey, status);
+        } catch (Exception failure) {
+            throw new IllegalStateException("Failed to store idempotent response", failure);
+        }
     }
 
     /**
@@ -245,63 +379,69 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             if (statusEnd == -1) statusEnd = json.indexOf("}", statusStart);
             int status = Integer.parseInt(json.substring(statusStart, statusEnd).trim());
 
-            // Parse body
-            String body = null;
-            int bodyStart = json.indexOf("\"body\":");
-            if (bodyStart != -1) {
-                bodyStart += 7;
-                if (json.charAt(bodyStart) == '"') {
-                    // String body — find matching close quote (handle escapes)
-                    bodyStart++;
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = bodyStart; i < json.length(); i++) {
-                        char c = json.charAt(i);
-                        if (c == '\\' && i + 1 < json.length()) {
-                            char next = json.charAt(i + 1);
-                            if (next == '"') { sb.append('"'); i++; }
-                            else if (next == '\\') { sb.append('\\'); i++; }
-                            else if (next == 'n') { sb.append('\n'); i++; }
-                            else if (next == 'r') { sb.append('\r'); i++; }
-                            else { sb.append(c); }
-                        } else if (c == '"') {
-                            break;
-                        } else {
-                            sb.append(c);
-                        }
-                    }
-                    body = sb.toString();
-                } else if (json.substring(bodyStart).startsWith("null")) {
-                    body = null;
-                }
-            }
-            return new CachedResponse(status, body);
+            return new CachedResponse(status,
+                    parseStringField(json, "\"fingerprint\":"),
+                    parseStringField(json, "\"body\":"));
         } catch (Exception e) {
             Log.warnf(e, "Failed to parse cached response JSON: %s", json);
-            return new CachedResponse(200, json);
+            return new CachedResponse(200, null, json);
         }
+    }
+
+    private String parseStringField(String json, String field) {
+        int start = json.indexOf(field);
+        if (start == -1) {
+            return null;
+        }
+        start += field.length();
+        if (json.startsWith("null", start)) {
+            return null;
+        }
+        if (json.charAt(start) != '"') {
+            return null;
+        }
+        StringBuilder value = new StringBuilder();
+        for (int i = start + 1; i < json.length(); i++) {
+            char current = json.charAt(i);
+            if (current == '\\' && i + 1 < json.length()) {
+                value.append(json.charAt(++i));
+            } else if (current == '"') {
+                return value.toString();
+            } else {
+                value.append(current);
+            }
+        }
+        return null;
     }
 
     /**
      * Serialize response to JSON for Redis storage.
      * Escapes special characters in body.
      */
-    private String serializeCachedResponse(int status, String body) {
+    private String serializeCachedResponse(int status, String body, String fingerprint) {
+        String fingerprintJson = fingerprint == null ? "null" : "\"" + escape(fingerprint) + "\"";
         if (body == null || body.isEmpty()) {
-            return "{\"status\":" + status + ",\"body\":null}";
+            return "{\"status\":" + status + ",\"fingerprint\":" + fingerprintJson + ",\"body\":null}";
         }
-        String escaped = body.replace("\\", "\\\\")
-                             .replace("\"", "\\\"")
-                             .replace("\n", "\\n")
-                             .replace("\r", "\\r");
-        return "{\"status\":" + status + ",\"body\":\"" + escaped + "\"}";
+        return "{\"status\":" + status + ",\"fingerprint\":" + fingerprintJson
+                + ",\"body\":\"" + escape(body) + "\"}";
+    }
+
+    private String escape(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 
     private static class CachedResponse {
         private final int status;
+        private final String fingerprint;
         private final String body;
 
-        public CachedResponse(int status, String body) {
+        public CachedResponse(int status, String fingerprint, String body) {
             this.status = status;
+            this.fingerprint = fingerprint;
             this.body = body;
         }
 
