@@ -41,7 +41,7 @@ public class RefundService implements RefundUseCase {
 
         Refund refund = Refund.createFullRefund(transactionId, transaction.amount(), transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
-        refundEventPublisherPort.publishRefundRequested(saved);
+        refundEventPublisherPort.publishRefundRequested(saved, transaction);
         log.info("Created refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
     }
@@ -61,7 +61,7 @@ public class RefundService implements RefundUseCase {
 
         Refund refund = Refund.createPartialRefund(transactionId, amount, transaction.currency(), reason);
         Refund saved = refundPersistencePort.save(refund);
-        refundEventPublisherPort.publishRefundRequested(saved);
+        refundEventPublisherPort.publishRefundRequested(saved, transaction);
         log.info("Created partial refund with ID: {} for transaction: {}", saved.getId(), transactionId);
         return saved;
     }

@@ -107,7 +107,11 @@ public class TransactionService implements TransactionUseCase {
             throw new id.payu.api.common.exception.BusinessException(
                     "TXN_422", "Transaction has invalid refund details: " + transactionId);
         }
-        return new TransactionRefundDetailsResponse(amount, currency);
+        return new TransactionRefundDetailsResponse(
+                amount,
+                currency,
+                transaction.getSenderAccountId() != null ? transaction.getSenderAccountId().toString() : null,
+                transaction.getRecipientAccountId() != null ? transaction.getRecipientAccountId().toString() : null);
     }
 
     @Override

@@ -48,7 +48,8 @@ public class TransactionRestAdapter implements TransactionLookupPort {
             TransactionRefundDetailsResponse body = response.getBody();
             return body == null
                     ? Optional.empty()
-                    : Optional.of(new TransactionDetails(body.amount(), body.currency()));
+                    : Optional.of(new TransactionDetails(body.amount(), body.currency(),
+                            body.senderAccountId(), body.recipientAccountId()));
         } catch (RestClientException exception) {
             if (isNotFound(exception)) {
                 return Optional.empty();

@@ -5,5 +5,6 @@ import java.math.BigDecimal;
 /**
  * Minimal transaction representation exposed to the dispute service for refund creation.
  */
-public record TransactionRefundDetailsResponse(BigDecimal amount, String currency) {
+public record TransactionRefundDetailsResponse(BigDecimal amount, String currency,
+                                               String senderAccountId, String recipientAccountId) {
 }

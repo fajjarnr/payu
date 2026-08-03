@@ -6,7 +6,12 @@ import java.util.Locale;
 /**
  * Authoritative transaction values needed to create a refund.
  */
-public record TransactionDetails(BigDecimal amount, String currency) {
+public record TransactionDetails(BigDecimal amount, String currency,
+                                 String senderAccountId, String recipientAccountId) {
+
+    public TransactionDetails(BigDecimal amount, String currency) {
+        this(amount, currency, null, null);
+    }
 
     public TransactionDetails {
         if (amount == null || amount.signum() <= 0) {

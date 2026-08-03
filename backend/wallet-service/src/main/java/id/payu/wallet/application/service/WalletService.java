@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Objects;
 import id.payu.wallet.domain.model.EntryType;
 import id.payu.wallet.domain.model.TransactionType;
 import id.payu.wallet.domain.model.WalletStatus;
@@ -347,6 +348,79 @@ public class WalletService implements WalletUseCase {
 
         log.info("Credited {} to account {}, transactionId: {}", amount, accountId, transactionId);
         return transactionId.toString();
+    }
+
+    @Override
+    @Transactional
+    public void reverseTransfer(String senderAccountId, String recipientAccountId, BigDecimal amount,
+                                String currency, UUID refundId, String description) {
+        if (senderAccountId == null || recipientAccountId == null || senderAccountId.equals(recipientAccountId)) {
+            throw new IllegalArgumentException("Refund reversal requires distinct sender and recipient wallets");
+        }
+        if (amount == null || amount.signum() <= 0 || refundId == null) {
+            throw new IllegalArgumentException("Refund reversal requires a positive amount and refund ID");
+        }
+
+        String firstAccount = senderAccountId.compareTo(recipientAccountId) < 0
+                ? senderAccountId : recipientAccountId;
+        String secondAccount = firstAccount.equals(senderAccountId) ? recipientAccountId : senderAccountId;
+        Wallet firstWallet = walletPersistencePort.findByAccountIdForUpdate(firstAccount)
+                .orElseThrow(() -> new WalletNotFoundException(firstAccount));
+        Wallet secondWallet = walletPersistencePort.findByAccountIdForUpdate(secondAccount)
+                .orElseThrow(() -> new WalletNotFoundException(secondAccount));
+
+        if (walletPersistencePort.findByTransactionId(refundId).stream()
+                .anyMatch(entry -> "REFUND_REVERSAL".equals(entry.getReferenceType()))) {
+            return;
+        }
+
+        Wallet sender = firstWallet.getAccountId().equals(senderAccountId) ? firstWallet : secondWallet;
+        Wallet recipient = firstWallet.getAccountId().equals(recipientAccountId) ? firstWallet : secondWallet;
+        if (!Objects.equals(currency, sender.getCurrency()) || !Objects.equals(currency, recipient.getCurrency())) {
+            throw new IllegalArgumentException("Refund currency must match both wallet currencies");
+        }
+
+        recipient.debit(amount);
+        sender.credit(amount);
+        walletPersistencePort.save(recipient);
+        walletPersistencePort.save(sender);
+
+        LocalDateTime now = LocalDateTime.now();
+        walletPersistencePort.saveLedgerEntry(LedgerEntry.builder()
+                .transactionId(refundId)
+                .accountId(recipient.getAccountId())
+                .entryType(EntryType.DEBIT)
+                .amount(amount)
+                .currency(currency)
+                .balanceAfter(recipient.getBalance())
+                .referenceType("REFUND_REVERSAL")
+                .referenceId(refundId.toString())
+                .createdAt(now)
+                .build());
+        walletPersistencePort.saveLedgerEntry(LedgerEntry.builder()
+                .transactionId(refundId)
+                .accountId(sender.getAccountId())
+                .entryType(EntryType.CREDIT)
+                .amount(amount)
+                .currency(currency)
+                .balanceAfter(sender.getBalance())
+                .referenceType("REFUND_REVERSAL")
+                .referenceId(refundId.toString())
+                .createdAt(now)
+                .build());
+
+        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance());
+        invalidateWalletCaches(recipient);
+        invalidateWalletCaches(sender);
+        log.info("Reversed transfer for refund {}: {} -> {} amount {}", refundId, recipientAccountId, senderAccountId, amount);
+    }
+
+    private void invalidateWalletCaches(Wallet wallet) {
+        cacheService.invalidate("balance:account:" + wallet.getAccountId());
+        cacheService.invalidate("balance:available:account:" + wallet.getAccountId());
+        cacheService.invalidate("wallet:account:" + wallet.getAccountId());
+        cacheService.invalidate("wallet:id:" + wallet.getId());
     }
 
     @Override

@@ -91,6 +91,17 @@ public class Wallet {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Debit an amount from the available wallet balance.
+     */
+    public void debit(BigDecimal amount) {
+        if (!hasSufficientBalance(amount)) {
+            throw new IllegalStateException("Insufficient available balance");
+        }
+        this.balance = this.balance.subtract(amount);
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public static WalletBuilder builder() {
         return new WalletBuilder();
     }

@@ -90,6 +90,12 @@ public interface WalletUseCase {
     String credit(String accountId, BigDecimal amount, String referenceId, String description);
 
     /**
+     * Atomically reverses an internal transfer: debit recipient and credit sender.
+     */
+    void reverseTransfer(String senderAccountId, String recipientAccountId, BigDecimal amount,
+                         String currency, UUID refundId, String description);
+
+    /**
      * Get transaction history for a wallet.
      * @param accountId   account ID
      * @param page      page number

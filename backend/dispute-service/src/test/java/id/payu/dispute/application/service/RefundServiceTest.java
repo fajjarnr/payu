@@ -64,8 +64,9 @@ class RefundServiceTest {
         void shouldCreatePartialRefundSuccessfully() {
             // Given
             Refund expectedRefund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
+            TransactionDetails transactionDetails = new TransactionDetails(AMOUNT, CURRENCY, "sender", "recipient");
             when(transactionLookupPort.findById(TRANSACTION_ID))
-                    .thenReturn(Optional.of(new TransactionDetails(AMOUNT, CURRENCY)));
+                    .thenReturn(Optional.of(transactionDetails));
             when(refundPersistencePort.save(any(Refund.class))).thenReturn(expectedRefund);
 
             // When
@@ -79,7 +80,7 @@ class RefundServiceTest {
             assertThat(result.getReason()).isEqualTo(REASON);
             assertThat(result.getStatus()).isEqualTo(RefundStatus.PENDING);
             verify(refundPersistencePort).save(any(Refund.class));
-            verify(refundEventPublisherPort).publishRefundRequested(expectedRefund);
+            verify(refundEventPublisherPort).publishRefundRequested(expectedRefund, transactionDetails);
         }
 
         @Test
