@@ -130,6 +130,7 @@ public class DisbursementController {
     }
 
     @PostMapping("/callback")
+    @Idempotent(required = true)
     @Operation(summary = "BI-FAST callback", description = "Callback endpoint for BI-FAST transfer status updates")
     public ResponseEntity<DisbursementResponse> handleCallback(
             @Valid @RequestBody DisbursementCallbackRequest request) {

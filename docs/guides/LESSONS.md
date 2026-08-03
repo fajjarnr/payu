@@ -20,6 +20,22 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - SNAP payment terminal/refund events route through `WebhookDispatcherService` and `outbox-starter`.
 - `partner-service` passed 237/237 tests on 2026-08-03; OpenShift wallet E2E remains open.
 
+## L-197: Idempotency Has Two Layers (2026-08-03)
+
+**Date**: 2026-08-03
+**Domain**: SNAP-BI, disbursement callback, HMAC, idempotency
+**Context**: SNAP payment/refund and disbursement callback had natural-key/database or HMAC protection, but the endpoint contract did not require `X-Idempotency-Key`.
+
+**Lesson**:
+- Put `@Idempotent(required=true)` at every payment, refund, and external callback boundary; service-level natural keys and database constraints remain the second layer.
+- HMAC authenticates the callback sender; it does not deduplicate retries. Keep both HMAC and idempotency.
+- A cumulative refund query is still race-prone after endpoint idempotency. Serialize the payment parent or reserve refund capacity in the database before declaring the flow complete.
+
+**Applied evidence**:
+- SNAP payment/refund and disbursement callback annotations are now enforced by contract tests.
+- Disbursement callback HMAC path was already covered by `CallbackSignatureFilterTest`.
+- `partner-service` passed 238/238 and `transaction-service` 132/132 tests; refund locking and live E2E remain open.
+
 ## L-134: External Callback Security Must Match the Runtime Contract (2026-08-03)
 
 **Date**: 2026-08-03

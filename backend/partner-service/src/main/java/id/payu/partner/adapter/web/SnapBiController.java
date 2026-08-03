@@ -2,6 +2,7 @@ package id.payu.partner.adapter.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.snap.*;
 import id.payu.partner.application.service.PartnerService;
@@ -146,6 +147,7 @@ public class SnapBiController {
     }
 
     @PostMapping("/payments")
+    @Idempotent(required = true)
     @Operation(
         summary = "Create payment",
         description = "Initiates a new payment transaction through the BI-FAST network."
@@ -273,6 +275,7 @@ public class SnapBiController {
     }
 
     @PostMapping("/payments/{id}/refund")
+    @Idempotent(required = true)
     @Operation(summary = "Create refund")
     public ResponseEntity<?> createRefund(
         @RequestHeader("Authorization") String authorization,

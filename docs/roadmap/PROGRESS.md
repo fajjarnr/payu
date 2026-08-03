@@ -13,6 +13,10 @@
 > - Terminal status and refund notifications use `WebhookDispatcherService`/outbox instead of log-only stubs.
 > - Verification: `partner-service` 237/237 tests passed. Live wallet/OpenShift E2E remains pending, especially JWT/account-ownership behavior.
 
+> 🟡 **2026-08-03 — MVP-004 idempotency boundary hardened locally**:
+> - SNAP payment/refund and disbursement callback now require `@Idempotent(required=true)`; disbursement callback remains HMAC-protected by `CallbackSignatureFilter`.
+> - Verification: `partner-service` 238/238 and `transaction-service` 132/132 tests passed. Refund cumulative-sum locking and live E2E remain pending.
+
 > ✅ **2026-08-03 — MVP-003 VA settlement implementation completed (pre-deploy)**:
 > - VA creation now stores a required `settlementAccountId`; bank callbacks mark the VA paid only with a valid target, credit the wallet through `WalletServicePort`, and create `payment.completed` via the transactional outbox.
 > - Callback security is aligned to `/api/v1/payments/va/callback`: HMAC timestamp/signature verification, required idempotency key, and simulator/deployment secret parity.
