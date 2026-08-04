@@ -4,9 +4,15 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — PROD-039 mobile dependency reproducibility/build gate fixed**:
+> - Regenerated `frontend/mobile/package-lock.json`, added project-local `legacy-peer-deps=true` for the existing Expo/Jest peer graph, and added Expo web peers `react-dom`/`react-native-web`.
+> - Corrected NativeWind 4.0.1 Babel preset placement; Metro now processes `global.css` and enables package exports so native Axios resolves its `react-native` entry instead of the Node `crypto` bundle.
+> - Verification: clean `npm ci --ignore-scripts` exit `0` (`1667` packages), focused Jest `1/1`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, and Expo Android export exit `0`. Mobile has no OpenShift workload to roll out.
+> - Full mobile Jest/typecheck remain pre-existing baseline failures in separate test/runtime findings; they are recorded in `TODOS.md` and were not masked by this dependency fix.
+
 > ✅ **2026-08-04 — PROD-036 mobile offline false success fixed**:
 > - Offline queue now supports only implemented money endpoints (`transfer`, `topup`, `qris`). Persisted legacy `payment`/`bill_payment` items take the unknown-operation failure path, remain queued for retry/failure handling, and never delete their idempotency key or report success without a backend transaction.
-> - Verification: red-first hook test failed on the old `{}` success path, then focused mobile Jest `1/1` and changed-file ESLint `0 errors, 0 warnings` passed. Full mobile Jest and Expo export remain blocked by pre-existing runtime/dependency drift tracked under `PROD-039`; mobile has no OpenShift workload to roll out.
+> - Verification: red-first hook test failed on the old `{}` success path, then focused mobile Jest `1/1` and changed-file ESLint `0 errors, 0 warnings` passed. Full mobile Jest/typecheck remain blocked by pre-existing runtime/test findings; mobile has no OpenShift workload to roll out.
 
 > ✅ **2026-08-04 — MVP-004 disbursement callback live E2E closed**:
 > - Disbursement now sends the callback URL only on the disbursement flow, uses the actual BI-FAST `/api/v1` routes and payload aliases, selects the internal wallet gRPC adapter for anonymous callbacks, and persists the wallet reservation ID for commit/release.

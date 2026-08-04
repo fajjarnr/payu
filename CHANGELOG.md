@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.29] - 2026-08-04
+
+### Fixed
+
+- **Mobile dependency reproducibility (PROD-039)**: regenerated the lockfile, made the existing Expo/Jest peer-resolution policy explicit in `.npmrc`, added Expo web peers, and fixed NativeWind/Metro platform resolution. Clean install plus web and Android Expo exports now pass.
+
 ## [1.10.28] - 2026-08-04
 
 ### Fixed

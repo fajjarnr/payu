@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-214: Clean Install Must Exercise Each Expo Platform (2026-08-04)
+
+**Context**: The mobile lockfile was stale, NativeWind was loaded in the wrong Babel slot, and Metro resolved Axios's Node entry during Android export even though web export passed.
+
+**Lesson**:
+- Treat `npm ci --ignore-scripts` as the reproducibility gate and keep peer-resolution policy in the project, not developer-global npm config.
+- A successful web bundle does not prove native resolution; run both web and Android Expo exports after dependency/config changes.
+- Native package exports must remain enabled when a dependency publishes a `react-native` condition; otherwise Metro can select Node-only builtins such as `crypto`.
+
+**Applied evidence**: clean install, focused Jest `1/1`, changed-file ESLint `0 errors/0 warnings`, Expo web export, and Expo Android export all passed. Full Jest/typecheck baseline failures remain separately tracked.
+
 ## L-211: Local Compose Must Assert the Current Dev Contract (2026-08-04)
 
 **Context**: The local compose file had already moved to the payu-dev plain Hot Rod contract, but its parity test still asserted the old Kafka digest and mTLS settings. FX provider and web base URL variables were also implicit locally.

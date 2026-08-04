@@ -2,15 +2,13 @@ module.exports = function(api) {
   api.cache(true);
 
   const presets = ['babel-preset-expo'];
-  const plugins = [];
 
-  // Only add nativewind for non-test environments
+  // NativeWind 4.0.1 exposes a Babel preset, not a plugin.
   if (process.env.NODE_ENV !== 'test') {
-    plugins.push('nativewind/babel');
+    presets.push('nativewind/babel');
   }
 
   return {
     presets,
-    plugins,
   };
 };

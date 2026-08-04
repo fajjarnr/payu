@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.28` (2026-08-04) — mobile offline money queue false-success fix |
-| **Last Updated** | 2026-08-04 (PROD-036 fixed with focused hook test; PROD-039 mobile dependency/build gate remains open) |
+| **Last Release** | `1.10.29` (2026-08-04) — mobile clean-install and Expo build gate |
+| **Last Updated** | 2026-08-04 (PROD-039 fixed; full mobile suite/typecheck baseline findings remain) |
 
 ---
 
@@ -218,7 +218,6 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 | PROD-036 | P0 | Offline false success | `frontend/mobile/hooks/useOfflineMode.ts` benar-benar memanggil API untuk transfer/topup/qris, tetapi `payment` dan `bill_payment` sebelumnya mengisi `{}` sebagai `Transaction`; queue lalu menghapus idempotency key dan melaporkan sukses tanpa post ke backend. | ✅ Closed 2026-08-04 — unsupported types removed; legacy items now remain retry/failed and retain their idempotency key; focused hook test passes. |
 | PROD-037 | P1 | Mobile storage runtime | `frontend/mobile/utils/storage.ts:117-127` memanggil `logger.error` yang tidak diimpor saat clear gagal; package juga mengekspos `expo start --web` (`package.json:5-10`) tanpa branch availability SecureStore. | Perbaiki logger dan tetapkan perilaku storage native/web secara eksplisit; jalankan typecheck serta smoke test clear/read/write di platform target. |
 | PROD-038 | P1 | Mobile money precision | `frontend/mobile/types/index.ts:55-95` memodelkan transaction/transfer/top-up/QRIS amount sebagai JavaScript `number`, sehingga arithmetic dan round-trip nominal tidak exact. | Gunakan decimal string atau minor-unit integer di boundary; formatting/arithmetic exact dan precision test wajib. |
-| PROD-039 | P1 | Mobile dependency reproducibility | `frontend/mobile/package.json` dan `package-lock.json` tidak sinkron; `npm ci --ignore-scripts` gagal `EUSAGE` dengan missing/invalid lock entries dan peer conflict React/Jest Expo. | Regenerate lockfile secara intentional, review diff, lalu jalankan lint/test/typecheck/E2E pada clean install di CI. |
 
 ### Verification evidence
 
@@ -227,7 +226,8 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 - Pass: web `npm run lint` dan `npm run build`.
 - Pass: web `npm test -- --run` — 90 test files, 1203 passed, 1 skipped; `npm run lint` (changed files), `npm run type-check`, `npm run build`, dan `npm audit --omit=dev` (0 vulnerabilities) pass. Analytics pytest dan full lint legacy warning tetap open findings terpisah.
 - Pass: lending PayLater boundary red-first regression, focused controller/validation suite `9/9`, full lending reactor `93/93`, package `BUILD SUCCESS`; image `1.8.107` pod Ready `1/1`, restart `0`, liveness/readiness `UP`. No authenticated financial mutation was run without an isolated fixture.
-- Fail: mobile `npm ci --ignore-scripts` karena lockfile drift (`EUSAGE`, missing/invalid package entries, dan peer conflict); mobile lint/test/typecheck belum dapat direproduksi sampai dependency graph diperbaiki.
+- Pass: mobile clean install `npm ci --ignore-scripts` added `1667` packages with exit `0`; focused Jest `1/1`, changed-file ESLint `0 errors/0 warnings`, Expo web export, dan Expo Android export semuanya exit `0`. Metro NativeWind wrapper dan package exports diaktifkan agar CSS Tailwind serta Axios memilih entrypoint platform yang benar.
+- Known baseline: full mobile Jest dan `tsc --noEmit` masih gagal pada TurboModule `SettingsManager`, JSX di file test `.ts`, assertion storage lama, dan fixture expiry idempotency; finding ini tidak berasal dari PROD-039 dan tetap perlu tiket PROD-037/next audit.
 - Graph evidence: fast-path `graphify query` menghubungkan mobile mutation/idempotency dengan backend payment/ledger/outbox; `codegraph explore` menelusuri controller → service → port/adapter pada wallet, billing, dan mobile API.
 - Context7 checks: Expo SecureStore value limit/error behavior dan web availability; Axios retry reuses original request config. Rujukan: [Expo SecureStore](https://github.com/expo/expo/blob/main/docs/public/llms-sdk-v51.0.0.txt), [Axios retry](https://github.com/axios/axios/blob/v1.x/docs/pages/advanced/retry.md).
 - Context7 checks: Spring Boot actuator liveness/readiness; Next.js session validation in Proxy, environment variables, CSP, dan error boundaries. Rujukan resmi: [Spring Boot Actuator](https://github.com/spring-projects/spring-boot/blob/main/documentation/spring-boot-docs/src/docs/antora/modules/reference/pages/actuator/endpoints.adoc), [Next.js authentication](https://github.com/vercel/next.js/blob/canary/docs/01-app/02-guides/authentication.mdx), [Next.js Proxy](https://github.com/vercel/next.js/blob/canary/docs/01-app/03-api-reference/03-file-conventions/proxy.mdx), [Next.js CSP](https://github.com/vercel/next.js/blob/canary/docs/01-app/02-guides/content-security-policy.mdx).
