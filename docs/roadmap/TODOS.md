@@ -17,9 +17,9 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.15` (2026-08-04) — Analytics CI gate fixed and analytics `1.8.95` deployed |
-| **Last Updated** | 2026-08-04 (analytics CI GitHub run #2 green; branch-protection required-check verification remains open) |
+| **Cluster Status** | 🟡 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 62 pods and 32 deployments; gateway is `1/2`, simulator CrashLoops remain, and quota `limits.cpu` is saturated at `40/40`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
+| **Last Release** | `1.10.16` (2026-08-04) — PayLater amount validation fixed and lending `1.8.103` deployed |
+| **Last Updated** | 2026-08-04 (PayLater money guard deployed; PROD-018 branch-protection required-check verification remains open) |
 
 ---
 

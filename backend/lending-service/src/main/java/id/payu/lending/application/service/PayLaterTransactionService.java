@@ -35,6 +35,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
     @Override
     @Transactional
     public PayLaterTransaction recordPurchase(UUID userId, String merchantName, BigDecimal amount, String description) {
+        validateAmount(amount);
         log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, merchantName);
 
         PayLater payLater = payLaterPersistencePort.findByUserId(userId)
@@ -77,6 +78,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
     @Override
     @Transactional
     public PayLaterTransaction recordPayment(UUID userId, BigDecimal amount) {
+        validateAmount(amount);
         log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
 
         PayLater payLater = payLaterPersistencePort.findByUserId(userId)
@@ -123,5 +125,11 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
 
     private String generateExternalId() {
         return "PYLT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private void validateAmount(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("PayLater amount must be positive with at most 4 decimal places");
+        }
     }
 }

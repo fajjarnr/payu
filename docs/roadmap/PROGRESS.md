@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-041 PayLater amount validation fixed/deployed**:
+> - PayLater purchase/payment now reject null, zero, negative, and amounts with more than four decimals before touching credit or transaction persistence.
+> - Verification: red-first focused test `3` failures, then `4/4` focused tests and full lending reactor `90/90` passed; package `BUILD SUCCESS`. Image `lending-service:1.8.103` (`sha256:293f191a2aa8cf7a419ea86152b846ce50c014d0404311f798558e0bc9c667c6`) was applied declaratively; pod Ready `1/1`, `SERVICE_VERSION=1.8.103`, liveness/readiness both `200`, Flyway schema `9`. No authenticated financial mutation was run because `payu_lending` has no loan/schedule/payment fixture.
+
 > ✅ **2026-08-04 — PROD-018 Analytics CI and runtime test gate fixed/deployed**:
 > - Reproduced the first failed GitHub run (`30836757966`): the workflow installed runtime dependencies but omitted the required CI `SECRET_KEY` and `Faker`, so collection failed and coverage was only `26%`. The test gate now injects a synthetic run-scoped key, installs `Faker`, disables tracing/metrics, and pins pytest-asyncio fixture loop scope.
 > - Fixed the actual service/test contract failures: Pydantic `ApiResponse` field/method collisions now use `create_success`/`create_error`; direct secured handler tests pass explicit claims; HTTP tests override DB/auth and mock Kafka lifecycle; E2E assertions match the response envelope; WebSocket tests use expiring JWT-shaped fixtures and production uses the already-installed `python-jose` package.

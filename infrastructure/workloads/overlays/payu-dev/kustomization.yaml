@@ -49,9 +49,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:1.8.8
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newTag: "1.8.89"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.102
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service:1.8.103
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-  newTag: "1.8.102"
+  newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.5
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newTag: "1.0.5"

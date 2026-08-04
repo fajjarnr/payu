@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.16] - 2026-08-04
+
+### Fixed
+
+- **PayLater money input validation (PROD-041)**: purchase and payment now reject null, non-positive, and over-precision amounts before credit or transaction persistence. Lending image `1.8.103` is live at ImageStream digest `sha256:293f191a2aa8cf7a419ea86152b846ce50c014d0404311f798558e0bc9c667c6`.
+
 ## [1.10.15] - 2026-08-04
 
 ### Fixed
