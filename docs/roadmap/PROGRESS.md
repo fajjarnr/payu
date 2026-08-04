@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-041 PayLater request boundary fixed/deployed**:
+> - Purchase/payment now bind JSON to typed DTOs in `interfaces.dto` with `@Valid` constraints for merchant and `DECIMAL(19,4)`-compatible money. Raw `Map` parsing is gone, so missing or malformed input is rejected at the MVC boundary before PayLater service execution.
+> - Verification: red-first controller contract failed on the old `Map` signature; focused controller/validation suite `9/9`, full lending reactor `93/93`, and package `BUILD SUCCESS`. Image `lending-service:1.8.107` (`sha256:3ea9d4bfd4c04140884b8c82a5f6c6a3806118fa324bba8dcb11c18951523948`) is live; pod Ready `1/1`, restart `0`, liveness/readiness `UP`. No authenticated financial mutation was run because `payu-dev` has no isolated lending fixture.
+
 > ✅ **2026-08-04 — PROD-013 lending money precision deployed**:
 > - Lending monetary response properties now serialize as decimal strings without changing non-money decimals; the web LendingService models monetary fields as the shared `Money` string type and the lending page formats them with exact decimal parsing/rounding instead of `Intl.NumberFormat` on JavaScript numbers.
 > - Verification: backend serializer regression `1/1`, lending reactor `91/91`, package `BUILD SUCCESS`; web LendingService `25/25`, Lending page `5/5`, full Vitest `1203 passed | 1 skipped`, type-check, changed-file ESLint, and production build passed. Images lending `1.8.106` (`sha256:ea430e0cb57784dd2204c4e92df9367fd42784eb191c80d0329e7e6abf968d22`) and web-app `1.5.15` (`sha256:714434bf2313036fa654df1622d1195247361650cb341949d7434713162310bc`) are live; both pods Ready `1/1`, restart `0`, lending liveness/readiness `UP`, and web `/api/health` healthy. Authenticated financial E2E remains pending because `payu-dev` has no isolated lending fixture.

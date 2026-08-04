@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.18] - 2026-08-04
+
+### Fixed
+
+- **PayLater request boundary (PROD-041 follow-up)**: purchase and payment endpoints now use typed, validated request DTOs; missing or malformed amounts and blank merchant names return the standard validation response before service execution instead of controller parsing failures. Lending image `1.8.107` is live at ImageStream digest `sha256:3ea9d4bfd4c04140884b8c82a5f6c6a3806118fa324bba8dcb11c18951523948`.
+
 ## [1.10.17] - 2026-08-04
 
 ### Fixed

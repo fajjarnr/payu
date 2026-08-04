@@ -10,6 +10,9 @@ import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.LoanStatus;
 import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.dto.LoanApplicationCommand;
+import id.payu.lending.interfaces.dto.PayLaterPaymentRequest;
+import id.payu.lending.interfaces.dto.PayLaterPurchaseRequest;
+import jakarta.validation.Validation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -221,8 +224,40 @@ class LendingControllerSecurityTest {
         assertXIdempotencyKey("applyLoan", LoanApplicationCommand.class, Principal.class);
         assertXIdempotencyKey("processRepayment", UUID.class, String.class,
                 id.payu.lending.interfaces.dto.RepaymentRequest.class);
-        assertXIdempotencyKey("recordPurchase", UUID.class, java.util.Map.class);
-        assertXIdempotencyKey("recordPayment", UUID.class, java.util.Map.class);
+        assertXIdempotencyKey("recordPurchase", UUID.class,
+                id.payu.lending.interfaces.dto.PayLaterPurchaseRequest.class);
+        assertXIdempotencyKey("recordPayment", UUID.class,
+                id.payu.lending.interfaces.dto.PayLaterPaymentRequest.class);
+    }
+
+    @Test
+    void payLaterMutationEndpoints_UseTypedRequestBodies() throws NoSuchMethodException {
+        var purchase = methodNamed("recordPurchase");
+        var payment = methodNamed("recordPayment");
+
+        assertEquals(id.payu.lending.interfaces.dto.PayLaterPurchaseRequest.class,
+                purchase.getParameterTypes()[1]);
+        assertEquals(id.payu.lending.interfaces.dto.PayLaterPaymentRequest.class,
+                payment.getParameterTypes()[1]);
+    }
+
+    @Test
+    void payLaterRequestBodies_RejectMissingAndInvalidMoney() {
+        var validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        assertFalse(validator.validate(new PayLaterPurchaseRequest("", null, null)).isEmpty());
+        assertFalse(validator.validate(new PayLaterPaymentRequest(null)).isEmpty());
+        assertTrue(validator.validate(new PayLaterPurchaseRequest(
+                "Merchant", new BigDecimal("100.0000"), null)).isEmpty());
+        assertTrue(validator.validate(new PayLaterPaymentRequest(
+                new BigDecimal("100.0000"))).isEmpty());
+    }
+
+    private static java.lang.reflect.Method methodNamed(String name) {
+        return java.util.Arrays.stream(LendingController.class.getDeclaredMethods())
+                .filter(method -> method.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
     }
 
     private static void assertXIdempotencyKey(String methodName, Class<?>... parameterTypes)

@@ -40,6 +40,8 @@ import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
+import id.payu.lending.interfaces.dto.PayLaterPaymentRequest;
+import id.payu.lending.interfaces.dto.PayLaterPurchaseRequest;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -270,12 +272,10 @@ public class LendingController extends BaseController {
     // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPurchase(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Valid @RequestBody java.util.Map<String, Object> body) {
-        String merchantName = (String) body.get("merchantName");
-        BigDecimal amount = new BigDecimal(body.get("amount").toString());
-        String description = body.containsKey("description") ? (String) body.get("description") : null;
-        log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, merchantName);
-        PayLaterTransaction transaction = payLaterTransactionService.recordPurchase(userId, merchantName, amount, description);
+            @Valid @RequestBody PayLaterPurchaseRequest request) {
+        log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, request.merchantName());
+        PayLaterTransaction transaction = payLaterTransactionService.recordPurchase(
+                userId, request.merchantName(), request.amount(), request.description());
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -298,10 +298,9 @@ public class LendingController extends BaseController {
     // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPayment(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Valid @RequestBody java.util.Map<String, BigDecimal> body) {
-        BigDecimal amount = body.get("amount");
-        log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
-        PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, amount);
+            @Valid @RequestBody PayLaterPaymentRequest request) {
+        log.info("Recording PayLater payment for user: {} with amount: {}", userId, request.amount());
+        PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, request.amount());
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
