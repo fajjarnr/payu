@@ -75,6 +75,18 @@ class AuthorizationFilterTest {
             .statusCode(anyOf(is(200), is(503)));
     }
 
+    @Test
+    @DisplayName("Should bypass platform JWT for SNAP token endpoint")
+    void testPublicEndpointBypass_SnapToken() {
+        given()
+            .contentType("application/json")
+            .body("{\"grantType\":\"client_credentials\"}")
+            .when()
+            .post("/api/v1/v1/partner/auth/token")
+            .then()
+            .statusCode(anyOf(is(400), is(404), is(503)));
+    }
+
     // ==================== Missing/Invalid Token Tests ====================
 
     @Test

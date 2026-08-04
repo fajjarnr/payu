@@ -28,9 +28,9 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
-| MVP-001 | P1 | `SnapBiPaymentService.createPayment` kini settle melalui port wallet (reserve → commit → credit dengan kompensasi), menandai record `COMPLETED`, dan menerbitkan webhook + outbox `payment.completed`. | 🟡 Implemented locally — live wallet E2E pending |
+| MVP-001 | P1 | `SnapBiPaymentService.createPayment` kini settle melalui port wallet (reserve → commit → credit dengan kompensasi), menandai record `COMPLETED`, dan menerbitkan webhook + outbox `payment.completed`. | ✅ Closed 2026-08-04 — live SNAP payment `2002500`, wallet `ACC-001 → ACC-002` IDR 100, replay identik; partner `1.8.98`, wallet `1.8.110`, gateway `1.9.9` |
 | MVP-002 | P1 | `TransferSagaOrchestrator` (transaction-service) = **DEAD CODE**: nol pemanggil di seluruh repo (hanya self-ref + javadoc `@see` di `SagaConfig.java:17`). Saga ini (reserve→commit→compensation + BI-FAST, pub via outbox) tidak pernah dipanggil controller/service manapun — jalur transfer yang ter-wire justru `InitiateTransferCommandHandler`. Dua implementasi logika uang paralel → risiko divergensi (satu di-fix, satu tetap rusak) & duplikasi. Keputusan: **hapus** (YAGNI) atau **wire** ke endpoint. Sangat direkomendasikan wiring kompensasi saga ke `InitiateTransferCommandHandler` atau hapus demi satu source of truth. | ✅ Dead code removed (MVP-002, 2026-08-01) — saga deleted (TransferSagaOrchestrator/Context), SagaConfig javadoc updated; `mvn test` transaction-service SUCCESS (2026-08-03) |
-| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | 🟡 Partial — partner runtime, Keycloak DB/ESO, generated client credentials, and realm import are restored; authenticated live SNAP replay remains pending on an isolated financial fixture |
+| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | 🟡 Partial — live payment replay gate passed 2026-08-04; refund/callback live evidence remains |
 
 
 
@@ -112,11 +112,11 @@ completion evidence.
 |:---:|:---|:---|:---|
 
 ## 📝 Platform Workload Audit Details
-### 🟡 MVP-001: SNAP-BI `createPayment` money flow — implementasi lokal selesai
+### ✅ MVP-001: SNAP-BI `createPayment` money flow — live E2E selesai (2026-08-04)
 * **Implemented (2026-08-03)**: `SnapBiPaymentService` sekarang menggunakan `WalletSettlementPort`; adapter wallet memanggil reserve → commit → credit dengan `X-Idempotency-Key` per langkah dan mencoba credit kompensasi jika beneficiary credit gagal.
 * **Event contract**: payment yang berhasil menjadi `COMPLETED`, webhook memakai `payment.completed` + event ID stabil, dan outbox memakai topic `payu.partner.payment-completed.v1`. Refund/status terminal juga tidak lagi memakai `LOG.info` stub.
 * **Verification**: `SnapBiPaymentServiceTest` 8/8 dan seluruh `partner-service` 237/237 test lulus pada 2026-08-03.
-* **Remaining**: live wallet/OpenShift E2E belum dijalankan; verifikasi deploy harus memastikan JWT service-to-service dan account ownership wallet sesuai kontrak runtime.
+* **Verification**: SNAP token 200, payment IDR 100 dari `ACC-001` ke `ACC-002` mengembalikan `2002500`; replay dengan body dan idempotency key yang sama menghasilkan response identik. Partner `1.8.98`, wallet `1.8.110`, dan gateway `1.9.9` berhasil rollout.
 
 ### 🔴 MVP-002: `TransferSagaOrchestrator` dead code — dua implementasi transfer paralel
 * **Trace (2026-08-01)**: `grep -rn 'TransferSagaOrchestrator'` di seluruh repo hanya menemukan: (a) definisi kelas `application/saga/TransferSagaOrchestrator.java`, (b) self constructor, (c) javadoc `@see` di `config/SagaConfig.java:17`. **Tidak ada controller/service yang memanggil** saga ini → unreachable.

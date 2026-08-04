@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.22] - 2026-08-04
+
+### Fixed
+
+- **SNAP-BI payment runtime (MVP-001)**: external SNAP bearer tokens now reach the partner controller for HMAC/SNAP validation, wallet settlement uses a Keycloak service token, and trusted service ownership is enforced by client identity. Live payment/replay passed with identical responses.
+- **Local development parity (INFRA-025)**: Podman uses the same plain dev Hot Rod contract as `payu-dev`—distributed `payu` cache, no TLS/client material, and no stale Python REST TLS settings. Production mTLS remains unchanged.
+
 ## [1.10.21] - 2026-08-04
 
 ### Fixed

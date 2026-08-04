@@ -4,6 +4,11 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — MVP-001 SNAP payment live E2E and local cache parity**:
+> - SNAP token issuance and payment settlement passed on `payu-dev`: IDR 100 from `ACC-001` to `ACC-002` returned `2002500`; replay with the same request body and `X-Idempotency-Key` returned an identical response. Partner `1.8.98`, wallet `1.8.110`, and gateway `1.9.9` are rolled out.
+> - Partner-to-wallet calls use a Keycloak client-credentials token; wallet trusts the configured service client identity while user-owned wallet paths remain protected.
+> - Local Podman now matches the dev cache contract: plain Hot Rod/REST, distributed `payu` cache, no Data Grid TLS files or credentials. YAML/XML parse checks pass; compose execution is pending a host compose provider.
+
 ---
 
 ## 🏁 Current Status Snapshot

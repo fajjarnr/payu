@@ -81,6 +81,17 @@ Prereqs for UAT/preprod/prod runs: overlay secrets via VaultStaticSecret per env
 | Preprod | `payu-preprod` | `infrastructure/workloads/overlays/payu-preprod` |
 | Production | `payu` | `infrastructure/workloads/overlays/payu-prod` |
 
+## Local Podman Development
+
+`infrastructure/local/podman/podman-compose.yml` mirrors the `payu-dev` runtime contract for local work: single-node infrastructure, Kafka's local `29092` listener, and plain Infinispan Hot Rod/REST on `payu-cache:11222`. It intentionally does not copy production mTLS files or credentials.
+
+```bash
+rtk podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-database-rw payu-cache payu-kafka-kafka-bootstrap artemis payu-keycloak-service
+rtk podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
+```
+
+The cache config uses the distributed `payu` cache with non-XA pessimistic transactions. If the host has no Compose provider, install `podman-compose` or Docker Compose before running these commands; YAML/XML parsing alone does not start services.
+
 Platform namespaces:
 
 | Namespace | Purpose |

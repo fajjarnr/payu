@@ -17,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -65,10 +66,12 @@ public class WebSecurityAutoConfiguration {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             ObjectProvider<JwtAuthenticationConverter> jwtConverterProvider,
+            ObjectProvider<BearerTokenResolver> bearerTokenResolverProvider,
             ObjectProvider<SecurityConfigurerCustomizer> customizerProvider,
             ObjectProvider<CorsConfigurationSource> corsSourceProvider) throws Exception {
 
         JwtAuthenticationConverter jwtConverter = jwtConverterProvider.getIfAvailable();
+        BearerTokenResolver bearerTokenResolver = bearerTokenResolverProvider.getIfAvailable();
         CorsConfigurationSource corsSource = corsSourceProvider.getIfAvailable();
 
         http
@@ -107,13 +110,16 @@ public class WebSecurityAutoConfiguration {
                 // Everything else requires authentication
                 auth.anyRequest().authenticated();
             })
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> {
+            .oauth2ResourceServer(oauth2 -> {
+                if (bearerTokenResolver != null) {
+                    oauth2.bearerTokenResolver(bearerTokenResolver);
+                }
+                oauth2.jwt(jwt -> {
                     if (jwtConverter != null) {
                         jwt.jwtAuthenticationConverter(jwtConverter);
                     }
-                })
-            );
+                });
+            });
 
         // Apply per-service HttpSecurity customizations (filters, headers, etc.)
         customizerProvider.forEach(customizer -> {

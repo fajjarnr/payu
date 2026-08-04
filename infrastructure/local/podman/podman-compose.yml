@@ -5,21 +5,16 @@
 # Optional example: COMPOSE_PROFILES=api-management podman compose
 #       -f podman-compose.yml up -d apicast
 # Local substitutions are intentional: single-node infrastructure, locally built
-# app images, Kafka's internal 29092 listener, and development-only secret defaults.
+# app images, Kafka's internal 29092 listener, plain dev Hot Rod, and
+# development-only secret defaults.
 
 x-local-security-environment: &local-security-environment
   PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-PayU-local-PBKDF2-salt-change-outside-development}
   WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-payu-local-webhook-secret-change-outside-development}
+  PAYU_CACHE_PROVIDER: hotrod
   PAYU_CACHE_HOTROD_SERVER_LIST: ${PAYU_CACHE_HOTROD_SERVER_LIST:-payu-cache:11222}
-  PAYU_CACHE_HOTROD_USE_SSL: ${PAYU_CACHE_HOTROD_USE_SSL:-true}
-  PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME: /run/secrets/payu-datagrid/client-truststore.p12
-  PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD: ${PAYU_CACHE_TLS_STORE_PASSWORD:-changeit}
-  PAYU_CACHE_HOTROD_TRUST_STORE_TYPE: PKCS12
-  PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME: /run/secrets/payu-datagrid/client-keystore.p12
-  PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD: ${PAYU_CACHE_TLS_STORE_PASSWORD:-changeit}
-  PAYU_CACHE_HOTROD_KEY_STORE_TYPE: PKCS12
-  PAYU_CACHE_HOTROD_KEY_ALIAS: payu-client
-  PAYU_CACHE_HOTROD_SNI_HOST_NAME: payu-cache
+  PAYU_CACHE_HOTROD_CACHE_NAME: payu
+  PAYU_CACHE_HOTROD_USE_SSL: "false"
 
 x-app-defaults: &app-defaults
   pull_policy: build
@@ -31,8 +26,6 @@ x-app-defaults: &app-defaults
     - no-new-privileges:true
   tmpfs:
     - /tmp:rw,noexec,nosuid,size=128m
-  volumes:
-    - ./.secrets/datagrid:/run/secrets/payu-datagrid:ro,z
   pids_limit: 512
   mem_limit: 768m
   cpus: 1.0
@@ -80,15 +73,14 @@ services:
     networks:
       - payu-network
     environment:
-      USER: developer
-      PASS: payu-cache-dev-password
+      # The upstream image enables the incubator vector module by default; cache development does not need it.
+      JAVA_OPTS_BASE: -Djava.awt.headless=true -XX:+ExitOnOutOfMemoryError
     ports:
       - 11222:11222
     volumes:
       - ./config/infinispan-config.xml:/opt/infinispan/server/conf/infinispan.xml:z
-      - ./.secrets/datagrid:/opt/infinispan/server/conf/tls:ro,z
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "--cacert", "/opt/infinispan/server/conf/tls/ca.crt", "--cert", "/opt/infinispan/server/conf/tls/client.crt", "--key", "/opt/infinispan/server/conf/tls/client.key", "-u", "developer:payu-cache-dev-password", "https://localhost:11222/rest/v2/container/health/status"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:11222/rest/v2/container/health/status"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1049,6 +1041,10 @@ services:
       SPRING_PROFILES_ACTIVE: container
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      PAYU_KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
+      PAYU_KEYCLOAK_REALM: payu
+      PAYU_KEYCLOAK_CLIENT_ID: payu-backend
+      PAYU_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -1355,13 +1351,6 @@ services:
       ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-admin}
-      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-https://payu-cache:11222}
-      PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
-      PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
-      PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
-      PAYU_CACHE_REST_CA_FILE: /run/secrets/payu-datagrid/ca.crt
-      PAYU_CACHE_REST_CLIENT_CERT_FILE: /run/secrets/payu-datagrid/client.crt
-      PAYU_CACHE_REST_CLIENT_KEY_FILE: /run/secrets/payu-datagrid/client.key
     depends_on:
       payu-database-rw:
         condition: service_healthy
@@ -1403,13 +1392,6 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       PORT: "8080"
       SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
-      PAYU_CACHE_REST_URL: ${PAYU_CACHE_REST_URL:-https://payu-cache:11222}
-      PAYU_CACHE_REST_USERNAME: ${PAYU_CACHE_REST_USERNAME:-developer}
-      PAYU_CACHE_REST_PASSWORD: ${PAYU_CACHE_REST_PASSWORD:-payu-cache-dev-password}
-      PAYU_CACHE_REST_AUTH_TYPE: ${PAYU_CACHE_REST_AUTH_TYPE:-digest}
-      PAYU_CACHE_REST_CA_FILE: /run/secrets/payu-datagrid/ca.crt
-      PAYU_CACHE_REST_CLIENT_CERT_FILE: /run/secrets/payu-datagrid/client.crt
-      PAYU_CACHE_REST_CLIENT_KEY_FILE: /run/secrets/payu-datagrid/client.key
     depends_on:
       payu-database-rw:
         condition: service_healthy

@@ -1,5 +1,5 @@
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
-ARG APP_VERSION=1.9.8
+ARG APP_VERSION=1.9.9
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-gateway-service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"

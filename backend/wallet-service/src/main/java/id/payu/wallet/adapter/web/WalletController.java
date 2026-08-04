@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -47,9 +48,13 @@ public class WalletController extends BaseController {
     private static final Logger log = LoggerFactory.getLogger(WalletController.class);
 
     private final WalletUseCase walletUseCase;
+    private final String trustedServiceClientId;
 
-    public WalletController(WalletUseCase walletUseCase) {
+    public WalletController(
+            WalletUseCase walletUseCase,
+            @Value("${payu.keycloak.client-id:payu-backend}") String trustedServiceClientId) {
         this.walletUseCase = walletUseCase;
+        this.trustedServiceClientId = trustedServiceClientId;
     }
 
     /**
@@ -73,10 +78,21 @@ public class WalletController extends BaseController {
      * BUG-BE-150: Centralised ownership check for account-scoped endpoints.
      */
     private void verifyAccountOwnership(String accountId) {
+        if (isTrustedServiceRequest()) {
+            return;
+        }
         String userId = extractUserId();
         if (!Objects.equals(accountId, userId)) {
             throw new AccessDeniedException("Access denied: you don't own this resource");
         }
+    }
+
+    private boolean isTrustedServiceRequest() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return false;
+        }
+        return trustedServiceClientId.equals(jwt.getClaimAsString("azp"));
     }
 
     /**
@@ -215,6 +231,9 @@ public class WalletController extends BaseController {
      * @return true if the user owns the reservation, false otherwise
      */
     public boolean validateReservationOwnership(String reservationId, String accountId) {
+        if (isTrustedServiceRequest()) {
+            return true;
+        }
         try {
             String reservationOwnerId = walletUseCase.getAccountIdByReservationId(reservationId);
             return reservationOwnerId.equals(accountId);

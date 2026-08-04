@@ -73,7 +73,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/transactions/public/health",
         "/api/v1/billing/public/health",
         "/api/v1/notification/public/health",
-        "/api/v1/simulator/dukcapil/verify"  // Internal account-service -> Dukcapil simulator path
+        "/api/v1/simulator/dukcapil/verify",  // Internal account-service -> Dukcapil simulator path
+        // SNAP-BI authenticates at partner-service with client-key HMAC and its own bearer token.
+        // Do not force the platform Keycloak JWT flow onto this external contract.
+        "/api/v1/v1/partner",
+        "/v1/partner"
     };
 
     // Exact match public endpoints (must match exactly)

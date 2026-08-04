@@ -4799,3 +4799,7 @@ A GET validation endpoint must never call an apply command: `apply` mutates usag
 ### L-207: CRD schema, operator defaults, and generated artifacts are separate gates (2026-08-04)
 
 `oc kustomize` can render a valid manifest while the operator applies a different runtime default, and a stale framework build can keep an already-removed extension inside the container image. Before changing a CRD field, run `oc explain`; after changing dependency/configuration, run a clean package and inspect the final artifact; then apply the rendered manifest and verify the live CR plus recent logs. This caught the dev Data Grid TLS/plain mismatch and the API portal duplicate Micrometer gauge.
+
+### L-208: External SNAP bearer and internal service bearer are different trust boundaries (2026-08-04)
+
+The partner endpoint must preserve the external SNAP `Authorization` header for controller-level HMAC/SNAP validation, while the shared platform JWT filter must not try to parse that token. Calls from partner to wallet use a separate Keycloak client-credentials token; wallet bypasses account ownership only for the configured trusted service client identity. Local development must use the same plain dev cache protocol as `payu-dev`; stale TLS REST variables cause Python idempotency startup/runtime failures after the dev cache drops mTLS.

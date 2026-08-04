@@ -4,13 +4,15 @@ import id.payu.partner.domain.port.out.WalletSettlementPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Wallet-service adapter for SNAP payment settlement.
@@ -18,11 +20,25 @@ import java.util.Map;
 @Component
 public class WalletSettlementAdapter implements WalletSettlementPort {
 
-    private final RestClient restClient;
+    private final RestClient walletClient;
+    private final RestClient keycloakClient;
+    private final String keycloakClientId;
+    private final String keycloakClientSecret;
+    private volatile ServiceToken serviceToken;
 
     public WalletSettlementAdapter(
-        @Value("${payu.services.wallet-service.url:http://wallet-service:8080}") String walletServiceUrl) {
-        this.restClient = RestClient.builder().baseUrl(walletServiceUrl).build();
+        @Value("${payu.services.wallet-service.url:http://wallet-service:8080}") String walletServiceUrl,
+        @Value("${PAYU_KEYCLOAK_SERVER_URL:http://payu-keycloak-service.payu-sso.svc.cluster.local:8080}")
+        String keycloakServerUrl,
+        @Value("${PAYU_KEYCLOAK_REALM:payu}") String keycloakRealm,
+        @Value("${PAYU_KEYCLOAK_CLIENT_ID:payu-backend}") String keycloakClientId,
+        @Value("${PAYU_KEYCLOAK_CLIENT_SECRET:}") String keycloakClientSecret) {
+        this.walletClient = RestClient.builder().baseUrl(walletServiceUrl).build();
+        this.keycloakClient = RestClient.builder()
+                .baseUrl(keycloakServerUrl + "/realms/" + keycloakRealm)
+                .build();
+        this.keycloakClientId = keycloakClientId;
+        this.keycloakClientSecret = keycloakClientSecret;
     }
 
     @Override
@@ -51,7 +67,7 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
                 "amount", amount,
                 "referenceId", referenceId);
 
-        Map<?, ?> response = restClient.post()
+        Map<?, ?> response = walletClient.post()
                 .uri("/api/v1/wallets/" + accountId + "/reserve")
                 .headers(target -> target.addAll(headers))
                 .body(body)
@@ -66,7 +82,7 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
     }
 
     private void commit(String reservationId, String referenceId) {
-        restClient.post()
+        walletClient.post()
                 .uri("/api/v1/wallets/reservations/" + reservationId + "/commit")
                 .headers(target -> target.addAll(headers("snap-commit-" + referenceId)))
                 .retrieve()
@@ -78,7 +94,7 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
                 "amount", amount,
                 "referenceId", referenceId,
                 "description", description);
-        restClient.post()
+        walletClient.post()
                 .uri("/api/v1/wallets/" + accountId + "/credit")
                 .headers(target -> target.addAll(headers("snap-credit-" + referenceId)))
                 .body(body)
@@ -91,14 +107,46 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Idempotency-Key", idempotencyKey);
 
-        ServletRequestAttributes attributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            String authorization = attributes.getRequest().getHeader(HttpHeaders.AUTHORIZATION);
-            if (authorization != null) {
-                headers.set(HttpHeaders.AUTHORIZATION, authorization);
-            }
-        }
+        headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + platformToken());
         return headers;
+    }
+
+    private String platformToken() {
+        ServiceToken cached = serviceToken;
+        if (cached != null && cached.expiresAt().isAfter(Instant.now().plusSeconds(30))) {
+            return cached.value();
+        }
+
+        synchronized (this) {
+            cached = serviceToken;
+            if (cached != null && cached.expiresAt().isAfter(Instant.now().plusSeconds(30))) {
+                return cached.value();
+            }
+
+            MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+            form.add("grant_type", "client_credentials");
+            form.add("client_id", keycloakClientId);
+            form.add("client_secret", keycloakClientSecret);
+
+            Map<?, ?> response = keycloakClient.post()
+                    .uri("/protocol/openid-connect/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .body(Map.class);
+            String value = response == null ? null : Objects.toString(response.get("access_token"), null);
+            if (value == null || value.isBlank()) {
+                throw new IllegalStateException("Keycloak service token response did not contain access_token");
+            }
+
+            long expiresIn = response.get("expires_in") instanceof Number number
+                    ? number.longValue()
+                    : Long.parseLong(Objects.toString(response.get("expires_in"), "300"));
+            serviceToken = new ServiceToken(value, Instant.now().plusSeconds(Math.max(1, expiresIn - 30)));
+            return value;
+        }
+    }
+
+    private record ServiceToken(String value, Instant expiresAt) {
     }
 }

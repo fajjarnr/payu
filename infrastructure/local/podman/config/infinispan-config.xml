@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Infinispan 16.2.1 local server config.
-    Hot Rod and REST share endpoint port 11222 and require TLS client certificates.
-    The container's USER/PASS env vars populate the default properties realm.
--->
+<!-- Infinispan 16.2.1 local config matching payu-dev: plain Hot Rod/REST. -->
 <infinispan
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:infinispan:config:16.2 https://infinispan.org/schemas/infinispan-config-16.2.xsd
@@ -15,21 +11,20 @@
         <transport cluster="${infinispan.cluster.name:cluster}"
                    stack="${infinispan.cluster.stack:tcp}"
                    node-name="${infinispan.node.name:}"/>
-        <security>
-            <authorization/>
-        </security>
-        <local-cache name="payu">
+        <jmx enabled="false"/>
+        <distributed-cache name="payu" mode="SYNC" owners="1" statistics="true">
+            <transaction mode="NON_XA" locking="PESSIMISTIC"/>
             <encoding>
                 <key media-type="text/plain"/>
                 <value media-type="text/plain"/>
             </encoding>
-        </local-cache>
+        </distributed-cache>
     </cache-container>
 
     <server xmlns="urn:infinispan:server:16.2">
         <interfaces>
             <interface name="public">
-                <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+                <inet-address value="${infinispan.bind.address:0.0.0.0}"/>
             </interface>
         </interfaces>
 
@@ -39,27 +34,22 @@
 
         <security>
             <security-realms>
-                <security-realm name="default">
-                    <server-identities>
-                        <ssl>
-                            <keystore path="tls/server.p12"
-                                      relative-to="infinispan.server.config.path"
-                                      password="changeit"
-                                      alias="payu-cache"/>
-                            <truststore path="tls/client-truststore.p12"
-                                        relative-to="infinispan.server.config.path"
-                                        password="changeit"/>
-                        </ssl>
-                    </server-identities>
+                <security-realm name="default" default-realm="default">
                     <properties-realm/>
                 </security-realm>
             </security-realms>
         </security>
 
         <endpoints socket-binding="default" security-realm="default">
-            <endpoint socket-binding="default" security-realm="default" require-ssl-client-auth="true">
-                <hotrod-connector/>
-                <rest-connector/>
+            <endpoint socket-binding="default">
+                <hotrod-connector>
+                    <authentication>
+                        <sasl mechanisms="NONE"/>
+                    </authentication>
+                </hotrod-connector>
+                <rest-connector>
+                    <authentication mechanisms="NONE"/>
+                </rest-connector>
             </endpoint>
         </endpoints>
     </server>
