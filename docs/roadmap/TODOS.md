@@ -28,9 +28,6 @@
 | Key | Priority | Summary | Status |
 |:---|:---:|:---|:---|
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
-| MVP-001 | P1 | `SnapBiPaymentService.createPayment` kini settle melalui port wallet (reserve → commit → credit dengan kompensasi), menandai record `COMPLETED`, dan menerbitkan webhook + outbox `payment.completed`. | ✅ Closed 2026-08-04 — live SNAP payment `2002500`, wallet `ACC-001 → ACC-002` IDR 100, replay identik; partner `1.8.98`, wallet `1.8.110`, gateway `1.9.9` |
-| MVP-002 | P1 | `TransferSagaOrchestrator` (transaction-service) = **DEAD CODE**: nol pemanggil di seluruh repo (hanya self-ref + javadoc `@see` di `SagaConfig.java:17`). Saga ini (reserve→commit→compensation + BI-FAST, pub via outbox) tidak pernah dipanggil controller/service manapun — jalur transfer yang ter-wire justru `InitiateTransferCommandHandler`. Dua implementasi logika uang paralel → risiko divergensi (satu di-fix, satu tetap rusak) & duplikasi. Keputusan: **hapus** (YAGNI) atau **wire** ke endpoint. Sangat direkomendasikan wiring kompensasi saga ke `InitiateTransferCommandHandler` atau hapus demi satu source of truth. | ✅ Dead code removed (MVP-002, 2026-08-01) — saga deleted (TransferSagaOrchestrator/Context), SagaConfig javadoc updated; `mvn test` transaction-service SUCCESS (2026-08-03) |
-| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | ✅ Closed 2026-08-04 — live disbursement callback completed; transaction `1.8.108`, BI-FAST simulator `1.8.84` |
 
 
 
@@ -91,16 +88,11 @@ Success criteria: every mandatory control in `infrastructure/DEVSECOPS_ARCHITECT
 has repository tests plus live-cluster evidence. A manifest existing in Git is not
 completion evidence.
 
-- [x] Add failing infrastructure contract tests for Kustomize rendering, secret hygiene, fail-closed Java/Python/Next.js gates, digest-pinned Task images, immutable image promotion, and policy ownership. (`34/34` green on 2026-07-22.)
-- [x] Repair `payu-dev` rendering and workload port contracts before enabling GitOps reconciliation. (Web route verified HTTP 200.)
 - [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
 - [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
-- [x] Bootstrap Argo CD Applications/ApplicationSets with Git/live parity before enabling prune and self-heal. Paritas tercapai: 22 Applications, 3 AppSet tersisa semua manual sync; file repo disinkronkan (AppSet automated dihapus dari file). Prune/self-heal tetap off sampai promotion gate SIT/UAT/preprod/prod selesai.
 - [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity, OCI signature/attestation, and internal Rekor transparency are verified; signed-image admission sudah Enforce (`require-cosign-signature`, 31 image `payu-dev` di-sign); sisa: SBOM attestation retention dan provider opt-in Pact gate.
 - [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days.
-- [x] Enforce security controls in ACS and operational controls in Kyverno without overlapping ownership. Semua policy Kyverno sekarang `Enforce`; pelanggaran `payu-dev` diremediasi (0 policy FAIL per PolicyReport 2026-07-31), negative tests lulus (root, registry, labels, cosign).
 - [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.
-- [x] Measure scheduler pressure and MachineSet topology; add workers only for a verified constraint. Required zone anti-affinity exposed the single-AZ worker layout, so workers were added in `1b/1c`; five workers are currently Ready across three AZs.
 - [ ] After workload redistribution and a disruption-budget review, rightsize the original `1a` MachineSet from three replicas to one so steady state is one worker per AZ.
 - [ ] Run positive and negative E2E security gates, DR/rollback exercises, reviewer audit, then reconcile architecture and PCI evidence documents with runtime truth.
 
@@ -112,28 +104,6 @@ completion evidence.
 |:---:|:---|:---|:---|
 
 ## 📝 Platform Workload Audit Details
-### ✅ MVP-001: SNAP-BI `createPayment` money flow — live E2E selesai (2026-08-04)
-* **Implemented (2026-08-03)**: `SnapBiPaymentService` sekarang menggunakan `WalletSettlementPort`; adapter wallet memanggil reserve → commit → credit dengan `X-Idempotency-Key` per langkah dan mencoba credit kompensasi jika beneficiary credit gagal.
-* **Event contract**: payment yang berhasil menjadi `COMPLETED`, webhook memakai `payment.completed` + event ID stabil, dan outbox memakai topic `payu.partner.payment-completed.v1`. Refund/status terminal juga tidak lagi memakai `LOG.info` stub.
-* **Verification**: `SnapBiPaymentServiceTest` 8/8 dan seluruh `partner-service` 237/237 test lulus pada 2026-08-03.
-* **Verification**: SNAP token 200, payment IDR 100 dari `ACC-001` ke `ACC-002` mengembalikan `2002500`; replay dengan body dan idempotency key yang sama menghasilkan response identik. Partner `1.8.98`, wallet `1.8.110`, dan gateway `1.9.9` berhasil rollout.
-
-### 🔴 MVP-002: `TransferSagaOrchestrator` dead code — dua implementasi transfer paralel
-* **Trace (2026-08-01)**: `grep -rn 'TransferSagaOrchestrator'` di seluruh repo hanya menemukan: (a) definisi kelas `application/saga/TransferSagaOrchestrator.java`, (b) self constructor, (c) javadoc `@see` di `config/SagaConfig.java:17`. **Tidak ada controller/service yang memanggil** saga ini → unreachable.
-* **Konflik**: jalur `/api/v1/transactions/transfer` yang ter-wire memakai `InitiateTransferCommandHandler` (reserve→commit→credit + outbox + compensation), bukan saga. Jadi ada 2 implementasi logika transfer yang identik tapi terpisah.
-* **Risiko**: divergensi uang — perbaikan di satu path tidak menjangkau path lain; dua source of truth untuk keputusan money.
-* **Rekomendasi**: hapus `TransferSagaOrchestrator` (YAGNI) atau wire kompensasinya ke `InitiateTransferCommandHandler`. Satu alur uang, bukan dua.
-
-### ✅ MVP-004: Idempotency boundary — payment/refund/disbursement callback live (2026-08-04)
-* **Scan idempotency (2026-08-01)**: semua endpoint money pindah-dana sudah `@Idempotent(required=true)`: transfer, qris/pay, billing/topup/subscription, disbursement/batch-create, VA-create, split-bill payment/settle, wallet reserve/commit/release, merchant qr-pay, payment-link, public confirm. ✅
-* **Implemented (2026-08-03)**: `SnapBiController` `POST /payments` dan `POST /payments/{id}/refund`, serta `DisbursementController` `POST /api/v1/disbursements/callback`, sekarang memakai `@Idempotent(required=true)`. Disbursement callback juga sudah dilindungi HMAC oleh `CallbackSignatureFilter`; V15/V16 menjaga natural-key/unique delivery.
-* **Implemented (2026-08-03)**: `createRefund` sekarang mengambil parent payment dengan `PESSIMISTIC_WRITE` sebelum menghitung cumulative refund, sehingga refund berbeda pada payment yang sama terserialisasi dalam satu transaksi.
-* **Fixed (2026-08-04)**: SNAP refund sekarang menyimpan `PENDING`, menjalankan wallet reversal atomik melalui trusted service endpoint, lalu baru menjadi `COMPLETED`; `refundId` deterministik menjaga retry aman pada ledger reversal. Kafka topic + DLQ `payu.partner.payment-refunded.v1` juga dideklarasikan.
-* **Fixed (2026-08-03)**: partner-service CrashLoop karena dua migration `V15` diselesaikan dengan mempertahankan migration schema `V15` dan memindahkan unique-index/idempotency migration ke `V17`; regression test memastikan semua versi Flyway unik. Live `1.8.94` tervalidasi Flyway schema version 17, pod 1/1, health 200.
-* **Fixed (2026-08-04)**: activated the existing `ExternalSecretsConfig/cluster`, synced CNPG `payu-database-app` into `payu-sso/payu-keycloak-db` through a declarative Kubernetes `SecretStore`, corrected the dev DB FQDN, and verified Keycloak Ready `1/1`; source/sync password hashes match without exposing the value.
-* **Fixed (2026-08-04)**: dev client credentials are generated by the installed ESO `Password` generator with `ExternalSecret.refreshPolicy: OnChange`, synced from `payu-dev` to `payu-sso` through the existing least-privilege Kubernetes `SecretStore`, and loaded by `auth-service` through a declarative pod-template revision. The RHBK realm import Job completed successfully; source/sync key hashes match without exposing credential material.
-* **Verification (2026-08-04)**: authenticated disbursement `c313201f-94a1-4560-8319-04560c097e46` using bank code `014` returned `201`, then reached `COMPLETED` for `1 IDR`; BI-FAST delivered the signed callback, the HMAC filter verified it, and gRPC committed the persisted wallet reservation ID. Transaction reactor `142` tests, BI-FAST simulator reactor `2` tests, and numeric bank-code regression `1/1` passed; deployed images are transaction `1.8.108` and BI-FAST simulator `1.8.84`, both Ready `1/1` with restart `0`. Simulator startup has no deprecated-property or OTLP-export warning.
-
 ### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration
 * **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.
 * **Status**: 🟢 DEV STABLE / PROMOTION OPEN. Local mTLS is verified for `cache-starter` and Quarkus gateway Hot Rod plus KYC/analytics REST. `payu-dev` now deliberately uses plain Hot Rod without endpoint authentication; production overlays retain mTLS. `cache-starter` uses Infinispan 16.2.1 native Hot Rod with a lazy `RemoteCacheManager`, 10,000-entry invalidated near cache, and explicit UTF-8 JSON-text values in the `payu` cache. Auth refresh tokens, partner SNAP-BI tokens, API-commons atomic paths, and Quarkus gateway paths use Hot Rod. KYC and analytics idempotency use authenticated Data Grid REST because the Python Hot Rod client is unmaintained.
@@ -207,14 +177,12 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
-| PROD-022 | P0 | Loan repayment money movement | Repayment menjadi command durable: `loan_repayment_payments` menyimpan state/idempotency, schedule memakai row-lock + unique `(loan_id, installment_number)`, wallet melakukan debit + balanced journal, dan hasil dipublish via outbox CloudEvent. Live authenticated replay pada fixture schedule `479741ae-d96a-4c7f-907a-5b8e0c9fd675` mengembalikan 200 pada dua request dengan key sama; ledger debit/credit seimbang `341141.4100`, payment `COMPLETED`, schedule `FULLY_PAID`, outbox published dengan retry `0`. Images lending `1.8.113` dan wallet `1.8.109` live. | ✅ Closed 2026-08-04 — tests, build, declarative apply, rollout, ledger, replay, and outbox evidence complete. |
 
 ### Follow-up audit — Graphify + CodeGraph
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
 | PROD-035 | P1 | Mobile idempotency durability | `frontend/mobile/utils/idempotency.ts:124-152` menulis hingga 100 record metadata ke satu SecureStore value dan menelan error write. Expo SecureStore membatasi value sekitar 2048 byte; recovery key dapat hilang jauh sebelum 100 record, sementara request tetap diteruskan. | Simpan record per key atau gunakan storage yang sesuai untuk metadata; write failure harus mengubah flow menjadi queued/failed, bukan diam-diam lanjut. |
-| PROD-036 | P0 | Offline false success | `frontend/mobile/hooks/useOfflineMode.ts` benar-benar memanggil API untuk transfer/topup/qris, tetapi `payment` dan `bill_payment` sebelumnya mengisi `{}` sebagai `Transaction`; queue lalu menghapus idempotency key dan melaporkan sukses tanpa post ke backend. | ✅ Closed 2026-08-04 — unsupported types removed; legacy items now remain retry/failed and retain their idempotency key; focused hook test passes. |
 | PROD-038 | P1 | Mobile money precision | `frontend/mobile/types/index.ts:55-95` memodelkan transaction/transfer/top-up/QRIS amount sebagai JavaScript `number`, sehingga arithmetic dan round-trip nominal tidak exact. | Gunakan decimal string atau minor-unit integer di boundary; formatting/arithmetic exact dan precision test wajib. |
 
 ### Verification evidence
