@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Spring Data JPA repository for BillPaymentEntity entity.
@@ -17,4 +19,8 @@ public interface BillPaymentRepository extends JpaRepository<BillPaymentEntity, 
      * Find payment by reference number.
      */
     Optional<BillPaymentEntity> findByReferenceNumber(String referenceNumber);
+
+    Optional<BillPaymentEntity> findByIdempotencyKey(String idempotencyKey);
+
+    List<BillPaymentEntity> findByStatusIn(Collection<String> statuses);
 }

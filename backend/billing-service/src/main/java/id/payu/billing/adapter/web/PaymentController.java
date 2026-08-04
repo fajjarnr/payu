@@ -23,6 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Objects;
 
@@ -91,7 +93,7 @@ public class PaymentController {
             maskData = true,
             level = AuditLevel.INFO
     )
-    @Idempotent(required = true)
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create bill payment", description = "Process a bill payment for utilities like PLN, PDAM, BPJS, etc.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment created successfully",
@@ -109,8 +111,21 @@ public class PaymentController {
             throw new PaymentNotFoundException("Unauthorized payment attempt: account ownership mismatch");
         }
 
-        BillPayment payment = paymentService.createPayment(request);
+        BillPayment payment = paymentService.createPayment(request, extractIdempotencyKey());
         return ApiResponse.success(PaymentResponse.from(payment));
+    }
+
+    private String extractIdempotencyKey() {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+            String key = attributes.getRequest().getHeader("X-Idempotency-Key");
+            if (key == null) {
+                key = attributes.getRequest().getHeader("Idempotency-Key");
+            }
+            if (key != null && !key.isBlank()) {
+                return key;
+            }
+        }
+        return UUID.randomUUID().toString();
     }
 
     @GetMapping("/{id}")

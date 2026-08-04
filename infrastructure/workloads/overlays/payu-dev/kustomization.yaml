@@ -23,7 +23,7 @@ images:
   newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-  newTag: "1.8.102"
+  newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newTag: "1.8.103"

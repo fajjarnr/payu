@@ -70,6 +70,7 @@ public class BillingIntegrationTest {
         // 1. Call API to create payment
         String paymentId = given()
                 .contentType(ContentType.JSON)
+                .header("X-Idempotency-Key", java.util.UUID.randomUUID().toString())
                 .body(request)
         .when()
                 .post("/api/v1/payments")

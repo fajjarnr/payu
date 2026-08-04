@@ -18,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,6 +66,89 @@ class PaymentServiceTest {
     @Nested
     @DisplayName("Create Payment Tests")
     class CreatePaymentTests {
+
+        @Test
+        @DisplayName("should resume the persisted payment with the same reference after a provider timeout")
+        void shouldResumePersistedPaymentAfterProviderTimeout() {
+            String idempotencyKey = UUID.randomUUID().toString();
+            CreatePaymentRequest request = new CreatePaymentRequest(
+                    "account-123", "PLN", "12345678901234", new BigDecimal("100000"));
+            BillPayment checkpoint = new BillPayment();
+            checkpoint.setId(UUID.randomUUID());
+            checkpoint.setAccountId(request.accountId());
+            checkpoint.setBillerType(BillerType.PLN);
+            checkpoint.setCustomerId(request.customerId());
+            checkpoint.setAmount(request.amount());
+            checkpoint.setAdminFee(new BigDecimal("2500"));
+            checkpoint.setTotalAmount(new BigDecimal("102500"));
+            checkpoint.setStatus(PaymentStatus.PROCESSING);
+            checkpoint.setReferenceNumber("BILL-STABLE-001");
+            checkpoint.setIdempotencyKey(idempotencyKey);
+            checkpoint.setWalletReservationId("res-123");
+
+            when(persistencePort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(checkpoint));
+            when(billerPort.pay(eq("PLN"), eq(request.customerId()), eq(request.amount()), eq("BILL-STABLE-001")))
+                    .thenThrow(new RuntimeException("provider timeout"));
+
+            BillPayment payment = paymentService.createPayment(request, idempotencyKey);
+
+            assertSame(checkpoint, payment);
+            assertEquals(PaymentStatus.PROCESSING, payment.getStatus());
+            verify(billerPort).pay("PLN", request.customerId(), request.amount(), "BILL-STABLE-001");
+        }
+
+        @Test
+        @DisplayName("should retry the durable event without calling the provider again")
+        void shouldRetryDurableEventWithoutRepeatingProvider() {
+            String idempotencyKey = UUID.randomUUID().toString();
+            CreatePaymentRequest request = new CreatePaymentRequest(
+                    "account-123", "PLN", "12345678901234", new BigDecimal("100000"));
+            BillPayment checkpoint = new BillPayment();
+            checkpoint.setId(UUID.randomUUID());
+            checkpoint.setAccountId(request.accountId());
+            checkpoint.setBillerType(BillerType.PLN);
+            checkpoint.setCustomerId(request.customerId());
+            checkpoint.setAmount(request.amount());
+            checkpoint.setStatus(PaymentStatus.COMPLETED);
+            checkpoint.setReferenceNumber("BILL-STABLE-002");
+            checkpoint.setIdempotencyKey(idempotencyKey);
+
+            when(persistencePort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(checkpoint));
+
+            BillPayment payment = paymentService.createPayment(request, idempotencyKey);
+
+            assertSame(checkpoint, payment);
+            assertTrue(payment.isEventPublished());
+            verify(eventPort).publishPaymentEvent(checkpoint);
+            verifyNoInteractions(walletPort, billerPort);
+        }
+
+        @Test
+        @DisplayName("should retry a failed payment event without calling providers")
+        void shouldRetryFailedPaymentEventWithoutCallingProviders() {
+            String idempotencyKey = UUID.randomUUID().toString();
+            CreatePaymentRequest request = new CreatePaymentRequest(
+                    "account-123", "PLN", "12345678901234", new BigDecimal("100000"));
+            BillPayment checkpoint = new BillPayment();
+            checkpoint.setId(UUID.randomUUID());
+            checkpoint.setAccountId(request.accountId());
+            checkpoint.setBillerType(BillerType.PLN);
+            checkpoint.setCustomerId(request.customerId());
+            checkpoint.setAmount(request.amount());
+            checkpoint.setStatus(PaymentStatus.FAILED);
+            checkpoint.setFailureReason("Biller rejected");
+            checkpoint.setReferenceNumber("BILL-FAILED-001");
+            checkpoint.setIdempotencyKey(idempotencyKey);
+
+            when(persistencePort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(checkpoint));
+
+            BillPayment payment = paymentService.createPayment(request, idempotencyKey);
+
+            assertSame(checkpoint, payment);
+            assertTrue(payment.isEventPublished());
+            verify(eventPort).publishPaymentEvent(checkpoint);
+            verifyNoInteractions(walletPort, billerPort);
+        }
 
         @Test
         @DisplayName("should create payment successfully when wallet reserves balance")
@@ -118,7 +203,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("should fail payment when wallet service is unavailable")
+        @DisplayName("should retain payment checkpoint when wallet service is unavailable")
         void shouldFailPaymentWhenWalletServiceUnavailable() {
             // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
@@ -136,8 +221,8 @@ class PaymentServiceTest {
 
             // Then
             assertNotNull(payment);
-            assertEquals(PaymentStatus.FAILED, payment.getStatus());
-            assertEquals("Payment processing failed: Connection refused", payment.getFailureReason());
+            assertEquals(PaymentStatus.PROCESSING, payment.getStatus());
+            assertTrue(payment.getFailureReason().startsWith("Reconciliation required:"));
         }
 
         @Test

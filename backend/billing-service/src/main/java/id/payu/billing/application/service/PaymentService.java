@@ -19,11 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import id.payu.billing.domain.model.PaymentStatus;
@@ -41,177 +46,140 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     private final BillerPort billerPort;
     private final PaymentEventPort eventPort;
 
-    @CircuitBreaker(name = "billing", fallbackMethod = "createPaymentFallback")
-    @Retry(name = "billing")
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public BillPayment createPayment(CreatePaymentRequest request) {
-        log.info("Creating payment: biller={}, customerId={}, amount={}",
-                request.billerCode(), request.customerId(), request.amount());
-
-        // Validate biller
-        BillerType billerType = getBillerType(request.billerCode())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown biller: " + request.billerCode()));
-
-        // Calculate admin fee
-        BigDecimal adminFee = calculateAdminFee(billerType);
-
-        // Create payment record
-        BillPayment payment = new BillPayment();
-        payment.setAccountId(request.accountId());
-        payment.setBillerType(billerType);
-        payment.setCustomerId(request.customerId());
-        payment.setAmount(request.amount());
-        payment.setAdminFee(adminFee);
-        payment.setTotalAmount(request.amount().add(adminFee));
-        payment.setStatus(PaymentStatus.PENDING);
-
-        payment = persistencePort.save(payment);
-        log.info("Payment created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
-
-        // Reserve balance from wallet
-        String reservationId = null;
-        try {
-            WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
-                    request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
-            );
-
-            if ("RESERVED".equals(reserveResult.status())) {
-                reservationId = reserveResult.reservationId();
-                payment.setStatus(PaymentStatus.PROCESSING);
-
-                // Process with biller via BillerPort (calls biller-simulator in dev)
-                BillerPort.PaymentResult billerResult = billerPort.pay(
-                        request.billerCode(), request.customerId(),
-                        request.amount(), payment.getReferenceNumber()
-                );
-
-                if (billerResult.isSuccess()) {
-                    payment.setStatus(PaymentStatus.COMPLETED);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setBillerTransactionId(billerResult.billerTransactionId());
-                    // Commit the reservation after successful biller processing
-                    walletPort.commitReservation(reservationId);
-                } else if (billerResult.isDuplicate()) {
-                    // Idempotent: payment was already processed
-                    payment.setStatus(PaymentStatus.COMPLETED);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setBillerTransactionId(billerResult.billerTransactionId());
-                    walletPort.commitReservation(reservationId);
-                    log.warn("Duplicate biller reference detected for payment {}", payment.getId());
-                } else {
-                    payment.setStatus(PaymentStatus.FAILED);
-                    payment.setFailureReason("Biller rejected: " + billerResult.responseMessage());
-                    walletPort.releaseReservation(reservationId);
-                    reservationId = null; // Already released
-                }
-            } else {
-                payment.setStatus(PaymentStatus.FAILED);
-                payment.setFailureReason("Failed to reserve balance");
-            }
-        } catch (Exception e) {
-            log.error("Payment processing failed: {}", e.getMessage());
-            payment.setStatus(PaymentStatus.FAILED);
-            payment.setFailureReason("Payment processing failed: " + e.getMessage());
-            // Release the reservation if it was acquired
-            if (reservationId != null) {
-                try {
-                    walletPort.releaseReservation(reservationId);
-                    log.info("Released reservation {} after payment failure", reservationId);
-                } catch (Exception releaseEx) {
-                    log.error("CRITICAL: Failed to release reservation {} — manual intervention required", reservationId, releaseEx);
-                }
-            }
-        }
-
-        payment = persistencePort.save(payment);
-
-        // Publish event
-        eventPort.publishPaymentEvent(payment);
-
-        return payment;
+        return createPayment(request, UUID.randomUUID().toString());
     }
 
-    @CircuitBreaker(name = "billing", fallbackMethod = "createTopUpFallback")
-    @Retry(name = "billing")
-    @Transactional
-    public BillPayment createTopUp(TopUpRequest request) {
-        log.info("Creating top-up: provider={}, walletNumber={}, amount={}",
-                request.provider(), request.walletNumber(), request.amount());
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BillPayment createPayment(CreatePaymentRequest request, String idempotencyKey) {
+        BillerType billerType = getBillerType(request.billerCode())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown biller: " + request.billerCode()));
+        return startOrResume(request.accountId(), billerType, request.customerId(), request.amount(),
+                calculateAdminFee(billerType), idempotencyKey);
+    }
 
-        // Validate e-wallet provider
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BillPayment createTopUp(TopUpRequest request) {
+        return createTopUp(request, UUID.randomUUID().toString());
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BillPayment createTopUp(TopUpRequest request, String idempotencyKey) {
         BillerType billerType = getBillerType(request.provider())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown e-wallet provider: " + request.provider()));
+        return startOrResume(request.accountId(), billerType, request.walletNumber(), request.amount(),
+                calculateTopUpFee(request.amount()), idempotencyKey);
+    }
 
-        // Calculate admin fee (lower for e-wallet top-ups)
-        BigDecimal adminFee = calculateTopUpFee(request.amount());
+    private BillPayment startOrResume(String accountId, BillerType billerType, String customerId,
+                                      BigDecimal amount, BigDecimal adminFee, String idempotencyKey) {
+        BillPayment payment = persistencePort.findByIdempotencyKey(idempotencyKey)
+                .orElseGet(() -> createCheckpoint(accountId, billerType, customerId, amount, adminFee, idempotencyKey));
+        validateReplay(payment, accountId, billerType, customerId, amount);
+        return reconcilePayment(payment);
+    }
 
-        // Create payment record
+    private BillPayment createCheckpoint(String accountId, BillerType billerType, String customerId,
+                                         BigDecimal amount, BigDecimal adminFee, String idempotencyKey) {
         BillPayment payment = new BillPayment();
-        payment.setAccountId(request.accountId());
+        payment.setAccountId(accountId);
+        payment.setReferenceNumber("BILL-" + idempotencyKey.replace("-", ""));
+        payment.setIdempotencyKey(idempotencyKey);
         payment.setBillerType(billerType);
-        payment.setCustomerId(request.walletNumber());
-        payment.setAmount(request.amount());
+        payment.setCustomerId(customerId);
+        payment.setAmount(amount);
         payment.setAdminFee(adminFee);
-        payment.setTotalAmount(request.amount().add(adminFee));
+        payment.setTotalAmount(amount.add(adminFee));
         payment.setStatus(PaymentStatus.PENDING);
+        return persistencePort.save(payment);
+    }
 
-        payment = persistencePort.save(payment);
-        log.info("Top-up created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
+    private void validateReplay(BillPayment payment, String accountId, BillerType billerType,
+                                String customerId, BigDecimal amount) {
+        if (!Objects.equals(payment.getAccountId(), accountId)
+                || payment.getBillerType() != billerType
+                || !Objects.equals(payment.getCustomerId(), customerId)
+                || payment.getAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException("Idempotency key was already used for a different payment");
+        }
+    }
 
-        // Reserve balance from wallet
-        String reservationId = null;
-        try {
-            WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
-                    request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
-            );
-
-            if ("RESERVED".equals(reserveResult.status())) {
-                reservationId = reserveResult.reservationId();
-                payment.setStatus(PaymentStatus.PROCESSING);
-
-                // Process with e-wallet provider via BillerPort (same simulator handles e-wallets)
-                BillerPort.PaymentResult providerResult = billerPort.pay(
-                        request.provider(), request.walletNumber(),
-                        request.amount(), payment.getReferenceNumber()
-                );
-
-                if (providerResult.isSuccess() || providerResult.isDuplicate()) {
-                    payment.setStatus(PaymentStatus.COMPLETED);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setBillerTransactionId(providerResult.billerTransactionId());
-                    // Commit the reservation after successful provider processing
-                    walletPort.commitReservation(reservationId);
-                } else {
-                    payment.setStatus(PaymentStatus.FAILED);
-                    payment.setFailureReason("Provider rejected: " + providerResult.responseMessage());
-                    walletPort.releaseReservation(reservationId);
-                    reservationId = null;
-                }
-            } else {
-                payment.setStatus(PaymentStatus.FAILED);
-                payment.setFailureReason("Failed to reserve balance");
-            }
-        } catch (Exception e) {
-            log.error("Top-up processing failed: {}", e.getMessage());
-            payment.setStatus(PaymentStatus.FAILED);
-            payment.setFailureReason("Top-up processing failed: " + e.getMessage());
-            // Release the reservation if it was acquired
-            if (reservationId != null) {
-                try {
-                    walletPort.releaseReservation(reservationId);
-                    log.info("Released reservation {} after top-up failure", reservationId);
-                } catch (Exception releaseEx) {
-                    log.error("CRITICAL: Failed to release reservation {} — manual intervention required", reservationId, releaseEx);
-                }
-            }
+    private BillPayment reconcilePayment(BillPayment payment) {
+        if (payment.getStatus() == PaymentStatus.COMPLETED) {
+            return publishEventIfNeeded(payment);
+        }
+        if (payment.getStatus() == PaymentStatus.FAILED) {
+            return publishEventIfNeeded(payment);
         }
 
-        payment = persistencePort.save(payment);
+        try {
+            if (payment.getWalletReservationId() == null) {
+                WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
+                        payment.getAccountId(), payment.getTotalAmount(), payment.getReferenceNumber());
+                if (!"RESERVED".equals(reserveResult.status())) {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    payment.setFailureReason("Failed to reserve balance");
+                    return publishEventIfNeeded(persistencePort.save(payment));
+                }
+                payment.setWalletReservationId(reserveResult.reservationId());
+                payment.setStatus(PaymentStatus.PROCESSING);
+                payment = persistencePort.save(payment);
+            }
 
-        // Publish event
-        eventPort.publishPaymentEvent(payment);
+            if (payment.getBillerTransactionId() == null) {
+                BillerPort.PaymentResult result = billerPort.pay(
+                        payment.getBillerType().getCode(), payment.getCustomerId(),
+                        payment.getAmount(), payment.getReferenceNumber());
+                if (result.isSuccess() || result.isDuplicate()) {
+                    payment.setBillerTransactionId(result.billerTransactionId() != null
+                            ? result.billerTransactionId() : payment.getReferenceNumber());
+                    payment.setCompletedAt(LocalDateTime.now());
+                    payment = persistencePort.save(payment);
+                } else if ("96".equals(result.responseCode())) {
+                    payment.setStatus(PaymentStatus.PROCESSING);
+                    payment.setFailureReason("Reconciliation required: " + result.responseMessage());
+                    return persistencePort.save(payment);
+                } else {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    payment.setFailureReason("Biller rejected: " + result.responseMessage());
+                    walletPort.releaseReservation(payment.getWalletReservationId());
+                    return publishEventIfNeeded(persistencePort.save(payment));
+                }
+            }
 
-        return payment;
+            walletPort.commitReservation(payment.getWalletReservationId());
+            payment.setStatus(PaymentStatus.COMPLETED);
+            payment.setFailureReason(null);
+            return publishEventIfNeeded(persistencePort.save(payment));
+        } catch (Exception e) {
+            log.warn("Payment checkpoint requires reconciliation: id={}, error={}", payment.getId(), e.getMessage());
+            payment.setStatus(PaymentStatus.PROCESSING);
+            payment.setFailureReason("Reconciliation required: " + e.getMessage());
+            return persistencePort.save(payment);
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${payu.billing.payment.reconcile-interval-ms:60000}")
+    @SchedulerLock(name = "PaymentService_reconcile", lockAtMostFor = "PT30S")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void reconcilePayments() {
+        persistencePort.findByStatusIn(List.of(PaymentStatus.PENDING, PaymentStatus.PROCESSING,
+                        PaymentStatus.COMPLETED, PaymentStatus.FAILED))
+                .forEach(this::reconcilePayment);
+    }
+
+    private BillPayment publishEventIfNeeded(BillPayment payment) {
+        if (payment.isEventPublished()) {
+            return payment;
+        }
+        try {
+            eventPort.publishPaymentEvent(payment);
+            payment.setEventPublished(true);
+        } catch (Exception e) {
+            log.warn("Payment event remains pending: id={}, error={}", payment.getId(), e.getMessage());
+        }
+        return persistencePort.save(payment);
     }
 
     @CircuitBreaker(name = "billing", fallbackMethod = "getPaymentFallback")

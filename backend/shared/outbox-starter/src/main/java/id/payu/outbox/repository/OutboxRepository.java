@@ -79,6 +79,9 @@ public interface OutboxRepository extends JpaRepository<OutboxEvent, UUID> {
     Page<OutboxEvent> findByAggregateTypeAndAggregateIdOrderBySequenceNumAsc(
             String aggregateType, String aggregateId, Pageable pageable);
 
+    Optional<OutboxEvent> findFirstByAggregateTypeAndAggregateIdAndEventType(
+            String aggregateType, String aggregateId, String eventType);
+
     /**
      * Finds events by aggregate type.
      *

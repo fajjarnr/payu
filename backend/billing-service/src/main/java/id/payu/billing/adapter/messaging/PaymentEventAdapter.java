@@ -3,6 +3,7 @@ package id.payu.billing.adapter.messaging;
 import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.outbox.service.OutboxService;
+import id.payu.outbox.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,9 +20,17 @@ import id.payu.billing.domain.model.PaymentStatus;
 public class PaymentEventAdapter implements PaymentEventPort {
 
     private final OutboxService outboxService;
+    private final OutboxRepository outboxRepository;
 
     @Override
     public void publishPaymentEvent(BillPayment payment) {
+        String eventType = payment.getStatus() == PaymentStatus.COMPLETED
+                ? "PaymentCompleted" : "PaymentFailed";
+        if (outboxRepository.findFirstByAggregateTypeAndAggregateIdAndEventType(
+                "BillPaymentEntity", payment.getId().toString(), eventType).isPresent()) {
+            return;
+        }
+
         Map<String, Object> payload = Map.of(
                 "paymentId", payment.getId().toString(),
                 "referenceNumber", payment.getReferenceNumber(),
@@ -34,8 +43,7 @@ public class PaymentEventAdapter implements PaymentEventPort {
         outboxService.createEvent(
                 "BillPaymentEntity",
                 payment.getId().toString(),
-                payment.getStatus() == PaymentStatus.COMPLETED
-                        ? "PaymentCompleted" : "PaymentFailed",
+                eventType,
                 payload
         );
 

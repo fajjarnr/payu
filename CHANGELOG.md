@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.9] - 2026-08-04
+
+### Fixed
+
+- **Billing retry side effects (PROD-040)**: payment/top-up operations now persist an idempotency checkpoint and stable reference before wallet/biller calls, retain uncertain work for ShedLock reconciliation, retry failed outbox delivery without repeating providers, and preserve JPA optimistic-lock versions. Billing image `1.8.103` is live.
+
 ## [1.10.8] - 2026-08-03
 
 ### Fixed (MVP money-safety — SNAP idempotency, webhook dedup, saga dead-code removal)

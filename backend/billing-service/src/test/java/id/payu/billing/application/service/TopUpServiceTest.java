@@ -173,7 +173,7 @@ class TopUpServiceTest {
         }
 
         @Test
-        @DisplayName("should fail top-up when wallet service is unavailable")
+        @DisplayName("should retain top-up checkpoint when wallet service is unavailable")
         void shouldFailTopUpWhenWalletServiceUnavailable() {
             TopUpRequest request = new TopUpRequest(
                 "account-123",
@@ -188,8 +188,8 @@ class TopUpServiceTest {
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(PaymentStatus.FAILED, payment.getStatus());
-            assertEquals("Top-up processing failed: Connection refused", payment.getFailureReason());
+            assertEquals(PaymentStatus.PROCESSING, payment.getStatus());
+            assertTrue(payment.getFailureReason().startsWith("Reconciliation required:"));
         }
 
         @Test

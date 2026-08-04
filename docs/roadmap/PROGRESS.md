@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-040 billing retry side effects deployed**:
+> - Payment/top-up mutations now persist an idempotency checkpoint and stable reference before external calls, retain uncertain wallet/biller outcomes for ShedLock reconciliation, and retry failed outbox delivery without repeating providers. Existing payment rows are updated through their managed JPA entity so optimistic-lock versions survive each checkpoint save.
+> - Verification: billing reactor `117` tests passed with `0` failures and `1` skipped; package BUILD SUCCESS; image `1.8.103` (`sha256:1ab05f50a584c4bc91af118cf5b10e5040188aea4f101dcfa995dae61fcd8d0f`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, `SERVICE_VERSION=1.8.103`, liveness/readiness `UP`, and Flyway migration v8 applied.
+
 > ✅ **2026-08-03 — PROD-033 wallet partial commit deployed**:
 > - Wallet gRPC transfer kini mendelegasikan ke satu transaksi debit+credit atomik dengan reference deterministik. Split payment dan settlement tidak lagi commit debit batch sebelum credit; tiap leg memakai transfer unik, disimpan sebelum/di antara side effect, dan direkonsiliasi oleh scheduler ShedLock dengan status durable `RECONCILIATION_REQUIRED`. Journal retry dilindungi lookup reference agar crash tidak menggandakan posting.
 > - Verification: focused failure/recovery suite `5` passed; full wallet reactor `25` passed with `0` failures/errors; package BUILD SUCCESS. Image `1.8.105` (`sha256:da1c679a3087acce90f644cc88f059815e5ab48d176a0e76c162b90beb0578fa`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, health `UP`; Flyway validated/applied v108–v110. No authenticated financial mutation was run.

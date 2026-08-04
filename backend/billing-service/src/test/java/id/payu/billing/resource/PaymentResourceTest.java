@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -42,7 +43,7 @@ class PaymentResourceTest {
 
     private static final String AUTH_HEADER = "Authorization";
     private static final String AUTH_TOKEN = "Bearer test-token";
-    private static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
+    private static final String IDEMPOTENCY_HEADER = "X-Idempotency-Key";
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -65,9 +66,13 @@ class PaymentResourceTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private FilterRegistrationBean<?> idempotencyRequestBodyFilter;
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .addFilters(idempotencyRequestBodyFilter.getFilter())
                 .apply(springSecurity())
                 .build();
         objectMapper = new ObjectMapper();

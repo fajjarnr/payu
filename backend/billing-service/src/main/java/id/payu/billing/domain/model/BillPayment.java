@@ -15,6 +15,7 @@ public class BillPayment {
     private UUID id;
     private String accountId;
     private String referenceNumber;
+    private String idempotencyKey;
     private BillerType billerType;
     private String customerId;
     private BigDecimal amount;
@@ -23,6 +24,8 @@ public class BillPayment {
     private PaymentStatus status;
     private String failureReason;
     private String billerTransactionId;
+    private String walletReservationId;
+    private boolean eventPublished;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;

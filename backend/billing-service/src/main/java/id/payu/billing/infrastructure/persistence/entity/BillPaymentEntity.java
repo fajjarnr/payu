@@ -34,6 +34,9 @@ public class BillPaymentEntity {
     @Column(name = "reference_number", nullable = false, unique = true, length = 100)
     private String referenceNumber;
 
+    @Column(name = "idempotency_key", unique = true, length = 128)
+    private String idempotencyKey;
+
     @Column(name = "biller_type", nullable = false, length = 50)
     private String billerType;
 
@@ -58,6 +61,12 @@ public class BillPaymentEntity {
 
     @Column(name = "biller_transaction_id", length = 100)
     private String billerTransactionId;
+
+    @Column(name = "wallet_reservation_id", length = 100)
+    private String walletReservationId;
+
+    @Column(name = "event_published", nullable = false)
+    private boolean eventPublished;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -125,6 +134,14 @@ public class BillPaymentEntity {
         this.referenceNumber = referenceNumber;
     }
 
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
     public String getBillerType() {
         return billerType;
     }
@@ -187,6 +204,22 @@ public class BillPaymentEntity {
 
     public void setBillerTransactionId(String billerTransactionId) {
         this.billerTransactionId = billerTransactionId;
+    }
+
+    public String getWalletReservationId() {
+        return walletReservationId;
+    }
+
+    public void setWalletReservationId(String walletReservationId) {
+        this.walletReservationId = walletReservationId;
+    }
+
+    public boolean isEventPublished() {
+        return eventPublished;
+    }
+
+    public void setEventPublished(boolean eventPublished) {
+        this.eventPublished = eventPublished;
     }
 
     public LocalDateTime getCreatedAt() {
