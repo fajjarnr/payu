@@ -4,6 +4,7 @@ namespace: payu-dev
 resources:
 - namespace.yaml
 - ../../base
+- keycloak-client-secret-generator.yaml
 - network-policy-payu-sso-postgres.yaml
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:1.8.21
@@ -154,6 +155,19 @@ patches:
     kind: Deployment
     name: auth-service
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
+- target:
+    kind: Deployment
+    name: auth-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: auth-service
+    spec:
+      template:
+        metadata:
+          annotations:
+            payu.io/keycloak-client-secret-revision: "2026-08-04"
 - target:
     kind: Deployment
     name: backoffice-service

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.14] - 2026-08-04
+
+### Fixed
+
+- **Keycloak client credential drift (MVP-004)**: dev client credentials are generated once by ESO, synced declaratively from `payu-dev` to `payu-sso`, and loaded by `auth-service`; the RHBK `payu` realm import now completes successfully. No credential material is stored in Git or exposed in verification output.
+
 ## [1.10.13] - 2026-08-04
 
 ### Fixed

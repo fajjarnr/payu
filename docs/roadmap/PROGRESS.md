@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — MVP-004 Keycloak client credentials and realm import restored**:
+> - Replaced the stale unmanaged dev client Secret with an ESO `Password` generator and `ExternalSecret` using `OnChange`, then synced the two required client keys declaratively from `payu-dev` to `payu-sso` through the existing least-privilege Kubernetes `SecretStore`. The dev `auth-service` Deployment receives a manifest revision bump so it reloads the generated backend credential.
+> - Verification: new infrastructure contract test passed; workload and identity server dry-runs passed; both ExternalSecrets are `Ready/SecretSynced`; source/sync per-key hashes match; `payu-realm-import` completed with Job `succeeded=1`, `Done=True`, `HasErrors=False`; OIDC discovery returned the `payu` issuer; `payu-backend` client-credentials token issuance succeeded; web `/api/health` and `/login` returned healthy/200 through port-forward; auth actuator health/readiness returned `UP`.
+
 > ✅ **2026-08-04 — PROD-002 FX fail-closed selection deployed**:
 > - A blank `fx.provider.url` can no longer select the HTTP adapter; configured non-blank URLs select the real adapter, otherwise the unavailable adapter fails closed.
 > - Verification: focused provider-selection/config suite `5/5` and full FX reactor tests passed with zero failures; package BUILD SUCCESS. Image `1.8.106` (`sha256:519abcf289d548fd801b62a861edbc1609c30bba0659b9dae0c521c4d5de9fa5`) is live after manifest apply, pod Ready `1/1`, restart `0`, health `UP`; no approved provider URL/source is currently configured in `payu-dev`.

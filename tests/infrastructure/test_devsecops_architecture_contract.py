@@ -539,6 +539,76 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertNotIn("dev-env-secrets.yaml", resources)
         self.assertNotIn("dev-secrets-patch.yaml", resources)
 
+    def test_dev_keycloak_client_credentials_are_generated_once_and_synced(self) -> None:
+        workload_result = self.render("infrastructure/workloads/overlays/payu-dev")
+        self.assertEqual(0, workload_result.returncode, workload_result.stderr)
+        workload_documents = [
+            item
+            for item in yaml.safe_load_all(workload_result.stdout)
+            if isinstance(item, dict)
+        ]
+        generator = next(
+            item
+            for item in workload_documents
+            if item.get("kind") == "Password"
+            and item.get("metadata", {}).get("name")
+            == "payu-keycloak-client-secrets"
+        )
+        self.assertEqual(
+            [
+                "payu-backend-client-secret",
+                "payu-web-client-secret",
+            ],
+            generator["spec"]["secretKeys"],
+        )
+        source = next(
+            item
+            for item in workload_documents
+            if item.get("kind") == "ExternalSecret"
+            and item.get("metadata", {}).get("name")
+            == "payu-keycloak-client-secrets"
+        )
+        self.assertEqual("OnChange", source["spec"]["refreshPolicy"])
+        self.assertEqual(
+            "payu-keycloak-client-secrets",
+            source["spec"]["target"]["name"],
+        )
+
+        identity_result = self.render("infrastructure/platform/identity/overlays/dev")
+        self.assertEqual(0, identity_result.returncode, identity_result.stderr)
+        identity_documents = [
+            item
+            for item in yaml.safe_load_all(identity_result.stdout)
+            if isinstance(item, dict)
+        ]
+        sync = next(
+            item
+            for item in identity_documents
+            if item.get("kind") == "ExternalSecret"
+            and item.get("metadata", {}).get("name")
+            == "payu-keycloak-client-secrets"
+        )
+        self.assertEqual(
+            {"payu-backend-client-secret", "payu-web-client-secret"},
+            {
+                entry["secretKey"]
+                for entry in sync["spec"]["data"]
+            },
+        )
+        role = next(
+            item
+            for item in identity_documents
+            if item.get("kind") == "ClusterRole"
+            and item.get("metadata", {}).get("name")
+            == "payu-dev-keycloak-secret-reader"
+        )
+        resource_names = {
+            resource_name
+            for rule in role["rules"]
+            for resource_name in rule.get("resourceNames", [])
+        }
+        self.assertIn("payu-keycloak-client-secrets", resource_names)
+
     def test_promoted_workloads_are_environment_isolated(self) -> None:
         environments = {
             "payu-sit": "payu-sit",
