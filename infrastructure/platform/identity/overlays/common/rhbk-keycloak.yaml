@@ -22,6 +22,13 @@ metadata:
 spec:
   instances: 1
 
+  # Force a declarative pod-template revision after syncing the DB Secret.
+  unsupported:
+    podTemplate:
+      metadata:
+        annotations:
+          payu.io/keycloak-db-secret-revision: "2026-08-04"
+
   # --- Bootstrap Admin (initial admin user) ---
   bootstrapAdmin:
     user:

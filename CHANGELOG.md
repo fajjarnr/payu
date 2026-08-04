@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.11] - 2026-08-04
+
+### Fixed
+
+- **Keycloak database credential drift (MVP-004)**: activated the existing Red Hat External Secrets configuration, declared a least-privilege cross-namespace sync from the CNPG app Secret, corrected the dev Keycloak database FQDN, and reapplied the identity overlay. `payu-keycloak-0` is Ready with matching source/sync credential hashes; realm import/live SNAP replay remain blocked by the missing `payu-keycloak-client-secrets` in `payu-sso`.
+
 ## [1.10.10] - 2026-08-04
 
 ### Fixed

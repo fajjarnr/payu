@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.10` (2026-08-04) — outbox lock leak fixed and FX dispatcher deployed |
-| **Last Updated** | 2026-08-04 (OPS-2026-08-01-06 outbox lock leak fixed and deployed; FX `1.8.104` live; prior MVP/PROD items unchanged) |
+| **Last Release** | `1.10.11` (2026-08-04) — Keycloak DB credential drift fixed and identity overlay deployed |
+| **Last Updated** | 2026-08-04 (Keycloak DB/ESO sync live; realm import/client-secret blocker and live SNAP replay remain open) |
 
 ---
 
@@ -30,7 +30,7 @@
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
 | MVP-001 | P1 | `SnapBiPaymentService.createPayment` kini settle melalui port wallet (reserve → commit → credit dengan kompensasi), menandai record `COMPLETED`, dan menerbitkan webhook + outbox `payment.completed`. | 🟡 Implemented locally — live wallet E2E pending |
 | MVP-002 | P1 | `TransferSagaOrchestrator` (transaction-service) = **DEAD CODE**: nol pemanggil di seluruh repo (hanya self-ref + javadoc `@see` di `SagaConfig.java:17`). Saga ini (reserve→commit→compensation + BI-FAST, pub via outbox) tidak pernah dipanggil controller/service manapun — jalur transfer yang ter-wire justru `InitiateTransferCommandHandler`. Dua implementasi logika uang paralel → risiko divergensi (satu di-fix, satu tetap rusak) & duplikasi. Keputusan: **hapus** (YAGNI) atau **wire** ke endpoint. Sangat direkomendasikan wiring kompensasi saga ke `InitiateTransferCommandHandler` atau hapus demi satu source of truth. | ✅ Dead code removed (MVP-002, 2026-08-01) — saga deleted (TransferSagaOrchestrator/Context), SagaConfig javadoc updated; `mvn test` transaction-service SUCCESS (2026-08-03) |
-| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | 🟡 Partial — partner runtime restored on 1.8.94; live SNAP replay E2E blocked by missing `payu` Keycloak realm/VaultStaticSecret CRD |
+| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | 🟡 Partial — partner runtime restored on 1.8.94; Keycloak DB/ESO recovered and Ready; realm import/live SNAP replay blocked because `payu-keycloak-client-secrets` is absent in `payu-sso` and the stale `payu-dev` secret has different keys |
 
 
 
@@ -129,7 +129,8 @@ completion evidence.
 * **Implemented (2026-08-03)**: `SnapBiController` `POST /payments` dan `POST /payments/{id}/refund`, serta `DisbursementController` `POST /api/v1/disbursements/callback`, sekarang memakai `@Idempotent(required=true)`. Disbursement callback juga sudah dilindungi HMAC oleh `CallbackSignatureFilter`; V15/V16 menjaga natural-key/unique delivery.
 * **Implemented (2026-08-03)**: `createRefund` sekarang mengambil parent payment dengan `PESSIMISTIC_WRITE` sebelum menghitung cumulative refund, sehingga refund berbeda pada payment yang sama terserialisasi dalam satu transaksi.
 * **Fixed (2026-08-03)**: partner-service CrashLoop karena dua migration `V15` diselesaikan dengan mempertahankan migration schema `V15` dan memindahkan unique-index/idempotency migration ke `V17`; regression test memastikan semua versi Flyway unik. Live `1.8.94` tervalidasi Flyway schema version 17, pod 1/1, health 200.
-* **Remaining**: live SNAP replay E2E setelah realm `payu` tersedia; cluster saat ini hanya memiliki realm `master`, dan VaultStaticSecret CRD belum terpasang.
+* **Fixed (2026-08-04)**: activated the existing `ExternalSecretsConfig/cluster`, synced CNPG `payu-database-app` into `payu-sso/payu-keycloak-db` through a declarative Kubernetes `SecretStore`, corrected the dev DB FQDN, and verified Keycloak Ready `1/1`; source/sync password hashes match without exposing the value.
+* **Remaining**: live SNAP replay E2E after the `payu` realm import is usable. The import job is currently blocked by missing `payu-sso/payu-keycloak-client-secrets`; the stale `payu-dev` secret exposes different keys, so no credential substitution was made.
 * **Verification**: controller contract tests SNAP 1/1, disbursement 1/1, callback signature 10/10, `partner-service` 241/241, dan `transaction-service` 132/132 lulus pada 2026-08-03.
 
 ### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration

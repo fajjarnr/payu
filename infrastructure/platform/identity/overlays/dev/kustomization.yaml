@@ -7,6 +7,7 @@ kind: Kustomization
 
 resources:
   - ../common
+  - keycloak-db-secret-sync.yaml
 
 namespace: payu-sso
 
@@ -20,6 +21,9 @@ patches:
       - op: replace
         path: /spec/instances
         value: 1
+      - op: replace
+        path: /spec/db/host
+        value: payu-database-rw.payu-dev.svc.cluster.local
       - op: add
         path: /spec/hostname/hostname
         value: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id

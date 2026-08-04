@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — Keycloak database credential recovery deployed (MVP-004)**:
+> - Activated the existing `ExternalSecretsConfig/cluster`, added declarative cross-namespace Kubernetes `SecretStore`/`ExternalSecret` RBAC for `payu-sso` → `payu-dev`, and corrected the dev Keycloak database FQDN.
+> - Verification: server dry-run and `oc apply -k infrastructure/platform/identity/overlays/dev` succeeded; `ExternalSecret/payu-keycloak-db` is `Ready/SecretSynced`, source/sync password hashes match, Keycloak `Ready=True`, pod `1/1` with restart `0`, and runtime logs show successful startup/database index checks. Realm import remains blocked by missing `payu-sso/payu-keycloak-client-secrets`.
+
 > ✅ **2026-08-04 — OPS-2026-08-01-06 outbox lock leak deployed**:
 > - The shared outbox dispatcher now commits the `FOR UPDATE SKIP LOCKED` fetch before Kafka I/O and wraps only publish-state updates in short transactions, preventing broker waits from holding `outbox_events` row locks.
 > - Verification: focused publisher suite `24` passed; full outbox reactor `103` tests passed; FX reactor `63` tests passed; package BUILD SUCCESS. FX image `1.8.104` (`sha256:8b929d2924807d1245cf93401cac674080f7271d6493ed6b4a9902d389955adb`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, `SERVICE_VERSION=1.8.104`, liveness/readiness `UP`; runtime logs show outbox batches succeeding.

@@ -3,5 +3,4 @@ kind: Kustomization
 
 resources:
   - oidc-config.yaml
-  - rhbk-externalsecrets.yaml
   - rhbk-keycloak.yaml
