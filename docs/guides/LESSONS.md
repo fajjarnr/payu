@@ -4874,3 +4874,9 @@ The partner endpoint must preserve the external SNAP `Authorization` header for 
 ### L-209: Refund completion follows the ledger, not the request (2026-08-04)
 
 SNAP refund previously inserted `COMPLETED` and emitted a notification without reversing wallet money. Reuse the wallet atomic reversal primitive behind a trusted service endpoint, persist `PENDING` first, and only return `COMPLETED` after the reversal succeeds. Derive the reversal UUID from the refund natural key so a retry after a process crash cannot create a second ledger reversal. Declare every outbox destination and its `.dlq` as a KafkaTopic; auto-create is not a deployment contract.
+
+### L-210: Request deduplication must never cancel money mutations (2026-08-04)
+
+The mobile API client keyed pending requests by method, URL, and query params, then aborted the previous request with the same key. That is acceptable for duplicate reads, but it can cancel a different transfer/top-up/QRIS body before the backend sees it.
+
+Keep cancellation deduplication on read-only methods only. Mutation safety belongs to the idempotency key and backend transaction boundary; a concurrent POST regression must prove that distinct bodies both reach the adapter.

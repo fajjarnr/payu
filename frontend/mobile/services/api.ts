@@ -110,18 +110,20 @@ class ApiClient {
 
         // Generate request key for deduplication and abort controller support
         const requestKey = this.getRequestKey(config);
-        config._requestKey = requestKey;
+        if (requestKey) {
+          config._requestKey = requestKey;
 
-        // Cancel previous request if same request is pending (deduplication)
-        if (this.pendingRequests.has(requestKey)) {
-          const controller = this.pendingRequests.get(requestKey);
-          controller?.abort();
+          // Cancel previous read-only request if the same request is pending.
+          if (this.pendingRequests.has(requestKey)) {
+            const controller = this.pendingRequests.get(requestKey);
+            controller?.abort();
+          }
+
+          // Mutations must never be cancelled by another request to the same URL.
+          const controller = new AbortController();
+          config.signal = controller.signal;
+          this.pendingRequests.set(requestKey, controller);
         }
-
-        // Create new abort controller for this request
-        const controller = new AbortController();
-        config.signal = controller.signal;
-        this.pendingRequests.set(requestKey, controller);
 
         // Log request
         Logger.apiRequest(
@@ -269,8 +271,13 @@ class ApiClient {
   /**
    * Generate a unique key for a request based on method, url, and params
    */
-  private getRequestKey(config: AxiosRequestConfig): string {
-    return `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
+  private getRequestKey(config: AxiosRequestConfig): string | undefined {
+    const method = (config.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      return undefined;
+    }
+
+    return JSON.stringify([method, config.url || '', config.params || {}]);
   }
 
   private async refreshToken(refreshToken: string) {

@@ -4,6 +4,10 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — PROD-034 mobile request deduplication fixed**:
+> - Request cancellation is now limited to read-only `GET`/`HEAD`/`OPTIONS` requests; financial mutations are never cancelled by another request sharing the same URL.
+> - Verification: red-first concurrent POST regression failed on the old implementation, then API + storage + offline focused Jest `27/27`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, and Expo Android export exit `0`. Mobile has no OpenShift workload to roll out.
+
 > ✅ **2026-08-04 — PROD-037 mobile storage runtime fixed**:
 > - `storage.clear()` now uses the imported structured `Logger` on SecureStore failure instead of throwing `ReferenceError`; existing get/set/remove failures retain sanitized error handling.
 > - SecureStore is explicitly native-only: web reads return `null`, writes fail closed, and remove/clear are safe no-ops, so the Expo web target never pretends plaintext browser storage is secure.

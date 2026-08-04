@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.30` (2026-08-04) — mobile storage runtime safety |
-| **Last Updated** | 2026-08-04 (PROD-037 fixed; PROD-002 still awaits approved FX provider evidence) |
+| **Last Release** | `1.10.31` (2026-08-04) — mobile request deduplication safety |
+| **Last Updated** | 2026-08-04 (PROD-034/037 fixed; PROD-002 still awaits approved FX provider evidence) |
 
 ---
 
@@ -213,7 +213,6 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
-| PROD-034 | P1 | Mobile request deduplication | `frontend/mobile/services/api.ts:111-124,269-274` membentuk request key hanya dari method/url/params, lalu abort request pending dengan key sama. Dua POST financial dengan body berbeda ke endpoint yang sama (`transfer`, `topup`, `qris`) saling membatalkan. | Dedupe hanya exact request: sertakan body + idempotency key atau hapus dedupe untuk mutation; tambahkan concurrent mutation test. |
 | PROD-035 | P1 | Mobile idempotency durability | `frontend/mobile/utils/idempotency.ts:124-152` menulis hingga 100 record metadata ke satu SecureStore value dan menelan error write. Expo SecureStore membatasi value sekitar 2048 byte; recovery key dapat hilang jauh sebelum 100 record, sementara request tetap diteruskan. | Simpan record per key atau gunakan storage yang sesuai untuk metadata; write failure harus mengubah flow menjadi queued/failed, bukan diam-diam lanjut. |
 | PROD-036 | P0 | Offline false success | `frontend/mobile/hooks/useOfflineMode.ts` benar-benar memanggil API untuk transfer/topup/qris, tetapi `payment` dan `bill_payment` sebelumnya mengisi `{}` sebagai `Transaction`; queue lalu menghapus idempotency key dan melaporkan sukses tanpa post ke backend. | ✅ Closed 2026-08-04 — unsupported types removed; legacy items now remain retry/failed and retain their idempotency key; focused hook test passes. |
 | PROD-038 | P1 | Mobile money precision | `frontend/mobile/types/index.ts:55-95` memodelkan transaction/transfer/top-up/QRIS amount sebagai JavaScript `number`, sehingga arithmetic dan round-trip nominal tidak exact. | Gunakan decimal string atau minor-unit integer di boundary; formatting/arithmetic exact dan precision test wajib. |
@@ -226,6 +225,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 - Pass: web `npm test -- --run` — 90 test files, 1203 passed, 1 skipped; `npm run lint` (changed files), `npm run type-check`, `npm run build`, dan `npm audit --omit=dev` (0 vulnerabilities) pass. Analytics pytest dan full lint legacy warning tetap open findings terpisah.
 - Pass: lending PayLater boundary red-first regression, focused controller/validation suite `9/9`, full lending reactor `93/93`, package `BUILD SUCCESS`; image `1.8.107` pod Ready `1/1`, restart `0`, liveness/readiness `UP`. No authenticated financial mutation was run without an isolated fixture.
 - Pass: mobile clean install `npm ci --ignore-scripts` added `1667` packages with exit `0`; focused Jest `1/1`, changed-file ESLint `0 errors/0 warnings`, Expo web export, dan Expo Android export semuanya exit `0`. Metro NativeWind wrapper dan package exports diaktifkan agar CSS Tailwind serta Axios memilih entrypoint platform yang benar.
+- Pass: PROD-034 red-first concurrent mutation regression failed on the old request-key cancellation, then API + storage + offline focused Jest `27/27`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, dan Expo Android export exit `0`. Mobile has no OpenShift workload to deploy; read-only request dedupe remains enabled.
 - Known baseline: full mobile Jest dan `tsc --noEmit` masih gagal pada TurboModule `SettingsManager`, JSX di file test `.ts`, dan fixture expiry idempotency; finding ini tidak berasal dari PROD-039/037 dan tetap perlu audit berikutnya.
 - Graph evidence: fast-path `graphify query` menghubungkan mobile mutation/idempotency dengan backend payment/ledger/outbox; `codegraph explore` menelusuri controller → service → port/adapter pada wallet, billing, dan mobile API.
 - Context7 checks: Expo SecureStore value limit/error behavior dan web availability; Axios retry reuses original request config. Rujukan: [Expo SecureStore](https://github.com/expo/expo/blob/main/docs/public/llms-sdk-v51.0.0.txt), [Axios retry](https://github.com/axios/axios/blob/v1.x/docs/pages/advanced/retry.md).

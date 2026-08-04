@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.31] - 2026-08-04
+
+### Fixed
+
+- **Mobile request deduplication (PROD-034)**: read-only requests retain cancellation deduplication, while financial mutations are no longer cancelled by another request to the same URL. Added concurrent mutation regression coverage.
+
 ## [1.10.30] - 2026-08-04
 
 ### Fixed
