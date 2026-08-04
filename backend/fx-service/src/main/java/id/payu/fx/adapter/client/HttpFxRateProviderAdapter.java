@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +36,7 @@ import java.util.Map;
 @Component("realFxRateProvider")
 @Profile("!local & !test")
 @ConditionalOnProperty(name = "fx.provider.url")
+@ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('${fx.provider.url:}')")
 public class HttpFxRateProviderAdapter implements FxRateProviderPort {
 
     private final ObjectMapper objectMapper;

@@ -3,7 +3,10 @@ package id.payu.fx.adapter.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +33,38 @@ class HttpFxRateProviderAdapterTest {
     @AfterEach
     void tearDown() {
         server.stop(0);
+    }
+
+    @Test
+    void emptyProviderUrlUsesFailClosedAdapter() {
+        new ApplicationContextRunner()
+                .withPropertyValues(
+                        "spring.profiles.active=container",
+                        "fx.provider.url=",
+                        "fx.provider.timeout=3s",
+                        "fx.provider.max-age=15m")
+                .withBean(ObjectMapper.class, ObjectMapper::new)
+                .withBean(ConversionService.class, ApplicationConversionService::getSharedInstance)
+                .withUserConfiguration(HttpFxRateProviderAdapter.class, UnavailableFxRateProviderAdapter.class)
+                .run(context -> assertThat(context)
+                        .hasSingleBean(UnavailableFxRateProviderAdapter.class)
+                        .doesNotHaveBean(HttpFxRateProviderAdapter.class));
+    }
+
+    @Test
+    void configuredProviderUrlUsesHttpAdapter() {
+        new ApplicationContextRunner()
+                .withPropertyValues(
+                        "spring.profiles.active=container",
+                        "fx.provider.url=https://provider.example/rates",
+                        "fx.provider.timeout=3s",
+                        "fx.provider.max-age=15m")
+                .withBean(ObjectMapper.class, ObjectMapper::new)
+                .withBean(ConversionService.class, ApplicationConversionService::getSharedInstance)
+                .withUserConfiguration(HttpFxRateProviderAdapter.class, UnavailableFxRateProviderAdapter.class)
+                .run(context -> assertThat(context)
+                        .hasSingleBean(HttpFxRateProviderAdapter.class)
+                        .doesNotHaveBean(UnavailableFxRateProviderAdapter.class));
     }
 
     @Test

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.13] - 2026-08-04
+
+### Fixed
+
+- **FX fail-closed selection (PROD-002)**: a blank `fx.provider.url` no longer activates the HTTP provider; the unavailable adapter remains selected until a non-blank approved URL is configured. FX image `1.8.106` is live.
+
 ## [1.10.12] - 2026-08-04
 
 ### Fixed

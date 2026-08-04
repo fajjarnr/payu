@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-002 FX fail-closed selection deployed**:
+> - A blank `fx.provider.url` can no longer select the HTTP adapter; configured non-blank URLs select the real adapter, otherwise the unavailable adapter fails closed.
+> - Verification: focused provider-selection/config suite `5/5` and full FX reactor tests passed with zero failures; package BUILD SUCCESS. Image `1.8.106` (`sha256:519abcf289d548fd801b62a861edbc1609c30bba0659b9dae0c521c4d5de9fa5`) is live after manifest apply, pod Ready `1/1`, restart `0`, health `UP`; no approved provider URL/source is currently configured in `payu-dev`.
+
 > ✅ **2026-08-04 — PROD-002 FX provider configuration plumbing deployed**:
 > - Bound `FX_PROVIDER_URL` to `fx.provider.url`; the FX Deployment now has optional provider URL/source ConfigMap references and an optional API-key Secret reference while retaining fail-closed behavior when no approved provider is configured.
 > - Verification: red-first config regression `1` failure, then `3/3` focused tests and full FX reactor reports passed with zero failures; package BUILD SUCCESS. Image `1.8.105` (`sha256:d3619f435fb115527d33b5a324a87796e460bb809981dfe1ec24ee4eae89dee4`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, health `UP`, Flyway validated 6 migrations. `payu-dev` currently has no approved provider URL/source, so live rate evidence remains open.
