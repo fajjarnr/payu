@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.27] - 2026-08-04
+
+### Fixed
+
+- **BI-FAST bank-code parity**: the simulator accepts standard numeric bank codes (`014`, `002`, `008`, and others) while retaining documented bank-name fixtures. Numeric-code disbursement E2E now reaches `COMPLETED`; BI-FAST simulator `1.8.84` is live.
+
 ## [1.10.26] - 2026-08-04
 
 ### Fixed

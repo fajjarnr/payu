@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: simulator
     app.kubernetes.io/managed-by: platform-team
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: "1.8.83"
+    app.kubernetes.io/version: "1.8.84"
     team: backend
 spec:
   replicas: 1
@@ -34,7 +34,7 @@ spec:
         emptyDir: {}
       containers:
       - name: bi-fast-simulator
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.83
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.84
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

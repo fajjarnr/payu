@@ -82,9 +82,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.16
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newTag: "1.5.16"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.83
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.84
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
-  newTag: "1.8.83"
+  newTag: "1.8.84"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newTag: "1.8.80"

@@ -3,6 +3,7 @@ package id.payu.simulator.bifast.entity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -37,7 +38,24 @@ public class BankAccount extends PanacheEntityBase {
 
     // Finder methods
     public static BankAccount findByBankAndAccount(String bankCode, String accountNumber) {
-        return find("bankCode = ?1 and accountNumber = ?2", bankCode, accountNumber).firstResult();
+        return find("bankCode = ?1 and accountNumber = ?2", canonicalBankCode(bankCode), accountNumber).firstResult();
+    }
+
+    public static String canonicalBankCode(String bankCode) {
+        if (bankCode == null) {
+            return null;
+        }
+        return switch (bankCode.trim().toUpperCase(Locale.ROOT)) {
+            case "002" -> "BRI";
+            case "008" -> "MANDIRI";
+            case "009" -> "BNI";
+            case "011" -> "DANAMON";
+            case "013" -> "PERMATA";
+            case "014" -> "BCA";
+            case "022" -> "CIMB";
+            case "028" -> "OCBC";
+            default -> bankCode.trim().toUpperCase(Locale.ROOT);
+        };
     }
 
     public static long countByBankCode(String bankCode) {

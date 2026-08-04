@@ -22,7 +22,7 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Persist provider-side correlation identifiers needed by later callbacks; the disbursement UUID is not a substitute for the wallet reservation UUID.
 - Use the internal service adapter for anonymous trusted callbacks and keep simulator fixture bank codes aligned with the documented contract.
 
-**Applied evidence**: transaction `142` tests, simulator `2` tests, and authenticated `1 IDR` disbursement reached `COMPLETED` in `payu-dev` with HMAC verification and gRPC reservation commit.
+**Applied evidence**: transaction `142` tests, simulator `2` tests, numeric bank-code regression `1/1`, and authenticated `1 IDR` disbursement reached `COMPLETED` in `payu-dev` with HMAC verification and gRPC reservation commit; BI-FAST `1.8.84` is live.
 
 ## L-210: Refund Contracts Must Preserve Request Identifiers (2026-08-04)
 
