@@ -11,8 +11,8 @@ import { formatCurrency } from '@/lib/currency';
 interface BalanceCardProps {
   balance: string | number;
   percentage?: number;
-  income?: number;
-  expense?: number;
+  income?: string | number;
+  expense?: string | number;
   incomeChange?: number;
   expenseChange?: number;
   netWorth?: number;
@@ -182,7 +182,7 @@ export default function BalanceCard({
 
 interface SummaryItemProps {
   label: string;
-  amount: number;
+  amount: string | number;
   change: number;
   isPositive: boolean;
   currency: string;
@@ -208,7 +208,7 @@ function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale,
       <CardContent>
         <div className="space-y-4">
           <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
-            {currency} {amount.toLocaleString(bcp47Locale)}
+            {formatCurrency(amount, { symbol: currency, locale: bcp47Locale })}
           </h4>
           <div className="flex items-center gap-2">
             <span className={cn(

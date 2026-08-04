@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.19] - 2026-08-04
+
+### Fixed
+
+- **Web analytics contract and money precision**: the web analytics service now maps the backend's snake_case contract, sends `period_days`/`group_by`, keeps Pydantic `Decimal` values as strings, and renders dashboard income/expenses through the exact currency formatter. Web-app image `1.5.16` is live at ImageStream digest `sha256:cbe2fe17934c839d1b6d3a488d715d849cbbbb4e8dd6e8378108e338287f1d4d`.
+
 ## [1.10.18] - 2026-08-04
 
 ### Fixed

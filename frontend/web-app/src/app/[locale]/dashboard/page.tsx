@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useInvestmentAccount } from '@/hooks';
+import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useCashFlow, useInvestmentAccount } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import BalanceCard from '@/components/dashboard/BalanceCard';
@@ -60,7 +60,8 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
  const accountId = useAuthStore((state) => state.accountId);
  const userId = useAuthStore((state) => state.user?.id);
  const { data: balance, isLoading: balanceLoading } = useBalance(accountId || undefined);
- const { data: metrics, isLoading: metricsLoading } = useUserMetrics(userId);
+ const { isLoading: metricsLoading } = useUserMetrics(userId);
+ const { data: cashFlow } = useCashFlow(userId);
  const { isLoading: spendingLoading } = useSpendingTrends(userId);
  const { isLoading: investmentLoading } = useInvestmentAccount();
 
@@ -81,9 +82,9 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
      <div>
       {balanceLoading ? <Skeleton className="h-64 rounded-2xl" /> : (
         <BalanceCard
-         balance={balance?.balance || 0}
-         income={metrics?.totalIncome}
-         expense={metrics?.totalSpent}
+         balance={balance?.balance ?? '0'}
+         income={cashFlow?.income}
+         expense={cashFlow?.expenses}
         />
        )}
      </div>

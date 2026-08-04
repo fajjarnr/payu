@@ -1,60 +1,69 @@
 import api from '@/lib/api';
+import type { Money } from '@/lib/currency';
 
-// --- Interfaces matching backend analytics_router (FastAPI) ---
+// Backend Decimal fields stay strings at the JSON boundary.
 
 export interface UserMetrics {
   userId: string;
   totalTransactions: number;
-  totalSpent: number;
-  totalIncome: number;
-  avgTransactionAmount: number;
-  topCategories: CategoryBreakdown[];
-  period: string;
+  totalAmount: Money;
+  averageTransaction: Money;
+  lastTransactionDate: string | null;
+  accountAgeDays: number;
+  kycStatus: string | null;
 }
 
 export interface SpendingTrendsRequest {
   userId: string;
-  startDate: string;
-  endDate: string;
-  granularity?: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  periodDays?: number;
+  groupBy?: 'category' | 'merchant' | 'day';
 }
 
 export interface SpendingAnalytics {
   period: string;
-  totalSpent: number;
-  totalIncome: number;
-  netSavings: number;
+  totalSpending: Money;
   categories: CategoryBreakdown[];
-  trend: TrendData[];
+  monthOverMonthChange: number | null;
+  topMerchants: Array<Record<string, unknown>>;
 }
 
 export interface CashFlowRequest {
   userId: string;
-  startDate: string;
-  endDate: string;
+  periodDays?: number;
 }
 
 export interface CashFlowAnalysis {
-  userId: string;
-  inflow: number;
-  outflow: number;
-  netFlow: number;
-  entries: { date: string; inflow: number; outflow: number; balance: number }[];
+  period: string;
+  income: Money;
+  expenses: Money;
+  netCashFlow: Money;
+  incomeBySource: Array<Record<string, unknown>>;
+  expensesByCategory: CategoryBreakdown[];
 }
 
 export interface CategoryBreakdown {
   category: string;
-  amount: number;
+  amount: Money;
   percentage: number;
   transactionCount: number;
+  trend: string;
 }
 
-export interface TrendData {
-  date: string;
-  income: number;
-  expense: number;
-  balance: number;
-}
+type BackendSpendingPattern = {
+  category: string;
+  amount: Money;
+  percentage: number;
+  transaction_count: number;
+  trend: string;
+};
+
+const mapSpendingPattern = (category: BackendSpendingPattern): CategoryBreakdown => ({
+  category: category.category,
+  amount: category.amount,
+  percentage: category.percentage,
+  transactionCount: category.transaction_count,
+  trend: category.trend,
+});
 
 export interface FinancialInsight {
   id: string;
@@ -110,19 +119,50 @@ class AnalyticsService {
   /** GET /analytics/user/{userId}/metrics — Get user analytics metrics */
   async getUserMetrics(userId: string): Promise<UserMetrics> {
     const response = await api.get(`/analytics/user/${userId}/metrics`);
-    return response.data;
+    const data = response.data;
+    return {
+      userId: data.user_id,
+      totalTransactions: data.total_transactions,
+      totalAmount: data.total_amount,
+      averageTransaction: data.average_transaction,
+      lastTransactionDate: data.last_transaction_date,
+      accountAgeDays: data.account_age_days,
+      kycStatus: data.kyc_status,
+    };
   }
 
   /** POST /analytics/spending/trends — Get spending trends */
   async getSpendingTrends(request: SpendingTrendsRequest): Promise<SpendingAnalytics> {
-    const response = await api.post('/analytics/spending/trends', request);
-    return response.data;
+    const response = await api.post('/analytics/spending/trends', {
+      user_id: request.userId,
+      period_days: request.periodDays ?? 30,
+      group_by: request.groupBy ?? 'category',
+    });
+    const data = response.data;
+    return {
+      period: data.period,
+      totalSpending: data.total_spending,
+      categories: data.spending_by_category.map(mapSpendingPattern),
+      monthOverMonthChange: data.month_over_month_change,
+      topMerchants: data.top_merchants,
+    };
   }
 
   /** POST /analytics/cashflow — Get cash flow analysis */
   async getCashFlowAnalysis(request: CashFlowRequest): Promise<CashFlowAnalysis> {
-    const response = await api.post('/analytics/cashflow', request);
-    return response.data;
+    const response = await api.post('/analytics/cashflow', {
+      user_id: request.userId,
+      period_days: request.periodDays ?? 30,
+    });
+    const data = response.data;
+    return {
+      period: data.period,
+      income: data.income,
+      expenses: data.expenses,
+      netCashFlow: data.net_cash_flow,
+      incomeBySource: data.income_by_source,
+      expensesByCategory: data.expenses_by_category.map(mapSpendingPattern),
+    };
   }
 
   /** GET /analytics/user/{userId}/recommendations — Get financial recommendations */

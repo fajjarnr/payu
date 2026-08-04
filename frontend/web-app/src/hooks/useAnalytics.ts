@@ -7,7 +7,7 @@ import AnalyticsService from '@/services/AnalyticsService';
 import type { UserMetrics, SpendingAnalytics, CashFlowAnalysis } from '@/services/AnalyticsService';
 import type { AnalyticsData } from '@/types';
 
-/** REST hook: fetch user metrics (totalSpent, totalIncome, topCategories, etc.) */
+/** REST hook: fetch user metrics. */
 export function useUserMetrics(userId: string | undefined) {
   return useQuery<UserMetrics>({
     queryKey: ['user-metrics', userId],
@@ -19,18 +19,13 @@ export function useUserMetrics(userId: string | undefined) {
 }
 
 export function useSpendingTrends(userId: string | undefined) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const endDate = now.toISOString().split('T')[0];
-
   return useQuery<SpendingAnalytics>({
-    queryKey: ['spending-trends', userId, startOfMonth, endDate],
+    queryKey: ['spending-trends', userId, 30, 'category'],
     queryFn: () =>
       AnalyticsService.getSpendingTrends({
         userId: userId!,
-        startDate: startOfMonth,
-        endDate,
-        granularity: 'MONTHLY',
+        periodDays: 30,
+        groupBy: 'category',
       }),
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,
@@ -39,17 +34,12 @@ export function useSpendingTrends(userId: string | undefined) {
 }
 
 export function useCashFlow(userId: string | undefined) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const endDate = now.toISOString().split('T')[0];
-
   return useQuery<CashFlowAnalysis>({
-    queryKey: ['cash-flow', userId, startOfMonth, endDate],
+    queryKey: ['cash-flow', userId, 30],
     queryFn: () =>
       AnalyticsService.getCashFlowAnalysis({
         userId: userId!,
-        startDate: startOfMonth,
-        endDate,
+        periodDays: 30,
       }),
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,

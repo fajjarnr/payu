@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — Web analytics contract and money precision deployed**:
+> - `AnalyticsService` now maps the FastAPI analytics response/request contract at the boundary; backend Decimal values remain strings, and dashboard income/expenses come from the cash-flow endpoint and use the exact currency formatter.
+> - Verification: red-first analytics contract suite `3` failed on the old implementation, then focused `3/3` passed; full web Vitest `1206 passed | 1 skipped`, type-check, and production build passed. Full lint still reports the pre-existing `src/lib/currency.ts:87` prefer-const error. Image `web-app:1.5.16` (`sha256:cbe2fe17934c839d1b6d3a488d715d849cbbbb4e8dd6e8378108e338287f1d4d`) is live; deployment `1/1` available, pod restart `0`, and internal `/api/health` returned `healthy` with version `1.5.16`.
+
 > ✅ **2026-08-04 — PROD-041 PayLater request boundary fixed/deployed**:
 > - Purchase/payment now bind JSON to typed DTOs in `interfaces.dto` with `@Valid` constraints for merchant and `DECIMAL(19,4)`-compatible money. Raw `Map` parsing is gone, so missing or malformed input is rejected at the MVC boundary before PayLater service execution.
 > - Verification: red-first controller contract failed on the old `Map` signature; focused controller/validation suite `9/9`, full lending reactor `93/93`, and package `BUILD SUCCESS`. Image `lending-service:1.8.107` (`sha256:3ea9d4bfd4c04140884b8c82a5f6c6a3806118fa324bba8dcb11c18951523948`) is live; pod Ready `1/1`, restart `0`, liveness/readiness `UP`. No authenticated financial mutation was run because `payu-dev` has no isolated lending fixture.
