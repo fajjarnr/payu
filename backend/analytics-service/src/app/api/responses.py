@@ -70,29 +70,6 @@ class ApiResponse(BaseModel):
         kwargs.setdefault("mode", "json")
         return super().model_dump(*args, **kwargs)
 
-    # BUG-BE-156: Add convenience aliases used by analytics.py and kyc.py
-    # to resolve inconsistency between create_success/create_error and success/error
-    @classmethod
-    def success(
-        cls,
-        data: Any = None,
-        meta: Optional[MetaData] = None,
-        request_id: Optional[str] = None,
-    ) -> "ApiResponse":
-        """Alias for create_success — convenience method."""
-        return cls.create_success(data=data, meta=meta, request_id=request_id)
-
-    @classmethod
-    def error(
-        cls,
-        code: str = "UNKNOWN",
-        message: str = "An error occurred",
-        details: Optional[Dict[str, Any]] = None,
-        request_id: Optional[str] = None,
-    ) -> "ApiResponse":
-        """Alias for create_error — convenience method."""
-        return cls.create_error(code=code, message=message, details=details, request_id=request_id)
-
     @classmethod
     def create_error(
         cls,

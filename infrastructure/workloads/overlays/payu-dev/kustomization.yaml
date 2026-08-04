@@ -12,7 +12,7 @@ images:
   newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.8.94
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-  newTag: "1.8.94"
+  newTag: "1.8.95"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newTag: "1.8.80"

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.15] - 2026-08-04
+
+### Fixed
+
+- **Analytics CI/runtime test gate (PROD-018)**: CI now supplies a run-scoped test `SECRET_KEY`, installs the existing `Faker` test dependency, disables external tracing/metrics, and pins pytest-asyncio fixture scope. API tests pass explicit auth claims and isolate PostgreSQL/Kafka/OTLP; stale response-envelope tests were corrected. `ApiResponse` factories no longer collide with Pydantic fields, and WebSocket JWT decoding now uses the already-installed `python-jose` dependency. Analytics image `1.8.95` is live.
+
 ## [1.10.14] - 2026-08-04
 
 ### Fixed

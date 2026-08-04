@@ -46,7 +46,7 @@ async def get_user_metrics(
         metrics = await service.get_user_metrics(user_id)
 
         if not metrics:
-            return ApiResponse.error(
+            return ApiResponse.create_error(
                 code="ANA_VAL_001",
                 message="User not found",
                 request_id=getattr(request.state, "request_id", None),
@@ -62,13 +62,13 @@ async def get_user_metrics(
             kyc_status=metrics.kyc_status,
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data.model_dump(),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch user metrics", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_001",
             message="Failed to fetch user metrics",
             request_id=getattr(request.state, "request_id", None),
@@ -101,12 +101,12 @@ async def get_spending_trends(
             group_by=request_data.group_by,
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=trends, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch spending trends", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_002",
             message="Failed to fetch spending trends",
             request_id=getattr(request.state, "request_id", None),
@@ -137,12 +137,12 @@ async def get_cash_flow_analysis(
             user_id=request_data.user_id, period_days=request_data.period_days
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=analysis, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch cash flow analysis", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_003",
             message="Failed to fetch cash flow analysis",
             request_id=getattr(request.state, "request_id", None),
@@ -172,13 +172,13 @@ async def get_recommendations(
             user_id=user_id, recommendations=recommendations
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data.model_dump(),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch recommendations", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_004",
             message="Failed to fetch recommendations",
             request_id=getattr(request.state, "request_id", None),
@@ -216,7 +216,7 @@ async def get_robo_advisory(
         )
         if cached:
             log.info("Returning cached robo-advisory result")
-            return ApiResponse.success(
+            return ApiResponse.create_success(
                 data=cached, request_id=getattr(request.state, "request_id", None)
             ).model_dump()
 
@@ -238,12 +238,12 @@ async def get_robo_advisory(
                 result=response_data,
             )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
         log.error("Failed to generate robo-advisory recommendations", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_005",
             message="Failed to generate robo-advisory recommendations",
             request_id=getattr(request.state, "request_id", None),
@@ -279,7 +279,7 @@ async def calculate_fraud_score(
     try:
         await limiter.check(request, get_remote_address(request), "100/minute")
     except Exception:
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_RAT_001",
             message="Rate limit exceeded. Please try again later.",
             request_id=getattr(request.state, "request_id", None),
@@ -294,7 +294,7 @@ async def calculate_fraud_score(
         )
         if cached:
             log.info("Returning cached fraud score result")
-            return ApiResponse.success(
+            return ApiResponse.create_success(
                 data=cached, request_id=getattr(request.state, "request_id", None)
             ).model_dump()
 
@@ -320,12 +320,12 @@ async def calculate_fraud_score(
                 result=response_data,
             )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
         log.error("Failed to calculate fraud score", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_006",
             message="Failed to calculate fraud score",
             request_id=getattr(request.state, "request_id", None),
@@ -356,7 +356,7 @@ async def get_transaction_fraud_score(
         fraud_entity = result.scalar_one_or_none()
 
         if not fraud_entity:
-            return ApiResponse.error(
+            return ApiResponse.create_error(
                 code="ANA_VAL_002",
                 message="Fraud score not found",
                 request_id=getattr(request.state, "request_id", None),
@@ -382,13 +382,13 @@ async def get_transaction_fraud_score(
             rule_triggers=fraud_entity.rule_triggers,
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data.model_dump(),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch fraud score", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_007",
             message="Failed to fetch fraud score",
             request_id=getattr(request.state, "request_id", None),
@@ -437,12 +437,12 @@ async def get_user_high_risk_transactions(
             for txn in high_risk_transactions
         ]
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch high-risk transactions", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="ANA_SYS_008",
             message="Failed to fetch high-risk transactions",
             request_id=getattr(request.state, "request_id", None),
@@ -476,7 +476,7 @@ async def get_analytics_root(request: Request):
 @analytics_router.get("/metrics")
 async def get_analytics_metrics(request: Request):
     """Get analytics service operational metrics and available endpoints."""
-    return ApiResponse.success(
+    return ApiResponse.create_success(
         data={
             "status": "operational",
             "service": "analytics-service",

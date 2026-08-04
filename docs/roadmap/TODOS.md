@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.14` (2026-08-04) — Keycloak dev client credentials generated/synced and realm import restored |
-| **Last Updated** | 2026-08-04 (FX `1.8.106` live; approved provider URL/credential and live rate evidence remain open) |
+| **Last Release** | `1.10.15` (2026-08-04) — Analytics CI gate fixed and analytics `1.8.95` deployed |
+| **Last Updated** | 2026-08-04 (analytics CI local gate green; branch-protection required-check verification remains open) |
 
 ---
 
@@ -202,7 +202,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 |---|---|---|---|---|
 | PROD-001 | P0 | Dispute/refund | Source-of-truth leg fixed; refund creation now applies a persisted active-refund cumulative guard, emits a durable reversal command, and has a deployed idempotent reversal-ledger executor with reconciliation state. Live money E2E remains open. | Jalankan live authenticated E2E pada fixture finansial terisolasi dan buktikan reversal/retry/reconciliation. |
 | PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila provider belum dikonfigurasi. `FX_PROVIDER_URL` kini dibind ke `fx.provider.url`, blank URL tetap memilih unavailable adapter, dan deployment mengekspos URL/source ConfigMap serta API-key Secret reference. Provider response wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui `service-endpoints`/`fx-provider-credentials`, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
-| PROD-018 | P2 | Analytics CI | `.github/workflows/analytics-tests.yml` menyiapkan Python 3.12, dependency runtime + test tooling terpin, `PYTHONPATH=src`, marker exclusion untuk infrastructure, dan coverage gate 80% dari `pyproject.toml`. Local `python3 -m pytest -q` tetap blocked karena runner tidak punya `pytest`, `pip`, atau `venv`; first CI run belum tersedia. | Jalankan workflow di GitHub, pastikan coverage lulus, lalu aktifkan job `analytics-tests` sebagai required check pada branch protection. |
+| PROD-018 | P2 | Analytics CI | First GitHub run `30836757966` failed at the coverage step: CI lacked `SECRET_KEY` and test dependency `Faker`; local reproduction also found API tests using unresolved `Depends`, real DB/Kafka/OTLP startup, stale response-envelope assertions, and WebSocket importing unavailable `PyJWT`. Workflow now supplies deterministic CI-only settings/dependencies, app tests isolate external services, response factories avoid Pydantic field collisions, and WebSocket uses the existing `python-jose` dependency. Local gate: `189 passed, 1 skipped`, coverage `84.86%`; analytics image `1.8.95` is live. | Confirm the post-fix GitHub workflow is green, then activate job `analytics-tests` as a required branch-protection check. |
 
 ### Additional findings from deeper pass
 

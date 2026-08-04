@@ -186,6 +186,38 @@ def mock_kafka_consumer():
         yield mock_consumer
 
 
+@pytest.fixture(autouse=True)
+def isolate_app_runtime(monkeypatch):
+    """Keep HTTP tests independent from local PostgreSQL, Kafka, and OTLP."""
+    from app.api.auth import require_auth
+    from app.database import get_db_session
+    from app.main import app
+
+    async def override_db_session():
+        yield AsyncMock(spec=AsyncSession)
+
+    mock_kafka = MagicMock()
+    mock_kafka.start = AsyncMock()
+    mock_kafka.stop = AsyncMock()
+
+    monkeypatch.setattr("app.main.init_db", AsyncMock())
+    monkeypatch.setattr("app.main.close_db", AsyncMock())
+    monkeypatch.setattr(
+        "app.main.KafkaConsumerService",
+        MagicMock(return_value=mock_kafka),
+    )
+
+    previous_overrides = app.dependency_overrides.copy()
+    app.dependency_overrides[get_db_session] = override_db_session
+    app.dependency_overrides[require_auth] = lambda: {
+        "sub": "user_123456789",
+        "account_id": "user_123456789",
+    }
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(previous_overrides)
+
+
 @pytest.fixture
 def client(mock_kafka_consumer):
     """Create a test client with mocked Kafka"""

@@ -25,7 +25,8 @@ async def _validate_ws_token(websocket: WebSocket) -> bool:
     Expects a token as a query parameter or in the first message.
     Returns True if valid, False otherwise.
     """
-    import jwt
+    from jose import jwt
+    from jose.exceptions import JWTError
 
     token = websocket.query_params.get("token")
     if not token:
@@ -36,10 +37,14 @@ async def _validate_ws_token(websocket: WebSocket) -> bool:
         # Downstream services only need to decode claims.
         jwt.decode(
             token,
+            key="",
             options={"verify_signature": False, "verify_exp": True},
         )
         return True
-    except (jwt.InvalidTokenError, jwt.ExpiredSignatureError, Exception) as e:
+    except JWTError as e:
+        logger.warning("WebSocket token validation failed", error=str(e))
+        return False
+    except Exception as e:
         logger.warning("WebSocket token validation failed", error=str(e))
         return False
 

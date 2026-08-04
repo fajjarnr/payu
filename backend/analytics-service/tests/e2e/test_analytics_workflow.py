@@ -64,11 +64,11 @@ class TestAnalyticsWorkflowE2E:
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_spending_trends"
             ) as mock_get:
-                mock_trends = MagicMock()
-                mock_trends.period = "30 days"
-                mock_trends.total_spending = Decimal("5000000.00")
-                mock_trends.month_over_month_change = 15.5
-                mock_trends.spending_by_category = [
+                mock_trends = {
+                    "period": "30 days",
+                    "total_spending": Decimal("5000000.00"),
+                    "month_over_month_change": 15.5,
+                    "spending_by_category": [
                     {
                         "category": "FOOD",
                         "amount": "1500000.00",
@@ -90,8 +90,8 @@ class TestAnalyticsWorkflowE2E:
                         "transaction_count": 25,
                         "trend": "stable",
                     },
-                ]
-                mock_trends.top_merchants = [
+                ],
+                "top_merchants": [
                     {
                         "merchant_id": "merchant_001",
                         "total_amount": 500000.0,
@@ -102,7 +102,8 @@ class TestAnalyticsWorkflowE2E:
                         "total_amount": 300000.0,
                         "transaction_count": 8,
                     },
-                ]
+                ],
+                }
 
                 mock_get.return_value = mock_trends
 
@@ -116,7 +117,7 @@ class TestAnalyticsWorkflowE2E:
                 )
 
                 assert response.status_code == 200
-                data = response.json()
+                data = response.json()["data"]
                 assert data["period"] == "30 days"
                 assert data["total_spending"] == "5000000.00"
                 assert data["month_over_month_change"] == 15.5
@@ -136,16 +137,16 @@ class TestAnalyticsWorkflowE2E:
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_cash_flow_analysis"
             ) as mock_get:
-                mock_analysis = MagicMock()
-                mock_analysis.period = "30 days"
-                mock_analysis.income = Decimal("20000000.00")
-                mock_analysis.expenses = Decimal("15000000.00")
-                mock_analysis.net_cash_flow = Decimal("5000000.00")
-                mock_analysis.income_by_source = [
+                mock_analysis = {
+                    "period": "30 days",
+                    "income": Decimal("20000000.00"),
+                    "expenses": Decimal("15000000.00"),
+                    "net_cash_flow": Decimal("5000000.00"),
+                    "income_by_source": [
                     {"source": "SALARY", "amount": "15000000.00"},
                     {"source": "SIDE_HUSTLE", "amount": "5000000.00"},
-                ]
-                mock_analysis.expenses_by_category = [
+                    ],
+                    "expenses_by_category": [
                     {
                         "category": "FOOD",
                         "amount": "5000000.00",
@@ -160,7 +161,8 @@ class TestAnalyticsWorkflowE2E:
                         "transaction_count": 25,
                         "trend": "increasing",
                     },
-                ]
+                    ],
+                }
 
                 mock_get.return_value = mock_analysis
 
@@ -170,7 +172,7 @@ class TestAnalyticsWorkflowE2E:
                 )
 
                 assert response.status_code == 200
-                data = response.json()
+                data = response.json()["data"]
                 assert data["period"] == "30 days"
                 assert data["income"] == "20000000.00"
                 assert data["expenses"] == "15000000.00"
@@ -226,7 +228,7 @@ class TestAnalyticsWorkflowE2E:
                 )
 
                 assert response.status_code == 200
-                data = response.json()
+                data = response.json()["data"]
                 assert data["user_id"] == sample_user_id
                 assert len(data["recommendations"]) == 3
                 assert (
@@ -372,7 +374,7 @@ class TestAnalyticsWorkflowE2E:
                     f"/api/v1/analytics/user/{sample_user_id}/recommendations"
                 )
                 assert rec_response.status_code == 200
-                data = rec_response.json()
+                data = rec_response.json()["data"]
                 assert len(data["recommendations"]) == 2
                 assert any(
                     r["recommendation_type"] == "SPENDING_TREND"

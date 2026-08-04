@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-018 Analytics CI and runtime test gate fixed/deployed**:
+> - Reproduced the first failed GitHub run (`30836757966`): the workflow installed runtime dependencies but omitted the required CI `SECRET_KEY` and `Faker`, so collection failed and coverage was only `26%`. The test gate now injects a synthetic run-scoped key, installs `Faker`, disables tracing/metrics, and pins pytest-asyncio fixture loop scope.
+> - Fixed the actual service/test contract failures: Pydantic `ApiResponse` field/method collisions now use `create_success`/`create_error`; direct secured handler tests pass explicit claims; HTTP tests override DB/auth and mock Kafka lifecycle; E2E assertions match the response envelope; WebSocket tests use expiring JWT-shaped fixtures and production uses the already-installed `python-jose` package.
+> - Verification: analytics full gate `189 passed, 1 skipped`, coverage `84.86%` (required `80%`); focused infrastructure contract suite `45 passed, 4 pre-existing failures`; image `1.8.95` (`sha256:5d68acc2863c33c7120c7f046585632c4ad6d28020457596fc7aad3b71725181`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, `/health` returned `success=true`. GitHub post-fix run and branch-protection required-check activation remain open.
+
 > ✅ **2026-08-04 — MVP-004 Keycloak client credentials and realm import restored**:
 > - Replaced the stale unmanaged dev client Secret with an ESO `Password` generator and `ExternalSecret` using `OnChange`, then synced the two required client keys declaratively from `payu-dev` to `payu-sso` through the existing least-privilege Kubernetes `SecretStore`. The dev `auth-service` Deployment receives a manifest revision bump so it reloads the generated backend credential.
 > - Verification: new infrastructure contract test passed; workload and identity server dry-runs passed; both ExternalSecrets are `Ready/SecretSynced`; source/sync per-key hashes match; `payu-realm-import` completed with Job `succeeded=1`, `Done=True`, `HasErrors=False`; OIDC discovery returned the `payu` issuer; `payu-backend` client-credentials token issuance succeeded; web `/api/health` and `/login` returned healthy/200 through port-forward; auth actuator health/readiness returned `UP`.

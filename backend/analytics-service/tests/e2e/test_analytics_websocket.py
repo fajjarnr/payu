@@ -4,6 +4,9 @@ import sys
 sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
 from unittest.mock import AsyncMock, patch, MagicMock  # noqa: E402
 from fastapi import WebSocket  # noqa: E402
+from datetime import datetime, timedelta, timezone
+from base64 import urlsafe_b64encode
+import json
 
 from app.websocket.connection_manager import manager  # noqa: E402
 
@@ -11,11 +14,32 @@ from app.websocket.connection_manager import manager  # noqa: E402
 # Import fixtures from conftest.py - client and reset_manager are now defined there
 
 
+def _websocket_url(user_id: str) -> str:
+    def encode_part(value: dict) -> str:
+        return urlsafe_b64encode(
+            json.dumps(value, separators=(",", ":")).encode()
+        ).rstrip(b"=").decode()
+
+    token = ".".join(
+        [
+            encode_part({"alg": "none", "typ": "JWT"}),
+            encode_part(
+                {
+                    "sub": user_id,
+                    "exp": (datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp(),
+                }
+            ),
+            "",
+        ]
+    )
+    return f"/ws/dashboard/{user_id}?token={token}"
+
+
 def test_websocket_connect_and_ping(reset_manager, client):
     """Test WebSocket connection and ping/pong"""
     user_id = "test_user_123"
 
-    with client.websocket_connect(f"/ws/dashboard/{user_id}") as websocket:
+    with client.websocket_connect(_websocket_url(user_id)) as websocket:
         # First message is connection_established
         data = websocket.receive_json()
         assert data["type"] == "connection_established"
@@ -32,7 +56,7 @@ def test_websocket_multiple_clients_same_user(reset_manager, client):
 
     connections = []
     for i in range(3):
-        ws = client.websocket_connect(f"/ws/dashboard/{user_id}")
+        ws = client.websocket_connect(_websocket_url(user_id))
         ws.__enter__()
         connections.append(ws)
         # Consume the connection_established message for each connection
@@ -57,7 +81,7 @@ def test_websocket_disconnect(reset_manager, client):
     """Test WebSocket disconnect behavior"""
     user_id = "test_user_123"
 
-    websocket = client.websocket_connect(f"/ws/dashboard/{user_id}")
+    websocket = client.websocket_connect(_websocket_url(user_id))
     websocket.__enter__()
 
     # Consume connection_established message
@@ -84,7 +108,7 @@ def test_websocket_invalid_user_id(client):
     """Test WebSocket with special characters in user_id"""
     # Test with special characters that might be used in user IDs
     user_id = "user-test_123.456"
-    websocket = client.websocket_connect(f"/ws/dashboard/{user_id}")
+    websocket = client.websocket_connect(_websocket_url(user_id))
     websocket.__enter__()
 
     # Consume connection_established message
@@ -143,11 +167,11 @@ def test_health_endpoint(client):
     """Test health check endpoint"""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
+    assert response.json()["data"]["status"] == "healthy"
 
 
 def test_ready_endpoint(client):
     """Test readiness check endpoint"""
     response = client.get("/ready")
     assert response.status_code == 200
-    assert response.json()["status"] == "ready"
+    assert response.json()["data"]["status"] == "ready"

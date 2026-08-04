@@ -5,7 +5,8 @@ Tests the FastAPI endpoint handlers in the analytics router.
 
 NOTE: The actual endpoint handlers now accept a ``Request`` object as the
 first parameter and return ``ApiResponse`` envelope dicts (via
-``ApiResponse.success(...).model_dump()`` / ``ApiResponse.error(...).model_dump()``)
+``ApiResponse.create_success(...).model_dump()`` /
+``ApiResponse.create_error(...).model_dump()``)
 instead of raising ``HTTPException``.  These tests create a lightweight mock
 ``Request`` and assert on the envelope structure.
 """
@@ -57,6 +58,10 @@ def _make_mock_request(*, with_limiter: bool = False) -> MagicMock:
         mock_request.app.state.limiter = MagicMock()
         mock_request.app.state.limiter.check = AsyncMock(return_value=True)
     return mock_request
+
+
+def _auth_claims(user_id: str) -> dict:
+    return {"sub": user_id, "account_id": user_id}
 
 
 @pytest.fixture
@@ -170,7 +175,9 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_user_metrics.return_value = sample_user_metrics_response
             mock_service_class.return_value = mock_service
 
-            result = await get_user_metrics(mock_request, "user_123", mock_db_session)
+            result = await get_user_metrics(
+                mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+            )
 
             # Handler returns ApiResponse envelope dict
             assert isinstance(result, dict)
@@ -189,7 +196,12 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_user_metrics.return_value = None
             mock_service_class.return_value = mock_service
 
-            result = await get_user_metrics(mock_request, "nonexistent_user", mock_db_session)
+            result = await get_user_metrics(
+                mock_request,
+                "nonexistent_user",
+                mock_db_session,
+                _auth_claims("nonexistent_user"),
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is False
@@ -205,7 +217,9 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_user_metrics.side_effect = Exception("Database error")
             mock_service_class.return_value = mock_service
 
-            result = await get_user_metrics(mock_request, "user_123", mock_db_session)
+            result = await get_user_metrics(
+                mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is False
@@ -228,7 +242,9 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            result = await get_spending_trends(mock_request, request_data, mock_db_session)
+            result = await get_spending_trends(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is True
@@ -246,7 +262,9 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_spending_trends.side_effect = Exception("Query error")
             mock_service_class.return_value = mock_service
 
-            result = await get_spending_trends(mock_request, request_data, mock_db_session)
+            result = await get_spending_trends(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is False
@@ -265,7 +283,9 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_cash_flow_analysis.return_value = sample_cash_flow_response
             mock_service_class.return_value = mock_service
 
-            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
+            result = await get_cash_flow_analysis(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is True
@@ -283,7 +303,9 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
+            result = await get_cash_flow_analysis(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is False
@@ -310,7 +332,9 @@ class TestAnalyticsAPIEndpoints:
             ]
             mock_service_class.return_value = mock_service
 
-            result = await get_recommendations(mock_request, "user_123", mock_db_session)
+            result = await get_recommendations(
+                mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is True
@@ -329,7 +353,9 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            result = await get_recommendations(mock_request, "user_123", mock_db_session)
+            result = await get_recommendations(
+                mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+            )
 
             assert isinstance(result, dict)
             assert result["success"] is False
@@ -353,7 +379,10 @@ class TestAnalyticsAPIEndpoints:
             with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
                 with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
                     result = await get_robo_advisory(
-                        mock_request, sample_robo_advisory_request, idempotency_key=None
+                        mock_request,
+                        sample_robo_advisory_request,
+                        idempotency_key=None,
+                        auth=_auth_claims("user_123"),
                     )
 
             assert isinstance(result, dict)
@@ -372,7 +401,10 @@ class TestAnalyticsAPIEndpoints:
 
             with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
                 result = await get_robo_advisory(
-                    mock_request, sample_robo_advisory_request, idempotency_key=None
+                    mock_request,
+                    sample_robo_advisory_request,
+                    idempotency_key=None,
+                    auth=_auth_claims("user_123"),
                 )
 
             assert isinstance(result, dict)
@@ -408,7 +440,10 @@ class TestAnalyticsAPIEndpoints:
             with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
                 with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
                     result = await calculate_fraud_score(
-                        mock_request, sample_fraud_score_request, idempotency_key=None
+                        mock_request,
+                        sample_fraud_score_request,
+                        idempotency_key=None,
+                        auth=_auth_claims("user_67890"),
                     )
 
             assert isinstance(result, dict)
@@ -430,7 +465,10 @@ class TestAnalyticsAPIEndpoints:
 
             with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
                 result = await calculate_fraud_score(
-                    mock_request, sample_fraud_score_request, idempotency_key=None
+                    mock_request,
+                    sample_fraud_score_request,
+                    idempotency_key=None,
+                    auth=_auth_claims("user_67890"),
                 )
 
             assert isinstance(result, dict)
@@ -447,7 +485,12 @@ class TestAnalyticsAPIEndpoints:
             sample_fraud_score_entity
         )
 
-        result = await get_transaction_fraud_score(mock_request, "txn_12345", mock_db_session)
+        result = await get_transaction_fraud_score(
+            mock_request,
+            "txn_12345",
+            mock_db_session,
+            _auth_claims("user_67890"),
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is True
@@ -461,7 +504,12 @@ class TestAnalyticsAPIEndpoints:
         mock_request = _make_mock_request()
         mock_db_session.execute.return_value = mock_scalar_result_fn(None)
 
-        result = await get_transaction_fraud_score(mock_request, "nonexistent_txn", mock_db_session)
+        result = await get_transaction_fraud_score(
+            mock_request,
+            "nonexistent_txn",
+            mock_db_session,
+            _auth_claims("user_123"),
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is False
@@ -473,7 +521,12 @@ class TestAnalyticsAPIEndpoints:
         mock_request = _make_mock_request()
         mock_db_session.execute.side_effect = Exception("Database error")
 
-        result = await get_transaction_fraud_score(mock_request, "txn_12345", mock_db_session)
+        result = await get_transaction_fraud_score(
+            mock_request,
+            "txn_12345",
+            mock_db_session,
+            _auth_claims("user_123"),
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is False
@@ -508,7 +561,9 @@ class TestAnalyticsAPIEndpoints:
 
         mock_db_session.execute.return_value = mock_scalars_result_fn(mock_entities)
 
-        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
+        result = await get_user_high_risk_transactions(
+            mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is True
@@ -524,7 +579,9 @@ class TestAnalyticsAPIEndpoints:
         mock_request = _make_mock_request()
         mock_db_session.execute.return_value = mock_scalars_result_fn([])
 
-        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
+        result = await get_user_high_risk_transactions(
+            mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is True
@@ -536,7 +593,9 @@ class TestAnalyticsAPIEndpoints:
         mock_request = _make_mock_request()
         mock_db_session.execute.side_effect = Exception("Query error")
 
-        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
+        result = await get_user_high_risk_transactions(
+            mock_request, "user_123", mock_db_session, _auth_claims("user_123")
+        )
 
         assert isinstance(result, dict)
         assert result["success"] is False
@@ -567,7 +626,9 @@ class TestAnalyticsAPIValidation:
                 request_data = GetSpendingTrendsRequest(
                     user_id="user_123", period_days=30, group_by=group_by
                 )
-                result = await get_spending_trends(mock_request, request_data, mock_db_session)
+                result = await get_spending_trends(
+                    mock_request, request_data, mock_db_session, _auth_claims("user_123")
+                )
                 assert result is not None
                 assert isinstance(result, dict)
 
@@ -590,7 +651,9 @@ class TestAnalyticsAPIValidation:
             request_data = GetSpendingTrendsRequest(
                 user_id="user_123", period_days=60, group_by="category"
             )
-            result = await get_spending_trends(mock_request, request_data, mock_db_session)
+            result = await get_spending_trends(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
             assert result is not None
             assert isinstance(result, dict)
 
@@ -612,7 +675,9 @@ class TestAnalyticsAPIValidation:
             mock_service_class.return_value = mock_service
 
             request_data = GetAnalyticsRequest(user_id="user_123", period_days=90)
-            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
+            result = await get_cash_flow_analysis(
+                mock_request, request_data, mock_db_session, _auth_claims("user_123")
+            )
             assert result is not None
             assert isinstance(result, dict)
 
@@ -659,7 +724,10 @@ class TestAnalyticsAPIValidation:
                             monthly_investment_amount=1000000.0,
                         )
                         result = await get_robo_advisory(
-                            mock_request, request_data, idempotency_key=None
+                            mock_request,
+                            request_data,
+                            idempotency_key=None,
+                            auth=_auth_claims("user_123"),
                         )
                         assert result is not None
                         assert isinstance(result, dict)
@@ -705,7 +773,10 @@ class TestAnalyticsAPIValidation:
                             metadata={},
                         )
                         result = await calculate_fraud_score(
-                            mock_request, request_data, idempotency_key=None
+                            mock_request,
+                            request_data,
+                            idempotency_key=None,
+                            auth=_auth_claims("user_123"),
                         )
                         assert result is not None
                         assert isinstance(result, dict)

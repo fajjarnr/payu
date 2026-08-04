@@ -67,6 +67,23 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         self.assertIn('name: EXIT_CODE\n          value: "1"', pipeline)
         self.assertNotIn("onError: continue", pipeline)
 
+    def test_analytics_ci_is_reproducible_without_external_services(self) -> None:
+        workflow = (
+            REPO_ROOT / ".github/workflows/analytics-tests.yml"
+        ).read_text(encoding="utf-8")
+        pyproject = (
+            REPO_ROOT / "backend/analytics-service/pyproject.toml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("SECRET_KEY: ci-test-${{ github.run_id }}-${{ github.sha }}", workflow)
+        self.assertIn('ENABLE_TRACING: "false"', workflow)
+        self.assertIn('ENABLE_METRICS: "false"', workflow)
+        self.assertIn("Faker==30.0.0", workflow)
+        self.assertIn(
+            "asyncio_default_fixture_loop_scope = \"function\"",
+            pyproject,
+        )
+
     def test_mandatory_security_tasks_are_fail_closed(self) -> None:
         tasks = REPO_ROOT / "infrastructure/platform/cicd/tekton/tasks"
         mandatory = (
@@ -608,6 +625,24 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             for resource_name in rule.get("resourceNames", [])
         }
         self.assertIn("payu-keycloak-client-secrets", resource_names)
+
+    def test_analytics_ci_supplies_required_test_environment_and_dependencies(self) -> None:
+        workflow = (
+            REPO_ROOT / ".github/workflows/analytics-tests.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "SECRET_KEY: ci-test-${{ github.run_id }}-${{ github.sha }}",
+            workflow,
+        )
+        self.assertIn("Faker==30.0.0", workflow)
+
+        pyproject = (
+            REPO_ROOT / "backend/analytics-service/pyproject.toml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            'asyncio_default_fixture_loop_scope = "function"',
+            pyproject,
+        )
 
     def test_promoted_workloads_are_environment_isolated(self) -> None:
         environments = {

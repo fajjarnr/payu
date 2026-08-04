@@ -25,6 +25,9 @@ jobs:
         working-directory: backend/analytics-service
     env:
       PYTHONPATH: src
+      SECRET_KEY: ci-test-${{ github.run_id }}-${{ github.sha }}
+      ENABLE_TRACING: "false"
+      ENABLE_METRICS: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +46,8 @@ jobs:
             -r requirements.txt \
             pytest==8.3.5 \
             pytest-asyncio==0.25.3 \
-            pytest-cov==6.1.1
+            pytest-cov==6.1.1 \
+            Faker==30.0.0
 
       - name: Run tests and coverage gate
         run: python -m pytest -m "not infrastructure"
