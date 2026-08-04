@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.21] - 2026-08-04
+
+### Fixed
+
+- **Loan repayment persistence (PROD-022)**: existing repayment, schedule, and payment rows now update managed JPA entities instead of replacing generated IDs; wallet ledger account IDs support durable loan references through `VARCHAR(128)`. Live authenticated replay returned identical 200 responses, balanced debit/credit `341141.4100`, `COMPLETED` payment, `FULLY_PAID` schedule, and published outbox event. Lending `1.8.113` and wallet `1.8.109` are live.
+- **Dev runtime stability (INFRA-025)**: `payu-dev` Data Grid is declaratively configured for plain Hot Rod without endpoint authentication, with the `payu` cache using pessimistic non-XA transactions; backend JVM workloads use matching plain-client settings. Dev HPAs remain removed; the quota is `30/64` CPU limits and `4/16` CPU requests.
+- **API portal startup warning**: removed the unused Micrometer Prometheus extension so the Netty worker gauge is not registered twice. Clean package/build and deployed API portal `1.8.88`; recent API portal, gateway, cache, account, lending, wallet, and web-app logs contain no WARN/ERROR/Exception matches.
+
 ## [1.10.20] - 2026-08-04
 
 ### Fixed

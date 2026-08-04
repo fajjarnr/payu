@@ -4795,3 +4795,7 @@ A GET validation endpoint must never call an apply command: `apply` mutates usag
 ### L-206: Cross-adapter money flow wajib per-leg durable (2026-08-03)
 
 `@Transactional` tidak menyatukan debit dan credit yang dipanggil melalui adapter berbeda, dan menyimpan execution setelah side effect membuat crash kehilangan recovery record. Gunakan primitive transfer atomik dengan reference deterministik, checkpoint execution sebelum setiap leg, persist status setelah setiap leg, dan scheduler retry ber-ShedLock. Pastikan journal retry idempotent berdasarkan reference; tambahkan migration untuk semua kolom entity yang belum ada di schema lama sebelum mengaktifkan query recovery.
+
+### L-207: CRD schema, operator defaults, and generated artifacts are separate gates (2026-08-04)
+
+`oc kustomize` can render a valid manifest while the operator applies a different runtime default, and a stale framework build can keep an already-removed extension inside the container image. Before changing a CRD field, run `oc explain`; after changing dependency/configuration, run a clean package and inspect the final artifact; then apply the rendered manifest and verify the live CR plus recent logs. This caught the dev Data Grid TLS/plain mismatch and the API portal duplicate Micrometer gauge.

@@ -11,7 +11,7 @@
 | Scope | Infrastructure bootstrap, platform services, workload deployment, verification, rollback |
 | Target platform | Red Hat OpenShift 4.20+ |
 | Last verified cluster | OCP 4.20.29, Kubernetes v1.35.6, 8 Ready nodes (3 control-plane + 5 workers, 3 AZs) |
-| Last verified date | 2026-08-01 |
+| Last verified date | 2026-08-04 |
 | Primary namespace | `payu-dev` for current data, messaging, cache, and application workloads |
 | Change mode | GitOps (ArgoCD `automated` sync, no prune/self-heal) after bootstrap; manual `oc apply` only for operator-managed resources (ArgoCD CR, Image config) |
 
@@ -25,11 +25,11 @@ Current state differs from older docs:
 |:---|:---|:---|
 | Namespaces | `infrastructure/foundation/namespaces/` | Creates `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |
 | Operators | `infrastructure/foundation/cluster-operators/` | Installs CNPG, Data Grid, AMQ Streams, AMQ Broker, RHBK, 3scale, GitOps, Pipelines, Vault Secrets, Tempo, Compliance |
-| Database | `infrastructure/platform/data/base/current/cnpg-*.yaml` | CloudNativePG `payu-database` in `payu-dev`; not Crunchy |
+| Database | `infrastructure/platform/data/base/cnpg-*.yaml` | CloudNativePG `payu-database` in `payu-dev`; not Crunchy |
 | Kafka | `infrastructure/platform/data/base/kafka-amqstreams.yaml` | AMQ Streams `payu-kafka` in `payu-dev` |
-| Cache | `infrastructure/platform/data/base/datagrid.yaml` | Infinispan `payu-cache` (operator-managed, mTLS); clients use native Hot Rod `payu-cache:11222` with cache `payu` (RESP removed — ARCH-007) |
+| Cache | `infrastructure/platform/data/base/datagrid.yaml` + environment overlay | Infinispan `payu-cache` (operator-managed); dev uses plain Hot Rod/no endpoint auth, production uses mTLS; cache `payu` (RESP removed — ARCH-007) |
 | AMQ Broker | `infrastructure/platform/amq-broker/base/` | `payu-broker` with CORE, AMQP, and STOMP on `61616` |
-| Identity | `infrastructure/platform/identity/keycloak/` | RHBK `payu-keycloak` in `payu-sso`; verify CR conditions before declaring healthy |
+| Identity | `infrastructure/platform/identity/overlays/<env>/` | RHBK `payu-keycloak` in `payu-sso`; verify CR conditions before declaring healthy |
 | API management | `infrastructure/platform/api-management/` | Operator/policy only by default; `APIManager` is gated until external backing-store and Vault secrets exist |
 | Workloads | `infrastructure/workloads/overlays/<env>/` | Use environment overlays, not workload base directly |
 
@@ -45,6 +45,7 @@ Current state differs from older docs:
 8. ArgoCD Application objects are resolved with the explicit group `applications.argoproj.io` — `oc get application` resolves to the `app.k8s.io` shadow CRD (L-171).
 9. LitmusChaos execution plane: `infrastructure/platform/security/litmus/` (operator bundle) + `infrastructure/platform/security/chaos/litmus/` (SIT overlay: RBAC, experiments, ChaosEngine, NetworkPolicy). Images are digest-pinned via `mirror.gcr.io`; the registry must stay in `image.config.openshift.io/cluster` allowedRegistries.
 10. SIT exposes a gateway Route (`gateway-sit.apps.fajjjar.my.id`, edge TLS) for DAST/fuzzing/E2E; OpenShift Route port uses `spec.port.targetPort` at top level (not nested under `to`, and no `name` field — L-172/173 lessons).
+11. HPA is production-only. The `payu-dev` overlay removes `HorizontalPodAutoscaler` resources; verify with `rtk oc get hpa -n payu-dev`. Production keeps the base HPA manifests and must be capacity-tested before promotion.
 
 ## Promotion Pipeline (SIT → UAT → preprod → prod)
 
@@ -187,7 +188,8 @@ Expected result:
 - CNPG `payu-database` has 3 instances Ready.
 - Kafka `payu-kafka` reports `READY=True`.
 - Infinispan `payu-cache` pods are Running (`WellFormed=True`) using the custom XML configuration ConfigMap (`payu-cache-custom-config`) with the `payu` cache (text/plain) over the native Hot Rod endpoint.
-- `payu-cache` service exposes the Hot Rod port `11222` with mTLS; backend workloads use `payu-cache:11222` with `PAYU_CACHE_HOTROD_USE_SSL=true` (RESP/RESP-compat services are removed — ARCH-007).
+- `payu-cache` service exposes Hot Rod port `11222`; dev backend workloads use plain `payu-cache:11222` with endpoint authentication disabled, while production workloads use the mTLS contract (RESP/RESP-compat services are removed — ARCH-007).
+- Validate the installed CRD schema before changing Data Grid fields: `rtk oc explain infinispan.spec.security --recursive`, `rtk oc explain infinispan.spec.logging --recursive`, and `rtk oc explain infinispan.spec.container --recursive`.
 
 ### 4. Deploy AMQ Broker
 
@@ -239,7 +241,7 @@ For production, do not apply `infrastructure/workloads/base/db-secrets.yaml` or 
 Apply the RHBK stack after CNPG and `payu-keycloak-db` are available:
 
 ```bash
-rtk oc apply -k infrastructure/platform/identity/keycloak
+rtk oc apply -k infrastructure/platform/identity/overlays/dev
 ```
 
 Verify:
@@ -258,9 +260,7 @@ Expected result:
 - `HasErrors` is absent or `False`.
 - The route resolves and returns a Keycloak response.
 
-Current known gate as of 2026-07-08:
-
-- `payu-keycloak-0` is Running, but the `Keycloak` CR reports `Ready=Unknown` and `HasErrors=True` after a service patch conflict. Treat identity as not production-healthy until that CR condition is cleared.
+Current dev gate as of 2026-08-04: `payu-keycloak` reports `Ready=True`, `HasErrors=False`; keep the condition check in every environment.
 
 ### 7. Deploy API Management Shell
 
@@ -388,7 +388,7 @@ Production rule:
 - Do not use `latest`.
 - Promote immutable images between namespaces; do not rebuild different bytes with the same tag.
 
-### 9. Deploy Workloads
+### 10. Deploy Workloads
 
 Apply the environment overlay:
 
@@ -414,12 +414,12 @@ rtk env NAMESPACE=payu-dev scripts/deployment/verify-deployment.sh
 
 Expected result for current `payu-dev`:
 
-- 32/32 deployments Ready.
-- 46/46 pods Running.
-- No new Warning events after rollout.
+- 33/33 deployments Ready.
+- 47/47 pods Running/Ready.
+- No Warning events introduced after the preflight baseline; historical Warning events alone are not a rollout failure.
 - Logs for changed services contain no `error`, `warn`, `exception`, `traceback`, `failed`, or `unavailable` matches after startup stabilization.
 
-### 10. GitOps Handoff
+### 11. GitOps Handoff
 
 Current GitOps state:
 
@@ -558,7 +558,7 @@ MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/d
 |:---|:---|
 | CNPG not Ready | `rtk oc describe cluster.postgresql.cnpg.io payu-database -n payu-dev`; check PVC and storage class |
 | Kafka not Ready | `rtk oc describe kafka payu-kafka -n payu-dev`; check AMQ Streams CSV and broker pods |
-| Cache connection fails | Confirm clients use `payu-cache.payu-dev.svc.cluster.local:11222` with `PAYU_CACHE_HOTROD_USE_SSL=true` and `payu-cache-credentials` (mTLS contract, L-148) |
+| Cache connection fails | Check the environment contract: dev uses plain `payu-cache.payu-dev.svc.cluster.local:11222` with no endpoint auth; production uses mTLS and `payu-cache-credentials` (L-148). |
 | AMQ STOMP disconnects | Confirm broker acceptor includes `STOMP` on `61616` and clients send heartbeats |
 | Keycloak route works but CR unhealthy | Check `Keycloak` conditions and RHBK operator logs in `payu-sso` |
 | 3scale pods missing | Confirm only operator shell was applied; APIManager is gated by external secrets |
@@ -575,5 +575,5 @@ MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/d
 |:---|:---|:---|
 | `INFRA-020` | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | Open |
 | `DEPLOY-010` | Deploy 3scale APIManager after external backing-store/Vault secrets exist | Open |
-| `INFRA-021` | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | Open |
+| `INFRA-021` | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ✅ Closed 2026-08-04; live `Ready=True`, `HasErrors=False` |
 | `SEC-020` | Remediate CIS platform failures | Open |

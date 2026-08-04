@@ -8,6 +8,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-022 live replay and dev runtime stabilization**:
+> - Existing repayment/schedule/payment IDs now remain managed by JPA repositories, wallet ledger account IDs accept the durable `LOAN_RECEIVABLE:<UUID>` reference, and the lending/wallet images were rebuilt and applied declaratively.
+> - Verification: lending persistence/messaging tests and wallet journal/schema tests passed; lending `1.8.113` and wallet `1.8.109` are Ready. Authenticated repayment replay returned 200 twice with the same idempotency key; wallet ledger debit/credit were both `341141.4100`, payment was `COMPLETED`, schedule was `FULLY_PAID`, and the lending outbox event was published with retry `0`.
+> - Dev Data Grid was corrected from operator TLS defaults to the manifest-declared plain Hot Rod/no-auth contract. `oc explain` validated the Infinispan CR fields before apply; the cache is `Running`/`WellFormed=True`, dev HPA count is zero, and the API portal `1.8.88` clean build removed the duplicate Netty Micrometer gauge warning. Selected service logs have no recent WARN/ERROR/Exception matches.
+
 > ✅ **2026-08-04 — PROD-042 wallet money response precision deployed**:
 > - Wallet REST balance, transaction history, and ledger responses now serialize only monetary `BigDecimal` fields as strings via Jackson `ToStringSerializer`; non-money fields and gRPC behavior are unchanged. The existing web `Money` contract is covered with an exact large-decimal fixture.
 > - Verification: red-first serialization test `1` failure, then `1/1` passed; full wallet reactor `26` wallet tests passed with `BUILD SUCCESS`; web WalletService `7/7` and type-check passed, backend package passed. Image `wallet-service:1.8.106` (`sha256:9dc6f1ace0fddfe60850a142b927273ed1247b86c9ab2bc741dc8b41633f5fc7`) is live; pod Ready `1/1`, restart `0`, liveness/readiness `UP`.
@@ -102,9 +107,9 @@
 > - Investments now renders only the authoritative investment-account balance/currency. Unsupported performance, risk, product, and advice data use explicit empty states; fabricated return/LPS/ROI/allocation claims and inactive actions were removed.
 > - Verification: focused page test `5/5`, full web Vitest `1201 passed | 1 skipped`, changed-file ESLint clean, type-check and production build successful; image `web-app:1.5.12` (`sha256:d76e1706a67f9351d65e9a80251da26bdbbd92d0fdf903b3d823b370c81d2496`) live, pod Ready 1/1/restart 0, health `healthy`, runtime `APP_VERSION=1.5.12`. Full lint still reports the pre-existing `src/lib/currency.ts:87` prefer-const error.
 
-> 🟡 **2026-08-03 — PROD-022 loan repayment money movement deployed**:
+> ✅ **2026-08-03 → 2026-08-04 — PROD-022 loan repayment money movement deployed and live-verified**:
 > - Repayment is now a durable financial command with exact `BigDecimal` validation, schedule row-lock/unique guard, wallet gRPC debit, balanced ledger journal, outbox event, idempotent replay, and reconciliation retry.
-> - Verification: selected reactor tests `103/103` passed (wallet `18`, lending `85`); package BUILD SUCCESS; images `lending-service:1.8.101` (`sha256:d52f7b02350aee9bbc209b18dd83b7302242ac12e0e7d9524bed2093b6e9bc6a`) and `wallet-service:1.8.100` (`sha256:5fa702f39c3c752043809c3391995ac0e7958346f9c329117946e2fae282e89c`) live; both pods Ready 1/1, restart 0, health `UP`; lending Flyway V9, wallet V106, and repayment topic/DLQ Ready. Authenticated money E2E remains open pending an isolated financial fixture.
+> - Verification: selected reactor tests passed; package BUILD SUCCESS; lending `1.8.113` and wallet `1.8.109` are live and Ready; lending Flyway V9, wallet V111, and repayment topic/DLQ are Ready. Authenticated replay on an isolated schedule returned 200 twice with one idempotency key, balanced wallet ledger debit/credit `341141.4100`, `COMPLETED` payment, `FULLY_PAID` schedule, and published outbox event with retry `0`.
 
 > 🟡 **2026-08-03 — MVP-001 SNAP-BI money flow implemented locally (pre-deploy)**:
 > - `SnapBiPaymentService.createPayment` now settles source → beneficiary through a hexagonal wallet port, persists `COMPLETED`, and publishes stable-ID `payment.completed` webhook + `payu.partner.payment-completed.v1` outbox event.
@@ -133,18 +138,18 @@
 
 | Attribute                | Value                                    | Notes                                           |
 |:-------------------------|:-----------------------------------------|:------------------------------------------------|
-| Services Deployed        | 🟢 35/35 deployments Ready               | `payu-dev` workloads recovered + GitOps ApplicationSet parity tercapai (22 Applications, Synced/Healthy, 0 changed). |
-| Total Pods               | 🟢 46/46 Running                         | Application, simulator, Kafka, PostgreSQL, Redis, and Artemis pods are Running. |
-| OpenShift Cluster        | 🟡 Active, single-AZ worker pool (autoscaled) | OCP 4.20.29; 3 control-plane + worker pool `us-east-1f` (MachineAutoscaler min 5 max 10); nodes 9-10 saat beban pipeline (autoscaler aktif). Zona worker lain belum ada — gap vs claim multi-AZ sebelumnya (koreksi 2026-08-01). |
+| Services Deployed        | 🟢 33/33 deployments Ready               | `payu-dev` workload overlay applied declaratively; all current deployments available. |
+| Total Pods               | 🟢 47/47 Running/Ready                   | Application, simulator, Kafka, PostgreSQL, Data Grid, and Artemis pods are Running/Ready. |
+| OpenShift Cluster        | 🟢 Active, 3-AZ worker pool              | OCP 4.20.29; 3 control-plane + 5 Ready workers across 3 AZs. |
 | Operators Installed      | 🟢 Core platform ready                    | GitOps 1.21.1, Pipelines 1.23.0, RHACS 4.11.1, RHTAS 1.4.2, AWS EFS CSI 4.20, External Secrets 1.2.0, Compliance 1.9.1, Service Mesh 3.4.0, CNPG 1.30.0. |
-| Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid Hot Rod/mTLS, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
+| Data Services            | 🟢 Active in `payu-dev`                  | CNPG PostgreSQL, Kafka, Data Grid plain Hot Rod/no endpoint auth, and Artemis are Running; AMQ acceptor supports CORE, AMQP, and STOMP. |
 | Identity (Keycloak)      | 🟢 External OIDC validated              | Keycloak external URL used as OIDC issuer; all 20 services + 3scale APIcast validated end-to-end (L-116). |
 | Maven Build              | 🟢 44/44                                 | `clean package -DskipTests -T 1C` BUILD SUCCESS on 2026-07-17. |
-| Cache                    | 🟢 Hot Rod/mTLS (operator-managed)       | `payu-dev` Data Grid Infinispan CR `WellFormed=True`, mTLS penuh, cache `payu` text/plain; manual `infinispan/server:15.0` dihapus; canary gate accepted 2026-08-01 (ARCH-007). |
+| Cache                    | 🟢 Hot Rod (dev plain, prod mTLS)        | `payu-dev` Data Grid Infinispan CR `WellFormed=True`, plain Hot Rod/no endpoint auth, cache `payu` text/plain; production overlays retain mTLS; manual `infinispan/server:15.0` dihapus; canary gate accepted 2026-08-01 (ARCH-007). |
 | Database                 | 🟢 CNPG healthy (3/3)                     | CloudNativePG replaces Crunchy. 26 databases, failover quorum, rolling updates. |
 | **API Management**        | 🟢 3scale Tier 1 active, OIDC cluster-wide, E2E 11/11 | APIcast verified. Gateway 1.9.5 image tagged. ArgoCD Synced. L-120/121 lessons. |
 | **Production Readiness** | 🟡 Controls partially live                | RHACS, RHTAS, Kyverno (Enforce, 0 violations), Compliance (CIS 8/9), signed-image admission, EFS, OpenCost live. Vault, durable Loki/Results, SIEM (audit forwarding), DR remain gated. |
-| Last Status Update       | 2026-08-03                               | MVP-003 implementation verified locally; ARCH-007 remains deployed and healthy; live promotion/E2E for the VA settlement path is pending. |
+| Last Status Update       | 2026-08-04                               | PROD-022 live replay and dev runtime gate verified; MVP-003 live promotion/E2E remains pending. |
 
 > ✅ **2026-08-01 — ARCH-007 Hot Rod/mTLS dev completion**:
 > - Data Grid dev dimigrasi ke Infinispan Operator CR (`WellFormed=True`, mTLS: server TLS + client CA + client keystore + identities literal-password — L-148); deployment manual + Service `payu-cache-resp` dihapus; semua workload pakai `payu-cache:11222` SSL.
