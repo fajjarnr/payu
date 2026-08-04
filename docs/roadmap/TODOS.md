@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.15` (2026-08-04) — Analytics CI gate fixed and analytics `1.8.95` deployed |
-| **Last Updated** | 2026-08-04 (analytics CI local gate green; branch-protection required-check verification remains open) |
+| **Last Updated** | 2026-08-04 (analytics CI GitHub run #2 green; branch-protection required-check verification remains open) |
 
 ---
 
@@ -202,7 +202,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 |---|---|---|---|---|
 | PROD-001 | P0 | Dispute/refund | Source-of-truth leg fixed; refund creation now applies a persisted active-refund cumulative guard, emits a durable reversal command, and has a deployed idempotent reversal-ledger executor with reconciliation state. Live money E2E remains open. | Jalankan live authenticated E2E pada fixture finansial terisolasi dan buktikan reversal/retry/reconciliation. |
 | PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila provider belum dikonfigurasi. `FX_PROVIDER_URL` kini dibind ke `fx.provider.url`, blank URL tetap memilih unavailable adapter, dan deployment mengekspos URL/source ConfigMap serta API-key Secret reference. Provider response wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui `service-endpoints`/`fx-provider-credentials`, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
-| PROD-018 | P2 | Analytics CI | First GitHub run `30836757966` failed at the coverage step: CI lacked `SECRET_KEY` and test dependency `Faker`; local reproduction also found API tests using unresolved `Depends`, real DB/Kafka/OTLP startup, stale response-envelope assertions, and WebSocket importing unavailable `PyJWT`. Workflow now supplies deterministic CI-only settings/dependencies, app tests isolate external services, response factories avoid Pydantic field collisions, and WebSocket uses the existing `python-jose` dependency. Local gate: `189 passed, 1 skipped`, coverage `84.86%`; analytics image `1.8.95` is live. | Confirm the post-fix GitHub workflow is green, then activate job `analytics-tests` as a required branch-protection check. |
+| PROD-018 | P2 | Analytics CI | First GitHub run `30836757966` failed at the coverage step: CI lacked `SECRET_KEY` and test dependency `Faker`; local reproduction also found API tests using unresolved `Depends`, real DB/Kafka/OTLP startup, stale response-envelope assertions, and WebSocket importing unavailable `PyJWT`. Workflow now supplies deterministic CI-only settings/dependencies, app tests isolate external services, response factories avoid Pydantic field collisions, and WebSocket uses the existing `python-jose` dependency. Local gate: `189 passed, 1 skipped`, coverage `84.86%`; analytics image `1.8.95` is live; post-fix GitHub run `30878225559` is green. | Activate job `analytics-tests` as a required branch-protection check (admin API verification currently returns `401`). |
 
 ### Additional findings from deeper pass
 

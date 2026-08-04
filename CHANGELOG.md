@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Analytics CI/runtime test gate (PROD-018)**: CI now supplies a run-scoped test `SECRET_KEY`, installs the existing `Faker` test dependency, disables external tracing/metrics, and pins pytest-asyncio fixture scope. API tests pass explicit auth claims and isolate PostgreSQL/Kafka/OTLP; stale response-envelope tests were corrected. `ApiResponse` factories no longer collide with Pydantic fields, and WebSocket JWT decoding now uses the already-installed `python-jose` dependency. Analytics image `1.8.95` is live.
+- **Analytics CI/runtime test gate (PROD-018)**: CI now supplies a run-scoped test `SECRET_KEY`, installs the existing `Faker` test dependency, disables external tracing/metrics, and pins pytest-asyncio fixture scope. API tests pass explicit auth claims and isolate PostgreSQL/Kafka/OTLP; stale response-envelope tests were corrected. `ApiResponse` factories no longer collide with Pydantic fields, and WebSocket JWT decoding now uses the already-installed `python-jose` dependency. Analytics image `1.8.95` is live; GitHub run `30878225559` passed.
 
 ## [1.10.14] - 2026-08-04
 
