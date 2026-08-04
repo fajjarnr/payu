@@ -1,6 +1,7 @@
 package id.payu.transaction.contract;
 
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +24,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 /**
@@ -75,7 +75,7 @@ public abstract class ContractVerifierBase {
     @BeforeEach
     void setUpContractMocks() {
         // Stub TransactionUseCase to return a successful transfer for any request
-        given(transactionUseCase.initiateTransfer(any(id.payu.transaction.dto.InitiateTransferRequest.class), anyString()))
+        given(transactionUseCase.initiateTransfer(any(InitiateTransferCommand.class)))
                 .willReturn(new InitiateTransferCommandResult(
                         UUID.randomUUID(),
                         "REF-" + UUID.randomUUID().toString().substring(0, 8),

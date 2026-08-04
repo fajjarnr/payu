@@ -195,7 +195,8 @@ public class TransactionController extends BaseController {
     ) {
         try {
             String userId = extractUserId();
-            InitiateTransferCommandResult result = transactionUseCase.initiateTransfer(request, userId);
+            InitiateTransferCommandResult result = transactionUseCase.initiateTransfer(
+                    InitiateTransferCommand.from(request, userId));
             InitiateTransferResponse response = result.toResponse();
             return created(response, "/api/v1/transactions/" + result.transactionId());
         } catch (BusinessException e) {

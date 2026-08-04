@@ -129,6 +129,82 @@ spec:
     cleanup.policy: delete
 
 ---
+# KafkaTopic - transaction initiated domain event
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: transaction-initiated
+  labels:
+    app.kubernetes.io/name: transaction-initiated
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.transaction.initiated.v1
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - transaction validated domain event
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: transaction-validated
+  labels:
+    app.kubernetes.io/name: transaction-validated
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.transaction.validated.v1
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - transaction completed domain event
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: transaction-completed
+  labels:
+    app.kubernetes.io/name: transaction-completed
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.transaction.completed.v1
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - transaction failed domain event
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: transaction-failed
+  labels:
+    app.kubernetes.io/name: transaction-failed
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.transaction.failed.v1
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
 # KafkaTopic - wallet events
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic

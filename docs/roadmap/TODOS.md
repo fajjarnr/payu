@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.21` (2026-08-04) — loan repayment persistence/runtime fixes, dev Data Grid protocol correction, and API portal warning removal |
-| **Last Updated** | 2026-08-04 (PROD-022 live replay verified; dev runtime warning gate green; PROD-018 branch-protection required-check verification remains open) |
+| **Last Release** | `1.10.24` (2026-08-04) — live dispute refund E2E, wallet event compatibility, managed JPA updates, and transaction runtime warning cleanup |
+| **Last Updated** | 2026-08-04 (PROD-001/PROD-021 live transfer→refund→ledger reversal verified; PROD-018 branch-protection required-check verification remains open) |
 
 ---
 
@@ -201,7 +201,6 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
-| PROD-001 | P0 | Dispute/refund | Source-of-truth leg fixed; refund creation now applies a persisted active-refund cumulative guard, emits a durable reversal command, and has a deployed idempotent reversal-ledger executor with reconciliation state. Live money E2E remains open. | Jalankan live authenticated E2E pada fixture finansial terisolasi dan buktikan reversal/retry/reconciliation. |
 | PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila provider belum dikonfigurasi. `FX_PROVIDER_URL` kini dibind ke `fx.provider.url`, blank URL tetap memilih unavailable adapter, dan deployment mengekspos URL/source ConfigMap serta API-key Secret reference. Provider response wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui `service-endpoints`/`fx-provider-credentials`, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
 | PROD-018 | P2 | Analytics CI | First GitHub run `30836757966` failed at the coverage step: CI lacked `SECRET_KEY` and test dependency `Faker`; local reproduction also found API tests using unresolved `Depends`, real DB/Kafka/OTLP startup, stale response-envelope assertions, and WebSocket importing unavailable `PyJWT`. Workflow now supplies deterministic CI-only settings/dependencies, app tests isolate external services, response factories avoid Pydantic field collisions, and WebSocket uses the existing `python-jose` dependency. Local gate: `189 passed, 1 skipped`, coverage `84.86%`; analytics image `1.8.95` is live; post-fix GitHub run `30878225559` is green. | Activate job `analytics-tests` as a required branch-protection check (admin API verification currently returns `401`). |
 
@@ -209,7 +208,6 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
-| PROD-021 | P0 | Dispute refund execution | `REFUND_CUSTOMER/PARTIAL_REFUND` kini membuat refund melalui `RefundUseCase`, resolve wajib idempotency key, active refund totals menolak over-refund, dan `outbox_events` menyimpan `RefundRequested` dengan publisher retry. Wallet consumer/executor kini melakukan debit recipient + credit sender, memakai `REFUND_REVERSAL` idempotency, dan menyimpan status reconciliation dengan retry scheduler. Live authenticated money E2E masih belum dijalankan. | Jalankan live authenticated E2E pada fixture finansial terisolasi; pertahankan test retry/crash recovery dan reconciliation. |
 | PROD-022 | P0 | Loan repayment money movement | Repayment menjadi command durable: `loan_repayment_payments` menyimpan state/idempotency, schedule memakai row-lock + unique `(loan_id, installment_number)`, wallet melakukan debit + balanced journal, dan hasil dipublish via outbox CloudEvent. Live authenticated replay pada fixture schedule `479741ae-d96a-4c7f-907a-5b8e0c9fd675` mengembalikan 200 pada dua request dengan key sama; ledger debit/credit seimbang `341141.4100`, payment `COMPLETED`, schedule `FULLY_PAID`, outbox published dengan retry `0`. Images lending `1.8.113` dan wallet `1.8.109` live. | ✅ Closed 2026-08-04 — tests, build, declarative apply, rollout, ledger, replay, and outbox evidence complete. |
 
 ### Follow-up audit — Graphify + CodeGraph

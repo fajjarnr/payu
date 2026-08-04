@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.24] - 2026-08-04
+
+### Fixed
+
+- **Dispute refund E2E (PROD-001/PROD-021)**: internal transfers persist the numeric recipient account in JSONB metadata, transaction events use canonical versioned topics, and refund-details resolves the persisted recipient without a schema migration.
+- **Refund event compatibility and persistence**: wallet accepts the existing `ledgerOperation` CloudEvent field, while dispute updates managed JPA refund entities instead of attaching duplicate instances with the same ID. Transaction wallet calls now propagate the caller bearer token.
+- **Runtime warning cleanup**: enum masking no longer reflects into JDK internals, and transfer requests call the CQRS command path directly instead of the deprecated service overload.
+- **Live verification**: transaction `1.8.103`, dispute `1.8.105`, and wallet `1.8.112` rolled out Ready `1/1`; authenticated transfer→refund completed with balanced `REFUND_REVERSAL` ledger entries and final source/recipient balances restored.
+
 ## [1.10.23] - 2026-08-04
 
 ### Fixed

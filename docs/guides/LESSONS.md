@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-210: Refund Contracts Must Preserve Request Identifiers (2026-08-04)
+
+**Context**: Internal transfer requests carry a numeric recipient account number, while the transaction entity's legacy recipient field is a UUID. The first live refund reached Kafka with a null recipient and was sent to the DLQ; the wallet DTO then exposed a second failure because the CloudEvent payload also contains the valid `ledgerOperation` field.
+
+**Lesson**:
+- Persist the identifier actually required by the downstream money operation at the transaction boundary; JSONB metadata was the smallest safe fix here, with no speculative schema migration.
+- Treat additive CloudEvent fields as forward-compatible at consumer DTO boundaries (`@JsonIgnoreProperties(ignoreUnknown = true)`), while keeping required money fields validated before execution.
+- Update existing JPA rows through the managed entity. Mapping a domain object to a fresh entity with the same ID can produce `DuplicateKeyException` inside one persistence context.
+- Run the authenticated transfer → outbox → consumer → ledger → refund-completion path. Unit tests would not have exposed the missing recipient or JPA attachment bug alone.
+
+**Applied evidence**: transaction `1.8.103`, dispute `1.8.105`, and wallet `1.8.112` passed full reactor tests and a live isolated `100 IDR` transfer/refund with `REFUND_REVERSAL` execution `COMPLETED`, balanced debit/credit, and final balances restored.
+
 ## L-135: Money Flow Needs a Port and a Runtime E2E Check (2026-08-03)
 
 **Date**: 2026-08-03

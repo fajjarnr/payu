@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.List;
 import java.util.UUID;
@@ -103,7 +104,11 @@ public class TransactionService implements TransactionUseCase {
         var currency = money != null
                 ? money.getCurrency().getCurrencyCode()
                 : transaction.getCurrencyCode();
-        if (amount == null || amount.signum() <= 0 || currency == null || currency.isBlank()) {
+        String recipientAccountId = transaction.getRecipientAccountId() != null
+                ? transaction.getRecipientAccountId().toString()
+                : recipientAccountNumber(transaction.getMetadata());
+        if (amount == null || amount.signum() <= 0 || currency == null || currency.isBlank()
+                || recipientAccountId == null || recipientAccountId.isBlank()) {
             throw new id.payu.api.common.exception.BusinessException(
                     "TXN_422", "Transaction has invalid refund details: " + transactionId);
         }
@@ -111,7 +116,19 @@ public class TransactionService implements TransactionUseCase {
                 amount,
                 currency,
                 transaction.getSenderAccountId() != null ? transaction.getSenderAccountId().toString() : null,
-                transaction.getRecipientAccountId() != null ? transaction.getRecipientAccountId().toString() : null);
+                recipientAccountId);
+    }
+
+    private String recipientAccountNumber(String metadata) {
+        if (metadata == null || metadata.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(metadata).path("recipientAccountNumber").asText(null);
+        } catch (JsonProcessingException e) {
+            throw new id.payu.api.common.exception.BusinessException(
+                    "TXN_422", "Transaction has invalid metadata");
+        }
     }
 
     @Override

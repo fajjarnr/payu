@@ -21,12 +21,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.when;
 
 @WebMvcTest(RefundController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -67,6 +69,16 @@ class RefundControllerSecurityTest {
         mockMvc.perform(post("/api/v1/refunds/{refundId}/process", UUID.randomUUID())
                         .header("X-Idempotency-Key", "security-test-process"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminRoleCanReadRefund() throws Exception {
+        UUID refundId = UUID.randomUUID();
+        when(refundUseCase.getRefund(refundId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/refunds/{refundId}", refundId))
+                .andExpect(status().isNotFound());
     }
 
     @Test

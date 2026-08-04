@@ -5,6 +5,7 @@ import id.payu.transaction.domain.model.*;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.domain.Persistable;
@@ -435,6 +436,8 @@ public class TransactionEntity implements Persistable<UUID> {
     @Column(name = "failure_reason")
     private String failureReason;
 
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    @ColumnTransformer(write = "?::jsonb")
     private String metadata;
 
     @Column(name = "created_at", nullable = false, updatable = false)

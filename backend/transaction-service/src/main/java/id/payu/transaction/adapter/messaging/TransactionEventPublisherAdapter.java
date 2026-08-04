@@ -33,7 +33,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     }
 
     private static final String AGGREGATE_TYPE = "TransactionEntity";
-    private static final String TOPIC_TRANSACTIONS = "payu.transactions";
+    private static final String TOPIC_TRANSACTION = "payu.transaction";
     private static final String SERVICE_NAME = "transaction-service";
 
     @Override
@@ -61,7 +61,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 "TransactionInitiated",
                 envelopeToMap(envelope),
                 null,
-                TOPIC_TRANSACTIONS + ".initiated"
+                TOPIC_TRANSACTION + ".initiated.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-initiated: {}", transaction.getId());
     }
@@ -87,7 +87,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 "TransactionValidated",
                 envelopeToMap(envelope),
                 null,
-                TOPIC_TRANSACTIONS + ".validated"
+                TOPIC_TRANSACTION + ".validated.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-validated: {}", transaction.getId());
     }
@@ -117,7 +117,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 "TransactionCompleted",
                 envelopeToMap(envelope),
                 null,
-                TOPIC_TRANSACTIONS + ".completed"
+                TOPIC_TRANSACTION + ".completed.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-completed: {}", transaction.getId());
     }
@@ -147,7 +147,7 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 "TransactionFailed",
                 envelopeToMap(envelope),
                 null,
-                TOPIC_TRANSACTIONS + ".failed"
+                TOPIC_TRANSACTION + ".failed.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-failed: {} - Reason: {}", transaction.getId(), reason);
     }

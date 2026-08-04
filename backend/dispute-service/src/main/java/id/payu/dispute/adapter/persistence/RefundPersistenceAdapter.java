@@ -27,7 +27,11 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
 
     @Override
     public Refund save(Refund refund) {
-        RefundEntity entity = toEntity(refund);
+        RefundEntity entity = refund.getId() == null
+                ? toEntity(refund)
+                : refundJpaRepository.findById(refund.getId())
+                        .map(existing -> updateEntity(existing, refund))
+                        .orElseGet(() -> toEntity(refund));
         RefundEntity saved = refundJpaRepository.save(entity);
         return toDomain(saved);
     }
@@ -81,6 +85,21 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
                 .failedAt(refund.getFailedAt())
                 .cancelledAt(refund.getCancelledAt())
                 .build();
+    }
+
+    private RefundEntity updateEntity(RefundEntity entity, Refund refund) {
+        entity.setTransactionId(refund.getTransactionId());
+        entity.setAmount(refund.getAmount());
+        entity.setCurrency(refund.getCurrency());
+        entity.setReason(refund.getReason());
+        entity.setStatus(refund.getStatus());
+        entity.setFailureReason(refund.getFailureReason());
+        entity.setCreatedAt(refund.getCreatedAt());
+        entity.setProcessedAt(refund.getProcessedAt());
+        entity.setCompletedAt(refund.getCompletedAt());
+        entity.setFailedAt(refund.getFailedAt());
+        entity.setCancelledAt(refund.getCancelledAt());
+        return entity;
     }
 
     private Refund toDomain(RefundEntity entity) {

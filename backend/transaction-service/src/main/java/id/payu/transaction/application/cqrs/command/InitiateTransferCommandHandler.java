@@ -130,6 +130,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .idempotencyKey(command.idempotencyKey())
+                .metadata("{\"recipientAccountNumber\":\""
+                        + command.recipientAccountNumber().replace("\\", "\\\\").replace("\"", "\\\"")
+                        + "\"}")
                 .build();
     }
 

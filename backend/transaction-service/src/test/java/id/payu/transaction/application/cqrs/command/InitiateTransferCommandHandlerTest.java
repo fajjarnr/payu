@@ -11,6 +11,7 @@ import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.dto.ReserveBalanceResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -132,5 +135,43 @@ class InitiateTransferCommandHandlerTest {
 
         assertThat(result.status()).isEqualTo(TransactionStatus.PENDING.name());
         verify(sknServicePort).initiateTransfer(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void persistsRecipientAccountNumberForInternalTransferRefunds() {
+        UUID transactionId = UUID.randomUUID();
+        String recipientAccountNumber = "1234567890";
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                UUID.randomUUID(),
+                recipientAccountNumber,
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-internal-refund-001",
+                "user-001");
+        when(walletServicePort.reserveBalance(
+                eq(command.senderAccountId()), eq(transactionId.toString()), eq(command.amount().getAmount())))
+                .thenReturn(ReserveBalanceResponse.builder()
+                        .reservationId("reservation-internal-001")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        handler.handle(command);
+
+        var savedTransactions = org.mockito.ArgumentCaptor.forClass(TransactionEntity.class);
+        verify(transactionPersistencePort, atLeastOnce()).save(savedTransactions.capture());
+        assertThat(savedTransactions.getAllValues())
+                .anyMatch(transaction -> transaction.getMetadata() != null
+                        && transaction.getMetadata().contains("\"recipientAccountNumber\":\"1234567890\""));
     }
 }

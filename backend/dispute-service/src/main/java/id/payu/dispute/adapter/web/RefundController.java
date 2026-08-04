@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/refunds")
 @RequiredArgsConstructor
 @Tag(name = "Refunds", description = "Refund management endpoints")
-@PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'dispute_agent')")
+@PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'DISPUTE_AGENT')")
 public class RefundController {
 
     private final RefundUseCase refundUseCase;

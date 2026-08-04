@@ -62,13 +62,7 @@ public class WalletRestAdapter implements WalletServicePort {
                 .referenceId(transactionId)
                 .build();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        // Forward the incoming JWT token so wallet-service can validate auth
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs != null && attrs.getRequest().getHeader("Authorization") != null) {
-            headers.set("Authorization", attrs.getRequest().getHeader("Authorization"));
-        }
+        HttpHeaders headers = authorizationHeaders();
         HttpEntity<ReserveBalanceRequest> entity = new HttpEntity<>(request, headers);
 
         try {
@@ -106,7 +100,7 @@ public class WalletRestAdapter implements WalletServicePort {
         log.info("Committing reservation: reservationId={}", reservationId);
 
         try {
-            restTemplate.postForObject(url, null, Map.class);
+            restTemplate.postForObject(url, new HttpEntity<>(null, authorizationHeaders()), Map.class);
             log.info("Reservation committed successfully: reservationId={}", reservationId);
         } catch (Exception e) {
             log.error("Failed to commit reservation: {}", e.getMessage());
@@ -127,7 +121,7 @@ public class WalletRestAdapter implements WalletServicePort {
         log.info("Releasing reservation: reservationId={}", reservationId);
 
         try {
-            restTemplate.postForObject(url, null, Map.class);
+            restTemplate.postForObject(url, new HttpEntity<>(null, authorizationHeaders()), Map.class);
             log.info("Reservation released successfully: reservationId={}", reservationId);
         } catch (Exception e) {
             log.error("Failed to release reservation: {}", e.getMessage());
@@ -167,8 +161,7 @@ public class WalletRestAdapter implements WalletServicePort {
                 "description", "Internal transfer credit"
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = authorizationHeaders();
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
         try {
@@ -182,5 +175,15 @@ public class WalletRestAdapter implements WalletServicePort {
 
     private void creditBalanceFallback(String accountId, String transactionId, BigDecimal amount, Exception e) {
         log.warn("Circuit breaker fallback for creditBalance: {}", e.getMessage());
+    }
+
+    private HttpHeaders authorizationHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs != null && attrs.getRequest().getHeader("Authorization") != null) {
+            headers.set("Authorization", attrs.getRequest().getHeader("Authorization"));
+        }
+        return headers;
     }
 }

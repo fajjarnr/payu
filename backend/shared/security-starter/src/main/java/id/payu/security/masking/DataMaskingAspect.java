@@ -136,6 +136,10 @@ public class DataMaskingAspect {
             return maskAmount((BigDecimal) value);
         }
 
+        if (value instanceof Enum<?>) {
+            return value.toString();
+        }
+
         // BUG-BE-175: Check recursion depth to prevent StackOverflowError
         int depth = recursionDepth.get();
         if (depth >= MAX_RECURSION_DEPTH) {
