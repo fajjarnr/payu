@@ -4,6 +4,12 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — PROD-037 mobile storage runtime fixed**:
+> - `storage.clear()` now uses the imported structured `Logger` on SecureStore failure instead of throwing `ReferenceError`; existing get/set/remove failures retain sanitized error handling.
+> - SecureStore is explicitly native-only: web reads return `null`, writes fail closed, and remove/clear are safe no-ops, so the Expo web target never pretends plaintext browser storage is secure.
+> - Verification: red-first clear-failure regression, storage + offline focused Jest `26/26`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, and Expo Android export exit `0`. Mobile has no OpenShift workload to deploy.
+> - Full mobile typecheck remains blocked by unrelated pre-existing JSX-in-`.ts` test files; this finding's source/tests are clean.
+
 > ✅ **2026-08-04 — PROD-039 mobile dependency reproducibility/build gate fixed**:
 > - Regenerated `frontend/mobile/package-lock.json`, added project-local `legacy-peer-deps=true` for the existing Expo/Jest peer graph, and added Expo web peers `react-dom`/`react-native-web`.
 > - Corrected NativeWind 4.0.1 Babel preset placement; Metro now processes `global.css` and enables package exports so native Axios resolves its `react-native` entry instead of the Node `crypto` bundle.

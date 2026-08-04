@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.30] - 2026-08-04
+
+### Fixed
+
+- **Mobile storage runtime (PROD-037)**: fixed the SecureStore clear failure path, added sanitized regression coverage, and made web behavior explicit and fail-closed instead of calling unavailable SecureStore APIs.
+
 ## [1.10.29] - 2026-08-04
 
 ### Fixed

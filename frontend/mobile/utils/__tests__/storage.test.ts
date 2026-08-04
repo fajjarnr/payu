@@ -1,5 +1,7 @@
 import { storage } from '../storage';
+import { Logger } from '../logger';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
@@ -32,18 +34,20 @@ describe('storage.get', () => {
   });
 
   it('should return null when error occurs', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerError = jest.spyOn(Logger, 'error').mockImplementation(() => {});
     (SecureStore.getItemAsync as jest.Mock).mockRejectedValue(new Error('Storage error'));
 
     const result = await storage.get('user');
 
     expect(result).toBeNull();
-    expect(consoleError).toHaveBeenCalledWith(
-      'Error reading user from secure store:',
-      expect.any(Error)
+    expect(loggerError).toHaveBeenCalledWith(
+      'Storage',
+      'Failed to read from secure storage',
+      expect.any(Error),
+      { key: 'user' }
     );
 
-    consoleError.mockRestore();
+    loggerError.mockRestore();
   });
 
   it('should handle string values', async () => {
@@ -141,18 +145,20 @@ describe('storage.set', () => {
   });
 
   it('should return false when error occurs', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerError = jest.spyOn(Logger, 'error').mockImplementation(() => {});
     (SecureStore.setItemAsync as jest.Mock).mockRejectedValue(new Error('Storage error'));
 
     const result = await storage.set('user', { name: 'John' });
 
     expect(result).toBe(false);
-    expect(consoleError).toHaveBeenCalledWith(
-      'Error writing user to secure store:',
-      expect.any(Error)
+    expect(loggerError).toHaveBeenCalledWith(
+      'Storage',
+      'Failed to write to secure storage',
+      expect.any(Error),
+      { key: 'user' }
     );
 
-    consoleError.mockRestore();
+    loggerError.mockRestore();
   });
 
   it('should store array value', async () => {
@@ -198,18 +204,20 @@ describe('storage.remove', () => {
   });
 
   it('should return false when error occurs', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerError = jest.spyOn(Logger, 'error').mockImplementation(() => {});
     (SecureStore.deleteItemAsync as jest.Mock).mockRejectedValue(new Error('Storage error'));
 
     const result = await storage.remove('user');
 
     expect(result).toBe(false);
-    expect(consoleError).toHaveBeenCalledWith(
-      'Error deleting user from secure store:',
-      expect.any(Error)
+    expect(loggerError).toHaveBeenCalledWith(
+      'Storage',
+      'Failed to delete from secure storage',
+      expect.any(Error),
+      { key: 'user' }
     );
 
-    consoleError.mockRestore();
+    loggerError.mockRestore();
   });
 
   it('should handle removing non-existent key', async () => {
@@ -238,6 +246,45 @@ describe('storage.clear', () => {
 
     expect(result1).toBe(true);
     expect(result2).toBe(true);
+  });
+
+  it('should return false and log when deleting a tracked key fails', async () => {
+    const loggerError = jest.spyOn(Logger, 'error').mockImplementation(() => {});
+    (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
+    await storage.set('clear-failure', { value: 'test' });
+    (SecureStore.deleteItemAsync as jest.Mock).mockRejectedValue(new Error('Storage error'));
+
+    await expect(storage.clear()).resolves.toBe(false);
+    expect(loggerError).toHaveBeenCalledWith(
+      'Storage',
+      'Failed to clear secure storage',
+      expect.any(Error)
+    );
+
+    loggerError.mockRestore();
+  });
+});
+
+describe('storage on web', () => {
+  const nativePlatform = Platform.OS;
+
+  beforeEach(() => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: nativePlatform });
+  });
+
+  it('fails closed without calling SecureStore', async () => {
+    expect(await storage.get('token')).toBeNull();
+    expect(await storage.set('token', 'secret')).toBe(false);
+    expect(await storage.remove('token')).toBe(true);
+    expect(await storage.clear()).toBe(true);
+    expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
+    expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+    expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
   });
 });
 

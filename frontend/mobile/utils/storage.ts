@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { Logger } from './logger';
 
 /**
@@ -27,6 +28,10 @@ export const storage = {
    * Performance: Async, cached in memory after first read
    */
   async get<T>(key: string): Promise<T | null> {
+    if (Platform.OS === 'web') {
+      return null;
+    }
+
     try {
       const value = await SecureStore.getItemAsync(key);
       return value ? JSON.parse(value) : null;
@@ -54,6 +59,10 @@ export const storage = {
    * Performance: Async, tracks key for batch operations
    */
   async set<T>(key: string, value: T): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      return false;
+    }
+
     try {
       await SecureStore.setItemAsync(key, JSON.stringify(value));
       KNOWN_KEYS.add(key); // Track key for later bulk operations
@@ -78,7 +87,7 @@ export const storage = {
    *   ['settings', settingsData]
    * ]);
    */
-  async setMany<T>(entries: Array<[string, T]>): Promise<boolean[]> {
+  async setMany<T>(entries: [string, T][]): Promise<boolean[]> {
     // Parallel write for better performance
     return Promise.all(
       entries.map(([key, value]) => this.set<T>(key, value))
@@ -89,6 +98,10 @@ export const storage = {
    * Remove a single value
    */
   async remove(key: string): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      return true;
+    }
+
     try {
       await SecureStore.deleteItemAsync(key);
       KNOWN_KEYS.delete(key);
@@ -115,6 +128,10 @@ export const storage = {
    * Uses tracked keys for efficient bulk deletion
    */
   async clear(): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      return true;
+    }
+
     try {
       // Delete all tracked keys in parallel
       const keys = Array.from(KNOWN_KEYS);
@@ -123,7 +140,7 @@ export const storage = {
       Logger.info('Storage', 'Cleared all tracked secure storage keys', { keysCleared: keys.length });
       return true;
     } catch (error) {
-      logger.error('Failed to clear secure storage', error);
+      Logger.error('Storage', 'Failed to clear secure storage', error);
       return false;
     }
   },

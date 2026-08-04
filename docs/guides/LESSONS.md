@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-215: Secure Storage Must Fail Closed on Web (2026-08-04)
+
+**Context**: `expo-secure-store` is native-only; the mobile package also exposes an Expo web target, and the clear failure branch referenced a non-existent lowercase logger.
+
+**Lesson**:
+- Keep authentication storage native-only; do not silently replace encrypted storage with `localStorage`.
+- On unsupported platforms, return explicit safe results (`null`, `false`, or no-op success) rather than invoking an unavailable native API.
+- Exercise provider failure paths, not only successful read/write flows; an error handler can itself be the crash.
+
+**Applied evidence**: red-first clear-failure regression, web fail-closed test, storage/offline Jest `26/26`, and changed-file ESLint `0 errors/0 warnings` passed.
+
 ## L-214: Clean Install Must Exercise Each Expo Platform (2026-08-04)
 
 **Context**: The mobile lockfile was stale, NativeWind was loaded in the wrong Babel slot, and Metro resolved Axios's Node entry during Android export even though web export passed.
