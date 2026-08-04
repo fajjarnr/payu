@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — OPS-2026-08-01-06 outbox lock leak deployed**:
+> - The shared outbox dispatcher now commits the `FOR UPDATE SKIP LOCKED` fetch before Kafka I/O and wraps only publish-state updates in short transactions, preventing broker waits from holding `outbox_events` row locks.
+> - Verification: focused publisher suite `24` passed; full outbox reactor `103` tests passed; FX reactor `63` tests passed; package BUILD SUCCESS. FX image `1.8.104` (`sha256:8b929d2924807d1245cf93401cac674080f7271d6493ed6b4a9902d389955adb`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, `SERVICE_VERSION=1.8.104`, liveness/readiness `UP`; runtime logs show outbox batches succeeding.
+
 > ✅ **2026-08-04 — PROD-040 billing retry side effects deployed**:
 > - Payment/top-up mutations now persist an idempotency checkpoint and stable reference before external calls, retain uncertain wallet/biller outcomes for ShedLock reconciliation, and retry failed outbox delivery without repeating providers. Existing payment rows are updated through their managed JPA entity so optimistic-lock versions survive each checkpoint save.
 > - Verification: billing reactor `117` tests passed with `0` failures and `1` skipped; package BUILD SUCCESS; image `1.8.103` (`sha256:1ab05f50a584c4bc91af118cf5b10e5040188aea4f101dcfa995dae61fcd8d0f`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, `SERVICE_VERSION=1.8.103`, liveness/readiness `UP`, and Flyway migration v8 applied.

@@ -21,6 +21,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
@@ -114,6 +116,33 @@ class OutboxPublisherTest {
     @Nested
     @DisplayName("pollAndPublish()")
     class PollAndPublishTests {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should commit the fetch transaction before publishing to Kafka")
+        void shouldCommitFetchTransactionBeforePublishingToKafka() {
+            PlatformTransactionManager transactionManager = mock(PlatformTransactionManager.class);
+            TransactionStatus transactionStatus = mock(TransactionStatus.class);
+            when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+            OutboxPublisher isolatedPublisher = new OutboxPublisher(
+                    outboxRepository, kafkaTemplate, meterRegistry, transactionManager);
+            ReflectionTestUtils.setField(isolatedPublisher, "batchSize", 100);
+            ReflectionTestUtils.setField(isolatedPublisher, "maxRetries", 3);
+            ReflectionTestUtils.setField(isolatedPublisher, "defaultTopic", "outbox.events");
+            ReflectionTestUtils.setField(isolatedPublisher, "enabled", true);
+            isolatedPublisher.init();
+
+            OutboxEvent event = createTestEvent();
+            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), anyInt()))
+                    .thenReturn(List.of(event));
+            mockSuccessfulKafkaSend();
+            when(outboxRepository.markAsPublished(any(UUID.class), any(Instant.class))).thenReturn(1);
+
+            isolatedPublisher.pollAndPublish();
+
+            verify(transactionManager, times(2)).getTransaction(any());
+            verify(transactionManager, times(2)).commit(transactionStatus);
+        }
 
         @Test
         @DisplayName("should skip when disabled")

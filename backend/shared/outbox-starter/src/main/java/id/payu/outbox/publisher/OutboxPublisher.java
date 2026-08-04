@@ -104,13 +104,13 @@ public class OutboxPublisher {
     /**
      * Scheduled task that polls for unpublished events and publishes them.
      * <p>
-     * Publishes with at-least-once delivery while holding the database row locks.
+     * Publishes with at-least-once delivery without holding database row locks during Kafka I/O.
      * <p>
      * <ol>
      *   <li>SELECT unpublished events FOR UPDATE SKIP LOCKED (in transaction)</li>
-     *   <li>Send each event to Kafka while its row lock is held</li>
-     *   <li>Mark successful events as published in the same transaction</li>
-     *   <li>Increment retry metadata for failed events</li>
+     *   <li>Commit the fetch transaction before sending events to Kafka</li>
+     *   <li>Mark successful events as published in short transactions</li>
+     *   <li>Increment retry metadata in short transactions for failed events</li>
      * </ol>
      * A crash after Kafka acknowledges but before the database commits can produce a
      * duplicate on retry, so consumers must remain idempotent. It cannot lose an event
@@ -136,41 +136,41 @@ public class OutboxPublisher {
     }
 
     /**
-     * Processes one locked batch inside a single database transaction.
+     * Fetches one locked batch, then publishes outside the fetch transaction.
      */
     private void pollAndPublishAtLeastOnce() {
-        transactionTemplate.executeWithoutResult(status -> {
-            List<OutboxEvent> unpublished = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
-            if (unpublished.isEmpty()) {
-                pendingEventsGauge.set(0);
-                return;
+        List<OutboxEvent> unpublished = transactionTemplate.execute(status ->
+                outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize));
+        if (unpublished == null || unpublished.isEmpty()) {
+            pendingEventsGauge.set(0);
+            return;
+        }
+
+        pendingEventsGauge.set(unpublished.size());
+        log.debug("Found {} unpublished outbox events to process", unpublished.size());
+
+        Timer.Sample batchTimer = Timer.start(meterRegistry);
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (OutboxEvent event : unpublished) {
+            try {
+                sendToKafka(event);
+                transactionTemplate.executeWithoutResult(status ->
+                        outboxRepository.markAsPublished(event.getId(), Instant.now()));
+                successCount++;
+            } catch (Exception e) {
+                failureCount++;
+                transactionTemplate.executeWithoutResult(status -> handlePublishFailureInline(event, e));
             }
+        }
 
-            pendingEventsGauge.set(unpublished.size());
-            log.debug("Found {} unpublished outbox events to process", unpublished.size());
+        batchTimer.stop(Timer.builder("outbox.publish.batch")
+                .description("Time taken to process a batch of outbox events")
+                .tag("status", "completed")
+                .register(meterRegistry));
 
-            Timer.Sample batchTimer = Timer.start(meterRegistry);
-            int successCount = 0;
-            int failureCount = 0;
-
-            for (OutboxEvent event : unpublished) {
-                try {
-                    sendToKafka(event);
-                    outboxRepository.markAsPublished(event.getId(), Instant.now());
-                    successCount++;
-                } catch (Exception e) {
-                    failureCount++;
-                    handlePublishFailureInline(event, e);
-                }
-            }
-
-            batchTimer.stop(Timer.builder("outbox.publish.batch")
-                    .description("Time taken to process a batch of outbox events")
-                    .tag("status", "completed")
-                    .register(meterRegistry));
-
-            log.info("Outbox batch processed: {} succeeded, {} failed", successCount, failureCount);
-        });
+        log.info("Outbox batch processed: {} succeeded, {} failed", successCount, failureCount);
     }
 
     /**

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.10] - 2026-08-04
+
+### Fixed
+
+- **Outbox lock leak (OPS-2026-08-01-06)**: the dispatcher now commits the `FOR UPDATE SKIP LOCKED` fetch before Kafka I/O and uses short transactions for publish-state updates, so broker waits no longer hold `outbox_events` row locks. FX image `1.8.104` (`sha256:8b929d2924807d1245cf93401cac674080f7271d6493ed6b4a9902d389955adb`) is live.
+
 ## [1.10.9] - 2026-08-04
 
 ### Fixed
