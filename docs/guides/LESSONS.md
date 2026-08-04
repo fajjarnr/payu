@@ -13,6 +13,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: local compose parity unittest `16/16` passed; `payu-dev` has 26 workload Deployments and no HPA.
 
+## L-212: Callback E2E Must Include the Actual Transport Boundary (2026-08-04)
+
+**Context**: Disbursement callback unit tests passed while the live flow still had an incorrect BI-FAST route, payload names, anonymous wallet authentication, and a lost reservation identifier.
+
+**Lesson**:
+- Verify the real callback path end to end: request → provider route/payload → signed webhook → callback security → downstream money commit.
+- Persist provider-side correlation identifiers needed by later callbacks; the disbursement UUID is not a substitute for the wallet reservation UUID.
+- Use the internal service adapter for anonymous trusted callbacks and keep simulator fixture bank codes aligned with the documented contract.
+
+**Applied evidence**: transaction `142` tests, simulator `2` tests, and authenticated `1 IDR` disbursement reached `COMPLETED` in `payu-dev` with HMAC verification and gRPC reservation commit.
+
 ## L-210: Refund Contracts Must Preserve Request Identifiers (2026-08-04)
 
 **Context**: Internal transfer requests carry a numeric recipient account number, while the transaction entity's legacy recipient field is a UUID. The first live refund reached Kafka with a null recipient and was sent to the DLQ; the wallet DTO then exposed a second failure because the CloudEvent payload also contains the valid `ledgerOperation` field.

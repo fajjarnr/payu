@@ -8,7 +8,6 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,7 +31,6 @@ import java.util.UUID;
  *             Kept as fallback during migration period.
  */
 @Deprecated
-@Primary
 @Component("walletRestAdapter")
 public class WalletRestAdapter implements WalletServicePort {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletRestAdapter.class);

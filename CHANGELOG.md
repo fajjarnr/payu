@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.26] - 2026-08-04
+
+### Fixed
+
+- **MVP-004 disbursement callback**: BI-FAST simulator callbacks now reach the actual transaction endpoint with HMAC signing; transaction uses internal wallet gRPC for anonymous callbacks and commits the persisted reservation ID. Live dev E2E reached `COMPLETED`; transaction `1.8.108` and BI-FAST simulator `1.8.83` are live.
+- **Simulator runtime warnings**: BI-FAST uses current Quarkus schema-management and health UI properties and disables OTLP export when no collector is deployed.
+
 ## [1.10.25] - 2026-08-04
 
 ### Fixed

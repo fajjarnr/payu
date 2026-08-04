@@ -90,6 +90,7 @@ public class DisbursementEntity {
         private String accountName;
         private String description;
         private DisbursementStatus status;
+        private String reservationId;
         private String bankReference;
         private String failureReason;
         private Instant createdAt;
@@ -140,6 +141,10 @@ public class DisbursementEntity {
             this.status = status;
             return this;
         }
+        public DisbursementEntityBuilder reservationId(String reservationId) {
+            this.reservationId = reservationId;
+            return this;
+        }
         public DisbursementEntityBuilder bankReference(String bankReference) {
             this.bankReference = bankReference;
             return this;
@@ -162,7 +167,11 @@ public class DisbursementEntity {
         }
 
         public DisbursementEntity build() {
-            return new DisbursementEntity(id, idempotencyKey, sourceAccountId, amount, amountValue, currencyCode, bankCode, accountNumber, accountName, description, status, bankReference, failureReason, createdAt, processedAt, completedAt);
+            DisbursementEntity disbursement = new DisbursementEntity(id, idempotencyKey, sourceAccountId, amount,
+                    amountValue, currencyCode, bankCode, accountNumber, accountName, description, status,
+                    bankReference, failureReason, createdAt, processedAt, completedAt);
+            disbursement.setReservationId(reservationId);
+            return disbursement;
         }
     }
 
@@ -281,6 +290,14 @@ public class DisbursementEntity {
         this.status = status;
     }
 
+    public String getReservationId() {
+        return reservationId;
+    }
+
+    public void setReservationId(String reservationId) {
+        this.reservationId = reservationId;
+    }
+
     public String getBankReference() {
         return bankReference;
     }
@@ -396,6 +413,9 @@ public class DisbursementEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private DisbursementStatus status;
+
+    @Column(name = "reservation_id", length = 64)
+    private String reservationId;
 
     @Column(name = "bank_reference", length = 50)
     private String bankReference;

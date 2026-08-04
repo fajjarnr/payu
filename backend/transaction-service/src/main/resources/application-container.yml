@@ -54,6 +54,8 @@ management:
       enabled: true
 
 payu:
+  grpc:
+    enabled: true
   security:
     encryption-enabled: true
     encryption:

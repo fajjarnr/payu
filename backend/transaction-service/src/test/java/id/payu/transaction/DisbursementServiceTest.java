@@ -7,6 +7,7 @@ import id.payu.transaction.domain.port.out.BifastServicePort;
 import id.payu.transaction.domain.port.out.DisbursementRepositoryPort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.BifastTransferResponse;
+import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +19,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -78,6 +82,7 @@ class DisbursementServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.PENDING);
             assertThat(result.getIdempotencyKey()).isEqualTo(idempotencyKey);
+            assertThat(result.getReservationId()).isEqualTo("res-123");
             verify(walletService).reserveBalance(eq(SOURCE_ACCOUNT_ID), any(), eq(AMOUNT.getAmount()));
             verify(disbursementRepository).persistNew(any());
         }
@@ -126,6 +131,9 @@ class DisbursementServiceTest {
                             .build());
             when(disbursementRepository.save(any()))
                     .thenAnswer(invocation -> invocation.getArgument(0));
+            Field callbackUrl = DisbursementService.class.getDeclaredField("disbursementCallbackUrl");
+            callbackUrl.setAccessible(true);
+            callbackUrl.set(disbursementService, "http://transaction-service:8080/api/v1/disbursements/callback");
 
             // When
             DisbursementEntity result = disbursementService.processDisbursement(disbursement.getId());
@@ -133,7 +141,10 @@ class DisbursementServiceTest {
             // Then
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.PROCESSING);
             assertThat(result.getProcessedAt()).isNotNull();
-            verify(bifastService).initiateTransfer(any());
+            ArgumentCaptor<BifastTransferRequest> requestCaptor = ArgumentCaptor.forClass(BifastTransferRequest.class);
+            verify(bifastService).initiateTransfer(requestCaptor.capture());
+            assertThat(requestCaptor.getValue().getWebhookUrl())
+                    .isEqualTo("http://transaction-service:8080/api/v1/disbursements/callback");
         }
     }
 
@@ -149,6 +160,7 @@ class DisbursementServiceTest {
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
             );
             disbursement.process();
+            disbursement.setReservationId("reservation-001");
 
             when(disbursementRepository.findById(any()))
                     .thenReturn(Optional.of(disbursement));
@@ -162,7 +174,7 @@ class DisbursementServiceTest {
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.COMPLETED);
             assertThat(result.getBankReference()).isEqualTo("BANK-REF-123");
             assertThat(result.getCompletedAt()).isNotNull();
-            verify(walletService).commitBalance(any(), any(), any(), any());
+            verify(walletService).commitBalance(any(), any(), eq("reservation-001"), any());
         }
     }
 
@@ -178,6 +190,7 @@ class DisbursementServiceTest {
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
             );
             disbursement.process();
+            disbursement.setReservationId("reservation-001");
 
             when(disbursementRepository.findById(any()))
                     .thenReturn(Optional.of(disbursement));
@@ -191,7 +204,7 @@ class DisbursementServiceTest {
             assertThat(result.getStatus()).isEqualTo(DisbursementStatus.FAILED);
             assertThat(result.getFailureReason()).isEqualTo("Invalid account");
             assertThat(result.getCompletedAt()).isNotNull();
-            verify(walletService).releaseBalance(any(), any(), any(), any());
+            verify(walletService).releaseBalance(any(), any(), eq("reservation-001"), any());
         }
     }
 }

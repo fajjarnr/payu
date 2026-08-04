@@ -416,6 +416,7 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       PAYU_CALLBACK_SIGNATURE_SECRET: ${CALLBACK_SIGNATURE_SECRET:-local-development-callback-signature-secret}
+      PAYU_DISBURSEMENT_CALLBACK_URL: ${DISBURSEMENT_CALLBACK_URL:-http://transaction-service:8080/api/v1/disbursements/callback}
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -652,7 +653,7 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
-      QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: drop-and-create
+      QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY: drop-and-create
       QUARKUS_HIBERNATE_ORM_ENABLED: "true"
       QUARKUS_HIBERNATE_ORM_ACTIVE: "true"
       QUARKUS_DATASOURCE_DB_KIND: postgresql
@@ -674,6 +675,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SIMULATOR_WEBHOOK_ENABLED: "true"
       SIMULATOR_WEBHOOK_DELAY_MS: "2000"
+      SIMULATOR_WEBHOOK_SECRET: ${CALLBACK_SIGNATURE_SECRET:-local-development-callback-signature-secret}
     depends_on:
       payu-cache:
         condition: service_healthy

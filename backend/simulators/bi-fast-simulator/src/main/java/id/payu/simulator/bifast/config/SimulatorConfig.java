@@ -68,5 +68,8 @@ public interface SimulatorConfig {
         @WithName("retry-delay-ms")
         @WithDefault("1000")
         int retryDelayMs();
+
+        @WithDefault("")
+        String secret();
     }
 }

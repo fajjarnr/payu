@@ -10,6 +10,7 @@ import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +47,9 @@ public class DisbursementService implements DisbursementUseCase {
     private final DisbursementRepositoryPort disbursementRepository;
     private final WalletServicePort walletService;
     private final BifastServicePort bifastService;
+
+    @Value("${payu.disbursement.callback-url:}")
+    private String disbursementCallbackUrl;
 
     public DisbursementService(DisbursementRepositoryPort disbursementRepository,
                                WalletServicePort walletService,
@@ -103,6 +107,7 @@ public class DisbursementService implements DisbursementUseCase {
 
         log.info("Reserved balance for disbursement: {}, reservationId: {}",
                 disbursement.getId(), reservation.getReservationId());
+        disbursement.setReservationId(reservation.getReservationId());
 
         // Save disbursement using EntityManager.persist() directly to bypass
         // Spring Data JPA's isNew() detection. The default detection sees
@@ -156,6 +161,7 @@ public class DisbursementService implements DisbursementUseCase {
                 .senderAccountNumber("PAYU" + disbursement.getSourceAccountId().toString().substring(0, 8))
                 .senderAccountName("PayU DisbursementEntity")
                 .purposeCode("PAY")
+                .webhookUrl(disbursementCallbackUrl)
                 .build();
 
         try {
@@ -200,11 +206,10 @@ public class DisbursementService implements DisbursementUseCase {
         // Transition to COMPLETED
         disbursement.complete(bankReference);
 
-        // BUG-LOGIC-013 FIX: Use disbursement ID as reservationId (matches reserveBalance call in createDisbursement)
         walletService.commitBalance(
                 disbursement.getSourceAccountId(),
                 disbursement.getId().toString(),
-                disbursement.getId().toString(),
+                disbursement.getReservationId(),
                 disbursement.getAmount().getAmount()
         );
 
@@ -223,11 +228,10 @@ public class DisbursementService implements DisbursementUseCase {
         // Transition to FAILED
         disbursement.fail(reason);
 
-        // BUG-LOGIC-013 FIX: Use disbursement ID as reservationId (matches reserveBalance call in createDisbursement)
         walletService.releaseBalance(
                 disbursement.getSourceAccountId(),
                 disbursement.getId().toString(),
-                disbursement.getId().toString(),
+                disbursement.getReservationId(),
                 disbursement.getAmount().getAmount()
         );
 

@@ -4,6 +4,10 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — MVP-004 disbursement callback live E2E closed**:
+> - Disbursement now sends the callback URL only on the disbursement flow, uses the actual BI-FAST `/api/v1` routes and payload aliases, selects the internal wallet gRPC adapter for anonymous callbacks, and persists the wallet reservation ID for commit/release.
+> - Verification: transaction reactor `142` tests and BI-FAST simulator reactor `2` tests passed; transaction `1.8.108` and BI-FAST simulator `1.8.83` are Ready `1/1` with restart `0`. Authenticated disbursement `90d2c64e-81d5-4993-af92-c0f6cb3a33da` returned `201` and reached `COMPLETED`; HMAC verification, webhook delivery, and gRPC reservation commit are present in runtime logs.
+
 > ✅ **2026-08-04 — Local Podman/OpenShift runtime contract aligned**:
 > - Local compose now uses the current payu-dev Kafka image digest, explicit FX provider variables with `UNCONFIGURED`/blank fail-closed defaults, and `NEXT_PUBLIC_BASE_URL=http://localhost:3001` by default.
 > - The local service set covers all 26 OpenShift workload Deployments; intentional substitutions remain single-node Postgres, local Keycloak, Kafka `29092`, plain Hot Rod, and local Artemis.

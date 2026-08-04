@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.103
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.108
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -94,7 +94,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: transaction-service
         - name: SERVICE_VERSION
-          value: 1.8.103
+          value: 1.8.108
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT
@@ -170,6 +170,8 @@ spec:
             secretKeyRef:
               name: dev-env-secrets
               key: WEBHOOK_SECRET
+        - name: PAYU_DISBURSEMENT_CALLBACK_URL
+          value: "http://transaction-service:8080/api/v1/disbursements/callback"
         # Services URL config (read by id.payu.transaction.adapter.client.* adapters)
         # Code reads these via @Value("${services.<name>.url}") which Spring resolves
         # from env var SERVICES_<NAME>_URL (uppercase, dots->underscores).
@@ -178,9 +180,9 @@ spec:
         - name: SERVICES_ACCOUNT_URL
           value: "http://account-service:8080"
         - name: SERVICES_BIFAST_URL
-          value: "http://bifast-service:8080"
+          value: "http://bi-fast-simulator:8080"
         - name: SERVICES_QRIS_URL
-          value: "http://qris-service:8080"
+          value: "http://qris-simulator:8080"
         - name: SERVICES_RGS_URL
           value: "http://rgs-service:8080"
         - name: SERVICES_SKN_URL

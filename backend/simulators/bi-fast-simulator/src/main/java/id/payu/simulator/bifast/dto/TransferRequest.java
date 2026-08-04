@@ -1,5 +1,6 @@
 package id.payu.simulator.bifast.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
@@ -7,19 +8,25 @@ import java.math.BigDecimal;
  * Request DTO for fund transfer.
  */
 public record TransferRequest(
+    String referenceNumber,
+
     @NotBlank(message = "Source bank code is required")
     String sourceBankCode,
     
     @NotBlank(message = "Source account number is required")
+    @JsonAlias("senderAccountNumber")
     String sourceAccountNumber,
     
     @NotBlank(message = "Source account name is required")
+    @JsonAlias("senderAccountName")
     String sourceAccountName,
     
     @NotBlank(message = "Destination bank code is required")
+    @JsonAlias("beneficiaryBankCode")
     String destinationBankCode,
     
     @NotBlank(message = "Destination account number is required")
+    @JsonAlias("beneficiaryAccountNumber")
     String destinationAccountNumber,
     
     @NotNull(message = "Amount is required")
@@ -37,6 +44,9 @@ public record TransferRequest(
     String webhookUrl
 ) {
     public TransferRequest {
+        if (sourceBankCode == null || sourceBankCode.isBlank()) {
+            sourceBankCode = "PAYU";
+        }
         if (currency == null || currency.isBlank()) {
             currency = "IDR";
         }

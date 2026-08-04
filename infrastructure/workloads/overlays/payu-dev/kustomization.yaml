@@ -73,18 +73,18 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newTag: "1.8.86"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.103
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service:1.8.108
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newTag: "1.8.103"
+  newTag: "1.8.108"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.112
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newTag: "1.8.112"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.16
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newTag: "1.5.16"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.21
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.83
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
-  newTag: "1.8.80"
+  newTag: "1.8.83"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newTag: "1.8.80"

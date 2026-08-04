@@ -24,6 +24,9 @@ public class BiFastService {
     @Inject
     SimulatorConfig config;
 
+    @Inject
+    WebhookDispatcher webhookDispatcher;
+
     /**
      * Simulate account inquiry.
      */
@@ -79,7 +82,11 @@ public class BiFastService {
         // Check for random failure
         if (shouldSimulateFailure()) {
             Log.warn("Simulating random failure for transfer");
-            return TransferResponse.error("Simulated random failure");
+            Transfer failed = createTransfer(request);
+            failed.fail("Simulated random failure");
+            failed.persist();
+            webhookDispatcher.dispatch(failed);
+            return TransferResponse.fromEntity(failed);
         }
 
         // Validate destination account
@@ -92,6 +99,7 @@ public class BiFastService {
             Transfer failed = createTransfer(request);
             failed.fail("Destination account not found");
             failed.persist();
+            webhookDispatcher.dispatch(failed);
             return TransferResponse.fromEntity(failed);
         }
 
@@ -99,6 +107,7 @@ public class BiFastService {
             Transfer failed = createTransfer(request);
             failed.fail("Destination account is blocked");
             failed.persist();
+            webhookDispatcher.dispatch(failed);
             return TransferResponse.fromEntity(failed);
         }
 
@@ -115,6 +124,7 @@ public class BiFastService {
         transfer.destinationAccountName = destAccount.accountName;
         transfer.complete();
         transfer.persist();
+        webhookDispatcher.dispatch(transfer);
 
         Log.infof("Transfer completed: ref=%s", transfer.referenceNumber);
         return TransferResponse.fromEntity(transfer);
@@ -138,7 +148,9 @@ public class BiFastService {
 
     private Transfer createTransfer(TransferRequest request) {
         Transfer transfer = new Transfer();
-        transfer.referenceNumber = generateReferenceNumber();
+        transfer.referenceNumber = request.referenceNumber() != null && !request.referenceNumber().isBlank()
+                ? request.referenceNumber()
+                : generateReferenceNumber();
         transfer.sourceBankCode = request.sourceBankCode();
         transfer.sourceAccountNumber = request.sourceAccountNumber();
         transfer.sourceAccountName = request.sourceAccountName();
@@ -152,8 +164,8 @@ public class BiFastService {
     }
 
     private String generateReferenceNumber() {
-        return "BIFAST-" + System.currentTimeMillis() + "-" + 
-               UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return "BIFAST-" + System.currentTimeMillis() + "-"
+                + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     private void simulateLatency() {

@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.24` (2026-08-04) — live dispute refund E2E, wallet event compatibility, managed JPA updates, and transaction runtime warning cleanup |
-| **Last Updated** | 2026-08-04 (PROD-001/PROD-021 live transfer→refund→ledger reversal verified; PROD-018 branch-protection required-check verification remains open) |
+| **Last Release** | `1.10.26` (2026-08-04) — live MVP-004 disbursement callback E2E and simulator warning cleanup |
+| **Last Updated** | 2026-08-04 (MVP-004 callback completed; PROD-018 branch-protection required-check verification remains open) |
 
 ---
 
@@ -30,7 +30,7 @@
 | INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
 | MVP-001 | P1 | `SnapBiPaymentService.createPayment` kini settle melalui port wallet (reserve → commit → credit dengan kompensasi), menandai record `COMPLETED`, dan menerbitkan webhook + outbox `payment.completed`. | ✅ Closed 2026-08-04 — live SNAP payment `2002500`, wallet `ACC-001 → ACC-002` IDR 100, replay identik; partner `1.8.98`, wallet `1.8.110`, gateway `1.9.9` |
 | MVP-002 | P1 | `TransferSagaOrchestrator` (transaction-service) = **DEAD CODE**: nol pemanggil di seluruh repo (hanya self-ref + javadoc `@see` di `SagaConfig.java:17`). Saga ini (reserve→commit→compensation + BI-FAST, pub via outbox) tidak pernah dipanggil controller/service manapun — jalur transfer yang ter-wire justru `InitiateTransferCommandHandler`. Dua implementasi logika uang paralel → risiko divergensi (satu di-fix, satu tetap rusak) & duplikasi. Keputusan: **hapus** (YAGNI) atau **wire** ke endpoint. Sangat direkomendasikan wiring kompensasi saga ke `InitiateTransferCommandHandler` atau hapus demi satu source of truth. | ✅ Dead code removed (MVP-002, 2026-08-01) — saga deleted (TransferSagaOrchestrator/Context), SagaConfig javadoc updated; `mvn test` transaction-service SUCCESS (2026-08-03) |
-| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | 🟡 Partial — live payment + refund money gates passed 2026-08-04; callback live evidence remains |
+| MVP-004 | P1 | Idempotency boundary untuk SNAP payment/refund dan disbursement callback kini wajib `X-Idempotency-Key`; natural-key/unique index V16/V17, HMAC callback, dan parent-row lock untuk cumulative refund sudah tersedia. | ✅ Closed 2026-08-04 — live disbursement callback completed; transaction `1.8.108`, BI-FAST simulator `1.8.83` |
 
 
 
@@ -124,7 +124,7 @@ completion evidence.
 * **Risiko**: divergensi uang — perbaikan di satu path tidak menjangkau path lain; dua source of truth untuk keputusan money.
 * **Rekomendasi**: hapus `TransferSagaOrchestrator` (YAGNI) atau wire kompensasinya ke `InitiateTransferCommandHandler`. Satu alur uang, bukan dua.
 
-### 🟡 MVP-004: Idempotency boundary — payment/refund live, callback masih pending
+### ✅ MVP-004: Idempotency boundary — payment/refund/disbursement callback live (2026-08-04)
 * **Scan idempotency (2026-08-01)**: semua endpoint money pindah-dana sudah `@Idempotent(required=true)`: transfer, qris/pay, billing/topup/subscription, disbursement/batch-create, VA-create, split-bill payment/settle, wallet reserve/commit/release, merchant qr-pay, payment-link, public confirm. ✅
 * **Implemented (2026-08-03)**: `SnapBiController` `POST /payments` dan `POST /payments/{id}/refund`, serta `DisbursementController` `POST /api/v1/disbursements/callback`, sekarang memakai `@Idempotent(required=true)`. Disbursement callback juga sudah dilindungi HMAC oleh `CallbackSignatureFilter`; V15/V16 menjaga natural-key/unique delivery.
 * **Implemented (2026-08-03)**: `createRefund` sekarang mengambil parent payment dengan `PESSIMISTIC_WRITE` sebelum menghitung cumulative refund, sehingga refund berbeda pada payment yang sama terserialisasi dalam satu transaksi.
@@ -132,8 +132,7 @@ completion evidence.
 * **Fixed (2026-08-03)**: partner-service CrashLoop karena dua migration `V15` diselesaikan dengan mempertahankan migration schema `V15` dan memindahkan unique-index/idempotency migration ke `V17`; regression test memastikan semua versi Flyway unik. Live `1.8.94` tervalidasi Flyway schema version 17, pod 1/1, health 200.
 * **Fixed (2026-08-04)**: activated the existing `ExternalSecretsConfig/cluster`, synced CNPG `payu-database-app` into `payu-sso/payu-keycloak-db` through a declarative Kubernetes `SecretStore`, corrected the dev DB FQDN, and verified Keycloak Ready `1/1`; source/sync password hashes match without exposing the value.
 * **Fixed (2026-08-04)**: dev client credentials are generated by the installed ESO `Password` generator with `ExternalSecret.refreshPolicy: OnChange`, synced from `payu-dev` to `payu-sso` through the existing least-privilege Kubernetes `SecretStore`, and loaded by `auth-service` through a declarative pod-template revision. The RHBK realm import Job completed successfully; source/sync key hashes match without exposing credential material.
-* **Remaining**: live disbursement callback evidence.
-* **Verification (2026-08-04)**: isolated SNAP payment → refund `100 IDR` moved `ACC-001` `999800→999900` and `ACC-002` `500200→500100`; refund replay returned the existing record. Partner `1.8.99` and wallet `1.8.111` are Ready, partner+wallet reactor tests `245`/`29` passed, and no new WARN/ERROR appeared after the refund topic was created.
+* **Verification (2026-08-04)**: authenticated disbursement `90d2c64e-81d5-4993-af92-c0f6cb3a33da` returned `201`, then reached `COMPLETED` for `1 IDR`; BI-FAST delivered the signed callback, the HMAC filter verified it, and gRPC committed the persisted wallet reservation ID. Transaction reactor `142` tests and BI-FAST simulator reactor `2` tests passed; deployed images are transaction `1.8.108` and BI-FAST simulator `1.8.83`, both Ready `1/1` with restart `0`. Simulator startup has no deprecated-property or OTLP-export warning.
 
 ### ⚙️ INFRA-025 / ARCH-007: Infinispan Hot Rod Migration
 * **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.

@@ -19,13 +19,13 @@ public class BifastServiceAdapter implements BifastServicePort {
 
     @Override
     public BifastTransferResponse initiateTransfer(BifastTransferRequest request) {
-        String url = bifastServiceUrl + "/v1/bifast/transfer";
+        String url = bifastServiceUrl + "/api/v1/transfer";
         return restTemplate.postForObject(url, request, BifastTransferResponse.class);
     }
 
     @Override
     public BifastTransferResponse checkStatus(String referenceNumber) {
-        String url = bifastServiceUrl + "/v1/bifast/status/" + referenceNumber;
+        String url = bifastServiceUrl + "/api/v1/status/" + referenceNumber;
         return restTemplate.getForObject(url, BifastTransferResponse.class);
     }
 }

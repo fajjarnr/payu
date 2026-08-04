@@ -3,6 +3,7 @@ package id.payu.transaction.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -32,6 +33,9 @@ public class BifastTransferRequest {
 
     @Pattern(regexp = "^[A-Z]{3}$", message = "Purpose code must be 3 uppercase letters")
     private String purposeCode;
+
+    @Size(max = 500)
+    private String webhookUrl;
 
     public BifastTransferRequest() {
     }
@@ -126,6 +130,14 @@ public class BifastTransferRequest {
         this.purposeCode = purposeCode;
     }
 
+    public String getWebhookUrl() {
+        return webhookUrl;
+    }
+
+    public void setWebhookUrl(String webhookUrl) {
+        this.webhookUrl = webhookUrl;
+    }
+
     public static class BifastTransferRequestBuilder {
         private String referenceNumber;
         private String beneficiaryBankCode;
@@ -136,6 +148,7 @@ public class BifastTransferRequest {
         private String senderAccountNumber;
         private String senderAccountName;
         private String purposeCode;
+        private String webhookUrl;
 
         public BifastTransferRequestBuilder referenceNumber(String referenceNumber) {
             this.referenceNumber = referenceNumber;
@@ -182,9 +195,16 @@ public class BifastTransferRequest {
             return this;
         }
 
+        public BifastTransferRequestBuilder webhookUrl(String webhookUrl) {
+            this.webhookUrl = webhookUrl;
+            return this;
+        }
+
         public BifastTransferRequest build() {
-            return new BifastTransferRequest(referenceNumber, beneficiaryBankCode, beneficiaryAccountNumber,
+            BifastTransferRequest request = new BifastTransferRequest(referenceNumber, beneficiaryBankCode, beneficiaryAccountNumber,
                     beneficiaryAccountName, amount, currency, senderAccountNumber, senderAccountName, purposeCode);
+            request.setWebhookUrl(webhookUrl);
+            return request;
         }
     }
 }
