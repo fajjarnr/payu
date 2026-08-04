@@ -33,7 +33,7 @@ public class KafkaLoanEventPublisherAdapter implements LoanEventPublisherPort {
                 "LoanApproved",
                 event,
                 null,
-                "loan.approved"
+                "payu.lending.loan-approved.v1"
         );
     }
 
@@ -46,7 +46,7 @@ public class KafkaLoanEventPublisherAdapter implements LoanEventPublisherPort {
                 "LoanRejected",
                 event,
                 null,
-                "loan.rejected"
+                "payu.lending.loan-rejected.v1"
         );
     }
 

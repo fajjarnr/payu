@@ -227,6 +227,44 @@ class LoanManagementServiceTest {
         }
 
         @Test
+        @DisplayName("should preserve generated payment id across repayment updates")
+        void shouldPreserveGeneratedPaymentIdAcrossRepaymentUpdates() {
+            UUID scheduleId = UUID.randomUUID();
+            UUID generatedPaymentId = UUID.randomUUID();
+            RepaymentSchedule schedule = new RepaymentSchedule();
+            schedule.setId(scheduleId);
+            schedule.setLoanId(loanId);
+            schedule.setInstallmentAmount(new BigDecimal("1078000"));
+            schedule.setPrincipalAmount(new BigDecimal("1000000"));
+            schedule.setInterestAmount(new BigDecimal("78000"));
+            schedule.setStatus(RepaymentStatus.PENDING);
+            schedule.setPaidAmount(BigDecimal.ZERO);
+
+            when(repaymentSchedulePersistencePort.findByIdForUpdate(scheduleId)).thenReturn(Optional.of(schedule));
+            when(repaymentSchedulePersistencePort.save(any(RepaymentSchedule.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(loanPersistencePort.findById(loanId)).thenReturn(Optional.of(testLoan));
+            when(repaymentPaymentPersistencePort.findByIdempotencyKey("generated-id-key"))
+                    .thenReturn(Optional.empty());
+            when(repaymentPaymentPersistencePort.save(any())).thenAnswer(invocation -> {
+                RepaymentPayment candidate = invocation.getArgument(0);
+                if (candidate.getId() == null) {
+                    assertThat(candidate.getStatus()).isEqualTo(RepaymentPaymentStatus.PROCESSING);
+                    RepaymentPayment persisted = new RepaymentPayment();
+                    persisted.setId(generatedPaymentId);
+                    return persisted;
+                }
+                assertThat(candidate.getId()).isEqualTo(generatedPaymentId);
+                return candidate;
+            });
+            when(walletPaymentPort.collectRepayment(any(), any(), any(), any(), any(), any()))
+                    .thenReturn("wallet-generated-id");
+
+            loanManagementService.processRepayment(scheduleId, new BigDecimal("1078000"), "generated-id-key");
+
+            verify(repaymentPaymentPersistencePort, times(2)).save(any());
+        }
+
+        @Test
         @DisplayName("should process partial repayment successfully")
         void shouldProcessPartialRepaymentSuccessfully() {
             UUID scheduleId = UUID.randomUUID();

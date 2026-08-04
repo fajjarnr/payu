@@ -1,4 +1,4 @@
-package id.payu.lending.rules;
+package rules;
 
 import id.payu.lending.domain.model.CreditScoringFact;
 import java.math.BigDecimal;

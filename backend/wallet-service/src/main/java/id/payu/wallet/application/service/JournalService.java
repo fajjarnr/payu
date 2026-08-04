@@ -46,11 +46,9 @@ public class JournalService implements JournalUseCase {
         log.info("Creating journal entry: desc={}, refType={}, refId={}, entries={}",
                 description, referenceType, referenceId, entries.size());
 
-        UUID journalId = UUID.randomUUID();
         String journalNumber = journalPersistencePort.generateJournalNumber();
 
         JournalEntry journal = JournalEntry.builder()
-                .id(journalId)
                 .journalNumber(journalNumber)
                 .description(description)
                 .referenceType(referenceType)
@@ -64,9 +62,6 @@ public class JournalService implements JournalUseCase {
         // Assign IDs and journal reference to each entry
         UUID transactionId = UUID.randomUUID();
         for (LedgerEntry entry : entries) {
-            if (entry.getId() == null) {
-                entry.setId(UUID.randomUUID());
-            }
             if (entry.getTransactionId() == null) {
                 entry.setTransactionId(transactionId);
             }

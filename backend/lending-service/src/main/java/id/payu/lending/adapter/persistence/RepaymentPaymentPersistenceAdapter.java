@@ -39,7 +39,11 @@ public class RepaymentPaymentPersistenceAdapter implements RepaymentPaymentPersi
     }
 
     private RepaymentPaymentEntity toEntity(RepaymentPayment source) {
-        RepaymentPaymentEntity target = new RepaymentPaymentEntity();
+        RepaymentPaymentEntity target = source.getId() == null
+                ? new RepaymentPaymentEntity()
+                : repository.findById(source.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Repayment payment not found: " + source.getId()));
         target.setId(source.getId());
         target.setRepaymentScheduleId(source.getRepaymentScheduleId());
         target.setLoanId(source.getLoanId());

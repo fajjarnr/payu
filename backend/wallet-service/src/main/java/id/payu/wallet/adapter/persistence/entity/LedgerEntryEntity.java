@@ -33,7 +33,7 @@ public class LedgerEntryEntity implements Persistable<UUID> {
     @JoinColumn(name = "journal_entry_id")
     private JournalEntryEntity journalEntry;
 
-    @Column(name = "account_id", nullable = false, updatable = false)
+    @Column(name = "account_id", length = 128, nullable = false, updatable = false)
     private String accountId;
 
     @Column(name = "coa_code", length = 20)

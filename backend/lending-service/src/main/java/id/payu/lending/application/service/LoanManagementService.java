@@ -130,7 +130,6 @@ public class LoanManagementService implements LoanManagementUseCase {
 
         if (payment == null) {
             payment = new RepaymentPayment();
-            payment.setId(UUID.randomUUID());
             payment.setRepaymentScheduleId(repaymentScheduleId);
             payment.setLoanId(loan.getId());
             payment.setUserId(loan.getUserId());
@@ -142,7 +141,7 @@ public class LoanManagementService implements LoanManagementUseCase {
         payment.setStatus(RepaymentPaymentStatus.PROCESSING);
         payment.setFailureReason(null);
         payment.setUpdatedAt(LocalDateTime.now());
-        repaymentPaymentPersistencePort.save(payment);
+        payment = repaymentPaymentPersistencePort.save(payment);
 
         final String walletTransactionId;
         try {

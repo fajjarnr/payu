@@ -13,8 +13,6 @@ quarkus:
     auth-server-url: ${KEYCLOAK_URL:http://localhost:8099}/realms/${KEYCLOAK_REALM:payu}
     client-id: ${OIDC_CLIENT_ID:api-portal-service}
     connection-delay: 30S
-    tls:
-      verification: none
     token:
       issuer: any
   smallrye-openapi:
@@ -24,9 +22,6 @@ quarkus:
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.fajjjar.my.id
     path: /q/openapi
-  smallrye-health:
-    ui:
-      enable: true
   log:
     level: INFO
     category:

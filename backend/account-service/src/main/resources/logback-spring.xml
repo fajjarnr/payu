@@ -25,7 +25,7 @@
         </logger>
     </springProfile>
 
-    <springProfile name="!prod">
+    <springProfile name="!prod &amp; !container">
         <logger name="id.payu.security" level="INFO" additivity="false">
             <appender-ref ref="TEXT_CONSOLE"/>
         </logger>

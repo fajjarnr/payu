@@ -53,21 +53,23 @@ public class RepaymentSchedulePersistenceAdapter implements RepaymentSchedulePer
     }
 
     private RepaymentScheduleEntity toEntity(RepaymentSchedule domain) {
-        return RepaymentScheduleEntity.builder()
-                .id(domain.getId())
-                .loanId(domain.getLoanId())
-                .installmentNumber(domain.getInstallmentNumber())
-                .installmentAmount(domain.getInstallmentAmount())
-                .principalAmount(domain.getPrincipalAmount())
-                .interestAmount(domain.getInterestAmount())
-                .outstandingPrincipal(domain.getOutstandingPrincipal())
-                .dueDate(domain.getDueDate())
-                .status(domain.getStatus())
-                .paidDate(domain.getPaidDate())
-                .paidAmount(domain.getPaidAmount())
-                .createdAt(domain.getCreatedAt())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        RepaymentScheduleEntity entity = domain.getId() == null
+                ? new RepaymentScheduleEntity()
+                : repository.findById(domain.getId())
+                        .orElseThrow(() -> new IllegalStateException("Repayment schedule not found: " + domain.getId()));
+        entity.setLoanId(domain.getLoanId());
+        entity.setInstallmentNumber(domain.getInstallmentNumber());
+        entity.setInstallmentAmount(domain.getInstallmentAmount());
+        entity.setPrincipalAmount(domain.getPrincipalAmount());
+        entity.setInterestAmount(domain.getInterestAmount());
+        entity.setOutstandingPrincipal(domain.getOutstandingPrincipal());
+        entity.setDueDate(domain.getDueDate());
+        entity.setStatus(domain.getStatus());
+        entity.setPaidDate(domain.getPaidDate());
+        entity.setPaidAmount(domain.getPaidAmount());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setUpdatedAt(LocalDateTime.now());
+        return entity;
     }
 
     private RepaymentSchedule toDomain(RepaymentScheduleEntity entity) {

@@ -1,6 +1,6 @@
 FROM registry.redhat.io/ubi9/openjdk-25-runtime@sha256:a0c3ecb2af6e1100394721417ba412a9c9088dfadce53b8d98bb95a7bb4d23ea
 
-ARG APP_VERSION=1.8.1
+ARG APP_VERSION=1.8.104
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-account-service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"

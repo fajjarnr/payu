@@ -69,8 +69,10 @@ public class LoanPersistenceAdapter implements LoanPersistencePort {
     }
 
     private LoanEntity toEntity(Loan loan) {
-        LoanEntity entity = new LoanEntity();
-        entity.setId(loan.getId());
+        LoanEntity entity = loan.getId() == null
+                ? new LoanEntity()
+                : loanRepository.findById(loan.getId())
+                        .orElseThrow(() -> new IllegalStateException("Loan not found: " + loan.getId()));
         entity.setExternalId(loan.getExternalId());
         entity.setUserId(loan.getUserId());
         entity.setType(loan.getType());
