@@ -4880,3 +4880,7 @@ SNAP refund previously inserted `COMPLETED` and emitted a notification without r
 The mobile API client keyed pending requests by method, URL, and query params, then aborted the previous request with the same key. That is acceptable for duplicate reads, but it can cancel a different transfer/top-up/QRIS body before the backend sees it.
 
 Keep cancellation deduplication on read-only methods only. Mutation safety belongs to the idempotency key and backend transaction boundary; a concurrent POST regression must prove that distinct bodies both reach the adapter.
+
+### L-211: Dev-only work needs dev-only completion gates (2026-08-04)
+
+When the project scope is `payu-dev` rather than a production rollout, a completed dev canary is sufficient evidence for a dev backlog item. Do not leave a 24-hour monitoring or SIT/UAT/preprod/prod promotion gate attached to a dev-only architecture task; track production promotion separately only when that environment is in scope.
