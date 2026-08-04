@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.28] - 2026-08-04
+
+### Fixed
+
+- **Mobile offline money queue (PROD-036)**: removed unsupported `payment`/`bill_payment` success simulation. Legacy queued items now fail/retry without deleting their idempotency key or claiming a backend transaction that never happened. Focused hook regression passes.
+
 ## [1.10.27] - 2026-08-04
 
 ### Fixed

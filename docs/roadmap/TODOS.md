@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.27` (2026-08-04) — live MVP-004 disbursement callback E2E with numeric bank-code parity |
-| **Last Updated** | 2026-08-04 (MVP-004 callback completed; PROD-018 branch-protection required-check verification remains open) |
+| **Last Release** | `1.10.28` (2026-08-04) — mobile offline money queue false-success fix |
+| **Last Updated** | 2026-08-04 (PROD-036 fixed with focused hook test; PROD-039 mobile dependency/build gate remains open) |
 
 ---
 
@@ -215,7 +215,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 |---|---|---|---|---|
 | PROD-034 | P1 | Mobile request deduplication | `frontend/mobile/services/api.ts:111-124,269-274` membentuk request key hanya dari method/url/params, lalu abort request pending dengan key sama. Dua POST financial dengan body berbeda ke endpoint yang sama (`transfer`, `topup`, `qris`) saling membatalkan. | Dedupe hanya exact request: sertakan body + idempotency key atau hapus dedupe untuk mutation; tambahkan concurrent mutation test. |
 | PROD-035 | P1 | Mobile idempotency durability | `frontend/mobile/utils/idempotency.ts:124-152` menulis hingga 100 record metadata ke satu SecureStore value dan menelan error write. Expo SecureStore membatasi value sekitar 2048 byte; recovery key dapat hilang jauh sebelum 100 record, sementara request tetap diteruskan. | Simpan record per key atau gunakan storage yang sesuai untuk metadata; write failure harus mengubah flow menjadi queued/failed, bukan diam-diam lanjut. |
-| PROD-036 | P0 | Offline false success | `frontend/mobile/hooks/useOfflineMode.ts:229-256` benar-benar memanggil API untuk transfer/topup/qris, tetapi `payment` dan `bill_payment` mengisi `{}` sebagai `Transaction`; `:262-268` lalu menghapus idempotency key dan melaporkan sukses tanpa post ke backend. | Hapus tipe queue yang belum didukung atau implementasikan endpoint nyata; tidak boleh menghapus queue/menampilkan sukses tanpa transaction reference. |
+| PROD-036 | P0 | Offline false success | `frontend/mobile/hooks/useOfflineMode.ts` benar-benar memanggil API untuk transfer/topup/qris, tetapi `payment` dan `bill_payment` sebelumnya mengisi `{}` sebagai `Transaction`; queue lalu menghapus idempotency key dan melaporkan sukses tanpa post ke backend. | ✅ Closed 2026-08-04 — unsupported types removed; legacy items now remain retry/failed and retain their idempotency key; focused hook test passes. |
 | PROD-037 | P1 | Mobile storage runtime | `frontend/mobile/utils/storage.ts:117-127` memanggil `logger.error` yang tidak diimpor saat clear gagal; package juga mengekspos `expo start --web` (`package.json:5-10`) tanpa branch availability SecureStore. | Perbaiki logger dan tetapkan perilaku storage native/web secara eksplisit; jalankan typecheck serta smoke test clear/read/write di platform target. |
 | PROD-038 | P1 | Mobile money precision | `frontend/mobile/types/index.ts:55-95` memodelkan transaction/transfer/top-up/QRIS amount sebagai JavaScript `number`, sehingga arithmetic dan round-trip nominal tidak exact. | Gunakan decimal string atau minor-unit integer di boundary; formatting/arithmetic exact dan precision test wajib. |
 | PROD-039 | P1 | Mobile dependency reproducibility | `frontend/mobile/package.json` dan `package-lock.json` tidak sinkron; `npm ci --ignore-scripts` gagal `EUSAGE` dengan missing/invalid lock entries dan peer conflict React/Jest Expo. | Regenerate lockfile secara intentional, review diff, lalu jalankan lint/test/typecheck/E2E pada clean install di CI. |

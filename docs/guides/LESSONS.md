@@ -13,6 +13,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: local compose parity unittest `16/16` passed; `payu-dev` has 26 workload Deployments and no HPA.
 
+## L-213: Unsupported Offline Money Types Must Fail Closed (2026-08-04)
+
+**Context**: The mobile offline queue had `payment` and `bill_payment` branches that returned an empty transaction object, removed the idempotency key, and reported success without any backend request.
+
+**Lesson**:
+- A queue item is successful only after the authoritative backend operation returns a transaction reference.
+- Do not keep placeholder branches for money operations; remove unsupported types and let persisted legacy items take the normal retry/failed path.
+- Keep the idempotency key until the backend confirms success so a future retry remains safe.
+
+**Applied evidence**: red-first hook regression failed on the old simulation, then passed after the unsupported branches were removed; changed-file ESLint is clean.
+
 ## L-212: Callback E2E Must Include the Actual Transport Boundary (2026-08-04)
 
 **Context**: Disbursement callback unit tests passed while the live flow still had an incorrect BI-FAST route, payload names, anonymous wallet authentication, and a lost reservation identifier.

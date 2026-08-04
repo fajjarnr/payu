@@ -4,6 +4,10 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — PROD-036 mobile offline false success fixed**:
+> - Offline queue now supports only implemented money endpoints (`transfer`, `topup`, `qris`). Persisted legacy `payment`/`bill_payment` items take the unknown-operation failure path, remain queued for retry/failure handling, and never delete their idempotency key or report success without a backend transaction.
+> - Verification: red-first hook test failed on the old `{}` success path, then focused mobile Jest `1/1` and changed-file ESLint `0 errors, 0 warnings` passed. Full mobile Jest and Expo export remain blocked by pre-existing runtime/dependency drift tracked under `PROD-039`; mobile has no OpenShift workload to roll out.
+
 > ✅ **2026-08-04 — MVP-004 disbursement callback live E2E closed**:
 > - Disbursement now sends the callback URL only on the disbursement flow, uses the actual BI-FAST `/api/v1` routes and payload aliases, selects the internal wallet gRPC adapter for anonymous callbacks, and persists the wallet reservation ID for commit/release.
 > - Verification: transaction reactor `142` tests, BI-FAST simulator reactor `2` tests, and numeric bank-code regression `1/1` passed; transaction `1.8.108` and BI-FAST simulator `1.8.84` are Ready `1/1` with restart `0`. Authenticated disbursement `c313201f-94a1-4560-8319-04560c097e46` using bank code `014` returned `201` and reached `COMPLETED`; HMAC verification, webhook delivery, and gRPC reservation commit are present in runtime logs.

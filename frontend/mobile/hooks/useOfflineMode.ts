@@ -24,7 +24,7 @@ export enum ConflictResolution {
  */
 interface OfflineQueueItem {
   id: string;
-  type: 'transfer' | 'payment' | 'bill_payment' | 'topup' | 'qris';
+  type: 'transfer' | 'topup' | 'qris';
   data: any;
   timestamp: number;
   idempotencyKey: string;
@@ -44,12 +44,6 @@ interface OfflineCacheItem<T> {
   data: T;
   timestamp: number;
   version: number;
-}
-
-interface OfflineCache {
-  transactions: Transaction[];
-  balance: number;
-  timestamp: number;
 }
 
 /**
@@ -246,13 +240,6 @@ export const useOfflineMode = (
             ...data,
             idempotencyKey,
           });
-          break;
-
-        case 'payment':
-        case 'bill_payment':
-          // These would be handled by a payment service
-          // For now, simulate success
-          result = {} as Transaction;
           break;
 
         default:
