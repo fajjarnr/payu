@@ -30,9 +30,9 @@ describe('WalletService', () => {
     it('should fetch balance for given account', async () => {
       const mockBalance: BalanceResponse = {
         accountId: 'acc_123',
-        balance: '1000000',
-        availableBalance: '900000',
-        reservedBalance: '100000',
+        balance: '9007199254740993.1234',
+        availableBalance: '900000.0000',
+        reservedBalance: '100000.0000',
         currency: 'IDR',
       };
 
@@ -117,8 +117,8 @@ describe('WalletService', () => {
           walletId: 'wallet_123',
           referenceId: 'ref_1',
           type: 'CREDIT' as const,
-          amount: '100000',
-          balanceAfter: 1100000,
+          amount: '100000.0000',
+          balanceAfter: '9007199254740993.1234',
           description: 'Test transaction',
           createdAt: '2024-01-01T00:00:00Z',
         },

@@ -17,9 +17,9 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟡 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 64 pods and 32 deployments; lending and web-app are available, simulator CrashLoops remain, and quota `limits.cpu` is saturated at `40/40`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.19` (2026-08-04) — web analytics contract fixed; web-app `1.5.16` deployed |
-| **Last Updated** | 2026-08-04 (web analytics Decimal contract deployed; PROD-018 branch-protection required-check verification remains open) |
+| **Cluster Status** | 🟡 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 63 pods and 32 deployments; wallet-service and web-app are available, and quota `limits.cpu` remains saturated at `40/40`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
+| **Last Release** | `1.10.20` (2026-08-04) — wallet money response precision fixed; wallet `1.8.106` deployed |
+| **Last Updated** | 2026-08-04 (PROD-042 wallet Decimal response deployed; PROD-018 branch-protection required-check verification remains open) |
 
 ---
 

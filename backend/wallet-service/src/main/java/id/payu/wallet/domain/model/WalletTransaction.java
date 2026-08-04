@@ -1,5 +1,8 @@
 package id.payu.wallet.domain.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -14,7 +17,9 @@ public class WalletTransaction {
     private UUID walletId;
     private String referenceId;
     private TransactionType type;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal amount;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal balanceAfter;
     private String description;
     private LocalDateTime createdAt;

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.20] - 2026-08-04
+
+### Fixed
+
+- **Wallet money response precision (PROD-042)**: wallet balance, transaction history, and ledger monetary fields now serialize as decimal strings, preventing JavaScript number coercion from losing `DECIMAL(19,4)` values. Wallet image `1.8.106` is live at ImageStream digest `sha256:9dc6f1ace0fddfe60850a142b927273ed1247b86c9ab2bc741dc8b41633f5fc7`.
+
 ## [1.10.19] - 2026-08-04
 
 ### Fixed

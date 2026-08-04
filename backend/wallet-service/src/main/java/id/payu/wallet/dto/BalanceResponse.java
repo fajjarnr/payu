@@ -1,11 +1,17 @@
 package id.payu.wallet.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import java.math.BigDecimal;
 
 public class BalanceResponse {
     private String accountId;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal balance;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal availableBalance;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal reservedBalance;
     private String currency;
 

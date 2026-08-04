@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-042 wallet money response precision deployed**:
+> - Wallet REST balance, transaction history, and ledger responses now serialize only monetary `BigDecimal` fields as strings via Jackson `ToStringSerializer`; non-money fields and gRPC behavior are unchanged. The existing web `Money` contract is covered with an exact large-decimal fixture.
+> - Verification: red-first serialization test `1` failure, then `1/1` passed; full wallet reactor `26` wallet tests passed with `BUILD SUCCESS`; web WalletService `7/7` and type-check passed, backend package passed. Image `wallet-service:1.8.106` (`sha256:9dc6f1ace0fddfe60850a142b927273ed1247b86c9ab2bc741dc8b41633f5fc7`) is live; pod Ready `1/1`, restart `0`, liveness/readiness `UP`.
+
 > ✅ **2026-08-04 — Web analytics contract and money precision deployed**:
 > - `AnalyticsService` now maps the FastAPI analytics response/request contract at the boundary; backend Decimal values remain strings, and dashboard income/expenses come from the cash-flow endpoint and use the exact currency formatter.
 > - Verification: red-first analytics contract suite `3` failed on the old implementation, then focused `3/3` passed; full web Vitest `1206 passed | 1 skipped`, type-check, and production build passed. Full lint still reports the pre-existing `src/lib/currency.ts:87` prefer-const error. Image `web-app:1.5.16` (`sha256:cbe2fe17934c839d1b6d3a488d715d849cbbbb4e8dd6e8378108e338287f1d4d`) is live; deployment `1/1` available, pod restart `0`, and internal `/api/health` returned `healthy` with version `1.5.16`.
