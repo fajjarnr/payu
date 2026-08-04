@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` has 46/46 pods Running and 33/33 deployments Ready. VSO 2/2 Running (egress fixed); vector→Loki DNS + TLS CA fixed, delivery blocked oleh gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.11` (2026-08-04) — Keycloak DB credential drift fixed and identity overlay deployed |
-| **Last Updated** | 2026-08-04 (Keycloak DB/ESO sync live; realm import/client-secret blocker and live SNAP replay remain open) |
+| **Last Release** | `1.10.12` (2026-08-04) — FX provider configuration plumbing fixed and deployed |
+| **Last Updated** | 2026-08-04 (FX `1.8.105` live; approved provider URL/credential and live rate evidence remain open) |
 
 ---
 
@@ -200,7 +200,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
 | PROD-001 | P0 | Dispute/refund | Source-of-truth leg fixed; refund creation now applies a persisted active-refund cumulative guard, emits a durable reversal command, and has a deployed idempotent reversal-ledger executor with reconciliation state. Live money E2E remains open. | Jalankan live authenticated E2E pada fixture finansial terisolasi dan buktikan reversal/retry/reconciliation. |
-| PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila `FX_PROVIDER_URL` belum dikonfigurasi. Provider response kini wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui manifest/secret, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
+| PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila provider belum dikonfigurasi. `FX_PROVIDER_URL` kini benar-benar dibind ke `fx.provider.url`, dan deployment mengekspos URL/source ConfigMap serta API-key Secret reference. Provider response wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui `service-endpoints`/`fx-provider-credentials`, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
 | PROD-018 | P2 | Analytics CI | `.github/workflows/analytics-tests.yml` menyiapkan Python 3.12, dependency runtime + test tooling terpin, `PYTHONPATH=src`, marker exclusion untuk infrastructure, dan coverage gate 80% dari `pyproject.toml`. Local `python3 -m pytest -q` tetap blocked karena runner tidak punya `pytest`, `pip`, atau `venv`; first CI run belum tersedia. | Jalankan workflow di GitHub, pastikan coverage lulus, lalu aktifkan job `analytics-tests` sebagai required check pada branch protection. |
 
 ### Additional findings from deeper pass

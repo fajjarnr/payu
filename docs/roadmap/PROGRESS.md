@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-002 FX provider configuration plumbing deployed**:
+> - Bound `FX_PROVIDER_URL` to `fx.provider.url`; the FX Deployment now has optional provider URL/source ConfigMap references and an optional API-key Secret reference while retaining fail-closed behavior when no approved provider is configured.
+> - Verification: red-first config regression `1` failure, then `3/3` focused tests and full FX reactor reports passed with zero failures; package BUILD SUCCESS. Image `1.8.105` (`sha256:d3619f435fb115527d33b5a324a87796e460bb809981dfe1ec24ee4eae89dee4`) live after manifest render + `oc apply -k`, pod Ready `1/1`, restart `0`, health `UP`, Flyway validated 6 migrations. `payu-dev` currently has no approved provider URL/source, so live rate evidence remains open.
+
 > ✅ **2026-08-04 — Keycloak database credential recovery deployed (MVP-004)**:
 > - Activated the existing `ExternalSecretsConfig/cluster`, added declarative cross-namespace Kubernetes `SecretStore`/`ExternalSecret` RBAC for `payu-sso` → `payu-dev`, and corrected the dev Keycloak database FQDN.
 > - Verification: server dry-run and `oc apply -k infrastructure/platform/identity/overlays/dev` succeeded; `ExternalSecret/payu-keycloak-db` is `Ready/SecretSynced`, source/sync password hashes match, Keycloak `Ready=True`, pod `1/1` with restart `0`, and runtime logs show successful startup/database index checks. Realm import remains blocked by missing `payu-sso/payu-keycloak-client-secrets`.

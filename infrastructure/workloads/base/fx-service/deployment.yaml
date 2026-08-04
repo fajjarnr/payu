@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.104
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service:1.8.105
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -87,7 +87,7 @@ spec:
         - name: SPRING_APPLICATION_NAME
           value: fx-service
         - name: SERVICE_VERSION
-          value: 1.8.104
+          value: 1.8.105
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT
@@ -156,6 +156,24 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        - name: FX_PROVIDER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: FX_PROVIDER_URL
+              optional: true
+        - name: FX_PROVIDER_SOURCE
+          valueFrom:
+            configMapKeyRef:
+              name: service-endpoints
+              key: FX_PROVIDER_SOURCE
+              optional: true
+        - name: FX_PROVIDER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fx-provider-credentials
+              key: api-key
+              optional: true
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
         - name: PAYU_SECURITY_ENCRYPTION_SALT

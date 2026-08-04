@@ -2,12 +2,15 @@ package id.payu.fx.adapter.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.io.ClassPathResource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -27,6 +30,16 @@ class HttpFxRateProviderAdapterTest {
     @AfterEach
     void tearDown() {
         server.stop(0);
+    }
+
+    @Test
+    void applicationConfigurationBindsProviderUrlFromEnvironment() throws IOException {
+        var source = new YamlPropertySourceLoader()
+                .load("application", new ClassPathResource("application.yml"))
+                .get(0);
+
+        assertThat(source.getProperty("fx.provider.url"))
+                .isEqualTo("${FX_PROVIDER_URL:}");
     }
 
     @Test

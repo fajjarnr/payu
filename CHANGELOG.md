@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.12] - 2026-08-04
+
+### Fixed
+
+- **FX provider configuration (PROD-002)**: bound `FX_PROVIDER_URL` into `fx.provider.url` and wired optional provider URL/source ConfigMap keys plus API-key Secret reference into the FX deployment. FX image `1.8.105` (`sha256:d3619f435fb115527d33b5a324a87796e460bb809981dfe1ec24ee4eae89dee4`) is live; approved provider configuration and live rate evidence remain open.
+
 ## [1.10.11] - 2026-08-04
 
 ### Fixed
