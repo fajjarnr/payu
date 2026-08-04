@@ -42,7 +42,7 @@ class PodmanComposeParityTest(unittest.TestCase):
         )
         self.assertEqual(created | {"payu_account"}, granted)
 
-    def test_uses_infinispan_hotrod_mtls_and_standard_networking(self):
+    def test_uses_infinispan_hotrod_dev_and_standard_networking(self):
         self.assertNotIn("podman_networks", self.document)
         self.assertNotIn("redis-native", self.document)
         self.assertNotIn("payu-cache-resp", self.document)
@@ -56,9 +56,11 @@ class PodmanComposeParityTest(unittest.TestCase):
             "PAYU_CACHE_HOTROD_SERVER_LIST: ${PAYU_CACHE_HOTROD_SERVER_LIST:-payu-cache:11222}",
             self.document,
         )
-        self.assertIn("PAYU_CACHE_HOTROD_USE_SSL: ${PAYU_CACHE_HOTROD_USE_SSL:-true}", self.document)
-        self.assertIn("PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME:", self.document)
-        self.assertIn("PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME:", self.document)
+        self.assertIn('PAYU_CACHE_HOTROD_USE_SSL: "false"', self.document)
+        self.assertIn(
+            "PAYU_CACHE_HOTROD_SNI_HOST_NAME: ${PAYU_CACHE_HOTROD_SNI_HOST_NAME:-payu-cache}",
+            self.document,
+        )
 
     def test_uses_openshift_service_dns_names(self):
         for service in (
@@ -76,7 +78,7 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertIn("image: docker.io/library/postgres:16.8", self.document)
         self.assertIn(
             "registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:"
-            "cf93e2ca48fa3596cfead6f01791f672108a160491088d4b02e8e203c4ae76ff",
+            "1be81136da130940742f9836d09dadd6100474d943aad2d607c836811931e29e",
             self.document,
         )
         self.assertTrue(KAFKA_CONFIG.is_file())
@@ -151,6 +153,27 @@ class PodmanComposeParityTest(unittest.TestCase):
         config = gateway.group(1)
         self.assertIn("JWT_SECRET: ${JWT_SECRET:-", config)
         self.assertIn("OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-", config)
+
+    def test_fx_and_web_app_match_dev_runtime_contract(self):
+        fx = self.service_config("fx-service")
+        for name in (
+            "SPRING_APPLICATION_NAME: fx-service",
+            "SERVICE_VERSION: ${FX_SERVICE_VERSION:-1.8.106}",
+            'SERVER_PORT: "8080"',
+            "FX_PROVIDER_URL: ${FX_PROVIDER_URL:-}",
+            "FX_PROVIDER_SOURCE: ${FX_PROVIDER_SOURCE:-}",
+            "FX_PROVIDER_API_KEY: ${FX_PROVIDER_API_KEY:-}",
+            "FX_PROVIDER_TIMEOUT: ${FX_PROVIDER_TIMEOUT:-3s}",
+            "FX_PROVIDER_MAX_AGE: ${FX_PROVIDER_MAX_AGE:-15m}",
+            "FX_DEFAULT_PROVIDER: ${FX_DEFAULT_PROVIDER:-UNCONFIGURED}",
+        ):
+            self.assertIn(name, fx)
+
+        web = self.service_config("web-app")
+        self.assertIn(
+            "NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3001}",
+            web,
+        )
 
     def test_security_environment_matches_workload_contracts(self):
         shared = re.search(

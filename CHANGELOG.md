@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.25] - 2026-08-04
+
+### Fixed
+
+- **Local OpenShift parity**: Podman now pins the current OpenShift Kafka digest, exposes the FX provider contract with fail-closed defaults, and sets the local web app base URL. The compose parity suite was updated to guard the dev Hot Rod/no-TLS contract.
+
 ## [1.10.24] - 2026-08-04
 
 ### Fixed

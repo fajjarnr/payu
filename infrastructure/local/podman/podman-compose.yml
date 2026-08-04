@@ -98,7 +98,7 @@ services:
 
   payu-kafka-kafka-bootstrap:
     <<: *infra-defaults
-    image: registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:cf93e2ca48fa3596cfead6f01791f672108a160491088d4b02e8e203c4ae76ff
+    image: registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:1be81136da130940742f9836d09dadd6100474d943aad2d607c836811931e29e
     container_name: payu-kafka
     networks:
       - payu-network
@@ -1305,6 +1305,8 @@ services:
       - 8015:8080
     environment:
       <<: *local-security-environment
+      SPRING_APPLICATION_NAME: statement-service
+      SERVICE_VERSION: ${STATEMENT_SERVICE_VERSION:-1.8.84}
       SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_TRANSACTION_URL: http://transaction-service:8080
       KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
@@ -1505,7 +1507,10 @@ services:
       - "8096:8080"
     environment:
       <<: *local-security-environment
+      SPRING_APPLICATION_NAME: fx-service
+      SERVICE_VERSION: ${FX_SERVICE_VERSION:-1.8.106}
       SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
       JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: payu-database-rw
       DB_PORT: "5432"
@@ -1523,6 +1528,12 @@ services:
       OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://payu-keycloak-service:8080/realms/payu
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      FX_PROVIDER_URL: ${FX_PROVIDER_URL:-}
+      FX_PROVIDER_SOURCE: ${FX_PROVIDER_SOURCE:-}
+      FX_PROVIDER_API_KEY: ${FX_PROVIDER_API_KEY:-}
+      FX_PROVIDER_TIMEOUT: ${FX_PROVIDER_TIMEOUT:-3s}
+      FX_PROVIDER_MAX_AGE: ${FX_PROVIDER_MAX_AGE:-15m}
+      FX_DEFAULT_PROVIDER: ${FX_DEFAULT_PROVIDER:-UNCONFIGURED}
     depends_on:
       payu-database-rw:
         condition: service_healthy
@@ -1712,6 +1723,7 @@ services:
       - 3001:8080
     environment:
       NEXT_PUBLIC_API_URL: /api/v1
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3001}
       GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
       NODE_ENV: production
       OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu

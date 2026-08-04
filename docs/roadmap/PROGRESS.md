@@ -4,6 +4,11 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — Local Podman/OpenShift runtime contract aligned**:
+> - Local compose now uses the current payu-dev Kafka image digest, explicit FX provider variables with `UNCONFIGURED`/blank fail-closed defaults, and `NEXT_PUBLIC_BASE_URL=http://localhost:3001` by default.
+> - The local service set covers all 26 OpenShift workload Deployments; intentional substitutions remain single-node Postgres, local Keycloak, Kafka `29092`, plain Hot Rod, and local Artemis.
+> - Verification: YAML parse passed; compose parity unittest `16/16` passed. Runtime compose execution remains pending because this host has no Podman Compose provider installed.
+
 > ✅ **2026-08-04 — MVP-004 SNAP refund money movement deployed**:
 > - SNAP refund now persists `PENDING`, calls the existing atomic wallet reversal through a trusted Keycloak service endpoint, and changes to `COMPLETED` only after debit-recipient/credit-sender succeeds. Deterministic refund UUID plus wallet ledger idempotency makes retries safe.
 > - Verification: partner+wallet reactor tests `245`/`29` passed; partner `1.8.99` and wallet `1.8.111` rolled out Ready `1/1`, restart `0`; isolated `100 IDR` payment changed source `999900→999800` and beneficiary `500100→500200`, refund restored both balances; `payu.partner.payment-refunded.v1` and its DLQ are declared and Ready.

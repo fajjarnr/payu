@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-211: Local Compose Must Assert the Current Dev Contract (2026-08-04)
+
+**Context**: The local compose file had already moved to the payu-dev plain Hot Rod contract, but its parity test still asserted the old Kafka digest and mTLS settings. FX provider and web base URL variables were also implicit locally.
+
+**Lesson**:
+- Compare local infrastructure against the live OpenShift image and env contract, not stale test assumptions.
+- Keep external FX configuration explicit and blank by default so local development remains fail-closed without credentials.
+- A YAML parse and contract unittest are useful when a host lacks a Compose provider; report runtime execution as unverified instead of claiming it passed.
+
+**Applied evidence**: local compose parity unittest `16/16` passed; `payu-dev` has 26 workload Deployments and no HPA.
+
 ## L-210: Refund Contracts Must Preserve Request Identifiers (2026-08-04)
 
 **Context**: Internal transfer requests carry a numeric recipient account number, while the transaction entity's legacy recipient field is a UUID. The first live refund reached Kafka with a null recipient and was sent to the DLQ; the wallet DTO then exposed a second failure because the CloudEvent payload also contains the valid `ledgerOperation` field.
