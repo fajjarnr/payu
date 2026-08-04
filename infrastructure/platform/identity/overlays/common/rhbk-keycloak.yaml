@@ -212,7 +212,7 @@ spec:
         publicClient: false
         standardFlowEnabled: false
         implicitFlowEnabled: false
-        directAccessGrantsEnabled: false
+        directAccessGrantsEnabled: true
         serviceAccountsEnabled: true
         protocol: openid-connect
 

@@ -58,6 +58,7 @@ data:
                 xmlns="urn:infinispan:config:16.0">
       <cache-container name="default" statistics="true">
         <distributed-cache name="payu" mode="SYNC" owners="2" statistics="true">
+          <transaction mode="NON_XA" locking="PESSIMISTIC"/>
           <encoding>
             <key media-type="text/plain"/>
             <value media-type="text/plain"/>

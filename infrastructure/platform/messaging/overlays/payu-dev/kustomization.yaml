@@ -3,4 +3,27 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../base
-  - external-secret.yaml
+
+patches:
+  - target:
+      group: console.streamshub.github.com
+      version: v1alpha1
+      kind: Console
+      name: payu-kafka-console
+    patch: |-
+      $patch: delete
+      apiVersion: console.streamshub.github.com/v1alpha1
+      kind: Console
+      metadata:
+        name: payu-kafka-console
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaUser
+      name: payu-kafka-console-user
+    patch: |-
+      $patch: delete
+      apiVersion: kafka.strimzi.io/v1
+      kind: KafkaUser
+      metadata:
+        name: payu-kafka-console-user

@@ -26,7 +26,7 @@ patches:
         value: payu-database-rw.payu-dev.svc.cluster.local
       - op: add
         path: /spec/hostname/hostname
-        value: https://sso-payu-dev.apps.payu.ocp.fajjjar.my.id
+        value: https://sso-dev.apps.fajjjar.my.id
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import

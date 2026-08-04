@@ -14,7 +14,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def load_documents(path: Path) -> list[dict]:
     with path.open(encoding="utf-8") as stream:
-        return [doc for doc in yaml.safe_load_all(stream) if isinstance(doc, dict)]
+        return load_documents_from_text(stream.read())
+
+
+def load_documents_from_text(content: str) -> list[dict]:
+    return [doc for doc in yaml.safe_load_all(content) if isinstance(doc, dict)]
 
 
 class DevSecOpsArchitectureContractTest(unittest.TestCase):
@@ -35,6 +39,86 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
     def test_observability_root_renders(self) -> None:
         result = self.render("infrastructure/platform/observability")
         self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_auth_login_client_allows_direct_access_grants(self) -> None:
+        identity = load_documents(
+            REPO_ROOT / "infrastructure/platform/identity/overlays/common/rhbk-keycloak.yaml"
+        )
+        realm_import = next(
+            document for document in identity if document.get("kind") == "KeycloakRealmImport"
+        )
+        backend_client = next(
+            client
+            for client in realm_import["spec"]["realm"]["clients"]
+            if client["clientId"] == "payu-backend"
+        )
+        self.assertTrue(backend_client["directAccessGrantsEnabled"])
+
+    def test_dev_lending_uses_internal_keycloak_jwks_and_live_hostname(self) -> None:
+        workloads = self.render("infrastructure/workloads/overlays/payu-dev")
+        self.assertEqual(0, workloads.returncode, workloads.stderr)
+        lending = next(
+            document
+            for document in load_documents_from_text(workloads.stdout)
+            if document.get("kind") == "Deployment"
+            and document.get("metadata", {}).get("name") == "lending-service"
+        )
+        env = {
+            item["name"]: item.get("value")
+            for item in lending["spec"]["template"]["spec"]["containers"][0]["env"]
+        }
+        self.assertEqual(
+            "https://sso-dev.apps.fajjjar.my.id/realms/payu",
+            env["OIDC_ISSUER"],
+        )
+        self.assertEqual(
+            "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs",
+            env["OIDC_JWK_SET_URI"],
+        )
+
+        identity = self.render("infrastructure/platform/identity/overlays/dev")
+        self.assertEqual(0, identity.returncode, identity.stderr)
+        keycloak = next(
+            document
+            for document in load_documents_from_text(identity.stdout)
+            if document.get("kind") == "Keycloak"
+            and document.get("metadata", {}).get("name") == "payu-keycloak"
+        )
+        self.assertEqual(
+            "https://sso-dev.apps.fajjjar.my.id",
+            keycloak["spec"]["hostname"]["hostname"],
+        )
+
+    def test_dev_quarkus_and_simulators_use_cluster_safe_runtime_config(self) -> None:
+        workloads = self.render("infrastructure/workloads/overlays/payu-dev")
+        self.assertEqual(0, workloads.returncode, workloads.stderr)
+        documents = load_documents_from_text(workloads.stdout)
+        deployments = {
+            document["metadata"]["name"]: document
+            for document in documents
+            if document.get("kind") == "Deployment"
+        }
+
+        for name in ("bi-fast-simulator", "qris-simulator", "dukcapil-simulator"):
+            with self.subTest(deployment=name):
+                env = {
+                    item["name"]: item.get("value")
+                    for item in deployments[name]["spec"]["template"]["spec"]["containers"][0]["env"]
+                }
+                self.assertEqual("http://localhost:4317", env["OTEL_ENDPOINT"])
+
+        notification_env = {
+            item["name"]: item.get("value")
+            for item in deployments["notification-service"]["spec"]["template"]["spec"]["containers"][0]["env"]
+        }
+        self.assertEqual("false", notification_env["QUARKUS_OIDC_DISCOVERY_ENABLED"])
+        self.assertEqual(
+            "/protocol/openid-connect/certs",
+            notification_env["QUARKUS_OIDC_JWKS_PATH"],
+        )
+        self.assertFalse(
+            any(document.get("kind") == "HorizontalPodAutoscaler" for document in documents)
+        )
 
     def test_web_app_uses_internal_port_8080_end_to_end(self) -> None:
         web_app = REPO_ROOT / "infrastructure/workloads/base/web-app"
@@ -785,6 +869,35 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             datagrid["spec"]["service"]["container"]["storage"].removesuffix("Gi")
         )
         self.assertGreaterEqual(storage, memory)
+
+    def test_dev_datagrid_is_plain_and_transactional_for_atomic_cache_operations(self) -> None:
+        result = self.render("infrastructure/platform/data/overlays/dev")
+        self.assertEqual(0, result.returncode, result.stderr)
+        documents = load_documents_from_text(result.stdout)
+        datagrid = next(
+            item
+            for item in documents
+            if item.get("kind") == "Infinispan"
+            and item.get("metadata", {}).get("name") == "payu-cache"
+        )
+        self.assertFalse(datagrid["spec"]["security"]["endpointAuthentication"])
+        self.assertEqual("None", datagrid["spec"]["security"]["endpointEncryption"]["type"])
+        self.assertEqual(
+            "error",
+            datagrid["spec"]["logging"]["categories"][
+                "org.infinispan.commons.util.StringPropertyReplacer"
+            ],
+        )
+        cache_config = next(
+            item
+            for item in documents
+            if item.get("kind") == "ConfigMap"
+            and item.get("metadata", {}).get("name") == "payu-cache-custom-config"
+        )
+        self.assertIn(
+            '<transaction mode="NON_XA" locking="PESSIMISTIC"/>',
+            cache_config["data"]["infinispan-config.xml"],
+        )
 
     def test_security_controls_remain_enforced_during_acs_migration(self) -> None:
         policy_root = REPO_ROOT / "infrastructure/platform/security/kyverno/policies"

@@ -72,6 +72,8 @@ patches:
                 startupProbe:
                   failureThreshold: 90
                 volumeMounts:
+                  - name: tmp
+                    mountPath: /tmp
                   - name: datagrid-client-tls
                     mountPath: /var/run/payu-cache/tls
                     readOnly: true
