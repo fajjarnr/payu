@@ -1,5 +1,7 @@
 package id.payu.lending.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import id.payu.lending.domain.model.InstallmentCheckout;
 
 import java.math.BigDecimal;
@@ -13,11 +15,11 @@ public record InstallmentCheckoutResponse(
         UUID loanId,
         String partnerId,
         String externalOrderId,
-        BigDecimal purchaseAmount,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal purchaseAmount,
         String currency,
         int tenor,
-        BigDecimal monthlyPayment,
-        BigDecimal interestRate,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal monthlyPayment,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal interestRate,
         String status,
         String failureReason,
         LocalDateTime createdAt,

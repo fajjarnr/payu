@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { formatCurrency } from '@/lib/currency';
 
 export default function LendingPage() {
   const { user } = useAuthStore();
@@ -23,8 +24,8 @@ export default function LendingPage() {
     {
       name: 'Pinjaman Personal',
       description: 'Pembiayaan fleksibel untuk kebutuhan pribadi dengan bunga kompetitif',
-      minAmount: 2000000,
-      maxAmount: 50000000,
+      minAmount: '2000000',
+      maxAmount: '50000000',
       interestRate: '12.5% p.a',
       tenure: '6 - 36 bulan',
       processingTime: '1-2 hari kerja',
@@ -35,8 +36,8 @@ export default function LendingPage() {
     {
       name: 'Pinjaman Multiguna',
       description: 'Gunakan aset Anda sebagai jaminan untuk limit pinjaman lebih tinggi',
-      minAmount: 10000000,
-      maxAmount: 200000000,
+      minAmount: '10000000',
+      maxAmount: '200000000',
       interestRate: '10% p.a',
       tenure: '12 - 60 bulan',
       processingTime: '3-5 hari kerja',
@@ -47,10 +48,10 @@ export default function LendingPage() {
   ];
 
   const payLaterStats = {
-    creditLimit: payLaterData?.creditLimit ?? 0,
-    usedLimit: payLaterData?.usedLimit ?? 0,
-    availableLimit: payLaterData?.availableLimit ?? 0,
-    minimumPayment: payLaterData?.minimumPayment ?? 0,
+    creditLimit: payLaterData?.creditLimit ?? '0',
+    usedLimit: payLaterData?.usedLimit ?? '0',
+    availableLimit: payLaterData?.availableLimit ?? '0',
+    minimumPayment: payLaterData?.minimumPayment ?? '0',
     dueDate: payLaterData?.dueDate ?? '--',
     transactions: (payLaterTxns ?? []).map(t => ({
       id: Number(t.id) || 0,
@@ -69,9 +70,9 @@ export default function LendingPage() {
     factors: creditScoreData?.factors ?? []
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-  };
+  const creditUtilization = Number(payLaterStats.creditLimit) > 0
+    ? (Number(payLaterStats.usedLimit) / Number(payLaterStats.creditLimit)) * 100
+    : 0;
 
   return (
     <DashboardLayout>
@@ -152,7 +153,7 @@ export default function LendingPage() {
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">Total Limit Pinjaman</h3>
                        <p className="text-3xl font-bold text-primary mb-2">
-                        {isLoadingPreApprovals ? <Skeleton className="h-9 w-32" /> : formatCurrency(preApprovals?.[0]?.maxAmount ?? 0)}
+                        {isLoadingPreApprovals ? <Skeleton className="h-9 w-32" /> : formatCurrency(preApprovals?.[0]?.maxAmount ?? '0')}
                        </p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
                     </div>
@@ -242,7 +243,7 @@ export default function LendingPage() {
                             <span>{formatCurrency(payLaterStats.usedLimit)} / {formatCurrency(payLaterStats.creditLimit)}</span>
                           </div>
                           <div className="w-full bg-white/20 h-3 rounded-full overflow-hidden">
-                            <div className="bg-white h-full rounded-full transition-all" style={{ width: `${(payLaterStats.usedLimit / payLaterStats.creditLimit) * 100}%` }} />
+                            <div className="bg-white h-full rounded-full transition-all" style={{ width: `${creditUtilization}%` }} />
                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t border-white/20">

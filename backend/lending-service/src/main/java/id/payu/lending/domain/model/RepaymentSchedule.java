@@ -1,5 +1,7 @@
 package id.payu.lending.domain.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,13 +12,18 @@ public class RepaymentSchedule {
     private UUID id;
     private UUID loanId;
     private Integer installmentNumber;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal installmentAmount;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal principalAmount;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal interestAmount;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal outstandingPrincipal;
     private LocalDate dueDate;
     private RepaymentStatus status;
     private LocalDate paidDate;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal paidAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

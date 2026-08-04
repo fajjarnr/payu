@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
+import type { Money } from '@/types';
 
 export type LoanStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISBURSED' | 'REPAID' | 'DEFAULTED';
 export type PayLaterStatus = 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
@@ -8,7 +9,7 @@ export type PayLaterStatus = 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
 export interface LoanApplicationRequest {
   externalId: string;
   loanType: 'PERSONAL' | 'BUSINESS' | 'MORTGAGE' | 'AUTO' | 'EDUCATION';
-  principalAmount: number;
+  principalAmount: Money;
   tenureMonths: number;
   purpose: string;
 }
@@ -16,13 +17,13 @@ export interface LoanApplicationRequest {
 export interface Loan {
   id: string;
   userId: string;
-  amount: number;
-  interestRate: number;
+  amount: Money;
+  interestRate: Money;
   tenureMonths: number;
   purpose: string;
   status: LoanStatus;
-  monthlyPayment: number;
-  totalPayment: number;
+  monthlyPayment: Money;
+  totalPayment: Money;
   createdAt: string;
   approvedAt?: string;
   disbursedAt?: string;
@@ -33,9 +34,9 @@ export interface RepaymentSchedule {
   loanId: string;
   installmentNumber: number;
   dueDate: string;
-  amount: number;
-  principalAmount: number;
-  interestAmount: number;
+  amount: Money;
+  principalAmount: Money;
+  interestAmount: Money;
   status: 'PENDING' | 'PAID' | 'OVERDUE';
   paidAt?: string;
 }
@@ -43,12 +44,12 @@ export interface RepaymentSchedule {
 export interface PayLater {
   id: string;
   userId: string;
-  creditLimit: number;
-  usedLimit: number;
-  availableLimit: number;
+  creditLimit: Money;
+  usedLimit: Money;
+  availableLimit: Money;
   status: PayLaterStatus;
   dueDate?: string;
-  minimumPayment?: number;
+  minimumPayment?: Money;
   createdAt: string;
 }
 
@@ -57,8 +58,8 @@ export interface PayLaterTransaction {
   userId: string;
   type: 'PURCHASE' | 'PAYMENT';
   merchantName?: string;
-  amount: number;
-  balanceAfter: number;
+  amount: Money;
+  balanceAfter: Money;
   description?: string;
   createdAt: string;
 }
@@ -73,19 +74,19 @@ export interface CreditScore {
 }
 
 export interface PayLaterLimitRequest {
-  monthlyIncome: number;
+  monthlyIncome: Money;
   employmentType: string;
   employmentDurationMonths: number;
 }
 
 export interface PayLaterPurchaseRequest {
   merchantName: string;
-  amount: number;
+  amount: Money;
   description?: string;
 }
 
 export interface PayLaterPaymentRequest {
-  amount: number;
+  amount: Money;
 }
 
 export class LendingService {
@@ -124,7 +125,7 @@ export class LendingService {
 
   // IMP-015 Fix: Moved 'amount' from query param to request body
   // Query params are logged in access logs and browser history (security risk)
-  async processRepayment(scheduleId: string, amount: number): Promise<RepaymentSchedule> {
+  async processRepayment(scheduleId: string, amount: Money): Promise<RepaymentSchedule> {
     const response = await api.post<RepaymentSchedule>(`/lending/repayment-schedules/${scheduleId}/pay`, {
       amount
     }, {
@@ -149,7 +150,7 @@ export class LendingService {
   }
 
   // BUG-CROSS-055: Backend recordPurchase reads merchantName, amount, description from JSON body
-  async recordPurchase(userId: string, merchantName: string, amount: number, description?: string): Promise<PayLaterTransaction> {
+  async recordPurchase(userId: string, merchantName: string, amount: Money, description?: string): Promise<PayLaterTransaction> {
     const request: PayLaterPurchaseRequest = {
       merchantName,
       amount,
@@ -162,7 +163,7 @@ export class LendingService {
   }
 
   // BUG-CROSS-056: Backend recordPayment reads amount from JSON body
-  async recordPayment(userId: string, amount: number): Promise<PayLaterTransaction> {
+  async recordPayment(userId: string, amount: Money): Promise<PayLaterTransaction> {
     const request: PayLaterPaymentRequest = { amount };
     const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, request, {
       headers: getFinancialMutationHeaders(),
@@ -212,15 +213,15 @@ export class LendingService {
 
 export interface PreApprovalCheckRequest {
   userId: string;
-  requestedAmount?: number;
+  requestedAmount?: Money;
   purpose?: string;
 }
 
 export interface PreApproval {
   id: string;
   userId: string;
-  maxAmount: number;
-  interestRate: number;
+  maxAmount: Money;
+  interestRate: Money;
   maxTenureMonths: number;
   status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'EXPIRED';
   validUntil: string;

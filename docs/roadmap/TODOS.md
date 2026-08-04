@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟡 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 62 pods and 32 deployments; gateway is `1/2`, simulator CrashLoops remain, and quota `limits.cpu` is saturated at `40/40`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.16` (2026-08-04) — PayLater amount validation fixed and lending `1.8.103` deployed |
-| **Last Updated** | 2026-08-04 (PayLater money guard deployed; PROD-018 branch-protection required-check verification remains open) |
+| **Last Release** | `1.10.17` (2026-08-04) — lending money precision contract fixed; lending `1.8.106` and web-app `1.5.15` deployed |
+| **Last Updated** | 2026-08-04 (lending/web money strings deployed; PROD-018 branch-protection required-check verification remains open) |
 
 ---
 
@@ -227,7 +227,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 - Pass: `mvn -f backend/pom.xml -pl fx-service -am test`, `gateway-service -am test`, dan `transaction-service -am test`.
 - Pass: `mvn -f backend/pom.xml -pl dispute-service,lending-service,investment-service,billing-service,promotion-service -am test` — reactor `BUILD SUCCESS`; target services reported 88, 81, 48, 107, dan 242 tests tanpa failure.
 - Pass: web `npm run lint` dan `npm run build`.
-- Pass: web `npm test -- --run` — 86 test files, 1188 passed, 1 skipped; `npm run lint`, `npm run type-check`, dan `npm run build` juga pass. `npm audit --omit=dev` dan analytics pytest tetap open findings terpisah.
+- Pass: web `npm test -- --run` — 90 test files, 1203 passed, 1 skipped; `npm run lint` (changed files), `npm run type-check`, `npm run build`, dan `npm audit --omit=dev` (0 vulnerabilities) pass. Analytics pytest dan full lint legacy warning tetap open findings terpisah.
 - Fail: mobile `npm ci --ignore-scripts` karena lockfile drift (`EUSAGE`, missing/invalid package entries, dan peer conflict); mobile lint/test/typecheck belum dapat direproduksi sampai dependency graph diperbaiki.
 - Graph evidence: fast-path `graphify query` menghubungkan mobile mutation/idempotency dengan backend payment/ledger/outbox; `codegraph explore` menelusuri controller → service → port/adapter pada wallet, billing, dan mobile API.
 - Context7 checks: Expo SecureStore value limit/error behavior dan web availability; Axios retry reuses original request config. Rujukan: [Expo SecureStore](https://github.com/expo/expo/blob/main/docs/public/llms-sdk-v51.0.0.txt), [Axios retry](https://github.com/axios/axios/blob/v1.x/docs/pages/advanced/retry.md).

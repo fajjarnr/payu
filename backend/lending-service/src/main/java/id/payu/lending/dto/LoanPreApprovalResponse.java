@@ -1,5 +1,7 @@
 package id.payu.lending.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.CreditScore;
 import id.payu.lending.domain.model.PreApprovalStatus;
@@ -14,11 +16,11 @@ public record LoanPreApprovalResponse(
         UUID preApprovalId,
         UUID userId,
         LoanType loanType,
-        BigDecimal principalAmount,
-        BigDecimal maxApprovedAmount,
-        BigDecimal minInterestRate,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal principalAmount,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal maxApprovedAmount,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal minInterestRate,
         Integer maxTenureMonths,
-        BigDecimal estimatedMonthlyPayment,
+        @JsonSerialize(using = ToStringSerializer.class) BigDecimal estimatedMonthlyPayment,
         PreApprovalStatus status,
         BigDecimal creditScore,
         RiskCategory riskCategory,

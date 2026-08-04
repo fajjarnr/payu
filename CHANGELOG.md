@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.17] - 2026-08-04
+
+### Fixed
+
+- **Lending money precision (PROD-013 follow-up)**: lending monetary response properties now serialize as decimal strings without changing non-money decimals, while the web lending service and page use the shared `Money` string contract and exact currency formatter. Images lending `1.8.106` (`sha256:ea430e0cb57784dd2204c4e92df9367fd42784eb191c80d0329e7e6abf968d22`) and web-app `1.5.15` (`sha256:714434bf2313036fa654df1622d1195247361650cb341949d7434713162310bc`) are live.
+
 ## [1.10.16] - 2026-08-04
 
 ### Fixed

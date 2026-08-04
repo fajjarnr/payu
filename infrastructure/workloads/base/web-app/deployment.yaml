@@ -40,7 +40,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.14
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.15
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -104,7 +104,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: APP_VERSION
-          value: "1.5.14"
+          value: "1.5.15"
         - name: GATEWAY_URL
           value: "http://gateway-service:8080"
         - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY

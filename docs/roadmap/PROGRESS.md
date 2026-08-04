@@ -8,6 +8,10 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-04 — PROD-013 lending money precision deployed**:
+> - Lending monetary response properties now serialize as decimal strings without changing non-money decimals; the web LendingService models monetary fields as the shared `Money` string type and the lending page formats them with exact decimal parsing/rounding instead of `Intl.NumberFormat` on JavaScript numbers.
+> - Verification: backend serializer regression `1/1`, lending reactor `91/91`, package `BUILD SUCCESS`; web LendingService `25/25`, Lending page `5/5`, full Vitest `1203 passed | 1 skipped`, type-check, changed-file ESLint, and production build passed. Images lending `1.8.106` (`sha256:ea430e0cb57784dd2204c4e92df9367fd42784eb191c80d0329e7e6abf968d22`) and web-app `1.5.15` (`sha256:714434bf2313036fa654df1622d1195247361650cb341949d7434713162310bc`) are live; both pods Ready `1/1`, restart `0`, lending liveness/readiness `UP`, and web `/api/health` healthy. Authenticated financial E2E remains pending because `payu-dev` has no isolated lending fixture.
+
 > ✅ **2026-08-04 — PROD-041 PayLater amount validation fixed/deployed**:
 > - PayLater purchase/payment now reject null, zero, negative, and amounts with more than four decimals before touching credit or transaction persistence.
 > - Verification: red-first focused test `3` failures, then `4/4` focused tests and full lending reactor `90/90` passed; package `BUILD SUCCESS`. Image `lending-service:1.8.103` (`sha256:293f191a2aa8cf7a419ea86152b846ce50c014d0404311f798558e0bc9c667c6`) was applied declaratively; pod Ready `1/1`, `SERVICE_VERSION=1.8.103`, liveness/readiness both `200`, Flyway schema `9`. No authenticated financial mutation was run because `payu_lending` has no loan/schedule/payment fixture.

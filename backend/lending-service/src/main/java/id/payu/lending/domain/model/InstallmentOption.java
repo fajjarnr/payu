@@ -1,5 +1,7 @@
 package id.payu.lending.domain.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.math.BigDecimal;
 
 /**
@@ -9,9 +11,13 @@ import java.math.BigDecimal;
 public class InstallmentOption {
 
     private int tenor;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal monthlyPayment;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal totalPayment;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal totalInterest;
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal interestRate;
 
     public InstallmentOption() {}
