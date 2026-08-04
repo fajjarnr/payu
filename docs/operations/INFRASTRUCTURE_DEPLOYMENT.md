@@ -134,6 +134,7 @@ Render all mandatory roots:
 rtk oc kustomize infrastructure/foundation/namespaces >/tmp/payu-mop/namespaces.yaml
 rtk oc kustomize infrastructure/foundation/cluster-operators >/tmp/payu-mop/operators.yaml
 rtk oc kustomize infrastructure/platform/data/base >/tmp/payu-mop/data.yaml
+rtk oc kustomize infrastructure/platform/messaging/overlays/payu-dev >/tmp/payu-mop/messaging.yaml
 rtk oc kustomize infrastructure/platform/amq-broker/base >/tmp/payu-mop/amq-broker.yaml
 rtk oc kustomize infrastructure/platform/api-management >/tmp/payu-mop/api-management.yaml
 rtk oc kustomize infrastructure/workloads/overlays/payu-dev >/tmp/payu-mop/workloads.yaml
@@ -182,6 +183,7 @@ Do not proceed until each required CSV is `Succeeded`.
 
 ```bash
 rtk oc apply -k infrastructure/platform/data/base -n payu-dev
+rtk oc apply -k infrastructure/platform/messaging/overlays/payu-dev -n payu-dev
 ```
 
 Verify:
@@ -189,6 +191,7 @@ Verify:
 ```bash
 rtk oc get cluster.postgresql.cnpg.io -n payu-dev
 rtk oc get kafka -n payu-dev
+rtk oc get kafkatopic -n payu-dev
 rtk oc get infinispan -n payu-dev
 rtk oc get pods -n payu-dev | rtk rg 'payu-database|payu-kafka|payu-cache'
 rtk oc get events -n payu-dev --field-selector type=Warning --sort-by=.lastTimestamp | rtk tail -40
@@ -198,6 +201,7 @@ Expected result:
 
 - CNPG `payu-database` has 3 instances Ready.
 - Kafka `payu-kafka` reports `READY=True`.
+- Declared application topics, including each required `.dlq`, report `Ready=True`; do not rely on Kafka auto-create for outbox destinations.
 - Infinispan `payu-cache` pods are Running (`WellFormed=True`) using the custom XML configuration ConfigMap (`payu-cache-custom-config`) with the `payu` cache (text/plain) over the native Hot Rod endpoint.
 - `payu-cache` service exposes Hot Rod port `11222`; dev backend workloads use plain `payu-cache:11222` with endpoint authentication disabled, while production workloads use the mTLS contract (RESP/RESP-compat services are removed — ARCH-007).
 - Validate the installed CRD schema before changing Data Grid fields: `rtk oc explain infinispan.spec.security --recursive`, `rtk oc explain infinispan.spec.logging --recursive`, and `rtk oc explain infinispan.spec.container --recursive`.

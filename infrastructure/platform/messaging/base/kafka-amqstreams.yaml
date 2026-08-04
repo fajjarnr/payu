@@ -147,6 +147,44 @@ spec:
     cleanup.policy: delete
 
 ---
+# KafkaTopic - SNAP payment refunded events
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: partner-payment-refunded
+  labels:
+    app.kubernetes.io/name: partner-payment-refunded
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.partner.payment-refunded.v1
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
+# KafkaTopic - DLQ for SNAP payment refunded events
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: partner-payment-refunded-dlq
+  labels:
+    app.kubernetes.io/name: partner-payment-refunded-dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  topicName: payu.partner.payment-refunded.v1.dlq
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+
+---
 # KafkaTopic - notification events
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic

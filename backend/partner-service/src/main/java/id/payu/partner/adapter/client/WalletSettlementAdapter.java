@@ -11,8 +11,10 @@ import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Wallet-service adapter for SNAP payment settlement.
@@ -59,6 +61,25 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
             }
             throw creditFailure;
         }
+    }
+
+    @Override
+    public void reverse(String senderAccountId, String recipientAccountId,
+                        BigDecimal amount, String currency, UUID refundId, String description) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("senderAccountId", senderAccountId);
+        body.put("recipientAccountId", recipientAccountId);
+        body.put("amount", amount);
+        body.put("currency", currency);
+        body.put("refundId", refundId);
+        body.put("description", description);
+
+        walletClient.post()
+                .uri("/api/v1/wallets/transfer/reverse")
+                .headers(target -> target.addAll(headers("snap-refund-" + refundId)))
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     private String reserve(String accountId, BigDecimal amount, String referenceId) {

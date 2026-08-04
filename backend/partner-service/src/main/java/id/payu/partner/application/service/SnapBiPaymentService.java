@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -232,6 +233,15 @@ public class SnapBiPaymentService {
             );
         }
 
+        if (isBlank(request.partnerRefundNo)) {
+            return new RefundResponse("4002501", "Partner refund number is required", null, null, null, null);
+        }
+
+        if (request.amount.currency == null
+                || !record.getCurrency().equalsIgnoreCase(request.amount.currency)) {
+            return new RefundResponse("4002502", "Refund currency must match payment currency", null, null, null, null);
+        }
+
         // MVP-004: refund idempotency via natural key (partnerRefundNo per partner+payment).
         // Replayed refund returns the existing refund instead of creating a duplicate.
         // Backed by unique index uq_snap_refund_partner_ref (V15).
@@ -268,7 +278,9 @@ public class SnapBiPaymentService {
             );
         }
 
-        String payuRefundNo = "REFUND-" + UUID.randomUUID().toString();
+        UUID refundId = UUID.nameUUIDFromBytes((partnerId + ":" + record.getPayuReferenceNo() + ":"
+                + request.partnerRefundNo).getBytes(StandardCharsets.UTF_8));
+        String payuRefundNo = "REFUND-" + refundId;
 
         SnapBiRefundEntity refundRecord = new SnapBiRefundEntity(
             payuRefundNo,
@@ -279,9 +291,15 @@ public class SnapBiPaymentService {
             request.amount.value,
             request.amount.currency,
             request.reason,
-            "COMPLETED"
+            "PENDING"
         );
 
+        refundRepository.save(refundRecord);
+
+        walletSettlementPort.reverse(
+                record.getSourceAccountNo(), record.getBeneficiaryAccountNo(), request.amount.value,
+                request.amount.currency, refundId, "SNAP-BI refund: " + record.getPayuReferenceNo());
+        refundRecord.setStatus("COMPLETED");
         refundRepository.save(refundRecord);
 
         LOG.info("Refund processed payuRefund={} paymentRef={} amount={}",

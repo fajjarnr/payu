@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.23] - 2026-08-04
+
+### Fixed
+
+- **SNAP-BI refund money movement (MVP-004)**: refunds now reverse recipient debit/source credit through the trusted wallet service before returning `COMPLETED`; deterministic reversal IDs make retries ledger-idempotent. Partner `1.8.99` and wallet `1.8.111` are live.
+- **Refund event topic**: declared `payu.partner.payment-refunded.v1` and its `.dlq` Kafka topics so refund outbox publishing does not hit `UNKNOWN_TOPIC_OR_PARTITION`.
+
 ## [1.10.22] - 2026-08-04
 
 ### Fixed

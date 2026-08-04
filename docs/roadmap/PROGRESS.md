@@ -4,6 +4,10 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-04 — MVP-004 SNAP refund money movement deployed**:
+> - SNAP refund now persists `PENDING`, calls the existing atomic wallet reversal through a trusted Keycloak service endpoint, and changes to `COMPLETED` only after debit-recipient/credit-sender succeeds. Deterministic refund UUID plus wallet ledger idempotency makes retries safe.
+> - Verification: partner+wallet reactor tests `245`/`29` passed; partner `1.8.99` and wallet `1.8.111` rolled out Ready `1/1`, restart `0`; isolated `100 IDR` payment changed source `999900→999800` and beneficiary `500100→500200`, refund restored both balances; `payu.partner.payment-refunded.v1` and its DLQ are declared and Ready.
+
 > ✅ **2026-08-04 — MVP-001 SNAP payment live E2E and local cache parity**:
 > - SNAP token issuance and payment settlement passed on `payu-dev`: IDR 100 from `ACC-001` to `ACC-002` returned `2002500`; replay with the same request body and `X-Idempotency-Key` returned an identical response. Partner `1.8.98`, wallet `1.8.110`, and gateway `1.9.9` are rolled out.
 > - Partner-to-wallet calls use a Keycloak client-credentials token; wallet trusts the configured service client identity while user-owned wallet paths remain protected.

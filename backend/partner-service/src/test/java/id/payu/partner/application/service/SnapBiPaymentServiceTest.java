@@ -193,6 +193,31 @@ public class SnapBiPaymentServiceTest {
     }
 
     @Test
+    public void testCreateRefundReversesWalletFundsBeforeCompleting() {
+        SnapBiPaymentEntity payment = new SnapBiPaymentEntity(
+                "PAYU-REFUND-REVERSAL-001", "123", "PARTNER-REF-REVERSAL-001",
+                new BigDecimal("10000.00"), "IDR", "beneficiary-001", "014", "source-001", "COMPLETED");
+        when(paymentRepository.findForUpdateByPartnerIdAndReferenceNo("123", payment.getPayuReferenceNo()))
+                .thenReturn(Optional.of(payment));
+        when(refundRepository.sumRefundedAmountByPayuReferenceNo(payment.getPayuReferenceNo()))
+                .thenReturn(BigDecimal.ZERO);
+
+        RefundRequest request = new RefundRequest();
+        request.partnerRefundNo = "PARTNER-REFUND-REVERSAL-001";
+        request.amount = new RefundRequest.Amount();
+        request.amount.value = new BigDecimal("100.00");
+        request.amount.currency = "IDR";
+        request.reason = "customer requested refund";
+
+        var response = paymentService.createRefund("123", payment.getPayuReferenceNo(), request);
+
+        assertEquals("2002500", response.responseCode);
+        verify(walletSettlementPort).reverse(
+                eq("source-001"), eq("beneficiary-001"), eq(new BigDecimal("100.00")), eq("IDR"),
+                any(), eq("SNAP-BI refund: " + payment.getPayuReferenceNo()));
+    }
+
+    @Test
     public void testGetPaymentStatus() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();

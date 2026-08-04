@@ -276,6 +276,28 @@ public class WalletController extends BaseController {
         return ok(Map.of("status", "CREDITED", "accountId", accountId));
     }
 
+    @PostMapping("/transfer/reverse")
+    @Audited(
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
+            entityType = "Wallet",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
+    @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Reverse wallet transfer", description = "Atomically reverse a settled wallet transfer")
+    public ResponseEntity<ApiResponse<Map<String, String>>> reverseTransfer(
+            @Valid @RequestBody ReverseTransferRequest request) {
+        if (!isTrustedServiceRequest()) {
+            throw new AccessDeniedException("Only trusted services may reverse wallet transfers");
+        }
+
+        walletUseCase.reverseTransfer(
+                request.getSenderAccountId(), request.getRecipientAccountId(), request.getAmount(),
+                request.getCurrency(), request.getRefundId(), request.getDescription());
+        return ok(Map.of("status", "REVERSED", "refundId", request.getRefundId().toString()));
+    }
+
     @GetMapping("/{accountId}/ledger")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get ledger entries", description = "Retrieve all ledger entries for an account")

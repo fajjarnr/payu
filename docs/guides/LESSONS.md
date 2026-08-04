@@ -4803,3 +4803,7 @@ A GET validation endpoint must never call an apply command: `apply` mutates usag
 ### L-208: External SNAP bearer and internal service bearer are different trust boundaries (2026-08-04)
 
 The partner endpoint must preserve the external SNAP `Authorization` header for controller-level HMAC/SNAP validation, while the shared platform JWT filter must not try to parse that token. Calls from partner to wallet use a separate Keycloak client-credentials token; wallet bypasses account ownership only for the configured trusted service client identity. Local development must use the same plain dev cache protocol as `payu-dev`; stale TLS REST variables cause Python idempotency startup/runtime failures after the dev cache drops mTLS.
+
+### L-209: Refund completion follows the ledger, not the request (2026-08-04)
+
+SNAP refund previously inserted `COMPLETED` and emitted a notification without reversing wallet money. Reuse the wallet atomic reversal primitive behind a trusted service endpoint, persist `PENDING` first, and only return `COMPLETED` after the reversal succeeds. Derive the reversal UUID from the refund natural key so a retry after a process crash cannot create a second ledger reversal. Declare every outbox destination and its `.dlq` as a KafkaTopic; auto-create is not a deployment contract.

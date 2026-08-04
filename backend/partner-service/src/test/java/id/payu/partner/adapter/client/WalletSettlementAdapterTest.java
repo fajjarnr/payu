@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,6 +34,7 @@ class WalletSettlementAdapterTest {
         server.createContext("/api/v1/wallets/ACC-001/reserve", this::checkServiceToken);
         server.createContext("/api/v1/wallets/reservations/res-1/commit", this::checkServiceToken);
         server.createContext("/api/v1/wallets/ACC-002/credit", this::checkServiceToken);
+        server.createContext("/api/v1/wallets/transfer/reverse", this::checkServiceToken);
         server.start();
     }
 
@@ -52,6 +54,19 @@ class WalletSettlementAdapterTest {
                 "backend-secret");
 
         adapter.settle("ACC-001", "ACC-002", java.math.BigDecimal.ONE, "IDR", "snap-ref-1");
+
+        assertTrue(walletCallsUseServiceToken.get());
+        assertEquals(1, tokenRequests.get());
+    }
+
+    @Test
+    void reversesWithPlatformToken() {
+        String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+        WalletSettlementAdapter adapter = new WalletSettlementAdapter(
+                baseUrl, baseUrl, "payu", "payu-backend", "backend-secret");
+
+        adapter.reverse("ACC-001", "ACC-002", java.math.BigDecimal.ONE, "IDR",
+                UUID.randomUUID(), "refund");
 
         assertTrue(walletCallsUseServiceToken.get());
         assertEquals(1, tokenRequests.get());
