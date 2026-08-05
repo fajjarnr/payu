@@ -797,9 +797,9 @@ graph LR
 
 | Component       | RPO (Data Loss) | RTO (Recovery Time) | Backup Method                          | Recovery Method                        |
 | --------------- | --------------- | ------------------- | -------------------------------------- | -------------------------------------- |
-| **Vault**       | < 1 jam         | < 15 menit          | Raft auto-snapshot setiap 1 jam ke S3  | Raft restore dari snapshot + auto-unseal |
+| **Vault**       | < 6 jam        | < 15 menit          | Raft auto-snapshot setiap 6 jam ke S3  | Raft restore dari snapshot + auto-unseal |
 | **ArgoCD**      | 0 (Git-backed)  | < 10 menit          | Git repo sebagai source of truth       | Re-sync dari Git + Redis cache rebuild |
-| **ACS Central** | < 4 jam         | < 30 menit          | Daily backup via ACS backup CronJob    | Restore dari backup + sensor reconnect |
+| **ACS Central** | < 24 jam        | < 30 menit          | Daily backup via ACS backup CronJob    | Restore dari backup + sensor reconnect |
 | **Wazuh**       | < 2 jam         | < 30 menit          | Indexer snapshot ke S3 setiap 2 jam    | Restore snapshot + agent re-enrollment |
 | **LokiStack**   | < 1 jam         | < 15 menit          | S3 backend (data sudah persisted)      | Redeploy stack, S3 data intact         |
 | **Tekton**      | 0 (Git-backed)  | < 10 menit          | Pipeline/Task definitions di Git       | Re-apply dari Git + PV restore         |
@@ -807,7 +807,7 @@ graph LR
 ### 9.2 Vault DR Strategy
 
 - **Auto-Unseal**: Konfigurasi Vault auto-unseal menggunakan Transit secret engine (self-managed) atau AWS KMS (cloud) untuk menghindari manual unseal saat recovery
-- **Raft Snapshot**: Automated Raft snapshot setiap 1 jam via CronJob, disimpan ke S3 bucket terenkripsi dengan versioning enabled
+- **Raft Snapshot**: Automated Raft snapshot setiap **6 jam** via CronJob (`vault-raft-snapshot`, schedule `0 */6 * * *`), disimpan ke S3 bucket terenkripsi dengan versioning enabled
 - **Cross-AZ Replication**: Vault HA cluster di-deploy across minimum 2 Availability Zones
 - **DR Drill**: Quarterly DR drill wajib dilakukan — restore Vault dari snapshot di isolated namespace, validasi secret integrity
 
@@ -923,7 +923,7 @@ graph TB
 
 | Registry          | Purpose                          | Access                   | Retention          |
 | ----------------- | -------------------------------- | ------------------------ | ------------------ |
-| **Quay.io**       | Primary registry, geo-replicated | All clusters via mirror  | 90 hari (non-prod) |
+| **Quay.io**       | Primary registry, geo-replicated | All clusters via mirror  | 7 hari (untagged GC) / 90 hari (tagged) |
 | **OCP Registry**  | Build cache, ephemeral images    | Within cluster only      | 30 hari            |
 | **Prod Registry** | Production-only, signed images   | Spoke 2 only (read-only) | 1 tahun            |
 
@@ -1136,7 +1136,7 @@ $ vault-migrator generate-external-secrets \
 | Vault secret compromise             | Vault lease revoke + key rotate | Manual      | CISO sign-off  |
 | Chaos experiment causes P1           | Cerberus auto-halt + restore   | Auto        | None           |
 
-> ℹ️ **Catatan**: ArgoCD tidak memiliki auto-rollback native — rollback manual = `argocd app rollback <app> <revision>` atau sync ke revision Git sebelumnya. Auto-rollback berbasis health/error metrics adalah fitur **Argo Rollouts** (`analysis` + `AnalysisTemplate` dengan Prometheus metrics), bukan ArgoCD. Untuk deployment non-Rollout (Deployment biasa), auto-rollback perlu tooling eksternal (mis. Flux/Keel) atau alert-driven manual rollback.
+> ℹ️ **Catatan**: ArgoCD tidak memiliki auto-rollback native — rollback manual = `argocd app rollback <app> <revision>` atau sync ke revision Git sebelumnya. Auto-rollback berbasis health/error metrics adalah fitur **Argo Rollouts** (`analysis` + `AnalysisTemplate` dengan Prometheus metrics), bukan ArgoCD. Untuk deployment non-Rollout (Deployment biasa), auto-rollback perlu tooling eksternal — PayU mengimplementasikan **CronJob `argocd-auto-rollback-monitor`** (setiap 2 menit, rollback jika Application Degraded dalam 5 menit, lihat §7 Phase 2) sebagai workaround untuk Deployment biasa; workload production baru wajib menggunakan Argo Rollouts.
 
 ### 18.3 Communication & ChatOps
 
