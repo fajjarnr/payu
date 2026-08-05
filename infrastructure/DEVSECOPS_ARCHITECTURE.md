@@ -775,7 +775,7 @@ graph LR
 | Vault secret requests       | **1.000 req/s**             | Scalable via Vault cluster + caching layer         |
 | Log ingestion (Loki/Wazuh)  | **10.000 eps**              | Scalable via sharding + S3 cold storage            |
 | ArgoCD managed applications | **200 apps**                | Via ApplicationSet + cluster sharding if needed    |
-| Falco events processing     | **5.000 events/s per node** | Via Prometheus remote-write batching               |
+| ACS runtime event processing | **5.000 events/s per node** | Via RHACS sensor + Prometheus remote-write batching |
 
 > 📌 **Scalability Principle**: Design for horizontal scaling first. Vertical scaling (bigger nodes) hanya sebagai last resort.
 
@@ -1127,11 +1127,13 @@ $ vault-migrator generate-external-secrets \
 
 | Trigger                              | Rollback Method                | Auto/Manual | Approval       |
 | ------------------------------------ | ------------------------------ | ----------- | -------------- |
-| Health check fail within 5 min       | ArgoCD auto-rollback           | Auto        | None           |
-| Error rate > 5% for 3 min           | ArgoCD rollback to last known  | Auto        | None           |
+| Health check fail within 5 min       | **Argo Rollouts** auto-abort/rollback (analysis step) | Auto        | None           |
+| Error rate > 5% for 3 min           | **Argo Rollouts** auto-abort via AnalysisTemplate metrics | Auto        | None           |
 | Critical CVE detected in runtime     | ACS enforce → block + rollback | Semi-auto   | SRE confirm    |
 | Vault secret compromise             | Vault lease revoke + key rotate | Manual      | CISO sign-off  |
 | Chaos experiment causes P1           | Cerberus auto-halt + restore   | Auto        | None           |
+
+> ℹ️ **Catatan**: ArgoCD tidak memiliki auto-rollback native — rollback manual = `argocd app rollback <app> <revision>` atau sync ke revision Git sebelumnya. Auto-rollback berbasis health/error metrics adalah fitur **Argo Rollouts** (`analysis` + `AnalysisTemplate` dengan Prometheus metrics), bukan ArgoCD. Untuk deployment non-Rollout (Deployment biasa), auto-rollback perlu tooling eksternal (mis. Flux/Keel) atau alert-driven manual rollback.
 
 ### 18.3 Communication & ChatOps
 
