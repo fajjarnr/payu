@@ -4,9 +4,10 @@
 
 | Field               | Value                                               |
 | ------------------- | --------------------------------------------------- |
-| **Versi**           | **1.3.1** _(Updated from 1.3.0)_                    |
+| **Versi**           | **1.4.0**                                           |
 | **Status**          | Implementasi berjalan — SIT gates live (2026-08-01) |
 | **Tanggal**         | 2026-08-01                                          |
+| **Target Cluster**  | `payu.ocp.fajjjar.my.id` (OCP 4.20.x) — production platform; sandbox/lab cluster (mis. `cluster-*` OpenTLC) hanya untuk development dan tidak mencerminkan status di dokumen ini |
 | **Author**          | Platform Engineering Team                           |
 | **Klasifikasi**     | CONFIDENTIAL _(Internal Personal Project Use Only)_ |
 | **Target Audience** | Engineering Lead, CISO, Platform Team               |
