@@ -70,8 +70,8 @@ data:
     }
 
     seal "awskms" {
-      region = "us-east-1"
-      kms_key_id = "arn:aws:kms:us-east-1:390403884108:key/610f3f85-0e82-4a7a-930b-64d7a3e05af4"
+      region = "ap-southeast-1"
+      kms_key_id = "arn:aws:kms:ap-southeast-1:405894847531:key/e0ad4932-933d-4de4-8caa-5b170630636e"
     }
 
     listener "tcp" {
@@ -121,6 +121,11 @@ metadata:
     app.kubernetes.io/part-of: payu
 spec:
   type: ClusterIP
+  # publishNotReadyAddresses: pods stay not-Ready until Vault is
+  # initialized, but raft peers and the init job must reach the API
+  # before that — otherwise the service has no endpoints and raft
+  # join / init can never start (chicken-and-egg).
+  publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/name: vault
   ports:
@@ -170,8 +175,13 @@ spec:
         - name: vault
           image: docker.io/hashicorp/vault@sha256:db6a5f78749204d0a8d002be1cc6e9a2a6de53dffce41a894c4a06d309dca360
           imagePullPolicy: IfNotPresent
+          # Override entrypoint: the image entrypoint always injects
+          # -dev-root-token-id= for `server`, which flips Vault into dev
+          # (inmem) mode. Run the binary directly with our config.
+          command: ["vault"]
           args:
             - server
+            - -config=/vault/config
           env:
             - name: POD_NAME
               valueFrom:
@@ -357,6 +367,13 @@ spec:
         - protocol: TCP
           port: 8201
     - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault-init
+      ports:
+        - protocol: TCP
+          port: 8200
+    - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: external-secrets
@@ -417,3 +434,32 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vault-init-egress
+  namespace: payu-vault
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault-init
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+      ports:
+        - protocol: TCP
+          port: 8200
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353

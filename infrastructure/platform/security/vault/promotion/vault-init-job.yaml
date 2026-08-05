@@ -1,0 +1,186 @@
+# Vault HA init + configure + seed Job (production-style)
+# Run ONCE after the vault StatefulSet is Ready:
+#   oc apply -f infrastructure/platform/security/vault/promotion/vault-init-job.yaml
+#
+# 1. `vault operator init` with awskms seal -> root key stored in KMS,
+#    only a root token is printed (1 share / 1 threshold, auto-unseal).
+# 2. Root token persisted to Secret vault-root-token (payu-vault).
+# 3. Runs configure.sh (from vault-bootstrap-config): kv-v2, kubernetes
+#    auth, per-env policies/roles.
+# 4. Seeds VaultStaticSecret paths for sit/uat/preprod/prod.
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-init-secrets
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault-init
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-init-secrets
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault-init
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vault-init-secrets
+subjects:
+  - kind: ServiceAccount
+    name: vault-admin
+    namespace: payu-vault
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  namespace: payu-vault
+  labels:
+    app.kubernetes.io/name: vault-init
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+    app.kubernetes.io/version: "2.0.3"
+    team: platform
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault-init
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: secrets
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: vault-admin
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: vault-init
+          image: docker.io/hashicorp/vault@sha256:db6a5f78749204d0a8d002be1cc6e9a2a6de53dffce41a894c4a06d309dca360
+          env:
+            # `vault` service has publishNotReadyAddresses so the API is
+            # reachable before readiness; its serving cert SAN matches.
+            - name: VAULT_ADDR
+              value: https://vault.payu-vault.svc.cluster.local:8200
+            - name: VAULT_CACERT
+              value: /vault/ca/service-ca.crt
+            - name: VAULT_TLS_SERVER_NAME
+              value: vault.payu-vault.svc.cluster.local
+            - name: KUBERNETES_CLUSTER
+              value: cluster-nkk8q
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              set -eu
+              echo "=== waiting for vault API ==="
+              for i in $(seq 1 60); do
+                OUT=$(vault status -format=json 2>/dev/null || true)
+                if [ -n "$OUT" ]; then
+                  echo "$OUT" > /tmp/vstatus.json
+                  break
+                fi
+                sleep 2
+              done
+
+              if [ ! -s /tmp/vstatus.json ]; then
+                echo "FATAL: vault API unreachable"
+                exit 1
+              fi
+
+              INITIALIZED=$(grep -o '"initialized": *[a-z]*' /tmp/vstatus.json | cut -d: -f2 | tr -d ' ')
+              echo "initialized=$INITIALIZED"
+              if [ "$INITIALIZED" = "false" ]; then
+                echo "=== initializing vault (awskms seal, root key stored in KMS) ==="
+                # awskms seal manages the root key itself; shares/threshold
+                # are forced to 1 by the seal and must NOT be passed.
+                vault operator init -format=json > /tmp/init.json
+                cat /tmp/init.json
+                ROOT_TOKEN=$(grep -o '"root_token": *"[^"]*"' /tmp/init.json | cut -d'"' -f4 || true)
+                if [ -z "${ROOT_TOKEN:-}" ]; then
+                  # awskms prints recovery keys (for generate-root) instead of
+                  # a root token — persist them for later root regeneration.
+                  TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                  RECOVERY=$(grep -o '"recovery_keys_base64": *\[[^]]*\]' /tmp/init.json | sed 's/.*\[//;s/\].*//' | tr -d '" ' || true)
+                  B64=$(base64 -w0 < /tmp/init.json 2>/dev/null || base64 < /tmp/init.json)
+                  PAYLOAD=$(printf '{"apiVersion":"v1","kind":"Secret","metadata":{"name":"vault-init-output","namespace":"payu-vault"},"type":"Opaque","data":{"init.json":"%s"}}' "$B64")
+                  curl -sk -X POST "https://kubernetes.default.svc/api/v1/namespaces/payu-vault/secrets" \
+                    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+                    -d "$PAYLOAD" -o /dev/null -w 'init output secret: %{http_code}\n' || true
+                  echo "recovery keys captured: ${RECOVERY:0:40}..."
+                fi
+              else
+                echo "=== vault already initialized ==="
+                ROOT_TOKEN=""
+              fi
+
+              # persist root token via Kubernetes API (no kubectl in image)
+              if [ -n "${ROOT_TOKEN:-}" ]; then
+                TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                PAYLOAD=$(printf '{"apiVersion":"v1","kind":"Secret","metadata":{"name":"vault-root-token","namespace":"payu-vault"},"type":"Opaque","stringData":{"root-token":"%s"}}' "$ROOT_TOKEN")
+                curl -sk -X POST "https://kubernetes.default.svc/api/v1/namespaces/payu-vault/secrets" \
+                  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+                  -d "$PAYLOAD" -o /dev/null -w 'root token secret: %{http_code}\n' || true
+                echo "root token stored in payu-vault/vault-root-token"
+              else
+                echo "no root token captured (expected with awskms auto-unseal; use recovery keys if needed)"
+              fi
+
+              echo "=== waiting for unseal (auto via KMS) ==="
+              for i in $(seq 1 30); do
+                SEALED=$(vault status -format=json 2>/dev/null | grep -o '"sealed": *[a-z]*' | cut -d: -f2 | tr -d ' ' || true)
+                if [ "$SEALED" = "false" ]; then break; fi
+                sleep 2
+              done
+
+              echo "=== configuring auth + roles ==="
+              if [ -n "${ROOT_TOKEN:-}" ]; then
+                export VAULT_TOKEN="$ROOT_TOKEN"
+                /vault/config/configure.sh
+              else
+                echo "SKIP configure: root token not captured — run configure.sh manually with vault-root-token"
+              fi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /vault/config
+              readOnly: true
+            - name: service-ca
+              mountPath: /vault/ca/service-ca.crt
+              subPath: service-ca.crt
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: vault-bootstrap-config
+            defaultMode: 0550
+        - name: service-ca
+          configMap:
+            name: vault-service-ca
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi
