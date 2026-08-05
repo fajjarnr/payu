@@ -35,7 +35,7 @@ spec:
         emptyDir: {}
       containers:
       - name: va-simulator
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.8.80
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.8.81
         imagePullPolicy: Always
         ports:
         - containerPort: 8085

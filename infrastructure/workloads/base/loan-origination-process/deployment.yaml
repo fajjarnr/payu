@@ -33,7 +33,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.5
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.6
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
