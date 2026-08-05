@@ -131,7 +131,7 @@ Setiap namespace merepresentasikan environment yang terisolasi dengan kebijakan 
 | `payu-sit`     | System Integration Test | Auto + security gate  | ACS policy pass + no critical CVE      | QA + Dev + SRE         | Restricted ingress  | **LitmusChaos** (app-level: pod kill, network latency, disk fill)                 |
 | `payu-uat`     | User Acceptance Test    | Semi-auto             | Manual PO/QA + ACS + Schemathesis pass | QA + PM + SRE          | Strict — UAT only   | None                                                                              |
 | `payu-preprod` | Pre-Production          | Manual trigger        | Pen test + CAB + **Kraken chaos pass** | SRE + Security         | Mirror production   | **Kraken + Cerberus** (infra-level: etcd kill, node crash, API server disruption) |
-| `payu` (prod)  | Production              | Blue/Green via ArgoCD | CAB + CISO sign-off + health check     | SRE only (break-glass) | Zero-trust strict   | None _(red team exercise quarterly)_                                              |
+| `payu` (prod)  | Production              | Blue/Green via **Argo Rollouts** | CAB + CISO sign-off + health check     | SRE only (break-glass) | Zero-trust strict   | None _(red team exercise quarterly)_                                              |
 
 > 💡 **Preview Environment**: Namespace `payu-dev-{branch-name}` di-spin up otomatis via ArgoCD ApplicationSet saat PR dibuat, dan di-destroy otomatis saat PR di-merge/close. Memungkinkan QA fitur sebelum masuk `payu-dev` utama. **Manajemen Siklus Hidup**: Untuk mencegah "zombie namespace" jika webhook GitHub gagal, terapkan label `ttl: 48h` pada namespace. Sebuah `CronJob` sederhana akan memantau label ini dan melakukan *cleanup* namespace yang melewati batas TTL secara otomatis.
 
@@ -157,7 +157,7 @@ graph LR
     C --> D["Deploy to payu-sit: ACS + Litmus smoke test"]
     D --> E["Emergency Break-glass Bypass / Chatops"]
     E --> F["Deploy to payu-preprod: Kraken chaos smoke + Cerberus"]
-    F --> G["Deploy to payu: Blue/Green with auto-rollback"]
+    F --> G["Deploy to payu: Blue/Green via Argo Rollouts with auto-rollback"]
     G --> H["Post-Deployment: Full security review dalam 24 jam"]
     H --> I{Review Pass?}
     I -->|Ya| J["Hotfix merged to main, normal workflow resumed"]
@@ -299,7 +299,8 @@ graph LR
 #### 4.4.1 GitOps Requirements
 
 - Semua konfigurasi deployment disimpan di Git (infrastructure-as-code) dengan **branch protection** dan **required reviews**
-- **ArgoCD** — single source of truth untuk state deployment di semua namespace
+- **ArgoCD** — single source of truth untuk state deployment di semua namespace. Sync policy `automated` **wajib mengaktifkan `prune: true` dan `selfHeal: true`** (kecuali resource yang di-manage operator lain — exclude via `ignoreDifferences`/`syncOptions`). Tanpa keduanya, ArgoCD hanya push satu arah: resource yang hilang dari Git tidak pernah dihapus dan drift di cluster tidak pernah dikoreksi, sehingga Git bukan lagi source of truth yang sebenarnya.
+- **Argo Rollouts** — deployment strategy advanced (Blue/Green & Canary) untuk production. ArgoCD sendiri hanya melakukan deploy; traffic split, step progression, dan metrics analysis adalah domain **Argo Rollouts** (`Rollout` CRD + `AnalysisTemplate`). Blue/Green direkomendasikan untuk adopsi awal (sederhana dan robust), transisi ke Canary setelah metrics & observability stabil. Untuk canary 5% → 25% → 100% (lihat §19.3), gunakan `setWeight` + `pause` + `analysis` steps dengan metrics dari Prometheus/ACR.
 - **ArgoCD Image Updater** — mekanisme otomatis untuk promote image digest antar environment via Git write-back
 - Drift detection aktif — ArgoCD alert dan auto-sync jika terjadi drift dari Git (dengan approval gate untuk production)
 - App-of-Apps pattern untuk manajemen multi-namespace yang terstandardisasi
@@ -550,9 +551,9 @@ graph LR
 - [x] 🔵 Namespace strategy: `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, `payu-cicd` dengan labels, quotas, limitranges
 - [x] 🔵 Kyverno 9 ClusterPolicies: `disallow-root-user`, `require-resource-limits`, `set-readonly-root-filesystem`, `disallow-host-namespaces`, `require-approved-registry`, `require-cosign-signature`, `generate-default-deny-networkpolicy`, `block-shadow-namespaces`, `require-payu-labels`
 - [x] 🔵 Vault HA (Raft 3/3 + awskms auto-unseal + TLS + PDB) live; sinkronisasi secret via Vault Secrets Operator (`VaultStaticSecret`, 60/60 Ready per env) — pengganti ESO ClusterSecretStore `payu-vault` (INFRA-026). Vault dev mode (inmem) masih ada di `payu-dev` dan dilarang untuk production.
-- [x] 🔵 Sinkronisasi secret via VSO live untuk SIT/UAT/preprod/prod (env-isolated `payu/<env>/...` paths); refresh terganggu oleh egress anomaly VSO (OPS-2026-08-01-03).
+- [x] 🔵 Sinkronisasi secret via VSO live untuk SIT/UAT/preprod/prod (env-isolated `payu/<env>/...` paths); refresh terganggu oleh egress anomaly VSO (OPS-2026-08-01-03). **Best practice**: tambahkan `spec.rolloutRestartTarget` pada `VaultStaticSecret` (Deployment/StatefulSet/`argo.Rollout`) agar workload otomatis di-restart saat secret di-rotate — mencegah workload memakai secret lama setelah refresh.
 - [x] 🔵 Tekton Tasks: Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken + Pipelines + Triggers
-- [x] 🔵 ArgoCD live: 3 ApplicationSets + 22 Applications, appset `automated` sync (tanpa prune/self-heal) + prod sync window; `payu-sit`/`payu-uat`/`payu-preprod` Synced/Healthy.
+- [x] 🔵 ArgoCD live: 3 ApplicationSets + 22 Applications, appset `automated` sync + prod sync window; `payu-sit`/`payu-uat`/`payu-preprod` Synced/Healthy. **Catatan**: `prune`/`selfHeal` sengaja nonaktif saat adopsi awal (menghindari penghapusan tak terduga selama migrasi); sesuai best practice ArgoCD, keduanya **wajib diaktifkan** sebelum production — lihat §4.4.1.
 - [x] 🔵 Kyverno cleanup CronJob image fix: `bitnami/kubectl:1.28.5` → OpenShift internal CLI
 
 **DR & Backup (§9):**
@@ -1172,7 +1173,7 @@ $ vault-migrator generate-external-secrets \
 | `payu-sit`     | Health + core transaction flow (create → process → complete)              | 5 min   |
 | `payu-uat`     | Health + full regression suite (Playwright/Pytest)                        | 15 min  |
 | `payu-preprod` | Health + load test baseline (k6 100 req/s for 5 min) + Cerberus healthy  | 10 min  |
-| `payu` (prod)  | Health + canary traffic validation (5% → 25% → 100%)                     | 10 min  |
+| `payu` (prod)  | Health + canary traffic validation (5% → 25% → 100%) via **Argo Rollouts** | 10 min  |
 
 ---
 
