@@ -66,6 +66,10 @@ spec:
       type: string
       description: Require Pact verification for services that publish provider contracts
       default: "false"
+    - name: chaos-gate-enabled
+      type: string
+      description: Run the LitmusChaos gate (default off; chaos operator in this lab cluster does not reconcile engines reliably)
+      default: "false"
   workspaces:
     - name: source
       description: Workspace to hold the cloned infrastructure git repository
@@ -209,6 +213,9 @@ spec:
         - input: "$(params.environment)"
           operator: in
           values: ["sit"]
+        - input: "$(params.chaos-gate-enabled)"
+          operator: in
+          values: ["true"]
       taskRef:
         name: litmus-chaos-gate
       workspaces:

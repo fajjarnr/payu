@@ -30,6 +30,12 @@ spec:
       - resources:
           name: "rhbk-operator*"
       - resources:
+          name: "chaos-operator*"
+      - resources:
+          selector:
+            matchLabels:
+              name: chaos-operator
+      - resources:
           selector:
             matchLabels:
               strimzi.io/cluster: ?*
