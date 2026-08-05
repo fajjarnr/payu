@@ -12,7 +12,11 @@
 > - **Litmus portal fixes**: images `litmuschaos.docker.scarf.sh` → `mirror.gcr.io` (Docker Hub rate limit), nginx log → `/dev/stdout` + emptyDir `/var/log/nginx` (writable under RunAsAny SCC).
 > - **Image promotion**: 31 image streams mirrored `payu-dev` → `payu-sit`/`payu-uat`/`payu-preprod` (deployment-pinned tags via `oc tag`).
 > - **Namespace labels restored**: `payu.io/managed-by: platform-team` re-applied from foundation manifest (Kyverno `require-payu-labels` was rejecting syncs).
-> - **Known pending (Vault deferred)**: `payu-sit` workloads deployed but `VaultStaticSecret` not synced (no Vault in lab cluster) — pods waiting on `payu-runtime-secrets`; `data-*` CNPG cluster waiting on Vault db secret; prod apps `OutOfSync` (prod sync window deny-all except Sunday).
+> - **Vault HA live (awskms)**: 3-node Raft StatefulSet in `payu-vault`, auto-unseal via cluster KMS key (`ap-southeast-1`, CCO CredentialsRequest), `publishNotReadyAddresses` on the service (chicken-and-egg fix for raft join before readiness), init job → kv-v2 + kubernetes auth + per-env roles; secrets seeded for sit/uat/preprod/prod (`payu/<env>/workloads/runtime`, database, cache, messaging, keycloak). VSS 14/14 Ready in payu-sit.
+> - **Promotion-env secrets fixed**: VSS added for `payu-keycloak-client-secrets` (incl. `payu-web-client-secret`) and `dev-env-secrets` (simulators still reference it); identity overlay now renders its VSS (`rhbk-externalsecrets.yaml` was missing from kustomization).
+> - **Operator installs unblocked in promotion namespaces**: Kyverno policies (require-payu-labels, disallow-root-user, readonly-root-filesystem) now exclude `rhbk-operator*`; new `allow-api-egress` netpol (egress `- {}`, OVN doesn't enforce ipBlock+port — L-188) lets operators reach the API; payu-sit quota raised to 80Gi/56 CPU.
+> - **payu-sit live**: Keycloak Ready (RHBK operator + realm import), Infinispan `payu-cache-0` Running, CNPG `payu-database` Ready, 62 pods Running / 0 bad, apps `payu-sit`/`data-sit`/`messaging-sit`/`identity-sit` Synced + Healthy.
+> - **Known pending**: prod apps `OutOfSync` (prod sync window deny-all except Sunday); identity-dev/prod + messaging-prod/data-prod `Missing` (overlays reference dev/prod-only resources); payu-uat/preprod `Progressing` (same promotion fixes now rolling through).
 
 
 > ✅ **2026-08-04 — PROD-034 mobile request deduplication fixed**:
