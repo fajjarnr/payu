@@ -9,7 +9,8 @@ quarkus:
     packages: id.payu.notification
     database:
       dialect: org.hibernate.dialect.H2Dialect
-      generation: drop-and-create
+    schema-management:
+      strategy: drop-and-create
   mailer:
     mock: true
   kafka:

@@ -40,9 +40,9 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.9
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newTag: "1.9.9"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.95
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service:1.8.103
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:1.8.89
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newTag: "1.8.89"
@@ -54,10 +54,10 @@ images:
   newTag: "1.8.113"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.5
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
-  newTag: "1.0.5"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.23
+  newTag: "1.0.6"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:1.8.82
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-  newTag: "1.8.80"
+  newTag: "1.8.82"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.99
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newTag: "1.8.99"
@@ -85,15 +85,18 @@ images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.84
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.8.84"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.21
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator:1.8.80
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
-  newTag: "1.8.80"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator:1.8.21
+  newTag: "1.8.81"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator:1.8.80
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
-  newTag: "1.8.80"
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.21
+  newTag: "1.8.81"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:1.8.80
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
-  newTag: "1.8.80"
+  newTag: "1.8.81"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.8.80
+  newName: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
+  newTag: "1.8.81"
 patches:
 # Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
 # environments; do not make dev depend on Vault-provisioned client material.
@@ -481,6 +484,11 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
               value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            # ponytail: dev has no OJK network path; keep report generation off to avoid daily DNS errors
+            - name: PAYU_INTEGRATION_OJK_DAILY_REPORT_ENABLED
+              value: "false"
+            - name: PAYU_INTEGRATION_OJK_MONTHLY_REPORT_ENABLED
+              value: "false"
 - target:
     kind: Deployment
     name: investment-service

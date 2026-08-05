@@ -31,8 +31,9 @@ quarkus:
   # Hibernate ORM configuration
   hibernate-orm:
     # Default persistence unit
+    schema-management:
+      strategy: drop-and-create
     database:
-      generation: drop-and-create
       dialect: org.hibernate.dialect.PostgreSQLDialect
     sql-load-script: no-file
     packages: "id.payu.partner.domain"
@@ -40,8 +41,9 @@ quarkus:
     exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
     # Named persistence unit for Kafka checkpointing (referenced as "database")
     "database":
+      schema-management:
+        strategy: drop-and-create
       database:
-        generation: drop-and-create
         dialect: org.hibernate.dialect.PostgreSQLDialect
       packages: "io.quarkus.smallrye.reactivemessaging.kafka"
       datasource: database

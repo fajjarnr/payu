@@ -13,8 +13,6 @@ quarkus:
     auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM}
     client-id: ${OIDC_CLIENT_ID:notification-service}
     connection-delay: 30S
-    tls:
-      verification: none
     token:
       issuer: any
   otel:
@@ -43,8 +41,8 @@ quarkus:
       url: ${DB_URL:jdbc:postgresql://localhost:5432/notificationdb}
   hibernate-orm:
     packages: id.payu.notification
-    database:
-      generation: update
+    schema-management:
+      strategy: update
     log:
       sql: false
   mailer:
@@ -90,8 +88,8 @@ payu:
 "%dev":
   quarkus:
     hibernate-orm:
-      database:
-        generation: drop-and-create
+      schema-management:
+        strategy: drop-and-create
     mailer:
       mock: true
 mp:

@@ -30,7 +30,7 @@ public class KafkaIntegrationTestProfile implements QuarkusTestProfile {
         // Use H2 for fast in-memory database during integration tests
         config.put("quarkus.datasource.db-kind", "h2");
         config.put("quarkus.datasource.jdbc.url", "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL");
-        config.put("quarkus.hibernate-orm.database.generation", "drop-and-create");
+        config.put("quarkus.hibernate-orm.schema-management.strategy", "drop-and-create");
 
         // Use mock mailer for integration tests
         config.put("quarkus.mailer.mock", "true");

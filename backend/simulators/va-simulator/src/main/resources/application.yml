@@ -17,8 +17,8 @@ quarkus:
       enabled: true
 
   hibernate-orm:
-    database:
-      generation: update
+    schema-management:
+      strategy: update
     log:
       sql: false
 

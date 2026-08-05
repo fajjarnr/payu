@@ -59,8 +59,6 @@ spec:
             secretKeyRef:
               name: db-secrets
               key: DB_PASSWORD
-        - name: QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION
-          value: drop-and-create
         - name: QUARKUS_HIBERNATE_ORM_ENABLED
           value: 'true'
         - name: QUARKUS_HIBERNATE_ORM_ACTIVE
