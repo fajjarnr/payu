@@ -5,6 +5,7 @@ namespace: litmus
 
 resources:
   - operator.yaml
+  - crds.yaml
   - scc.yaml
   - scc-portal.yaml
   - rbac.yaml
