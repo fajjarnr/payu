@@ -82,6 +82,21 @@ data:
     end
     return hs
 
+  # HPA health checks: an HPA whose scale target does not exist yet
+  # (wave -1 applies before its Deployment) must be Progressing, not
+  # Degraded — otherwise ArgoCD flags the wave as failed and never
+  # proceeds to the workloads wave.
+  resource.customizations.health.autoscaling_HorizontalPodAutoscaler: |
+    hs = {}
+    if obj.status ~= nil and obj.status.currentReplicas ~= nil then
+      hs.status = "Healthy"
+      hs.message = "HPA is healthy"
+    else
+      hs.status = "Progressing"
+      hs.message = "HPA target not ready yet"
+    end
+    return hs
+
   # Route health checks
   resource.customizations.health.route.openshift.io_Route: |
     hs = {}
