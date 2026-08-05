@@ -340,7 +340,7 @@ graph LR
 
 ### 4.5 Stage 5 — Runtime Security
 
-**OWASP Coverage:** A04 (Crypto via mTLS) · A07 (Auth via RBAC) · A09 (Logging & Alerting via Falco) · Zero-trust enforcement
+**OWASP Coverage:** A04 (Crypto via mTLS) · A07 (Auth via RBAC) · A09 (Logging & Alerting via RHACS/Wazuh) · Zero-trust enforcement
 
 #### 4.5.1 Cloud Workload Protection Platform (CWPP)
 
@@ -764,7 +764,7 @@ graph LR
 | Vault             | HA with Raft consensus, 3 node minimum, cross-AZ            | **99.95%**    |
 | Tekton Controller | 2+ replica + persistent volume for task run                 | **99.9%**     |
 | ACS Central       | HA mode (included in OCP sub), sensor per node              | **99.95%**    |
-| Wazuh Manager     | Cluster mode (1 master + 2 workers) + Elasticsearch backend | **99.9%**     |
+| Wazuh Manager     | Cluster mode (1 master + 2 workers) + OpenSearch indexer | **99.9%**     |
 | LokiStack         | Distributor + Ingester + Querier HA + S3 storage            | **99.9%**     |
 
 ### 8.3 Scalability _(Realistic for Enterprise Mid-Scale)_
@@ -781,7 +781,7 @@ graph LR
 
 ### 8.4 Maintainability
 
-- Semua konfigurasi pipeline (Tekton, ArgoCD, Kyverno, Falco rules) disimpan di Git dengan branch protection
+- Semua konfigurasi pipeline (Tekton, ArgoCD, Kyverno, RHACS) disimpan di Git dengan branch protection
 - Setiap tool harus memiliki: (1) runbook operasional, (2) alert playbook, (3) upgrade procedure
 - Upgrade tool harus dapat dilakukan tanpa downtime (rolling update + canary deployment untuk control plane)
 - Dokumentasi harus diperbarui otomatis via Git commit hook atau CI job saat konfigurasi berubah
@@ -954,9 +954,12 @@ graph TB
 
 ### 13.2 Egress Control (PCI-DSS Requirement)
 
-- **EgressNetworkPolicy (OCP-specific)**: Restrict outbound traffic dari production namespace
+> ⚠️ **Catatan**: `EgressNetworkPolicy` adalah fitur SDN lama OpenShift yang **deprecated** dan **tidak didukung di OVN-Kubernetes** (network plugin default OCP 4.14+). Gunakan pendekatan modern di bawah.
+
+- **NetworkPolicy egress**: Restrict outbound traffic dari production namespace via `policyTypes: [Egress]` + allowlist `to:` rules
 - Allowlist hanya untuk: external payment provider API, Bank Indonesia API, DNS resolver
-- **Egress Gateway**: Istio egress gateway untuk centralized egress monitoring dan logging
+- **Egress Gateway**: Istio egress gateway untuk centralized egress monitoring dan logging (layer 7)
+- **Opsional (layer 3/4 strict)**: OpenShift egress router/firewall (e.g. egress router CR atau node-level firewall via `EgressFirewall`/`EgressIP` di OVN-Kubernetes)
 - Semua egress traffic di-log ke Wazuh untuk audit trail
 
 ### 13.3 DNS Security
@@ -1024,7 +1027,7 @@ Semua response dari API Gateway wajib include:
 | **Req 2**   | Apply Secure Configurations              | Stage 1 + 4 + 6   | Semgrep + Kyverno + ComplianceOperator   | Scan report + CIS Benchmark result           |
 | **Req 3**   | Protect Stored Account Data              | Stage 5           | Vault encryption + security-starter      | Vault audit log + encryption config          |
 | **Req 4**   | Protect Data in Transit                  | Stage 5           | OSSM mTLS STRICT + TLS 1.3              | PeerAuthentication config + cert rotation    |
-| **Req 5**   | Protect Against Malicious Software       | Stage 1 + 2       | Trivy + Grype + Falco runtime            | Image scan report + Falco alert log          |
+| **Req 5**   | Protect Against Malicious Software       | Stage 1 + 2       | Trivy + Grype + RHACS runtime           | Image scan report + RHACS alert log          |
 | **Req 6**   | Develop/Maintain Secure Systems          | Stage 1 + 2 + 3   | Semgrep SAST + ZAP DAST + Schemathesis  | Pipeline scan report + quality gate result   |
 | **Req 7**   | Restrict Access by Need-to-Know          | Stage 4 + 5       | RBAC + OSSM AuthorizationPolicy          | RBAC config + AuthPolicy YAML                |
 | **Req 8**   | Identify Users and Auth Access           | Stage 5           | Keycloak + Vault auth + MFA             | Auth audit log + MFA enrollment report       |
@@ -1196,7 +1199,7 @@ $ vault-migrator generate-external-secrets \
 | Chaos experiment menyebabkan outage tidak terduga   | Rendah       | Tinggi | Cerberus go/no-go signal + run di pre-prod dulu + rollback automation + change window                    |
 | Compliance gap terdeteksi audit BI                  | Rendah       | Tinggi | ComplianceOperator weekly scan + Wazuh compliance dashboard + proactive remediation sprint               |
 | Developer friction (too many gates)                 | Tinggi       | Sedang | DevEx KPI monitoring + feedback loop < 15 menit + pre-commit sebagai recommendation, CI sebagai enforcer |
-| Tool overlap/conflict (Falco+Tetragon, Kyverno+ACS) | Sedang       | Sedang | Clear boundary definition + single-owner per policy domain + integration testing di SIT                  |
+| Tool overlap/conflict (Kyverno+ACS, runtime tooling) | Sedang       | Sedang | Clear boundary definition + single-owner per policy domain + integration testing di SIT                  |
 | **BSL license compliance risk (Vault)**             | Sedang       | Tinggi | Legal review + evaluasi OpenBao sebagai alternatif + monitor BSL change notice                           |
 | **Cross-cluster data inconsistency**                | Rendah       | Tinggi | Image digest promotion + Cosign verify di setiap cluster + ArgoCD drift detection                        |
 
@@ -1254,6 +1257,7 @@ Template service sudah include:
 | 1.1.0   | Mar 2026   | Platform Engineering Team  | Added chaos engineering strategy (Kraken + Litmus), emergency workflow                          |
 | 1.2.0   | Apr 2026   | Platform Engineering Team  | Updated OWASP Top 10 2025, 100% OSS tooling, DevEx KPI, API Security Top 10, PCI-DSS alignment |
 | 1.3.0   | Apr 2026   | Platform Engineering Team  | **Major update**: DR strategy, FinOps, multi-cluster, registry, network segmentation, API Gateway/WAF, PCI-DSS v4.0 explicit mapping, data residency, brownfield adoption, incident response, testing strategy, Vault BSL disclaimer, Falco kernel compat, Tekton Chains/Results, RACI matrix, version history |
+| 1.4.0   | Aug 2026   | Platform Engineering Team  | **Best-practice alignment (Context7 audit)**: ArgoCD `prune`/`selfHeal` mandatory + Argo Rollouts untuk blue/green & canary prod (bukan ArgoCD native); VSO sebagai jalur secret utama + `rolloutRestartTarget`; Wazuh Indexer (OpenSearch-based) vs OpenSearch standalone — pilih salah satu; Pact best practice (real consumer code, minimal contract, BDCT); auto-rollback diklarifikasi ke Argo Rollouts; `EgressNetworkPolicy` deprecated (OVN-K8s) → NetworkPolicy egress + egress gateway; inkonsistensi Falco di-resolve ke RHACS di semua section |
 
 ---
 
