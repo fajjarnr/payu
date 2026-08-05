@@ -84,10 +84,10 @@ function formatExact(value: CurrencyInput, decimals: number, locale: string): st
   const rounded = roundDecimal(normalized, decimals);
   const negative = rounded.startsWith('-');
   const unsigned = negative ? rounded.slice(1) : rounded;
-  let [integer, fraction = ''] = unsigned.split('.');
-  integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'id-ID' ? '.' : ',');
+  const [integer, fraction = ''] = unsigned.split('.');
+  const groupedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'id-ID' ? '.' : ',');
   const decimalSeparator = locale === 'id-ID' ? ',' : '.';
-  return `${negative ? '-' : ''}${integer}${fraction ? decimalSeparator + fraction : ''}`;
+  return `${negative ? '-' : ''}${groupedInteger}${fraction ? decimalSeparator + fraction : ''}`;
 }
 
 /**

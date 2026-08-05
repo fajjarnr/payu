@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.33] - 2026-08-05
+
+### Fixed
+
+- **Web-app test suite under `NODE_ENV=production` (WEB-002)**: a leaked production `NODE_ENV` made vitest load React's production builds, which ship no `act` export, so `@testing-library/react` crashed every suite with `React.act is not a function`. Test scripts now force `NODE_ENV=test`; full suite restored to `91 files / 1206 passed / 1 skipped`.
+- **Web-app lint error in `currency.ts`**: fixed a `prefer-const` violation in `formatExact` (the destructured `integer`/`fraction` were never reassigned). Lint, type-check, and `next build` are now clean.
+
 ## [1.10.32] - 2026-08-05
 
 ### Fixed

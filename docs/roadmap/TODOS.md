@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.32` (2026-08-05) — outbox table fix (product-catalog/auth/compliance) + billing open-in-view |
-| **Last Updated** | 2026-08-05 (PROD-040/041 + ARCH-008/009/010 closed → CHANGELOG 1.10.32; PROD-002 still awaits approved FX provider evidence) |
+| **Last Release** | `1.10.33` (2026-08-05) — web-app test env fix + lint clean |
+| **Last Updated** | 2026-08-05 (WEB-002 fixed; PROD-040/041 + ARCH-008/009/010 closed → CHANGELOG 1.10.32; PROD-002 still awaits approved FX provider evidence) |
 
 ---
 
@@ -148,6 +148,7 @@ Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi
 
 | ID | Pri | Area | Bukti | Minimum done |
 |---|---|---|---|---|
+| WEB-002 | P1 | Web-app CI | `npm test` with a leaked `NODE_ENV=production` loads React production builds, which ship no `act` export → every `@testing-library/react` suite crashes with `React.act is not a function` (react-testing-library#1399, React packaging decision). | ✅ FIXED 2026-08-05: test scripts force `NODE_ENV=test`; 91 files / 1206 passed / 1 skipped, lint + type-check + build clean. |
 
 ### Follow-up audit — Graphify + CodeGraph
 

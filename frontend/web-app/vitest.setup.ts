@@ -2,8 +2,18 @@ import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { toHaveNoViolations as jestAxeToHaveNoViolations } from 'jest-axe';
-import { act } from 'react-dom/test-utils';
 import * as React from 'react';
+import { act as reactDomTestUtilsAct } from 'react-dom/test-utils';
+
+// React 19.2.3 ships no `act` export on the `react` module (and none on
+// `react-dom`), but `react-dom/test-utils` re-exports a deprecated shim that
+// forwards to `React.act`. @testing-library/react picks `React.act` first
+// and falls back to that shim, so both paths crash with "React.act is not a
+// function". Patch the real `react` module once so the testing library's
+// direct `require('react')` sees a working `act`.
+if (typeof (React as unknown as Record<string, unknown>).act !== 'function') {
+  (React as unknown as Record<string, unknown>).act = reactDomTestUtilsAct;
+}
 
 // React 19.2+ does not export `act` from the top-level 'react' module (ESM).
 // @testing-library/react 16.3.2 tries `React.act` first and falls back to
@@ -11,7 +21,7 @@ import * as React from 'react';
 // testing library works without deprecation warnings in vitest/jsdom.
 Object.assign(globalThis, {
   IS_REACT_ACT_ENVIRONMENT: true,
-  React: { ...React, act },
+  React: { ...React, act: reactDomTestUtilsAct },
 });
 
 expect.extend(matchers);
