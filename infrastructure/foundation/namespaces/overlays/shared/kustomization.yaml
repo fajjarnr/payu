@@ -12,3 +12,4 @@ resources:
   - allow-external-secrets-to-vault.yaml
   - allow-openshift-router.yaml
   - allow-api-egress.yaml
+  - allow-cicd-ingress.yaml
