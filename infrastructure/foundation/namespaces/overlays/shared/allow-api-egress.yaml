@@ -1,0 +1,53 @@
+# Allow egress from every pod in promotion namespaces.
+# OLM-installed operators (rhbk, CNPG, Strimzi, ...) run inside app namespaces
+# and must reach the Kubernetes API to reconcile; the Kyverno-generated
+# default-deny-all blocks that egress. OVN-Kubernetes on this cluster does not
+# reliably enforce fine-grained egress (ipBlock+port) — per L-188 the working
+# pattern is egress `- {}` (allow-all) for platform traffic.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: payu-sit
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: payu-uat
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: payu-preprod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: payu
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}

@@ -11,3 +11,4 @@ resources:
   - allow-dns-egress.yaml
   - allow-external-secrets-to-vault.yaml
   - allow-openshift-router.yaml
+  - allow-api-egress.yaml

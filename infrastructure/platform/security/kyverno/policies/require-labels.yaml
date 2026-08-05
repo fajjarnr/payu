@@ -68,6 +68,8 @@ spec:
                 matchLabels:
                   app.kubernetes.io/managed-by: keycloak-operator
           - resources:
+              name: "rhbk-operator*"
+          - resources:
               selector:
                 matchLabels:
                   openshift.io/build.name: ?*

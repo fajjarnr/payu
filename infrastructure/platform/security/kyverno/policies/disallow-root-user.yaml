@@ -29,6 +29,8 @@ spec:
             - key: app.kubernetes.io/managed-by
               operator: Exists
       - resources:
+          name: "rhbk-operator*"
+      - resources:
           selector:
             matchLabels:
               strimzi.io/cluster: ?*
