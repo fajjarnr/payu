@@ -18,7 +18,7 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.33` (2026-08-05) — web-app test env fix + lint clean |
+| **Last Release** | `1.10.34` (2026-08-05) — Quarkus deprecation warnings removed, OJK upload disabled in dev |
 | **Last Updated** | 2026-08-05 (WEB-002 fixed; PROD-040/041 + ARCH-008/009/010 closed → CHANGELOG 1.10.32; PROD-002 still awaits approved FX provider evidence) |
 
 ---

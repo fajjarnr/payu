@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.34] - 2026-08-05
+
+### Fixed
+
+- **OJK report upload ERROR in dev (integration-service)**: the daily/monthly OJK timer fired with `enabled: true` and tried to upload to `reporting.ojk.go.id`, which dev cannot resolve — every startup logged `OJK report processing error: reporting.ojk.go.id: Name or service not known`. Disabled both reports in the `payu-dev` overlay via `PAYU_INTEGRATION_OJK_DAILY_REPORT_ENABLED=false` / `PAYU_INTEGRATION_OJK_MONTHLY_REPORT_ENABLED=false`; fresh logs show zero OJK mentions. Deployed `integration-service:1.8.104`.
+- **Quarkus deprecation warnings (`quarkus.hibernate-orm.database.generation`)**: replaced with the non-deprecated `quarkus.hibernate-orm.schema-management.strategy` in notification-service (base + `%dev` + test profile + `application-test.yml`), biller/dukcapil/qris simulators (`drop-and-create`), va-simulator (`update`), and partner-service integration-test config (both persistence units).
+- **Quarkus deprecation warning (`quarkus.smallrye-health.ui.enable`)**: removed from biller/dukcapil/qris simulators — the health UI is enabled by default in dev.
+- **Quarkus deprecation warning (`quarkus.oidc.tls.verification`)**: removed the hardcoded `verification: none` from notification-service; the dev deployment already manages trust via `QUARKUS_TLS_TRUST_ALL`.
+- **Hibernate HHH90000025 warning (loan-origination-process)**: removed the explicit `hibernate.dialect=PostgreSQLDialect` — Hibernate auto-detects it. Deployed `loan-origination-process:1.0.6`.
+- **Biller-simulator stale env override**: removed the hardcoded `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION` env from the base manifest — it overrode the (now modern) jar config and reproduced the deprecation warning at runtime.
+- Deployed `notification-service:1.8.82`, `biller/dukcapil/qris/va-simulator:1.8.81`. Fresh logs: zero deprecation/WARN/ERROR lines; all 47 pods Running/Ready. Web-app suite re-verified: 91 files / 1206 passed / 1 skipped, lint + type-check + build clean.
+
 ## [1.10.33] - 2026-08-05
 
 ### Fixed
