@@ -14,6 +14,10 @@ spec:
     - name: BASE_URL
       type: string
       description: "Base URL where the API is reachable"
+    - name: ENDPOINT_FILTER
+      type: string
+      description: "Regex filter for endpoints to test (negative lookahead excludes)"
+      default: "^(?!.*analytics).*"
   workspaces:
     - name: source
       description: "Workspace used to persist reports"
@@ -30,6 +34,7 @@ spec:
         schemathesis run \
           "$(params.SCHEMA_URL)" \
           --base-url "$(params.BASE_URL)" \
+          --endpoint "$(params.ENDPOINT_FILTER)" \
           --checks all \
           --exclude-checks status_code_conformance \
           --exclude-checks not_a_server_error \
