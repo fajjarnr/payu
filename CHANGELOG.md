@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.37] - 2026-08-05
+
+### Added
+
+- **Vault HA live on lab cluster (awskms auto-unseal)**: 3-node Raft StatefulSet in `payu-vault` with TLS via service-ca, PDB, and NetworkPolicies; KMS key + snapshot S3 bucket created in the cluster account (`ap-southeast-1`, account `405894847531`) and wired through CCO `CredentialsRequest` (`vault-kms-credentials`); `publishNotReadyAddresses` on the `vault` service so raft peers and the init job can reach the API before readiness (chicken-and-egg); init job runs `operator init` (awskms forces 1 share — no `key-shares` flags), persists the root token, and runs `configure.sh` (kv-v2, kubernetes auth, per-env policies/roles for sit/uat/preprod/prod). Secrets seeded at `payu/<env>/workloads/runtime`, `database/app|superuser|services`, `cache/credentials|server-tls|client-tls|client-ca`, `messaging/artemis`, `kafka-console`, `keycloak/credentials|database|clients` — VSS 16/16 Ready in payu-sit.
+- **payu-sit fully live**: CNPG `payu-database` Ready (initdb + 3 instances, superuser/app secrets with CNPG `username`/`password` keys), Infinispan `payu-cache-0` Running (TLS certs seeded as `tls.crt`/`tls.key`), Keycloak Ready with realm `payu` imported, RHBK operator Succeeded, 62 pods Running / 0 bad in payu-sit; ArgoCD apps `payu-sit`/`data-sit`/`identity-sit`/`messaging-sit` all Synced + Healthy.
+
+### Fixed
+
+- **Vault image entrypoint silently ran dev-mode**: `docker-entrypoint.sh` always injects `-dev-root-token-id=` for `server`, flipping Vault into inmem dev; StatefulSet now overrides `command: ["vault"]` to run the binary directly with the raft+awskms config.
+- **Operator installs blocked in promotion namespaces**: Kyverno `require-payu-labels`, `disallow-root-user`, `set-readonly-root-filesystem` rejected OLM operator deployments (`rhbk-operator`); excluded by name `rhbk-operator*`. Default-deny egress also blocked operators reaching the Kubernetes API (rhbk crash: timeout to 172.30.0.1:443) — new `allow-api-egress` NetworkPolicy with egress `- {}` (OVN-Kubernetes on this cluster does not enforce ipBlock+port egress reliably, per L-188).
+- **payu-sit quota raised twice**: full workloads + Infinispan + Keycloak exceeded 48Gi then 64Gi; now 80Gi memory / 56 CPU / 120 pods (manifest in `foundation/namespaces/base/resource-quotas.yaml`).
+- **Promotion-env secret gaps**: VSS added for `payu-keycloak-client-secrets` (incl. `payu-web-client-secret` — realm-import job failed without it) and `dev-env-secrets` (simulators still reference the base secret the component deletes); identity overlay `kustomization.yaml` now renders `rhbk-externalsecrets.yaml` (the admin/db/client VSS were never deployed); Vault keycloak paths seeded with the exact keys the VSS templates expect (`KEYCLOAK_ADMIN_USERNAME/PASSWORD`, `POSTGRES_USERNAME/PASSWORD`, `payu-backend`, `payu-web-app`).
+- **Keycloak DB access on PostgreSQL 16 (CNPG)**: keycloak role + schema grants added (`GRANT ALL ON SCHEMA public`, all tables/sequences, default privileges) — the keycloak DB was initialized with owner `payu`, so liquibase failed with `permission denied for schema public` until grants were applied.
+
 ## [1.10.36] - 2026-08-05
 
 ### Added
