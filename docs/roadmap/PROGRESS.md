@@ -4,6 +4,17 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-05 — Lab cluster `cluster-nkk8q` payu-sit platform bootstrap (GitOps + operators)**:
+> - **ArgoCD bootstrapped**: 8 `AppProject` (payu-dev/sit/uat/preprod/payu + monitoring/platform/preview), 3 `ApplicationSet` (`payu-environments`, `payu-environment-platform`, `payu-identity`) → 18 `Application` generated; workloads `payu-dev/sit/uat/preprod` Synced, messaging `sit/uat/preprod` Healthy, identity `sit/uat/preprod` Synced.
+> - **ArgoCD CR declarative**: `kustomizeBuildOptions: --enable-helm` + `extraConfig` HPA health check (target-missing = Progressing) applied via manifest (no `oc patch`); application-controller resource limits dropped after repeated OOMKill at 2Gi.
+> - **Sync-wave deadlock fixed**: HPA `sync-wave: -1` deadlocked every workload sync — ArgoCD waits for a wave to be Healthy before advancing, and an HPA whose Deployment target does not exist yet can never be Healthy. All 31 HPAs moved to wave 0 (no annotation); `require-hpa` Kyverno policy → Audit.
+> - **Operators installed (manifest)**: Vault Secrets Operator 1.5.0 (CRD `vaultstaticsecrets`), LitmusChaos (chaos-operator + portal, SCC `litmus-portal`/`litmus-chaos`), Kyverno 3.8.2 (10 ClusterPolicies Ready, CRD conflict with ACM `policyreports` handled).
+> - **Litmus portal fixes**: images `litmuschaos.docker.scarf.sh` → `mirror.gcr.io` (Docker Hub rate limit), nginx log → `/dev/stdout` + emptyDir `/var/log/nginx` (writable under RunAsAny SCC).
+> - **Image promotion**: 31 image streams mirrored `payu-dev` → `payu-sit`/`payu-uat`/`payu-preprod` (deployment-pinned tags via `oc tag`).
+> - **Namespace labels restored**: `payu.io/managed-by: platform-team` re-applied from foundation manifest (Kyverno `require-payu-labels` was rejecting syncs).
+> - **Known pending (Vault deferred)**: `payu-sit` workloads deployed but `VaultStaticSecret` not synced (no Vault in lab cluster) — pods waiting on `payu-runtime-secrets`; `data-*` CNPG cluster waiting on Vault db secret; prod apps `OutOfSync` (prod sync window deny-all except Sunday).
+
+
 > ✅ **2026-08-04 — PROD-034 mobile request deduplication fixed**:
 > - Request cancellation is now limited to read-only `GET`/`HEAD`/`OPTIONS` requests; financial mutations are never cancelled by another request sharing the same URL.
 > - Verification: red-first concurrent POST regression failed on the old implementation, then API + storage + offline focused Jest `27/27`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, and Expo Android export exit `0`. Mobile has no OpenShift workload to roll out.

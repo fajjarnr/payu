@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.36] - 2026-08-05
+
+### Added
+
+- **Lab cluster platform bootstrap (payu-sit GitOps)**: bootstrapped ArgoCD on lab cluster `cluster-nkk8q` — 8 AppProjects, 3 ApplicationSets, 18 Applications generated; installed Vault Secrets Operator 1.5.0, LitmusChaos (operator + portal + SCCs), Kyverno 3.8.2 (10 ClusterPolicies) from repo manifests; mirrored 31 image streams `payu-dev` → `payu-sit`/`payu-uat`/`payu-preprod`; payu-sit/uat/preprod workload Deployments + Services + HPAs + Routes applied via ArgoCD.
+
+### Fixed
+
+- **ArgoCD sync-wave deadlock (workloads never applied)**: HPAs carried `sync-wave: -1` while their Deployment targets only exist from wave 0; ArgoCD waits for every resource in a wave to be Healthy before advancing, so HPAs with a missing target (Degraded/Progressing forever) blocked wave 0 — syncs retried endlessly, Deployments were never created. All 31 HPAs now sync in wave 0 with their Deployments, and the Kyverno `require-hpa` policy is Audit so Deployments are not admission-blocked.
+- **ArgoCD application-controller OOMKilled (2Gi limit)**: raised via manifest, then resource limits removed while reconciling 18 apps; controller now stable.
+- **ArgoCD CR health check for HPA**: `resource.customizations.health.autoscaling_HorizontalPodAutoscaler` injected via CR `extraConfig` (operator-managed `argocd-cm` otherwise resets manual edits) so target-missing HPAs report Progressing.
+- **Litmus portal unstartable on OpenShift**: images `litmuschaos.docker.scarf.sh` hit Docker Hub anonymous pull rate limits → `mirror.gcr.io`; portal nginx could not write `/var/log/nginx` under RunAsAny SCC → logs to `/dev/stdout`/`/dev/stderr` + emptyDir mount.
+- **Kyverno CRD conflicts on lab cluster**: `policyreports.wgpolicyk8s.io` owned by ACM (stored `v1beta1`) — Kyverno chart CRDs filtered before apply; large Kyverno CRDs (`clusterpolicies`, `policies`) applied via `oc create` (last-applied annotation overflow).
+
 ## [1.10.35] - 2026-08-05
 
 ### Fixed
