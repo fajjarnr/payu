@@ -12,4 +12,5 @@ resources:
   - shedlock-bootstrap-job.yaml
   - post-deploy-db-grants.yaml
   - datagrid.yaml
+  - datagrid-network-policy.yaml
   - network-policy-egress.yaml

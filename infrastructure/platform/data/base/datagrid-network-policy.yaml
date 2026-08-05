@@ -1,0 +1,29 @@
+# Allow the Data Grid operator-managed config listener to reach the cache
+# admin REST port (11223). The operator's pods do not carry the
+# app.kubernetes.io/part-of=payu label, so allow-intra-namespace does not
+# cover them and default-deny-all drops the connection (listener logs
+# "Cache stream connection lost ... connect: connection timed out").
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-datagrid-config-listener
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    app.kubernetes.io/name: allow-datagrid-config-listener
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      app: infinispan-pod
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: infinispan-config-listener-pod
+      ports:
+        - port: 11223
+          protocol: TCP

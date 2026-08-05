@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.35] - 2026-08-05
+
+### Fixed
+
+- **Data Grid config-listener connection timeout (payu-cache-config-listener)**: the operator-managed listener pod tried to reach the cache admin REST port (11223) but was dropped by `default-deny-all` — the Data Grid pods don't carry the `app.kubernetes.io/part-of=payu` label that `allow-intra-namespace` requires, so the listener logged `Cache stream connection lost ... connection timed out` every ~2 minutes. Added `allow-datagrid-config-listener` NetworkPolicy (source `app: infinispan-config-listener-pod` → destination `app: infinispan-pod:11223`) to `infrastructure/platform/data/base/`. Listener reconnected at apply time, created the `payu` Cache CR, and logs zero warnings since.
+
 ## [1.10.34] - 2026-08-05
 
 ### Fixed
