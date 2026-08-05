@@ -1,14 +1,14 @@
-# PayU MachineAutoscaler — current cluster (cluster-9xtfg, us-east-1)
-# Worker pool: m6a.4xlarge (16 vCPU / 64 GiB) in AZ us-east-1f.
+# PayU MachineAutoscaler — current cluster (cluster-nkk8q, ap-southeast-1)
+# Worker pool: m6a.4xlarge (16 vCPU / 64 GiB) in AZ ap-southeast-1a.
 # Min 5 = current baseline (46+ pods in payu-dev + promotion environments).
 # Max 10 = 160 vCPU / 640 GiB ceiling for SIT/UAT/preprod/prod + k6 load runs.
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
-  name: payu-worker-us-east-1f
+  name: payu-worker-ap-southeast-1a
   namespace: openshift-machine-api
   annotations:
-    payu.io/updated-at: "2026-08-01"
+    payu.io/updated-at: "2026-08-03"
     payu.io/reason: "worker pool growth for promotion environments (DEPLOY-011) and k6 performance runs"
 spec:
   minReplicas: 5
@@ -16,4 +16,5 @@ spec:
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: cluster-9xtfg-jk2m5-worker-us-east-1f
+    name: cluster-nkk8q-6v55s-worker-ap-southeast-1a
+

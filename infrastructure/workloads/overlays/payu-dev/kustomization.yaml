@@ -18,19 +18,19 @@ images:
   newTag: "1.8.88"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service:1.8.22
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
-  newTag: "1.8.83"
+  newTag: "1.8.84"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service:1.8.105
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newTag: "1.8.105"
@@ -63,7 +63,7 @@ images:
   newTag: "1.8.99"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service:1.8.22
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:1.8.51
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newTag: "1.8.106"

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.32] - 2026-08-05
+
+### Fixed
+
+- **Outbox table missing in three services (product-catalog, auth, compliance)**: the transactional outbox publisher polled every second against a nonexistent `outbox_events` table, spamming `ERROR: relation "outbox_events" does not exist` (SQLState 42P01) every second. Added Flyway `V3__add_outbox_events_table.sql` to each service; migrations applied and verified in `payu_products`, `payu_auth`, and `payu_compliance`. Deployed `product-catalog-service:1.8.104`, `auth-service:1.8.84`, `compliance-service:1.8.104` — zero WARN/ERROR lines in fresh logs.
+- **Billing JPA open-in-view warning**: added `spring.jpa.open-in-view: false` to the billing base and container profiles, matching all other services. Deployed `billing-service:1.8.104`; the startup warning is gone.
+
 ## [1.10.31] - 2026-08-04
 
 ### Fixed

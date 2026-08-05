@@ -18,6 +18,7 @@ spring:
       pool-name: container-pool
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     show-sql: false

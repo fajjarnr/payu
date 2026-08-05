@@ -18,8 +18,8 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.31` (2026-08-04) — mobile request deduplication safety |
-| **Last Updated** | 2026-08-04 (PROD-034/037 fixed; PROD-002 still awaits approved FX provider evidence) |
+| **Last Release** | `1.10.32` (2026-08-05) — outbox table fix (product-catalog/auth/compliance) + billing open-in-view |
+| **Last Updated** | 2026-08-05 (PROD-040/041 + ARCH-008/009/010 closed → CHANGELOG 1.10.32; PROD-002 still awaits approved FX provider evidence) |
 
 ---
 
@@ -109,14 +109,6 @@ completion evidence.
 * **Status**: 🟢 DEV STABLE / PROMOTION OPEN. Local mTLS is verified for `cache-starter` and Quarkus gateway Hot Rod plus KYC/analytics REST. `payu-dev` now deliberately uses plain Hot Rod without endpoint authentication; production overlays retain mTLS. `cache-starter` uses Infinispan 16.2.1 native Hot Rod with a lazy `RemoteCacheManager`, 10,000-entry invalidated near cache, and explicit UTF-8 JSON-text values in the `payu` cache. Auth refresh tokens, partner SNAP-BI tokens, API-commons atomic paths, and Quarkus gateway paths use Hot Rod. KYC and analytics idempotency use authenticated Data Grid REST because the Python Hot Rod client is unmaintained.
 * **Remaining**: Production promotion (SIT/UAT/preprod/prod) — canary gate diterima 2026-08-01 (pods 23/23 Running/Ready, errs 0, latency 1–2ms; detail `ARCH007_CANARY.md`). TLS/mTLS secrets untuk env promosi sudah operator-managed di Vault (SIT `WellFormed=True`).
 * **Updated**: 2026-08-04; CRD fields validated with `oc explain` before apply.
-
-### 🏗️ ARCH-008/009/010: ArchUnit 1.4.2 violations (billing, statement, promotion)
-* **Context**: ArchUnit 1.2.1 → 1.4.2 upgrade in parent POM exposed pre-existing architecture violations that ArchUnit 1.2.1 silently skipped (ASM < 9.5 cannot parse Java 25 bytecode — empty `importPackages()`).
-* **ARCH-008 (billing)**: 85 domain@adapter violations — `SubscriptionEvent.createChargeFailedEvent()` calls `SubscriptionChargeEntity` getters directly. Domain layer depends on adapter persistence entities.
-* **ARCH-009 (statement)**: 12 immutability violations — `RecipientInfo`/`SenderInfo` Lombok `@Builder` + `@NoArgsConstructor` generates non-final fields. `ReceiptException` lives in `application.service.exception`, not `domain.model`.
-* **ARCH-010 (promotion)**: 288 dependency violations + 3 cyclic deps (adapter→application→adapter) + `CashbackEntity` naming (entity in persistence package not following naming convention).
-* **Status**: Pinned to ArchUnit 1.2.1 in these 3 services until remediation. Parent POM keeps `<archunit.version>1.4.2</archunit.version>` for services that already pass (compliance, partner, gateway, etc.).
-* **Created**: 2026-07-13.
 
 ### 🔐 SEC-020: Remediate CIS/PCI platform failures (platform-security)
 * **Problem**: Scan live `ocp4-cis-1-9` + `ocp4-pci-dss-4-0` pada 2026-07-22 berstatus `NON-COMPLIANT`. Terdapat 25 FAIL (16 kontrol unik); sembilan kontrol bersama adalah:

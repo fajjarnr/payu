@@ -12,6 +12,7 @@
  * - Automatic cleanup of expired keys
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { storage } from './storage';
 import { Logger } from './logger';
 
@@ -29,6 +30,28 @@ export interface IdempotencyKeyMetadata {
 export interface StoredIdempotencyKey extends IdempotencyKeyMetadata {
   expiresAt: number;
   status: 'pending' | 'completed' | 'failed';
+}
+
+async function readStoredKeys(): Promise<StoredIdempotencyKey[]> {
+  const raw = await AsyncStorage.getItem(IDEMPOTENCY_KEYS_STORAGE_KEY);
+  if (raw) {
+    return JSON.parse(raw) as StoredIdempotencyKey[];
+  }
+
+  // Migrate the old SecureStore aggregate once. AsyncStorage is used only for
+  // retry metadata; auth tokens and financial payloads remain in secure storage.
+  const legacyKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY);
+  if (legacyKeys?.length) {
+    await AsyncStorage.setItem(IDEMPOTENCY_KEYS_STORAGE_KEY, JSON.stringify(legacyKeys));
+    await storage.remove(IDEMPOTENCY_KEYS_STORAGE_KEY);
+    return legacyKeys;
+  }
+
+  return [];
+}
+
+async function writeStoredKeys(keys: StoredIdempotencyKey[]): Promise<void> {
+  await AsyncStorage.setItem(IDEMPOTENCY_KEYS_STORAGE_KEY, JSON.stringify(keys));
 }
 
 /**
@@ -127,7 +150,7 @@ export async function saveIdempotencyKey(
   userId?: string
 ): Promise<void> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
 
     const newKey: StoredIdempotencyKey = {
       key,
@@ -144,11 +167,12 @@ export async function saveIdempotencyKey(
     // Keep only last 100 keys to prevent storage bloat
     const trimmedKeys = storedKeys.slice(-100);
 
-    await storage.set(IDEMPOTENCY_KEYS_STORAGE_KEY, trimmedKeys);
+    await writeStoredKeys(trimmedKeys);
 
     Logger.debug('Idempotency', 'Key saved', { key, operation });
   } catch (error) {
     Logger.error('Idempotency', 'Failed to save idempotency key', error, { key, operation });
+    throw error;
   }
 }
 
@@ -165,7 +189,7 @@ export async function updateIdempotencyKeyStatus(
   retryCount?: number
 ): Promise<void> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
 
     const keyIndex = storedKeys.findIndex((k) => k.key === key);
     if (keyIndex === -1) return;
@@ -175,7 +199,7 @@ export async function updateIdempotencyKeyStatus(
       storedKeys[keyIndex].retryCount = (storedKeys[keyIndex].retryCount || 0) + retryCount;
     }
 
-    await storage.set(IDEMPOTENCY_KEYS_STORAGE_KEY, storedKeys);
+    await writeStoredKeys(storedKeys);
 
     Logger.debug('Idempotency', 'Key status updated', { key, status });
   } catch (error) {
@@ -191,11 +215,11 @@ export async function updateIdempotencyKeyStatus(
  */
 export async function removeIdempotencyKey(key: string): Promise<void> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
 
     const filteredKeys = storedKeys.filter((k) => k.key !== key);
 
-    await storage.set(IDEMPOTENCY_KEYS_STORAGE_KEY, filteredKeys);
+    await writeStoredKeys(filteredKeys);
 
     Logger.debug('Idempotency', 'Key removed', { key });
   } catch (error) {
@@ -211,7 +235,7 @@ export async function removeIdempotencyKey(key: string): Promise<void> {
  */
 export async function cleanupOldIdempotencyKeys(): Promise<number> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
     const now = Date.now();
 
     // Filter out expired keys
@@ -227,7 +251,7 @@ export async function cleanupOldIdempotencyKeys(): Promise<number> {
     const cleanedCount = storedKeys.length - validKeys.length;
 
     if (cleanedCount > 0) {
-      await storage.set(IDEMPOTENCY_KEYS_STORAGE_KEY, validKeys);
+      await writeStoredKeys(validKeys);
       Logger.info('Idempotency', `Cleaned up ${cleanedCount} expired keys`);
     }
 
@@ -246,7 +270,7 @@ export async function cleanupOldIdempotencyKeys(): Promise<number> {
  */
 export async function getPendingIdempotencyKeys(): Promise<StoredIdempotencyKey[]> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
     const now = Date.now();
 
     // Only return non-expired pending keys
@@ -269,7 +293,7 @@ export async function getPendingIdempotencyKeys(): Promise<StoredIdempotencyKey[
  */
 export async function hasIdempotencyKey(key: string): Promise<boolean> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
     const now = Date.now();
 
     // Check if key exists and is not expired
@@ -293,7 +317,7 @@ export async function getIdempotencyKeyMetadata(
   key: string
 ): Promise<StoredIdempotencyKey | null> {
   try {
-    const storedKeys = await storage.get<StoredIdempotencyKey[]>(IDEMPOTENCY_KEYS_STORAGE_KEY) || [];
+    const storedKeys = await readStoredKeys();
     const now = Date.now();
 
     const foundKey = storedKeys.find((k) => {
@@ -316,6 +340,7 @@ export async function getIdempotencyKeyMetadata(
  */
 export async function clearAllIdempotencyKeys(): Promise<void> {
   try {
+    await AsyncStorage.removeItem(IDEMPOTENCY_KEYS_STORAGE_KEY);
     await storage.remove(IDEMPOTENCY_KEYS_STORAGE_KEY);
     Logger.info('Idempotency', 'All idempotency keys cleared');
   } catch (error) {
