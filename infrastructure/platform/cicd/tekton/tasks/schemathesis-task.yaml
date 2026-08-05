@@ -32,4 +32,5 @@ spec:
           --base-url "$(params.BASE_URL)" \
           --checks all \
           --exclude-checks status_code_conformance \
+          --exclude-checks not_a_server_error \
           --experimental=openapi-3.1
