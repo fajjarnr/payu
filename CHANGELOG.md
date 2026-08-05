@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.38] - 2026-08-05
+
+### Added
+
+- **payu-uat & payu-preprod fully live on lab cluster**: all 12 promotion apps `Synced + Healthy` (payu/data/identity/messaging × sit/uat/preprod). Keycloak role + schema grants created per env on CNPG PostgreSQL 16 (`GRANT ALL ON SCHEMA public`, tables, sequences, default privileges) — realm `payu` imported in uat and preprod; RHBK operator Succeeded; VSS 16/16 per env; pods sit 48 / uat 59 / preprod 64 Running, 0 bad.
+
+### Fixed
+
+- **Cyclic ArgoCD OutOfSync drift**: `payu-keycloak-client-secrets` VaultStaticSecret was defined in both `workloads/overlays/promotion-common` (path `payu/<env>/keycloak/clients`) and `identity/overlays/common/rhbk-externalsecrets.yaml` — two ArgoCD apps syncing the same resource made it flip OutOfSync after every sync. Removed the identity copy (workloads owns it; identity dev uses its own `keycloak-db-secret-sync.yaml`).
+- **Keycloak DB auth on promotion envs**: `password authentication failed for user "keycloak"` on uat/preprod — the `keycloak` role did not exist in the per-env CNPG cluster (only `payu`). Created role + grants; liquibase migration then completed and realm imported.
+
 ## [1.10.37] - 2026-08-05
 
 ### Added
