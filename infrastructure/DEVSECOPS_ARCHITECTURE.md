@@ -365,13 +365,13 @@ graph LR
 | Tool                                    | Tipe                 | Dynamic Secrets   | Auto-Rotate             | Rekomendasi                                  |
 | --------------------------------------- | -------------------- | ----------------- | ----------------------- | -------------------------------------------- |
 | **HashiCorp Vault OSS**                 | BSL-1.1 (lihat ⚠️)  | Ya                | Manual config + CronJob | ✅ **Utama** — self-hosted, feature-complete |
-| **External Secrets Operator**           | Open Source (Apache) | Bridge only       | Via Vault backend       | ✅ **Wajib** sebagai bridge K8s ↔ Vault      |
-| **Vault Agent Injector / CSI Provider** | Open Source          | Sidecar/CSI mount | Via Vault               | ✅ Untuk secret injection ke pod             |
+| **Vault Secrets Operator (VSO)**        | Open Source (MPL-2.0)| Bridge only       | Via Vault backend       | ✅ **Wajib** — sinkronisasi Vault → K8s Secret, dukung auto-restart workload saat rotate (`rolloutRestartTarget`) |
+| **Vault Agent Injector / CSI Provider** | Open Source          | Sidecar/CSI mount | Via Vault               | ⚙️ **Opsional** — hanya untuk use case khusus (secret per-pod ephemeral, non-K8s-Secret) |
 
 > ⚠️ **Vault BSL License Risk Disclaimer**: HashiCorp Vault "OSS" menggunakan **Business Source License 1.1 (BSL-1.1)**, yang **bukan open source** menurut definisi OSI. BSL memiliki restrictions untuk production use oleh organisasi di atas revenue threshold tertentu. Tim legal **wajib** melakukan compliance review sebelum production deployment. **Alternatif truly open source**: Evaluasi **OpenBao** (fork Vault di bawah MPL-2.0, Linux Foundation backed) sebagai drop-in replacement jika BSL compliance menjadi blocker.
 
 - Tidak ada secret yang boleh disimpan sebagai environment variable langsung di pod spec
-- Semua secret di-inject via **External Secrets Operator** dari Vault
+- Semua secret di-inject via **Vault Secrets Operator (VSO)** dari Vault (`VaultStaticSecret` → K8s Secret), dengan `rolloutRestartTarget` untuk auto-restart workload saat secret di-rotate
 - Secret rotation otomatis setiap **30 hari** untuk kredensial database dan API key (via Vault TTL + CronJob)
 - **Zero-Downtime Rotation**: Aplikasi backend (Koneksi Pool HikariCP Spring Boot atau Hibernate ORM Quarkus) wajib dikonfigurasi untuk _hot-reload_ agar memuat kredensial baru secara dinamis usai rotasi Vault, tanpa perlu restart pod.
 - Audit log Vault di-forward ke Wazuh untuk compliance monitoring
@@ -387,8 +387,9 @@ graph LR
 | Tool                    | Tipe        | Use Case                                                   | Rekomendasi                                                  |
 | ----------------------- | ----------- | ---------------------------------------------------------- | ------------------------------------------------------------ |
 | **LokiStack + Grafana** | Open Source | Log aggregation, cost-effective, OCP native                | ✅ **Utama** untuk K8s application logs                      |
-| **OpenSearch**          | Open Source | Full-text search, complex query, dashboard                 | ✅ **Komplemen** untuk log retention jangka panjang          |
 | **Wazuh**               | Open Source | SIEM, XDR, file integrity monitoring, compliance dashboard | ✅ **Wajib** untuk PCI-DSS/NIST reporting & threat detection |
+
+> ⚠️ **Catatan OpenSearch standalone**: Wazuh Indexer **berbasis OpenSearch** — jika Wazuh dipakai sebagai SIEM utama, OpenSearch standalone menjadi **redundan** (duplikasi storage + operasional). Gunakan salah satu: (a) Wazuh Indexer untuk long-term retention SIEM, ATAU (b) OpenSearch standalone jika butuh query engine terpisah dari Wazuh. Jangan deploy dua-duanya tanpa kebutuhan eksplisit.
 
 - **Deployment SIEM**: Wazuh Manager & Indexer akan dikonfigurasi berjalan secara mandiri di dalam klaster OpenShift via Helm, mendukung _isolated lab scalability_. 
 - **Rule Management**: Demi efisiensi tim dalam operasional policy (Wazuh, ACS), platform memprioritaskan hanya menggunakan rule *native/predefined Red Hat*. Apabila *ruleset Red Hat* tidak relevan/tersedia, maka opsi fallback adalah _default rule template_ bawaan komunitas *open-source* (OSS). Pendekatan *highly customized toolsets* akan dihindari sejauh mungkin.
@@ -498,8 +499,9 @@ graph LR
 | ------------------------------ | ------------------------ | ----------------- | ----------------------- | ---------------------------------------------------- |
 | **HashiCorp Vault OSS**        | BSL-1.1 (lihat ⚠️)       | Ya                | Manual config + CronJob | ✅ Utama — tapi wajib legal review BSL compliance    |
 | **OpenBao** _(alternatif)_     | MPL-2.0 (truly OSS, LF) | Ya                | Manual config + CronJob | ⚙️ Evaluasi — drop-in replacement jika BSL blocker   |
-| **External Secrets Operator**  | Open Source (Apache-2.0) | Bridge only       | Via Vault backend       | ✅ Wajib sebagai bridge K8s ↔ Vault                  |
-| **Vault Agent Injector / CSI** | Open Source              | Sidecar/CSI mount | Via Vault TTL           | ✅ Untuk secret injection ke pod                     |
+| **Vault Secrets Operator**     | Open Source (MPL-2.0)    | Bridge only       | Via Vault backend       | ✅ Wajib — sinkronisasi Vault → K8s Secret + auto-restart (`rolloutRestartTarget`) |
+| **External Secrets Operator**  | Open Source (Apache-2.0) | Bridge only       | Via backend (Vault/AWS/GCP) | ⚙️ Alternatif — untuk multi-backend (non-Vault) secret source |
+| **Vault Agent Injector / CSI** | Open Source              | Sidecar/CSI mount | Via Vault TTL           | ⚙️ Opsional — use case per-pod ephemeral secret     |
 
 ### 6.6 Observability & Compliance
 
@@ -710,7 +712,7 @@ graph LR
 - [ ] ❌ Chains image signing terbukti, tetapi Rekor, key backup/rotation, SBOM attestation retention, dan signed-image admission verification belum selesai
 - [ ] ❌ ArgoCD Applications, drift reconciliation, dan Git write-back belum aktif
 - [ ] ❌ Service Mesh mTLS/AuthorizationPolicy belum aktif
-- [ ] ❌ Vault HA/auto-unseal/backup dan ESO secret store belum tersedia
+- [ ] ❌ Vault HA/auto-unseal/backup dan VSO secret store belum tersedia
 - [x] ✅ RHACS Central/SecuredCluster Ready; admission fail-closed, privileged policy, dan scoped short-lived CI identity terbukti melalui `roxctl`
 - [ ] ❌ Wazuh/SIEM, Loki object storage, immutable log archive belum tersedia
 - [x] ✅ NetworkPolicy default-deny; non-dev egress hanya same-namespace + DNS
@@ -1161,8 +1163,12 @@ $ vault-migrator generate-external-secrets \
 ### 19.2 Contract Testing (Pact)
 
 - **Consumer-Driven Contract Testing**: Setiap consumer service define expected API contract
-- Pact broker deployed di cluster untuk manage contract versions
-- **Bi-Directional**: Provider juga verify terhadap consumer pacts
+- Pact broker deployed di cluster untuk manage contract versions (publish + verification results)
+- **Best practice (Pact docs)**: 
+  - Contract test **wajib menggunakan real consumer code** (API client asli), bukan memanggil HTTP langsung ke mock — memastikan logic aplikasi teruji terhadap mock provider response
+  - Contract **hanya mencakup data & operasi yang benar-benar dipakai consumer** (minimal contract) — hindari over-constraint provider dengan field yang tidak dipakai
+  - Pact untuk **contract testing, bukan functional testing provider** — jangan jadikan pengganti integration/E2E test
+- **Bi-Directional Contract Testing (BDCT)**: Provider verify terhadap OpenAPI spec (via PactFlow atau tooling pendukung) + consumer pacts — mengurangi flakiness dan biaya maintenance dibanding CDC murni
 - Pipeline gate: PR yang break existing contract **otomatis ditolak**
 
 ### 19.3 Smoke Test Gate per Environment
@@ -1233,7 +1239,7 @@ Template service sudah include:
 
 - Secure Dockerfile (UBI minimal, non-root user, read-only FS)
 - Pre-configured Semgrep + k6 + ZAP tasks
-- Vault integration via External Secrets Operator
+- Vault integration via Vault Secrets Operator (VSO)
 - ArgoCD Application manifest ready-to-commit
 
 ---
