@@ -12,7 +12,7 @@ metadata:
       Production workloads (payu-prod, payu-preprod, payu-uat) must have a
       matching HorizontalPodAutoscaler defined.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: true
   rules:
     - name: check-hpa-exists

@@ -14,6 +14,18 @@ spec:
       requests:
         cpu: 500m
         memory: 1Gi
-      limits:
-        cpu: 4
-        memory: 4Gi
+  # ExtraConfig merges these keys into the operator-managed argocd-cm.
+  # HPA health: wave -1 HPAs whose Deployment target does not exist yet
+  # must be Progressing, not Degraded — Degraded flags the sync wave as
+  # failed and ArgoCD never proceeds to the workloads wave.
+  extraConfig:
+    resource.customizations.health.autoscaling_HorizontalPodAutoscaler: |
+      hs = {}
+      if obj.status ~= nil and obj.status.currentReplicas ~= nil then
+        hs.status = "Healthy"
+        hs.message = "HPA is healthy"
+      else
+        hs.status = "Progressing"
+        hs.message = "HPA target not ready yet"
+      end
+      return hs

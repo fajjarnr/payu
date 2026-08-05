@@ -2,8 +2,11 @@
 # Horizontal Pod Autoscaler (HPA) for PayU Workloads
 # =============================================================================
 # CPU utilization target 70%; min 1, max 5 for services; max 2 for simulators.
-# sync-wave -1: HPAs apply BEFORE Deployments so Kyverno require-hpa admission
-# (payu-uat/preprod/prod) passes during ArgoCD sync.
+# No sync-wave: HPAs sync in wave 0 with their Deployments. ArgoCD sync waves
+# wait for every resource in a wave to be Healthy before moving on, and an HPA
+# whose Deployment target does not exist yet can never be Healthy — putting
+# HPAs in wave -1 deadlocks the sync. require-hpa Kyverno policy is Audit so
+# Deployments are not blocked while HPAs land in the same wave.
 # =============================================================================
 ---
 apiVersion: autoscaling/v2
@@ -11,8 +14,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: account-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: account-service
     app.kubernetes.io/part-of: payu
@@ -36,8 +37,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: analytics-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: analytics-service
     app.kubernetes.io/part-of: payu
@@ -61,8 +60,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: api-portal-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: api-portal-service
     app.kubernetes.io/part-of: payu
@@ -86,8 +83,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: auth-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: auth-service
     app.kubernetes.io/part-of: payu
@@ -111,8 +106,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: backoffice-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: backoffice-service
     app.kubernetes.io/part-of: payu
@@ -136,8 +129,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: bi-fast-simulator-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: bi-fast-simulator
     app.kubernetes.io/part-of: payu
@@ -161,8 +152,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: biller-simulator-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: biller-simulator
     app.kubernetes.io/part-of: payu
@@ -186,8 +175,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: billing-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: billing-service
     app.kubernetes.io/part-of: payu
@@ -211,8 +198,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: cms-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: cms-service
     app.kubernetes.io/part-of: payu
@@ -236,8 +221,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: compliance-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: compliance-service
     app.kubernetes.io/part-of: payu
@@ -261,8 +244,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: dispute-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: dispute-service
     app.kubernetes.io/part-of: payu
@@ -286,8 +267,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: dukcapil-simulator-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: dukcapil-simulator
     app.kubernetes.io/part-of: payu
@@ -311,8 +290,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: fx-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: fx-service
     app.kubernetes.io/part-of: payu
@@ -336,8 +313,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: gateway-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: gateway-service
     app.kubernetes.io/part-of: payu
@@ -361,8 +336,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: integration-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: integration-service
     app.kubernetes.io/part-of: payu
@@ -386,8 +359,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: investment-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: investment-service
     app.kubernetes.io/part-of: payu
@@ -411,8 +382,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: kyc-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: kyc-service
     app.kubernetes.io/part-of: payu
@@ -436,8 +405,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: lending-rules-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: lending-rules
     app.kubernetes.io/part-of: payu
@@ -461,8 +428,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: lending-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: lending-service
     app.kubernetes.io/part-of: payu
@@ -486,8 +451,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: loan-origination-process-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: loan-origination-process
     app.kubernetes.io/part-of: payu
@@ -511,8 +474,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: notification-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: notification-service
     app.kubernetes.io/part-of: payu
@@ -536,8 +497,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: partner-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: partner-service
     app.kubernetes.io/part-of: payu
@@ -561,8 +520,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: product-catalog-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: product-catalog-service
     app.kubernetes.io/part-of: payu
@@ -586,8 +543,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: promotion-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: promotion-service
     app.kubernetes.io/part-of: payu
@@ -611,8 +566,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: qris-simulator-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: qris-simulator
     app.kubernetes.io/part-of: payu
@@ -636,8 +589,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: statement-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: statement-service
     app.kubernetes.io/part-of: payu
@@ -661,8 +612,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: support-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: support-service
     app.kubernetes.io/part-of: payu
@@ -686,8 +635,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: transaction-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: transaction-service
     app.kubernetes.io/part-of: payu
@@ -711,8 +658,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: va-simulator-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: va-simulator
     app.kubernetes.io/part-of: payu
@@ -736,8 +681,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: wallet-service-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: wallet-service
     app.kubernetes.io/part-of: payu
@@ -761,8 +704,6 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: web-app-hpa
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
