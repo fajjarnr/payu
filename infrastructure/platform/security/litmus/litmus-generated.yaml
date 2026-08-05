@@ -246,8 +246,8 @@ data:
         gzip on;
         gzip_disable "msie6";
 
-        access_log /var/log/nginx/access.log;
-        error_log /var/log/nginx/error.log;
+        access_log /dev/stdout;
+        error_log /dev/stderr;
 
         server {
             listen 8185;
@@ -456,7 +456,7 @@ spec:
       automountServiceAccountToken: false
       initContainers:
         - name: wait-for-mongodb
-          image: litmuschaos.docker.scarf.sh/litmuschaos/mongo:6
+          image: mirror.gcr.io/litmuschaos/mongo:6
           imagePullPolicy: Always
           command: ["/bin/bash", "-c"]
           env:
@@ -486,7 +486,7 @@ spec:
             {}
       containers:
         - name: auth-server
-          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-auth-server:3.28.0
+          image: mirror.gcr.io/litmuschaos/litmusportal-auth-server:3.28.0
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -576,9 +576,11 @@ spec:
         - name: nginx-config
           configMap:
             name: litmus-frontend-nginx-configuration
+        - name: nginx-log
+          emptyDir: {}
       containers:
         - name: litmusportal-frontend
-          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-frontend:3.28.0
+          image: mirror.gcr.io/litmuschaos/litmusportal-frontend:3.28.0
           imagePullPolicy: Always
           resources:
             limits:
@@ -617,6 +619,8 @@ spec:
             - name: nginx-config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
+            - name: nginx-log
+              mountPath: /var/log/nginx
 ---
 # Source: litmus/templates/server-deployment.yaml
 apiVersion: apps/v1
@@ -658,7 +662,7 @@ spec:
           name: hub-storage
       initContainers:
         - name: wait-for-mongodb
-          image: litmuschaos.docker.scarf.sh/litmuschaos/mongo:6
+          image: mirror.gcr.io/litmuschaos/mongo:6
           imagePullPolicy: Always
           command: ["/bin/bash", "-c"]
           env:
@@ -688,7 +692,7 @@ spec:
             {}
       containers:
         - name: graphql-server
-          image: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-server:3.28.0
+          image: mirror.gcr.io/litmuschaos/litmusportal-server:3.28.0
           volumeMounts:
             - mountPath: /tmp/
               name: gitops-storage
@@ -744,19 +748,19 @@ spec:
             - name: NO_PROXY
               value: ""
             - name: ARGO_WORKFLOW_CONTROLLER_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/workflow-controller:v3.3.1
+              value: mirror.gcr.io/litmuschaos/workflow-controller:v3.3.1
             - name: ARGO_WORKFLOW_EXECUTOR_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/argoexec:v3.3.1
+              value: mirror.gcr.io/litmuschaos/argoexec:v3.3.1
             - name: EVENT_TRACKER_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-event-tracker:3.28.0
+              value: mirror.gcr.io/litmuschaos/litmusportal-event-tracker:3.28.0
             - name: LITMUS_CHAOS_EXPORTER_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-exporter:3.28.0
+              value: mirror.gcr.io/litmuschaos/chaos-exporter:3.28.0
             - name: LITMUS_CHAOS_OPERATOR_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-operator:3.28.0
+              value: mirror.gcr.io/litmuschaos/chaos-operator:3.28.0
             - name: LITMUS_CHAOS_RUNNER_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/chaos-runner:3.28.0
+              value: mirror.gcr.io/litmuschaos/chaos-runner:3.28.0
             - name: SUBSCRIBER_IMAGE
-              value: litmuschaos.docker.scarf.sh/litmuschaos/litmusportal-subscriber:3.28.0
+              value: mirror.gcr.io/litmuschaos/litmusportal-subscriber:3.28.0
             - name: CHAOS_CENTER_UI_ENDPOINT
               value: ""
             - name: CONTAINER_RUNTIME_EXECUTOR

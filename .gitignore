@@ -169,4 +169,5 @@ infrastructure/foundation/hostedcluster/
 .codegraph/
 .gemini/
 
-graphify-out
+graphify-out/charts/
+graphify-out/

@@ -1,17 +1,19 @@
-# OpenShift GitOps — ArgoCD Instance Configuration (REFERENCE ONLY)
-# DO NOT deploy via kustomize/bootstrap. The OpenShift GitOps operator
-# manages the ArgoCD CR and re-verifies its spec on each reconcile.
-#
-# Apply once via:
-#   oc patch argocd openshift-gitops -n openshift-gitops \
-#     --type=merge -p '{"spec":{"kustomizeBuildOptions":"--enable-helm"}}'
-#
+# OpenShift GitOps — ArgoCD Instance Configuration
+# Applied declaratively (no oc patch) so the repo stays the source of truth.
 # This is required for Kyverno, Falco, Wazuh kustomize+HelmChartInflationGenerator.
 # ===========================================================
-# apiVersion: argoproj.io/v1beta1
-# kind: ArgoCD
-# metadata:
-#   name: openshift-gitops
-#   namespace: openshift-gitops
-# spec:
-#   kustomizeBuildOptions: "--enable-helm"
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  kustomizeBuildOptions: "--enable-helm"
+  controller:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 4
+        memory: 4Gi

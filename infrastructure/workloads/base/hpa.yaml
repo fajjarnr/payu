@@ -12,6 +12,7 @@ metadata:
   name: account-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: account-service
     app.kubernetes.io/part-of: payu
@@ -36,6 +37,7 @@ metadata:
   name: analytics-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: analytics-service
     app.kubernetes.io/part-of: payu
@@ -60,6 +62,7 @@ metadata:
   name: api-portal-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: api-portal-service
     app.kubernetes.io/part-of: payu
@@ -84,6 +87,7 @@ metadata:
   name: auth-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: auth-service
     app.kubernetes.io/part-of: payu
@@ -108,6 +112,7 @@ metadata:
   name: backoffice-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: backoffice-service
     app.kubernetes.io/part-of: payu
@@ -132,6 +137,7 @@ metadata:
   name: bi-fast-simulator-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: bi-fast-simulator
     app.kubernetes.io/part-of: payu
@@ -156,6 +162,7 @@ metadata:
   name: biller-simulator-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: biller-simulator
     app.kubernetes.io/part-of: payu
@@ -180,6 +187,7 @@ metadata:
   name: billing-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: billing-service
     app.kubernetes.io/part-of: payu
@@ -204,6 +212,7 @@ metadata:
   name: cms-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: cms-service
     app.kubernetes.io/part-of: payu
@@ -228,6 +237,7 @@ metadata:
   name: compliance-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: compliance-service
     app.kubernetes.io/part-of: payu
@@ -252,6 +262,7 @@ metadata:
   name: dispute-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: dispute-service
     app.kubernetes.io/part-of: payu
@@ -276,6 +287,7 @@ metadata:
   name: dukcapil-simulator-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: dukcapil-simulator
     app.kubernetes.io/part-of: payu
@@ -300,6 +312,7 @@ metadata:
   name: fx-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: fx-service
     app.kubernetes.io/part-of: payu
@@ -324,6 +337,7 @@ metadata:
   name: gateway-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: gateway-service
     app.kubernetes.io/part-of: payu
@@ -348,6 +362,7 @@ metadata:
   name: integration-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: integration-service
     app.kubernetes.io/part-of: payu
@@ -372,6 +387,7 @@ metadata:
   name: investment-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: investment-service
     app.kubernetes.io/part-of: payu
@@ -396,6 +412,7 @@ metadata:
   name: kyc-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: kyc-service
     app.kubernetes.io/part-of: payu
@@ -420,6 +437,7 @@ metadata:
   name: lending-rules-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: lending-rules
     app.kubernetes.io/part-of: payu
@@ -444,6 +462,7 @@ metadata:
   name: lending-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: lending-service
     app.kubernetes.io/part-of: payu
@@ -468,6 +487,7 @@ metadata:
   name: loan-origination-process-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: loan-origination-process
     app.kubernetes.io/part-of: payu
@@ -492,6 +512,7 @@ metadata:
   name: notification-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: notification-service
     app.kubernetes.io/part-of: payu
@@ -516,6 +537,7 @@ metadata:
   name: partner-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: partner-service
     app.kubernetes.io/part-of: payu
@@ -540,6 +562,7 @@ metadata:
   name: product-catalog-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: product-catalog-service
     app.kubernetes.io/part-of: payu
@@ -564,6 +587,7 @@ metadata:
   name: promotion-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: promotion-service
     app.kubernetes.io/part-of: payu
@@ -588,6 +612,7 @@ metadata:
   name: qris-simulator-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: qris-simulator
     app.kubernetes.io/part-of: payu
@@ -612,6 +637,7 @@ metadata:
   name: statement-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: statement-service
     app.kubernetes.io/part-of: payu
@@ -636,6 +662,7 @@ metadata:
   name: support-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: support-service
     app.kubernetes.io/part-of: payu
@@ -660,6 +687,7 @@ metadata:
   name: transaction-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: transaction-service
     app.kubernetes.io/part-of: payu
@@ -684,6 +712,7 @@ metadata:
   name: va-simulator-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: va-simulator
     app.kubernetes.io/part-of: payu
@@ -708,6 +737,7 @@ metadata:
   name: wallet-service-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: wallet-service
     app.kubernetes.io/part-of: payu
@@ -732,6 +762,7 @@ metadata:
   name: web-app-hpa
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: "Wait=false"
   labels:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
