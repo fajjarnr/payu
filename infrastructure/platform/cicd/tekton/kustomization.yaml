@@ -50,3 +50,6 @@ resources:
 
   # RBAC (ArgoCD Application read for sync-wait gate)
   - argocd-sync-rbac.yaml
+
+  # RBAC (pipeline SA -> payu-sit chaos resources for Litmus gate)
+  - litmus-gate-rbac.yaml
