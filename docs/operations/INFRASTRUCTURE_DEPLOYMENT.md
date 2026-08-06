@@ -55,7 +55,7 @@ Current state differs from older docs:
 tkn pipeline start payu-deploy-gitops-pipeline -n payu-cicd \
   -w name=source,claimName=tekton-workspace-pvc \
   -p service-name=<service> -p environment=<sit|uat|preprod|prod> \
-  -p image-tag=<tag> -p push-changes=true \
+  -p image-digest=<sha256-digest> -p push-changes=true \
   -p environment-base-url=<env-url> -p schema-url=<gateway>/q/openapi \
   --use-param-defaults
 ```

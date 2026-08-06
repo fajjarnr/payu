@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: preview-env-cleanup
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: preview-env-cleanup
+    app.kubernetes.io/part-of: payu
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: openshift-gitops-argocd-application-controller
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978dd8c57b2c131adff663df26
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  echo "=== Preview Environment Cleanup ==="
+                  oc get ns -l payu.io/environment=preview -o json | \
+                    jq -r '.items[] | select(.metadata.annotations["payu.io/ttl-hours"] != null) | [.metadata.name, (.metadata.annotations["payu.io/created-at"] // .metadata.creationTimestamp), .metadata.annotations["payu.io/ttl-hours"]] | @tsv' | \
+                    while IFS="$(printf '\t')" read -r ns created_at ttl_hours; do
+                      created_epoch=$(date -d "$created_at" +%s)
+                      now_epoch=$(date +%s)
+                      ttl_seconds=$((ttl_hours * 3600))
+                      age_seconds=$((now_epoch - created_epoch))
+                      echo "Namespace: $ns | Age: ${age_seconds}s | TTL: ${ttl_seconds}s"
+                      if [ "$age_seconds" -gt "$ttl_seconds" ]; then
+                        pr_num=$(oc get ns "$ns" -o jsonpath='{.metadata.labels.payu\.io/pr-number}')
+                        if [ -n "$pr_num" ]; then
+                          oc delete application.argoproj.io "payu-preview-pr-${pr_num}" -n openshift-gitops --ignore-not-found=true
+                        fi
+                        oc delete ns "$ns" --ignore-not-found=true
+                      fi
+                    done

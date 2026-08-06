@@ -528,14 +528,16 @@ graph LR
 
 ## 7. Implementation Roadmap
 
-> **Status update 2026-08-01 (evidence-based):** SIT & UAT promotion pipeline
+> **Status update 2026-08-06 (evidence-based):** SIT & UAT promotion pipeline
 > hijau (`payu-deploy-gitops-pipeline`: sync-wait, ZAP, Schemathesis, Litmus
 > pod-delete Pass, k6; UAT SUCCEEDED 11m50s). Preprod workloads live
 > (31 deployment Synced/Healthy), preprod pipeline diblok `preprod-kraken-gate`
 > (chaos runtime — OPS-2026-08-01-05). INFRA-029 audit forwarding live
 > (Logging 6.5 + LokiStack S3/KMS + ClusterLogForwarder audit→lokiStack,
-> CLF Ready). Tekton Results dimigrasi ke HA PostgreSQL (CNPG `tekton_results`,
-> 17 records). Vault HA + auto-unseal (awskms) + snapshot S3 live. ArgoCD
+> CLF Ready). Tekton Results operator/API/retention agent live with a 365-day
+> policy, but the live `TektonResult` still uses the operator-managed PostgreSQL
+> (`is_external_db=false`); the CNPG `tekton_results` design is not connected.
+> Vault HA + auto-unseal (awskms) + snapshot S3 live. ArgoCD
 > appset automated sync (prod sync window). VSO egress anomaly masih open
 > (OPS-2026-08-01-03).
 
@@ -556,7 +558,7 @@ graph LR
 - [x] 🔵 Vault HA (Raft 3/3 + awskms auto-unseal + TLS + PDB) live; sinkronisasi secret via Vault Secrets Operator (`VaultStaticSecret`, 60/60 Ready per env) — pengganti ESO ClusterSecretStore `payu-vault` (INFRA-026). Vault dev mode (inmem) masih ada di `payu-dev` dan dilarang untuk production.
 - [x] 🔵 Sinkronisasi secret via VSO live untuk SIT/UAT/preprod/prod (env-isolated `payu/<env>/...` paths); refresh terganggu oleh egress anomaly VSO (OPS-2026-08-01-03). **Best practice**: tambahkan `spec.rolloutRestartTarget` pada `VaultStaticSecret` (Deployment/StatefulSet/`argo.Rollout`) agar workload otomatis di-restart saat secret di-rotate — mencegah workload memakai secret lama setelah refresh.
 - [x] 🔵 Tekton Tasks: Semgrep, Trivy, Grype, Syft, ZAP, Schemathesis, k6, Litmus, Kraken + Pipelines + Triggers
-- [x] 🔵 ArgoCD live: 3 ApplicationSets + 22 Applications, appset `automated` sync + prod sync window; `payu-sit`/`payu-uat`/`payu-preprod` Synced/Healthy. **Catatan**: `prune`/`selfHeal` sengaja nonaktif saat adopsi awal (menghindari penghapusan tak terduga selama migrasi); sesuai best practice ArgoCD, keduanya **wajib diaktifkan** sebelum production — lihat §4.4.1.
+- [x] 🔵 ArgoCD live: 3 ApplicationSets + 22 Applications, appset automated sync dengan `prune`/`selfHeal`, dan prod sync window; `payu-sit`/`payu-uat`/`payu-preprod` Synced/Healthy. Production promotion tetap dibatasi sync window.
 - [x] 🔵 Kyverno cleanup CronJob image fix: `bitnami/kubectl:1.28.5` → OpenShift internal CLI
 
 **DR & Backup (§9):**
@@ -622,9 +624,9 @@ graph LR
     - `artifacts.taskrun.storage: oci`
   - Enkripsi etcd AES-GCM selesai dan operator menghasilkan key ECDSA di `signing-secrets`. TaskRun proof menghasilkan `chains_signed=true`; verifikasi public-key Cosign sukses, tetapi strict verification gagal karena belum ada Rekor transparency entry.
 - [x] 🟡 Konfigurasi Tekton Results untuk audit trail (retention 12 bulan)
-  - Tekton Results v0.18.0 sudah terinstall dengan watcher + API + retention policy agent
+  - Tekton Results v0.19.0 sudah terinstall dengan watcher + API + retention policy agent
   - Retention policy di-patch dari 30 hari ke **365 hari** untuk memenuhi PCI-DSS Requirement 10
-  - Retention metadata diset 365 hari dan Route publik dimatikan. Backend internal belum memenuhi target HA/backup production; external PostgreSQL masih wajib sebelum production.
+  - Retention metadata diset 365 hari dan Route publik dimatikan. Backend live masih PostgreSQL operator-managed; target HA PostgreSQL CNPG + Vault-backed credential belum terhubung dan tetap wajib sebelum production.
 
 **API Gateway & WAF (§14):**
 - [ ] 🟡 Deploy Coraza WAF dengan OWASP CRS v4.x di ingress layer

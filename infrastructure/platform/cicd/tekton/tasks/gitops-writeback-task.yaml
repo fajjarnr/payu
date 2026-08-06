@@ -12,12 +12,9 @@ spec:
       type: string
     - name: environment
       type: string
-    - name: image-tag
-      type: string
-      default: ""
     - name: image-digest
       type: string
-      default: ""
+      description: Immutable sha256 digest to promote
     - name: registry-url
       type: string
       default: image-registry.openshift-image-registry.svc:5000
@@ -56,17 +53,13 @@ spec:
           echo "[X] Overlay directory $TARGET_DIR not found!"
           exit 1
         fi
-        if [ -z "$(params.image-tag)" ] && [ -z "$(params.image-digest)" ]; then
-          echo "[X] Either image-tag or image-digest must be provided"
+        if ! printf '%s' "$(params.image-digest)" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+          echo "[X] image-digest must be a lowercase sha256 digest" >&2
           exit 1
         fi
 
         IMAGE_NAME="$(params.registry-url)/$(params.registry-namespace)/$(params.service-name)"
-        if [ -n "$(params.image-digest)" ]; then
-          IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
-        else
-          IMAGE_REF="${IMAGE_NAME}:$(params.image-tag)"
-        fi
+        IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
 
         cd "$TARGET_DIR"
         # Replace the newName of the matching images entry without requiring kustomize.

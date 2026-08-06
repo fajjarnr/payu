@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ArgoCD bootstrap validity**: removed the unsupported `ConfigManagementPlugin`, corrected the root Application project, and authorized platform destinations for RHTAS and CCO CredentialsRequests.
 - **RHTAS Kyverno admission**: added required labels and restricted filesystem settings to the custom Redis proxy and Trillian schema Job; the production base now passes server-side validation under the enforced policies.
 - **Unsafe optional integrations**: stopped deploying Image Updater and Slack Vault ExternalSecrets until a platform-scoped Vault store exists; Tekton's existing GitOps writeback remains the active promotion path.
+- **Promotion safety**: GitOps write-back now accepts only lowercase SHA-256 digests; the quality-gate Trivy task is fail-closed; Pact verification is opt-in until a real broker/provider contract exists.
+- **Drift scanner wiring**: moved drift/preview CronJobs under the Argo bootstrap Kustomization, added the missing least-privilege ServiceAccount, used the explicit ArgoCD API group, and pinned the CLI image. A live validation Job completed and surfaced current known drift without a configured alert endpoint.
+- **GitOps reconciliation**: ApplicationSets now explicitly enable ArgoCD `prune` and `selfHeal`; the production sync window remains in force for promotion approval.
+- **Broken lab leftovers**: removed the stale Image Updater manifests and deleted its failed live deployment plus unresolved Vault ExternalSecrets; no credentials were copied or generated.
 
 ### Validation
 

@@ -25,6 +25,10 @@
 > - Added the RHTAS Application with automated prune/self-heal. The current cluster uses an explicit single-zone profile: ODF CephFS RWX, 3-instance CNPG, and hostname anti-affinity; the production base remains EFS RWX with zone-aware HA.
 > - Runtime evidence: RHTAS Redis proxy `2/2`, Redis `3/3`, CNPG spec is `3` with hostname anti-affinity, Trillian schema/create-tree Jobs succeeded, Rekor/CTLog/Fulcio/TSA are Ready, and the internal `rekor-server` Service is available. CNPG full readiness remains open: the recreated former-primary replica is blocked by the existing lab Barman/WAL archive error (`exit status 4`), which requires separate CCO/S3 credential and bucket verification. Tekton Chains remains configured for internal Rekor transparency.
 > - Deliberately deferred Argo Image Updater and Slack webhook ExternalSecrets: both required the missing platform `payu-vault` store. Existing Tekton `gitops-writeback` remains the promotion writer; secure PaC webhook and platform Vault auth are still open.
+> - CI/CD safety pass applied live: promotion now rejects tags and requires a lowercase `sha256:<64-hex>` digest; the quality-gate Trivy scan is fail-closed; Pact verification is opt-in until a real broker/provider contract exists.
+> - ArgoCD ApplicationSets now explicitly enable `prune: true` and `selfHeal: true`; the production AppProject sync window remains the approval boundary.
+> - Drift detection is now managed by the bootstrap Kustomization with its own least-privilege ServiceAccount, explicit ArgoCD API group, and digest-pinned CLI image. A validation Job completed successfully and reported the known prod/missing-app drift; no alert webhook is configured.
+> - Removed the stale broken Image Updater deployment/config and three unresolved Vault ExternalSecrets from the lab cluster. No signing/Git credentials were copied or generated.
 
 
 > ✅ **2026-08-04 — PROD-034 mobile request deduplication fixed**:

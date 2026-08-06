@@ -31,10 +31,9 @@ spec:
       type: string
       description: Maximum allowed high vulnerabilities
       default: "3"
-    - name: image-tag
+    - name: image-digest
       type: string
-      description: Image tag to scan
-      default: "latest"
+      description: Immutable sha256 digest of the image to scan
   workspaces:
     - name: source
       description: Workspace for source code
@@ -64,11 +63,11 @@ spec:
         name: trivy
       params:
         - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/payu-dev/$(params.service-name):$(params.image-tag)
+          value: image-registry.openshift-image-registry.svc:5000/payu-dev/$(params.service-name)@$(params.image-digest)
         - name: SEVERITY
           value: "CRITICAL,HIGH"
         - name: EXIT_CODE
-          value: "0"
+          value: "1"
 
     - name: generate-quality-report
       runAfter:
@@ -92,6 +91,6 @@ spec:
             echo "Timestamp: $(date -Iseconds)"
             echo ""
             echo "Coverage: threshold=$(params.min-coverage)%"
-            echo "Security: max_critical=$(params.max-critical-vulns), max_high=$(params.max-high-vulns)"
+            echo "Security: max_critical=$(params.max-critical-vulns), max_high=$(params.max-high-vulns), image_digest=$(params.image-digest)"
             echo ""
             echo "Quality Gate: PASSED"

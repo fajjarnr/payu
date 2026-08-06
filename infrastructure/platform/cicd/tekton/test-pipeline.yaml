@@ -35,6 +35,10 @@ spec:
       type: string
       description: Run integration tests with Testcontainers
       default: "false"
+    - name: contract-tests-required
+      type: string
+      description: Run Pact verification only when a broker and provider contract are configured
+      default: "false"
   workspaces:
     - name: source
       description: Workspace for source code
@@ -156,6 +160,10 @@ spec:
       runAfter:
         - unit-tests
         - python-tests
+      when:
+        - input: "$(params.contract-tests-required)"
+          operator: in
+          values: ["true"]
       taskRef:
         name: pact-verify
       workspaces:
