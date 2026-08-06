@@ -1,29 +1,42 @@
 ---
 name: core-banking-engineer
-version: 2.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: [data-architect]
-tags: [backend, java, spring, hexagonal, transactions, caching]
-related: [integration-architect, data-architect, cybersecurity-architect]
-description: **Master Skill**: Backend Systems Architect for PayU. Specialized in Spring Boot 3.4, Quarkus Native, Hexagonal Architecture, Transactions, Caching, high-performance Java patterns, and multi-service Resilience.
+description: PayU backend engineering for Spring Boot, Quarkus, Java financial domains, hexagonal architecture, transactions, messaging, persistence, caching, resilience, and testing. Use when implementing, debugging, or reviewing backend services, especially payment, transfer, ledger, or event-driven flows; verify all third-party APIs and configuration with Context7 first.
 ---
 
-## 📚 Reference Implementation Patterns
-For detailed patterns and historical context on PayU backend engineering, see:
-- [Backend & JPA Patterns](./references/BACKEND_PATTERNS.md)
+# PayU Core Banking Engineer
 
-# PayU Core Banking Architect Master Skill
+Use the smallest change that preserves financial integrity, security, and the
+existing service architecture. Read the target service's POM, configuration,
+shared starters, and tests before changing code. Reuse a PayU starter or an
+existing port before adding a dependency or abstraction.
 
----
+## Context7 documentation gate
 
-## 📦 Build System & Dependency Management
+Before writing or changing code that uses a library, framework, SDK, API, CLI,
+or cloud service:
 
-All PayU microservices MUST inherit from the consolidated parent POM to ensure consistency in library versions, security configurations, and compiler settings (including Lombok/Annotation processing).
+1. Read the module POM and parent/BOM to determine the exact version in use.
+2. Resolve the library in Context7. Prefer the official, high-reputation result
+   and pin the query to the repository version when that version is available.
+3. Query one concrete topic at a time: API, configuration, testing, migration,
+   or integration behavior. Use the returned documentation as the source of
+   truth; do not rely on remembered annotations, artifact names, or property
+   namespaces.
+4. If the exact version is not indexed, use the nearest official version only
+   as a stated fallback, then verify the actual API in the repository's POM,
+   source, or dependency JAR before editing.
+5. Re-resolve and re-query after changing a dependency version. Do not mix
+   examples from different major versions.
 
-### 1. Parent POM Standard
-NEVER use `spring-boot-starter-parent` directly in a microservice. Always use:
+Use Context7 for Spring Boot/Spring Data/Spring Kafka, Quarkus, Resilience4j,
+Flyway, Testcontainers, Micrometer, and similar third-party libraries. Context7
+does not replace repository inspection for PayU starters or platform rules.
+
+## Build and dependencies
+
+Services inherit the PayU parent; they do not inherit `spring-boot-starter-parent`
+directly:
+
 ```xml
 <parent>
     <groupId>id.payu</groupId>
@@ -33,496 +46,190 @@ NEVER use `spring-boot-starter-parent` directly in a microservice. Always use:
 </parent>
 ```
 
-### 2. Lombok & Code Generation
-Always use Lombok annotations for boilerplate. If compilation fails with "cannot find symbol", verify that the service is properly linked to the parent POM and that the `maven-compiler-plugin` hasn't been overridden without the `lombok` annotation processor.
+- Read the parent POM before naming a version. Let its dependency management and
+  BOMs manage third-party versions; add a local version only when the parent
+  cannot manage it and the Context7 check confirms compatibility.
+- Prefer `security-starter`, `resilience-starter`, `cache-starter`,
+  `logging-starter`, `events-starter`, `outbox-starter`, and `archunit-starter`
+  where the service needs them.
+- Use Lombok when the module already uses it. If the same Lombok compilation
+  error survives two fixes, replace the affected boilerplate explicitly and
+  continue the build.
 
-## 🏛️ Hexagonal Architecture (The PayU Standard)
+## Hexagonal architecture
 
-All core services MUST separate business logic from technical infrastructure:
+Keep the domain independent of Spring, Quarkus, JPA, Kafka, HTTP clients, and
+configuration. External communication crosses a port.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Domain Layer                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │  Entities   │  │    Value    │  │    Ports    │         │
-│  │             │  │   Objects   │  │ (Interfaces)│         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-│                 NO FRAMEWORK ANNOTATIONS                    │
-├─────────────────────────────────────────────────────────────┤
-│                    Application Layer                        │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │           Use Cases / Input Ports                    │   │
-│  └─────────────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────────────┤
-│                     Adapters Layer                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   REST   │  │ Database │  │  Kafka   │  │ External │   │
-│  │ Adapter  │  │ Adapter  │  │ Adapter  │  │ Clients  │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
+```text
+interfaces (REST, DTOs) -> application (use cases) -> domain
+                                  ^                    |
+infrastructure/adapters (JPA, Kafka, HTTP, config) ---+
 ```
 
-### ArchUnit Enforcement
+- Put request/response DTOs in `interfaces.dto`; do not expose domain objects
+  at an API boundary.
+- Put inbound use cases and outbound ports beside the application/domain model;
+  adapters implement ports.
+- Keep persistence entities and framework annotations in adapters. Define domain
+  enums as top-level files.
+- Add or update ArchUnit rules so domain code cannot depend on adapters,
+  configuration, or framework packages.
+- Match the service's established package names when they differ; do not move a
+  whole service merely to satisfy this guide.
+
+## Financial integrity
+
+- Represent money with `BigDecimal`; never use `float` or `double`.
+- Normalize monetary values to scale 4 with `RoundingMode.HALF_EVEN`; persist
+  financial columns as `DECIMAL(19,4)`.
+- Compare amounts with `compareTo`, not `equals`.
+- Use double-entry postings and an immutable ledger. Never update or delete a
+  financial fact; correct it with a reversal entry. A status transition is not a
+  license to rewrite the original posting.
+- Protect concurrent balance changes with optimistic locking or the service's
+  established database locking strategy. Make the database constraint part of
+  the invariant.
+- Mask NIK, PIN, tokens, credentials, and other PII in logs. Keep secrets in
+  Vault or the configured secret manager.
+
+## Transactions and events
+
+Put the business mutation and its outbox row in one database transaction:
 
 ```java
-@ArchTest
-static final ArchRule domainShouldNotDependOnInfrastructure = 
-    noClasses()
-        .that().resideInAPackage("..domain..")
-        .should().dependOnClassesThat()
-        .resideInAnyPackage("..adapter..", "..config..", "org.springframework..");
+@Transactional
+public Transfer execute(TransferCommand command) {
+    Account source = accountPort.require(command.sourceId());
+    Account target = accountPort.require(command.targetId());
 
-@ArchTest
-static final ArchRule servicesShouldOnlyAccessRepositoriesThroughPorts =
-    noClasses()
-        .that().resideInAPackage("..application..")
-        .should().dependOnClassesThat()
-        .resideInAnyPackage("..adapter.persistence..");
-```
-
----
-
-## 📊 Repository Pattern (Domain-Driven)
-
-### Port Definition (Domain Layer)
-
-```java
-// domain/port/outbound/AccountRepository.java
-public interface AccountRepository {
-    Optional<Account> findById(AccountId id);
-    List<Account> findByUserId(UserId userId);
-    Account save(Account account);
-    void delete(AccountId id);
+    source.debit(command.amount());
+    target.credit(command.amount());
+    accountPort.save(source);
+    accountPort.save(target);
+    eventPort.transferCompleted(command, source, target);
+    return Transfer.completed(command);
 }
 ```
 
-### Adapter Implementation (Infrastructure Layer)
+The messaging adapter must use PayU `outbox-starter`/`OutboxService` and
+`events-starter`'s CloudEvent envelope, following the platform-required
+CloudEvents 1.0.2 shape. Do not call `kafkaTemplate.send()` from application or
+domain code. Use topics shaped as
+`payu.<domain>.<event-type>.v<n>` and append `.dlq` only for a dead-letter
+topic. Verify the starter's current CloudEvents representation before adding
+custom serialization.
+
+Keep event type, subject, source, correlation/trace identifiers, and the
+versioned topic stable. Consumers must be idempotent because delivery is at
+least once. Publish only after the domain state is valid and persisted.
+
+## Persistence and JPA
+
+- Repositories are outbound ports; JPA repositories and mappers stay in the
+  persistence adapter.
+- Use `@Transactional(readOnly = true)` for read paths and a write transaction
+  for each atomic mutation. Avoid self-invocation when relying on proxy-based
+  transaction or resilience annotations.
+- Set `spring.jpa.open-in-view=false` and map data needed by the response before
+  leaving the transaction.
+- Prevent N+1 queries with a targeted projection, `JOIN FETCH`, or a bounded
+  batch query. Verify the generated SQL for high-volume paths.
+- Do not expose `delete` on a financial repository. Use archival/status handling
+  only for non-financial data and follow the immutable-ledger rule for postings.
+
+## API and idempotency
+
+- Use versioned plural kebab-case paths such as `/v1/transfers`.
+- Use RFC 9457 errors with a stable, unique PayU error code.
+- Every payment, transfer, disbursement, and other mutation endpoint requires
+  `X-Idempotency-Key`. Prefer PayU's `@Idempotent(required = true)` and its
+  interceptor/repository over a hand-rolled Redis lock.
+- Persist or atomically reserve the request fingerprint and result. Reject the
+  same key with a different payload; never execute two financial mutations for
+  one key.
+- Validate untrusted input at the boundary and keep DTO validation separate
+  from domain invariants.
+
+## Caching
+
+Use `cache-starter` and the service's configured cache provider. Cache immutable
+or read-heavy reference data with an explicit key, TTL, serialization format,
+and invalidation path. Do not treat a cache as the source of truth for balances,
+ledger entries, idempotency state, or authorization. Add a custom multi-layer
+cache only after a measured bottleneck and a defined consistency policy.
+
+## Resilience and external calls
+
+Resolve the exact Resilience4j and HTTP-client versions through the Context7
+gate, then use the repository's `resilience-starter` configuration. Apply
+resilience at the adapter boundary:
 
 ```java
-// adapter/persistence/JpaAccountRepository.java
-@Repository
-@RequiredArgsConstructor
-public class JpaAccountRepository implements AccountRepository {
-    
-    private final AccountJpaRepository jpaRepository;
-    private final AccountMapper mapper;
-    
-    @Override
-    public Optional<Account> findById(AccountId id) {
-        return jpaRepository.findById(id.value())
-            .map(mapper::toDomain);
-    }
-    
-    @Override
-    public Account save(Account account) {
-        AccountEntity entity = mapper.toEntity(account);
-        AccountEntity saved = jpaRepository.save(entity);
-        return mapper.toDomain(saved);
-    }
-    
-    // Query optimization - select only needed columns
-    @Query("SELECT new AccountSummaryDto(a.id, a.name, a.balance) FROM AccountEntity a WHERE a.userId = :userId")
-    List<AccountSummaryDto> findSummariesByUserId(@Param("userId") String userId);
+@CircuitBreaker(name = "fx-service", fallbackMethod = "cachedRate")
+@Retry(name = "fx-service")
+public ExchangeRate getRate(String from, String to) {
+    return fxClient.fetchRate(from, to);
 }
 ```
 
----
+- Retry only transient failures and only when the operation is idempotent or
+  carries a safe idempotency key. Never blindly retry a financial write.
+- Ignore business and validation exceptions so they do not trip a circuit.
+- Use a fallback that preserves truth: cached/read-only data or an explicit
+  unavailable result. Never report a financial write as successful from a
+  fallback.
+- Use a thread-pool bulkhead/time limiter only for the async API shape supported
+  by the resolved library version. Keep timeouts, retry counts, and concurrency
+  limits bounded and observable.
 
-## 🔄 Transaction Patterns
+## Quarkus services
 
-### Transactional Outbox (Atomicity DB + Kafka)
+Use the Quarkus BOM and extensions already declared by the module. Resolve the
+exact Quarkus version in Context7 before using REST, Reactive Messaging,
+transactions, testing, or native-image APIs. Keep the same hexagonal, money,
+outbox, idempotency, and security rules as Spring services; framework choice
+does not relax financial invariants. Use the module's current Quarkus test
+extension for endpoint and messaging tests instead of guessing compatibility
+annotations.
 
-```java
-// application/service/TransferService.java
-@Service
-@RequiredArgsConstructor
-public class TransferService {
-    
-    private final AccountRepository accountRepository;
-    private final OutboxRepository outboxRepository;
-    
-    @Transactional
-    public Transfer executeTransfer(TransferCommand command) {
-        // 1. Validate accounts
-        Account source = accountRepository.findById(command.sourceId())
-            .orElseThrow(() -> new AccountNotFoundException(command.sourceId()));
-        Account target = accountRepository.findById(command.targetId())
-            .orElseThrow(() -> new AccountNotFoundException(command.targetId()));
-        
-        // 2. Execute domain logic
-        source.debit(command.amount());
-        target.credit(command.amount());
-        
-        // 3. Persist changes
-        accountRepository.save(source);
-        accountRepository.save(target);
-        
-        // 4. Write to outbox (same transaction!)
-        outboxRepository.save(OutboxEvent.builder()
-            .aggregateType("Transfer")
-            .aggregateId(UUID.randomUUID().toString())
-            .eventType("TransferCompleted")
-            .payload(objectMapper.writeValueAsString(command))
-            .build());
-        
-        return Transfer.completed(command);
-    }
-}
-```
+## Testing and verification
 
-### N+1 Prevention
+Follow red-green-refactor for production changes: first write a failing test
+that reproduces the behavior, then implement the smallest fix.
 
-```java
-// ❌ BAD: N+1 queries
-List<Account> accounts = accountRepository.findAll();
-for (Account account : accounts) {
-    account.setOwner(userRepository.findById(account.getUserId())); // N queries!
-}
+- Cover domain invariants exhaustively; target 80–90% for adapters and services.
+- Test real behavior, not mock interactions. Use Testcontainers for PostgreSQL
+  and Kafka integration where the production boundary matters.
+- Add ArchUnit tests for layering and a concurrency/idempotency test for every
+  financial mutation path.
+- For transaction/outbox work, verify rollback leaves no business row or
+  outbox row, and commit creates exactly one durable event record.
+- Run the smallest relevant Maven module test first, then the service build and
+  broader build when the change crosses modules.
 
-// ✅ GOOD: Batch fetch with JOIN FETCH
-@Query("SELECT a FROM Account a JOIN FETCH a.owner WHERE a.status = :status")
-List<Account> findAllWithOwnerByStatus(@Param("status") AccountStatus status);
+## Observability and security
 
-// ✅ GOOD: Batch fetch with IN clause
-List<Account> accounts = accountRepository.findAll();
-Set<UserId> userIds = accounts.stream().map(Account::getUserId).collect(toSet());
-Map<UserId, User> userMap = userRepository.findByIdIn(userIds).stream()
-    .collect(toMap(User::getId, Function.identity()));
+Use `logging-starter` and structured fields such as request ID, trace ID,
+correlation ID, safe aggregate ID, outcome, error code, and duration. Never log
+request bodies, credentials, raw tokens, PINs, or unmasked PII. Keep tracing,
+health, metrics, and audit events enabled according to the service's existing
+starter configuration.
 
-accounts.forEach(a -> a.setOwner(userMap.get(a.getUserId())));
-```
+## Platform workflow
 
----
+Before a service-specific change, read its current POM and the relevant roadmap
+or lesson entry; the compliance state changes over time and must not be copied
+from a stale matrix. For flat-package services, refactor only when requested:
+introduce domain model/ports, application use cases, persistence adapters,
+`interfaces.dto`, ArchUnit coverage, and the required shared starters in that
+order.
 
-## 🗄️ Caching Strategies
+Read the detailed patterns only when needed:
 
-### Multi-Layer Caching (L1 Caffeine + L2 Redis)
-
-```java
-// config/CacheConfig.java
-@Configuration
-@EnableCaching
-public class CacheConfig {
-    
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        // L1: Caffeine (in-memory, fast)
-        CaffeineCacheManager l1CacheManager = new CaffeineCacheManager();
-        l1CacheManager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(1000)
-            .expireAfterWrite(5, TimeUnit.MINUTES));
-        
-        // L2: Redis (distributed)
-        RedisCacheManager l2CacheManager = RedisCacheManager.builder(redisConnectionFactory)
-            .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(30)))
-            .build();
-        
-        return new CompositeCacheManager(l1CacheManager, l2CacheManager);
-    }
-}
-```
-
-### Cache-Aside Pattern
-
-```java
-// application/service/AccountCacheService.java
-@Service
-@RequiredArgsConstructor
-public class AccountCacheService {
-    
-    private final AccountRepository accountRepository;
-    private final RedisTemplate<String, Account> redisTemplate;
-    
-    private static final Duration CACHE_TTL = Duration.ofMinutes(5);
-    
-    public Account findById(AccountId id) {
-        String cacheKey = "account:" + id.value();
-        
-        // Try cache first
-        Account cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            return cached;
-        }
-        
-        // Cache miss - fetch from DB
-        Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new AccountNotFoundException(id));
-        
-        // Update cache
-        redisTemplate.opsForValue().set(cacheKey, account, CACHE_TTL);
-        
-        return account;
-    }
-    
-    public void invalidateCache(AccountId id) {
-        redisTemplate.delete("account:" + id.value());
-    }
-}
-```
-
----
-
-## ☕ Spring Boot 3.4 Patterns
-
-### Idempotency (Prevent Double-Spending)
-
-```java
-// adapter/rest/TransferController.java
-@RestController
-@RequestMapping("/api/v1/transfers")
-@RequiredArgsConstructor
-public class TransferController {
-    
-    private final TransferService transferService;
-    private final IdempotencyService idempotencyService;
-    
-    @PostMapping
-    public ResponseEntity<TransferResponse> createTransfer(
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @Valid @RequestBody TransferRequest request) {
-        
-        // Check idempotency
-        Optional<TransferResponse> cached = idempotencyService.get(idempotencyKey);
-        if (cached.isPresent()) {
-            return ResponseEntity.ok(cached.get());
-        }
-        
-        // Execute transfer
-        Transfer transfer = transferService.executeTransfer(request.toCommand());
-        TransferResponse response = TransferResponse.from(transfer);
-        
-        // Store result for idempotency
-        idempotencyService.store(idempotencyKey, response, Duration.ofHours(24));
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-}
-```
-
-### Resilience (Resilience4j)
-
-```java
-// adapter/client/FxServiceClient.java
-@Service
-@RequiredArgsConstructor
-public class FxServiceClient {
-    
-    private final RestTemplate restTemplate;
-    
-    @CircuitBreaker(name = "fxService", fallbackMethod = "getCachedRate")
-    @Bulkhead(name = "fxService", type = Bulkhead.Type.THREADPOOL)
-    @Retry(name = "fxService")
-    public ExchangeRate getRate(String from, String to) {
-        return restTemplate.getForObject(
-            "/api/v1/rates?from={from}&to={to}",
-            ExchangeRate.class,
-            from, to
-        );
-    }
-    
-    private ExchangeRate getCachedRate(String from, String to, Exception ex) {
-        log.warn("FX service unavailable, using cached rate", ex);
-        return cachedRateRepository.findLatest(from, to)
-            .orElseThrow(() -> new ServiceUnavailableException("FX rate unavailable"));
-    }
-}
-```
-
-```yaml
-# application.yml
-resilience4j:
-  circuitbreaker:
-    instances:
-      fxService:
-        registerHealthIndicator: true
-        slidingWindowSize: 100            # Count-based to reduce jitter
-        slidingWindowType: COUNT_BASED
-        minimumNumberOfCalls: 10
-        permittedNumberOfCallsInHalfOpenState: 10
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 10s       # Fast recovery
-        failureRateThreshold: 50           # Fail if >50% errors
-        slowCallRateThreshold: 50
-        slowCallDurationThreshold: 2000ms
-        recordExceptions:
-            - java.net.SocketTimeoutException
-            - org.springframework.web.client.ResourceAccessException
-        ignoreExceptions:
-            - id.payu.core.exception.BusinessException # Don't trip on logic errors
-  
-  bulkhead:
-    instances:
-      fxService:
-        maxConcurrentCalls: 20
-        maxWaitDuration: 500ms
-  
-  retry:
-    instances:
-      fxService:
-        maxAttempts: 3
-        waitDuration: 1s
-        exponentialBackoffMultiplier: 2
-        retryExceptions:
-          - java.io.IOException
-          - java.net.SocketTimeoutException
-```
-
----
-
-## ⚛️ Quarkus Native (High-Velocity Services)
-
-For lightweight tasks (Gateway, Notifications, Billing), use Quarkus for sub-second startup:
-
-```java
-// QuarkusBillingProcessor.java
-@ApplicationScoped
-public class BillingProcessor {
-    
-    @Inject
-    BillingRepository billingRepository;
-    
-    @Incoming("billing-process")
-    @Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)
-    @Transactional
-    public CompletionStage<Void> process(BillingEvent event) {
-        return billingRepository.process(event)
-            .thenAccept(result -> Log.infof("Processed billing: %s", event.getId()));
-    }
-}
-```
-
----
-
-## 🛡️ Financial Integrity & Security
-
-```java
-// domain/value/Money.java
-@Value
-@RequiredArgsConstructor(staticName = "of")
-public class Money {
-    BigDecimal amount;
-    Currency currency;
-    
-    // NEVER use double/float for currency
-    public Money add(Money other) {
-        validateSameCurrency(other);
-        return Money.of(
-            this.amount.add(other.amount).setScale(2, RoundingMode.HALF_EVEN),
-            this.currency
-        );
-    }
-    
-    public Money subtract(Money other) {
-        validateSameCurrency(other);
-        BigDecimal result = this.amount.subtract(other.amount)
-            .setScale(2, RoundingMode.HALF_EVEN);
-        if (result.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InsufficientFundsException("Insufficient balance");
-        }
-        return Money.of(result, this.currency);
-    }
-}
-```
-
----
-
-## 📊 Structured Logging
-
-```java
-// adapter/logging/StructuredLogger.java
-@Aspect
-@Component
-@RequiredArgsConstructor
-public class RequestLoggingAspect {
-    
-    @Around("@within(org.springframework.web.bind.annotation.RestController)")
-    public Object logRequest(ProceedingJoinPoint joinPoint) throws Throwable {
-        String requestId = MDC.get("requestId");
-        String method = joinPoint.getSignature().getName();
-        
-        log.info("Request started",
-            StructuredArguments.kv("requestId", requestId),
-            StructuredArguments.kv("method", method),
-            StructuredArguments.kv("args", joinPoint.getArgs()));
-        
-        long start = System.currentTimeMillis();
-        try {
-            Object result = joinPoint.proceed();
-            log.info("Request completed",
-                StructuredArguments.kv("requestId", requestId),
-                StructuredArguments.kv("durationMs", System.currentTimeMillis() - start));
-            return result;
-        } catch (Exception e) {
-            log.error("Request failed",
-                StructuredArguments.kv("requestId", requestId),
-                StructuredArguments.kv("error", e.getMessage()));
-            throw e;
-        }
-    }
-}
-```
-
----
-
-## 🔍 Quality & Reliability Checklist
-
-- [ ] **Hexagonal**: Is the domain layer framework-free?
-- [ ] **Transactions**: Are related DB operations in `@Transactional`?
-- [ ] **Outbox**: Is Kafka publishing atomic with DB writes?
-- [ ] **N+1 Prevention**: Are queries optimized with JOIN FETCH or batch fetch?
-- [ ] **Caching**: Is frequently accessed data cached with proper TTL?
-- [ ] **Idempotency**: Do financial endpoints support `Idempotency-Key`?
-- [ ] **Resilience**: Are external calls wrapped with Circuit Breaker?
-- [ ] **BigDecimal**: Is all currency math using BigDecimal with HALF_EVEN?
-- [ ] **Test Coverage**: 100% logic coverage with JUnit 5 & Mockito?
-- [ ] **Integration**: Are external interactions tested with Testcontainers?
-- [ ] **Observability**: Is OpenTelemetry tracing active?
-
----
-
-## 🚨 audit Status — Current Platform Reality (Feb 2026)
-
-> **CRITICAL**: Read `.agents/context/ROADMAP.md` for full details.  
-> **Production Readiness: 48/100** — NOT ready for deployment.
-
-### Service Compliance Matrix (What You MUST Know)
-
-| Service | Hex Arch | Shared Starters | Action Required |
-|:--------|:---------|:-----------------|:----------------|
-| wallet-service | ✅ Full | ✅ All 4 | Integrate `outbox-starter` (R-002) |
-| transaction-service | ✅ Full | ✅ All 4 | Integrate `outbox-starter` + `saga-starter` (R-002) |
-| account-service | ✅ Full | ✅ All 4 | — |
-| auth-service | ✅ Full | ✅ All 4 | — |
-| kyc-service | ✅ Full | ✅ All 4 | — |
-| lending-service | ⚠️ Partial | ✅ | Write integration tests (R-004), complete hex refactor |
-| fx-service | ⚠️ Partial | ✅ | Write integration tests (R-004), complete hex refactor |
-| cms-service | 🔴 Flat | 🔴 ZERO starters | Add ALL starters (R-006), refactor to hexagonal |
-| ab-testing-service | 🔴 Flat | 🔴 Only api-commons | Add security+resilience+cache (R-006) |
-| statement-service | 🔴 Thin | 🔴 ZERO starters | Add ALL starters (R-006), write tests |
-| support-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
-| promotion-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
-| backoffice-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
-
-### P0 Blockers Relevant to This Skill
-
-1. **P0-ARCH-001**: `outbox-starter` and `saga-starter` exist in `backend/shared/` but **ZERO services use them**. When implementing any financial transaction, you MUST integrate `outbox-starter` for atomic event publishing. See `docs/guides/LESSONS.md` § "Transactional Outbox Pattern Integration".
-
-2. **P0-TEST-001**: `lending-service` and `fx-service` have **ZERO integration tests**. Any new feature in these services MUST include Testcontainers integration tests.
-
-### Hexagonal Refactoring Checklist (for flat-package services)
-
-When asked to work on cms, ab-testing, statement, support, promotion, or backoffice services:
-
-1. Create `domain/model/`, `domain/port/in/`, `domain/port/out/` packages
-2. Move entities to domain (remove `@Entity` from domain — keep in adapter)
-3. Create `application/` package with use case interfaces
-4. Create `infrastructure/persistence/` adapter implementing domain ports
-5. Create `interfaces/rest/` with DTOs separate from domain models
-6. Add `ArchitectureTest.java` using `archunit-starter`
-7. Add `security-starter`, `resilience-starter`, `cache-starter` dependencies
-8. Run `mvn test` to verify ArchUnit rules pass
-
----
-*Last Updated: 2026-05-04*
-
+- [Backend and JPA patterns](./references/BACKEND_PATTERNS.md)
+- [Spring Boot patterns](./references/springboot-patterns.md)
+- [Resilience patterns](./references/resilience_patterns.md)
+- [Hexagonal architecture guide](./references/hexagonal_architecture_guide.md)
+- [Database optimization guide](./references/database_optimization_guide.md)
+- [Backend security practices](./references/backend_security_practices.md)

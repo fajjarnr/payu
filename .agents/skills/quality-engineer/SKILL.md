@@ -1,772 +1,272 @@
 ---
 name: quality-engineer
-version: 2.1.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: [core-banking-engineer]
-tags: [qa, testing, automation, contract-testing, migration]
-related: [debugging-methodology]
-description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, Financial Integrity Verification, and Legacy Migration Testing.
+description: PayU quality engineering for Java/Spring and Quarkus services, Python APIs, Next.js and React Native clients, contract testing, integration testing, financial invariants, performance, accessibility, security, migration, and release gates. Use when designing, writing, reviewing, debugging, or improving tests; verify third-party test APIs and commands with Context7 first.
 ---
 
-## 📚 Reference Implementation Patterns
-For detailed patterns and historical context on PayU quality engineering, see:
-- [Testing & Quality Patterns](./references/TESTING_PATTERNS.md)
+# PayU Quality Engineer
 
-# PayU Quality Engineer Master Skill
+Test observable behavior at the cheapest layer that can detect the risk. Start
+with a failing test for a bug or feature, then implement the smallest change
+that makes it pass. A green test that accepts the wrong behavior is a defect.
 
-You are the **Lead Quality Engineer (AI)** for the **PayU Platform**. You don't just "find bugs"—you build the infrastructure, patterns, and automation that guarantee system reliability, performance, and financial accuracy across Backend, Web, and Mobile.
+## Context7 documentation gate
 
-## 🎯 Core Domains
+Before writing or changing a test, fixture, runner, plugin, configuration, or CI
+command that uses a library or service:
 
-| Domain | Focus Area | Key Deliverables |
-|:-------|:-----------|:-----------------|
-| **Test Architecture** | Pyramid, Strategy | Unit/Integration/E2E coverage targets |
-| **Contract Testing** | API Compatibility | Pact/Spring Cloud Contract, CDC |
-| **Performance** | Load Testing | Gatling/k6 scripts, Capacity planning |
-| **Financial Integrity** | Accuracy | Ledger invariants, Reconciliation tests |
-| **Mobile Quality** | User Experience | Appium/Maestro flows, Device Farm Strategy |
-| **Visual Regression** | Pixel Perfect | Percy/Chromatic snapshots, Storybook tests |
-| **Migration Testing** | Legacy -> Modern | Quarkus to Spring Boot transformations |
+1. Inspect the target module's `pom.xml`, `package.json`, lockfile, Python
+   requirements, test config, and existing test command.
+2. Resolve the exact library in Context7. Prefer official, high-reputation docs
+   and query one topic at a time: API, fixture, assertion, lifecycle,
+   configuration, migration, or CLI behavior.
+3. Pin the query to the repository version when indexed. Treat the result as the
+   source of truth; do not copy annotations or command flags from memory.
+4. If the exact version is not indexed, state the fallback and verify against
+   the local dependency graph, source, or installed CLI before editing.
+5. Re-resolve after dependency upgrades. Do not mix major-version APIs.
 
----
+Apply this gate to JUnit/Jupiter, Mockito, Spring Boot test slices, Quarkus test
+extensions, Testcontainers, ArchUnit, Spring Cloud Contract/Pact, Playwright,
+Vitest/React Testing Library, Jest/React Native Testing Library, Maestro, k6,
+Gatling, pytest, OWASP ZAP, and mutation-testing tools.
 
-## 🗼 The Testing Pyramid
+## Repository map
 
-```
-                    ┌───────────┐
-                    │    E2E    │  ← Maestro (Mobile), Playwright (Web)
-                    │   (5%)    │     Critical user journeys only
-                    ├───────────┤
-                    │ Contract  │  ← Pact, Spring Cloud Contract
-                    │  (10%)    │     Service-to-service compatibility
-                    ├───────────┤
-                    │Integration│  ← Testcontainers (Real DB/Kafka/Redis)
-                    │  (25%)    │     Controller + Repository tests
-                    ├───────────┤
-                    │   Unit    │  ← JUnit/Vitest, Pure domain logic
-                    │  (60%)    │     Fast, isolated, deterministic
-                    └───────────┘
-```
+Locate the real test surface before choosing a layer:
 
-### Coverage Targets
-
-| Layer | Target Coverage | Execution Time | Run Frequency |
-|:------|:----------------|:---------------|:--------------|
-| Unit | > 80% | < 5 min | Every commit |
-| Integration | > 70% (critical paths) | < 10 min | Every PR |
-| Contract | 100% (public APIs) | < 5 min | Every PR |
-| E2E | Critical journeys | < 20 min | Pre-deploy |
-| Performance | Load scenarios | 30-60 min | Weekly/Pre-release |
-
----
-
-## 🧪 Backend Testing (Java/Spring Boot)
-
-### Unit Testing Pattern
-
-```java
-@ExtendWith(MockitoExtension.class)
-class TransferServiceTest {
-    
-    @Mock
-    private WalletRepository walletRepository;
-    
-    @Mock
-    private TransactionPublisher transactionPublisher;
-    
-    @InjectMocks
-    private TransferService transferService;
-    
-    @Test
-    void shouldDebitSourceAndCreditDestination() {
-        // Given
-        var source = Wallet.builder()
-            .accountId("ACC-001")
-            .balance(new BigDecimal("1000000"))
-            .build();
-        var dest = Wallet.builder()
-            .accountId("ACC-002")
-            .balance(new BigDecimal("500000"))
-            .build();
-        
-        when(walletRepository.findById("ACC-001")).thenReturn(Optional.of(source));
-        when(walletRepository.findById("ACC-002")).thenReturn(Optional.of(dest));
-        
-        // When
-        var result = transferService.transfer(
-            new TransferRequest("ACC-001", "ACC-002", new BigDecimal("100000"))
-        );
-        
-        // Then
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(source.getBalance()).isEqualTo(new BigDecimal("900000"));
-        assertThat(dest.getBalance()).isEqualTo(new BigDecimal("600000"));
-        
-        verify(transactionPublisher).publish(any(TransferCompletedEvent.class));
-    }
-    
-    @Test
-    void shouldRejectTransferWhenInsufficientBalance() {
-        // Given
-        var source = Wallet.builder()
-            .accountId("ACC-001")
-            .balance(new BigDecimal("50000"))
-            .build();
-        
-        when(walletRepository.findById("ACC-001")).thenReturn(Optional.of(source));
-        
-        // When/Then
-        assertThatThrownBy(() -> transferService.transfer(
-            new TransferRequest("ACC-001", "ACC-002", new BigDecimal("100000"))
-        )).isInstanceOf(InsufficientBalanceException.class);
-    }
-}
+```text
+backend/*/src/test/java             Java unit, slice, integration, ArchUnit
+backend/*/tests                      Python unit, integration, and E2E
+tests/contract                       Spring Cloud Contract sources
+tests/performance                    Gatling simulations and k6 suites
+tests/e2e_blackbox                   Python black-box service journeys
+frontend/web-app/e2e                 Playwright web journeys
+frontend/web-app/src                 Vitest + React Testing Library
+frontend/mobile                      Jest + React Native Testing Library/Maestro
 ```
 
-### Integration Testing with Testcontainers
+Read the nearest existing test, fixture, runner, and module build file. Reuse
+its factories, container setup, auth fixture, test data, and naming conventions.
+Do not create a second test harness for the same boundary.
 
-```java
-@SpringBootTest
-@Testcontainers
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-class WalletRepositoryIntegrationTest {
-    
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-        .withDatabaseName("wallet_test")
-        .withUsername("test")
-        .withPassword("test");
-    
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.5.0")
-    );
-    
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-    }
-    
-    @Autowired
-    private WalletRepository walletRepository;
-    
-    @Test
-    void shouldPersistWalletWithLedgerEntries() {
-        // Given
-        var wallet = Wallet.create("ACC-001", "USER-001");
-        wallet.credit(new BigDecimal("1000000"), "Initial deposit");
-        
-        // When
-        walletRepository.save(wallet);
-        
-        // Then
-        var found = walletRepository.findById("ACC-001").orElseThrow();
-        assertThat(found.getBalance()).isEqualTo(new BigDecimal("1000000"));
-        assertThat(found.getLedgerEntries()).hasSize(1);
-    }
-}
+## Test strategy
+
+Use a risk-based pyramid, not fixed percentages copied between services:
+
+| Layer | Use for | Default rule |
+|---|---|---|
+| Domain unit | Invariants and deterministic logic | Fast, framework-free, exhaustive |
+| Adapter/slice | Mapping, validation, HTTP, persistence wiring | Verify real framework behavior at the boundary |
+| Integration | PostgreSQL, Kafka, Redis, Vault, outbox, migrations | Use the real dependency in a disposable environment |
+| Contract | Provider/consumer compatibility | Verify request, response, headers, errors, and versioning |
+| E2E | Critical user journeys | Keep few, stable, and user-visible |
+| Performance | Capacity, latency, saturation, failure behavior | Run controlled scenarios against an approved environment |
+
+Target 100% coverage for core domain logic and 80–90% for other code, but use
+coverage as a gap signal rather than proof of correctness. Prioritize money,
+authorization, idempotency, migrations, messaging, and failure paths over trivial
+getters or framework bootstrapping.
+
+## Java backend testing
+
+### Unit and domain tests
+
+- Use JUnit Jupiter and the repository's assertion library; keep test instances
+  isolated and avoid mutable static state.
+- Test domain objects without Spring, JPA, Kafka, HTTP, or Mockito.
+- Use parameterized tests for amount boundaries, status transitions, invalid
+  states, and authorization matrices.
+- Mock only an outbound port when a real adapter would move the test to another
+  layer. Assert the returned result and state transition; do not make `verify()`
+  the only assertion.
+- Compare monetary values by numeric value, not scale-sensitive object equality.
+
+### Spring and Quarkus boundaries
+
+- Use the current Spring Boot slice or test module declared by the service. Do
+  not copy `@MockBean`, slice annotations, or auto-configuration exclusions
+  across Spring major versions without a Context7 check.
+- Test validation, RFC 9457 errors, security decisions, headers, serialization,
+  and transaction boundaries at the adapter level.
+- Use `@QuarkusTest` and Quarkus test extensions only in Quarkus modules and
+  only with the current extension/API documented for that module.
+- Keep ArchUnit rules in every service with hexagonal boundaries: domain does
+  not depend on adapters/frameworks, controllers call input ports, and adapters
+  implement output ports.
+- Test shared starters with a focused application-context test instead of
+  booting every service.
+
+### Integration and database tests
+
+Use Testcontainers for behavior that depends on PostgreSQL, Kafka, Redis, or
+another production boundary. Use the modules and artifact names resolved from
+the service's BOM; never paste a stale image or module version into a test.
+
+- Keep containers disposable and isolated; avoid shared mutable databases.
+- Apply Flyway migrations against PostgreSQL rather than relying only on H2.
+- Verify indexes, constraints, optimistic locking, transaction rollback, and
+  serialization of `DECIMAL(19,4)` values.
+- For Kafka/outbox tests, prove the business row and outbox row commit together,
+  disappear together on rollback, and publish an idempotently consumable event.
+- Use Testcontainers only for the boundary under test; do not turn every unit
+  test into a full application boot.
+
+## Financial integrity and security tests
+
+Every payment, transfer, ledger, balance, settlement, and disbursement change
+must test:
+
+- `BigDecimal` only; no `float` or `double` in financial code;
+- scale 4 and `RoundingMode.HALF_EVEN` with half-way and large-value cases;
+- double-entry balance: total debits equal total credits;
+- non-negative balance and all domain authorization limits;
+- immutable financial facts and reversal-based correction;
+- database uniqueness, optimistic-lock/concurrency behavior, and transaction
+  atomicity;
+- `X-Idempotency-Key`: ten concurrent identical requests create one mutation,
+  return the same result, and do not duplicate ledger/outbox entries;
+- reuse of one key with a different payload is rejected;
+- CloudEvent fields, versioned topic, ordering key, retry, and DLQ behavior;
+- masked PII, no secrets in fixtures/logs, and authorization at every boundary.
+
+Use deterministic account IDs and amounts in tests. Never use real customer data,
+real PINs, reusable production tokens, or uncontrolled random financial writes.
+
+## Contract testing
+
+Use the contract technology already declared by the module. This repository
+contains Spring Cloud Contract sources under `tests/contract`; use Pact only
+where a module explicitly owns that dependency.
+
+- Treat the consumer request and provider response as a versioned public API.
+- Cover success, validation, authorization, RFC 9457 errors, idempotency
+  headers, pagination, and backward-compatible field changes.
+- Verify provider states with isolated data and no external production calls.
+- Publish contracts and run the provider verification/compatibility gate before
+  promotion. A generated stub is not proof that the deployed provider is safe.
+- Contract event payloads and CloudEvents separately from HTTP contracts when
+  Kafka or other messaging is part of the integration.
+
+## Web, mobile, and accessibility testing
+
+### Next.js web app
+
+Use the versions and scripts in `frontend/web-app/package.json`:
+
+- Use Vitest + React Testing Library for component behavior. Query by role,
+  label, and accessible name; use `user-event` for user interaction.
+- Test what a user can see and do, not React state, implementation methods, or
+  CSS class names. Mock network boundaries, not local child components by
+  default.
+- Use Playwright for critical journeys. Prefer semantic locators and web-first
+  assertions; let locators auto-wait instead of adding arbitrary sleeps.
+- Isolate tests with fixtures and fresh browser contexts. Store auth setup in a
+  fixture, not a login flow repeated in every test.
+- Capture traces on retry/failure and screenshots only when they help diagnosis.
+- Run axe-based accessibility checks, then verify keyboard navigation, focus,
+  labels, dialog semantics, contrast, and error announcements.
+
+### React Native mobile app
+
+Use Jest/React Native Testing Library for component and user behavior, and
+Maestro only for a small set of critical flows (login, transfer, payment,
+logout, deep link). Keep credentials and PINs in CI secrets. Test offline,
+resume, interrupted navigation, secure storage, permission denial, and
+idempotent retry behavior.
+
+### Black-box API E2E
+
+Use the existing pytest fixtures and clients under `tests/e2e_blackbox` or the
+service's own test package. Separate infrastructure unavailability from a real
+product failure: skip only a clearly identified 429/502/503/504 dependency
+outage when the test contract permits it; fail on unexpected 4xx/5xx responses.
+Never make `200` and `500` equivalent passing outcomes.
+
+## Performance and capacity
+
+Use the existing suites under `tests/performance` and `tests/load-tests` rather
+than creating another load-test tree. Verify which source directory the selected
+Maven profile actually compiles before running it.
+
+Model at least these scenarios:
+
+1. Smoke: one or a few users, short duration, detects broken wiring.
+2. Load: expected traffic mix and sustained duration.
+3. Stress: increasing load until a bounded failure point.
+4. Soak: long duration to expose leaks, queue growth, and degradation.
+
+Measure p50/p95/p99 latency, error rate, throughput, saturation, queue lag,
+database contention, and downstream failures. Set thresholds from the service
+SLO and capacity evidence, not global numbers copied from another service.
+
+For financial writes, use unique `X-Idempotency-Key` values for distinct test
+operations and repeat the same key only when testing idempotency. Keep test data
+bounded and reversible; do not run destructive load against production.
+
+Run performance tests in an environment with known topology and resource
+limits. Record commit, image, dataset, concurrency, duration, warm-up, and
+results so a baseline is reproducible.
+
+## Migration and regression testing
+
+Before Quarkus/Spring, framework, database, or schema migration:
+
+1. Add characterization tests for current externally visible behavior.
+2. Freeze HTTP/event contracts and financial invariants.
+3. Migrate one boundary at a time; do not mechanically map annotations.
+4. Run old/new parity tests with sanitized fixtures and compare errors,
+   serialization, timing budgets, and side effects.
+5. Verify migration rollback, replay/idempotency, and data reconciliation.
+6. Remove compatibility code only after the deployment window closes and the
+   rollback path is no longer required.
+
+## CI and failure handling
+
+Run the narrowest relevant check first, then broaden:
+
+```text
+failing test -> module test -> service integration/contract tests
+             -> frontend/mobile checks -> performance/security gates
+             -> release/E2E verification
 ```
 
-### Architecture Testing with ArchUnit
-
-```java
-@AnalyzeClasses(packages = "id.payu.wallet")
-class ArchitectureTest {
-    
-    @ArchTest
-    static final ArchRule domainShouldNotDependOnInfrastructure =
-        noClasses()
-            .that().resideInAPackage("..domain..")
-            .should().dependOnClassesThat()
-            .resideInAnyPackage("..adapter..", "..infrastructure..", "org.springframework..");
-    
-    @ArchTest
-    static final ArchRule controllersShouldOnlyCallUseCases =
-        classes()
-            .that().resideInAPackage("..adapter.web..")
-            .should().onlyDependOnClassesThat()
-            .resideInAnyPackage("..domain.port.in..", "..dto..", "java..", "org.springframework.web..");
-    
-    @ArchTest
-    static final ArchRule repositoriesShouldImplementPorts =
-        classes()
-            .that().haveSimpleNameEndingWith("RepositoryAdapter")
-            .should().implement(resideInAPackage("..domain.port.out.."));
-}
-```
-
-### 🦆 Quarkus to Spring Boot Test Migration
-
-When migrating test files, use this mapping cheatsheet to ensure quick and accurate conversion:
-
-| Quarkus / JUnit 4 | Spring Boot / JUnit 5 | Notes |
-|:---|:---|:---|
-| `@QuarkusTest` | `@SpringBootTest` | Start the full application context |
-| `@Test` (org.junit.Test) | `@Test` (org.junit.jupiter.api.Test) | Ensure strictly JUnit 5 imports |
-| `@InjectMock` | `@MockBean` | Mocks a bean in the ApplicationContext |
-| `@Inject` | `@Autowired` | Standard Dependency Injection |
-| `Assert.assertEquals(...)` | `Assertions.assertEquals(...)` | Verify parameter order (expected, actual) |
-| `@Before`/`@After` | `@BeforeEach`/`@AfterEach` | Lifecycle methods |
-| `@BeforeClass`/`@AfterClass` | `@BeforeAll`/`@AfterAll` | Must be static in many cases |
-
-**Example Migration:**
-
-*From (Quarkus):*
-```java
-@QuarkusTest
-public class ServiceTest {
-    @InjectMock
-    ExternalService externalService;
-    
-    @Test
-    public void testThings() { ... }
-}
-```
-
-*To (Spring Boot):*
-```java
-@SpringBootTest
-public class ServiceTest {
-    @MockBean
-    ExternalService externalService;
-    
-    @Test
-    void testThings() { ... }
-}
-```
-
----
-
-## 📜 Contract Testing
-
-### Consumer-Driven Contracts with Pact
-
-```java
-// Consumer Test (wallet-service consuming auth-service)
-@ExtendWith(PactConsumerTestExt.class)
-@PactTestFor(providerName = "auth-service", port = "8080")
-class AuthServiceContractTest {
-    
-    @Pact(consumer = "wallet-service")
-    public RequestResponsePact validateTokenPact(PactDslWithProvider builder) {
-        return builder
-            .given("a valid access token exists")
-            .uponReceiving("a token validation request")
-                .path("/api/v1/auth/validate")
-                .method("POST")
-                .headers("Content-Type", "application/json")
-                .body(new PactDslJsonBody()
-                    .stringType("token", "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
-                )
-            .willRespondWith()
-                .status(200)
-                .headers(Map.of("Content-Type", "application/json"))
-                .body(new PactDslJsonBody()
-                    .booleanType("valid", true)
-                    .stringType("user_id", "USER-001")
-                    .array("scopes")
-                        .stringType("wallet:read")
-                        .stringType("wallet:write")
-                    .closeArray()
-                )
-            .toPact();
-    }
-    
-    @Test
-    @PactTestFor(pactMethod = "validateTokenPact")
-    void shouldValidateToken(MockServer mockServer) {
-        var client = new AuthServiceClient(mockServer.getUrl());
-        
-        var result = client.validateToken("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...");
-        
-        assertThat(result.isValid()).isTrue();
-        assertThat(result.getUserId()).isEqualTo("USER-001");
-    }
-}
-```
-
-### Provider Verification
-
-```java
-// Provider Test (auth-service verifying contracts)
-@Provider("auth-service")
-@PactBroker(url = "${PACT_BROKER_URL}")
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-class AuthServiceProviderTest {
-    
-    @LocalServerPort
-    private int port;
-    
-    @BeforeEach
-    void setup(PactVerificationContext context) {
-        context.setTarget(new HttpTestTarget("localhost", port));
-    }
-    
-    @TestTemplate
-    @ExtendWith(PactVerificationInvocationContextProvider.class)
-    void verifyPact(PactVerificationContext context) {
-        context.verifyInteraction();
-    }
-    
-    @State("a valid access token exists")
-    void setupValidToken() {
-        // Setup test data for this state
-        tokenService.createToken("USER-001", List.of("wallet:read", "wallet:write"));
-    }
-}
-```
-
-### CI/CD Integration
-
-```yaml
-# .github/workflows/contract-tests.yml
-name: Contract Tests
-
-on: [push, pull_request]
-
-jobs:
-  consumer-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Consumer Tests
-        run: ./mvnw test -Dtest="*ContractTest"
-      - name: Publish Contracts
-        run: |
-          pact-broker publish target/pacts \
-            --broker-base-url ${{ secrets.PACT_BROKER_URL }} \
-            --consumer-app-version ${{ github.sha }} \
-            --tag ${{ github.ref_name }}
-
-  can-i-deploy:
-    needs: consumer-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Can I Deploy?
-        run: |
-          pact-broker can-i-deploy \
-            --pacticipant wallet-service \
-            --version ${{ github.sha }} \
-            --to production
-```
-
----
-
-## 📱 Mobile Test Automation (Maestro)
-
-Mobile testing di PayU menggunakan **Maestro** karena sintaks YAML-nya yang deklaratif dan toleransi tinggi terhadap *flakiness* (intelligent waiting).
-
-### 1. Critical User Journey (Transfer Flow)
-
-```yaml
-# flows/transfer/bi-fast-transfer.yaml
-appId: id.payu.mobile
-tags:
-  - critical
-  - transfer
-
----
-- launchApp
-- runFlow:
-    file: ../auth/login-flow.yaml
-    env:
-        USERNAME: "user_tester_01"
-        PASSWORD: "Password123!"
-
-- tapOn: "Transfer"
-- tapOn: "BI-FAST"
-- inputText: "1234567890" # Destination Account
-- tapOn: "Lanjut"
-- assertVisible: "John Doe" # Verify Account Name
-
-- inputText: "50000" # Amount
-- tapOn: "Lanjut"
-- tapOn: "Konfirmasi Transfer"
-
-- inputText: "123456" # PIN
-- assertVisible: "Transfer Berhasil"
-- assertVisible: "Rp 50.000"
-```
-
-### 2. Deep Linking Test
-
-```yaml
-- openLink: "payu://transfer?vc=12345"
-- assertVisible: "Pembayaran Virtual Account"
-- assertVisible: "12345"
-```
-
-### 3. Device Farm Strategy (AWS Device Farm / BrowserStack)
-
-Kami menggunakan strategi **Tiered Device Matrix** untuk regresi:
-
-| Tier | Devices | OS Versions | Frequency |
-|:-----|:--------|:------------|:----------|
-| **Tier 1 (Smoke)** | Pixel 7, iPhone 14 | Android 14, iOS 17 | Every PR |
-| **Tier 2 (Regression)** | Samsung S23, S21, Xiaomi 13, iPhone 12 | Android 12-14, iOS 16-17 | Nightly |
-| **Tier 3 (Compatibility)** | Oppo A series, Realme, iPhone SE | Android 10-11, iOS 15 | Weekly |
-
----
-
-## 👁️ Visual Regression Testing
-
-Jangan biarkan CSS refactor merusak UI. Gunakan **Percy** atau **Chromatic** yang terintegrasi dengan Storybook.
-
-### 1. Storybook Integration
-
-```javascript
-// wallet-card.stories.tsx
-export const Default: Story = {
-  args: {
-    balance: 5000000,
-    accountNumber: '123-456-7890',
-    variant: 'emerald',
-  },
-  play: async ({ canvasElement }) => {
-    // Percy automatically takes a snapshot here
-    await expect(canvasElement).toBeVisible();
-  },
-};
-```
-
-### 2. CI/CD Check
-
-```yaml
-# .github/workflows/visual-test.yml
-- name: Visual Test with Perecy
-  run: npx percy storybook-build
-  env:
-    PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
-    
-# Result: GitHub status check will FAIL if pixels changed > 1% check
-```
-
----
-
-## ⚡ Performance Testing
-
-### Load Testing with k6
-
-```javascript
-// tests/load-tests/k6/transfer-load.js
-import http from 'k6/http';
-import { check, sleep, group } from 'k6';
-import { Rate, Trend } from 'k6/metrics';
-
-// Custom metrics
-const transferSuccess = new Rate('transfer_success');
-const transferDuration = new Trend('transfer_duration');
-
-// Test configuration
-export const options = {
-  scenarios: {
-    smoke: {
-      executor: 'constant-vus',
-      vus: 5,
-      duration: '1m',
-      tags: { test_type: 'smoke' },
-    },
-    load: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '5m', target: 100 },
-        { duration: '30m', target: 100 },
-        { duration: '5m', target: 0 },
-      ],
-      tags: { test_type: 'load' },
-    },
-    stress: {
-      executor: 'ramping-vus',
-      startVUs: 100,
-      stages: [
-        { duration: '2m', target: 200 },
-        { duration: '2m', target: 400 },
-        { duration: '2m', target: 600 },
-        { duration: '2m', target: 800 },
-        { duration: '5m', target: 0 },
-      ],
-      tags: { test_type: 'stress' },
-    },
-  },
-  thresholds: {
-    http_req_duration: ['p(95)<300', 'p(99)<500'],
-    http_req_failed: ['rate<0.01'],
-    transfer_success: ['rate>0.99'],
-  },
-};
-
-const BASE_URL = __ENV.BASE_URL || 'https://api.payu.fajjjar.my.id';
-
-export function setup() {
-  const loginRes = http.post(`${BASE_URL}/auth/token`, JSON.stringify({
-    username: __ENV.TEST_USER,
-    password: __ENV.TEST_PASS,
-  }), { headers: { 'Content-Type': 'application/json' } });
-  
-  return { token: loginRes.json('access_token') };
-}
-
-export default function(data) {
-  const headers = {
-    'Authorization': `Bearer ${data.token}`,
-    'Content-Type': 'application/json',
-    'Idempotency-Key': `load-test-${Date.now()}-${Math.random()}`,
-  };
-
-  group('Transfer Flow', () => {
-    const start = Date.now();
-    
-    const res = http.post(`${BASE_URL}/api/v1/transfers`, JSON.stringify({
-      source_account: __ENV.SOURCE_ACCOUNT,
-      destination_account: __ENV.DEST_ACCOUNT,
-      amount: Math.floor(Math.random() * 100000) + 10000,
-      currency: 'IDR',
-    }), { headers });
-
-    const duration = Date.now() - start;
-    transferDuration.add(duration);
-
-    const success = check(res, {
-      'status is 2xx': (r) => r.status >= 200 && r.status < 300,
-      'has transaction_id': (r) => r.json('transaction_id') !== undefined,
-      'response time < 300ms': (r) => r.timings.duration < 300,
-    });
-
-    transferSuccess.add(success);
-    
-    sleep(1);
-  });
-}
-```
-
-### Capacity Planning
-
-```python
-# scripts/capacity_model.py
-import pandas as pd
-import numpy as np
-
-class CapacityPlanner:
-    def __init__(self, historical_rps: list, historical_latency: list):
-        self.rps = np.array(historical_rps)
-        self.latency = np.array(historical_latency)
-    
-    def calculate_peak_capacity(self, growth_rate: float = 0.15) -> dict:
-        """
-        Calculate required capacity for next year with growth
-        """
-        current_peak = np.percentile(self.rps, 99)
-        projected_peak = current_peak * (1 + growth_rate)
-        
-        # 2x headroom for burst handling
-        required_capacity = projected_peak * 2
-        
-        return {
-            'current_p99_rps': current_peak,
-            'projected_peak_rps': projected_peak,
-            'required_capacity_rps': required_capacity,
-            'recommended_pods': self._calculate_pods(required_capacity),
-        }
-    
-    def _calculate_pods(self, target_rps: float, rps_per_pod: float = 500) -> int:
-        pods = np.ceil(target_rps / rps_per_pod)
-        return int(pods * 1.2)  # 20% buffer for rolling updates
-    
-    def special_event_scaling(self, event_type: str) -> dict:
-        multipliers = {
-            'hari_raya': 5.0,
-            'gajian': 3.0,
-            'flash_sale': 10.0,
-        }
-        
-        base = self.calculate_peak_capacity()['required_capacity_rps']
-        event_capacity = base * multipliers.get(event_type, 2.0)
-        
-        return {
-            'event_type': event_type,
-            'required_capacity': event_capacity,
-            'recommended_pods': self._calculate_pods(event_capacity),
-            'scale_up_hours_before': 4,
-        }
-```
-
----
-
-## 💶 Financial Integrity Testing
-
-### BigDecimal Guardrails
-
-```java
-@Test
-void shouldNeverUseFloatOrDoubleForMoney() {
-    // ArchUnit rule to enforce BigDecimal usage
-    noClasses()
-        .that().resideInAPackage("..domain..")
-        .should().accessClassesThat()
-        .belongToAnyOf(Float.class, Double.class, float.class, double.class)
-        .because("Financial calculations MUST use BigDecimal");
-}
-
-@Test
-void shouldUseHalfEvenRounding() {
-    var amount = new BigDecimal("100.005");
-    var rounded = amount.setScale(2, RoundingMode.HALF_EVEN);
-    
-    assertThat(rounded).isEqualTo(new BigDecimal("100.00"));
-}
-```
-
-### Ledger Invariant Tests
-
-```java
-@Test
-void ledgerMustAlwaysBalance() {
-    // Given: Multiple transactions
-    wallet.credit(new BigDecimal("1000000"), "Deposit");
-    wallet.debit(new BigDecimal("250000"), "Transfer out");
-    wallet.credit(new BigDecimal("50000"), "Cashback");
-    
-    // Then: Sum of credits must equal sum of debits + current balance
-    var totalCredits = wallet.getLedgerEntries().stream()
-        .filter(e -> e.getType() == EntryType.CREDIT)
-        .map(LedgerEntry::getAmount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
-    
-    var totalDebits = wallet.getLedgerEntries().stream()
-        .filter(e -> e.getType() == EntryType.DEBIT)
-        .map(LedgerEntry::getAmount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
-    
-    assertThat(wallet.getBalance())
-        .isEqualTo(totalCredits.subtract(totalDebits));
-}
-```
-
-### Idempotency Stress Test
-
-```java
-@Test
-void shouldProcessOnlyOneTransactionForSameIdempotencyKey() {
-    var idempotencyKey = UUID.randomUUID().toString();
-    var request = new TransferRequest("ACC-001", "ACC-002", 
-        new BigDecimal("100000"), idempotencyKey);
-    
-    // Execute same request 10 times concurrently
-    var results = IntStream.range(0, 10)
-        .parallel()
-        .mapToObj(i -> transferService.transfer(request))
-        .toList();
-    
-    // Only 1 should be CREATED, rest should be DUPLICATE
-    var created = results.stream().filter(r -> r.getStatus() == CREATED).count();
-    var duplicates = results.stream().filter(r -> r.getStatus() == DUPLICATE).count();
-    
-    assertThat(created).isEqualTo(1);
-    assertThat(duplicates).isEqualTo(9);
-    
-    // Verify only 1 transaction exists
-    var transactions = transactionRepository.findByIdempotencyKey(idempotencyKey);
-    assertThat(transactions).hasSize(1);
-}
-```
-
----
-
-## 🔍 Quality Engineer Checklist
-
-### Test Coverage
-- [ ] Unit tests > 80% coverage for domain logic
-- [ ] Integration tests cover all repository methods
-- [ ] E2E tests cover critical user journeys
-
-### Contract Testing
-- [ ] All public APIs have consumer contracts
-- [ ] Provider verification runs on every PR
-- [ ] "Can I Deploy" gate in CI/CD pipeline
-
-### Performance
-- [ ] Load tests run weekly against staging
-- [ ] Performance baselines documented
-- [ ] Capacity model updated quarterly
-
-### Financial Integrity
-- [ ] No float/double in financial calculations
-- [ ] Ledger balance invariants verified
-- [ ] Idempotency stress tests passing
-
-### Migration Readiness (Quarkus -> Spring)
-- [ ] No `@QuarkusTest` remains
-- [ ] All `Uni`/`Mono` replaced with standard return types (if blocked)
-- [ ] Lombok `@Data` verified (public field access removed)
-
----
-
-## 🚨 audit Status — Testing Gaps (Feb 2026)
-
-> **CRITICAL**: Read `.agents/context/ROADMAP.md` for full details.
-> **E2E Pass Rate: <15%** | **Services with ZERO integration tests: 7**
-
-### Services Requiring Immediate Test Coverage
-
-| Service | Unit Tests | Integration Tests | Priority | Remediation |
-|:--------|:-----------|:-----------------|:---------|:------------|
-| **outbox-starter** | 🔴 ZERO | 🔴 ZERO | P0 | R-004 |
-| **saga-starter** | 🔴 ZERO | 🔴 ZERO | P0 | R-004 |
-| **lending-service** | ⚠️ Unit only | 🔴 ZERO | P0 | R-004 |
-| **fx-service** | ⚠️ Unit only | 🔴 ZERO | P0 | R-004 |
-| **cms-service** | ⚠️ 2 files | 🔴 ZERO | P1 | R-006 |
-| **ab-testing-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-006 |
-| **statement-service** | 🔴 2 files | 🔴 ZERO | P1 | R-006 |
-| **support-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-008 |
-| **promotion-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-008 |
-
-### E2E Playwright Status
-
-- 12 spec files, ~424 tests, **<15% passing**
-- Root causes: auth middleware redirects, missing UI features, selector mismatches
-- Investment module: tests exist but features NOT implemented
-- Lending, KYC, Bill Pay: major implementation gaps
-- **Fix strategy**: Skip unimplemented tests, fix auth fixture, align selectors (R-009)
-
-### Missing Test Patterns to Implement
-
-1. **Outbox Starter Integration Test** (See `docs/guides/LESSONS.md`):
-   ```java
-   @SpringBootTest
-   @Testcontainers
-   class OutboxStarterIntegrationTest {
-       @Container static PostgreSQLContainer<?> pg = ...;
-       @Container static KafkaContainer kafka = ...;
-       // Test: save entity → outbox entry created → Debezium publishes → consumer receives
-   }
-   ```
-
-2. **Contract Testing with Pact** (See `docs/guides/LESSONS.md`):
-   ```java
-   @ExtendWith(PactConsumerTestExt.class)
-   class WalletConsumerPactTest {
-       @Pact(consumer = "transaction-service", provider = "wallet-service")
-       V4Pact walletBalancePact(PactDslWithProvider builder) { ... }
-   }
-   ```
-
-3. **Financial Integrity Invariants**:
-   - Total debits == Total credits (double-entry ledger)
-   - Account balance >= 0 (no overdraft without authorization)
-   - Idempotency: duplicate requests yield same result
-
-### Load Testing Gap
-
-- `tests/load-tests/src/` is an **empty scaffold** (no Gatling simulations)
-- Real Gatling sims exist in `tests/performance/` (separate folder)
-- Action: Consolidate to `tests/load-tests/` or document the structure (R-013)
-
----
-*Last Updated: 2026-05-04*
-
+Use repository commands such as `make test` and
+`./scripts/test-single-service.sh <service>`; read the script before assuming
+its filters or environment. Run independent suites in parallel only when they
+do not share ports, containers, databases, files, or mutable fixtures.
+
+Do not:
+
+- delete or weaken a failing test to make CI green;
+- accept broad status-code ranges that hide defects;
+- add arbitrary sleeps, retries, or timeouts to mask races;
+- mock the system under test or every child component;
+- commit secrets, production data, or tokens in fixtures;
+- claim coverage, performance, or release readiness without command evidence.
+
+Quarantine a genuinely flaky test only with an owner, failure evidence, an
+expiry/removal condition, and a separate signal that still reports the failure.
+
+## Quality checklist
+
+- [ ] A failing test existed first for the requested bug/behavior.
+- [ ] Test layer matches the risk and uses the real boundary where required.
+- [ ] Core domain invariants and all failure paths are covered.
+- [ ] Financial precision, ledger balance, idempotency, concurrency, outbox,
+      and reversal behavior are verified where applicable.
+- [ ] Contracts cover compatible requests, responses, errors, headers, and
+      events.
+- [ ] E2E tests use stable user-visible selectors and isolated fixtures.
+- [ ] Accessibility and security checks run for relevant UI/API changes.
+- [ ] Performance thresholds come from current SLO/capacity evidence.
+- [ ] Test output, environment, commit/image, and known limitations are recorded.
+
+## References
+
+Read only the matching reference:
+
+- [Testing patterns](./references/TESTING_PATTERNS.md)
+- [Performance baselines](./references/performance-baselines.md)
+
+Treat other bundled references as secondary until their project scope and
+dependency versions are verified against the target module.

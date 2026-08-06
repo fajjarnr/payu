@@ -1,980 +1,267 @@
 ---
 name: platform-engineer
-version: 3.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: []
-tags: [devops, k8s, openshift, infrastructure, gitops, argocd, tekton, helm, sre, reliability, releases, feature-flags]
-related: [cybersecurity-architect, integration-architect, finops-engineer]
-description: **Master Skill**: Unified Platform, SRE & Release Engineering. Covers OpenShift 4.20+, GitOps (ArgoCD/Tekton), Container Hardening, Service Mesh, Feature Flags, Progressive Rollouts, Observability (LGTM Stack), Chaos Engineering, and Disaster Recovery.
+description: PayU platform, SRE, and release engineering for OpenShift and Kubernetes workloads, GitOps, Argo CD, Tekton, Kustomize, Helm, container hardening, networking, observability, reliability, disaster recovery, and FinOps. Use when designing, deploying, debugging, or reviewing infrastructure and delivery changes; verify third-party APIs and CLI behavior with Context7 first.
 ---
 
-## 📚 Reference Implementation Patterns
+# PayU Platform Engineer
 
-For detailed patterns and historical context on PayU infrastructure, see:
+Make the smallest safe infrastructure change. Treat Git as the deployment
+source of truth, prefer existing repository patterns and operators, and never
+patch production directly when the same change belongs in GitOps.
 
-- [Infrastructure & Container Patterns](./references/INFRASTRUCTURE_PATTERNS.md)
-- [Deployment & Release Patterns](./references/DEPLOYMENT_PATTERNS.md)
+## Context7 documentation gate
 
-# PayU Platform Architect Master Skill
+Before writing or changing manifests, pipelines, charts, scripts, or commands
+that use a third-party platform or tool:
 
-You are the **Lead Platform Engineer** for the **PayU Platform**. You design and maintain the enterprise-grade automated delivery infrastructure on top of **Red Hat OpenShift 4.20+**.
+1. Inspect the target overlay, installed operator/CRD, cluster version, and
+   repository configuration. Determine the exact version instead of guessing.
+2. Resolve the library or product in Context7. Prefer the official,
+   high-reputation result, then query one concrete topic at a time.
+3. Pin the query to the deployed version when indexed. Use the returned docs as
+   the source of truth for API fields, CLI flags, defaults, and behavior.
+4. If the exact version is not indexed, state the fallback and verify against
+   the installed CRD, `oc explain`, `kubectl explain`, chart schema, or source
+   before editing.
+5. Re-resolve after changing an operator, chart, Kubernetes, OpenShift, Argo
+   CD, Tekton, mesh, or observability version. Do not mix major-version APIs.
 
-## ⚡ 2026 Platform Engineering Trends
+Resolve and query the relevant official sources for Kubernetes/OpenShift, Argo
+CD/ApplicationSet, Tekton Pipelines/Triggers, Helm, Kustomize, Istio or Gateway
+API, Strimzi, Vault/External Secrets, and observability operators. Context7 does
+not replace inspection of PayU manifests or operator CRDs.
 
-1. **Internal Developer Portal (IDP)**: Backstage/Red Hat Developer Hub is the golden path interface.
-2. **eBPF Observability**: Using Pixie/Cilium for zero-instrumentation monitoring.
-3. **GreenOps**: Carbon-aware scheduling for batch jobs.
-4. **Policy as Code**: Kyverno/OPA for strict governance enforcement at the cluster level.
-5. **Container Port Standardization**: All 22 microservices MUST listen on internal port **8080** to simplify networking, healthchecks, and service mesh routing.
+## Repository map
 
----
+Start at the actual path, not a copied example:
 
-## 🚀 GitOps & Continuous Delivery (ArgoCD)
-
-### 1. ApplicationSet for Multi-Environment
-
-```yaml
-# infrastructure/platform/argocd-gitops/applicationsets/payu-applicationsets.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: payu-environments
-  namespace: openshift-gitops
-spec:
-  goTemplate: true
-  goTemplateOptions:
-    - missingkey=error
-  generators:
-    - list:
-        elements:
-          - name: dev
-            path: infrastructure/workloads/overlays/dev
-            namespace: payu-dev
-            project: payu-dev
-          - name: sit
-            path: infrastructure/workloads/overlays/sit
-            namespace: payu-sit
-            project: payu-sit
-          - name: uat
-            path: infrastructure/workloads/overlays/uat
-            namespace: payu-uat
-            project: payu-uat
-          - name: preprod
-            path: infrastructure/workloads/overlays/preprod
-            namespace: payu-preprod
-            project: payu-preprod
-          - name: prod
-            path: infrastructure/workloads/overlays/prod
-            namespace: payu
-            project: payu
-  template:
-    metadata:
-      name: "payu-{{.name}}"
-    spec:
-      project: "{{.project}}"
-      source:
-        repoURL: https://github.com/fajjarnr/payu.git
-        targetRevision: main
-        path: "{{.path}}"
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: "{{.namespace}}"
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
-          - RespectIgnoreDifferences=true
+```text
+infrastructure/workloads/base/                 shared workload manifests
+infrastructure/workloads/overlays/payu-*      dev, sit, uat, preprod, prod
+infrastructure/platform/cicd/argocd/           Argo CD projects and applications
+infrastructure/platform/cicd/tekton/           pipelines, tasks, runs, triggers
+infrastructure/foundation/                     namespaces and cluster foundation
+infrastructure/platform/{security,mesh,data,observability}
 ```
 
-Repo alignment note:
-- Stable environments are generated from `infrastructure/workloads/overlays/{dev,sit,uat,preprod,prod}`.
-- Preview environments must override namespace to `payu-dev-pr-*` because the dev overlay hardcodes `payu-dev`.
+Read the relevant `kustomization.yaml`, base resources, overlay patches, RBAC,
+secrets references, and existing tests before changing a workload. Verify the
+real namespace and resource name; do not infer them from the service name.
 
-### 2. Sync Windows for Production Safety
+## Delivery workflow
 
-```yaml
-# infrastructure/platform/argocd-gitops/projects/payu-projects.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: payu
-  namespace: openshift-gitops
-spec:
-  sourceRepos:
-    - https://github.com/fajjarnr/payu.git
-  destinations:
-    - namespace: payu
-      server: https://kubernetes.default.svc
-  syncWindows:
-    - kind: allow
-      schedule: "0 1 * * 1-5"
-      duration: 8h
-      applications:
-        - payu-prod
-      namespaces:
-        - payu
-    - kind: deny
-      schedule: "0 0 * * 0,6"
-      duration: 24h
-      applications:
-        - payu-prod
-      namespaces:
-        - payu
+Use this sequence for changes that affect deployment:
+
+1. Inventory dependencies, owners, blast radius, rollback, and required
+   approvals.
+2. Edit the smallest base or overlay that owns the behavior. Keep environment
+   differences in overlays, not duplicated bases.
+3. Render and statically validate manifests. Review the rendered diff.
+4. Run server-side dry-run or `oc diff` against the target cluster when access
+   exists; otherwise report that cluster validation is pending.
+5. Commit and promote through Argo CD. Wait for health, rollout, and smoke
+   checks at each environment.
+6. Verify metrics, logs, events, probes, dependencies, and rollback readiness.
+
+Never claim deployment success without command output or an Argo/cluster status.
+Do not use `oc edit`, `kubectl apply` to bypass GitOps, `setenforce 0`, or
+destructive cluster commands as a shortcut.
+
+## Kubernetes and OpenShift manifests
+
+Use the API versions supported by the target cluster and resolved documentation.
+For current Kubernetes APIs, prefer the stable forms such as:
+
+- `apps/v1` for Deployments and StatefulSets;
+- `networking.k8s.io/v1` for NetworkPolicy and Ingress;
+- `policy/v1` for PodDisruptionBudget;
+- `autoscaling/v2` for HorizontalPodAutoscaler;
+- `tekton.dev/v1` for current Tekton Pipeline, Task, PipelineRun, and TaskRun
+  resources.
+
+Do not carry forward deprecated `v1beta1` resources without verifying the
+installed operator. Validate OpenShift-specific resources against the cluster's
+CRDs. Use `Route`, Gateway API, or Ingress according to the existing platform
+standard; do not introduce a second ingress model for one workload.
+
+Every workload should have, as applicable:
+
+- explicit CPU and memory requests/limits;
+- startup, readiness, and liveness probes with realistic thresholds;
+- a `Service` selecting the exact pod labels;
+- a PDB for replicated production workloads;
+- HPA only when requests, metrics, stabilization, and max capacity are defined;
+- NetworkPolicy with explicit DNS, ingress, and dependency egress;
+- stable `app.kubernetes.io/*` labels, owner, environment, version, and cost
+  attribution metadata.
+
+Use native Kubernetes/OpenShift controllers for rollout, scaling, health, and
+policy. Avoid shell loops or custom controllers for behavior the platform already
+provides.
+
+## GitOps with Argo CD
+
+Keep Application, ApplicationSet, AppProject, sync-wave, and policy manifests
+under `infrastructure/platform/cicd/argocd/`.
+
+- Restrict each AppProject to approved source repositories and destination
+  clusters/namespaces. Avoid `*` in production permissions.
+- Use ApplicationSet templates with `goTemplate: true` and
+  `goTemplateOptions: [missingkey=error]` when templating is required.
+- Use generators that reflect the repository's environment layout; current PayU
+  overlays use `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, and
+  `payu-prod`.
+- Enable `prune` and `selfHeal` only with an explicit ownership decision. Keep
+  `allowEmpty: false` so a bad render cannot wipe an application.
+- Use sync waves or progressive sync for dependencies and environment
+  promotion. Gate production with a sync window, approval, or both.
+- Configure bounded retry backoff for transient sync failures. Do not retry
+  validation, authorization, or broken-manifest errors indefinitely.
+- Roll back by reverting the Git change or using the approved Argo rollback
+  flow. Record why the rollback happened and verify data compatibility.
+
+For progressive delivery, use the installed Argo Rollouts or mesh/Gateway API
+capability only after resolving its exact API and health-analysis behavior.
+
+## Tekton pipelines
+
+Define pipelines and tasks under `infrastructure/platform/cicd/tekton/` and use
+the current `tekton.dev/v1` API where the installed Tekton release supports it.
+Use `PipelineRun` with `pipelineRef`, explicit parameters, named workspaces,
+bounded timeouts/retries, and a least-privilege `serviceAccountName`.
+
+Keep the supply-chain stages explicit and fail closed:
+
+```text
+checkout -> secret scan -> SAST/SCA -> tests -> build
+         -> image scan -> SBOM -> policy/RHACS -> sign -> publish
+         -> deploy through Argo -> smoke/contract/load gates
 ```
 
-### 3. Automated Rollback
+- Pin task and step images by trusted digest or controlled immutable tag.
+- Run steps as non-root with bounded resources and no privilege escalation.
+- Pass credentials through Vault/External Secrets or Tekton-bound secrets; never
+  put tokens, kubeconfigs, or registry passwords in YAML or logs.
+- Use workspaces for source and artifacts; do not depend on an implicit shared
+  filesystem or deprecated PipelineResources.
+- Keep deployment credentials separate from build credentials and restrict RBAC
+  to the namespace and resources that the pipeline owns.
+- Use Tekton Triggers or Pipelines-as-Code only after verifying the installed
+  trigger API and webhook authentication configuration.
 
-```yaml
-# infrastructure/platform/argocd-gitops/applicationsets/payu-applicationsets.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-spec:
-  template:
-    spec:
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        retry:
-          limit: 5
-          backoff:
-            duration: 5s
-            factor: 2
-            maxDuration: 3m
-      ignoreDifferences:
-        - group: apps
-          kind: Deployment
-          jqPathExpressions:
-            - .spec.template.metadata.annotations
-```
+## Images and container hardening
 
----
+Build with the repository's UBI9/Podman pattern and preserve enough build context
+for parent POMs, shared modules, and lockfiles. Prefer a multi-stage build and a
+small UBI9 runtime image. Use pre-built artifacts only when the build has already
+run the same tests and scans.
 
-## 🔧 Tekton CI/CD Pipelines
+Require:
 
-### 1. Modular Pipeline Structure
+- internal application port `8080` for PayU services;
+- immutable image tags matching the Git release tag, preferably referenced by
+  digest;
+- non-root execution (`UID 1001` where the image and cluster policy support it;
+  otherwise use OpenShift's assigned UID range);
+- `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem:
+  true`, `seccompProfile.type: RuntimeDefault`, and dropped `ALL` capabilities;
+- explicit writable `emptyDir` mounts only where the application needs `/tmp` or
+  another transient path;
+- OCI labels, provenance, SBOM, vulnerability scan, and image signature.
 
-```yaml
-# infrastructure/platform/tekton-pipelines/build-pipeline.yaml
-apiVersion: tekton.dev/v1
-kind: Pipeline
-metadata:
-  name: payu-build-pipeline
-  namespace: payu-cicd
-spec:
-  tasks:
-    - name: fetch-repository
-      taskRef:
-        name: git-clone
+Use Kubernetes probes instead of relying on an image `HEALTHCHECK`. Match probe
+paths and startup delays to the service. Do not install packages that already
+exist in the selected UBI image; verify the image contents before adding a
+healthcheck binary. Never weaken SELinux or add a privileged SCC to solve a file
+permission problem—inspect the audit event, UID/GID, volume, and label first.
 
-    - name: secret-scan
-      runAfter: [fetch-repository]
-      taskRef:
-        name: gitleaks
+## Kustomize and Helm
 
-    - name: deep-secret-scan
-      runAfter: [fetch-repository]
-      taskRef:
-        name: trufflehog
-
-    - name: semgrep-scan
-      runAfter: [fetch-repository]
-      taskRef:
-        name: semgrep
-
-    - name: service-sast-sca
-      runAfter: [semgrep-scan]
-      taskRef:
-        name: security-scan
-
-    - name: build-image
-      runAfter: [secret-scan, deep-secret-scan, service-sast-sca]
-      taskRef:
-        name: buildah
-
-    - name: trivy-image-scan
-      runAfter: [build-image]
-      taskRef:
-        name: trivy
-
-    - name: rhacs-policy-check
-      runAfter: [trivy-image-scan]
-      taskRef:
-        name: rhacs-image-check
-
-    - name: generate-sbom
-      runAfter: [rhacs-policy-check]
-      taskRef:
-        name: syft-sbom
-
-    - name: grype-sbom-check
-      runAfter: [generate-sbom]
-      taskRef:
-        name: grype-scan
-
-    - name: sign-image
-      runAfter: [grype-sbom-check]
-      taskRef:
-        name: cosign-sign
-```
-
-Repo alignment note:
-- PayU build pipelines in `payu-cicd` enforce `gitleaks -> trufflehog -> semgrep -> service SAST/SCA -> build -> trivy -> RHACS -> Syft -> Grype -> Cosign`.
-- Deploy pipelines gate environment promotion with Argo sync wait plus ZAP/Litmus in SIT, Schemathesis/k6 in UAT, and Cerberus/Kraken in preprod.
-
-### 2. Pipeline Trigger for Git Events
-
-```yaml
-# tekton/triggers/github-push-trigger.yaml
-apiVersion: triggers.tekton.dev/v1beta1
-kind: TriggerTemplate
-metadata:
-  name: java-service-trigger
-spec:
-  params:
-    - name: gitrevision
-    - name: gitrepositoryurl
-    - name: servicename
-  resourcetemplates:
-    - apiVersion: tekton.dev/v1beta1
-      kind: PipelineRun
-      metadata:
-        generateName: "$(tt.params.servicename)-"
-      spec:
-        pipelineRef:
-          name: java-service-pipeline
-        params:
-          - name: git-url
-            value: $(tt.params.gitrepositoryurl)
-          - name: git-revision
-            value: $(tt.params.gitrevision)
-          - name: service-name
-            value: $(tt.params.servicename)
-        workspaces:
-          - name: source
-            volumeClaimTemplate:
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 1Gi
----
-apiVersion: triggers.tekton.dev/v1beta1
-kind: EventListener
-metadata:
-  name: github-listener
-spec:
-  serviceAccountName: tekton-triggers-sa
-  triggers:
-    - name: github-push
-      interceptors:
-        - ref:
-            name: github
-          params:
-            - name: secretRef
-              value:
-                secretName: github-webhook-secret
-                secretKey: token
-            - name: eventTypes
-              value: ["push"]
-      bindings:
-        - ref: github-push-binding
-      template:
-        ref: java-service-trigger
-```
-
----
-
-## 🏗️ Container Hardening (Podman/UBI9)
-
-PayU menggunakan **Podman** secara eksklusif karena arsitekturnya yang _daemonless_ dan kemampuan eksekusi _rootless_ secara native, yang jauh lebih aman dibanding Docker.
-
-### 1. Production Containerfile Template
-
-```dockerfile
-# Containerfile (Podman) - Multi-stage build for Java service
-# Stage 1: Build
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.18 AS builder
-WORKDIR /build
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests -Dmaven.repo.local=/build/.m2
-
-# Stage 2: Runtime (minimal)
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.3
-
-# Security: Create non-root user
-RUN microdnf install -y java-21-openjdk-headless shadow-utils && \
-    microdnf clean all && \
-    groupadd -r payu -g 1001 && \
-    useradd -r -g payu -u 1001 -d /app payu
-
-WORKDIR /app
-
-# Copy only the built artifact
-COPY --from=builder --chown=payu:payu /build/target/*.jar app.jar
-
-# Security: Run as non-root
-USER 1001
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
-
-# Security: Drop all capabilities
-# Read-only root filesystem
-# No new privileges
-EXPOSE 8080
-
-ENTRYPOINT ["java", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-jar", "app.jar"]
-```
-
-### 2. Security Context in Kubernetes
-
-```yaml
-# deployment.yaml
-spec:
-  template:
-    spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
-        fsGroup: 1001
-        seccompProfile:
-          type: RuntimeDefault
-      containers:
-        - name: app
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-            - name: logs
-              mountPath: /app/logs
-      volumes:
-        - name: tmp
-          emptyDir: {}
-        - name: logs
-          emptyDir: {}
-```
-
-### 3. SELinux Guardrails (Red Hat Best Practices)
-
-Platform PayU mengandalkan SELinux untuk pertahanan _Enforced_ secara default. Jangan pernah mematikan SELinux (`setenforce 0`) di lingkungan produksi.
-
-#### Volume Labeling (`:Z` vs `:z`)
-
-Saat mounting volume di Podman, label SELinux harus dikelola agar proses kontainer memiliki izin akses.
-
-- **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
-- **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
+Use Kustomize for the repository's existing base/overlay layout. Render with the
+same version used by CI and verify the output:
 
 ```bash
-# Contoh running rootless podman dengan SELinux labeling
-podman run -v /data/db:/var/lib/postgresql/data:Z postgres:16
+kustomize build infrastructure/workloads/overlays/payu-dev
 ```
 
-#### OpenShift MCS (Multi-Category Security)
-
-Di OpenShift, setiap namespace mendapatkan kategori SELinux yang unik (misal: `s0:c12,c34`). Ini mencegah kontainer di Namespace A mengakses volume di Namespace B meskipun UUID-nya sama.
-
-#### Security Context Constraints (SCC)
-
-Gunakan SCC `restricted-v2` (default di OCP 4.12+) yang secara otomatis:
-
-1. Mengalokasikan UID unik dari range namespace.
-2. Menerapkan tipe SELinux `container_t`.
-3. Memaksa penggunaan `seccompProfile` tipe `RuntimeDefault`.
-
-#### Troubleshooting Commands
-
-Jika terjadi `Permission Denied` meskipun permission file di host (Linux) sudah `777`:
-
-1. Cek audit log: `ausearch -m avc -ts recent`
-2. Lihat konteks file: `ls -Z /path/to/data`
-3. Perbaiki label: `restorecon -Rv /path/to/data`
-
----
-
-## ⚓ Platform Port Standardization
-
-All PayU backend services follow the **8080 Standard** for internal container networking. This reduces configuration complexity and aligns with OpenShift/Kubernetes networking patterns.
-
-### 1. Port Mapping Principles
-
-- **Internal Port**: Always **8080**. All applications (Spring Boot, Quarkus, FastAPI) must listen on this port inside the container.
-- **External Port**: Managed via `docker-compose` or `podman-compose` host mapping (e.g., `8001:8080`).
-- **Service Discovery**: Internal communication between containers uses the service name and port 8080 (e.g., `http://account-service:8080`).
-
-### 2. Implementation Checklist
-
-- [x] **Dockerfile**: `EXPOSE 8080`.
-- [x] **Application Config**: `server.port=8080` (Spring) or `quarkus.http.port=8080`.
-- [x] **Health Check**: Endpoint must be matched to port 8080 (e.g., `http://localhost:8080/actuator/health`).
-- [x] **Gateway Routes**: All `ROUTES_URL` must point to port 8080 of the target service.
-
-  ***
-
-### 4. OCI & Metadata Standards (Legacy Container Engineer)
-
-Semua container image PayU **WAJIB** memiliki metadata standar untuk auditability dan traceability, menggunakan standar OCI (Open Container Initiative).
-
-#### Containerfile Labels (Build Time)
-
-```dockerfile
-# Standard OCI Labels
-LABEL org.opencontainers.image.vendor="PayU Digital Banking" \
-      org.opencontainers.image.authors="platform@payu.fajjjar.my.id" \
-      org.opencontainers.image.title="Wallet Service" \
-      org.opencontainers.image.description="Core ledger and balance management service" \
-      org.opencontainers.image.licenses="Proprietary" \
-      org.opencontainers.image.source="https://github.com/payu/wallet-service" \
-      org.opencontainers.image.documentation="https://docs.payu.internal/services/wallet" \
-      org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.revision="${GIT_COMMIT}"
-
-# PayU Specific Metadata
-LABEL id.payu.service.tier="1" \
-      id.payu.service.domain="transaction" \
-      id.payu.compliance.pci-dss="true" \
-      id.payu.security.scan-level="critical"
-```
-
-#### Kubernetes Annotations (Runtime)
-
-```yaml
-metadata:
-  annotations:
-    # Build Info
-    image.openshift.io/triggers: '[{''from'':{''kind'':''ImageStreamTag'',''name'':''wallet-service:latest''},''fieldPath'':''spec.template.spec.containers[?(@.name=="app")].image''}]'
-
-    # Ownership & Contact
-    start.payu.fajjjar.my.id/owner: "Wallet Team <wallet@payu.fajjjar.my.id>"
-    start.payu.fajjjar.my.id/slack-channel: "#dev-wallet"
-
-    # Operational Metadata
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8080"
-    prometheus.io/path: "/actuator/prometheus"
-
-    # Documentation
-    link.argocd.argoproj.io/external-link: "https://docs.payu.internal/services/wallet"
-```
-
----
-
-## 📦 Helm Chart Standards
-
-### 1. Chart Structure
-
-```
-helm/
-└── wallet-service/
-    ├── Chart.yaml
-    ├── values.yaml
-    ├── values-dev.yaml
-  ├── values-sit.yaml
-    ├── values-prod.yaml
-    ├── templates/
-    │   ├── _helpers.tpl
-    │   ├── deployment.yaml
-    │   ├── service.yaml
-    │   ├── configmap.yaml
-    │   ├── secret.yaml
-    │   ├── hpa.yaml
-    │   ├── pdb.yaml
-    │   ├── networkpolicy.yaml
-    │   ├── servicemonitor.yaml
-    │   └── NOTES.txt
-    └── tests/
-        └── test-connection.yaml
-```
-
-### 2. Values Schema
-
-```yaml
-# values.yaml
-replicaCount: 2
-
-image:
-  repository: registry.payu.internal/payu/wallet-service
-  tag: "latest"
-  pullPolicy: IfNotPresent
-
-resources:
-  requests:
-    cpu: 250m
-    memory: 512Mi
-  limits:
-    cpu: 1000m
-    memory: 1Gi
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilization: 70
-  targetMemoryUtilization: 80
-
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
-
-networkPolicy:
-  enabled: true
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              name: payu-gateway
-      ports:
-        - port: 8080
-
-monitoring:
-  enabled: true
-  path: /actuator/prometheus
-  port: 8080
-```
-
----
-
-## 🔗 Service Mesh (Istio)
-
-### 1. Traffic Management
-
-```yaml
-# VirtualService for Canary Deployment
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: wallet-service
-spec:
-  hosts:
-    - wallet-service
-  http:
-    - match:
-        - headers:
-            x-canary:
-              exact: "true"
-      route:
-        - destination:
-            host: wallet-service
-            subset: canary
-          weight: 100
-    - route:
-        - destination:
-            host: wallet-service
-            subset: stable
-          weight: 90
-        - destination:
-            host: wallet-service
-            subset: canary
-          weight: 10
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: wallet-service
-spec:
-  host: wallet-service
-  trafficPolicy:
-    connectionPool:
-      tcp:
-        maxConnections: 100
-      http:
-        h2UpgradePolicy: UPGRADE
-        http1MaxPendingRequests: 100
-        http2MaxRequests: 1000
-    outlierDetection:
-      consecutive5xxErrors: 5
-      interval: 30s
-      baseEjectionTime: 30s
-  subsets:
-    - name: stable
-      labels:
-        version: stable
-    - name: canary
-      labels:
-        version: canary
-```
-
-### 2. Mutual TLS (mTLS) Strict Mode
-
-```yaml
-apiVersion: security.istio.io/v1beta1
-kind: PeerAuthentication
-metadata:
-  name: default
-  namespace: payu
-spec:
-  mtls:
-    mode: STRICT
----
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: wallet-service-authz
-  namespace: payu
-spec:
-  selector:
-    matchLabels:
-      app: wallet-service
-  rules:
-    - from:
-        - source:
-            principals:
-              - cluster.local/ns/payu/sa/gateway-service
-              - cluster.local/ns/payu/sa/transaction-service
-      to:
-        - operation:
-            methods: ["GET", "POST", "PUT"]
-            paths: ["/api/*"]
-```
-
----
-
-## 🌍 Multi-Region Disaster Recovery
-
-### 1. Architecture Pattern
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Global Load Balancer (GSLB)                  │
-│                    (Cloudflare/AWS Route53)                      │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-          ┌───────────────┴───────────────┐
-          │                               │
-          ▼                               ▼
-┌─────────────────────┐       ┌─────────────────────┐
-│   Region 1 (Active)  │       │  Region 2 (Standby)  │
-│   Jakarta DC         │       │  Singapore DC        │
-├─────────────────────┤       ├─────────────────────┤
-│ OpenShift Cluster   │       │ OpenShift Cluster    │
-│ - All services      │──────▶│ - All services       │
-│ - Kafka (Primary)   │ Sync  │ - Kafka (Mirror)     │
-│ - PostgreSQL (RW)   │──────▶│ - PostgreSQL (RO)    │
-│ - Redis (Master)    │──────▶│ - Redis (Replica)    │
-└─────────────────────┘       └─────────────────────┘
-```
-
-### 2. Failover Configuration
-
-```yaml
-# Multi-region Kafka MirrorMaker2
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaMirrorMaker2
-metadata:
-  name: payu-mm2
-spec:
-  version: 3.6.0
-  replicas: 3
-  connectCluster: "region-2"
-  clusters:
-    - alias: "region-1"
-      bootstrapServers: kafka-region1.payu.internal:9092
-    - alias: "region-2"
-      bootstrapServers: kafka-region2.payu.internal:9092
-  mirrors:
-    - sourceCluster: "region-1"
-      targetCluster: "region-2"
-      sourceConnector:
-        config:
-          replication.factor: 3
-          offset-syncs.topic.replication.factor: 3
-      topicsPattern: "payu.*"
-```
-
----
-
-## 💰 Cloud FinOps
-
-### 1. Resource Right-Sizing with VPA
-
-```yaml
-apiVersion: autoscaling.k8s.io/v1
-kind: VerticalPodAutoscaler
-metadata:
-  name: wallet-service-vpa
-spec:
-  targetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: wallet-service
-  updatePolicy:
-    updateMode: "Auto"
-  resourcePolicy:
-    containerPolicies:
-      - containerName: "*"
-        minAllowed:
-          cpu: 100m
-          memory: 256Mi
-        maxAllowed:
-          cpu: 2
-          memory: 4Gi
-```
-
-### 2. Cost Attribution Labels
-
-```yaml
-# Required labels for all resources
-metadata:
-  labels:
-    app.kubernetes.io/name: wallet-service
-    app.kubernetes.io/version: "1.2.3"
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: payu-platform
-    cost-center: platform-team
-    environment: prod
-    owner: wallet-team
-```
-
----
-
-## 🐛 Container Build Debugging (Podman/UBI9)
-
-> **Learned from**: E2E test infrastructure setup - February 1, 2026
-
-### Common Build Failure Patterns
-
-#### 1. Parent POM Resolution Failure
-
-**Symptom:** Maven build fails with `Could not resolve dependencies` or `parent POM not found`
-
-**Root Cause:** Containerfile copies only service pom.xml, but Spring Boot services reference parent POM at `../pom.xml`
-
-```dockerfile
-# ❌ WRONG - Only copies service pom.xml
-COPY pom.xml ./
-RUN mvn dependency:go-offline -B
-COPY src ./src
-
-# ✅ CORRECT - Copies entire project for parent POM access
-COPY . .
-RUN mvn clean package -DskipTests
-```
-
-**Fix:** Change `COPY pom.xml ./` to `COPY . .` in Containerfiles
-
-#### 2. Maven Build Hanging (4+ hours)
-
-**Symptom:** Maven build process hangs indefinitely during dependency download or compilation
-
-**Root Cause:**
-
-- Parallel builds (`-T 1C`) causing deadlock in certain services
-- Network issues accessing Maven Central during container build
-- Large dependency downloads timing out
-
-**Fix - Use Pre-Built JARs:**
-
-```dockerfile
-# Build stage: Skip Maven, use pre-built JAR
-# Runtime stage only
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
-
-# Copy pre-built JAR from local build
-COPY target/*.jar /app/app.jar
-
-USER 1001
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-```
-
-**Build Strategy:**
-
-1. Build all JARs first with Maven from backend directory:
-
-   ```bash
-   cd /home/ubuntu/payu/backend
-   mvn clean package -DskipTests -T 1C
-   ```
-
-2. Create runtime-only Containerfiles that copy pre-built JARs
-3. Build images much faster (minutes vs hours)
-
-#### 3. UBI9 Runtime Image Conflicts
-
-**Symptom:** `curl-minimal` conflicts when trying to install curl
-
-**Root Cause:** UBI9 runtime images have `curl-minimal` pre-installed, conflicts with installing regular curl
-
-**Fix:** Remove curl installation and curl-based health checks from Containerfiles, or use `curl-minimal` for health checks:
-
-```dockerfile
-# ❌ WRONG - Tries to install curl (conflicts)
-RUN microdnf install -y curl
-
-# ✅ CORRECT - curl-minimal already available
-HEALTHCHECK CMD curl-minimal --fail-with-body http://localhost:8080/actuator/health || exit 1
-```
-
-#### 4. User Creation Conflicts (GID 185)
-
-**Symptom:** `groupadd: GID '185' already exists` when creating non-root user
-
-**Root Cause:** UBI9 images already have user `jboss` with GID 185
-
-**Fix:** Use existing `jboss` user (UID 185) instead of creating new user:
-
-```dockerfile
-# ❌ WRONG - Tries to create user with GID 185
-RUN groupadd -r payu -g 1001 && \
-    useradd -r -g payu -u 1001 -d /app payu
-
-# ✅ CORRECT - Use existing jboss user
-USER 185
-```
-
-#### 5. Dockerfile Excludes Target Directory
-
-**Symptom:** `COPY target/*.jar /app/app.jar` fails with "no such file or directory"
-
-**Root Cause:** `.dockerignore` or `.containerignore` excludes `target/` directory
-
-**Fix:** Either:
-
-1. Build from parent directory with proper context
-2. Remove `target/` from ignore files
-3. Use `--ignorefile=.containerignore` to bypass dockerignore
-
-### Debugging Commands
-
-```bash
-# Check if parent POM is accessible
-cd backend/some-service
-cat ../pom.xml  # Should show parent POM content
-
-# Check Maven can resolve parent
-mvn help:evaluate -Dexpression=project.parentGroupId
-mvn help:evaluate -Dexpression=project.parentArtifactId
-
-# Check what's in target directory
-ls -la target/ | grep -E "\.jar$"
-
-# Test Maven build locally (without container)
-mvn clean package -DskipTests
-
-# Check dockerignore
-cat .dockerignore | grep target
-```
-
-### Build Performance Optimization
-
-| Strategy                     | Build Time        | Disk Space | Use When                    |
-| ---------------------------- | ----------------- | ---------- | --------------------------- |
-| **Full container build**     | 10-30 min/service | High       | Initial setup, CI/CD        |
-| **Pre-built JARs**           | 1-2 min/service   | Medium     | Development, fast iteration |
-| **Multi-stage with cache**   | 5-10 min/service  | Medium     | Production, optimized       |
-| **Runtime-only (local JAR)** | <1 min/service    | Low        | Debugging, testing          |
-
-### PayU Build Standards
-
-1. **All Spring Boot services** use `payu-backend-parent` (not direct `spring-boot-starter-parent`)
-2. **Containerfiles** use `COPY . .` for parent POM resolution
-3. **Non-root user** with UID 1001 or existing `jboss` user (185)
-4. **UBI9 images**: `ubi9/openjdk-21:1.24-2` for build, `ubi9/openjdk-21-runtime:1.24-2` for runtime
-5. **Node.js images**: `ubi9/nodejs-20:9.7` for frontend
-
-### Known Working Services
-
-| Service             | Image                            | Build Method  |
-| ------------------- | -------------------------------- | ------------- |
-| account-service     | ✅ payu-account-service:test     | Pre-built JAR |
-| auth-service        | ✅ payu-auth-service:test        | Pre-built JAR |
-| wallet-service      | ✅ payu-wallet-service:test      | Pre-built JAR |
-| transaction-service | ✅ payu-transaction-service:test | Pre-built JAR |
-| investment-service  | ✅ payu-investment-service:test  | Pre-built JAR |
-| gateway-service     | ✅ payu-gateway-service:test     | Pre-built JAR |
-| bi-fast-simulator   | ✅ payu-bifast-simulator:test    | Pre-built JAR |
-| dukcapil-simulator  | ✅ payu-dukcapil-simulator:test  | Full build    |
-| qris-simulator      | ✅ payu-qris-simulator:test      | Pre-built JAR |
-
-### References
-
-- [Podman Documentation](https://docs.podman.io/)
-- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-- [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
-
----
-
-## 🛡️ Platform Integrity Checklist
-
-### Security
-
-- [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
-
-- [ ] Dijalankan menggunakan Podman rootless (UID 1001)
-- [ ] SecurityContext drops all capabilities
-- [ ] NetworkPolicies isolate service traffic
-- [ ] Secrets managed via Vault + External Secrets Operator (not Git)
-
-### Delivery
-
-- [ ] Service deployed via ArgoCD (GitOps)
-
-- [ ] Sync windows configured for production
-- [ ] Automated rollback enabled
-- [ ] Tekton pipeline includes secret scan, SAST/SCA, SBOM, vulnerability gating, and Cosign signing
-
-### Observability
-
-- [ ] PodMonitor/ServiceMonitor configured
-
-- [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
-- [ ] Log aggregation configured (Loki)
-- [ ] eBPF probes enabled for network visibility
-
-### Resilience
-
-- [ ] PodDisruptionBudget defined
-
-- [ ] HPA configured with appropriate thresholds
-- [ ] Multi-region DR tested quarterly
-- [ ] Chaos testing run in SIT automatically
-
----
-
-## 📚 References
-
-### Merged Skill References (Consolidated)
-
-| Category     | Topic                                                  | File                                                                   |
-| ------------ | ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| **Releases** | Feature Flags, Progressive Rollouts, Blue-Green/Canary | [release-engineering.md](./references/releases/release-engineering.md) |
-| **SRE**      | Observability, SLO/SLI, Chaos Engineering, DR          | [sre-practices.md](./references/sre/sre-practices.md)                  |
-| **K8s**      | Kubernetes manifest generator patterns                 | [k8s-manifest-generator.md](./references/k8s-manifest-generator.md)    |
-
-### External Documentation
-
-- [OpenShift Documentation](https://docs.openshift.com/)
-- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
-- [Tekton Documentation](https://tekton.dev/docs/)
-- [Helm Documentation](https://helm.sh/docs/)
-- [Istio Documentation](https://istio.io/latest/docs/)
-- [Strimzi Kafka Operator](https://strimzi.io/documentation/)
-- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-- [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
-- [CNCF Landscape](https://landscape.cncf.io/)
-- [FinOps Foundation](https://www.finops.org/)
-- [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
-- [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
-
----
-
-_Last Updated: January 2026_
-
+Use Helm only when an existing chart or platform contract requires it. Validate
+`Chart.yaml`, `values.schema.json`, rendered templates, and environment values;
+do not add Helm merely to template a few Kubernetes fields. Do not mix Helm and
+Kustomize ownership of the same resource without a documented boundary.
+
+## Networking and security
+
+- Default to least-privilege NetworkPolicy. Allow only required ingress,
+  namespace traffic, DNS, mesh control-plane traffic, and named dependencies.
+- Use TLS at routes and strict mTLS/authorization policies when the installed
+  mesh supports them. Verify service accounts and principals instead of allowing
+  an entire namespace by label alone.
+- Store secrets in Vault, External Secrets, or the platform secret manager. Git
+  may contain references and encrypted material only when the repository policy
+  explicitly permits it.
+- Keep RBAC namespaced and minimal. Avoid `cluster-admin` in workloads,
+  pipelines, service accounts, and local development manifests.
+- Treat routes, webhooks, registries, admission policies, and operator
+  credentials as trust boundaries. Validate inputs and audit changes.
+
+## SRE, observability, and reliability
+
+Define an SLI, SLO, owner, alert threshold, and runbook for each production
+service. Instrument the existing platform stack for logs, metrics, traces, and
+Kubernetes events; do not add a second telemetry system without a measured need.
+
+Check:
+
+- availability, latency, error rate, saturation, queue lag, and dependency
+  health;
+- structured logs with correlation/request IDs and no secrets or PII;
+- alerts that page only on actionable symptoms and include a runbook link;
+- HPA, PDB, resource quotas, limit ranges, and capacity headroom;
+- rollout health, startup time, probe failures, crash loops, and OOM kills.
+
+Run chaos and load tests only in approved non-production environments. Make the
+test reversible, bound blast radius, and capture evidence. For financial flows,
+verify no duplicate posting, event loss, or unsafe retry occurs during failure.
+
+## Disaster recovery and FinOps
+
+Define RPO/RTO per dependency, backup ownership, replication mode, failover
+steps, and data reconciliation. Test restore and failover on a schedule; a
+multi-region diagram is not evidence of recoverability. Keep the primary/standby
+mode of PostgreSQL, Kafka, Redis, and object storage explicit and verified.
+
+Right-size requests and limits from observed usage, enforce quotas, and apply
+owner/environment/cost-center labels. Use VPA recommendations or OpenCost data
+before changing production resources; do not enable automatic eviction or
+resource mutation without an availability review.
+
+## Release and rollback checklist
+
+- [ ] Git diff is limited to the owning base/overlay or platform component.
+- [ ] API versions and fields were verified with Context7 and the installed CRD.
+- [ ] Rendered manifests and schema/lint checks pass.
+- [ ] Image is immutable, scanned, signed, and tagged to the Git release.
+- [ ] Secrets, RBAC, NetworkPolicy, probes, resources, PDB, and HPA are covered.
+- [ ] Argo/Tekton permissions and production gates are explicit.
+- [ ] Smoke, contract, migration, and rollback checks are defined.
+- [ ] Post-deploy health and rollback evidence is captured.
+
+## References
+
+Read only the reference that matches the task:
+
+- [Infrastructure patterns](./references/INFRASTRUCTURE_PATTERNS.md)
+- [Deployment patterns](./references/DEPLOYMENT_PATTERNS.md)
+- [Argo CD GitOps](./references/argocd-gitops.md)
+- [CI/CD pipeline guide](./references/cicd_pipeline_guide.md)
+- [Infrastructure as code](./references/infrastructure_as_code.md)
+- [Deployment strategies](./references/deployment_strategies.md)
+- [Istio traffic management](./references/istio-traffic-management.md)
+- [Release engineering](./references/releases/release-engineering.md)
+- [SRE practices](./references/sre/sre-practices.md)
+- [Incident playbooks](./references/sre/incident-playbooks.md)
+- [Disaster recovery](./references/sre/disaster-recovery.md)
+
+Treat bundled scripts as helpers, not authority. Read and test them before use;
+do not assume a generator or deployment script is complete or safe for a live
+cluster.
