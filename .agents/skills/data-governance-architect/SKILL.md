@@ -1,393 +1,131 @@
 ---
 name: data-governance-architect
-version: 2.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: [data-architect]
-tags: [data, compliance, pii, lineage]
-related: [cybersecurity-architect]
-description: **Master Skill**: Data Governance & Lineage Architect. Covers Data Cataloging, Lineage Tracking, PII Classification, Retention Policies, and Regulatory Compliance (POJK, UU PDP).
+description: PayU data governance for catalog ownership, data classification, PII and financial-data handling, lineage, consent and purpose, data quality, retention, access audit, data-subject workflows, and UU PDP/POJK/BI evidence. Use when defining what data may be collected, used, shared, retained, or audited; do not use this skill for schema/index/migration implementation, which belongs to data-architect.
 ---
 
-# PayU Data Governance Architect Master Skill
+# PayU Data Governance Architect
 
-You are the **Lead Data Governance Architect (AI)** for the **PayU Platform**. You ensure that all data assets are properly cataloged, classified, tracked, and compliant with Indonesian data protection regulations (UU PDP, POJK).
+Define the rules, ownership, evidence, and accountability for data. Hand database schemas, migrations, indexes, RLS, locking, backups, and storage implementation to `data-architect`; coordinate with `cybersecurity-architect` for controls and `compliance-auditor`/legal for regulatory interpretation.
 
-## 🎯 Core Objectives
+## Operating contract
 
-- **Data Discoverability**: All data assets are cataloged and searchable
-- **Lineage Transparency**: Full visibility into data flow from source to consumption
-- **Regulatory Compliance**: Meet UU PDP (Undang-Undang Perlindungan Data Pribadi) requirements
-- **Data Quality**: Ensure accuracy, completeness, and consistency of financial data
-- **Access Governance**: Right data to right people with full auditability
+- Read `AGENTS.md`, the owning service's catalog descriptor, API/event contract, migration history, security controls, and operations policy before making a governance decision.
+- Start from the data asset and its purpose, not from a catalog or compliance product.
+- Verify current repository and deployed configuration. A YAML example, audit note, catalog entry, or retention ConfigMap is not proof that a control is enforced.
+- Use Context7 before relying on Backstage, OpenLineage, Great Expectations, a catalog client, or another third-party tool. Resolve the installed or proposed version, query the exact concept, and record version mismatches.
+- Do not make legal/compliance claims from memory. Map each obligation to an approved policy, legal/compliance owner, effective date, evidence source, and review date.
+- Do not expose raw PII in catalog metadata, lineage payloads, quality results, examples, logs, or tickets.
 
----
+## Repository baseline
 
-## 📚 Data Classification Framework
+Treat these as observed implementation points to verify when they drift:
 
-### Sensitivity Levels
+- `catalog-info.yaml` is the current Backstage/Red Hat Developer Hub inventory surface. It models systems, components, APIs, resources, ownership, lifecycle, dependencies, links, and operational annotations; it is not a complete column-level data catalog.
+- The platform has service-owned domains including account, transaction, wallet, KYC, compliance, analytics, lending, investment, and partner. Confirm the actual data owner and steward with the domain team; Backstage service ownership alone does not prove data ownership.
+- `compliance-service` records `DataAccessAudit` fields such as subject, accessor, service, resource, operation, purpose, source address, success, and time. `security-starter` publishes audit records through the approved outbox path to `payu.security.audit-log.v1`; preserve this boundary and test delivery failure/replay.
+- `security-starter` provides `@Sensitive`-based masking and log masking. Verify annotation coverage and output tests for every new sensitive DTO; do not assume all PII is automatically protected.
+- `infrastructure/platform/security/compliance/data-retention-policy.yaml` contains proposed retention and cleanup behavior. It is not a legal approval or evidence of an active, safe policy. In particular, never use a generic cleanup job to delete immutable ledger facts or compliance evidence.
+- OpenLineage, DataHub, and Great Expectations are not observed as installed platform dependencies. Treat them as optional integrations requiring an owner, architecture decision, privacy review, and operational budget.
 
-| Level | Classification | Examples | Handling Requirements |
-|:------|:---------------|:---------|:---------------------|
-| **L1 - Restricted** | Highly Sensitive PII | NIK, Biometric, PIN, Card PAN | Encrypted at rest + transit, masked in logs, access logging, 2FA for access |
-| **L2 - Confidential** | Sensitive PII | Full Name, DOB, Address, Phone | Encrypted at rest, masked in non-prod, role-based access |
-| **L3 - Internal** | Business Sensitive | Transaction amounts, Account balances | Encrypted in transit, internal access only |
-| **L4 - Public** | Non-sensitive | Product names, Public rates | Standard security controls |
+## Governance workflow
 
-### Data Domain Ownership
+1. **Scope the asset** — identify the system, table/topic/object/API, fields, environment, data subject, producer, consumers, and business purpose.
+2. **Assign accountability** — record business owner, data steward, technical custodian, processors, consumers, approver, and escalation path. Keep data ownership separate from service deployment ownership.
+3. **Classify** — classify at field level where sensitivity differs; record the rationale, handling rules, and review date.
+4. **Define permitted use** — record purpose, legal/policy basis, consent requirement, allowed consumers, geographic boundary, sharing restrictions, and prohibited uses.
+5. **Map lineage** — trace source → command/API or event → transformation → storage → downstream consumer/report/model. Include schema/version and time semantics.
+6. **Define quality** — write measurable rules, severity, threshold, owner, validation cadence, failure action, and evidence location.
+7. **Define lifecycle** — set retention trigger, archive tier, legal hold behavior, anonymization/deletion method, approver, and restore implications.
+8. **Prove and review** — attach catalog validation, access logs, quality results, lineage evidence, retention dry-runs, reconciliation, and review sign-off. Reassess after schema, purpose, consumer, or regulation changes.
 
-| Domain | Owner | Key Data Assets | Steward |
-|:-------|:------|:----------------|:--------|
-| **Customer** | Account Service | User profiles, KYC data | Product Team |
-| **Transaction** | Transaction Service | Transfers, Payments, Ledger | Finance Team |
-| **Risk** | Compliance Service | AML scores, Fraud signals | Risk Team |
-| **Product** | CMS Service | Rates, Fees, Product configs | Business Team |
-| **Analytics** | Analytics Service | Aggregated metrics, Reports | Data Team |
+## Classification and handling
 
----
+Use labels that are understandable to the business and map them to the approved PayU policy. Do not invent a universal numeric level without policy approval. At minimum distinguish:
 
-## 🔄 Data Lineage Architecture
+- **Public** — safe for public release after owner approval.
+- **Internal** — operational or business data for PayU workforce and approved systems.
+- **Confidential** — customer profile, contact data, transaction details, balances, fraud signals, and partner data requiring controlled access.
+- **Restricted** — authentication material, PINs, secrets, PAN/CVV, NIK, biometrics, identity documents, and data whose exposure creates severe harm.
 
-### Lineage Tracking Components
+For each field, record `classification`, `contains_pii`, `contains_financial_data`, `contains_authentication_or_biometric_data`, `masking`, `encryption/tokenization`, allowed roles, purpose, retention, and data owner. Classification is not a substitute for threat modeling or access control.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    DATA LINEAGE FLOW                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌────────┐│
-│  │  Source  │───►│  Kafka   │───►│  Target  │───►│ Report ││
-│  │  (OLTP)  │    │  Topic   │    │  (OLAP)  │    │  Layer ││
-│  └──────────┘    └──────────┘    └──────────┘    └────────┘│
-│       │               │               │               │     │
-│       ▼               ▼               ▼               ▼     │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │              OpenLineage / DataHub                       ││
-│  │  • Source metadata    • Transformation logic             ││
-│  │  • Schema evolution   • Quality metrics                  ││
-│  │  • Access patterns    • Compliance tags                  ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
+Never put NIK, PIN, PAN, CVV, passwords, tokens, biometric templates, raw identity documents, or full account numbers in catalog descriptions, test fixtures, lineage facets, metrics labels, or logs. Use stable opaque asset IDs and masked examples.
 
-### OpenLineage Integration
+## Catalog and ownership
 
-```java
-// Emit lineage events from services
-@Component
-public class LineageEmitter {
-    
-    private final OpenLineageClient client;
-    
-    public void emitTransformationLineage(
-            String jobName,
-            List<Dataset> inputs,
-            List<Dataset> outputs) {
-        
-        RunEvent event = RunEvent.builder()
-            .eventType(RunEvent.EventType.COMPLETE)
-            .eventTime(ZonedDateTime.now())
-            .run(Run.builder()
-                .runId(UUID.randomUUID())
-                .build())
-            .job(Job.builder()
-                .namespace("payu")
-                .name(jobName)
-                .build())
-            .inputs(inputs)
-            .outputs(outputs)
-            .build();
-            
-        client.emit(event);
-    }
-}
+Use Backstage descriptors for discoverability:
 
-// Example: Transaction aggregation job
-lineageEmitter.emitTransformationLineage(
-    "daily-transaction-summary",
-    List.of(
-        Dataset.builder()
-            .namespace("payu")
-            .name("transactions.ledger")
-            .facets(DatasetFacets.builder()
-                .schema(schemaFacet)
-                .dataQuality(qualityFacet)
-                .build())
-            .build()
-    ),
-    List.of(
-        Dataset.builder()
-            .namespace("payu")
-            .name("analytics.daily_summary")
-            .build()
-    )
-);
-```
+- `System` groups a business or platform boundary; `Component` represents a deployed service; `API` represents a contract; `Resource` represents infrastructure or a data store.
+- Set stable `metadata.name`, `spec.owner`, `spec.system`, lifecycle, dependencies, API relations, and source/TechDocs links. Keep annotations operational and non-sensitive.
+- Add a pointer to the governed data contract or classification record instead of embedding secrets, PII samples, or an unmaintainable column dump in `catalog-info.yaml`.
+- Record an owner and steward who can approve access, purpose changes, quality exceptions, retention, and incident response. An unowned asset is a governance failure, not merely missing metadata.
+- Detect stale descriptors: missing owners, broken links, orphaned resources, duplicate identifiers, undocumented dependencies, and catalog entries that claim a lifecycle not supported by deployment evidence.
 
-### Column-Level Lineage
+## Lineage and data contracts
 
-```yaml
-# DataHub lineage configuration
-lineage:
-  source:
-    table: wallet.ledger
-    columns:
-      - amount
-      - account_id
-      - created_at
-  transformations:
-    - type: aggregation
-      operation: SUM(amount) GROUP BY account_id, DATE(created_at)
-  target:
-    table: analytics.daily_balances
-    columns:
-      - total_amount
-      - account_id
-      - balance_date
-```
+Represent lineage as metadata, not as a copy of production data. For each edge record:
 
----
+- source and target asset IDs, field mappings when material, producer/consumer, transformation or decision logic, event/API/schema version, timestamp semantics, run/version ID, owner, classification propagation, and quality result;
+- Kafka topic, CloudEvents type, outbox boundary, database table, report, feature, or model only when it is an actual repository/deployment boundary;
+- whether the edge is authoritative, derived, cached, replicated, exported, or manually corrected.
 
-## 📋 Data Catalog Structure
+Use OpenLineage only when a real producer and backend are funded and operated. Its run/job/dataset identity and facets are suitable for lineage metadata; do not emit raw payloads, PII, secrets, or unrestricted SQL containing sensitive values. Column-level lineage is required only for high-impact fields or transformations where the risk justifies the maintenance cost.
 
-### Catalog Entry Schema
+For every governed API/event/data asset, maintain a contract containing schema/version, owner, purpose, classifications, permitted consumers, retention, quality rules, failure behavior, and change-approval path. Use the existing OpenAPI/CloudEvents conventions; do not create a second incompatible schema registry by hand.
 
-```json
-{
-  "asset_id": "payu.wallet.ledger",
-  "name": "Wallet Ledger",
-  "description": "Double-entry accounting ledger for all wallet movements",
-  "domain": "Transaction",
-  "owner": "wallet-service-team",
-  "steward": "finance-ops@payu.fajjjar.my.id",
-  "classification": "L3-Internal",
-  "pii_fields": ["account_id"],
-  "schema": {
-    "columns": [
-      {"name": "id", "type": "UUID", "description": "Primary key"},
-      {"name": "account_id", "type": "UUID", "pii": true, "description": "Reference to account"},
-      {"name": "amount", "type": "DECIMAL(19,4)", "description": "Transaction amount in IDR"},
-      {"name": "entry_type", "type": "ENUM", "values": ["DEBIT", "CREDIT"]},
-      {"name": "created_at", "type": "TIMESTAMPTZ", "description": "Entry timestamp"}
-    ]
-  },
-  "freshness": {
-    "expected": "real-time",
-    "sla_minutes": 1
-  },
-  "quality_rules": [
-    {"rule": "amount != 0", "severity": "error"},
-    {"rule": "SUM(amount) = 0 GROUP BY transaction_id", "severity": "critical"}
-  ],
-  "retention": {
-    "policy": "7-years",
-    "regulation": "POJK 12/2017"
-  },
-  "tags": ["financial", "audit-required", "gdpr-relevant"]
-}
-```
+## Privacy, purpose, and consent
 
----
+- Apply collection minimization, purpose limitation, access limitation, retention limitation, and secure disposal. A field without a documented purpose should not be collected or replicated.
+- Record consent version, notice/purpose, subject, timestamp, channel, scope, expiry, withdrawal, and downstream enforcement where consent is the legal/policy basis. Never default optional analytics or partner sharing to enabled without product and compliance approval.
+- Separate essential service processing from marketing, analytics/personalization, and third-party sharing. A withdrawal must stop the applicable use and be traceable to affected consumers.
+- Support approved data-subject access, correction, portability, objection/withdrawal, and erasure workflows. Verify identity, scope, export format, redaction, legal hold, and completion evidence.
+- Do not call every request “GDPR.” Use the applicable Indonesian policy/law and approved legal interpretation. The governance skill records controls and evidence; it does not certify compliance.
+- For erasure or correction, preserve immutable financial facts and audit evidence where retention is required. Pseudonymize or remove only non-essential personal links through an approved, reversible-tested workflow; never update or delete posted ledger entries as a convenience.
 
-## 🛡️ Privacy & Compliance (UU PDP)
+## Data quality and reconciliation
 
-### Data Subject Rights Implementation
+Define a quality contract per critical asset:
 
-| Right | Implementation | Service |
-|:------|:---------------|:--------|
-| **Right to Access** | Export all user data in machine-readable format | Account Service `/api/v1/users/{id}/data-export` |
-| **Right to Rectification** | Allow profile updates with audit trail | Account Service `/api/v1/users/{id}/profile` |
-| **Right to Erasure** | Anonymize PII, retain financial records | Compliance Service `/api/v1/gdpr/erasure` |
-| **Right to Portability** | Export in standard format (JSON/CSV) | Account Service `/api/v1/users/{id}/portability` |
-| **Right to Object** | Opt-out of marketing, analytics | Consent Service `/api/v1/users/{id}/consent` |
+- dimensions: completeness, validity, uniqueness, consistency, timeliness/freshness, accuracy, reconciliation, and schema compatibility;
+- rule, population/batch, severity, threshold, owner, cadence, evidence location, alert, quarantine/replay behavior, and exception expiry;
+- financial invariants such as `NUMERIC(19,4)` representation, explicit currency, balanced debit/credit totals, idempotent event identity, and source-to-projection reconciliation.
 
-### Anonymization Patterns
+Quality targets are policy decisions, not generic numbers. Do not copy `99.9%`, `100%`, or a fixed retention period without a domain owner and measured baseline. Great Expectations may implement validations if approved, but a suite/checkpoint result is evidence only when it ran against the named batch and its result is retained.
 
-```java
-@Service
-public class AnonymizationService {
-    
-    /**
-     * Anonymize user data for GDPR erasure request
-     * Retains financial records for regulatory compliance
-     */
-    @Transactional
-    public void anonymizeUser(UUID userId) {
-        // 1. Anonymize PII in account table
-        accountRepository.anonymize(userId, AnonymizationConfig.builder()
-            .field("full_name", "ANONYMIZED_USER_" + hash(userId))
-            .field("email", hash(userId) + "@anonymized.local")
-            .field("phone", "0000000000")
-            .field("nik", "0000000000000000")
-            .field("address", "ANONYMIZED")
-            .build());
-        
-        // 2. Retain transaction records (required by POJK)
-        // Only remove linking identifiers from non-essential fields
-        transactionRepository.updateDescription(userId, "ANONYMIZED");
-        
-        // 3. Revoke all access tokens
-        authService.revokeAllTokens(userId);
-        
-        // 4. Emit compliance event
-        eventPublisher.publish(new DataErasureCompletedEvent(userId, Instant.now()));
-        
-        // 5. Audit log
-        auditLogger.log(AuditEvent.builder()
-            .action("GDPR_ERASURE")
-            .subject(userId)
-            .timestamp(Instant.now())
-            .build());
-    }
-}
-```
+When a rule fails, preserve the failed batch identity, rule version, observed values in masked/aggregated form, impact, owner, remediation, and revalidation result. Do not silently coerce, drop, or rewrite bad financial data.
 
-### Consent Management
+## Retention, archive, deletion, and legal hold
 
-```yaml
-# Consent categories
-consent:
-  categories:
-    - id: essential
-      name: Essential Services
-      required: true
-      description: Required for basic banking functionality
-      
-    - id: marketing
-      name: Marketing Communications
-      required: false
-      default: false
-      description: Promotional emails, push notifications
-      
-    - id: analytics
-      name: Analytics & Personalization
-      required: false
-      default: true
-      description: Usage analytics for service improvement
-      
-    - id: third_party
-      name: Partner Data Sharing
-      required: false
-      default: false
-      description: Sharing data with partners for offers
-```
+A retention record must state asset, classification, retention trigger, duration, legal/policy basis, owner, archive location, access controls, deletion/anonymization method, verification, and legal-hold override. The trigger may be account closure, event completion, consent withdrawal, record supersession, or another approved event—not simply “created_at plus N days.”
 
----
+- Treat current retention manifests as configuration proposals until compliance/legal and the data owner approve them. Verify the live controller, namespace, credentials, target tables, schedule, and dry-run output before activation.
+- Separate operational log/trace retention, Kafka retention, audit retention, KYC evidence, analytics projections, and immutable financial records. They have different owners and recovery requirements.
+- Never run broad `DELETE` or partition drops over ledger, journal, posted transaction, balance history, or audit evidence. Use archive, legal hold, anonymization of approved fields, or a forward domain workflow.
+- Make cleanup jobs least-privileged, scoped, observable, idempotent, dry-run capable, and blocked by legal hold. Keep deletion receipts and reconciliation evidence without logging the deleted PII.
+- Test retention against restore, replication, outbox replay, subject requests, and incident investigation before production rollout.
 
-## 📊 Data Quality Framework
+## Access governance and audit evidence
 
-### Quality Dimensions
+- Grant least privilege by role, purpose, tenant, environment, and field; separate customer, support, operations, compliance, auditor, and platform access.
+- Require approval, expiry, periodic review, and immediate revocation for elevated or break-glass access. Do not treat a Backstage owner or database role as automatic permission to view PII.
+- Audit reads, exports, searches, changes, failed attempts, consent changes, subject requests, retention actions, and policy exceptions. Capture actor, subject, purpose, resource, operation, service, tenant, time, result, correlation ID, and approval reference.
+- Keep audit records tamper-evident and delivered through the approved outbox path. Monitor relay lag, failure, duplicate events, and gaps; protect audit-query endpoints themselves.
+- Mask identifiers and error details in audit evidence. Store enough metadata to investigate without placing raw PII or secrets in the event.
 
-| Dimension | Definition | Metric | Target |
-|:----------|:-----------|:-------|:-------|
-| **Completeness** | All required fields populated | % non-null | > 99.9% |
-| **Accuracy** | Data matches real-world values | Validation pass rate | > 99.5% |
-| **Consistency** | Same data across systems | Cross-system match rate | 100% |
-| **Timeliness** | Data available when needed | Freshness lag | < SLA |
-| **Uniqueness** | No unwanted duplicates | Duplicate rate | < 0.01% |
-| **Validity** | Data conforms to rules | Schema validation | 100% |
+## Verification checklist
 
-### Quality Rules Engine
+- [ ] Asset, field scope, owner, steward, custodian, consumers, purpose, and classification are recorded.
+- [ ] Backstage metadata is valid and points to, but does not replace, the governed data contract.
+- [ ] Source-to-consumer lineage includes event/API/schema versions and no raw PII.
+- [ ] Consent/legal basis, permitted uses, subject workflow, and cross-border/third-party restrictions are approved.
+- [ ] Quality rules have owners, thresholds, failure actions, and retained batch results.
+- [ ] Retention trigger, legal basis, archive/disposal, legal hold, dry-run, and restore implications are documented.
+- [ ] Financial and audit records are protected from accidental update/delete.
+- [ ] Access reviews, masking, encryption, audit events, outbox delivery, and query access are tested.
+- [ ] Regulatory statements cite an approved source and review date; no unverified compliance score is claimed.
 
-```python
-# Data quality checks using Great Expectations
-from great_expectations.core import ExpectationSuite
+## Context7-first references
 
-def create_transaction_quality_suite() -> ExpectationSuite:
-    suite = ExpectationSuite(expectation_suite_name="transactions")
-    
-    # Completeness checks
-    suite.add_expectation(
-        expectation_type="expect_column_values_to_not_be_null",
-        kwargs={"column": "transaction_id"}
-    )
-    
-    # Validity checks
-    suite.add_expectation(
-        expectation_type="expect_column_values_to_be_in_set",
-        kwargs={"column": "status", "value_set": ["PENDING", "COMPLETED", "FAILED", "REVERSED"]}
-    )
-    
-    # Accuracy checks
-    suite.add_expectation(
-        expectation_type="expect_column_values_to_be_between",
-        kwargs={"column": "amount", "min_value": 1, "max_value": 1_000_000_000}
-    )
-    
-    # Consistency checks (double-entry must balance)
-    suite.add_expectation(
-        expectation_type="expect_column_pair_values_to_be_equal",
-        kwargs={
-            "column_A": "debit_total",
-            "column_B": "credit_total",
-            "mostly": 1.0  # 100% must match
-        }
-    )
-    
-    return suite
-```
-
----
-
-## 📜 Retention Policies
-
-### Retention Matrix
-
-| Data Category | Retention Period | Regulation | Archive Location | Deletion Method |
-|:--------------|:-----------------|:-----------|:-----------------|:----------------|
-| **Transaction Records** | 7 years | POJK 12/2017 | Cold Storage (S3 Glacier) | Secure deletion after period |
-| **Audit Logs** | 10 years | PCI-DSS | Immutable storage | Automated lifecycle |
-| **Customer PII** | Active + 5 years | UU PDP | Encrypted archive | Anonymization then deletion |
-| **Session Logs** | 90 days | Security policy | Hot storage | Auto-purge |
-| **Analytics Data** | 3 years | Internal | Data warehouse | Aggregation then deletion |
-
-### Automated Retention Enforcement
-
-```sql
--- PostgreSQL partitioned table with auto-drop
-CREATE TABLE transactions (
-    id UUID,
-    amount DECIMAL(19,4),
-    created_at TIMESTAMPTZ
-) PARTITION BY RANGE (created_at);
-
--- Create monthly partitions
-CREATE TABLE transactions_2026_01 PARTITION OF transactions
-    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
-
--- Automated cleanup job (runs monthly)
--- DROP partitions older than 7 years
-DO $$
-DECLARE
-    partition_name TEXT;
-BEGIN
-    FOR partition_name IN
-        SELECT tablename FROM pg_tables
-        WHERE tablename LIKE 'transactions_%'
-        AND tablename < 'transactions_' || to_char(NOW() - INTERVAL '7 years', 'YYYY_MM')
-    LOOP
-        EXECUTE 'DROP TABLE ' || partition_name;
-        RAISE NOTICE 'Dropped partition: %', partition_name;
-    END LOOP;
-END $$;
-```
-
----
-
-## 🔍 Data Governance Checklist
-
-- [ ] **Catalog**: Are all critical data assets cataloged with ownership?
-- [ ] **Classification**: Is every table/column classified by sensitivity level?
-- [ ] **Lineage**: Can you trace data from source to all downstream consumers?
-- [ ] **PII**: Are all PII fields identified and properly protected?
-- [ ] **Consent**: Is user consent tracked and enforced for each data use?
-- [ ] **Quality**: Are automated quality checks running for critical datasets?
-- [ ] **Retention**: Are retention policies defined and auto-enforced?
-- [ ] **Access**: Is there role-based access with full audit logging?
-- [ ] **Compliance**: Can you generate compliance reports for OJK/BI audits?
-
----
-*Last Updated: 2026-05-04*
-
-```
+- [Backstage catalog descriptor format](https://backstage.io/docs/features/software-catalog/descriptor-format)
+- [OpenLineage core specification](https://openlineage.io/docs/spec/facets/)
+- [Great Expectations validation workflow](https://docs.greatexpectations.io/docs/core/introduction/gx_overview)
