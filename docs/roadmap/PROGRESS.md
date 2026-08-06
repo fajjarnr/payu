@@ -23,7 +23,7 @@
 > 🟡 **2026-08-06 — CI/CD GitOps and supply-chain bootstrap repair (lab `cluster-nkk8q`)**:
 > - Removed the unsupported ArgoCD `ConfigManagementPlugin` from the live kustomization, corrected the root Application to `payu-platform`, and allowed the platform AppProject to manage `openshift-gitops`, RHTAS, and CCO resources.
 > - Added the RHTAS Application with automated prune/self-heal. The current cluster uses an explicit single-zone profile: ODF CephFS RWX, 3-instance CNPG, and hostname anti-affinity; the production base remains EFS RWX with zone-aware HA.
-> - Runtime evidence: RHTAS Redis proxy `2/2`, Redis `3/3`, CNPG is being reconciled to `3/3`, Trillian schema/create-tree Jobs succeeded, Rekor/CTLog/Fulcio/TSA are Ready, and the internal `rekor-server` Service is available. Tekton Chains remains configured for internal Rekor transparency.
+> - Runtime evidence: RHTAS Redis proxy `2/2`, Redis `3/3`, CNPG spec is `3` with hostname anti-affinity, Trillian schema/create-tree Jobs succeeded, Rekor/CTLog/Fulcio/TSA are Ready, and the internal `rekor-server` Service is available. CNPG full readiness remains open: the recreated former-primary replica is blocked by the existing lab Barman/WAL archive error (`exit status 4`), which requires separate CCO/S3 credential and bucket verification. Tekton Chains remains configured for internal Rekor transparency.
 > - Deliberately deferred Argo Image Updater and Slack webhook ExternalSecrets: both required the missing platform `payu-vault` store. Existing Tekton `gitops-writeback` remains the promotion writer; secure PaC webhook and platform Vault auth are still open.
 
 

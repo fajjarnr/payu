@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **RHTAS Kyverno admission**: added required labels and restricted filesystem settings to the custom Redis proxy and Trillian schema Job; the production base now passes server-side validation under the enforced policies.
 - **Unsafe optional integrations**: stopped deploying Image Updater and Slack Vault ExternalSecrets until a platform-scoped Vault store exists; Tekton's existing GitOps writeback remains the active promotion path.
 
+### Validation
+
+- Server-side dry-run passed for the RHTAS single-zone overlay, ArgoCD bootstrap, ArgoCD root, and Tekton kustomizations. Rendered contracts are explicit: production base uses EFS/zone-aware HA; lab overlay uses CephFS/hostname anti-affinity with 3 CNPG instances.
+- Lab runtime note: RHTAS CNPG convergence to 3 ready instances remains open because Barman WAL archive returns exit status 4; this is tracked separately from manifest validity and must be resolved before production rollout.
+
 ## [1.10.39] - 2026-08-05
 
 ### Added

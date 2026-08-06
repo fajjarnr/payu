@@ -15,6 +15,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: trusted-artifact-signer
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: rhtas-service-ca
+      namespace: trusted-artifact-signer
+      jsonPointers:
+        - /data
   syncPolicy:
     automated:
       prune: true
