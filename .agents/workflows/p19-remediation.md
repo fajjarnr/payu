@@ -22,7 +22,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 1: R-001 — JWT → httpOnly Cookies via BFF (8 SP)
 
-**Agents**: `@frontend-architect` + `@cybersecurity-architect`
+**Skills/Agents**: `@frontend-architect` + `@cybersecurity-architect`
 
 1. Create `frontend/web-app/app/api/auth/login/route.ts` (BFF proxy)
 2. Create `frontend/web-app/app/api/auth/refresh/route.ts` (BFF refresh)
@@ -34,7 +34,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 2: R-002 — Integrate Outbox Starter (5 SP)
 
-**Agents**: `@integration-architect` + `@core-banking-engineer`
+**Skills/Agents**: `@integration-architect` + `@core-banking-engineer`
 
 1. Add `outbox-starter` dependency to `transaction-service/pom.xml`
 2. Add `outbox-starter` dependency to `wallet-service/pom.xml`
@@ -45,7 +45,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 3: R-003 — Vault + Env Var for All Secrets (3 SP)
 
-**Agents**: `@cybersecurity-architect` + `@platform-engineer`
+**Skills/Agents**: `@cybersecurity-architect` + `@platform-engineer`
 
 1. Replace all hardcoded passwords in `infrastructure/keycloak/payu-realm-export.json` with `${KEYCLOAK_*}` vars
 2. Replace all hardcoded passwords in `docker-compose.yml` with `${POSTGRES_PASSWORD}` etc.
@@ -56,7 +56,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 4: R-004 — Integration Tests for Critical Services (5 SP)
 
-**Agents**: `@tester` (primary)
+**Skills/Agents**: `@tester` (primary)
 
 1. Write `OutboxStarterIntegrationTest.java` in `backend/shared/outbox-starter/`
 2. Write `SagaStarterIntegrationTest.java` in `backend/shared/saga-starter/`
@@ -66,7 +66,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 5: R-005 — Fix Port Conflict (1 SP)
 
-**Agents**: `@platform-engineer`
+**Skills/Agents**: `@platform-engineer`
 
 1. Change `api-portal-service` port mapping in `docker-compose.yml` from `8099:8080` to `8100:8080`
 2. Update any references to port 8099 for api-portal
@@ -74,7 +74,7 @@ Workflow ini adalah panduan langkah-demi-langkah untuk memperbaiki semua temuan 
 
 ### Step 6: R-006 — Integrate Shared Starters into Underserved Services (3 SP)
 
-**Agents**: `@core-banking-engineer`
+**Skills/Agents**: `@core-banking-engineer`
 
 For each of: `cms-service`, `ab-testing-service`, `statement-service`:
 1. Add `security-starter` dependency to `pom.xml`
@@ -89,28 +89,28 @@ For each of: `cms-service`, `ab-testing-service`, `statement-service`:
 ## Phase 2: P1 Architecture & Testing (37 SP, Sprint 2-3)
 
 ### R-007: Quarkus Security (8 SP)
-**Agents**: `@core-banking-engineer` + `@cybersecurity-architect`
+**Skills/Agents**: `@core-banking-engineer` + `@cybersecurity-architect`
 - Option A: Create Quarkus-compatible security extension
 - Option B: Migrate gateway, notification, api-portal to Spring Boot
 
 ### R-008: Hexagonal Refactor for 8 Services (13 SP)
-**Agents**: `@core-banking-engineer` + `@scaffolding-expert`
+**Skills/Agents**: `@core-banking-engineer` + `@scaffolding-expert`
 - Services: support, promotion, backoffice, billing, partner, investment, lending, fx
 - Follow checklist in `core-banking-engineer` SKILL.md § "Hexagonal Refactoring Checklist"
 
 ### R-009: Fix E2E Playwright Tests (8 SP)
-**Agents**: `@tester` + `@frontend-architect`
+**Skills/Agents**: `@tester` + `@frontend-architect`
 - Create proper auth fixture
 - Skip unimplemented feature tests
 - Fix selector mismatches
 - Target: >70% pass rate
 
 ### R-010: Restrict Remote Image Domains (2 SP)
-**Agents**: `@frontend-architect`
+**Skills/Agents**: `@frontend-architect`
 - Whitelist CDN domains in `next.config.ts`
 
 ### R-011: Mobile Feature Completion (6 SP)
-**Agents**: `@mobile-architect`
+**Skills/Agents**: `@mobile-architect`
 - Implement biometric auth
 - Complete placeholder screens
 
