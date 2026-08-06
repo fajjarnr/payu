@@ -25,7 +25,7 @@ production/multi-AZ.
 ```bash
 rtk oc get applications.argoproj.io data-uat messaging-uat identity-uat payu-uat -n openshift-gitops
 rtk oc get vaultstaticsecret -n payu-uat
-rtk oc get vaultstaticsecret -n payu-uat -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status,REASON:.status.conditions[0].reason
+rtk oc get vaultstaticsecret -n payu-uat -o json | rtk jq -r '.items[] | [.metadata.name, (.status.conditions // [] | map(select(.type=="SecretSynced") | .status) | first // "missing"), (.status.conditions // [] | map(select(.type=="SecretSynced") | .message) | first // "")] | @tsv'
 rtk oc get secret payu-cache-client-ca payu-cache-server-tls payu-cache-credentials -n payu-uat
 rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-uat
 rtk oc get infinispan payu-cache -n payu-uat
@@ -42,6 +42,11 @@ keystore adalah invalid. Jangan mencetak nilai Secret.
 
 Do not promote while any required VSS is unsynced, cache `WellFormed`/pods are
 not ready, gateway health fails, or Argo is still reconciling a failed revision.
+
+The UAT validation PipelineRun `account-service-deploy-uat-rjj9s` completed,
+but it is not sufficient to waive this preflight. The run's functional gates
+did not prove the cache mTLS path; inspect gateway logs for
+`certificate_unknown` and verify `SecretSynced=True` first.
 
 ## Promotion and gates
 

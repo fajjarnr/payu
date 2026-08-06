@@ -32,9 +32,13 @@
 
 > 🟢 **2026-08-06 — Dev test + immutable SIT promotion validation**:
 > - Tekton `account-service-test-8wq8w` completed at `06:21:52Z`; fetch, unit, architecture, integration, and report TaskRuns all `Succeeded`. The test pipeline now serializes Maven reactor tasks sharing one PVC, uses JDK 25 for the repository's `release=25`, and tolerates selector-mismatched reactor modules without hiding actual failures.
-> - Build `account-service-build-r2mr9` passed source/secret/SAST/SCA/Semgrep and Maven build gates, then stopped fail-closed at Buildah because the approved Red Hat registry credential was absent. A Vault-backed `redhat-registry-pull` VSS is now declarative; the lab Vault still lacks the `payu-cicd` role and the operator must populate `secret/payu/cicd/redhat-registry` key `dockerconfigjson`.
+> - Build `account-service-build-r2mr9` passed source/secret/SAST/SCA/Semgrep and Maven build gates, then stopped fail-closed at Buildah because the approved Red Hat registry credential was absent. The `payu-cicd` Vault policy/role is now provisioned; the operator must still populate `secret/payu/cicd/redhat-registry` key `dockerconfigjson`.
 > - Added immutable `promote-image` with target ImageStream creation, digest-tagged registry copy, target-namespace image-builder RBAC, and production `push-changes=true` guard. `account-service-deploy-sit-6d4jx` completed at `06:42:44Z`; target `payu-sit/account-service:sha256-fe3a…` resolves to the same `sha256:fe3a…` as dev, and SIT Argo/ZAP/k6/Schemathesis gates succeeded.
 > - Fixed a stale deploy example pipeline name (`payu-deploy-pipeline` → `payu-deploy-gitops-pipeline`). UAT/preprod/prod remain pending; no production sync window was bypassed.
+
+> 🟡 **2026-08-06 — UAT runtime validation**:
+> - `account-service-deploy-uat-rjj9s` completed with Argo sync, ZAP, k6 smoke, and Schemathesis (`44 passed`, `3809/3809` checks). This is validation evidence only, not UAT acceptance.
+> - Required UAT `VaultStaticSecret` objects remain `SecretSynced=False`; Vault KV paths under `secret/payu/uat/...` are absent. Gateway logs reproduce Hot Rod `certificate_unknown`, so the cache mTLS consumer contract is still broken until approved Vault seeding, workload restart, and rerun.
 
 
 > ✅ **2026-08-04 — PROD-034 mobile request deduplication fixed**:

@@ -122,7 +122,7 @@ Gate sequence per environment (snapshot 2026-08-06):
 | Environment | Gates | Status |
 |:---|:---|:---|
 | SIT | Argo sync-wait → ZAP baseline → Schemathesis → LitmusChaos → k6 smoke | ✅ green (pilot SUCCEEDED) |
-| UAT | Argo sync-wait → Schemathesis → k6 smoke/load | pending final cache/VSO + full rerun |
+| UAT | Argo sync-wait → Schemathesis → k6 smoke/load | validation pipeline completed; acceptance blocked by Vault KV/VSO + cache mTLS |
 | PREPROD | Argo sync-wait → Kraken/Cerberus chaos | pending evidence run |
 | PROD | Argo sync-wait → Argo Rollouts analysis | blocked: Rollouts/approval/storage/DR gates |
 
@@ -130,6 +130,16 @@ Prereqs for UAT/preprod/prod runs: healthy VaultStaticSecret per env, registry
 `newName` entries, digest pinning (`image-digest`), and a real gate evidence
 bundle. Presence of a VSS object is not enough; its Ready/Sync condition and
 consumer pod behavior must be verified.
+
+UAT evidence snapshot (`account-service-deploy-uat-rjj9s`, 2026-08-06): the
+non-mutating validation run completed with Argo sync, ZAP, k6 smoke, and
+Schemathesis (`44 passed`, `3809/3809` checks). It is not an acceptance result:
+the required UAT `VaultStaticSecret` objects still report `SecretSynced=False`,
+Vault KV paths under `secret/payu/uat/...` are absent, and gateway logs show
+Hot Rod `certificate_unknown` against `payu-cache`. The cache client Secret must
+be reseeded through the approved Vault procedure, then affected workloads must
+be restarted and the UAT runtime gate rerun. Do not copy live credential values
+into Git or create placeholder Secrets.
 
 ## Environment Map
 

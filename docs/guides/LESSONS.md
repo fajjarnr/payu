@@ -2,6 +2,24 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-217: A Passing Pipeline Does Not Override Failed Runtime Contracts (2026-08-06)
+
+**Context**: The UAT validation PipelineRun passed Argo sync, ZAP, k6 smoke, and
+Schemathesis, while the required VaultStaticSecrets remained `SecretSynced=False`
+and gateway logs showed Hot Rod `certificate_unknown`.
+
+**Lesson**:
+- Gate acceptance on each prerequisite independently: VSS sync, consumer behavior,
+  and functional tests are separate controls.
+- Use the condition type `SecretSynced`, not array position or `Ready=True`, when
+  evaluating VaultStaticSecret health.
+- A missing Vault KV path requires the approved secret-seeding procedure; never
+  make the pipeline green by copying credentials into Git or creating placeholders.
+
+**Applied evidence**: `account-service-deploy-uat-rjj9s` completed its tests, but
+UAT remains blocked until `secret/payu/uat/...` is seeded and cache consumers are
+restarted and revalidated.
+
 ## L-216: Keep Production Storage Contracts Separate from Lab Constraints (2026-08-06)
 
 **Context**: The production RHTAS base requires EFS RWX and zone-aware placement, while the lab cluster has ODF CephFS, no `efs-csi`, and no zone labels.
