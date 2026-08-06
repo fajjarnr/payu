@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **RHTAS GitOps bootstrap**: added the declarative RHTAS ArgoCD Application with automated prune/self-heal against the production RHTAS base (EFS RWX, 3-instance CNPG, zone-aware HA).
+- **Single-zone RHTAS profile**: added an explicit overlay for the current cluster using ODF CephFS RWX and hostname anti-affinity while retaining 3-instance CNPG and synchronous replication.
 
 ### Fixed
 

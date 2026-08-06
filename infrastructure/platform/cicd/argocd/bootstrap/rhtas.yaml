@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/fajjarnr/payu.git
     targetRevision: main
-    path: infrastructure/platform/security/rhtas
+    path: infrastructure/platform/security/rhtas-single-zone
   destination:
     server: https://kubernetes.default.svc
     namespace: trusted-artifact-signer
