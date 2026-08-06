@@ -4899,3 +4899,7 @@ When the project scope is `payu-dev` rather than a production rollout, a complet
 ### L-212: Data Grid Operator PKCS#12 secrets need a real binary contract (2026-08-06)
 
 When an environment Data Grid entered CrashLoopBackOff with `ELY02035: KeyStore type could not be detected`, the VSO destination contained a base64 string instead of a mounted PKCS#12 truststore. Use `truststore.p12` plus `truststore-password`, decode binary Vault values in the VSO transformation, and verify the live secret and fresh pod logs. Also push the manifest before testing: ArgoCD will reconcile uncommitted live patches back to `main`.
+
+### L-213: Environment runbooks must be executable, not just navigational (2026-08-06)
+
+When splitting a large infrastructure MOP, keep shared bootstrap details in the common file but give every environment its real Application names, overlay paths, preflight, gate evidence, abort criteria, and rollback. Validate every copied command against the ApplicationSet and rendered Kustomize output. For Argo-managed server dry-runs, use the Argo field manager with `--force-conflicts` only in dry-run; never hide real ownership conflicts or production drift with a forced apply.

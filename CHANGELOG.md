@@ -27,12 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Broken lab leftovers**: removed the stale Image Updater manifests and deleted its failed live deployment plus unresolved Vault ExternalSecrets; no credentials were copied or generated.
 - **Test pipeline race**: serialized unit, architecture, and integration Maven tasks that shared one PVC; switched active Maven tasks to JDK 25 and made reactor test selectors skip modules without matching tests.
 - **Promotion pipeline validity**: corrected the deploy example to reference `payu-deploy-gitops-pipeline`; GitOps write-back now writes a proper digest field instead of embedding the digest in `newName`.
+- **Environment runbooks**: expanded the shared MOP and added executable Dev/SIT/UAT/Preprod/Prod procedures with real Application names, overlay paths, gate evidence, abort criteria, rollback, and lab-vs-production limits.
 
 ### Validation
 
 - Server-side dry-run passed for the RHTAS single-zone overlay, ArgoCD bootstrap, ArgoCD root, and Tekton kustomizations. Rendered contracts are explicit: production base uses EFS/zone-aware HA; lab overlay uses CephFS/hostname anti-affinity with 3 CNPG instances.
 - Tekton `account-service-test-8wq8w` completed with fetch, unit, architecture, integration, and report TaskRuns succeeded. `account-service-deploy-sit-6d4jx` completed with immutable image copy, write-back, Argo sync-wait, ZAP, k6, Schemathesis, and notification succeeded. The Buildah build remained correctly fail-closed until approved Red Hat registry credentials and the Vault `payu-cicd` role are provisioned.
 - Lab runtime note: RHTAS CNPG convergence to 3 ready instances remains open because Barman WAL archive returns exit status 4; this is tracked separately from manifest validity and must be resolved before production rollout.
+- Kustomize validation also fixed two manifest defects: explicit Job selectors now use `manualSelector: true`, and the simulator promotion patch no longer duplicates `OTEL_SDK_DISABLED` in production output.
 
 ## [1.10.39] - 2026-08-05
 

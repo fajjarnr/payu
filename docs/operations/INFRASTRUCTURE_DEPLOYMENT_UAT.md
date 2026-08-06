@@ -1,32 +1,47 @@
 # PayU UAT Deployment Runbook
 
-This runbook covers `payu-uat`, where Product Owner and QA approval is required.
-Read the [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) and the [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
+`payu-uat` adalah environment acceptance dengan QA dan Product Owner approval.
+Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
 
-## Contract
+## Environment contract
 
-| Item | Value |
+| Item | Kontrak saat ini |
 |:---|:---|
 | Namespace | `payu-uat` |
-| Workload overlay | `infrastructure/workloads/overlays/payu-uat` |
-| Data overlay | `infrastructure/platform/data/overlays/uat` |
-| Messaging overlay | `infrastructure/platform/messaging/overlays/uat` |
-| Gate | Argo sync-wait → Schemathesis → k6 load → QA/PO approval |
-| Security | VaultStaticSecret synced; strict ingress; production-like cache TLS contract |
+| Workload | `infrastructure/workloads/overlays/payu-uat` |
+| Data | `infrastructure/platform/data/overlays/uat` |
+| Messaging | `infrastructure/platform/messaging/overlays/uat` |
+| Argo Applications | `data-uat`, `messaging-uat`, `identity-uat`, `payu-uat` |
+| Gate | Argo sync-wait → Schemathesis → k6 smoke/load → QA/PO approval |
+| Ingress | `app-uat.apps.fajjjar.my.id`, internal gateway URL untuk Tekton |
+| Security | Strict namespace policy, VSO, cache mTLS/PKCS#12 contract |
 
-## Preflight
+UAT tetap harus production-like dalam security dan promotion semantics. Kapasitas
+lab, single-zone scheduling, dan Ceph-backed PVC bukan bukti availability
+production/multi-AZ.
+
+## Preflight: infrastructure and secrets
 
 ```bash
-rtk oc apply --server-side --dry-run=server -k infrastructure/platform/data/overlays/uat
+rtk oc get applications.argoproj.io data-uat messaging-uat identity-uat payu-uat -n openshift-gitops
 rtk oc get vaultstaticsecret -n payu-uat
+rtk oc get vaultstaticsecret -n payu-uat -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status,REASON:.status.conditions[0].reason
 rtk oc get secret payu-cache-client-ca payu-cache-server-tls payu-cache-credentials -n payu-uat
-rtk oc get pods -n payu-uat | rtk rg 'payu-cache|gateway-service|auth-service'
+rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-uat
+rtk oc get infinispan payu-cache -n payu-uat
+rtk oc get pods -n payu-uat | rtk rg 'payu-cache|gateway-service|auth-service|account-service'
+rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/data/overlays/uat
+rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/messaging/overlays/uat
+rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/workloads/overlays/payu-uat
 ```
 
-Do not start a UAT promotion while any required VaultStaticSecret is unsynced,
-the cache is not ready, or the gateway health endpoint is failing. The cache
-client truststore must be a valid PKCS#12 contract (`truststore.p12` plus
-`truststore-password`); do not use a raw base64 string as a mounted keystore.
+Required cache secret contract: `truststore.p12` adalah binary PKCS#12 yang
+valid dan `truststore-password` adalah password string. VSO transformation
+harus decode value yang disimpan di Vault; raw base64 text yang dipasang sebagai
+keystore adalah invalid. Jangan mencetak nilai Secret.
+
+Do not promote while any required VSS is unsynced, cache `WellFormed`/pods are
+not ready, gateway health fails, or Argo is still reconciling a failed revision.
 
 ## Promotion and gates
 
@@ -39,18 +54,44 @@ rtk tkn pipeline start payu-deploy-gitops-pipeline -n payu-cicd \
   -p schema-url=http://gateway-service.payu-uat.svc:8080/q/openapi.json
 ```
 
-Schemathesis must pass all expected operations. k6 must pass its configured
-success-rate, error-rate, and latency thresholds. A successful Argo sync alone
-is not UAT acceptance.
+`push-changes=false` hanya validation. Real promotion harus melakukan digest
+promotion, Git write-back, dan Argo reconciliation. Argo sync sukses saja
+tidak berarti UAT accepted.
 
-## Acceptance and rollback
+## Evidence and acceptance
 
 ```bash
-rtk oc get application -n openshift-gitops payu-uat
+rtk tkn pipelinerun list -n payu-cicd -l type=deploy,environment=uat
+rtk oc get taskrun -n payu-cicd -l tekton.dev/pipelineRun=<pipelinerun>
+rtk oc get istag -n payu-uat | rtk rg '<service>|sha256-'
+rtk oc get applications.argoproj.io data-uat payu-uat -n openshift-gitops
 rtk oc get deployments,pods -n payu-uat
-rtk oc get events -n payu-uat --field-selector type=Warning --sort-by=.lastTimestamp | rtk tail -60
+rtk oc get events -n payu-uat --field-selector type=Warning --sort-by=.lastTimestamp | rtk tail -80
 ```
 
-Attach the QA/PO approval, PipelineRun/TaskRun results, digest comparison, and
-k6 summary to the release record. Roll back by Git revert or the rollback
-pipeline to the last known-good digest; never patch a Deployment directly.
+Pass criteria:
+
+- `promote-image`, write-back, Argo wait, Schemathesis, k6 smoke/load, dan
+  notify semuanya `Succeeded`.
+- Digest SIT dan UAT identik; tidak ada rebuild berdasarkan tag.
+- Schemathesis memenuhi seluruh operation yang diharapkan.
+- k6 memenuhi success-rate, error-rate, dan latency thresholds.
+- QA dan PO memberi approval terhadap evidence yang sama.
+
+## Abort and rollback
+
+Abort jika VSO/cache gagal, registration/core CRUD gagal, digest mismatch,
+Argo sync failed, Schemathesis menemukan unauthorized/crash, atau k6 threshold
+gagal. Simpan log gateway/account/cache, PipelineRun/TaskRun, Argo revision,
+dan k6 summary.
+
+```bash
+rtk tkn pipeline start payu-rollback-pipeline -n payu-cicd \
+  -w name=source,claimName=tekton-workspace-pvc \
+  -p service-name=<service> -p environment=uat \
+  -p image-digest=<last-known-good-sha256> -p push-changes=true
+```
+
+Git revert adalah fallback authoritative. Jangan patch Deployment langsung,
+hapus PVC/stateful CR, atau menyembunyikan failed gate dengan rerun tanpa
+root-cause evidence.

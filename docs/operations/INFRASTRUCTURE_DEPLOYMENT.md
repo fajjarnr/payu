@@ -16,8 +16,10 @@ use the matching environment runbook for promotion gates and acceptance criteria
 | Preprod | [INFRASTRUCTURE_DEPLOYMENT_PREPROD.md](INFRASTRUCTURE_DEPLOYMENT_PREPROD.md) |
 | Production | [INFRASTRUCTURE_DEPLOYMENT_PROD.md](INFRASTRUCTURE_DEPLOYMENT_PROD.md) |
 
-The environment runbooks are intentionally thin: shared commands remain here,
-while environment-specific gates must not be inferred from another environment.
+The environment runbooks are focused, not placeholders: each owns its
+environment contract, preflight, gate evidence, abort criteria, and rollback.
+Shared commands remain here; an environment gate must never be inferred from a
+different environment.
 
 ## Document Control
 
@@ -29,6 +31,29 @@ while environment-specific gates must not be inferred from another environment.
 | Last verified date | 2026-08-06 |
 | Primary namespaces | `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |
 | Change mode | GitOps ArgoCD ApplicationSets with automated sync, prune, and self-heal after bootstrap; manual `oc apply` only for approved operator/bootstrap resources |
+
+### Document ownership and source precedence
+
+1. `infrastructure/DEVSECOPS_ARCHITECTURE.md` is the architecture and gate
+   contract.
+2. This file is the shared bootstrap/dependency/rollback MOP.
+3. The five environment files are the execution and evidence procedures.
+4. Kustomize/Tekton/Argo manifests are the executable source of truth. If docs,
+   rendered YAML, and live state disagree, stop and reconcile Git before a
+   release. A green pod is never authority over Git.
+
+## Architecture-to-runbook traceability
+
+| Architecture contract | Operational owner |
+|:---|:---|
+| Namespace matrix and promotion order | Matching `INFRASTRUCTURE_DEPLOYMENT_<ENV>.md` |
+| Source/build/image security | Dev runbook + Tekton PipelineRun/TaskRun evidence |
+| ZAP, Schemathesis, k6 | SIT/UAT runbooks + deploy pipeline results |
+| LitmusChaos | SIT runbook + `chaosengine`/`chaosresult` |
+| Kraken/Cerberus | Preprod runbook + `kraken-run`/Cerberus evidence |
+| Vault/VSO, mTLS, NetworkPolicy | Shared MOP + each environment preflight |
+| Argo prune/self-heal and digest write-back | Shared MOP + SIT/UAT/preprod promotion |
+| Rollouts, CAB/CISO, DR and production rollback | Production runbook; currently a release blocker |
 
 ## Critical Drift Notes
 
@@ -48,11 +73,28 @@ Current state differs from older docs:
 | API management | `infrastructure/platform/api-management/` | Operator/policy only by default; `APIManager` is gated until external backing-store and Vault secrets exist |
 | Workloads | `infrastructure/workloads/overlays/<env>/` | Use environment overlays, not workload base directly |
 
+### Current platform constraints
+
+- The lab uses a single-cluster/single-zone operating profile for the gates
+  that are actually run. Production requires explicit multi-zone scheduling,
+  storage, backup, and failure evidence.
+- Ceph storage classes are available in the lab, but every workload must use
+  the class rendered by its overlay. Do not document “CephFS” as a universal
+  replacement: the current CNPG/Kafka/AMQ manifests still contain explicit
+  `gp3-csi` references while shared-file workloads may use CephFS. Production
+  approval requires a dedicated storage-class review.
+- `payu-dev` cache is plain Hot Rod. `payu-sit`/UAT/preprod/prod must use the
+  security contract in their overlays; a dev cache exception must not leak.
+
 ## Execution Rules
 
 1. Run every command through `rtk`.
 2. Never commit or apply real secrets from Git. Create runtime secrets from Vault, External Secrets, or one-time `oc create secret` commands.
 3. Render before apply. Every touched Kustomize root must pass `oc kustomize`.
+   For an Argo-managed root, server dry-run may use
+   `--field-manager=argocd-controller --force-conflicts` to validate the
+   rendered schema without mutating live state; never use `--force-conflicts`
+   on a real production apply.
 4. Apply in dependency order: namespaces, operators, data/messaging, identity, API management shell, images, workloads.
 5. Stop the deployment if any infrastructure CR reports `Ready=False`, `HasErrors=True`, CrashLoopBackOff, or recent Warning events.
 6. Do not apply `3scale/apimanager.yaml` until external backing-store, storage, and Vault-managed secrets are available.
@@ -75,16 +117,19 @@ tkn pipeline start payu-deploy-gitops-pipeline -n payu-cicd \
   --use-param-defaults
 ```
 
-Gate sequence per environment (2026-08-01 status):
+Gate sequence per environment (snapshot 2026-08-06):
 
 | Environment | Gates | Status |
 |:---|:---|:---|
 | SIT | Argo sync-wait → ZAP baseline → Schemathesis → LitmusChaos → k6 smoke | ✅ green (pilot SUCCEEDED) |
-| UAT | Argo sync-wait → Schemathesis → k6 load | pending |
-| PREPROD | Argo sync-wait → Kraken/Cerberus chaos | pending (Kraken not installed) |
-| PROD | Argo sync-wait → canary | pending (CAB/CISO sign-off) |
+| UAT | Argo sync-wait → Schemathesis → k6 smoke/load | pending final cache/VSO + full rerun |
+| PREPROD | Argo sync-wait → Kraken/Cerberus chaos | pending evidence run |
+| PROD | Argo sync-wait → Argo Rollouts analysis | blocked: Rollouts/approval/storage/DR gates |
 
-Prereqs for UAT/preprod/prod runs: overlay secrets via VaultStaticSecret per env (done), registry `newName` entries per env (done), digest pinning (`image-digest` param), and E2E gate scripts for each environment.
+Prereqs for UAT/preprod/prod runs: healthy VaultStaticSecret per env, registry
+`newName` entries, digest pinning (`image-digest`), and a real gate evidence
+bundle. Presence of a VSS object is not enough; its Ready/Sync condition and
+consumer pod behavior must be verified.
 
 ## Environment Map
 
@@ -454,14 +499,18 @@ Expected result for current `payu-dev`:
 Current GitOps state:
 
 - OpenShift GitOps operator is installed.
-- No `Application` resources are currently present in `openshift-gitops`.
-- `INFRA-020` remains open for reconciling ApplicationSet with manually recovered `payu-dev` workloads.
+- The live ApplicationSets generate `payu-dev`, `payu-sit`, `payu-uat`,
+  `payu-preprod`, `payu-prod` plus `data-*`, `messaging-*`, and `identity-*`.
+- Query the explicit `applications.argoproj.io` group; the unqualified
+  `application` shortcut can resolve to a shadow CRD.
+- Current evidence is dev/SIT green; UAT/preprod/prod remain release gates,
+  not completion claims.
 
-Do not enable automated sync until the overlay and live cluster are reconciled:
+Inspect generated Applications and drift before any approved bootstrap/change:
 
 ```bash
-rtk oc get application -n openshift-gitops
-rtk oc get applicationset -n openshift-gitops
+rtk oc get applications.argoproj.io -n openshift-gitops
+rtk oc get applicationsets.argoproj.io -n openshift-gitops
 rtk oc diff -k infrastructure/workloads/overlays/payu-dev
 ```
 
@@ -469,11 +518,12 @@ When ready, apply the GitOps app-of-apps:
 
 ```bash
 rtk oc apply -k infrastructure/platform/cicd/argocd
-rtk oc get application -n openshift-gitops
-rtk oc get applicationset -n openshift-gitops
+rtk oc get applications.argoproj.io -n openshift-gitops
+rtk oc get applicationsets.argoproj.io -n openshift-gitops
 ```
 
-Enable automated sync only after manual `oc diff` shows no destructive drift.
+Do not disable automated `prune`/`selfHeal` to hide drift. Production sync also
+depends on the AppProject window and approval policy.
 
 ## Post-Deployment Acceptance Criteria
 
@@ -515,13 +565,20 @@ Release evidence to save in the deployment ticket:
 
 ## Rollback Procedure
 
-For workload deployment failure:
+For workload deployment failure, prefer the promotion/rollback pipeline or a
+Git revert:
 
 ```bash
-rtk oc rollout undo deployment/<service> -n payu-dev
+rtk git revert <bad_commit_sha>
+rtk oc get applications.argoproj.io payu-dev -n openshift-gitops
 rtk oc rollout status deployment/<service> -n payu-dev --timeout=10m
 rtk oc logs -n payu-dev deployment/<service> --since=10m --all-containers=true
 ```
+
+For an immutable image rollback, use `payu-rollback-pipeline` with the
+previous digest. Direct `oc rollout undo` may be used only as an emergency
+diagnostic action and must be followed by the authoritative Git/pipeline
+rollback.
 
 For manifest drift:
 
@@ -593,7 +650,7 @@ MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/d
 | Keycloak route works but CR unhealthy | Check `Keycloak` conditions and RHBK operator logs in `payu-sso` |
 | 3scale pods missing | Confirm only operator shell was applied; APIManager is gated by external secrets |
 | Workload ImagePullBackOff | Confirm internal registry route, ImageStreamTags, and image pull permissions |
-| GitOps does nothing | Check `oc get application -n openshift-gitops`; ApplicationSet may not be installed yet |
+| GitOps does nothing | Check `oc get applications.argoproj.io -n openshift-gitops` and `oc get applicationsets.argoproj.io -n openshift-gitops`; then inspect controller logs |
 | VSO CrashLoopBackOff / egress timeout | Cek NP `allow-vso-platform-egress` egress `- {}` (jangan rule rinci) + `oc get pods -n vault-secrets-operator` |
 | Collector DNS lookup timeout | Cek `allow-logging-platform-egress` egress `- {}`; verifikasi `oc exec -n openshift-logging <collector> -- getent hosts loki-gateway-http.openshift-logging.svc` |
 | Vector `403 Forbidden` ke loki gateway | Cek `oc get cm loki-gateway -n openshift-logging -o jsonpath='{.binaryData}'` — `lokistack-gateway.rego`/`rbac.yaml` kosong = bug loki-operator 6.5.1 (L-193); SAR `logcollector` harus `allowed`; butuh RH support/upgrade |
@@ -603,7 +660,8 @@ MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/d
 
 | Key | Gate | Status |
 |:---|:---|:---|
-| `INFRA-020` | Reconcile GitOps ApplicationSet with manually recovered `payu-dev` workloads | Open |
 | `DEPLOY-010` | Deploy 3scale APIManager after external backing-store/Vault secrets exist | Open |
 | `INFRA-021` | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ✅ Closed 2026-08-04; live `Ready=True`, `HasErrors=False` |
 | `SEC-020` | Remediate CIS platform failures | Open |
+| `PROMO-2026-08` | Complete UAT final rerun and preprod Kraken evidence | Open |
+| `PROD-READINESS` | Argo Rollouts, production storage, Vault HA/DR, approvals, and signed-image admission evidence | Open |
