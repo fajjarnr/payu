@@ -1,676 +1,174 @@
 ---
 name: web-artifacts-builder
-version: 2.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: [frontend-architect]
-tags: [tools, bundling, scaffolding, vite, react, tailwind, documentation]
-related: [frontend-architect, technical-writer, product-designer]
-description: **Master Skill**: Frontend Artifact Specialist. Suite of tools for creating elaborate, multi-component PayU HTML artifacts using React, Tailwind CSS, shadcn/ui, and Vite for documentation, PRDs, interactive demos, and standalone applications.
+description: Build standalone, self-contained HTML artifacts (interactive demos, PRDs, prototypes, offline tools) with Vite, Tailwind CSS, shadcn/ui, React, and single-file bundling. Covers scaffolding with the shadcn CLI, Vite configuration, Tailwind theming, component patterns, motion, charts, and producing one portable HTML file. Use when creating, building, or bundling a web artifact or demo in any frontend project.
 ---
 
-# Web Artifacts Builder (PayU Edition)
+# Web Artifacts Builder
 
-You are the **Specialized Frontend Artifact Builder** for the PayU platform. You create standalone, high-fidelity React-based interactive artifacts used for documentation, PRDs, and advanced system demos.
+Build standalone, high-fidelity web artifacts: interactive demos, PRDs,
+prototypes, and offline tools delivered as a single self-contained HTML file.
+The workflow is framework-standard — Vite for dev/build, shadcn/ui for
+components, Tailwind for styling, and a single-file plugin to inline everything.
+Verify every library with Context7 before relying on its API; do not assume a
+version or config from memory.
 
----
+## Context7 documentation gate
 
-## 🚀 Quick Start Workflow
+Before writing or changing code that uses a library, framework, SDK, API, CLI,
+or cloud service:
 
-### From Idea to Single-File Artifact
+1. Read the project `package.json` (or the framework docs) to determine the
+   exact version in use.
+2. Resolve the library in Context7. Prefer the official, high-reputation result
+   and pin the query to the repository version when that version is available.
+3. Query one concrete topic at a time: API, configuration, testing, migration,
+   or integration behavior. Use the returned documentation as the source of
+   truth; do not rely on remembered annotations, script names, or property
+   namespaces.
+4. If the exact version is not indexed, use the nearest official version only
+   as a stated fallback, then verify the actual API in the project source
+   before editing.
+5. Re-resolve and re-query after changing a dependency version. Do not mix
+   examples from different major versions.
+
+Use Context7 for Vite (and `vite-plugin-singlefile`), Tailwind CSS, shadcn/ui
+and the shadcn CLI, Radix UI, framer-motion, recharts, and lucide-react.
+
+## Stack and setup
+
+The standard stack for a modern single-file artifact:
+
+- **Vite** (React + TypeScript template) for dev server and build.
+- **Tailwind CSS** for utility-first styling — v4 is CSS-first (`@import
+  "tailwindcss"` + `@theme`), while v3 uses `tailwind.config.js`. Match the
+  version in the project; do not mix config styles.
+- **shadcn/ui** for accessible, copy-paste components built on Radix UI and
+  styled with Tailwind. Use the shadcn CLI (`npx shadcn@latest init -t vite`,
+  `npx shadcn@latest add <component>`) rather than hand-copying components.
+- **framer-motion** for animation, **recharts** for charts, **lucide-react**
+  for icons — all optional, add only what the artifact needs.
+
+## Scaffolding a new artifact
+
+Use the shadcn CLI to scaffold a Vite project with components wired up:
 
 ```bash
-# 1. Initialize new artifact project
-bash .agents/skills/web-artifacts-builder/scripts/init-artifact.sh payment-flow-demo
+# Create a new Vite project (interactive prompts for name/framework)
+npm create vite@latest my-artifact -- --template react-ts
 
-# 2. Navigate and develop
-cd payment-flow-demo
-npm install
-npm run dev  # Vite dev server on localhost:5173
+# Initialize shadcn/ui (Tailwind v4: config lives in CSS, not a JS file)
+npx shadcn@latest init -t vite
 
-# 3. Build & bundle
-npm run build
-bash ../scripts/bundle-artifact.sh
-
-# 4. Deliver
-# Output: dist/bundle.html (~2MB, all-inclusive)
+# Add only the components you need
+npx shadcn@latest add button card input dialog tabs select
 ```
 
----
+- `npx shadcn@latest init` auto-detects the framework and generates
+  `components.json`; in Tailwind v4 the `tailwind.config` field is left empty
+  because theming is CSS-first.
+- Prefer the CLI over copying component files manually — it resolves the
+  correct Radix dependencies and aliases for the project.
+- If the artifact must work offline as one file, keep dependencies minimal;
+  every extra library grows the bundle.
 
-## 📁 Artifact Project Structure
+## Single-file bundling
 
-```
-payment-flow-demo/
-├── index.html
-├── package.json
-├── vite.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-├── public/
-│   └── payu-logo.svg
-├── src/
-│   ├── main.tsx              # Entry point
-│   ├── App.tsx               # Main application
-│   ├── index.css             # Tailwind imports + custom styles
-│   ├── components/
-│   │   ├── ui/               # shadcn/ui components
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   └── input.tsx
-│   │   ├── layout/
-│   │   │   ├── Header.tsx
-│   │   │   └── Sidebar.tsx
-│   │   └── features/
-│   │       ├── TransactionFlow.tsx
-│   │       └── LedgerTable.tsx
-│   ├── hooks/
-│   │   └── useSimulatedStream.ts
-│   ├── lib/
-│   │   └── utils.ts
-│   └── types/
-│       └── index.ts
-└── scripts/
-    └── bundle.ts             # Single-file bundler
-```
+The goal is one portable HTML file with all JS/CSS inlined:
 
----
+- **Recommended**: `vite-plugin-singlefile`. Add it to `vite.config.ts`:
+  ```ts
+  import { defineConfig } from "vite"
+  import react from "@vitejs/plugin-react"
+  import { viteSingleFile } from "vite-plugin-singlefile"
 
-## 🛠️ Configuration Files
-
-### vite.config.ts
-
-```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import { viteSingleFile } from 'vite-plugin-singlefile'
-
-export default defineConfig({
-  plugins: [
-    react(),
-    viteSingleFile()  // Bundles everything into single HTML
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  build: {
-    target: 'esnext',
-    cssCodeSplit: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
-  },
-})
-```
-
-### tailwind.config.ts
-
-```typescript
-import type { Config } from 'tailwindcss'
-
-const config: Config = {
-  darkMode: 'class',
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        // PayU Brand Colors
-        emerald: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',  // Primary
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-          950: '#022c22',
-        },
-        // Surface Colors (Dark Mode)
-        surface: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617',
-        },
-      },
-      fontFamily: {
-        display: ['Outfit', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-      },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-      },
-    },
-  },
-  plugins: [require('tailwindcss-animate')],
-}
-
-export default config
-```
-
-### package.json
-
-```json
-{
-  "name": "payu-artifact",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
-  },
-  "dependencies": {
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "framer-motion": "^11.0.0",
-    "lucide-react": "^0.400.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
-    "class-variance-authority": "^0.7.0",
-    "recharts": "^2.12.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.4.0",
-    "vite": "^5.2.0",
-    "vite-plugin-singlefile": "^2.0.0"
-  }
-}
-```
-
----
-
-## 🎨 PayU Premium Design System
-
-### The Emerald Token Set
-
-```tsx
-// src/lib/design-tokens.ts
-export const tokens = {
-  colors: {
-    primary: {
-      DEFAULT: '#10b981',  // emerald-500
-      hover: '#059669',    // emerald-600
-      active: '#047857',   // emerald-700
-    },
-    surface: {
-      dark: '#0f172a',     // slate-900
-      darker: '#020617',   // slate-950
-      card: 'rgba(255, 255, 255, 0.05)',
-    },
-    text: {
-      primary: '#f8fafc',
-      secondary: '#94a3b8',
-      muted: '#64748b',
-    },
-    status: {
-      success: '#22c55e',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      info: '#3b82f6',
-    },
-  },
-  shadows: {
-    glow: '0 0 20px rgba(16, 185, 129, 0.3)',
-    card: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-  },
-}
-```
-
-### Glassmorphism Components
-
-```tsx
-// src/components/ui/glass-card.tsx
-import { cn } from '@/lib/utils'
-
-interface GlassCardProps {
-  children: React.ReactNode
-  className?: string
-  glow?: boolean
-}
-
-export function GlassCard({ children, className, glow }: GlassCardProps) {
-  return (
-    <div
-      className={cn(
-        // Base glassmorphism
-        'bg-white/5 backdrop-blur-xl',
-        'border border-white/10 rounded-2xl',
-        'shadow-xl shadow-black/20',
-        // Glow effect
-        glow && 'ring-1 ring-emerald-500/20 shadow-emerald-500/10',
-        className
-      )}
-    >
-      {children}
-    </div>
-  )
-}
-
-// Usage
-<GlassCard glow className="p-6">
-  <h2 className="text-xl font-display font-semibold text-white">
-    Transaction Summary
-  </h2>
-</GlassCard>
-```
-
-### Gradient Backgrounds
-
-```tsx
-// src/components/layout/GradientBackground.tsx
-export function GradientBackground({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-surface-950 relative overflow-hidden">
-      {/* Gradient orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
-      
-      {/* Grid pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}
-      />
-      
-      {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
-    </div>
-  )
-}
-```
-
----
-
-## 🏗️ Complex Component Examples
-
-### Interactive Ledger Table
-
-```tsx
-// src/components/features/LedgerTable.tsx
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
-
-interface LedgerEntry {
-  id: string
-  type: 'CREDIT' | 'DEBIT'
-  amount: number
-  description: string
-  timestamp: string
-  status: 'COMPLETED' | 'PENDING' | 'FAILED'
-}
-
-export function LedgerTable({ entries }: { entries: LedgerEntry[] }) {
-  const [filter, setFilter] = useState('')
-  const [sortBy, setSortBy] = useState<'timestamp' | 'amount'>('timestamp')
-  
-  const filteredEntries = useMemo(() => {
-    return entries
-      .filter(e => 
-        e.description.toLowerCase().includes(filter.toLowerCase()) ||
-        e.id.includes(filter)
-      )
-      .sort((a, b) => 
-        sortBy === 'timestamp' 
-          ? new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          : b.amount - a.amount
-      )
-  }, [entries, filter, sortBy])
-
-  return (
-    <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search transactions..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg
-                     text-white placeholder:text-slate-500 focus:outline-none 
-                     focus:ring-2 focus:ring-emerald-500/50"
-        />
-      </div>
-      
-      {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-white/10">
-        <table className="w-full">
-          <thead className="bg-white/5">
-            <tr className="text-left text-sm text-slate-400">
-              <th className="p-4">Type</th>
-              <th className="p-4">Amount</th>
-              <th className="p-4">Description</th>
-              <th className="p-4">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <AnimatePresence>
-              {filteredEntries.map((entry, index) => (
-                <motion.tr
-                  key={entry.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-t border-white/5 hover:bg-white/5"
-                >
-                  <td className="p-4">
-                    {entry.type === 'CREDIT' ? (
-                      <ArrowDownLeft className="w-5 h-5 text-emerald-500" />
-                    ) : (
-                      <ArrowUpRight className="w-5 h-5 text-red-400" />
-                    )}
-                  </td>
-                  <td className={`p-4 font-mono ${
-                    entry.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {entry.type === 'CREDIT' ? '+' : '-'}
-                    Rp {entry.amount.toLocaleString()}
-                  </td>
-                  <td className="p-4 text-white">{entry.description}</td>
-                  <td className="p-4">
-                    <StatusBadge status={entry.status} />
-                  </td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles = {
-    COMPLETED: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    PENDING: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    FAILED: 'bg-red-500/20 text-red-400 border-red-500/30',
-  }
-  
-  return (
-    <span className={`px-2 py-1 text-xs rounded-full border ${styles[status as keyof typeof styles]}`}>
-      {status}
-    </span>
-  )
-}
-```
-
-### Real-time Transaction Monitor
-
-```tsx
-// src/components/features/TransactionMonitor.tsx
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Activity } from 'lucide-react'
-
-interface StreamEvent {
-  id: string
-  type: string
-  data: Record<string, unknown>
-  timestamp: Date
-}
-
-// Simulates Kafka consumer for demos
-export function useSimulatedStream(interval = 2000) {
-  const [events, setEvents] = useState<StreamEvent[]>([])
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const mockEvent: StreamEvent = {
-        id: `evt-${Date.now()}`,
-        type: ['TransferInitiated', 'PaymentReceived', 'BalanceUpdated'][
-          Math.floor(Math.random() * 3)
-        ],
-        data: {
-          amount: Math.floor(Math.random() * 1000000) + 10000,
-          walletId: `wallet-${Math.random().toString(36).slice(2, 8)}`,
-        },
-        timestamp: new Date(),
-      }
-      
-      setEvents(prev => [mockEvent, ...prev.slice(0, 19)])
-    }, interval)
-    
-    return () => clearInterval(timer)
-  }, [interval])
-  
-  return events
-}
-
-export function TransactionMonitor() {
-  const events = useSimulatedStream(1500)
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Activity className="w-5 h-5 text-emerald-500 animate-pulse" />
-        <h3 className="text-lg font-semibold text-white">Live Transaction Feed</h3>
-      </div>
-      
-      <div className="h-80 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-          {events.map((event, i) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="p-3 bg-white/5 rounded-lg border border-white/10"
-            >
-              <div className="flex justify-between items-start">
-                <span className="text-xs text-emerald-400 font-mono">
-                  {event.type}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {event.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-              <pre className="mt-2 text-xs text-slate-400 overflow-x-auto">
-                {JSON.stringify(event.data, null, 2)}
-              </pre>
-            </motion.div>
-          ))}
-        </div>
-        
-        {/* Fade overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-950 to-transparent pointer-events-none" />
-      </div>
-    </div>
-  )
-}
-```
-
----
-
-## 📊 Data Visualization
-
-### Financial Chart Component
-
-```tsx
-// src/components/features/BalanceChart.tsx
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer 
-} from 'recharts'
-
-interface DataPoint {
-  date: string
-  balance: number
-}
-
-export function BalanceChart({ data }: { data: DataPoint[] }) {
-  return (
-    <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke="rgba(255,255,255,0.1)" 
-          />
-          <XAxis 
-            dataKey="date" 
-            stroke="#64748b"
-            fontSize={12}
-          />
-          <YAxis 
-            stroke="#64748b"
-            fontSize={12}
-            tickFormatter={(value) => `Rp ${(value / 1000000).toFixed(0)}M`}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-            }}
-            labelStyle={{ color: '#f8fafc' }}
-          />
-          <Area
-            type="monotone"
-            dataKey="balance"
-            stroke="#10b981"
-            strokeWidth={2}
-            fill="url(#balanceGradient)"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-```
-
----
-
-## 🔧 Bundle Script
-
-```typescript
-// scripts/bundle.ts
-import { build } from 'vite'
-import { readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
-
-async function bundle() {
-  // Build with Vite
-  await build({
-    configFile: 'vite.config.ts',
+  export default defineConfig({
+    plugins: [react(), viteSingleFile()],
+    resolve: { alias: { "@": "/src" } },
   })
-  
-  // Read the built HTML
-  const distPath = join(process.cwd(), 'dist', 'index.html')
-  let html = readFileSync(distPath, 'utf-8')
-  
-  // Inline all Base64 images
-  html = html.replace(
-    /src="(public\/[^"]+)"/g, 
-    (_, path) => {
-      const imgBuffer = readFileSync(path)
-      const base64 = imgBuffer.toString('base64')
-      const ext = path.split('.').pop()
-      return `src="data:image/${ext};base64,${base64}"`
-    }
-  )
-  
-  // Add timestamp comment
-  html = html.replace(
-    '</head>',
-    `<!-- Built: ${new Date().toISOString()} -->\n</head>`
-  )
-  
-  writeFileSync(join(process.cwd(), 'dist', 'bundle.html'), html)
-  console.log('✅ bundle.html created successfully!')
-}
+  ```
+  The plugin sets `assetsInlineLimit` to always inline, disables CSS code
+  splitting, sets `base: "./"`, and forces a single bundle (inline dynamic
+  imports). `removeViteModuleLoader: true` strips Vite's loader for a truly
+  standalone file.
+- **Alternative**: Parcel (`npx parcel build index.html --no-source-maps`) +
+  `html-inline` — an older approach that also produces a single file. Prefer
+  the Vite plugin when on Vite, since it is the standard tooling.
+- After building, verify: the file loads from `file://` (or any static host),
+  has no console errors, and needs no network requests for fonts, CDNs, or
+  APIs.
 
-bundle()
-```
+## Tailwind theming
 
----
+- **Tailwind v4**: define tokens with `@theme` in the CSS entry:
+  ```css
+  @import "tailwindcss";
+  @theme {
+    --color-primary: oklch(0.55 0.18 160);   /* generates bg-primary, etc. */
+    --font-display: "Satoshi", sans-serif;
+  }
+  ```
+  Theme variables generate utility classes automatically and are available as
+  plain CSS variables.
+- **Tailwind v3**: extend `theme` in `tailwind.config.js` (colors, fontFamily,
+  keyframes/animation), with `content` pointing at `index.html` and `src`.
+- Dark mode: class-based (`darkMode: "class"` in v3, `@custom-variant dark`
+  in v4) with a theme provider such as `next-themes`.
+- Keep interactive colors accessible: choose a primary that meets 4.5:1
+  contrast with the foreground (white or dark), not a bright brand color with
+  white text. Define semantic tokens (background, foreground, card, muted,
+  destructive, border, ring) so components stay consistent.
 
-## 🛡️ Artifact Quality Checklist
+## Component and interaction patterns
 
-### Design
-- [ ] Uses PayU Emerald color palette
-- [ ] Dark mode properly implemented
-- [ ] Glassmorphism cards used for depth
-- [ ] Typography uses Outfit/Inter fonts
+- **Use shadcn components** (button, card, input, dialog, tabs, etc.) for
+  consistent, accessible UI. They support `asChild` (via Radix Slot), CVA
+  variants, and `cn()` (`clsx` + `tailwind-merge`) for merging classes.
+- **Compose, don't rebuild**: `App.tsx` composes components; keep business
+  logic in hooks/utilities so the artifact stays readable.
+- **Icons**: lucide-react SVG components at fixed sizes; no emojis as icons.
+- **Interactive tables/lists**: filter + sort with `useMemo`; animate
+  enter/exit with framer-motion `AnimatePresence`.
+- **Live-feel demos**: simulate streaming data with a hook (`useState` +
+  `setInterval` producing mock events, capped) instead of calling real
+  backends — keeps the artifact self-contained.
+- **Charts**: recharts with `ResponsiveContainer`; style tooltips/axes to match
+  the theme and remain readable in light and dark mode.
 
-### Responsiveness
-- [ ] Looks premium on Desktop (1920px)
-- [ ] Adapts properly to Tablet (768px)
-- [ ] Functional on Mobile (375px)
+## Motion and accessibility
 
-### Performance
-- [ ] Bundle size < 3MB
-- [ ] Initial load < 2 seconds
-- [ ] No console errors
-- [ ] Animations smooth at 60fps
+- Motion: framer-motion, durations ~0.3–0.5s, `easeOut`/spring; stagger for
+  lists. Honor reduced motion via `useReducedMotion` (or
+  `prefers-reduced-motion`) — never ship motion that ignores it.
+- Accessibility is non-negotiable:
+  - Contrast 4.5:1 normal text / 3:1 large UI.
+  - Visible focus rings, keyboard operability, semantic HTML, ARIA labels.
+  - Touch targets ≥ 44×44px; no layout shift (use skeletons for async).
+- `cursor-pointer` on clickable elements (or the shadcn `--pointer` option).
 
-### Self-Contained
-- [ ] All images converted to Base64
-- [ ] No external API dependencies
-- [ ] Works offline after load
-- [ ] Single HTML file deliverable
+## Quality checklist
 
-### Interactivity
-- [ ] All buttons functional
-- [ ] Filters work correctly
-- [ ] Animations enhance UX
-- [ ] Error states handled
+- [ ] Context7 resolved the exact library and the pinned version was checked.
+- [ ] Scaffolded with the shadcn CLI (`init -t vite`, `add <component>`); no
+      hand-copied components with broken aliases.
+- [ ] Tailwind version matched (v4 `@theme` CSS-first, or v3 config) and tokens
+      define semantic colors.
+- [ ] Primary action color meets 4.5:1 contrast with its foreground.
+- [ ] Responsive at 375px, 768px, 1024px, 1920px; touch targets ≥ 44×44px.
+- [ ] Icons are lucide SVGs; no emojis; `cursor-pointer` on clickables.
+- [ ] Motion is 0.3–0.5s and honors reduced motion.
+- [ ] All buttons, filters, and interactive states work; error states handled.
+- [ ] Built with single-file bundling (`vite-plugin-singlefile` preferred);
+      output loads offline with no console errors and no external requests.
+- [ ] Bundle size reported with command output; no unnecessary dependencies.
 
----
+## References
 
-## 📚 References
-
-- [Vite Documentation](https://vitejs.dev/)
-- [vite-plugin-singlefile](https://github.com/nicholasreynolds/vite-plugin-singlefile)
+- [Vite documentation](https://vitejs.dev/)
+- [vite-plugin-singlefile](https://github.com/richardtallent/vite-plugin-singlefile)
+- [Tailwind CSS documentation](https://tailwindcss.com/docs)
 - [shadcn/ui](https://ui.shadcn.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Framer Motion](https://www.framer.com/motion/)
+- [shadcn CLI](https://ui.shadcn.com/docs/cli)
+- [Radix UI primitives](https://www.radix-ui.com/primitives)
+- [framer-motion documentation](https://motion.dev/)
 - [Recharts](https://recharts.org/)
-- [Lucide Icons](https://lucide.dev/)
-- [Glassmorphism CSS Generator](https://hype4.academy/tools/glassmorphism-generator)
-
----
-*Last Updated: 2026-05-04*
+- [Lucide icons](https://lucide.dev/)

@@ -1,464 +1,180 @@
 ---
 name: principal-architect
-version: 3.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: []
-tags: [architecture, strategy, leadership, dora, adr, tech-radar, governance, docs, c4, documentation]
-related: [cybersecurity-architect, platform-engineer]
-description: **Master Skill**: Strategic Architecture & Documentation Leadership. Covers Decentralized Orchestration, Technology Radar, DORA metrics, ADR governance, C4 modeling, Technical Debt management, and Documentation Systems (Merged from information-architect).
+description: Strategic software architecture and documentation leadership — architecture governance (hexagonal, event-driven, domain-driven, immutable records), Architecture Decision Records, DORA and engineering metrics, technology evaluation and radar, C4 modeling, technical debt management, and documentation-as-code. Use when designing, reviewing, or documenting cross-cutting architecture decisions, writing ADRs, or evaluating technologies in any software project.
 ---
 
-# PayU Strategy & Architecture Master Skill
+# Principal Architect
 
-You are the **Lead Strategic Architect (AI)** for the **PayU Platform**. You bridge the gap between business objectives and technical implementation, ensuring the platform is scalable, efficient, and future-proof.
+Act as the strategic architecture authority for a software platform. Keep the
+system aligned with its published architecture principles, documented
+decisions, and measurable engineering targets — and record every significant
+decision as an ADR instead of relying on conversation or memory. Verify all
+third-party frameworks and tools with Context7 before recommending or writing
+them.
 
----
+## Context7 documentation gate
 
-## 🏛️ The 14 Immutable Laws of PayU Architecture
+Before writing, changing, or recommending anything that uses a library,
+framework, SDK, API, CLI, or cloud service:
 
-### 1. Domain-Driven Boundaries
-Every service must align with a single bounded context. Cross-domain communication only via events or well-defined APIs.
+1. Read the module POM, package.json, or the infrastructure manifest to
+   determine the exact version in use.
+2. Resolve the library in Context7. Prefer the official, high-reputation result
+   and pin the query to the repository version when that version is available.
+3. Query one concrete topic at a time: API, configuration, testing, migration,
+   or integration behavior. Use the returned documentation as the source of
+   truth; do not rely on remembered annotations, artifact names, or property
+   namespaces.
+4. If the exact version is not indexed, use the nearest official version only
+   as a stated fallback, then verify the actual API in the project source or
+   dependency JAR before editing.
+5. Re-resolve and re-query after changing a dependency version. Do not mix
+   examples from different major versions.
 
-### 2. Hexagonal Architecture
-Core business logic isolated from infrastructure. All external dependencies accessed through ports and adapters.
+Use Context7 for Spring Boot/Quarkus, Next.js/React Native, Kubernetes/
+OpenShift, event brokers (Kafka/Strimzi), API gateways, Backstage (catalog
+descriptor and TechDocs), Structurizr DSL, and similar third-party tools.
+Context7 does not replace project inspection for platform-specific standards.
 
-### 3. Event-First Communication
-Prefer asynchronous events over synchronous HTTP calls. Events are the source of truth for cross-service state.
+## Architecture governance
 
-### 4. Immutable Financial Records
-No UPDATE or DELETE on financial data. All changes via new entries with proper audit trails.
+Establish and enforce a small set of architecture principles, and ground them
+in the project's actual conventions rather than inventing new ones:
 
-### 5. Zero Trust Security
-Every service authenticates every request. No implicit trust based on network location.
+- **Domain-driven boundaries**: services align with bounded contexts;
+  cross-domain communication only via events or well-defined APIs.
+- **Hexagonal / ports-and-adapters**: domain stays independent of frameworks,
+  databases, and transport; external communication crosses a port. Enforce
+  with architecture tests (for example ArchUnit in Java) so rules are verified
+  in CI, not just by review.
+- **Event-driven where it matters**: prefer asynchronous events for
+  cross-service state; publish atomically with the business transaction
+  (transactional outbox) and make consumers idempotent.
+- **Immutable records for financial/audit data**: no UPDATE or DELETE on
+  financial facts; corrections via reversal entries with an audit trail.
+- **API-first**: versioned, consistent paths; a contract (OpenAPI) per
+  service; a standard error envelope.
+- **Independent deployability**: services deploy and scale independently
+  (GitOps), no coordinated releases.
+- **Config as code**: all infrastructure and configuration in Git; no manual
+  production changes.
+- **Observability by default**: logs, metrics, and traces for every service.
 
-### 6. API-First Design
-All services expose well-documented OpenAPI/AsyncAPI contracts before implementation begins.
+Before changing a cross-cutting standard, read the existing ADRs and the
+current compliance/roadmap state; the state changes over time and must not be
+copied from a stale table.
 
-### 7. Configuration as Code
-All infrastructure and configuration stored in Git. No manual changes to production.
+## Architecture decision records
 
-### 8. Observability by Default
-Every service ships with logs, metrics, and traces. No deployment without proper observability.
+Use the MADR-style ADR convention (a numbered markdown file per decision, an
+index/README that stays current). A good ADR contains:
 
-### 9. Graceful Degradation
-Services must handle downstream failures gracefully with circuit breakers and fallbacks.
+- **Status**: `Proposed | Accepted | Deprecated | Superseded`
+- **Date**: `YYYY-MM-DD`
+- **Deciders**: list of people/roles
+- **Context**: the problem and constraints
+- **Decision Drivers**: key requirements (for example compliance, latency, cost)
+- **Considered Options**: 2+ options with pros and cons
+- **Decision**: the final choice, with the technology/pattern name in bold
+- **Rationale**: why this option won, mapped back to drivers
+- **Consequences**: positive, negative, and risks
+- **Implementation Notes**: steps or config needed to adopt
 
-### 10. Data Residency Compliance
-User data stays within regional boundaries. Explicit data residency tags on all PII.
+Write an ADR for every significant architectural decision before implementation
+starts. Evaluate options with a weighted framework — for example technical 40%,
+business 30%, team 30% — so the choice is defensible, and reference related
+ADRs instead of duplicating context.
 
-### 11. Independent Deployability
-Services deployable and scalable independently. No coordinated releases required.
+## DORA and engineering metrics
 
-### 12. Test Automation First
-No code merges without automated tests. Coverage thresholds enforced in CI.
+Use DORA metrics to measure the delivery pipeline, not individuals:
 
-### 13. Documentation as Code
-Architecture decisions (ADRs), API specs, and runbooks versioned alongside code.
+- **Deployment Frequency** — how often releases ship.
+- **Lead Time for Changes** — commit to deploy.
+- **Mean Time to Recovery (MTTR)** — time to restore service.
+- **Change Failure Rate** — share of changes causing failures.
 
-### 14. Continuous Improvement
-20% of each sprint dedicated to tech debt, tooling, and developer experience.
+Reference levels (per the DORA program): Elite teams ship on demand, lead time
+< 1 day, MTTR < 1 hour, change failure rate < 15%. Align targets to the
+organization's current state and track them consistently (for example from CI
+deploys, pipeline durations, and incident data); do not invent thresholds or
+treat metrics as a performance scorecard.
 
----
+Complement with engineering quality gates: test coverage, 100% code review,
+bounded technical debt ratio, and PR merge time. When changing delivery
+tooling, verify the metric source still works and keep dashboards aligned.
 
-## 📈 DORA Metrics & Engineering Excellence
+## Technology evaluation and radar
 
-### Elite Performance Targets
+Evaluate technologies before adoption, and record the reasoning:
 
-| Metric | Elite Target | PayU Target |
-|:-------|:------------:|:-----------:|
-| **Deployment Frequency** | On-demand (multiple/day) | ≥ 1 per day |
-| **Lead Time for Changes** | < 1 day | < 4 hours |
-| **Mean Time to Recovery** | < 1 hour | < 30 minutes |
-| **Change Failure Rate** | < 15% | < 10% |
+- Maintain a radar with rings (`ADOPT`, `TRIAL`, `ASSESS`, `HOLD`) and a note
+  per entry. Do not silently move a technology between rings; that is a
+  governance decision.
+- Confirm a technology already exists in the project or its approved roadmap
+  before recommending it; the current stack is the source of truth.
+- For candidates not yet in use, assess against the decision drivers
+  (technical, business, team factors) and recommend a trial only with a defined
+  exit criterion (success metric + review date).
 
-### Measuring DORA in Practice
+## C4 architecture modeling
 
-```yaml
-# prometheus/dora-metrics.yaml
-groups:
-  - name: dora-metrics
-    rules:
-      # Deployment Frequency
-      - record: dora:deployment_frequency:7d
-        expr: |
-          count(argocd_app_sync_total{status="Succeeded"}) by (application)
-          / 7
-      
-      # Lead Time (commit to deploy)
-      - record: dora:lead_time_hours:avg
-        expr: |
-          avg(tekton_pipelinerun_duration_seconds{status="succeeded"}) / 3600
-      
-      # Change Failure Rate
-      - record: dora:change_failure_rate:7d
-        expr: |
-          sum(argocd_app_sync_total{status="Failed"})
-          / sum(argocd_app_sync_total)
-```
+Use the C4 model for architecture views, and keep diagrams close to the code
+they describe — model only what exists, never components that are not deployed.
 
-### Grafana Dashboard
+- Level 1 system context, Level 2 container, and Level 3 component views as
+  needed.
+- Prefer a text-based diagram format (Structurizr DSL, Mermaid, or the
+  project's convention) so diagrams are reviewable in Git. Verify the DSL
+  syntax (workspace, model, views, `systemContext`/`container`, `include *`,
+  `autoLayout`) in Context7 before generating diagrams.
+- When a diagram changes, update the corresponding docs and note the change in
+  the PR description so architecture stays traceable.
 
-```json
-{
-  "title": "DORA Metrics Dashboard",
-  "panels": [
-    {
-      "title": "Deployment Frequency (7d avg)",
-      "type": "stat",
-      "targets": [
-        {"expr": "dora:deployment_frequency:7d"}
-      ],
-      "thresholds": {
-        "mode": "absolute",
-        "steps": [
-          {"color": "red", "value": 0},
-          {"color": "yellow", "value": 0.5},
-          {"color": "green", "value": 1}
-        ]
-      }
-    }
-  ]
-}
-```
+## Technical debt management
 
----
+- Classify debt (deliberate, accidental, bit rot, obsolescence) and prioritize
+  by impact and effort — debt that blocks other work or creates security or
+  performance risk comes first.
+- Route debt to the project's existing tracker (for example a roadmap/TODO
+  file) instead of creating a parallel system; keep it visible and reviewed.
+- Allocate a defined slice of capacity to debt reduction (a common target is
+  ~20% of sprint capacity) and make the allocation explicit in planning.
 
-## 📝 Architecture Decision Records (ADR)
+## Documentation system
 
-### ADR Template
+- Keep documentation as code: README updates when APIs change, ADRs for
+  decisions, runbooks for operations, and a catalog entry (for example
+  Backstage `catalog-info.yaml`) pointing at the real docs directory. Verify
+  the Backstage descriptor format (`kind: Component`, `spec.type/lifecycle/
+  owner/system`, `annotations: backstage.io/techdocs-ref`) in Context7 before
+  editing a catalog file.
+- Route content to the project's established doc structure instead of mixing
+  content across files; link to existing docs rather than duplicating them.
+- Use clear writing: short sentences, concrete examples, and a consistent
+  template for READMEs and guides.
 
-```markdown
-# ADR-{number}: {title}
+## Review checklist
 
-## Status
-{Proposed | Accepted | Deprecated | Superseded by ADR-xxx}
-
-## Context
-What is the issue we're facing? What forces are at play?
-
-## Decision
-What is the change we're proposing and/or doing?
-
-## Consequences
-What becomes easier or more difficult because of this change?
-
-### Positive
-- ...
-
-### Negative
-- ...
-
-### Neutral
-- ...
-
-## Compliance
-- [ ] Security Review
-- [ ] Privacy Review
-- [ ] Architecture Review
+- [ ] Context7 resolved the exact library/tool and the pinned version was checked.
+- [ ] The decision follows the published architecture principles; no contradiction with existing ADRs.
+- [ ] A new ADR (or update to an existing one) uses the project template and is referenced from the index.
+- [ ] DORA/engineering metrics referenced match the current tracked targets.
+- [ ] Technology recommendations are on the radar or have a defined trial/exit criterion.
+- [ ] C4 diagrams model only deployed reality and are text-based for review.
+- [ ] Technical debt is routed to the project tracker and prioritized by impact/effort.
+- [ ] Docs follow the established structure; no parallel tracker or duplicate content.
+- [ ] No secrets, PII, or internal URLs leaked into docs or diagrams.
+- [ ] Changes are verified with the project quality gate and command output.
 
 ## References
-- Related ADRs: ADR-xxx
-- External docs: ...
-```
-
-### ADR Index Example
-
-```markdown
-# Architecture Decision Records
-
-| # | Title | Status | Date |
-|:--|:------|:------:|:----:|
-| 001 | Use Hexagonal Architecture for Core Services | ✅ Accepted | 2025-01 |
-| 002 | Adopt Kafka for Inter-Service Events | ✅ Accepted | 2025-01 |
-| 003 | PostgreSQL as Primary Database | ✅ Accepted | 2025-01 |
-| 004 | React Native for Mobile Apps | ✅ Accepted | 2025-02 |
-| 005 | Next.js 15 for Web Applications | ✅ Accepted | 2025-03 |
-| 006 | OpenShift 4.x as Container Platform | ✅ Accepted | 2025-03 |
-| 007 | Replace REST with gRPC for internal APIs | 🟡 Proposed | - |
-```
-
----
-
-## 🎯 Technology Radar
-
-### Radar Ring Definitions
-
-| Ring | Definition |
-|:-----|:-----------|
-| **ADOPT** | Proven in production, recommended for new projects |
-| **TRIAL** | Worth pursuing, used in specific projects |
-| **ASSESS** | Worth exploring with the goal of understanding |
-| **HOLD** | Proceed with caution, legacy or risky |
-
-### PayU Technology Radar
-
-#### Languages & Frameworks
-
-| Technology | Ring | Notes |
-|:-----------|:----:|:------|
-| Java 21 + Spring Boot 3.4 | ADOPT | Core banking services |
-| TypeScript 5.x | ADOPT | All frontend/BFF |
-| Python 3.12 + FastAPI | ADOPT | AI/ML services |
-| Kotlin | TRIAL | New Android modules |
-| Go | ASSESS | High-performance utilities |
-
-#### Platforms & Infrastructure
-
-| Technology | Ring | Notes |
-|:-----------|:----:|:------|
-| OpenShift 4.20+ | ADOPT | Container platform |
-| ArgoCD | ADOPT | GitOps |
-| Tekton | ADOPT | CI/CD pipelines |
-| Istio Service Mesh | ADOPT | Traffic management |
-| Serverless/Knative | TRIAL | Event-driven workloads |
-
-#### Data & Messaging
-
-| Technology | Ring | Notes |
-|:-----------|:----:|:------|
-| PostgreSQL 16 | ADOPT | Primary RDBMS |
-| Redis 7 | ADOPT | Caching, sessions |
-| Kafka (Strimzi) | ADOPT | Event streaming |
-| TimescaleDB | TRIAL | Time-series analytics |
-| MongoDB | HOLD | Avoid for new services |
-
-#### Frontend & Mobile
-
-| Technology | Ring | Notes |
-|:-----------|:----:|:------|
-| Next.js 15 | ADOPT | Web applications |
-| React Native 0.76+ | ADOPT | Mobile apps |
-| Expo SDK 52+ | ADOPT | Mobile tooling |
-| Tailwind CSS | ADOPT | Styling |
-| Vue.js | HOLD | Legacy only |
-
----
-
-## 🗺️ C4 Architecture Modeling
-
-### Level 1: System Context
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                           PAYU DIGITAL BANK                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│    ┌──────────┐        ┌──────────────────┐        ┌──────────┐    │
-│    │ Customer │───────▶│   PayU Platform  │◀───────│  Partner │    │
-│    │  (Mobile)│        │                  │        │   Banks  │    │
-│    └──────────┘        └────────┬─────────┘        └──────────┘    │
-│                                 │                                    │
-│    ┌──────────┐                 │                   ┌──────────┐    │
-│    │ Customer │─────────────────┤                   │ BI/LKPP  │    │
-│    │   (Web)  │                 │                   │ Regulator│    │
-│    └──────────┘                 ▼                   └──────────┘    │
-│                        ┌──────────────┐                             │
-│                        │ Back Office  │                             │
-│                        │   Staff      │                             │
-│                        └──────────────┘                             │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Level 2: Container Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         PayU Platform                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │
-│  │   Mobile    │  │   Web App   │  │  Backoffice │                 │
-│  │    App      │  │  (Next.js)  │  │    Portal   │                 │
-│  │(React Native)  │             │  │             │                 │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                 │
-│         │                │                │                         │
-│         └────────────────┼────────────────┘                         │
-│                          ▼                                          │
-│                  ┌───────────────┐                                  │
-│                  │  API Gateway  │                                  │
-│                  │   (Kong/KIC)  │                                  │
-│                  └───────┬───────┘                                  │
-│                          │                                          │
-│    ┌─────────────────────┼─────────────────────┐                   │
-│    │                     │                     │                    │
-│    ▼                     ▼                     ▼                    │
-│ ┌─────────┐        ┌─────────────┐       ┌─────────┐              │
-│ │ Account │        │   Wallet    │       │  Trans. │              │
-│ │ Service │        │   Service   │       │ Service │              │
-│ └────┬────┘        └──────┬──────┘       └────┬────┘              │
-│      │                    │                   │                    │
-│      └────────────────────┼───────────────────┘                    │
-│                           ▼                                         │
-│                    ┌─────────────┐                                  │
-│                    │   Kafka     │                                  │
-│                    │  (Events)   │                                  │
-│                    └─────────────┘                                  │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### C4 Tooling
-
-```bash
-# Generate C4 diagrams from code
-# Structurizr DSL -> PNG/SVG
-
-workspace {
-    model {
-        customer = person "Customer" "PayU Digital Bank user"
-        payuSystem = softwareSystem "PayU Platform" "Digital banking platform" {
-            webapp = container "Web App" "Next.js 15" "React"
-            mobileApp = container "Mobile App" "React Native" "Expo"
-            apiGateway = container "API Gateway" "Kong" "OpenShift"
-            walletService = container "Wallet Service" "Spring Boot 3.4" "Java 21"
-        }
-        
-        customer -> webapp "Uses"
-        customer -> mobileApp "Uses"
-        webapp -> apiGateway "Calls"
-        mobileApp -> apiGateway "Calls"
-        apiGateway -> walletService "Routes to"
-    }
-    
-    views {
-        systemContext payuSystem {
-            include *
-            autolayout lr
-        }
-        container payuSystem {
-            include *
-            autolayout lr
-        }
-    }
-}
-```
-
----
-
-## 🔧 Technical Debt Management
-
-### Debt Classification
-
-| Type | Description | Example |
-|:-----|:------------|:--------|
-| **Deliberate** | Conscious trade-off for speed | Skip tests for MVP |
-| **Accidental** | Unintentional, discovered later | Memory leak |
-| **Bit Rot** | Degradation over time | Outdated dependencies |
-| **Tech Obsolescence** | Technology becoming obsolete | Java 8 services |
-
-### Debt Tracking Template
-
-```yaml
-# tech-debt/wallet-service.yaml
-service: wallet-service
-owner: wallet-team
-debts:
-  - id: TD-001
-    title: Migrate from Java 17 to Java 21
-    type: tech-obsolescence
-    impact: medium
-    effort: small
-    priority: P2
-    status: planned
-    sprint: Next-Q1-S2
-    
-  - id: TD-002
-    title: Replace Lombok with Java Records
-    type: deliberate
-    impact: low
-    effort: medium
-    priority: P3
-    status: backlog
-    
-  - id: TD-003
-    title: Add missing integration tests for transfer flow
-    type: deliberate
-    impact: high
-    effort: medium
-    priority: P1
-    status: in-progress
-```
-
-### 20% Rule Implementation
-
-```markdown
-## Sprint Planning Template
-
-### Capacity Allocation
-- Feature Work: 60%
-- Bug Fixes: 15%
-- Tech Debt: 20%
-- On-call Buffer: 5%
-
-### Tech Debt Selection Criteria
-1. Blocks other work (highest priority)
-2. Security vulnerabilities
-3. Performance degradation
-4. Developer experience impact
-5. Dependency updates
-```
-
----
-
-## 🤖 Orchestration Map (Master Skills)
-
-| Domain | Master Skill | Description |
-|:-------|:-------------|:------------|
-| **Backend (Java)** | `@core-banking-engineer` | Spring Boot 3.4, Hexagonal, Resilience |
-| **Events** | `@integration-architect` | Sagas, Event Sourcing, Kafka |
-| **API** | `@api-architect` | REST API standards, OpenAPI, Versioning |
-| **AI** | `@ai-engineer` | Intelligent Systems, FastAPI, GenAI |
-| **Security** | `@cybersecurity-architect` | Zero Trust, Auth, Compliance |
-| **Data** | `@data-architect` | PostgreSQL, Flyway, CQRS |
-| **QA** | `@quality-engineer` | TDD, E2E, Financial Recon |
-| **Design** | `@product-designer` | Premium UI, Atomic Design |
-| **Frontend** | `@frontend-architect` | Next.js 15+, React, Web Perf |
-| **Mobile** | `@mobile-architect` | React Native, Expo, Security |
-| **Platform & SRE** | `@platform-engineer` | DevOps, SRE, Observability, OpenShift |
-| **DX** | `@dx-engineer` | Git, Conventional Commits, Tooling |
-| **Arch & Docs** | `@principal-architect` | Strategy, ADRs, C4, Documentation |
-
----
-
-## 🔍 Strategic Architecture Checklist
-
-### Design Review
-- [ ] Follows 14 Immutable Laws
-- [ ] ADR documented for significant decisions
-- [ ] C4 diagrams updated
-- [ ] API contracts reviewed
-
-### Quality Gates
-- [ ] Security review completed
-- [ ] Performance baseline established
-- [ ] Observability configured
-- [ ] DR plan documented
-
-### Metrics & KPIs
-- [ ] DORA metrics tracking enabled
-- [ ] SLIs/SLOs defined
-- [ ] Cost monitoring configured
-- [ ] Tech debt quantified
-
----
-
-## 📚 References
 
 - [DORA Research Program](https://dora.dev/)
-- [Accelerate Book](https://itrevolution.com/accelerate-book/)
 - [Architecture Decision Records](https://adr.github.io/)
 - [C4 Model](https://c4model.com/)
-- [Structurizr DSL](https://structurizr.com/dsl)
+- [Structurizr DSL](https://docs.structurizr.com/dsl)
+- [Structurizr DSL cookbook](https://docs.structurizr.com/dsl/cookbook/system-context-view)
+- [Backstage catalog descriptor format](https://backstage.io/docs/features/software-catalog/descriptor-format)
+- [Backstage TechDocs](https://backstage.io/docs/features/techdocs/)
 - [Technology Radar (ThoughtWorks)](https://www.thoughtworks.com/radar)
 - [Team Topologies](https://teamtopologies.com/)
-- [Domain-Driven Design](https://dddcommunity.org/)
-- [The Phoenix Project](https://itrevolution.com/the-phoenix-project/)
-- [Building Microservices (Sam Newman)](https://samnewman.io/books/building_microservices_2nd_edition/)
-
----
-*Last Updated: 2026-05-04*
-
-

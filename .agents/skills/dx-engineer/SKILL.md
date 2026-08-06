@@ -1,662 +1,158 @@
 ---
 name: dx-engineer
-version: 2.0.0
-maturity: stable
-updated: 2026-05-04
-author: payu-platform-team
-requires: []
-tags: [dev-experience, git, typescript, tooling]
-related: [platform-engineer]
-description: **Master Skill**: Developer Experience Engineering. Unified expertise in Git Workflows, TypeScript Patterns, Documentation Tools (Slidev), Code Review Standards, and Developer Tooling.
+description: Developer experience engineering — Git workflows and Conventional Commits, git hooks (husky, commitlint, lint-staged), pull request and code review standards, TypeScript patterns and runtime validation, developer documentation and presentations, and developer portals (Backstage catalog). Use when designing, implementing, debugging, reviewing, or testing developer tooling, hooks, scripts, or documentation in any software project.
 ---
 
-# PayU DX Engineer Master Skill
-
-You are the **Lead Developer Experience Engineer (AI)** for the **PayU Platform**. You ensure developers are productive, code is maintainable, and the developer journey from commit to production is smooth and well-documented.
-
-## 🎯 Core Domains
-
-| Domain | Focus Area | Key Deliverables |
-|:-------|:-----------|:-----------------|
-| **Git Workflow** | Branching, Commits, PRs | Conventional commits, PR templates |
-| **TypeScript** | Type safety, Patterns | Generics, Type guards, Validation |
-| **Documentation** | Slides, ADRs, Guides | Slidev presentations, Technical docs |
-| **Tooling** | DX Automation | Pre-commit hooks, CLI tools |
-
----
-
-## 🚀 Git Workflow & Branching
-
-### Branching Model
-
-```
-main (protected)
-  │
-  ├── develop (integration)
-  │     │
-  │     ├── feat/wallet-instant-transfer
-  │     ├── fix/auth-token-refresh
-  │     └── refactor/transaction-service-cleanup
-  │
-  └── hotfix/critical-payment-bug (from main, merge back to main + develop)
-```
-
-### Branch Naming Convention
-
-| Type | Pattern | Example |
-|:-----|:--------|:--------|
-| Feature | `feat/<ticket>-<description>` | `feat/PAYU-123-instant-transfer` |
-| Bug Fix | `fix/<ticket>-<description>` | `fix/PAYU-456-token-expiry` |
-| Hotfix | `hotfix/<description>` | `hotfix/payment-gateway-timeout` |
-| Refactor | `refactor/<description>` | `refactor/wallet-hexagonal` |
-| Docs | `docs/<description>` | `docs/api-versioning-guide` |
-
-### Conventional Commits
-
-```
-<type>(<scope>): <summary>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-**Types:**
-- `feat`: New feature (triggers MINOR version bump)
-- `fix`: Bug fix (triggers PATCH version bump)
-- `perf`: Performance improvement
-- `refactor`: Code change that neither fixes nor adds features
-- `test`: Adding or fixing tests
-- `docs`: Documentation only
-- `chore`: Maintenance tasks
-- `ci`: CI/CD changes
-- `BREAKING CHANGE`: In footer (triggers MAJOR version bump)
-
-**Examples:**
-
-```bash
-# Feature
-feat(wallet): add instant transfer via BI-FAST
-
-# Bug fix with issue reference
-fix(auth): resolve token refresh race condition
-
-Closes #456
-
-# Breaking change
-feat(api)!: change transfer response schema
-
-BREAKING CHANGE: transfer endpoint now returns nested account object
-```
-
-### Commit Message Validation
-
-```yaml
-# .husky/commit-msg
-#!/bin/sh
-npx commitlint --edit $1
-```
-
-```javascript
-// commitlint.config.js
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'scope-enum': [2, 'always', [
-      'wallet', 'transaction', 'auth', 'account', 
-      'billing', 'gateway', 'notification', 'api'
-    ]],
-    'subject-case': [2, 'always', 'lower-case'],
-    'header-max-length': [2, 'always', 72],
-  },
-};
-```
-
----
-
-## 📝 Pull Request Standards
-
-### PR Template
-
-```markdown
-## Summary
-<!-- What does this PR do and why? -->
-
-## Type of Change
-- [ ] 🐛 Bug fix
-- [ ] ✨ New feature
-- [ ] 🔨 Refactor
-- [ ] 📚 Documentation
-- [ ] 🧪 Tests
-
-## Testing
-<!-- How was this tested? Include logs/screenshots -->
-
-## Checklist
-- [ ] Tests added/updated
-- [ ] Documentation updated
-- [ ] No hardcoded secrets
-- [ ] PII is masked in logs
-- [ ] Follows Conventional Commits
-
-## Related Issues
-<!-- Closes #123, Relates to #456 -->
-```
-
-### Code Review Pillars
-
-| Pillar | Focus | Questions to Ask |
-|:-------|:------|:-----------------|
-| **Correctness** | Logic, Edge cases | Does this handle null? What if input is empty? |
-| **Clean Code** | SOLID, DRY, Naming | Is this method doing one thing? Is naming clear? |
-| **Performance** | N+1, Memory, I/O | Are we fetching in a loop? Is this blocking? |
-| **Security** | AuthZ, Validation | Is input sanitized? Are permissions checked? |
-| **Testability** | Coverage, Isolation | Can this be unit tested? Are dependencies injected? |
-
-### Review Etiquette
-
-```markdown
-# Good ✅
-> Consider using `Optional.orElseThrow()` here to make the intent clearer
-> and avoid potential NPE. What do you think?
-
-# Bad ❌
-> This is wrong. Use Optional.
-```
-
----
-
-## 💎 TypeScript Patterns
-
-### Advanced Type Patterns
-
-```typescript
-// 1. Branded Types (for domain safety)
-type AccountId = string & { readonly brand: unique symbol };
-type UserId = string & { readonly brand: unique symbol };
-
-function createAccountId(id: string): AccountId {
-  return id as AccountId;
-}
-
-// Prevents mixing up IDs
-function getAccount(accountId: AccountId): Account { ... }
-getAccount(userId); // ❌ Type error!
-
-// 2. Discriminated Unions (for state machines)
-type TransferState =
-  | { status: 'pending'; initiatedAt: Date }
-  | { status: 'processing'; processedAt: Date }
-  | { status: 'completed'; completedAt: Date; transactionId: string }
-  | { status: 'failed'; failedAt: Date; error: string };
-
-function handleTransfer(state: TransferState) {
-  switch (state.status) {
-    case 'completed':
-      console.log(state.transactionId); // ✅ TypeScript knows this exists
-      break;
-    case 'failed':
-      console.error(state.error); // ✅ TypeScript knows this exists
-      break;
-  }
-}
-
-// 3. Mapped Types with Template Literals
-type ApiRoutes = {
-  getAccount: `/api/v1/accounts/${string}`;
-  createTransfer: `/api/v1/transfers`;
-  getTransfer: `/api/v1/transfers/${string}`;
-};
-
-// 4. Conditional Types
-type ApiResponse<T> = T extends Array<infer U>
-  ? { data: T; pagination: Pagination }
-  : { data: T };
-
-// 5. Type Guards
-function isTransferCompleted(
-  state: TransferState
-): state is Extract<TransferState, { status: 'completed' }> {
-  return state.status === 'completed';
-}
-```
-
-### Runtime Validation with Zod
-
-```typescript
-import { z } from 'zod';
-
-// Schema definition
-const TransferRequestSchema = z.object({
-  sourceAccountId: z.string().min(1),
-  destinationAccountId: z.string().min(1),
-  amount: z.number().positive().max(100_000_000),
-  currency: z.enum(['IDR', 'USD']).default('IDR'),
-  description: z.string().max(100).optional(),
-  idempotencyKey: z.string().uuid(),
-});
-
-// Infer TypeScript type from schema
-type TransferRequest = z.infer<typeof TransferRequestSchema>;
-
-// Usage in API handler
-export async function handleTransfer(req: Request) {
-  const parseResult = TransferRequestSchema.safeParse(req.body);
-  
-  if (!parseResult.success) {
-    return Response.json({
-      error: 'VALIDATION_ERROR',
-      details: parseResult.error.flatten(),
-    }, { status: 400 });
-  }
-  
-  const transfer = parseResult.data; // Fully typed!
-  // ...
-}
-```
-
-### Functional Patterns
-
-```typescript
-// Pipe utility for data transformation
-const pipe = <T>(...fns: Array<(arg: T) => T>) =>
-  (value: T): T => fns.reduce((acc, fn) => fn(acc), value);
-
-// Usage
-const processTransaction = pipe(
-  validateAmount,
-  applyFees,
-  formatForLedger,
-  enrichWithMetadata
-);
-
-const result = processTransaction(rawTransaction);
-
-// Result type builder
-type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
-
-function ok<T>(data: T): Result<T, never> {
-  return { success: true, data };
-}
-
-function err<E>(error: E): Result<never, E> {
-  return { success: false, error };
-}
-```
-
----
-
-## 📊 Documentation with Slidev
-
-### Quick Start
-
-```bash
-pnpm create slidev@latest
-cd slides && pnpm run dev
-```
-
-### Basic Structure
-
-```markdown
----
-theme: default
-title: PayU Architecture Overview
-author: Engineering Team
----
-
-# PayU Platform Architecture
-
-Enterprise Digital Banking Solution
-
----
-
-## Microservices Overview
-
-```mermaid
-graph LR
-    A[Gateway] --> B[Auth]
-    A --> C[Wallet]
-    A --> D[Transaction]
-```
-
----
-layout: two-cols
----
-
-# Left Column
-
-Content here
-
-::right::
-
-# Right Column
-
-More content
-
----
-
-# Code Example
-
-```java {all|1-3|5-10|all}
-@Service
-public class TransferService {
-    
-    public TransferResult transfer(TransferRequest request) {
-        // Validate
-        validate(request);
-        
-        // Execute
-        return execute(request);
-    }
-}
-```
-
-<v-click>
-
-This code shows the main transfer flow.
-
-</v-click>
-```
-
-### Animation & Interactivity
-
-```markdown
-# Step by Step
-
-<v-clicks>
-
-- First point
-- Second point
-- Third point
-
-</v-clicks>
-
----
-
-# Interactive Code
-
-```ts {monaco}
-// Editable code block
-const greeting = "Hello, PayU!";
-console.log(greeting);
-```
-```
-
-### Export Commands
-
-```bash
-# Export to PDF
-pnpm run export
-
-# Export to PPTX
-pnpm run export --format pptx
-
-# Build for hosting
-pnpm run build
-```
-
----
-
-## 🛠️ Developer Tooling
-
-### Pre-commit Hooks
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: local
-    hooks:
-      - id: lint
-        name: Lint
-        entry: pnpm lint
-        language: system
-        types: [typescript, javascript]
-        
-      - id: test
-        name: Unit Tests
-        entry: pnpm test:unit
-        language: system
-        pass_filenames: false
-        
-      - id: security-scan
-        name: Security Scan
-        entry: pnpm audit
-        language: system
-        pass_filenames: false
-```
-
-### Makefile for Common Tasks
-
-```makefile
-.PHONY: dev test lint build deploy
-
-dev:
-	pnpm run dev
-
-test:
-	pnpm test
-
-lint:
-	pnpm lint && pnpm typecheck
-
-build:
-	pnpm build
-
-# Quick PR preparation
-pr-ready: lint test
-	@echo "✅ Ready for PR!"
-
-# Generate changelog
-changelog:
-	pnpm conventional-changelog -p angular -i CHANGELOG.md -s
-```
-
-### VS Code Workspace Settings
-
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.organizeImports": true
-  },
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.updateImportsOnFileMove.enabled": "always"
-}
-```
-
----
-
-## 🏗️ Internal Developer Portal (Backstage)
-
-PayU menggunakan portal terpusat (IDP) agar developer tidak perlu menghapal URL 20+ services.
-
-### 1. Service Catalog Definition
-
-Setiap service wajib memiliki `catalog-info.yaml` di root repository.
-
-```yaml
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: wallet-service
-  description: Core ledger and balance management
-  annotations:
-    github.com/project-slug: payu/wallet-service
-    backstage.io/techdocs-ref: dir:.
-    sonarqube.org/project-key: payu_wallet-service
-spec:
-  type: service
-  lifecycle: production
-  owner: squad-wallet
-  system: core-banking
-  providesApis:
-    - wallet-api
-  dependsOn:
-    - resource:wallet-db
-    - component:transaction-service
-```
-
-### 2. Software Templates (Scaffolding)
-Jangan buat repo manual! Gunakan template standar PayU di IDP.
-
-*   **Spring Boot 3.4 Service**: Hexagonal Arch + Resilience4j + Kafka.
-*   **Next.js 15 Frontend**: Tailwind + React Query + ShadcnUI.
-*   **Python AI Service**: FastAPI + Pydantic + PyTorch.
-
---- 
-
-
----
-
-## 🎬 Slidev - Developer Presentations
-
-### Quick Start
-
-```bash
-pnpm create slidev    # Create project
-pnpm run dev          # Start dev server
-pnpm run export       # Export to PDF
-```
-
-### Basic Syntax
-
-```md
----
-theme: default
-title: My Presentation
----
-
-# First Slide
-
-Content here
-
----
-
-# Second Slide
-
-More content
-
-<!--
-Presenter notes go here
--->
-```
-
-### Code Highlighting
-
-```md
-# Code Example
-
-\`\`\`typescript {2,3}
-function transfer(amount: number) {
-  validateAmount(amount);  // highlighted
-  executeTransfer(amount); // highlighted
-  return { success: true };
-}
-\`\`\`
-```
-
-### Click-Based Animations
-
-```md
-\`\`\`typescript {1|2-3|all}
-const user = await fetchUser()
-const balance = await getBalance(user.id)
-return { user, balance }
-\`\`\`
-```
-
-### Two-Column Layout
-
-```md
----
-layout: two-cols
----
-
-# Left Column
-
-Content on the left side
-
-::right::
-
-# Right Column
-
-Content on the right side
-```
-
-### Monaco Editor (Live Code)
-
-```md
-\`\`\`typescript {monaco}
-// Editable code block
-const greeting = "Hello World"
-console.log(greeting)
-\`\`\`
-```
-
-### Mermaid Diagrams
-
-```md
-\`\`\`mermaid
-sequenceDiagram
-    Client->>BFF: POST /transfer
-    BFF->>AccountService: validate()
-    AccountService-->>BFF: OK
-    BFF-->>Client: 201 Created
-\`\`\`
-```
-
-### Common Layouts
-
-| Layout | Purpose |
-|--------|---------|
-| `cover` | Title/cover slide |
-| `center` | Centered content |
-| `two-cols` | Two columns (use `::right::`) |
-| `image-right` | Content + image |
-| `section` | Section divider |
-
-### Export Options
-
-```bash
-# Export to PDF
-slidev export
-
-# Export with dark mode
-slidev export --dark
-
-# Export to PPTX
-slidev export --format pptx
-```
-
----
-
-## 🔍 Developer Experience Checklist
-
-### Git & PR
-- [ ] Branch follows naming convention
-- [ ] Commits follow Conventional Commits
-- [ ] PR has proper description and testing evidence
-- [ ] Code review feedback is constructive
-
-### TypeScript
-- [ ] No `any` types (use `unknown` + type guards)
-- [ ] Zod schemas for API input validation
-- [ ] Discriminated unions for state management
-
-### Documentation
-- [ ] README updated if APIs changed
-- [ ] ADR created for architectural decisions
-- [ ] Slidev presentation for major features
-
-### Tooling
-- [ ] Pre-commit hooks configured
-- [ ] VS Code settings shared in `.vscode/`
-- [ ] CI/CD pipeline includes lint + test + security
-
----
-*Last Updated: 2026-05-04*
-
+# DX Engineer
+
+Make developer workflows predictable and documented: consistent Git hygiene,
+fast local checks, verified tooling, and type-safe code. Read the target app's
+`package.json`, `tsconfig.json`, hook files under `.husky/`, and existing
+scripts before changing behavior. Reuse the project's tooling before adding a
+new dependency or script.
+
+## Context7 documentation gate
+
+Before writing or changing code that uses a library, framework, SDK, API, CLI,
+or cloud service:
+
+1. Read the app's `package.json` (or POM) to determine the exact version in use.
+2. Resolve the library in Context7. Prefer the official, high-reputation result
+   and pin the query to the repository version when that version is available.
+3. Query one concrete topic at a time: API, configuration, testing, migration,
+   or integration behavior. Use the returned documentation as the source of
+   truth; do not rely on remembered annotations, script names, or property
+   namespaces.
+4. If the exact version is not indexed, use the nearest official version only
+   as a stated fallback, then verify the actual API in the project source
+   before editing.
+5. Re-resolve and re-query after changing a dependency version. Do not mix
+   examples from different major versions.
+
+Use Context7 for husky (v9 hook setup), commitlint (rules and config),
+lint-staged (staged-file linting), Slidev (syntax and export), and Backstage
+(catalog descriptor and TechDocs). Context7 does not replace project inspection
+for team conventions.
+
+## Git workflow and hooks
+
+- Use a simple, effective branching model: a protected default branch, an
+  integration branch, short-lived `feat/<ticket>-<description>` branches, and
+  `hotfix/<description>` from the default branch when needed.
+- Enforce Conventional Commits (`type(scope): subject`) with types `feat`, `fix`,
+  `perf`, `refactor`, `test`, `docs`, `chore`, `ci`, `style`, `build`, `revert`;
+  breaking changes use a footer or `!` and trigger a MAJOR bump (SemVer).
+- Wire hooks with husky v9 (`npx husky init`, `prepare: "husky"` in
+  `package.json`) and validate commit messages with commitlint
+  (`extends: ['@commitlint/config-conventional']`). Use lint-staged for fast
+  pre-commit checks on staged files only (ESLint `--fix`, Prettier `--write`),
+  plus a type check and tests for changed files; leave the full suite to
+  pre-push or CI.
+- A solid hook layout:
+  - `.husky/pre-commit` — lint-staged, `tsc --noEmit` (or the project's type
+    check), tests for changed files.
+  - `.husky/pre-push` — full test suite, type check, secret scan, and a
+    `console.log` scan for production code.
+  - `.husky/commit-msg` — commitlint `--edit $1` (or the existing validation).
+- Never bypass hooks with `--no-verify` except as an emergency escape hatch,
+  and say so explicitly when it is used. Keep hooks fast so they are not a
+  reason to bypass them.
+
+## Pull requests and review standards
+
+- Follow the project's PR expectations: summary, type of change, testing
+  evidence, and a checklist covering tests, documentation, secrets, and commit
+  conventions.
+- Review on the pillars: correctness (edge cases, nulls, empty input), clean
+  code (SOLID, DRY, naming), performance (N+1, memory, blocking), security
+  (authz, validation), and testability (dependency injection, isolation).
+- Make review comments constructive and specific; propose an alternative when
+  flagging a problem, and avoid bare verdicts such as "this is wrong".
+- Use the project's domain rules as review anchors — for a financial platform,
+  that includes precise decimal money handling, immutable ledgers with reversal
+  entries, idempotency keys on mutations, atomic event publishing (outbox),
+  ports-and-adapters boundaries, and PII masking.
+
+## TypeScript patterns
+
+- Use branded types for domain identifiers so different ID types cannot be
+  mixed at compile time.
+- Model state machines with discriminated unions and exhaustively switch on the
+  discriminant; let TypeScript narrow the payload.
+- Use mapped types and template literal types for type-safe route strings, and
+  conditional types only where the shape genuinely branches.
+- Write type guards (`state is Extract<State, { status: 'done' }>`) instead of
+  scattering `as` casts; prefer `unknown` over `any` at trust boundaries.
+- Validate runtime input with the project's actual validation library (for
+  example zod) and infer the static type from the schema. Do not invent
+  validation libraries the project does not use.
+- Keep functional helpers small and single-purpose; a `pipe` or `Result` helper
+  is only worth it when it removes real duplication.
+
+## Documentation and presentations
+
+- Write technical docs close to the code: README updates when APIs change, ADRs
+  for architectural decisions, and TechDocs refs pointing at the changed
+  directory in a developer portal catalog.
+- Use Slidev for developer presentations. Verify the exact syntax and export
+  flags in Context7 before relying on them (frontmatter layouts such as
+  `two-cols`, `v-click`/`v-clicks`, `{monaco}`, mermaid diagrams, `slidev
+  export --format pptx`).
+- Keep slides source-controlled next to the content they explain and export for
+  the audience; do not commit generated artifacts unless the project already
+  does.
+- Document developer workflows (hooks, setup, troubleshooting) in the project's
+  docs folder so the onboarding path is self-service.
+
+## Developer portal (Backstage)
+
+- Keep the catalog file (for example `catalog-info.yaml`) the single source of
+  truth for the developer portal: every service, website, app, library, and
+  resource needs an entry with an owner, lifecycle, TechDocs ref, and accurate
+  `dependsOn`/`providesApis` relationships. Verify the descriptor format in
+  Context7 before adding a new kind or annotation.
+- Use `backstage.io/techdocs-ref: dir:<path>` pointing at the actual
+  documentation directory, and platform annotations (for example
+  `backstage.io/kubernetes-id`) where the workload exists.
+- Prefer the project's software templates over manual scaffolding when a new
+  repo or service is requested; treat templates as the approved baseline, not a
+  suggestion.
+- Keep the catalog consistent with the repository: adding a service without a
+  catalog entry, or a TechDocs ref without docs, is a DX debt to flag.
+
+## DX quality gate
+
+- Pre-commit checks: lint-staged on staged files, type check, and tests for
+  changed files only.
+- Pre-push or CI checks: full test suite with coverage, type check, secret
+  scan, and no `console.log` in production code.
+- CI should gate the same checks that run locally so `--no-verify` cannot hide
+  failures.
+- Test hooks and scripts as behavior: verify the exit code and message for a
+  valid and an invalid commit message, a failing lint, and a failing type
+  check. Do not claim a hook works without command output.
+
+## Review checklist
+
+- [ ] Context7 resolved the exact tool/library and the pinned version was checked.
+- [ ] A failing test existed before production behavior changed.
+- [ ] Commit messages follow Conventional Commits and hooks enforce them without `--no-verify` shortcuts.
+- [ ] Hooks run only staged or related checks, and full checks run in CI or pre-push.
+- [ ] TypeScript uses branded types, discriminated unions, and type guards; no new `any` at trust boundaries.
+- [ ] Runtime validation uses the project's actual validation library and version.
+- [ ] Docs, ADRs, and Slidev decks are updated with the change and referenced from the portal catalog.
+- [ ] The catalog reflects new or changed components, owners, and dependencies.
+- [ ] No hardcoded secrets, `console.log` in production code, or PII in logs and docs.
+- [ ] Tests cover real behavior and the project quality gate passes with command output.
+
+## References
+
+- [husky setup and hooks](https://typicode.github.io/husky/)
+- [commitlint rules and config](https://commitlint.js.org/reference/rules)
+- [lint-staged](https://github.com/lint-staged/lint-staged)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Slidev syntax](https://sli.dev/guide/syntax)
+- [Slidev layouts](https://sli.dev/guide/layout)
+- [Slidev monaco editor](https://sli.dev/features/monaco-editor)
+- [Slidev export](https://sli.dev/guide/exporting)
+- [Backstage catalog descriptor format](https://backstage.io/docs/features/software-catalog/descriptor-format)
