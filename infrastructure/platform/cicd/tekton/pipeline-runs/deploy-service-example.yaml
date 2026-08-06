@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: account-service-deploy-sit-$(TIMESTAMP)
+  generateName: account-service-deploy-sit-
   namespace: payu-cicd
   labels:
     app: payu
@@ -10,25 +10,27 @@ metadata:
     environment: sit
 spec:
   pipelineRef:
-    name: payu-deploy-pipeline
+    name: payu-deploy-gitops-pipeline
   params:
     - name: service-name
       value: account-service
     - name: environment
       value: sit
-    - name: image-tag
-      value: latest
-    - name: namespace
-      value: payu-sit
-    - name: replicas
-      value: "3"
-    - name: deployment-strategy
-      value: bluegreen
-    - name: rollback-on-failure
-      value: "true"
+    - name: image-digest
+      value: sha256:fe3a614b276c8bcb7e16c766c20f29cef41c4ee00e09719ffa2bbdd3dc61bb1f
+    - name: push-changes
+      value: "false"
+    - name: environment-base-url
+      value: http://gateway-service.payu-sit.svc:8080
+    - name: schema-url
+      value: http://gateway-service.payu-sit.svc:8080/q/openapi.json
   workspaces:
-    - name: manifest-dir
-      persistentVolumeClaim:
-        claimName: tekton-manifests-pvc
-      subPath: manifests
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
   timeout: 45m

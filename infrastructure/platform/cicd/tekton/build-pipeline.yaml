@@ -55,7 +55,6 @@ spec:
       description: Optional Maven settings.xml workspace
     - name: dockerconfig
       description: Optional container registry credentials workspace
-      optional: true
   tasks:
     # ── Step 1: Clone git repo ──
     - name: fetch-repository
@@ -194,7 +193,7 @@ spec:
         - deep-secret-scan
         - semgrep-scan
       taskRef:
-        name: maven-java21
+        name: maven-java25
       when:
         - input: "$(params.service-type)"
           operator: in

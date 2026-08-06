@@ -1,0 +1,81 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: promote-image
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: Copy one verified image digest into the target environment registry namespace.
+  params:
+    - name: service-name
+      type: string
+    - name: environment
+      type: string
+    - name: image-digest
+      type: string
+    - name: registry-url
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: source-namespace
+      type: string
+      default: payu-dev
+    - name: push-changes
+      type: string
+      default: "false"
+  steps:
+    - name: ensure-target-imagestream
+      image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978578dd8c57b2c131adff663df26
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        case "$(params.environment)" in
+          sit) target_namespace=payu-sit ;;
+          uat) target_namespace=payu-uat ;;
+          preprod) target_namespace=payu-preprod ;;
+          prod) target_namespace=payu ;;
+          *) echo "Unsupported promotion environment: $(params.environment)" >&2; exit 1 ;;
+        esac
+
+        if [[ "$(params.environment)" == "prod" && "$(params.push-changes)" != "true" ]]; then
+          echo "Production image promotion requires push-changes=true" >&2
+          exit 1
+        fi
+
+        oc create imagestream "$(params.service-name)" \
+          --namespace "$target_namespace" \
+          --dry-run=client -o yaml | oc apply -f -
+    - name: copy-digest
+      image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978578dd8c57b2c131adff663df26
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        digest="$(params.image-digest)"
+        if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+          echo "image-digest must be a sha256 digest" >&2
+          exit 1
+        fi
+
+        case "$(params.environment)" in
+          sit) target_namespace=payu-sit ;;
+          uat) target_namespace=payu-uat ;;
+          preprod) target_namespace=payu-preprod ;;
+          prod) target_namespace=payu ;;
+          *) echo "Unsupported promotion environment: $(params.environment)" >&2; exit 1 ;;
+        esac
+
+        registry="$(params.registry-url)"
+        source_image="${registry}/$(params.source-namespace)/$(params.service-name)@${digest}"
+        target_repository="${registry}/${target_namespace}/$(params.service-name)"
+        target_tag="sha256-${digest#sha256:}"
+        authfile=/tmp/registry-auth.json
+        token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+        auth=$(printf 'unused:%s' "$token" | base64 -w0)
+        printf '{"auths":{"%s":{"auth":"%s"}}}' "$registry" "$auth" > "$authfile"
+
+        oc image mirror \
+          "${source_image}" \
+          "${target_repository}:${target_tag}" \
+          --registry-config="$authfile"

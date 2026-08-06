@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: account-service-test-$(TIMESTAMP)
+  generateName: account-service-test-
   namespace: payu-cicd
   labels:
     app: payu
@@ -25,13 +25,11 @@ spec:
       value: "true"
   workspaces:
     - name: source
-      persistentVolumeClaim:
-        claimName: payu-build-workspace
-      subPath: source
-    - name: maven-settings
-      configMap:
-        name: maven-settings
-    - name: sonarqube-settings
-      secret:
-        secretName: sonarqube-credentials
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
   timeout: 2h

@@ -1,8 +1,23 @@
-# Method of Procedure (MOP) - PayU Infrastructure Deployment
+# Method of Procedure (MOP) - PayU Shared Infrastructure Deployment
 
 > Current operational runbook for deploying PayU infrastructure on Red Hat OpenShift.
 > This replaces the obsolete Crunchy/Postgres example guide and uses the current
 > Kustomize entrypoints in `infrastructure/`.
+
+Environment-specific execution is split into dedicated runbooks. Use this file
+for shared bootstrap, dependency order, common rollback rules, and troubleshooting;
+use the matching environment runbook for promotion gates and acceptance criteria.
+
+| Environment | Runbook |
+|:---|:---|
+| Development | [INFRASTRUCTURE_DEPLOYMENT_DEV.md](INFRASTRUCTURE_DEPLOYMENT_DEV.md) |
+| SIT | [INFRASTRUCTURE_DEPLOYMENT_SIT.md](INFRASTRUCTURE_DEPLOYMENT_SIT.md) |
+| UAT | [INFRASTRUCTURE_DEPLOYMENT_UAT.md](INFRASTRUCTURE_DEPLOYMENT_UAT.md) |
+| Preprod | [INFRASTRUCTURE_DEPLOYMENT_PREPROD.md](INFRASTRUCTURE_DEPLOYMENT_PREPROD.md) |
+| Production | [INFRASTRUCTURE_DEPLOYMENT_PROD.md](INFRASTRUCTURE_DEPLOYMENT_PROD.md) |
+
+The environment runbooks are intentionally thin: shared commands remain here,
+while environment-specific gates must not be inferred from another environment.
 
 ## Document Control
 
@@ -10,10 +25,10 @@
 |:---|:---|
 | Scope | Infrastructure bootstrap, platform services, workload deployment, verification, rollback |
 | Target platform | Red Hat OpenShift 4.20+ |
-| Last verified cluster | OCP 4.20.29, Kubernetes v1.35.6, 8 Ready nodes (3 control-plane + 5 workers, 3 AZs) |
-| Last verified date | 2026-08-04 |
-| Primary namespace | `payu-dev` for current data, messaging, cache, and application workloads |
-| Change mode | GitOps (ArgoCD `automated` sync, no prune/self-heal) after bootstrap; manual `oc apply` only for operator-managed resources (ArgoCD CR, Image config) |
+| Last verified cluster | OCP 4.22.7, Kubernetes v1.35.6, 8 Ready nodes (3 control-plane + 5 workers, 3 AZs) |
+| Last verified date | 2026-08-06 |
+| Primary namespaces | `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |
+| Change mode | GitOps ArgoCD ApplicationSets with automated sync, prune, and self-heal after bootstrap; manual `oc apply` only for approved operator/bootstrap resources |
 
 ## Critical Drift Notes
 
@@ -41,7 +56,7 @@ Current state differs from older docs:
 4. Apply in dependency order: namespaces, operators, data/messaging, identity, API management shell, images, workloads.
 5. Stop the deployment if any infrastructure CR reports `Ready=False`, `HasErrors=True`, CrashLoopBackOff, or recent Warning events.
 6. Do not apply `3scale/apimanager.yaml` until external backing-store, storage, and Vault-managed secrets are available.
-7. Automated GitOps sync (`syncPolicy.automated`, no prune/self-heal) is enabled on `payu-environments`, `payu-environment-platform`, and `payu-identity` ApplicationSets (2026-08-01). Prune/self-heal remain OFF until the promotion gate sequence SIT→UAT→preprod→prod completes.
+7. Automated GitOps sync (`syncPolicy.automated.prune: true` and `selfHeal: true`) is enabled on the environment/platform/identity ApplicationSets. Production still requires its Argo sync window and approval gates; do not bypass them with direct `oc apply`.
 8. ArgoCD Application objects are resolved with the explicit group `applications.argoproj.io` — `oc get application` resolves to the `app.k8s.io` shadow CRD (L-171).
 9. LitmusChaos execution plane: `infrastructure/platform/security/litmus/` (operator bundle) + `infrastructure/platform/security/chaos/litmus/` (SIT overlay: RBAC, experiments, ChaosEngine, NetworkPolicy). Images are digest-pinned via `mirror.gcr.io`; the registry must stay in `image.config.openshift.io/cluster` allowedRegistries.
 10. SIT exposes a gateway Route (`gateway-sit.apps.fajjjar.my.id`, edge TLS) for DAST/fuzzing/E2E; OpenShift Route port uses `spec.port.targetPort` at top level (not nested under `to`, and no `name` field — L-172/173 lessons).

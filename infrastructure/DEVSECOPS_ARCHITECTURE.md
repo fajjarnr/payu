@@ -5,8 +5,8 @@
 | Field               | Value                                               |
 | ------------------- | --------------------------------------------------- |
 | **Versi**           | **1.4.0**                                           |
-| **Status**          | Implementasi berjalan — SIT gates live (2026-08-01) |
-| **Tanggal**         | 2026-08-01                                          |
+| **Status**          | Implementasi berjalan — dev gates + SIT promotion live; UAT/preprod/prod pending (2026-08-06) |
+| **Tanggal**         | 2026-08-06                                          |
 | **Target Cluster**  | `payu.ocp.fajjjar.my.id` (OCP 4.20.x) — production platform; sandbox/lab cluster (mis. `cluster-*` OpenTLC) hanya untuk development dan tidak mencerminkan status di dokumen ini |
 | **Author**          | Platform Engineering Team                           |
 | **Klasifikasi**     | CONFIDENTIAL _(Internal Personal Project Use Only)_ |
@@ -60,6 +60,8 @@
 > | 🔵 **Lab Essential** | Wajib untuk lab/personal project | Segera — fondasi keamanan dasar |
 > | 🟡 **Lab Recommended** | Disarankan untuk lab, value tinggi | Jika waktu dan resource memungkinkan |
 > | 🟠 **Enterprise Target** | Aspirational — untuk production enterprise | Saat scaling ke multi-tenant/regulated environment |
+
+> **Evidence snapshot (2026-08-06):** Tekton dev test `account-service-test-8wq8w` completed with fetch, unit, architecture, integration, and report tasks succeeded. SIT promotion `account-service-deploy-sit-6d4jx` completed with immutable image promotion, GitOps write-back, Argo sync-wait, ZAP baseline, k6 smoke, Schemathesis, and notification succeeded. UAT, preprod, and production promotion remain open pending registry/Vault credentials, their environment gates, and production approval.
 
 ## 1. Executive Summary
 

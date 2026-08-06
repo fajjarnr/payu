@@ -40,7 +40,7 @@ spec:
   tasks:
     - name: validate-coverage
       taskRef:
-        name: maven-java21
+        name: maven-java25
       when:
         - input: "$(params.service-type)"
           operator: in

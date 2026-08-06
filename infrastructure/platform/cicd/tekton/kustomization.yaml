@@ -5,11 +5,13 @@ resources:
   # OpenShift Pipelines operator configuration
   - pipelines.yaml
   - rhacs-central-ca.yaml
+  - vault-ci-credentials.yaml
 
   # Tasks
   - tasks/argocd-sync-task.yaml
   - tasks/gitops-writeback-task.yaml
   - tasks/buildah-task.yaml
+  - tasks/promote-image-task.yaml
   - tasks/deploy-task.yaml
   - tasks/gitleaks-task.yaml
   - tasks/grype-task.yaml

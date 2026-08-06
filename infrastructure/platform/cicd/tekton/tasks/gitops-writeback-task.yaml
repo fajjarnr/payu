@@ -47,6 +47,10 @@ spec:
             exit 1
             ;;
         esac
+        if [ "$(params.environment)" = "prod" ] && [ "$(params.push-changes)" != "true" ]; then
+          echo "[X] Production rollback/promotion requires a pushed Git commit" >&2
+          exit 1
+        fi
 
         TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}"
         if [ ! -d "$TARGET_DIR" ]; then
@@ -62,13 +66,43 @@ spec:
         IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
 
         cd "$TARGET_DIR"
-        # Replace the newName of the matching images entry without requiring kustomize.
-        awk -v name="$IMAGE_NAME" -v ref="$IMAGE_REF" '
-          found && /newName:/ { sub(/newName:.*/, "newName: " ref); print; found=0; next }
-          /^[[:space:]]*- name:[[:space:]]*image-registry/ { found=0 }
-          $0 ~ ("- name: " name "$") { found=1 }
+        if ! grep -Fq -- "- name: $IMAGE_NAME" kustomization.yaml; then
+          echo "[X] Image entry not found for $IMAGE_NAME" >&2
+          exit 1
+        fi
+
+        # Keep the repository in newName and store the immutable reference in
+        # Kustomize's digest field. A digest embedded in newName is not a
+        # portable Kustomization image transform.
+        awk -v name="$IMAGE_NAME" -v target="$IMAGE_NAME" -v digest="$(params.image-digest)" '
+          $0 ~ ("- name: " name "$") { found=1; print; next }
+          found && /newTag:/ {
+            match($0, /^[[:space:]]*/)
+            print substr($0, RSTART, RLENGTH) "digest: " digest
+            found=0
+            next
+          }
+          found && /digest:/ {
+            sub(/digest:.*/, "digest: " digest)
+            print
+            found=0
+            next
+          }
+          found && /newName:/ {
+            sub(/newName:.*/, "newName: " target)
+            print
+            match($0, /^[[:space:]]*/)
+            print substr($0, RSTART, RLENGTH) "digest: " digest
+            found=0
+            next
+          }
           { print }
         ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+
+        if ! grep -Fq -- "digest: $(params.image-digest)" kustomization.yaml; then
+          echo "[X] Failed to write digest for $IMAGE_NAME" >&2
+          exit 1
+        fi
 
         git config --global --add safe.directory "$(workspaces.source.path)"
         git config --global user.email "gitops-bot@payu.internal"

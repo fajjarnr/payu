@@ -7,125 +7,105 @@ metadata:
     app: payu
     type: rollback
 spec:
-  description: |
-    Rollback pipeline for PayU services with quick recovery options.
-    Fixed for OpenShift Pipelines 1.21+ (no ClusterTask — uses resolver: cluster).
+  description: Roll back by writing a previously verified image digest to Git and letting ArgoCD reconcile it.
   params:
     - name: service-name
       type: string
-      description: Name of the service to rollback
-    - name: namespace
+      description: Name of the service to roll back
+    - name: environment
       type: string
-      description: Target namespace
-      default: payu-dev
-    - name: rollback-to
+      description: Target environment (dev, sit, uat, preprod, prod)
+      default: sit
+    - name: image-digest
       type: string
-      description: Target revision to rollback to (empty for previous version)
-      default: ""
-    - name: create-backup
+      description: Previously verified immutable sha256 digest
+    - name: infra-repo-url
       type: string
-      description: Create backup before rollback
-      default: "true"
+      default: https://github.com/fajjarnr/payu.git
+    - name: git-revision
+      type: string
+      default: main
+    - name: push-changes
+      type: string
+      description: Push the rollback commit; mandatory for production
+      default: "false"
+  workspaces:
+    - name: source
+      description: GitOps repository workspace
   tasks:
-    - name: verify-deployment
+    - name: fetch-infra-repo
       taskRef:
         resolver: cluster
         params:
           - name: kind
             value: task
           - name: name
-            value: openshift-client
+            value: git-clone
           - name: namespace
             value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: source
       params:
-        - name: SCRIPT
-          value: |
-            echo "=== Current Deployment State ==="
-            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
-            echo "=== Replicas ==="
-            oc get pods -n $(params.namespace) -l app=$(params.service-name)
+        - name: URL
+          value: $(params.infra-repo-url)
+        - name: REVISION
+          value: $(params.git-revision)
+        - name: DELETE_EXISTING
+          value: "true"
 
-    - name: get-deployment-history
+    - name: rollback-writeback
       runAfter:
-        - verify-deployment
+        - promote-image
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
+        name: gitops-writeback
+      workspaces:
+        - name: source
+          workspace: source
       params:
-        - name: SCRIPT
-          value: |
-            echo "=== Deployment History ==="
-            oc rollout history deployment/$(params.service-name) -n $(params.namespace)
+        - name: service-name
+          value: $(params.service-name)
+        - name: environment
+          value: $(params.environment)
+        - name: image-digest
+          value: $(params.image-digest)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: push-changes
+          value: $(params.push-changes)
 
-    - name: perform-rollback
+    - name: promote-image
       runAfter:
-        - get-deployment-history
+        - fetch-infra-repo
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
+        name: promote-image
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["sit", "uat", "preprod", "prod"]
       params:
-        - name: SCRIPT
-          value: |
-            if [ -n "$(params.rollback-to)" ]; then
-              echo "Rolling back to specific revision: $(params.rollback-to)"
-              oc rollout undo deployment/$(params.service-name) -n $(params.namespace) --to-revision=$(params.rollback-to)
-            else
-              echo "Rolling back to previous version"
-              oc rollout undo deployment/$(params.service-name) -n $(params.namespace)
-            fi
+        - name: service-name
+          value: $(params.service-name)
+        - name: environment
+          value: $(params.environment)
+        - name: image-digest
+          value: $(params.image-digest)
+        - name: push-changes
+          value: $(params.push-changes)
 
-    - name: wait-for-rollback
+    - name: argocd-sync-wait
       runAfter:
-        - perform-rollback
+        - rollback-writeback
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
+        name: argocd-sync-wait
       params:
-        - name: SCRIPT
-          value: |
-            echo "Waiting for rollback to complete..."
-            oc rollout status deployment/$(params.service-name) -n $(params.namespace) --timeout=300s
-            echo "Rollback completed successfully"
-
-    - name: verify-rollback
-      runAfter:
-        - wait-for-rollback
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: openshift-client
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: SCRIPT
-          value: |
-            echo "=== Post-Rollback State ==="
-            oc get pods -n $(params.namespace) -l app=$(params.service-name)
-            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
+        - name: APPLICATION_NAME
+          value: payu-$(params.environment)
+        - name: NAMESPACE
+          value: openshift-gitops
 
   finally:
-    - name: generate-report
+    - name: rollback-report
       taskRef:
         resolver: cluster
         params:
@@ -138,13 +118,7 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            echo "=== Rollback Summary Report ==="
+            echo "=== GitOps Rollback Summary ==="
             echo "Service: $(params.service-name)"
-            echo "Namespace: $(params.namespace)"
-            echo "Timestamp: $(date)"
-            echo ""
-            echo "Deployment Status:"
-            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
-            echo ""
-            echo "Pod Status:"
-            oc get pods -n $(params.namespace) -l app=$(params.service-name)
+            echo "Environment: $(params.environment)"
+            echo "Digest: $(params.image-digest)"

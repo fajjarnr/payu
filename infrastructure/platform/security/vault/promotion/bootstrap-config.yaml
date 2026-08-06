@@ -38,6 +38,16 @@ data:
       vault policy write "payu-${env}" "/tmp/payu-${env}.hcl"
     done
 
+    cat >/tmp/payu-cicd.hcl <<EOF
+    path "secret/data/payu/cicd/*" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/payu/cicd/*" {
+      capabilities = ["read", "list"]
+    }
+    EOF
+    vault policy write payu-cicd /tmp/payu-cicd.hcl
+
     vault write auth/kubernetes/role/payu-sit \
       bound_service_account_names=vault-eso,vault-secrets-operator \
       bound_service_account_namespaces=payu-sit \
@@ -67,6 +77,14 @@ data:
       bound_service_account_namespaces=payu \
       audience=vault \
       policies=payu-prod \
+      token_ttl=15m \
+      token_max_ttl=30m
+
+    vault write auth/kubernetes/role/payu-cicd \
+      bound_service_account_names=vault-secrets-operator \
+      bound_service_account_namespaces=payu-cicd \
+      audience=vault \
+      policies=payu-cicd \
       token_ttl=15m \
       token_max_ttl=30m
 

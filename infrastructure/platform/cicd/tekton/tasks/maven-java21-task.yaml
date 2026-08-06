@@ -1,16 +1,15 @@
-# Custom Maven Task with JDK 25 for PayU services
-# Replaces the cluster maven task which uses UBI-minimal without JDK 25
+# Custom Maven Task with JDK 25 for PayU services.
 # ============================================================
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: maven-java21
+  name: maven-java25
   namespace: payu-cicd
   labels:
     app: payu
     type: build
 spec:
-  description: Maven build task with Red Hat OpenJDK 21 for PayU services.
+  description: Maven build task with Red Hat OpenJDK 25 for PayU services.
   params:
     - name: GOALS
       type: array

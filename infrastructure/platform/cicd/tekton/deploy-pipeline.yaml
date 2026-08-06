@@ -94,7 +94,7 @@ spec:
     # ── Step 2: OpenShift GitOps / Kustomize Write-Back ──
     - name: gitops-writeback
       runAfter:
-        - fetch-infra-repo
+        - promote-image
       workspaces:
         - name: source
           workspace: source
@@ -113,6 +113,29 @@ spec:
           value: $(params.registry-namespace)
         - name: git-revision
           value: $(params.git-revision)
+        - name: push-changes
+          value: $(params.push-changes)
+
+    - name: promote-image
+      runAfter:
+        - fetch-infra-repo
+      taskRef:
+        name: promote-image
+      when:
+        - input: "$(params.environment)"
+          operator: in
+          values: ["sit", "uat", "preprod", "prod"]
+      params:
+        - name: service-name
+          value: $(params.service-name)
+        - name: environment
+          value: $(params.environment)
+        - name: image-digest
+          value: $(params.image-digest)
+        - name: registry-url
+          value: $(params.registry-url)
+        - name: source-namespace
+          value: $(params.registry-namespace)
         - name: push-changes
           value: $(params.push-changes)
 

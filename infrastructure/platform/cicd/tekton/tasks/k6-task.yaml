@@ -37,6 +37,8 @@ spec:
       env:
         - name: BASE_URL
           value: $(params.BASE_URL)
+        - name: GATEWAY_URL
+          value: $(params.BASE_URL)
       script: |
         #!/bin/sh
         set -eu

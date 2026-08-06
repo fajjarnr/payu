@@ -4895,3 +4895,7 @@ Keep cancellation deduplication on read-only methods only. Mutation safety belon
 ### L-211: Dev-only work needs dev-only completion gates (2026-08-04)
 
 When the project scope is `payu-dev` rather than a production rollout, a completed dev canary is sufficient evidence for a dev backlog item. Do not leave a 24-hour monitoring or SIT/UAT/preprod/prod promotion gate attached to a dev-only architecture task; track production promotion separately only when that environment is in scope.
+
+### L-212: Data Grid Operator PKCS#12 secrets need a real binary contract (2026-08-06)
+
+When an environment Data Grid entered CrashLoopBackOff with `ELY02035: KeyStore type could not be detected`, the VSO destination contained a base64 string instead of a mounted PKCS#12 truststore. Use `truststore.p12` plus `truststore-password`, decode binary Vault values in the VSO transformation, and verify the live secret and fresh pod logs. Also push the manifest before testing: ArgoCD will reconcile uncommitted live patches back to `main`.

@@ -69,7 +69,7 @@ spec:
       runAfter:
         - fetch-repository
       taskRef:
-        name: maven-java21
+        name: maven-java25
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -87,13 +87,15 @@ spec:
             - -am
             - test
             - "-Dtest=!**/*Integration*,!**/*IT*"
+            - "-Dsurefire.failIfNoSpecifiedTests=false"
 
     # Architecture Tests (Spring Boot only)
     - name: architecture-tests
       runAfter:
         - fetch-repository
+        - unit-tests
       taskRef:
-        name: maven-java21
+        name: maven-java25
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -111,6 +113,7 @@ spec:
             - -am
             - test
             - "-Dtest=ArchTest*"
+            - "-Dsurefire.failIfNoSpecifiedTests=false"
 
     # Python Tests
     - name: python-tests
@@ -135,8 +138,9 @@ spec:
     - name: integration-tests
       runAfter:
         - fetch-repository
+        - architecture-tests
       taskRef:
-        name: maven-java21
+        name: maven-java25
       when:
         - input: "$(params.run-integration-tests)"
           operator: in
@@ -154,6 +158,7 @@ spec:
             - -am
             - test
             - "-Dtest=**/*Integration*,**/*IT*"
+            - "-Dsurefire.failIfNoSpecifiedTests=false"
 
     # Contract Tests (Pact verification)
     - name: contract-tests

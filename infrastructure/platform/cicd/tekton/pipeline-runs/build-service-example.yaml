@@ -34,4 +34,7 @@ spec:
               storage: 5Gi
     - name: maven-settings
       emptyDir: {}
+    - name: dockerconfig
+      secret:
+        secretName: redhat-registry-pull
   timeout: 1h30m
