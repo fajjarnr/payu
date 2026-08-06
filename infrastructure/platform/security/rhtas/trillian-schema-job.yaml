@@ -6,6 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/name: rhtas-trillian-schema
     app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "1.4.2"
+    team: platform
 spec:
   backoffLimit: 6
   ttlSecondsAfterFinished: 86400
@@ -14,6 +16,8 @@ spec:
       labels:
         app.kubernetes.io/name: rhtas-trillian-schema
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "1.4.2"
+        team: platform
     spec:
       restartPolicy: OnFailure
       securityContext:
@@ -32,6 +36,8 @@ spec:
               echo "5faf995c3ef22fd2d709830ee5af410e6fce0477b6eaf58e231bd7b8b7c7170c  /schema/storage.sql" | sha256sum --check --strict
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
           resources:
@@ -86,6 +92,8 @@ spec:
               value: require
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
           resources:
@@ -103,4 +111,3 @@ spec:
         - name: schema
           emptyDir:
             sizeLimit: 2Mi
-

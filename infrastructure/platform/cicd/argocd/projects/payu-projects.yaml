@@ -284,11 +284,17 @@ spec:
   sourceRepos:
     - "https://github.com/fajjarnr/payu.git"
   destinations:
+    - namespace: openshift-gitops
+      server: https://kubernetes.default.svc
     - namespace: payu-cicd
       server: https://kubernetes.default.svc
     - namespace: payu-security
       server: https://kubernetes.default.svc
     - namespace: payu-sso
+      server: https://kubernetes.default.svc
+    - namespace: trusted-artifact-signer
+      server: https://kubernetes.default.svc
+    - namespace: openshift-cloud-credential-operator
       server: https://kubernetes.default.svc
     - namespace: payu-dev
       server: https://kubernetes.default.svc

@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-216: Keep Production Storage Contracts Separate from Lab Constraints (2026-08-06)
+
+**Context**: The production RHTAS base requires EFS RWX and zone-aware placement, while the lab cluster has ODF CephFS, no `efs-csi`, and no zone labels.
+
+**Lesson**:
+- Keep production manifests unchanged and isolate lab-only storage/topology changes in an overlay.
+- Validate every overlay with server-side dry-run before applying it.
+- Do not create placeholder Vault secrets to make optional integrations appear healthy; defer the integration and keep the working pipeline path explicit.
+
+**Applied evidence**: RHTAS production base remains EFS-backed; the lab overlay binds TUF via CephFS, schedules Redis by hostname, and RHTAS schema/create-tree plus Rekor/CTLog runtime checks succeeded.
+
 ## L-215: Secure Storage Must Fail Closed on Web (2026-08-04)
 
 **Context**: `expo-secure-store` is native-only; the mobile package also exposes an Expo web target, and the clear failure branch referenced a non-existent lowercase logger.

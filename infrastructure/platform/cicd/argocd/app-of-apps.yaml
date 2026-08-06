@@ -10,7 +10,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: payu
+  project: payu-platform
   source:
     repoURL: https://github.com/fajjarnr/payu.git
     targetRevision: main
@@ -196,29 +196,3 @@ data:
 
   policy.default: role:''
   scopes: "[groups,cn]"
----
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: argocd-secret
-  namespace: openshift-gitops
-  labels:
-    app: payu
-    type: argocd-secret
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    name: payu-vault
-    kind: ClusterSecretStore
-  target:
-    name: argocd-secret
-    creationPolicy: Merge
-  data:
-    - secretKey: admin.password
-      remoteRef:
-        key: payu/argocd
-        property: admin-password-bcrypt
-    - secretKey: oidc.clientSecret
-      remoteRef:
-        key: payu/argocd
-        property: oidc-client-secret

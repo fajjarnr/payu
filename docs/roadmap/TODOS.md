@@ -94,6 +94,7 @@ completion evidence.
 
 - [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
 - [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
+- [ ] Wire a secure Pipelines-as-Code Repository/webhook for the monorepo with changed-service dispatch and a Vault-backed Git write credential. The current pipeline can be run manually and its existing GitOps writeback remains the safe promotion path.
 - [ ] Tekton Tasks/Pipelines are live and fail-closed. Scoped 10-minute RHACS CI identity, OCI signature/attestation, and internal Rekor transparency are verified; signed-image admission sudah Enforce (`require-cosign-signature`, 31 image `payu-dev` di-sign); sisa: SBOM attestation retention dan provider opt-in Pact gate.
 - [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days.
 - [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.

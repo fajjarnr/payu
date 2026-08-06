@@ -5,7 +5,6 @@ resources:
   - app-of-apps.yaml
   - drift-detection.yaml
   - sync-waves.yaml
-  - image-updater
   - preview-cleanup-cronjob.yaml
   - projects
   - applicationsets

@@ -109,6 +109,8 @@ spec:
             periodSeconds: 10
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
           resources:
@@ -157,6 +159,8 @@ spec:
             periodSeconds: 5
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
           resources:
@@ -236,6 +240,8 @@ metadata:
   labels:
     app.kubernetes.io/name: rhtas-redis-proxy
     app.kubernetes.io/part-of: payu
+    app.kubernetes.io/version: "1.0.0"
+    team: platform
 spec:
   replicas: 2
   selector:
@@ -246,6 +252,8 @@ spec:
       labels:
         app.kubernetes.io/name: rhtas-redis-proxy
         app.kubernetes.io/part-of: payu
+        app.kubernetes.io/version: "1.0.0"
+        team: platform
     spec:
       securityContext:
         runAsNonRoot: true
@@ -272,6 +280,8 @@ spec:
                   key: password
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
           resources:
@@ -306,9 +316,10 @@ spec:
             periodSeconds: 10
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
             capabilities:
               drop: ["ALL"]
-            readOnlyRootFilesystem: true
           resources:
             requests:
               cpu: 25m
