@@ -11,12 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **RHTAS GitOps bootstrap**: added the declarative RHTAS ArgoCD Application with automated prune/self-heal and a lab overlay using ODF CephFS RWX storage; production manifests continue to target EFS RWX.
+- **RHTAS GitOps bootstrap**: added the declarative RHTAS ArgoCD Application with automated prune/self-heal against the production RHTAS base (EFS RWX, 3-instance CNPG, zone-aware HA).
 
 ### Fixed
 
 - **ArgoCD bootstrap validity**: removed the unsupported `ConfigManagementPlugin`, corrected the root Application project, and authorized platform destinations for RHTAS and CCO CredentialsRequests.
-- **RHTAS Kyverno admission**: added required labels and restricted filesystem settings to the custom Redis proxy and Trillian schema Job. Lab PostgreSQL/Redis topology now works with the cluster's single-zone labels and available nodes.
+- **RHTAS Kyverno admission**: added required labels and restricted filesystem settings to the custom Redis proxy and Trillian schema Job; the production base now passes server-side validation under the enforced policies.
 - **Unsafe optional integrations**: stopped deploying Image Updater and Slack Vault ExternalSecrets until a platform-scoped Vault store exists; Tekton's existing GitOps writeback remains the active promotion path.
 
 ## [1.10.39] - 2026-08-05

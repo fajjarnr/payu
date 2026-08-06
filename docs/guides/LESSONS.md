@@ -11,7 +11,7 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 - Validate every overlay with server-side dry-run before applying it.
 - Do not create placeholder Vault secrets to make optional integrations appear healthy; defer the integration and keep the working pipeline path explicit.
 
-**Applied evidence**: RHTAS production base remains EFS-backed; the lab overlay binds TUF via CephFS, schedules Redis by hostname, and RHTAS schema/create-tree plus Rekor/CTLog runtime checks succeeded.
+**Applied evidence**: RHTAS production base remains EFS-backed with zone-aware HA; the production kustomization passes server-side validation. Lab runtime gaps (`efs-csi` and zone labels) remain explicit infrastructure prerequisites.
 
 ## L-215: Secure Storage Must Fail Closed on Web (2026-08-04)
 
