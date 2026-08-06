@@ -4,11 +4,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+BACKEND = ROOT / "backend"
 COMPOSE = ROOT / "infrastructure/local/podman/podman-compose.yml"
 APICAST_CONFIG = ROOT / "infrastructure/local/podman/config/apicast-config.json"
 KAFKA_CONFIG = ROOT / "infrastructure/local/podman/config/kafka-server.properties"
 INIT_DB = ROOT / "infrastructure/local/podman/config/init-db.sql"
 WEB_CONTAINERFILE = ROOT / "frontend/web-app/Containerfile"
+MANAGE_SCRIPT = ROOT / "infrastructure/local/podman/containers/manage-podman.sh"
+GATEWAY_LOCAL = BACKEND / "gateway-service/src/main/resources/application-local.yaml"
 
 
 class PodmanComposeParityTest(unittest.TestCase):
@@ -111,8 +114,75 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertNotIn("KC_HOSTNAME_ADMIN_URL:", config)
         self.assertIn("KC_BOOTSTRAP_ADMIN_USERNAME:", config)
         self.assertIn("KC_BOOTSTRAP_ADMIN_PASSWORD:", config)
-        self.assertIn("KC_HOSTNAME: http://payu-keycloak-service:8080", config)
+        self.assertNotIn("KC_HOSTNAME:", config)
+        self.assertIn('KC_HOSTNAME_STRICT: "false"', config)
         self.assertIn('LIQUIBASE_ANALYTICS_ENABLED: "false"', config)
+
+    def test_host_run_contract_exposes_postgres_and_keycloak(self):
+        postgres = self.service_config("payu-database-rw")
+        self.assertRegex(postgres, r"(?ms)^    ports:\n      - 5432:5432$")
+
+        keycloak = self.service_config("payu-keycloak-service")
+        self.assertNotIn("KC_HOSTNAME:", keycloak)
+        self.assertIn('KC_HOSTNAME_STRICT: "false"', keycloak)
+
+        profiles = list(BACKEND.glob("*/src/main/resources/application-local.y*"))
+        profiles += list(BACKEND.glob("*/src/main/resources/application-dev.y*"))
+        self.assertTrue(profiles)
+        for profile in profiles:
+            document = profile.read_text()
+            self.assertNotIn("localhost:8080/realms/payu", document, profile)
+            self.assertNotIn("KEYCLOAK_SERVER_URL:http://localhost:8080", document, profile)
+
+    def test_host_run_profiles_reference_bootstrapped_databases(self):
+        sql = INIT_DB.read_text()
+        databases = set(re.findall(r"(?m)^CREATE DATABASE ([a-z0-9_]+);$", sql))
+        databases.add("payu_account")
+
+        profiles = list(BACKEND.glob("*/src/main/resources/application-local.y*"))
+        profiles += list(BACKEND.glob("*/src/main/resources/application-dev.y*"))
+        for profile in profiles:
+            document = profile.read_text()
+            referenced = re.findall(r"jdbc:postgresql://localhost:5432/([a-z0-9_]+)", document)
+            for database in referenced:
+                self.assertIn(database, databases, f"{profile}: {database}")
+
+            if "primary:" in document and "datasource:\n" in document:
+                has_standard_url = re.search(r"(?m)^    url: .*jdbc:postgresql", document)
+                has_hikari_primary = re.search(
+                    r"(?ms)^    primary:\n      hikari:\n        jdbc-url: .*jdbc:postgresql",
+                    document,
+                )
+                self.assertTrue(has_standard_url or has_hikari_primary, profile)
+
+    def test_host_run_profiles_use_compose_development_credentials(self):
+        profiles = list(BACKEND.glob("*/src/main/resources/application-local.y*"))
+        profiles += list(BACKEND.glob("*/src/main/resources/application-dev.y*"))
+        for profile in profiles:
+            document = profile.read_text()
+            self.assertNotIn("payu_dev_secret_password_1234", document, profile)
+            self.assertNotIn("payu-keycloak-dev-client-secret-12345", document, profile)
+            self.assertNotIn("admin_dev_pass_1234", document, profile)
+
+    def test_apps_and_api_management_have_distinct_host_ports(self):
+        def published_ports(service):
+            config = self.service_config(service)
+            return set(re.findall(r'(?m)^      - "?(\d+):\d+"?$', config))
+
+        self.assertTrue(published_ports("cms-service"))
+        self.assertTrue(published_ports("apicast"))
+        self.assertFalse(
+            published_ports("cms-service") & published_ports("apicast"),
+            "apps and api-management profiles must be runnable together",
+        )
+
+    def test_management_script_targets_the_canonical_compose_stack(self):
+        script = MANAGE_SCRIPT.read_text()
+        self.assertIn('infrastructure/local/podman/podman-compose.yml', script)
+        self.assertIn('podman compose', script)
+        self.assertIn('payu-database-rw', script)
+        self.assertNotIn('podman play', script)
+        self.assertNotIn('podman down --all', script)
 
     def test_local_app_anchor_is_hardened_and_builds_locally(self):
         anchor = re.search(r"(?s)^x-app-defaults: &app-defaults\n(.*?)^services:", self.document, re.MULTILINE)
@@ -153,6 +223,13 @@ class PodmanComposeParityTest(unittest.TestCase):
         config = gateway.group(1)
         self.assertIn("JWT_SECRET: ${JWT_SECRET:-", config)
         self.assertIn("OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-", config)
+
+    def test_gateway_has_a_host_run_local_profile(self):
+        self.assertTrue(GATEWAY_LOCAL.is_file())
+        profile = GATEWAY_LOCAL.read_text()
+        self.assertIn("jdbc:postgresql://localhost:5432/payu_gateway", profile)
+        self.assertIn("http://localhost:8099/realms/payu", profile)
+        self.assertIn("dummy_secret_for_dev_only", profile)
 
     def test_fx_and_web_app_match_dev_runtime_contract(self):
         fx = self.service_config("fx-service")

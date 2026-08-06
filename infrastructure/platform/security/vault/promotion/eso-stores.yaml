@@ -135,10 +135,10 @@ spec:
       path: secret
       version: v2
       caProvider:
-        type: ConfigMap
-        name: vault-service-ca
+        type: Secret
+        name: vault-server-tls
         namespace: payu-vault
-        key: service-ca.crt
+        key: ca.crt
       auth:
         kubernetes:
           mountPath: kubernetes
@@ -167,10 +167,10 @@ spec:
       path: secret
       version: v2
       caProvider:
-        type: ConfigMap
-        name: vault-service-ca
+        type: Secret
+        name: vault-server-tls
         namespace: payu-vault
-        key: service-ca.crt
+        key: ca.crt
       auth:
         kubernetes:
           mountPath: kubernetes
@@ -199,10 +199,10 @@ spec:
       path: secret
       version: v2
       caProvider:
-        type: ConfigMap
-        name: vault-service-ca
+        type: Secret
+        name: vault-server-tls
         namespace: payu-vault
-        key: service-ca.crt
+        key: ca.crt
       auth:
         kubernetes:
           mountPath: kubernetes
@@ -231,10 +231,10 @@ spec:
       path: secret
       version: v2
       caProvider:
-        type: ConfigMap
-        name: vault-service-ca
+        type: Secret
+        name: vault-server-tls
         namespace: payu-vault
-        key: service-ca.crt
+        key: ca.crt
       auth:
         kubernetes:
           mountPath: kubernetes

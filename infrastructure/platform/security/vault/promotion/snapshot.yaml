@@ -154,5 +154,8 @@ spec:
                       audience: vault
                       expirationSeconds: 900
             - name: vault-ca
-              configMap:
-                name: vault-service-ca
+              secret:
+                secretName: vault-server-tls
+                items:
+                  - key: ca.crt
+                    path: service-ca.crt

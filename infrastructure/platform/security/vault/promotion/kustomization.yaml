@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - aws-credentials.yaml
+  - vault-tls.yaml
   - vault-ha.yaml
   - bootstrap-config.yaml
   - eso-stores.yaml

@@ -1,0 +1,85 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: payu-vault-root-selfsigned
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: payu-vault-root-ca
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  isCA: true
+  commonName: payu-vault-root-ca
+  secretName: payu-vault-root-ca
+  duration: 87600h
+  renewBefore: 8760h
+  issuerRef:
+    name: payu-vault-root-selfsigned
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: payu-vault-ca
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  ca:
+    secretName: payu-vault-root-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-server-tls
+  namespace: payu-vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  secretName: vault-server-tls
+  duration: 2160h
+  renewBefore: 720h
+  dnsNames:
+    - vault.payu-vault.svc
+    - vault.payu-vault.svc.cluster.local
+    - vault-internal.payu-vault.svc
+    - vault-internal.payu-vault.svc.cluster.local
+    - vault-0.vault-internal.payu-vault.svc
+    - vault-0.vault-internal.payu-vault.svc.cluster.local
+    - vault-1.vault-internal.payu-vault.svc
+    - vault-1.vault-internal.payu-vault.svc.cluster.local
+    - vault-2.vault-internal.payu-vault.svc
+    - vault-2.vault-internal.payu-vault.svc.cluster.local
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    name: payu-vault-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-vso-trust
+  namespace: vault-secrets-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  secretName: vault-vso-trust
+  duration: 2160h
+  renewBefore: 720h
+  dnsNames:
+    - vault-vso-trust.vault-secrets-operator.svc.cluster.local
+  issuerRef:
+    name: payu-vault-ca
+    kind: ClusterIssuer
+    group: cert-manager.io

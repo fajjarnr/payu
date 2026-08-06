@@ -5,17 +5,18 @@ spring:
       enabled: false  # Disabled for dev by default
   datasource:
     primary:
-      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_account}
-      username: ${DB_USERNAME:payu}
-      password: ${DB_PASSWORD:payu_dev_secret_password_1234}
+      hikari:
+        jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_account}
+        username: ${DB_USERNAME:payu}
+        password: ${DB_PASSWORD:payu_secret}
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8099/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8099/realms/payu/protocol/openid-connect/certs}
 
 payu:
   gateway:

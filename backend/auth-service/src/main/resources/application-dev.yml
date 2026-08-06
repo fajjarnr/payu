@@ -6,23 +6,23 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_auth}
     username: ${DATABASE_USERNAME:payu}
-    password: ${DATABASE_PASSWORD:payu_dev_secret_password_1234}
+    password: ${DATABASE_PASSWORD:payu_secret}
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8099/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8099/realms/payu/protocol/openid-connect/certs}
 
 payu:
   keycloak:
-    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8099}
     realm: ${KEYCLOAK_REALM:payu}
     client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-keycloak-dev-client-secret-12345}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
     admin:
       username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-      password: ${KEYCLOAK_ADMIN_PASSWORD:admin_dev_pass_1234}
+      password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
   cache:
     hotrod:
       server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}

@@ -1,219 +1,82 @@
-"""
-Tests for Docker Compose infrastructure verification
-"""
+"""Read-only smoke checks for an already-running local Podman core stack."""
 
-import pytest
+import os
 import subprocess
 import time
+import unittest
+import urllib.request
+from pathlib import Path
 
 
-class TestDockerComposeVerification:
-    """Test Docker Compose up/down operations"""
+ROOT = Path(__file__).resolve().parents[2]
+COMPOSE_FILE = ROOT / "infrastructure/local/podman/podman-compose.yml"
+RUN_RUNTIME = os.getenv("PAYU_RUN_PODMAN_INTEGRATION") == "1"
 
-    COMPOSE_FILE = "infrastructure/local/podman/podman-compose.yml"
-    REQUIRED_SERVICES = [
-        "postgres",
-        "redis-native",
-        "infinispan",
-        "kafka",
-        "kafbat-ui",
-        "keycloak",
-        "vault",
-        "bi-fast-simulator",
-        "dukcapil-simulator",
-        "qris-simulator",
-        "account-service",
-        "auth-service",
-        "transaction-service",
-        "wallet-service",
-        "billing-service",
-        "notification-service",
-        "gateway-service",
-        "kyc-service",
-        "analytics-service"
-    ]
 
-    def run_command(self, cmd: list, timeout: int = 300) -> subprocess.CompletedProcess:
-        """Helper to run commands"""
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout
+class PodmanInfrastructureSmokeTest(unittest.TestCase):
+    CORE_CONTAINERS = (
+        "payu-database-rw",
+        "payu-cache",
+        "payu-kafka",
+        "payu-artemis",
+        "payu-keycloak",
+    )
+
+    def run_command(self, *command, timeout=30):
+        return subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+
+    def test_compose_provider_available(self):
+        result = self.run_command("podman", "compose", "version")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(RUN_RUNTIME, "set PAYU_RUN_PODMAN_INTEGRATION=1 after starting core infra")
+    def test_core_containers_are_healthy(self):
+        for container in self.CORE_CONTAINERS:
+            deadline = time.monotonic() + 180
+            while True:
+                result = self.run_command(
+                    "podman", "inspect", "--format", "{{.State.Health.Status}}", container
+                )
+                self.assertEqual(result.returncode, 0, f"{container}: {result.stderr}")
+                status = result.stdout.strip()
+                if status == "healthy" or time.monotonic() >= deadline:
+                    break
+                time.sleep(2)
+            self.assertEqual(status, "healthy", container)
+
+    @unittest.skipUnless(RUN_RUNTIME, "set PAYU_RUN_PODMAN_INTEGRATION=1 after starting core infra")
+    def test_core_protocols_are_usable(self):
+        checks = (
+            (
+                "postgres",
+                ("podman", "exec", "payu-database-rw", "pg_isready", "-U", "payu", "-d", "payu_account"),
+            ),
+            (
+                "data-grid",
+                (
+                    "podman", "exec", "payu-cache", "curl", "-fsS",
+                    "http://localhost:11222/rest/v2/container/health/status",
+                ),
+            ),
+            (
+                "kafka",
+                (
+                    "podman", "exec", "payu-kafka",
+                    "/opt/kafka/bin/kafka-broker-api-versions.sh",
+                    "--bootstrap-server", "localhost:9092",
+                ),
+            ),
         )
+        for name, command in checks:
+            result = self.run_command(*command, timeout=60)
+            self.assertEqual(result.returncode, 0, f"{name}: {result.stderr}")
 
-    @pytest.fixture(scope="class", autouse=True)
-    def compose_down(self):
-        """Ensure docker-compose is down after tests"""
-        yield
-        try:
-            self.run_command(["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"], timeout=120)
-        except Exception:
-            pass
+        with urllib.request.urlopen(
+            "http://localhost:8099/realms/payu/.well-known/openid-configuration",
+            timeout=10,
+        ) as response:
+            self.assertEqual(response.status, 200)
 
-    def test_docker_available(self):
-        """Test that Podman is available"""
-        result = self.run_command(["podman", "--version"])
-        assert result.returncode == 0, "Podman is not installed or not accessible"
 
-        result = self.run_command(["podman", "compose", "version"])
-        assert result.returncode == 0, "Podman Compose is not installed or not accessible"
-
-    def test_compose_up(self):
-        """Test that podman compose up works"""
-        result = self.run_command(
-            ["podman", "compose", "-f", self.COMPOSE_FILE, "up", "-d"],
-            timeout=600
-        )
-        assert result.returncode == 0, f"Failed to start podman compose: {result.stderr}"
-
-    def test_services_running(self, compose_up):
-        """Test that all required services are running"""
-        result = self.run_command(
-            ["podman", "compose", "-f", self.COMPOSE_FILE, "ps"]
-        )
-        assert result.returncode == 0, "Failed to get services status"
-
-        stdout = result.stdout
-        for service in self.REQUIRED_SERVICES:
-            assert service in stdout, f"Service {service} not found in running services"
-
-    def test_postgresql_ready(self):
-        """Test that PostgreSQL is ready to accept connections"""
-        max_retries = 30
-        for i in range(max_retries):
-            result = self.run_command([
-                "podman", "exec", "payu-postgres",
-                "pg_isready", "-U", "payu"
-            ])
-            if result.returncode == 0:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail("PostgreSQL did not become ready")
-
-    def test_databases_created(self):
-        """Test that all required databases are created"""
-        result = self.run_command([
-            "podman", "exec", "payu-postgres",
-            "psql", "-U", "payu", "-c", "\\l"
-        ])
-        assert result.returncode == 0, "Failed to list databases"
-
-        required_dbs = [
-            "payu_account",
-            "payu_auth",
-            "payu_transaction",
-            "payu_wallet",
-            "payu_notification",
-            "payu_billing",
-            "payu_kyc",
-            "payu_analytics",
-            "payu_bifast",
-            "payu_dukcapil",
-            "payu_qris"
-        ]
-
-        stdout = result.stdout
-        for db in required_dbs:
-            assert db in stdout, f"Database {db} not found"
-
-    def test_redis_ready(self):
-        """Test that Redis is ready"""
-        max_retries = 30
-        for i in range(max_retries):
-            result = self.run_command([
-                "podman", "exec", "payu-redis-native",
-                "redis-cli", "-a", "payu-cache-dev-password", "ping"
-            ])
-            if result.returncode == 0 and "PONG" in result.stdout:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail("Redis did not become ready")
-
-    def test_kafka_ready(self):
-        """Test that Kafka is ready"""
-        max_retries = 60
-        for i in range(max_retries):
-            result = self.run_command([
-                "podman", "exec", "payu-kafka",
-                "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"
-            ])
-            if result.returncode == 0:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail("Kafka did not become ready")
-
-    def test_keycloak_ready(self):
-        """Test that Keycloak is ready"""
-        max_retries = 60
-        for i in range(max_retries):
-            result = self.run_command([
-                "podman", "exec", "payu-keycloak",
-                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-                "http://localhost:8080/health"
-            ])
-            if result.returncode == 0 and result.stdout.strip() in ["200", "204"]:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail("Keycloak did not become ready")
-
-    def test_gateway_accessible(self):
-        """Test that Gateway is accessible"""
-        max_retries = 60
-        for i in range(max_retries):
-            result = self.run_command([
-                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-                "http://localhost:8080"
-            ])
-            if result.returncode == 0 and result.stdout.strip() in ["200", "404", "401"]:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail(f"Gateway did not become accessible (status: {result.stdout.strip()})")
-
-    def test_account_service_accessible(self):
-        """Test that Account Service is accessible"""
-        max_retries = 60
-        for i in range(max_retries):
-            result = self.run_command([
-                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-                "http://localhost:8001"
-            ])
-            if result.returncode == 0 and result.stdout.strip() in ["200", "404", "401"]:
-                break
-            time.sleep(2)
-        else:
-            pytest.fail(f"Account Service did not become accessible (status: {result.stdout.strip()})")
-
-    def test_compose_down(self):
-        """Test that podman compose down works"""
-        result = self.run_command(
-            ["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"],
-            timeout=120
-        )
-        assert result.returncode == 0, f"Failed to stop podman compose: {result.stderr}"
-
-        # Verify no containers are running
-        result = self.run_command(
-            ["podman", "compose", "-f", self.COMPOSE_FILE, "ps", "-q"]
-        )
-        assert result.stdout.strip() == "", "Some containers are still running after down"
-
-    @pytest.fixture
-    def compose_up(self):
-        """Fixture to ensure compose is up for tests"""
-        try:
-            self.run_command(
-                ["podman", "compose", "-f", self.COMPOSE_FILE, "up", "-d"],
-                timeout=600
-            )
-            yield
-        finally:
-            self.run_command(
-                ["podman", "compose", "-f", self.COMPOSE_FILE, "down", "-v"],
-                timeout=120
-            )
+if __name__ == "__main__":
+    unittest.main()

@@ -160,6 +160,11 @@ rtk podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-
 rtk podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
 ```
 
+For day-to-day development, use
+`infrastructure/local/podman/containers/manage-podman.sh core|apps|all|smoke`.
+The canonical local guide and host endpoint map are in
+[`infrastructure/local/podman/README.md`](../../infrastructure/local/podman/README.md).
+
 The cache config uses the distributed `payu` cache with non-XA pessimistic transactions. If the host has no Compose provider, install `podman-compose` or Docker Compose before running these commands; YAML/XML parsing alone does not start services.
 
 Platform namespaces:

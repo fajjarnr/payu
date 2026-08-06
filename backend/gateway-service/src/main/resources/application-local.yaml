@@ -1,0 +1,25 @@
+quarkus:
+  devservices:
+    enabled: false
+  datasource:
+    username: payu
+    password: payu_secret
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/payu_gateway
+  oidc:
+    auth-server-url: http://localhost:8099/realms/payu
+    credentials:
+      secret: payu-web-local-client-secret
+    token:
+      issuer: http://localhost:8099/realms/payu
+  log:
+    console:
+      json:
+        enabled: false
+
+gateway:
+  authorization:
+    jwt-secret: dev_jwt_secret_must_be_long_enough_for_dev_only_usage
+  request-signing:
+    partner-keys:
+      partner-1: dummy_secret_for_dev_only

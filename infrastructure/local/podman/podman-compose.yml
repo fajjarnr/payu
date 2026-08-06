@@ -63,6 +63,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-payu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       POSTGRES_DB: ${POSTGRES_DB:-payu_account}
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./config/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
@@ -214,7 +216,9 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
-      KC_HOSTNAME: http://payu-keycloak-service:8080
+      # Resolve URLs from the caller so both container DNS (:8080) and host-run
+      # development (:8099) receive an issuer they can reach.
+      KC_HOSTNAME_STRICT: "false"
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://payu-database-rw:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-payu}
@@ -1455,7 +1459,7 @@ services:
     networks:
       - payu-network
     ports:
-      - "8095:8080"
+      - "8097:8080"
     environment:
       <<: *local-security-environment
       SPRING_PROFILES_ACTIVE: container

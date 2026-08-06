@@ -1,8 +1,9 @@
 package id.payu.security.multitenancy;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Auto-configuration for multi-tenancy components.
@@ -15,11 +16,12 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@link TenantInterceptor} — enables Hibernate tenant filter (registered separately via @Component)</li>
  * </ul>
  */
-@Configuration
+@AutoConfiguration
 @ConditionalOnProperty(name = "payu.security.multitenancy.enabled", havingValue = "true", matchIfMissing = true)
 public class TenantConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(name = "tenantFilter")
     public TenantFilter tenantFilter() {
         return new TenantFilter();
     }

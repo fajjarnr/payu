@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
@@ -38,19 +37,20 @@ public class DataSourceAutoConfiguration {
     @Bean
     @Primary
     @ConditionalOnMissingBean(name = "primaryDataSource")
+    @ConditionalOnProperty(prefix = "spring.datasource.primary.hikari", name = "jdbc-url")
     @ConfigurationProperties(prefix = "spring.datasource.primary.hikari")
-    public DataSource primaryDataSource() {
+    public HikariDataSource primaryDataSource() {
         log.info("Configuring primary datasource for write operations");
-        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+        return new HikariDataSource();
     }
 
     @Bean
     @ConditionalOnMissingBean(name = "readReplicaDataSource")
     @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
     @ConfigurationProperties(prefix = "spring.datasource.read-replica.hikari")
-    public DataSource readReplicaDataSource() {
+    public HikariDataSource readReplicaDataSource() {
         log.info("Configuring read replica datasource for read operations");
-        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+        return new HikariDataSource();
     }
 
     @Bean

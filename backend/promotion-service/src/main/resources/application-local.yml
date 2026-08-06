@@ -4,13 +4,13 @@ spring:
     vault:
       enabled: false  # Disabled for local dev by default
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_promotions}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_promotion}
     username: ${DATABASE_USERNAME:payu}
-    password: ${DATABASE_PASSWORD:payu_dev_secret_password_1234}
+    password: ${DATABASE_PASSWORD:payu_secret}
     primary:
-      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_promotions}
+      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_promotion}
       username: ${DB_USERNAME:payu}
-      password: ${DB_PASSWORD:payu_dev_secret_password_1234}
+      password: ${DB_PASSWORD:payu_secret}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -18,20 +18,20 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8099/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8099/realms/payu/protocol/openid-connect/certs}
 
 payu:
   gateway:
     url: ${GATEWAY_URL:http://localhost:8080}
   keycloak:
-    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8099}
     realm: ${KEYCLOAK_REALM:payu}
     client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-keycloak-dev-client-secret-12345}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
     admin:
       username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-      password: ${KEYCLOAK_ADMIN_PASSWORD:admin_dev_pass_1234}
+      password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
   cache:
     hotrod:
       server-list: ${PAYU_CACHE_HOTROD_SERVER_LIST:localhost:11222}

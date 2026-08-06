@@ -75,7 +75,7 @@ spec:
             - name: VAULT_ADDR
               value: https://vault.payu-vault.svc.cluster.local:8200
             - name: VAULT_CACERT
-              value: /vault/ca/service-ca.crt
+              value: /vault/ca/ca.crt
             - name: VAULT_TLS_SERVER_NAME
               value: vault.payu-vault.svc.cluster.local
             - name: KUBERNETES_CLUSTER
@@ -179,8 +179,11 @@ spec:
             name: vault-bootstrap-config
             defaultMode: 0550
         - name: service-ca
-          configMap:
-            name: vault-service-ca
+          secret:
+            secretName: vault-server-tls
+            items:
+              - key: ca.crt
+                path: service-ca.crt
         - name: tmp
           emptyDir:
             sizeLimit: 128Mi

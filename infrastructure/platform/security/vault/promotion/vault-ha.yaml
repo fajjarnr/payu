@@ -35,18 +35,6 @@ subjects:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: vault-service-ca
-  namespace: payu-vault
-  annotations:
-    service.beta.openshift.io/inject-cabundle: "true"
-  labels:
-    app.kubernetes.io/name: vault
-    app.kubernetes.io/part-of: payu
-data: {}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
   name: vault-config
   namespace: payu-vault
   labels:
@@ -114,8 +102,6 @@ kind: Service
 metadata:
   name: vault
   namespace: payu-vault
-  annotations:
-    service.beta.openshift.io/serving-cert-secret-name: vault-internal-tls
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/part-of: payu
@@ -178,23 +164,25 @@ spec:
           # Override entrypoint: the image entrypoint always injects
           # -dev-root-token-id= for `server`, which flips Vault into dev
           # (inmem) mode. Run the binary directly with our config.
-          command: ["vault"]
+          command: ["/bin/sh", "-ec"]
           args:
-            - server
-            - -config=/vault/config
+            - |
+              export VAULT_RAFT_NODE_ID="${POD_NAME}"
+              export VAULT_CLUSTER_ADDR="https://${POD_NAME}.vault-internal.payu-vault.svc.cluster.local:8201"
+              exec vault server -config=/vault/config
           env:
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
             - name: VAULT_RAFT_NODE_ID
-              value: $(POD_NAME)
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: VAULT_API_ADDR
               value: https://vault.payu-vault.svc.cluster.local:8200
-            - name: VAULT_CLUSTER_ADDR
-              value: https://$(POD_NAME).vault-internal.payu-vault.svc.cluster.local:8201
             - name: VAULT_ADDR
-              value: https://127.0.0.1:8200
+              value: https://vault.payu-vault.svc.cluster.local:8200
             - name: VAULT_CACERT
               value: /vault/ca/service-ca.crt
             - name: SKIP_SETCAP
@@ -292,10 +280,13 @@ spec:
             name: vault-config
         - name: tls
           secret:
-            secretName: vault-internal-tls
+            secretName: vault-server-tls
         - name: service-ca
-          configMap:
-            name: vault-service-ca
+          secret:
+            secretName: vault-server-tls
+            items:
+              - key: ca.crt
+                path: service-ca.crt
         - name: bootstrap
           configMap:
             name: vault-bootstrap-config
