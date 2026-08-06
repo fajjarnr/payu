@@ -20,6 +20,9 @@ metadata:
     argocd.argoproj.io/sync-options: Replace=true
 spec:
   ttlSecondsAfterFinished: 300
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: post-deploy-db-grants
   template:
     metadata:
       labels:
