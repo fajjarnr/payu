@@ -17,7 +17,6 @@ Core banking & payment gateway (microservices, event-driven, hexagonal) di Red H
 | Single service | `./scripts/test-single-service.sh <service>`             |
 | Check services | `oc get pods` / `podman ps`                              |
 
-
 ## Layout
 
 - backend/ services + shared/ (starters) + simulators/
@@ -87,35 +86,22 @@ Kamu memiliki akses ke MCP servers berikut. Gunakan secara aktif tanpa perlu dim
 
 ## 🔄 Doc Routing (Jangan Campur Konten)
 
-| Konten                                    | File                           |
-| :---------------------------------------- | :----------------------------- |
-| Bug baru, open items, actionable todos    | `docs/roadmap/TODOS.md`        |
-| Deployment status, completed milestones   | `docs/roadmap/PROGRESS.md`     |
-| Architecture decisions, gap analysis      | `docs/roadmap/GATEWAY_ARCH.md` |
+| Konten                                    | File                                           |
+| :---------------------------------------- | :--------------------------------------------- |
+| Bug baru, open items, actionable todos    | `docs/roadmap/TODOS.md`                        |
+| Deployment status, completed milestones   | `docs/roadmap/PROGRESS.md`                     |
+| Architecture decisions, gap analysis      | `docs/roadmap/GATEWAY_ARCH.md`                 |
 | Infrastructure deployment MOP             | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md` |
-| Version changelog                         | `CHANGELOG.md`                 |
-| Implementation patterns & lessons learned | `docs/guides/LESSONS.md`       |
+| Version changelog                         | `CHANGELOG.md`                                 |
+| Implementation patterns & lessons learned | `docs/guides/LESSONS.md`                       |
 
 ## 🛰️ Deep Reference (Baca Saat Relevan)
 
-- Tech stack & 14 Laws & DORA → `docs/architecture/ARCHITECTURE.md`
+- Tech stack & architecture → `docs/architecture/ARCHITECTURE.md`
+- DORA metrics & engineering targets → `docs/roadmap/PROGRESS.md`
 - Service status → `docs/roadmap/SERVICES.md`
 - Database & schema standards (ledger, RLS, Flyway, pgcrypto) → `docs/architecture/`
 - API & integration (retry/webhook/SNAP-BI) → `docs/architecture/`
 - Infrastructure deployment / OpenShift MOP → `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md`
 - Frontend / Mobile / Python-ML & Design System (Premium Emerald) standards → `docs/guides/`
 - Skills & workflows → `.agents/skills/` dan `.agents/workflows/`
-
-@RTK.md
-
-
-<!-- CODEGRAPH_START -->
-## CodeGraph
-
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
-
-- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
-
-If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
-<!-- CODEGRAPH_END -->
