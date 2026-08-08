@@ -67,6 +67,8 @@ Status `partner-service` hanya boleh berubah menjadi **Production Ready** setela
 
 **2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
 
+**PARTNER-PROD-002 progress (2026-08-08)**: enkripsi at-rest `PartnerEntity.clientSecret` + legacy `apiKey` + `WebhookSubscriptionEntity.secret` via `EncryptedStringConverter` (AES-GCM 256-bit, `ENC(...)` ciphertext) + migration `V18` (widen kolom + comment). `client_id` sengaja tetap plaintext (lookup key `findByClientId`). Bukti: `PartnerCredentialEncryptionTest` 3/3 (native SQL tidak menemukan plaintext), dual-read plaintext legacy diverifikasi live (token 200). Sisa: key versioning/rotation + grace/revocation migration Vault, dan secret-absent verification menyeluruh.
+
 | ID | Pri | Gate yang harus diimplementasikan | Bukti selesai minimum |
 |:---|:---:|:---|:---|
 | PARTNER-PROD-001 | P0 | **Public edge/API management**: deploy 3scale `APIManager` + APIcast HA, Product/ApplicationPlan/Application partner, stable `/v1/partner/**`, TLS/WAF/rate-limit/quota, dan mTLS ke gateway. Hapus semua public Route yang dapat bypass APIcast. | Positive/negative E2E dari luar cluster membuktikan key/plan/quota, route, TLS, dan bypass ditolak; failover APIcast tidak memutus layanan. |

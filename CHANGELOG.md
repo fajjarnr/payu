@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Partner credentials encrypted at rest (PARTNER-PROD-002)**: `PartnerEntity.clientSecret`, legacy `apiKey`, and `WebhookSubscriptionEntity.secret` now use `@Convert(EncryptedStringConverter)` (AES-GCM 256-bit, `ENC(...)` ciphertext). `clientId` stays plaintext as the lookup key. Migration V18 widens the partner credential columns. Added `PartnerCredentialEncryptionTest` (3 cases) proving the database column never holds plaintext and that legacy plaintext rows remain readable (dual-read).
 - **SNAP-BI token exempt from mandatory idempotency**: `IdempotencyFilter` now excludes the `/auth/token` path from `FINANCIAL_PATHS`; token issuance is authenticated by client-key HMAC, not idempotency. Payments/refunds still require `Idempotency-Key` (PARTNER-002).
 - **Missing required SNAP-BI headers return 400, not 500**: shared `Rfc9457GlobalExceptionHandler` now handles `MissingRequestHeaderException` with `400 MISSING_REQUIRED_HEADER` (PARTNER-003).
 - **Public health endpoint reachable without auth**: partner-service `SecurityCustomizer` permits `/partners/public/health` (PARTNER-004).
@@ -25,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 
-- `partner-service -am test`: 255+ tests, 0 failures (includes new `SnapBiMissingHeaderTest` 3/3, `HealthPublicTest` 2/2, `SnapBiPublicFlowTest` 4/4, `SandboxFilterTest` 6/6).
+- `partner-service -am test`: 258 tests, 0 failures (includes new `SnapBiMissingHeaderTest` 3/3, `HealthPublicTest` 2/2, `SnapBiPublicFlowTest` 4/4, `SandboxFilterTest` 6/6, `PartnerCredentialEncryptionTest` 3/3).
 - `gateway-service test`: 469 tests, 0 failures (includes new `PartnerContractResourceTest` 3/3 and updated `IdempotencyFilterEnforcedTest` 5/5).
 - Live Podman stack (PostgreSQL, Infinispan, Kafka, Keycloak, Artemis, partner-service, gateway-service): `POST /v1/partner/auth/token` → `401 Invalid Client Key` (routed); token without idempotency key → `401` (not `GAT_IDM_001`); payments without key → `400 GAT_IDM_001`; missing `X-CLIENT-KEY` → `400 MISSING_REQUIRED_HEADER`; `/partners/public/health` → `200 UP` direct and via gateway.
 
