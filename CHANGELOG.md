@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Partner credentials encrypted at rest (PARTNER-PROD-002)**: `PartnerEntity.clientSecret`, legacy `apiKey`, and `WebhookSubscriptionEntity.secret` now use `@Convert(EncryptedStringConverter)` (AES-GCM 256-bit, `ENC(...)` ciphertext). `clientId` stays plaintext as the lookup key. Migration V18 widens the partner credential columns. Added `PartnerCredentialEncryptionTest` (3 cases) proving the database column never holds plaintext and that legacy plaintext rows remain readable (dual-read).
+- **Encryption key rotation/versioning (PARTNER-PROD-002)**: `security-starter` now supports `payu.security.encryption.previous-keys` (comma-separated old keys used for decryption fallback) and exposes `EncryptionService.reEncrypt()` to migrate ciphertext to the current key. Previously the previous-key capability existed but was never wired to configuration, so rotating the key would have made old ciphertext unreadable. `EncryptionServiceTest` covers rotation (single/multiple previous keys, re-encrypt, database round-trip).
+- **Client secret no longer leaked on read paths (PARTNER-PROD-002)**: `PartnerService.toDTO` never includes `clientSecret`; it is returned only once on create/rotate responses. Read paths (`getAllPartners`, `getPartnerById`, `updatePartner`) now return null secret. Added `testClientSecretNotExposedOnReadPaths`.
+- **Local compose encryption wiring**: partner-service local compose now sets `PAYU_SECURITY_ENCRYPTION_ENABLED`/`PAYU_SECURITY_ENCRYPTION_PASSWORD`/`PAYU_SECURITY_ENCRYPTION_PREVIOUS_KEYS` (dev defaults, override via env) so the local stack encrypts at rest and rotation is configurable.
 - **SNAP-BI token exempt from mandatory idempotency**: `IdempotencyFilter` now excludes the `/auth/token` path from `FINANCIAL_PATHS`; token issuance is authenticated by client-key HMAC, not idempotency. Payments/refunds still require `Idempotency-Key` (PARTNER-002).
 - **Missing required SNAP-BI headers return 400, not 500**: shared `Rfc9457GlobalExceptionHandler` now handles `MissingRequestHeaderException` with `400 MISSING_REQUIRED_HEADER` (PARTNER-003).
 - **Public health endpoint reachable without auth**: partner-service `SecurityCustomizer` permits `/partners/public/health` (PARTNER-004).
@@ -26,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 
-- `partner-service -am test`: 258 tests, 0 failures (includes new `SnapBiMissingHeaderTest` 3/3, `HealthPublicTest` 2/2, `SnapBiPublicFlowTest` 4/4, `SandboxFilterTest` 6/6, `PartnerCredentialEncryptionTest` 3/3).
+- `partner-service -am test`: 259 tests, 0 failures (includes `SnapBiMissingHeaderTest` 3/3, `HealthPublicTest` 2/2, `SnapBiPublicFlowTest` 4/4, `SandboxFilterTest` 6/6, `PartnerCredentialEncryptionTest` 3/3, `testClientSecretNotExposedOnReadPaths`).
+- `security-starter test`: 50 tests, 0 failures (key rotation suite: previous-key fallback, multi-key, re-encrypt, database round-trip).
 - `gateway-service test`: 469 tests, 0 failures (includes new `PartnerContractResourceTest` 3/3 and updated `IdempotencyFilterEnforcedTest` 5/5).
 - Live Podman stack (PostgreSQL, Infinispan, Kafka, Keycloak, Artemis, partner-service, gateway-service): `POST /v1/partner/auth/token` → `401 Invalid Client Key` (routed); token without idempotency key → `401` (not `GAT_IDM_001`); payments without key → `400 GAT_IDM_001`; missing `X-CLIENT-KEY` → `400 MISSING_REQUIRED_HEADER`; `/partners/public/health` → `200 UP` direct and via gateway.
 
