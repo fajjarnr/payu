@@ -1,6 +1,6 @@
 package id.payu.partner.adapter.web.filter;
 
-import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
+import id.payu.partner.application.service.ApiKeyService;
 import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,10 +8,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Filter that intercepts all partner API requests and handles sandbox mode routing.
@@ -20,6 +20,11 @@ import java.util.Optional;
  * - Adds X-Sandbox-Mode header for downstream services
  * - Routes to simulator services instead of production endpoints
  * - Logs sandbox activity for debugging
+ * <p>
+ * PARTNER-005: API key validation is delegated to {@link ApiKeyService#validateKey}
+ * (the single production caller). A request presenting an {@code X-API-Key} header
+ * is rejected with 401 when the key is unknown, revoked, or expired — fail closed.
+ * The SNAP-BI bearer token is left untouched (it authenticates via client-key HMAC).
  * <p>
  * This filter runs early in the chain (Order 1) to ensure sandbox detection
  * happens before authentication and rate limiting.
@@ -34,10 +39,10 @@ public class SandboxFilter implements Filter {
     private static final String SANDBOX_MODE_HEADER = "X-Sandbox-Mode";
     private static final String SANDBOX_TARGET_HEADER = "X-Sandbox-Target";
 
-    private final ApiKeyRepository apiKeyRepository;
+    private final ApiKeyService apiKeyService;
 
-    public SandboxFilter(ApiKeyRepository apiKeyRepository) {
-        this.apiKeyRepository = apiKeyRepository;
+    public SandboxFilter(ApiKeyService apiKeyService) {
+        this.apiKeyService = apiKeyService;
     }
 
     @Override
@@ -47,14 +52,27 @@ public class SandboxFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String apiKey = extractApiKey(httpRequest);
+        String apiKey = httpRequest.getHeader(API_KEY_HEADER);
         boolean isSandbox = false;
 
-        if (apiKey != null && !apiKey.isEmpty()) {
-            isSandbox = checkSandboxMode(apiKey);
+        // PARTNER-005: fail closed when an API key is presented but invalid.
+        if (apiKey != null && !apiKey.isBlank()) {
+            ApiKeyEntity key = apiKeyService.validateKey(apiKey);
+            if (key == null) {
+                log.warn("Rejecting request with invalid API key: {} {}",
+                        httpRequest.getMethod(), httpRequest.getRequestURI());
+                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                httpResponse.getWriter().write("{\"error_code\":\"AUTH_004\","
+                        + "\"title\":\"Unauthorized\","
+                        + "\"detail\":\"Invalid or revoked API key\"}");
+                return;
+            }
+            isSandbox = key.isSandbox();
             if (isSandbox) {
                 log.debug("Sandbox mode detected for request: {} {}",
                         httpRequest.getMethod(), httpRequest.getRequestURI());
+                httpResponse.addHeader(SANDBOX_MODE_HEADER, "true");
             }
         }
 
@@ -62,75 +80,7 @@ public class SandboxFilter implements Filter {
         SandboxHttpServletRequestWrapper wrappedRequest =
                 new SandboxHttpServletRequestWrapper(httpRequest, isSandbox);
 
-        // Add sandbox headers to response for client awareness
-        if (isSandbox) {
-            httpResponse.addHeader(SANDBOX_MODE_HEADER, "true");
-        }
-
         chain.doFilter(wrappedRequest, httpResponse);
-    }
-
-    /**
-     * Extract API key from request headers.
-     * Supports X-API-Key header.
-     */
-    private String extractApiKey(HttpServletRequest request) {
-        String apiKey = request.getHeader(API_KEY_HEADER);
-        if (apiKey == null || apiKey.isEmpty()) {
-            // Also check Authorization header for Bearer token format
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                apiKey = authHeader.substring(7);
-            }
-        }
-        return apiKey;
-    }
-
-    /**
-     * Check if the API key is in sandbox mode.
-     * Looks up the key hash in the database and checks the sandbox flag.
-     */
-    private boolean checkSandboxMode(String apiKey) {
-        try {
-            // Hash the API key to look it up (same hashing as storage)
-            String keyHash = hashApiKey(apiKey);
-
-            Optional<ApiKeyEntity> apiKeyEntity = apiKeyRepository.findByKeyHash(keyHash);
-            if (apiKeyEntity.isPresent()) {
-                ApiKeyEntity key = apiKeyEntity.get();
-                boolean isSandbox = key.isSandbox() && key.isUsable();
-
-                if (isSandbox) {
-                    // Record usage for analytics
-                    key.recordUsage();
-                    apiKeyRepository.save(key);
-                }
-
-                return isSandbox;
-            }
-        } catch (Exception e) {
-            log.warn("Error checking sandbox mode for API key: {}", e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Hash API key using SHA-256 (same as ApiKeyService).
-     */
-    private String hashApiKey(String apiKey) {
-        try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(apiKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to hash API key", e);
-        }
     }
 
     @Override

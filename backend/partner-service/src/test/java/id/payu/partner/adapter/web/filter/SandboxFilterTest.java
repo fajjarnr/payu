@@ -1,8 +1,8 @@
 package id.payu.partner.adapter.web.filter;
 
-import id.payu.partner.adapter.persistence.repository.ApiKeyRepository;
 import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
+import id.payu.partner.application.service.ApiKeyService;
 import id.payu.partner.domain.KeyEnvironment;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,19 +15,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for SandboxFilter.
+ * Tests for SandboxFilter — PARTNER-005: API key validation is delegated to
+ * {@link ApiKeyService#validateKey} (the single production caller), and an
+ * invalid/revoked key fails closed with 401.
  */
 @ExtendWith(MockitoExtension.class)
 class SandboxFilterTest {
 
     @Mock
-    private ApiKeyRepository apiKeyRepository;
+    private ApiKeyService apiKeyService;
 
     @Mock
     private HttpServletRequest request;
@@ -42,133 +45,106 @@ class SandboxFilterTest {
 
     @BeforeEach
     void setUp() {
-        sandboxFilter = new SandboxFilter(apiKeyRepository);
+        sandboxFilter = new SandboxFilter(apiKeyService);
     }
 
     @Test
     void doFilter_WithSandboxApiKey_AddsSandboxHeader() throws ServletException, IOException {
-        // Given
         String apiKey = "payu_test_sandbox_key_12345";
-        String keyHash = hashApiKey(apiKey);
 
         PartnerEntity partner = new PartnerEntity();
         partner.setId(1L);
 
         ApiKeyEntity sandboxKey = new ApiKeyEntity(
-                partner, "payu_test_", keyHash, "2345",
+                partner, "payu_test_", "hash", "2345",
                 KeyEnvironment.SANDBOX, true
         );
         sandboxKey.setId(1L);
 
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
-        when(apiKeyRepository.findByKeyHash(keyHash)).thenReturn(Optional.of(sandboxKey));
-        when(apiKeyRepository.save(any(ApiKeyEntity.class))).thenReturn(sandboxKey);
+        when(apiKeyService.validateKey(apiKey)).thenReturn(sandboxKey);
 
-        // When
         sandboxFilter.doFilter(request, response, filterChain);
 
-        // Then
         verify(response).addHeader("X-Sandbox-Mode", "true");
         verify(filterChain).doFilter(any(SandboxHttpServletRequestWrapper.class), eq(response));
     }
 
     @Test
     void doFilter_WithProductionApiKey_NoSandboxHeader() throws ServletException, IOException {
-        // Given
         String apiKey = "payu_live_production_key_12345";
-        String keyHash = hashApiKey(apiKey);
 
         PartnerEntity partner = new PartnerEntity();
         partner.setId(1L);
 
         ApiKeyEntity productionKey = new ApiKeyEntity(
-                partner, "payu_live_", keyHash, "2345",
+                partner, "payu_live_", "hash", "2345",
                 KeyEnvironment.LIVE, false
         );
         productionKey.setId(1L);
 
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
-        when(apiKeyRepository.findByKeyHash(keyHash)).thenReturn(Optional.of(productionKey));
+        when(apiKeyService.validateKey(apiKey)).thenReturn(productionKey);
 
-        // When
         sandboxFilter.doFilter(request, response, filterChain);
 
-        // Then
         verify(response, never()).addHeader(eq("X-Sandbox-Mode"), anyString());
         verify(filterChain).doFilter(any(SandboxHttpServletRequestWrapper.class), eq(response));
     }
 
     @Test
     void doFilter_WithNoApiKey_NoSandboxHeader() throws ServletException, IOException {
-        // Given
         when(request.getHeader("X-API-Key")).thenReturn(null);
-        when(request.getHeader("Authorization")).thenReturn(null);
 
-        // When
         sandboxFilter.doFilter(request, response, filterChain);
 
-        // Then
         verify(response, never()).addHeader(eq("X-Sandbox-Mode"), anyString());
         verify(filterChain).doFilter(any(SandboxHttpServletRequestWrapper.class), eq(response));
+        verify(apiKeyService, never()).validateKey(any());
     }
 
     @Test
-    void doFilter_WithInvalidApiKey_NoSandboxHeader() throws ServletException, IOException {
-        // Given
+    void doFilter_WithInvalidApiKey_RejectsWith401() throws ServletException, IOException {
         String apiKey = "invalid_key";
-        String keyHash = hashApiKey(apiKey);
+        StringWriter body = new StringWriter();
 
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
-        when(apiKeyRepository.findByKeyHash(keyHash)).thenReturn(Optional.empty());
+        when(apiKeyService.validateKey(apiKey)).thenReturn(null);
+        when(response.getWriter()).thenReturn(new PrintWriter(body));
 
-        // When
         sandboxFilter.doFilter(request, response, filterChain);
 
-        // Then
-        verify(response, never()).addHeader(eq("X-Sandbox-Mode"), anyString());
-        verify(filterChain).doFilter(any(SandboxHttpServletRequestWrapper.class), eq(response));
+        verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(any(), any());
+        org.junit.jupiter.api.Assertions.assertTrue(
+                body.toString().contains("Invalid or revoked API key"),
+                "401 body should explain the failure");
     }
 
     @Test
-    void doFilter_WithBearerToken_ExtractsApiKey() throws ServletException, IOException {
-        // Given
-        String apiKey = "payu_test_sandbox_key_12345";
-        String keyHash = hashApiKey(apiKey);
+    void doFilter_WithRevokedApiKey_RejectsWith401() throws ServletException, IOException {
+        String apiKey = "payu_live_revoked";
+        StringWriter body = new StringWriter();
 
-        PartnerEntity partner = new PartnerEntity();
-        partner.setId(1L);
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(apiKeyService.validateKey(apiKey)).thenReturn(null); // revoked -> unusable
+        when(response.getWriter()).thenReturn(new PrintWriter(body));
 
-        ApiKeyEntity sandboxKey = new ApiKeyEntity(
-                partner, "payu_test_", keyHash, "2345",
-                KeyEnvironment.SANDBOX, true
-        );
-        sandboxKey.setId(1L);
-
-        when(request.getHeader("X-API-Key")).thenReturn(null);
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + apiKey);
-        when(apiKeyRepository.findByKeyHash(keyHash)).thenReturn(Optional.of(sandboxKey));
-        when(apiKeyRepository.save(any(ApiKeyEntity.class))).thenReturn(sandboxKey);
-
-        // When
         sandboxFilter.doFilter(request, response, filterChain);
 
-        // Then
-        verify(response).addHeader("X-Sandbox-Mode", "true");
+        verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(any(), any());
     }
 
-    private String hashApiKey(String apiKey) {
-        try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(apiKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to hash API key", e);
-        }
+    @Test
+    void doFilter_WithBearerSnapBiToken_DoesNotTreatAsApiKey() throws ServletException, IOException {
+        // SNAP-BI bearer tokens are authenticated via client-key HMAC at the
+        // controller; the filter must not try to validate them as API keys.
+        when(request.getHeader("X-API-Key")).thenReturn(null);
+
+        sandboxFilter.doFilter(request, response, filterChain);
+
+        verify(apiKeyService, never()).validateKey(any());
+        verify(filterChain).doFilter(any(SandboxHttpServletRequestWrapper.class), eq(response));
     }
 }

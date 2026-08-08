@@ -22,6 +22,8 @@ public class SecurityCustomizer {
                 // SNAP-BI validates client-key HMAC and SNAP access tokens in SnapBiController.
                 .requestMatchers("/v1/partner/**").permitAll()
                 .requestMatchers("/api/v1/partners/callback/**").permitAll()
+                // PARTNER-004: public health probe is intentionally unauthenticated.
+                .requestMatchers("/partners/public/health").permitAll()
                 .requestMatchers("/pay/**").permitAll();
     }
 
