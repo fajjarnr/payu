@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -141,6 +142,15 @@ public class Rfc9457GlobalExceptionHandler {
         String detail = String.format("Required parameter '%s' is missing", ex.getParameterName());
         return respondWith(HttpStatus.BAD_REQUEST, "Missing parameter", detail,
                 "MISSING_PARAMETER", request);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ProblemDetail> handleMissingRequestHeader(
+            MissingRequestHeaderException ex, HttpServletRequest request) {
+        log.warn("Missing required header in {}: {}", request.getRequestURI(), ex.getHeaderName());
+        String detail = String.format("Required header '%s' is missing", ex.getHeaderName());
+        return respondWith(HttpStatus.BAD_REQUEST, "Missing required header", detail,
+                "MISSING_REQUIRED_HEADER", request);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
