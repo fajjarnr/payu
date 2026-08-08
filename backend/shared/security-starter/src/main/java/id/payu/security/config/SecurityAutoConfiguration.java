@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Collections;
 
 /**
  * Auto-configuration for Security features
@@ -72,7 +71,7 @@ public class SecurityAutoConfiguration {
 
         return new EncryptionService(
                 properties.getEncryption().getPassword(),
-                Collections.emptyList(),
+                properties.getEncryption().getPreviousKeys(),
                 salt
         );
     }

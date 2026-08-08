@@ -56,7 +56,8 @@ public class PartnerService {
         partner.setPublicKey(partnerDTO.publicKey);
 
         partnerRepository.save(partner);
-        return toDTO(partner);
+        // PARTNER-PROD-002: the client secret is returned only once at creation.
+        return toDTO(partner, true);
     }
 
     @Transactional
@@ -90,7 +91,8 @@ public class PartnerService {
         partner.setClientSecret(Base64.getUrlEncoder().withoutPadding().encodeToString(secretBytes));
 
         partnerRepository.save(partner);
-        return toDTO(partner);
+        // PARTNER-PROD-002: the rotated client secret is returned only once here.
+        return toDTO(partner, true);
     }
 
     @Transactional
@@ -102,7 +104,22 @@ public class PartnerService {
         return false;
     }
 
+    /**
+     * Read-path DTO: never exposes the client secret.
+     */
     private PartnerDTO toDTO(PartnerEntity partner) {
-        return new PartnerDTO(partner.getId(), partner.getName(), partner.getType(), partner.getEmail(), partner.getPhone(), partner.isActive(), partner.getClientId(), partner.getClientSecret(), partner.getPublicKey());
+        return toDTO(partner, false);
+    }
+
+    /**
+     * DTO conversion with optional secret disclosure. The secret is included
+     * only on the mutation response that creates or rotates it (PARTNER-PROD-002);
+     * every read path strips it.
+     */
+    private PartnerDTO toDTO(PartnerEntity partner, boolean includeSecret) {
+        return new PartnerDTO(partner.getId(), partner.getName(), partner.getType(),
+                partner.getEmail(), partner.getPhone(), partner.isActive(),
+                partner.getClientId(), includeSecret ? partner.getClientSecret() : null,
+                partner.getPublicKey());
     }
 }

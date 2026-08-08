@@ -1069,6 +1069,12 @@ services:
       - 8012:8080
     environment:
       <<: *local-security-environment
+      # PARTNER-PROD-002: field-level encryption at rest. password derives the
+      # AES-GCM key; previous-keys keeps old ciphertext readable during rotation
+      # (reverse order, most recent first). Override both via env in any real env.
+      PAYU_SECURITY_ENCRYPTION_ENABLED: ${PAYU_SECURITY_ENCRYPTION_ENABLED:-true}
+      PAYU_SECURITY_ENCRYPTION_PASSWORD: ${ENCRYPTION_KEY:-payu-dev-encryption-key-change-in-production-minimum-32-chars}
+      PAYU_SECURITY_ENCRYPTION_PREVIOUS_KEYS: ${ENCRYPTION_PREVIOUS_KEYS:-}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}

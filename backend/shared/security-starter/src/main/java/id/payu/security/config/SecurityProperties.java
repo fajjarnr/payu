@@ -117,6 +117,15 @@ public class SecurityProperties {
         private String salt;
 
         /**
+         * Previous encryption keys (reverse order, most recent first) used only for
+         * decryption fallback during key rotation. Data encrypted with the current key
+         * keeps using it; older ciphertext remains readable until rewritten. Configure
+         * via: payu.security.encryption.previous-keys (comma-separated) or
+         * ENCRYPTION_PREVIOUS_KEYS. MUST be externalized via Vault in production.
+         */
+        private List<String> previousKeys = List.of();
+
+        /**
          * Fields to encrypt (regex patterns)
          */
         private List<String> fields = List.of(

@@ -174,4 +174,43 @@ public class PartnerServiceIntegrationTest {
         assertNotEquals(originalClientId, regenerated.clientId);
         assertNotEquals(originalClientSecret, regenerated.clientSecret);
     }
+
+    @Test
+    public void testClientSecretNotExposedOnReadPaths() {
+        PartnerDTO dto = new PartnerDTO(
+            null,
+            "Secret Leak Test",
+            "MERCHANT",
+            "secrettest@example.com",
+            "+62123456789",
+            true,
+            null,
+            null,
+            "public-key"
+        );
+
+        PartnerDTO created = partnerService.createPartner(dto);
+        assertNotNull(created.clientSecret, "create response carries the secret once");
+
+        PartnerDTO byId = partnerService.getPartnerById(created.id);
+        assertNull(byId.clientSecret, "getPartnerById must not expose the secret");
+
+        assertTrue(partnerService.getAllPartners().stream()
+                .noneMatch(p -> p.clientSecret != null),
+                "partner list must not expose any client secret");
+
+        PartnerDTO updateDto = new PartnerDTO(
+            created.id,
+            "Secret Leak Test Updated",
+            "MERCHANT",
+            "secrettest@example.com",
+            "+62123456789",
+            true,
+            created.clientId,
+            null,
+            "public-key"
+        );
+        PartnerDTO updated = partnerService.updatePartner(created.id, updateDto);
+        assertNull(updated.clientSecret, "update response must not expose the secret");
+    }
 }
