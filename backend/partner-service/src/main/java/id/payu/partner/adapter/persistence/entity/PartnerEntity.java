@@ -3,6 +3,7 @@ package id.payu.partner.adapter.persistence.entity;
 import id.payu.partner.domain.*;
 
 import id.payu.security.annotation.Sensitive;
+import id.payu.security.converter.EncryptedStringConverter;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -43,12 +44,21 @@ public class PartnerEntity {
     private String phone;
     
     @Sensitive(value = SensitivityLevel.CRITICAL)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 512)
     private String apiKey;
 
     @Sensitive
     private String clientId;
 
+    /**
+     * Client secret encrypted at rest using AES-GCM (256-bit key) via
+     * {@link EncryptedStringConverter} (PARTNER-PROD-002). clientId stays
+     * plaintext because it is the lookup key (findByClientId).
+     */
     @Sensitive(value = SensitivityLevel.CRITICAL)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 512)
     private String clientSecret;
 
     @Sensitive(value = SensitivityLevel.CRITICAL)

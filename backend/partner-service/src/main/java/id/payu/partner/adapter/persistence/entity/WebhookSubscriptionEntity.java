@@ -2,6 +2,7 @@ package id.payu.partner.adapter.persistence.entity;
 
 import id.payu.partner.domain.*;
 
+import id.payu.security.converter.EncryptedStringConverter;
 import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
@@ -49,8 +50,11 @@ public class WebhookSubscriptionEntity {
     /**
      * HMAC-SHA256 secret for signing webhook payloads.
      * Generated at registration time, shared with partner.
+     * Encrypted at rest using AES-GCM via {@link EncryptedStringConverter}
+     * (PARTNER-PROD-002).
      */
     @NotBlank
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false, length = 512)
     private String secret;
 
