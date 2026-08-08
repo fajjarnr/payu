@@ -175,6 +175,21 @@ spec:
               name: dev-env-secrets
               key: ENCRYPTION_SALT
               optional: true
+        # PARTNER-PROD-002: field-level encryption at rest. password derives the
+        # AES-GCM key; previous-keys keeps old ciphertext readable during rotation.
+        - name: PAYU_SECURITY_ENCRYPTION_ENABLED
+          value: "true"
+        - name: PAYU_SECURITY_ENCRYPTION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payu-secrets
+              key: encryption-key
+        - name: PAYU_SECURITY_ENCRYPTION_PREVIOUS_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: payu-secrets
+              key: ENCRYPTION_PREVIOUS_KEYS
+              optional: true
         - name: WEBHOOK_SECURITY_SECRET
           valueFrom:
             secretKeyRef:
