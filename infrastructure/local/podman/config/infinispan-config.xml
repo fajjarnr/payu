@@ -33,23 +33,12 @@
         </socket-bindings>
 
         <security>
-            <security-realms>
-                <security-realm name="default" default-realm="default">
-                    <properties-realm/>
-                </security-realm>
-            </security-realms>
         </security>
 
-        <endpoints socket-binding="default" security-realm="default">
+        <endpoints socket-binding="default">
             <endpoint socket-binding="default">
-                <hotrod-connector>
-                    <authentication>
-                        <sasl mechanisms="NONE"/>
-                    </authentication>
-                </hotrod-connector>
-                <rest-connector>
-                    <authentication mechanisms="NONE"/>
-                </rest-connector>
+                <hotrod-connector/>
+                <rest-connector/>
             </endpoint>
         </endpoints>
     </server>
