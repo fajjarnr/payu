@@ -92,6 +92,9 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         "/api/v1/investments",
 
         // --- Partner service: payment links, merchants, SNAP-BI ---
+        // PARTNER-002: /auth/token is deliberately excluded — token issuance is
+        // authenticated by client-key HMAC, not idempotency. Only payment/refund
+        // writes (payments, payments/{id}/refund) require an idempotency key.
         "/api/v1/partners",
         "/v1/partner",
         "/api/v1/v1/partner",
@@ -99,6 +102,10 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         // --- Checkout (gateway-native) ---
         "/api/v1/checkout"
     );
+
+    // SNAP-BI token issuance is not a financial write; requiring Idempotency-Key
+    // here broke the public contract (PARTNER-002).
+    private static final String SNAP_BI_TOKEN_PATH = "/auth/token";
 
     @Inject
     GatewayConfig config;
@@ -158,6 +165,12 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         // Check if this is a financial operation that requires idempotency key
         boolean isFinancialOperation = FINANCIAL_PATHS.stream()
             .anyMatch(financialPath -> path.startsWith(financialPath));
+
+        // PARTNER-002: SNAP-BI token issuance (client-key HMAC auth) is not a
+        // financial write and must not require an idempotency key.
+        if (isFinancialOperation && path.endsWith(SNAP_BI_TOKEN_PATH)) {
+            isFinancialOperation = false;
+        }
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             if (isFinancialOperation) {

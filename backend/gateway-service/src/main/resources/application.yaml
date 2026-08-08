@@ -387,8 +387,12 @@ gateway:
     timestamp-header: "X-Timestamp"
     tolerance-seconds: 300 # 5 minutes
     required-paths:
-      - "/v1/partner/*"
-      - "/api/v1/partners/*"
+      # PARTNER-001/006: /v1/partner/** is the public SNAP-BI contract — it
+      # authenticates via client-key HMAC at partner-service, NOT the gateway's
+      # legacy X-Partner-Id HMAC. Partner admin paths are JWT-protected at
+      # partner-service. The placeholder below never matches, so the gateway's
+      # request-signing filter does not apply to the partner domain.
+      - "/internal/none/*"
     partner-keys:
       # Partner ID: Secret Key (base64 encoded)
       # In production, these should be stored securely (e.g., Vault)
@@ -399,11 +403,9 @@ gateway:
     enabled: true
     mode: "allow" # allow or deny
     paths:
-      - pattern: "/v1/partner/*"
-        ips:
-          - "10.0.0.0/8"
-          - "172.16.0.0/12"
-          - "192.168.0.0/16"
+      # PARTNER-001/006: /v1/partner/** is the public SNAP-BI contract reached
+      # by external partners — a private-RFC1918 whitelist would reject them.
+      # Partner auth happens via client-key HMAC at partner-service.
       - pattern: "/api/v1/backoffice/*"
         ips:
           - "10.0.0.0/8"

@@ -57,6 +57,20 @@ public class IdempotencyFilterEnforcedTest {
     }
 
     @Test
+    @DisplayName("PARTNER-002: Should accept SNAP-BI token request without idempotency key: /api/v1/v1/partner/auth/token")
+    public void testAcceptSnapBiTokenWithoutIdempotencyKey() {
+        // Regression: the idempotency filter must NOT reject the token path with
+        // 400 GAT_IDM_001. Downstream is absent in the unit-test env, so any
+        // non-400 pass-through status proves the filter let the request through.
+        given()
+            .contentType("application/json")
+            .when()
+            .post("/api/v1/v1/partner/auth/token")
+            .then()
+            .statusCode(not(is(400)));
+    }
+
+    @Test
     @DisplayName("Should accept request with idempotency key for financial path: /api/v1/disbursements")
     public void testAcceptRequestWithIdempotencyKeyForFinancialPath() {
         String key = "test-fin-key-" + System.currentTimeMillis();
