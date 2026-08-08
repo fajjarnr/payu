@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.41] - 2026-08-08
+
+### Added
+
+- **Gateway public SNAP-BI contract entry point**: added `PartnerContractResource` (`/v1/partner/**`) sharing a new `GatewayDispatchService` with the `/api/v1` catch-all, so the contract path reaches partner-service without a doubled prefix (PARTNER-001). Added `PartnerContractResourceTest` (3 cases).
+- **Isolated SNAP-BI fixture money-flow test**: `SnapBiPublicFlowTest` proves token → payment → status → refund through the contract path with real SNAP-BI HMAC signatures, plus negative auth cases (invalid client key, invalid signature, bogus bearer token) (PARTNER-006).
+
+### Fixed
+
+- **SNAP-BI token exempt from mandatory idempotency**: `IdempotencyFilter` now excludes the `/auth/token` path from `FINANCIAL_PATHS`; token issuance is authenticated by client-key HMAC, not idempotency. Payments/refunds still require `Idempotency-Key` (PARTNER-002).
+- **Missing required SNAP-BI headers return 400, not 500**: shared `Rfc9457GlobalExceptionHandler` now handles `MissingRequestHeaderException` with `400 MISSING_REQUIRED_HEADER` (PARTNER-003).
+- **Public health endpoint reachable without auth**: partner-service `SecurityCustomizer` permits `/partners/public/health` (PARTNER-004).
+- **API key validation wired to the request boundary**: `SandboxFilter` delegates to `ApiKeyService.validateKey()` (its only production caller) and fails closed with `401` for invalid/revoked keys; SNAP-BI bearer tokens are untouched (PARTNER-005).
+- **Gateway partner-domain filters no longer conflict with the public contract**: removed `/v1/partner/*` from `request-signing.required-paths` and `ip-whitelist.paths` — the public SNAP-BI path authenticates via client-key HMAC at partner-service, not the gateway's legacy X-Partner-Id HMAC or a private-RFC1918 whitelist.
+- **Local Infinispan dev config**: `infinispan-config.xml` endpoint no longer declares an auth realm, matching the plain Hot Rod/REST dev contract.
+
+### Validation
+
+- `partner-service -am test`: 255+ tests, 0 failures (includes new `SnapBiMissingHeaderTest` 3/3, `HealthPublicTest` 2/2, `SnapBiPublicFlowTest` 4/4, `SandboxFilterTest` 6/6).
+- `gateway-service test`: 469 tests, 0 failures (includes new `PartnerContractResourceTest` 3/3 and updated `IdempotencyFilterEnforcedTest` 5/5).
+- Live Podman stack (PostgreSQL, Infinispan, Kafka, Keycloak, Artemis, partner-service, gateway-service): `POST /v1/partner/auth/token` → `401 Invalid Client Key` (routed); token without idempotency key → `401` (not `GAT_IDM_001`); payments without key → `400 GAT_IDM_001`; missing `X-CLIENT-KEY` → `400 MISSING_REQUIRED_HEADER`; `/partners/public/health` → `200 UP` direct and via gateway.
+
 ## [1.10.40] - 2026-08-06
 
 ### Added
