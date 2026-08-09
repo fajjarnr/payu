@@ -3,7 +3,11 @@ node_modules/
 dist/
 *.generated.py
 
-# only index src/, ignore everything else
-*
-!src/
-!src/**
+# PayU codebase folders
+!backend/
+!docs/
+!frontend/
+!infrastructure/
+!scripts/
+!sdk/
+!tests/
