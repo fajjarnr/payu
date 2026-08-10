@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.42] - 2026-08-10
+
+### Fixed
+
+- **OpenShift `payu-dev` deployment alignment**: updated Tekton build pipelines with `-DskipTests` and disabled TLS verification for internal OpenShift registry compatibility.
+- **3Scale API Management deployment**: updated `apimanager.yaml` to use AWS EBS CSI (`gp3-csi`) storage class and applied missing dev secrets (`system-seed`, `system-database`, `backend-redis`, `system-redis`, `apicast-payu-env`, `system-events-hook`). Created `payu_3scale_system` database on CNPG PostgreSQL cluster.
+- **NetworkPolicy cross-namespace connectivity**: allowed `payu-api-management` namespace access to PostgreSQL port 5432 in `payu-dev` namespace for 3Scale preflight checks.
+- **Kafka KRaft HA topology for dev**: scaled Kafka broker and controller node pools to 3 replicas each for `payu-dev`.
+
 ## [1.10.41] - 2026-08-08
 
 ### Added

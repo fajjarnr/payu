@@ -79,13 +79,19 @@ check_pod_health() {
     POD_COUNT=$(oc get pods -n "${NAMESPACE}" -l "${label}" --no-headers 2>/dev/null | wc -l)
 
     if [ "$POD_COUNT" -eq 0 ]; then
-        # Try with different label format
-        POD_COUNT=$(oc get pods -n "${NAMESPACE}" -l "deployment=${service}" --no-headers 2>/dev/null | wc -l)
-        if [ "$POD_COUNT" -eq 0 ]; then
-            print_warning "No pods found for ${service}"
-            return 0
+        # Try with Kubernetes standard label format
+        POD_COUNT=$(oc get pods -n "${NAMESPACE}" -l "app.kubernetes.io/name=${service}" --no-headers 2>/dev/null | wc -l)
+        if [ "$POD_COUNT" -gt 0 ]; then
+            label="app.kubernetes.io/name=${service}"
+        else
+            # Try with deployment label format
+            POD_COUNT=$(oc get pods -n "${NAMESPACE}" -l "deployment=${service}" --no-headers 2>/dev/null | wc -l)
+            if [ "$POD_COUNT" -eq 0 ]; then
+                print_warning "No pods found for ${service}"
+                return 0
+            fi
+            label="deployment=${service}"
         fi
-        label="deployment=${service}"
     fi
 
     # Check running pods
@@ -120,11 +126,14 @@ check_deployment_status() {
 
     # Get deployment details
     DESIRED=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
-    READY=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
-    AVAILABLE=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
-
-    UPDATED=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.updatedReplicas}' 2>/dev/null || echo "0")
-    UNAVAILABLE=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.unavailableReplicas}' 2>/dev/null || echo "0")
+    READY=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null)
+    READY=${READY:-0}
+    AVAILABLE=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.availableReplicas}' 2>/dev/null)
+    AVAILABLE=${AVAILABLE:-0}
+    UPDATED=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.updatedReplicas}' 2>/dev/null)
+    UPDATED=${UPDATED:-0}
+    UNAVAILABLE=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.unavailableReplicas}' 2>/dev/null)
+    UNAVAILABLE=${UNAVAILABLE:-0}
 
     if [ "$READY" -eq "$DESIRED" ] && [ "$AVAILABLE" -eq "$DESIRED" ]; then
         if [ "$UNAVAILABLE" -eq 0 ]; then

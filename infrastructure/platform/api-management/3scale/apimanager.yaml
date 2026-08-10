@@ -40,7 +40,7 @@ spec:
   system:
     fileStorage:
       persistentVolumeClaim:
-        storageClassName: ocs-storagecluster-cephfs
+        storageClassName: gp3-csi
         resources:
           requests: 5Gi
     appSpec:

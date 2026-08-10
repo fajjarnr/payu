@@ -56,12 +56,17 @@ spec:
             requests:
               storage: 2Gi
           storageClassName: gp3-csi
+    - name: maven-settings
+      configMap:
+        name: maven-settings
+    - name: dockerconfig
+      emptyDir: {}
 EOF
   sleep 2
 }
 
 log "Deploying Backend Services (Spring Boot)"
-for svc in account-service auth-service transaction-service wallet-service investment-service lending-service fx-service statement-service backoffice-service partner-service promotion-service support-service compliance-service cms-service dispute-service integration-service product-catalog-service; do
+for svc in account-service auth-service transaction-service wallet-service investment-service lending-service lending-rules loan-origination-process fx-service statement-service backoffice-service partner-service promotion-service support-service compliance-service cms-service dispute-service integration-service product-catalog-service; do
   trigger_pipeline "$svc" "$svc" "spring-boot" "backend"
 done
 
@@ -70,8 +75,12 @@ for svc in billing-service notification-service gateway-service api-portal-servi
   trigger_pipeline "$svc" "$svc" "quarkus" "backend"
 done
 
-log "Deploying Required Simulator"
+log "Deploying Simulators (Quarkus)"
 trigger_pipeline "biller-simulator" "simulators/biller-simulator" "quarkus" "backend"
+trigger_pipeline "bi-fast-simulator" "simulators/bi-fast-simulator" "quarkus" "backend"
+trigger_pipeline "dukcapil-simulator" "simulators/dukcapil-simulator" "quarkus" "backend"
+trigger_pipeline "qris-simulator" "simulators/qris-simulator" "quarkus" "backend"
+trigger_pipeline "va-simulator" "simulators/va-simulator" "quarkus" "backend"
 
 log "Deploying Backend Services (Python/FastAPI)"
 for svc in kyc-service analytics-service; do

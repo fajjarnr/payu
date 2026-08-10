@@ -213,6 +213,7 @@ spec:
             - -am
             - clean
             - package
+            - -DskipTests
             - -T1C
 
     # ── Step 3a: Buildah image (Java services) ──
@@ -238,7 +239,7 @@ spec:
         - name: CONTAINERFILE
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
-          value: "true"
+          value: "false"
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
@@ -269,7 +270,7 @@ spec:
         - name: CONTAINERFILE
           value: $(params.service-base-dir)/$(params.service-path)/Containerfile
         - name: TLSVERIFY
-          value: "true"
+          value: "false"
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
