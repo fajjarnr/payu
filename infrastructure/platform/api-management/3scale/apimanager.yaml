@@ -5,7 +5,11 @@
 #   - 3scale Operator installed from OperatorHub (threescale-2.16 channel)
 #   - Namespace: payu-api-management
 #   - External PostgreSQL and Redis connection secrets
-#   - ODF CephFS for shared System file storage
+#   - MinIO S3-compatible storage for System file storage (see minio.yaml),
+#     replacing the RWX PVC requirement
+#
+# NOTE: system.fileStorage is NOT a reconcilable APIManager parameter.
+# Changing it after install requires deleting and recreating this CR.
 #
 # Usage:
 #   oc apply -f apimanager.yaml -n payu-api-management
@@ -38,11 +42,13 @@ spec:
       redis: true
 
   system:
+    # System file storage via MinIO S3-compatible endpoint (see minio.yaml and
+    # system-s3 secret). S3-compatible storage removes the RWX PVC requirement
+    # that blocks system-app at 2 replicas on RWO-only EBS clusters.
     fileStorage:
-      persistentVolumeClaim:
-        storageClassName: gp3-csi
-        resources:
-          requests: 5Gi
+      simpleStorageService:
+        configurationSecretRef:
+          name: system-s3
     appSpec:
       replicas: 2
     sidekiqSpec:

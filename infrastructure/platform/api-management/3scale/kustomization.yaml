@@ -10,6 +10,8 @@ resources:
   - externalsecrets.yaml
   - apicast-policy.yaml
   - redis.yaml
+  - minio.yaml
+  - secrets-3scale-dev.yaml
   - 3scale-network-policy.yaml
   - payu-dev-network-policy.yaml
   - allow-dev-gateway-to-redis-3scale.yaml

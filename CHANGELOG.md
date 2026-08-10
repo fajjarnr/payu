@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.43] - 2026-08-10
+
+### Added
+
+- **3scale system file storage on MinIO S3-compatible storage (PARTNER-PROD-001)**: added `infrastructure/platform/api-management/3scale/minio.yaml` (Deployment + Service + bucket-init Job, bucket `payu-3scale` private) and `system-s3` secret; switched `apimanager.yaml` `system.fileStorage` from RWO PVC to `simpleStorageService` (S3-compatible via `AWS_HOSTNAME`/`AWS_PROTOCOL`/`AWS_PATH_STYLE`). Sandbox clusters only provide RWO EBS storage classes, and 3scale system-app needs shared storage at 2 replicas. `system.fileStorage` is not a reconcilable APIManager parameter, so the CR was deleted and recreated. Verified: APIManager `Available=True`, `system-app` 2/2 Ready (previously stuck on Multi-Attach RWO), APIcast production 2/2 + staging 1/1 Running, APIcast routes admitted.
+- **Standalone Infinispan dev cache (PARTNER-PROD-002 dependency fix)**: added `infrastructure/platform/data/overlays/dev/infinispan-standalone.yaml` (StatefulSet + Service `payu-cache`, image `quay.io/infinispan/server:16.2.1`, full `infinispan.xml` server config with `payu` text/plain cache, plain Hot Rod). The Data Grid 8.6.5 operator's validating webhook (`vinfinispan.kb.io`) panics with a nil pointer on the Infinispan CR, so the operator never provisions the cache and gateway-service 500s with `CacheNotFoundException`. Dev overlay now uses the standalone manifest instead of the operator CR (promoted overlays keep the CR with mTLS).
+- **Partner API public edge route (dev)**: added `infrastructure/workloads/overlays/payu-dev/partner-api-route.yaml` — TLS edge Route `partner-api.apps.cluster-9knnm.9knnm.sandbox2980.opentlc.com` → `gateway-service`, because the `apps.fajjjar.my.id` wildcard DNS points at the previous cluster's ELB.
+
+### Fixed
+
+- **Dev secrets consistency**: `secrets-3scale-dev.yaml` Redis URLs used `payu_dev_redis_2026` while the actual `redis-3scale-credentials` password is `redis_dev_secret_2026`, so 3scale operator preflight failed with `WRONGPASS` on CR recreation. Aligned URLs and added the `redis-3scale-credentials` secret to the dev file. Added `threescale-provider-account` (sandbox adminURL) and `minio-credentials` secrets.
+- **Infinispan standalone boot**: `readOnlyRootFilesystem` relaxed (server writes `server/{conf,cache,log}` at boot); config key renamed to `infinispan.xml` (server 16.2.1 default config name) with full `interfaces`/`socket-bindings`/`endpoints` structure; probes point at Hot Rod port 11222. Verified: `payu-cache-0` Ready 1/1, cache `payu` RUNNING, gateway partner endpoint changed from 500 → 401 `MISSING_TOKEN`.
+
+### Known blockers
+
+- **3scale `system-master` container 2/3 (Puma worker timeout on `/check.txt`)**: started during the sandbox cluster upgrade 4.18→4.19→4.20 (still in progress, ~86%). Node CPU is low (2–7%), MCP pools Updated, S3/MinIO latency ~10ms — so it is neither resource contention nor storage. Suspected 3scale 2.16.4 incompatibility with the new OCP 4.20 configuration; needs investigation after the upgrade completes. This blocks `Backend`/`Product` capabilities sync (`payu-admin` admin API returns 503) and thus full APIcast credential E2E.
+
 ## [1.10.42] - 2026-08-10
 
 ### Fixed

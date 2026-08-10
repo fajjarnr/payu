@@ -7,7 +7,13 @@ kind: Kustomization
 
 namespace: payu-dev
 resources:
-  - ../../base
+  # Dev-only: standalone Infinispan StatefulSet serves plain Hot Rod. The
+  # operator-managed Infinispan CR (base/datagrid.yaml) is skipped because the
+  # Data Grid 8.6.5 operator webhook (vinfinispan.kb.io) panics on it in the
+  # sandbox cluster and never provisions the cache.
+  - infinispan-standalone.yaml
+  # Promoted overlays (sit/uat/preprod/prod) use ../../base which includes the
+  # operator-managed Infinispan CR with mTLS.
 
 # Dev cache stays reachable without Vault-provisioned server TLS/CA secrets.
 # Production overlays keep the base mTLS configuration.

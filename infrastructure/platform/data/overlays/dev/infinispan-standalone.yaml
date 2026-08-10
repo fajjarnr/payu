@@ -1,0 +1,157 @@
+# Infinispan dev cache — standalone StatefulSet + Service.
+#
+# payu-dev deliberately uses plain Hot Rod (no endpoint auth, no TLS) so the
+# dev workloads do not depend on Vault-provisioned client material. The
+# Infinispan CR (base/datagrid.yaml + overlay patch) is the promoted path, but
+# the Data Grid 8.6.5 operator's validating webhook (vinfinispan.kb.io) panics
+# with a nil pointer on this CR in the sandbox cluster, so the operator never
+# provisions the cluster. This standalone manifest is the dev fallback: same
+# cache name `payu`, text/plain values, Hot Rod port 11222.
+#
+# Promoted environments (sit/uat/preprod/prod) keep the operator-managed CR
+# with mTLS; this file is dev-only.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-cache-custom-config
+  labels:
+    app.kubernetes.io/name: payu-cache-config
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+data:
+  # Server 16.2.1 loads conf/infinispan.xml by default (no -c flag). The file
+  # must be a full server config (interfaces/socket-bindings/endpoints), not a
+  # bare cache-container — a bare config NPEs in parseConfiguration.
+  infinispan.xml: |
+    <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="urn:infinispan:config:16.2 https://infinispan.org/schemas/infinispan-config-16.2.xsd"
+                xmlns="urn:infinispan:config:16.2"
+                xmlns:server="urn:infinispan:server:16.2">
+      <cache-container name="default" statistics="true">
+        <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:tcp}" node-name="${infinispan.node.name:}"/>
+        <distributed-cache-configuration name="distributed-cache-template">
+          <encoding>
+            <key media-type="text/plain"/>
+            <value media-type="text/plain"/>
+          </encoding>
+        </distributed-cache-configuration>
+        <distributed-cache name="payu" configuration="distributed-cache-template"/>
+      </cache-container>
+      <server xmlns="urn:infinispan:server:16.2">
+        <interfaces>
+          <interface name="public">
+            <inet-address value="${infinispan.bind.address:0.0.0.0}"/>
+          </interface>
+        </interfaces>
+        <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+          <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+        </socket-bindings>
+        <endpoints>
+          <endpoint socket-binding="default">
+            <hotrod-connector name="hotrod"/>
+            <rest-connector name="rest"/>
+          </endpoint>
+        </endpoints>
+      </server>
+    </infinispan>
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: payu-cache
+  labels:
+    app.kubernetes.io/name: payu-cache
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: platform-team
+spec:
+  serviceName: payu-cache
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payu-cache
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payu-cache
+        app.kubernetes.io/component: cache
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: infinispan
+          image: quay.io/infinispan/server:16.2.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: hotrod
+              containerPort: 11222
+          readinessProbe:
+            httpGet:
+              path: /rest/v2/cache-managers/default/health/status
+              port: hotrod
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /rest/v2/cache-managers/default/health/status
+              port: hotrod
+            initialDelaySeconds: 25
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            # ponytail: infinispan server image writes to server/{conf,cache,log}
+            # at boot; a RO rootfs needs 3 extra emptyDir mounts for marginal
+            # gain in a dev-only cache. Relax RO rootfs instead.
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /opt/infinispan/server/conf/infinispan.xml
+              subPath: infinispan.xml
+            - name: data
+              mountPath: /opt/infinispan/server/data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: payu-cache-custom-config
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: gp3-csi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payu-cache
+  labels:
+    app.kubernetes.io/name: payu-cache
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  selector:
+    app.kubernetes.io/name: payu-cache
+  ports:
+    - name: hotrod
+      port: 11222
+      targetPort: hotrod

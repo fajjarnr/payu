@@ -1,0 +1,24 @@
+# Partner API public edge (dev).
+# TLS edge route to gateway-service; partner traffic flows
+# router -> gateway-service -> partner-service.
+# Host uses the sandbox cluster default domain because apps.fajjjar.my.id
+# wildcard DNS points at the previous cluster's ELB.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: partner-api
+  labels:
+    app.kubernetes.io/name: partner-api
+    app.kubernetes.io/part-of: payu
+spec:
+  host: partner-api.apps.cluster-9knnm.9knnm.sandbox2980.opentlc.com
+  to:
+    kind: Service
+    name: gateway-service
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
