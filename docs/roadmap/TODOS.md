@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.35` (2026-08-05) — Data Grid config-listener NetworkPolicy, zero warn/error across all pods |
-| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge live; 003 SSRF live; 004 DLQ live; 006 isolation matrix + merchant scoping live; sisa: WAF/mTLS, PROD-005/007-011, RLS/RBAC) |
+| **Last Updated** | 2026-08-11 (PROD-005 reconciliation live: 0 unmatched + case detection; sisa: WAF/mTLS, PROD-007-011, RLS/RBAC) |
 
 ---
 
@@ -121,6 +121,52 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 | CB-012 | P1 | Enforce ledger immutability di DB (WL-001): REVOKE UPDATE/DELETE atau trigger `prevent_ledger_update` + test migration menolak UPDATE | WL-001 closed, DB-level negative test lulus |
 | CB-013 | P1 | PII outbox & response (ACCOUNT-004 lanjutan): hapus `email`/`fullName` dari `UserCreatedEvent` payload atau enkripsi; ganti `ResponseEntity<User>` dengan DTO minimum | Event + response tanpa PII penuh, leakage tests green |
 
+---
+
+## 🧭 Audit Per Fitur (2026-08-11) — Transfer & Buka Rekening
+
+> Trace end-to-end tiap hop (bukan per service), langsung dari code. Fitur MVP PRD Phase 1: **transfer** dan **buka rekening+eKYC**.
+
+### Fitur 1: Transfer (antar PayU + BI-FAST)
+
+Alur code: `TransactionController POST /v1/transfers` (`@Idempotent` required) → `InitiateTransferCommandHandler.handle()` → `AuthorizationService.verifySenderAccountOwnership` → persist PENDING + outbox `payu.transaction.initiated.v1` (satu `@Transactional`) → wallet gRPC `reserveBalance` → switch type (BIFAST/INTERNAL/SKN/RTGS) → commit/credit.
+
+| Hop | Verdict | Bukti code |
+|:---|:---:|:---|
+| Idempotency entry | 🟢 | DB `findByIdempotencyKey` sebelum persist + `@Idempotent` di controller (TransactionController.java:191) |
+| Ownership sender | 🟢 | JWT userId == senderAccountId atau via account-service (AuthorizationService.java:109-124) |
+| Reserve | 🟢 | `findReservationByReference` + replay validation + pessimistic lock + double-check (WalletService.java:150-210) |
+| Commit | 🟢 | Idempotent (cek COMMIT entry dalam lock, WalletService.java:223-238), pessimistic lock |
+| **Kompensasi internal transfer** | 🔴 **BUG BARU TX-003** | `processInternalTransfer`: commit sukses lalu `creditBalance` recipient GAGAL → catch memanggil `releaseBalance` padahal setelah commit `reservedBalance = 0` → `releaseReservation` throw `"Reserved amount not found"` (WalletService.java:268-290, domain Wallet.java:78-83) → dana sender sudah ter-debit (committed) tapi recipient tidak dapat, **tanpa reversal**; compensation error hanya di-log. `InitiateTransferCommandHandlerTest` cuma 4 test, **tidak ada** yang cover skenario commit-ok/credit-fail |
+| Money scale lintas hop | 🔴 | Amount dibawa `Money` scale 2 (PROD-047) → wallet ledger scale 4 — 2 digit hilang sebelum reserve |
+| Event status | 🟢 | FAILED + `payu.transaction.failed.v1` di semua path error; outbox atomic |
+
+### Fitur 2: Buka Rekening + eKYC
+
+Alur code: `OnboardingController POST /register` → `UserApplicationService.registerUser` → duplicate check → Keycloak provision → KYC Dukcapil → save + outbox `payu.account.user-created.v1`.
+
+| Hop | Verdict | Bukti code |
+|:---|:---:|:---|
+| Duplicate check | 🔴 | `existsByEmail/existsByUsername` plaintext vs kolom terenkripsi → **selalu false**, duplicate email/user lolos (ACCOUNT-001 cross-feature: UserApplicationService.java:44-50, UserRepository.java:13-17) |
+| IAM provision | 🔴 | Keycloak dulu, tapi `externalId = command.externalId()` (dari request publik!) kalau IAM tidak return ID (UserApplicationService.java:57-64) — ACCOUNT-005 confirmed; save DB gagal → orphan IAM user tanpa kompensasi |
+| KYC | 🟡 | Fail-soft: KYC down → user tetap dibuat `PENDING_VERIFICATION` (UserApplicationService.java:68-82) — pilihan desain valid, tapi tanpa retry/backfill terlihat di code |
+| Response | 🔴 | Return `ResponseEntity<User>` domain penuh (email, phone, fullName, **nik**) — ACCOUNT-004; outbox payload `email`+`fullName` plaintext (KafkaUserEventPublisherAdapter.java:76-81) |
+| Tenant | 🔴 | `X-Tenant-Id` dari header caller (ACCOUNT-003) |
+
+### Ringkasan fitur
+
+| Fitur | Status | Blocker |
+|:---|:---:|:---|
+| Transfer | 🟡 money-flow live, tapi 1 bug kompensasi + scale 2 | TX-003 (baru), PROD-047 |
+| Buka rekening | 🔴 belum MVP | ACCOUNT-001..005 (semua confirmed di code), PII di response/event |
+
+**Action items fitur**:
+
+| Key | Priority | Item | Done saat |
+|:---|:---:|:---|:---|
+| CB-014 | P0 | Fix kompensasi internal transfer (TX-003): setelah commit sukses, kegagalan credit recipient harus **reversal** (debit recipient tidak terjadi / credit sender) bukan release; tambah test commit-ok+credit-fail → balance kembali exact | Test regression green, dana tidak hilang di skenario commit/credit split |
+| CB-015 | P1 | Test E2E fitur transfer end-to-end (gateway→transaction→wallet→outbox→ledger) dengan negative: duplicate key, insufficient, commit/credit failure, timeout ambiguity | E2E hop-by-hop green termasuk kompensasi |
+
 **Action items (masuk backlog aktif)**:
 
 | Key | Priority | Item | Done saat |
@@ -142,6 +188,12 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.
 
 **2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
+
+**PARTNER-PROD-005 progress (2026-08-11)**: **financial integrity & reconciliation LIVE** (`partner-service:1.8.104` / `wallet-service:1.8.113`):
+- **wallet-service**: endpoint trusted-service `POST /api/v1/reconciliation/ledger-movements` (azp `payu-backend`) — batch lookup `ledger_entries` by reference ID, membawa `referenceType` (RESERVATION/COMMIT/CREDIT/REFUND_REVERSAL) + `entryType` (DEBIT/CREDIT).
+- **partner-service `SnapBiReconciliationService`** (ShedLock + `@Scheduled`, interval `payu.reconciliation.snap.interval-ms` default 1h — dev 5m, window `window-hours` default 24h): COMPLETED payment wajib punya kedua leg ledger (DEBIT RESERVATION/COMMIT di source + CREDIT di beneficiary); COMPLETED refund wajib punya REFUND_REVERSAL; ledger movement tanpa record partner COMPLETED = orphan (deteksi crash-after-wallet-commit). Setiap unmatched → case `OPEN` di `snap_reconciliation_cases` (migration **V19**, unique `(reference_type, reference_id)`, dedupe replay-safe) + log WARN.
+- **Live bukti**: run bersih `Snap reconciliation clean: 4 payment(s), 1 refund(s), 5 reference(s) checked, 0 unmatched` (PAYU-5fc0b0ae/35701266/c3c33672/9335ceeb + REFUND-978cfae7 semua match leg ledger); injeksi COMPLETED payment tanpa leg ledger (`PAYU-RECON-BROKEN-001`) → run berikutnya **`Reconciliation case OPEN: type=PAYMENT ... missing ledger legs (debit=false, credit=false)`** + row OPEN di DB + WARN `1 unmatched case(s)`; cleanup → clean kembali. Migration V19 applied live.
+- **Sisa PARTNER-PROD-005**: reconciliation untuk outbox (event yang tidak pernah terpublish vs payment row) belum di-cover; auto-resolve/mark RESOLVED workflow ops belum ada (manual review), dan alert destination (Slack/PagerDuty) belum dikonfigurasi.
 
 **PARTNER-PROD-006 progress (2026-08-11)**: **tenant isolation & authorization sebagian besar LIVE** di `partner-service:1.8.103`:
 - **Identity dari credential/token**: SNAP-BI token → `clientId` dari JWT (HMAC-signature verified) → partner lookup; signature HMAC diverifikasi di token/payment/status/refund (`SnapBiSignatureService`). `SandboxFilter` fail-closed pada API key invalid/revoked (PARTNER-005).

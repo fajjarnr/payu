@@ -4,6 +4,12 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-005 reconciliation LIVE (partner `1.8.104` / wallet `1.8.113`)**:
+> - `SnapBiReconciliationService` (ShedLock, interval 1h prod / 5m dev, window 24h): COMPLETED payment wajib 2 leg ledger (DEBIT RESERVATION/COMMIT + CREDIT), refund wajib REFUND_REVERSAL, movement tanpa record COMPLETED = orphan; unmatched → `snap_reconciliation_cases` OPEN (V19, unique, dedupe) + WARN alert.
+> - wallet-service endpoint trusted `POST /api/v1/reconciliation/ledger-movements` (azp payu-backend).
+> - Live: run bersih `4 payments, 1 refund, 5 references, 0 unmatched`; injeksi COMPLETED tanpa leg → case OPEN `missing ledger legs` + WARN; cleanup → clean lagi. Tests: partner 303/303, wallet 30/30.
+> - Sisa: reconciliation outbox belum di-cover, workflow resolve manual, alert destination belum dikonfigurasi.
+
 > ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-006 isolation matrix + merchant scoping LIVE (partner-service `1.8.103`)**:
 > - Merchant routes unscoped diganti partner-scoped (`/merchants/partners/{partnerId}/{merchantId}`); `getMerchantForPartner`/`activateMerchantForPartner` enforce ownership.
 > - `PartnerIsolationMatrixTest`: matrix negatif cross-partner untuk API key, webhook, payment-link, merchant — partner A tidak bisa akses resource partner B (semua throw). SNAP-BI identity dari JWT clientId + HMAC (sudah live). Tests 295/295.

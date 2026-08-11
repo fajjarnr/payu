@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.48] - 2026-08-11
+
+### Added
+
+- **SNAP payment/refund vs wallet-ledger reconciliation (PARTNER-PROD-005)**: `SnapBiReconciliationService` (ShedLock + scheduled, `payu.reconciliation.snap.interval-ms` default 1h, `window-hours` default 24h) — every COMPLETED payment must show both wallet ledger legs (DEBIT RESERVATION/COMMIT on source + CREDIT on beneficiary), every COMPLETED refund a `REFUND_REVERSAL` movement, and any ledger movement without a COMPLETED partner record is an orphan (crash-after-wallet-commit detection). Unmatched references become OPEN `snap_reconciliation_cases` rows (Flyway V19, unique per type+reference, replay-safe dedupe) with a WARN alert log.
+- **Trusted ledger-movement query (wallet-service)**: `POST /api/v1/reconciliation/ledger-movements` (Keycloak azp `payu-backend` only) returns movements by reference IDs including `referenceType` so reversal legs are distinguishable.
+- **Dev overlay**: partner-service reconciliation interval 5 minutes (`PAYU_RECONCILIATION_SNAP_INTERVAL_MS=300000`) for fast evidence; production keeps the hourly default.
+
+### Validation
+
+- `SnapBiReconciliationServiceTest` 8 cases (matched payment/refund no-case, missing debit leg, no movements, refund without reversal, orphan movement, dedupe, unrelated references ignored); partner-service 303/303, wallet-service 30/30, 0 failures.
+- Live (partner `1.8.104`, wallet `1.8.113`): clean run `4 payment(s), 1 refund(s), 5 reference(s) checked, 0 unmatched`; injected COMPLETED payment without ledger legs → next run flags `OPEN PAYMENT` case `missing ledger legs (debit=false, credit=false)` + WARN `1 unmatched case(s)`; after cleanup the run is clean again. Flyway V19 applied live.
+
 ## [1.10.47] - 2026-08-11
 
 ### Added
