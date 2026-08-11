@@ -1393,7 +1393,7 @@ services:
       PORT: "8080"
       SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
       ARTEMIS_HOST: artemis
-      ARTEMIS_STOMP_PORT: "61616"
+      ARTEMIS_STOMP_PORT: "61613"
       ARTEMIS_HEARTBEAT_SEND_MS: "30000"
       ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
@@ -1465,6 +1465,7 @@ services:
     networks:
       - payu-network
     ports:
+      # host 8097: 8095 dipakai apicast (profile api-management). Host port != service port (8080).
       - "8097:8080"
     environment:
       <<: *local-security-environment
@@ -2110,6 +2111,73 @@ services:
     profiles:
       - devsecops
 
+  # Sigstore local signing lab — cosign sign/attest/verify + Rekor transparency log.
+  # NOT a replacement for RHTAS (Fulcio/CTlog/policy-controller remain cluster-only:
+  # admission enforcement needs kube-apiserver). Use for pipeline signing tests.
+  rekor-redis:
+    <<: *infra-defaults
+    image: docker.io/library/redis:7-alpine
+    container_name: payu-rekor-redis
+    networks:
+      - payu-network
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    volumes:
+      - rekor_redis:/data
+    profiles:
+      - devsecops
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rekor-server:
+    <<: *infra-defaults
+    image: ghcr.io/sigstore/rekor/rekor-server:v1.3.6
+    container_name: payu-rekor-server
+    networks:
+      - payu-network
+    ports:
+      - 3000:3000
+    command:
+      - rekor-server
+      - serve
+      - --rekor_server.address=0.0.0.0
+      - --rekor_server.port=3000
+      - --redis_server.address=rekor-redis:6379
+      - --trillian_log_server.address=rekor-redis:6379
+    depends_on:
+      rekor-redis:
+        condition: service_healthy
+    profiles:
+      - devsecops
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/log || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  cosign:
+    <<: *infra-defaults
+    restart: "no"
+    image: ghcr.io/sigstore/cosign/cosign:v2.4.3
+    container_name: payu-cosign
+    networks:
+      - payu-network
+    volumes:
+      - ../../../:/repo:ro,z
+      - cosign_keys:/keys
+    working_dir: /repo
+    command:
+      - version
+    profiles:
+      - devsecops
+
 volumes:
   postgres_data:
     driver: local
@@ -2132,6 +2200,10 @@ volumes:
   nuclei_data:
     driver: local
   grype_cache:
+    driver: local
+  rekor_redis:
+    driver: local
+  cosign_keys:
     driver: local
 networks:
   payu-network:
