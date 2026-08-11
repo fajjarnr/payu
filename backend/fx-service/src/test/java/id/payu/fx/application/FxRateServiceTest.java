@@ -121,6 +121,8 @@ class FxRateServiceTest {
         assertThat(result.getFromAmount()).isEqualByComparingTo("1000000");
         assertThat(result.getToAmount()).isEqualByComparingTo("65.00");
         assertThat(result.getExchangeRate()).isEqualByComparingTo("0.000065");
+        assertThat(result.getFee()).isEqualByComparingTo("5000.0000");
+        assertThat(result.getFee().scale()).isEqualTo(4);
         assertThat(result.getStatus()).isEqualTo(ConversionStatus.COMPLETED);
     }
 

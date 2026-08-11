@@ -105,7 +105,8 @@ public class FxRateService implements FxRateUseCase {
         
         // BUG-BE-032: Calculate actual fee (0.5% of source amount) instead of always ZERO
         BigDecimal feePercentage = new BigDecimal("0.005"); // 0.5%
-        BigDecimal fee = amount.multiply(feePercentage).setScale(2, java.math.RoundingMode.HALF_EVEN);
+        // FX-001: fee must match DECIMAL(19,4) — scale 2 silently drops fractions
+        BigDecimal fee = amount.multiply(feePercentage).setScale(4, java.math.RoundingMode.HALF_EVEN);
         
         FxConversion conversion = FxConversion.builder()
                 .id(UUID.randomUUID())
