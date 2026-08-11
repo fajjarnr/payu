@@ -3,6 +3,7 @@ package id.payu.account.adapter.web;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.account.dto.RegisterUserResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
@@ -53,12 +54,21 @@ public class OnboardingController {
     )
     @Operation(summary = "Register new user", description = "Create a new user account with email and password")
     @ApiResponse(responseCode = "200", description = "User registered successfully",
-            content = @Content(schema = @Schema(implementation = User.class)))
+            content = @Content(schema = @Schema(implementation = RegisterUserResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid request data")
     @ApiResponse(responseCode = "409", description = "User already exists")
-    public CompletableFuture<ResponseEntity<User>> register(@Valid @RequestBody RegisterUserRequest request) {
+    public CompletableFuture<ResponseEntity<RegisterUserResponse>> register(@Valid @RequestBody RegisterUserRequest request) {
         return registerUserUseCase.registerUser(request)
                 .orTimeout(30, TimeUnit.SECONDS) // BUG-BE-140: Prevent indefinite hang on async registration
-                .thenApply(ResponseEntity::ok);
+                .thenApply(user -> ResponseEntity.ok(toResponse(user)));
+    }
+
+    private RegisterUserResponse toResponse(User user) {
+        return new RegisterUserResponse(
+                user.getId(),
+                user.getExternalId(),
+                user.getStatus() != null ? user.getStatus().name() : null,
+                user.getKycStatus() != null ? user.getKycStatus().name() : null,
+                user.getCreatedAt());
     }
 }

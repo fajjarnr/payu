@@ -6,9 +6,11 @@ import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.adapter.persistence.entity.ProfileEntity;
+import id.payu.security.crypto.BlindIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import id.payu.account.adapter.persistence.entity.KycStatus;
@@ -21,10 +23,13 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final AccountRepository accountRepository;
+    private final BlindIndexService blindIndexService;
 
     @Override
     public User save(User user) {
         id.payu.account.adapter.persistence.entity.UserEntity userEntity = toEntity(user);
+        userEntity.setEmailHash(indexEmail(user.getEmail()));
+        userEntity.setPhoneNumberHash(indexPhone(user.getPhoneNumber()));
         id.payu.account.adapter.persistence.entity.UserEntity savedEntity = userRepository.save(userEntity);
         
         // Save ProfileEntity if needed
@@ -47,12 +52,12 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email).map(this::toDomain);
+        return findByEmailHash(indexEmail(email));
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.existsByEmailHash(indexEmail(email));
     }
 
     @Override
@@ -67,7 +72,26 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
     @Override
     public Optional<User> findByPhoneNumber(String phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber).map(this::toDomain);
+        String hash = indexPhone(phoneNumber);
+        return hash == null
+                ? Optional.empty()
+                : userRepository.findByPhoneNumberHash(hash).map(this::toDomain);
+    }
+
+    private Optional<User> findByEmailHash(String emailHash) {
+        return emailHash == null ? Optional.empty() : userRepository.findByEmailHash(emailHash).map(this::toDomain);
+    }
+
+    private String indexEmail(String email) {
+        return email == null || email.isBlank()
+                ? null
+                : blindIndexService.index(email.trim().toLowerCase(Locale.ROOT));
+    }
+
+    private String indexPhone(String phoneNumber) {
+        return phoneNumber == null || phoneNumber.isBlank()
+                ? null
+                : blindIndexService.index(phoneNumber.trim());
     }
 
     @Override

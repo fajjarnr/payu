@@ -90,19 +90,22 @@ public class BudgetService {
     }
 
     /**
-     * Get a budget by ID.
+     * Get a budget by ID, only when it belongs to the given account (ACCOUNT-002).
      *
+     * @param accountId the owning account ID
      * @param budgetId the budget ID
      * @return optional budget
      */
     @Transactional(readOnly = true)
-    public Optional<Budget> getBudget(UUID budgetId) {
-        return budgetRepository.findById(budgetId);
+    public Optional<Budget> getBudget(UUID accountId, UUID budgetId) {
+        return budgetRepository.findById(budgetId)
+                .filter(budget -> budget.getUserId().equals(accountId));
     }
 
     /**
-     * Update a budget.
+     * Update a budget, only when it belongs to the given account (ACCOUNT-002).
      *
+     * @param accountId the owning account ID
      * @param budgetId the budget ID
      * @param newLimit the new limit amount (optional)
      * @param newPeriod the new period (optional)
@@ -110,10 +113,9 @@ public class BudgetService {
      * @return the updated budget
      */
     @Transactional
-    public Budget updateBudget(UUID budgetId, BigDecimal newLimit,
+    public Budget updateBudget(UUID accountId, UUID budgetId, BigDecimal newLimit,
                                BudgetPeriod newPeriod, Boolean active) {
-        Budget budget = budgetRepository.findById(budgetId)
-                .orElseThrow(() -> new IllegalArgumentException("Budget not found: " + budgetId));
+        Budget budget = requireOwnedBudget(accountId, budgetId);
 
         if (newLimit != null) {
             budget.updateLimit(newLimit);
@@ -134,14 +136,25 @@ public class BudgetService {
     }
 
     /**
-     * Delete a budget.
+     * Delete a budget, only when it belongs to the given account (ACCOUNT-002).
      *
+     * @param accountId the owning account ID
      * @param budgetId the budget ID
      */
     @Transactional
-    public void deleteBudget(UUID budgetId) {
+    public void deleteBudget(UUID accountId, UUID budgetId) {
+        requireOwnedBudget(accountId, budgetId);
         budgetRepository.deleteById(budgetId);
         log.info("Deleted budget with id={}", budgetId);
+    }
+
+    private Budget requireOwnedBudget(UUID accountId, UUID budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found: " + budgetId));
+        if (!budget.getUserId().equals(accountId)) {
+            throw new IllegalArgumentException("Budget not found: " + budgetId);
+        }
+        return budget;
     }
 
     /**

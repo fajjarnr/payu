@@ -42,6 +42,12 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080/realms/payu
 
+payu:
+  security:
+    blind-index-key: test-blind-index-key-at-least-32-chars!!
+    blind-index-key-version: test-v1
+    blind-index-previous-keys:
+
 # Actuator endpoint security for tests
 management:
   endpoints:

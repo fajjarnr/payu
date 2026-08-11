@@ -109,7 +109,7 @@ public class BudgetController {
             @Parameter(description = "Budget ID", required = true) @PathVariable UUID budgetId) {
         log.debug("Getting budget {} for account={}", budgetId, accountId);
 
-        return budgetService.getBudget(budgetId)
+        return budgetService.getBudget(accountId, budgetId)
                 .map(budget -> ResponseEntity.ok(ApiResponse.success(budget)))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -135,6 +135,7 @@ public class BudgetController {
         log.info("Updating budget {} for account={}", budgetId, accountId);
 
         Budget budget = budgetService.updateBudget(
+                accountId,
                 budgetId,
                 request.limitAmount(),
                 request.period(),
@@ -161,7 +162,7 @@ public class BudgetController {
             @Parameter(description = "Budget ID", required = true) @PathVariable UUID budgetId) {
         log.info("Deleting budget {} for account={}", budgetId, accountId);
 
-        budgetService.deleteBudget(budgetId);
+        budgetService.deleteBudget(accountId, budgetId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

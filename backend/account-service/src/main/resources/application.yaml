@@ -232,6 +232,9 @@ payu:
     encryption-enabled: true
     masking-enabled: true
     audit-enabled: true
+    blind-index-key: ${BLIND_INDEX_KEY:payu-local-blind-index-dev-only-32}
+    blind-index-key-version: ${BLIND_INDEX_KEY_VERSION:local-v1}
+    blind-index-previous-keys: ${BLIND_INDEX_PREVIOUS_KEYS:}
     encryption:
       algorithm: PBEWITHHMACSHA512ANDAES_256
       password: ${ENCRYPTION_KEY}

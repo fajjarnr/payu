@@ -2,6 +2,8 @@ package id.payu.account.adapter.persistence.entity;
 
 import id.payu.account.domain.model.BudgetPeriod;
 import id.payu.account.domain.model.BudgetStatus;
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -22,11 +24,16 @@ import java.util.UUID;
                 @Index(name = "idx_budget_reset_date", columnList = "reset_date"),
                 @Index(name = "idx_budget_user_category", columnList = "user_id, category")
         })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class BudgetEntity {
 
     @Id
     @Column(columnDefinition = "uuid")
     private UUID id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
     private UUID userId;
@@ -75,6 +82,14 @@ public class BudgetEntity {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 
     public UUID getUserId() {

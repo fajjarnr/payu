@@ -109,12 +109,10 @@ public class UserApplicationService implements RegisterUserUseCase {
         log.info("User registered successfully with status={}, kycStatus={}: {}",
                 userStatus, kycStatus, savedUser.getId());
 
-        // Publish event
+        // Publish event (PII-minimized, ACCOUNT-004)
         userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
                 savedUser.getId(),
                 savedUser.getExternalId(),
-                savedUser.getEmail(),
-                savedUser.getFullName(),
                 savedUser.getCreatedAt()));
 
         return CompletableFuture.completedFuture(savedUser);

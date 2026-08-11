@@ -51,12 +51,8 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting beneficiaries for account: {}", accountId);
 
-        String externalId = jwt.getSubject();
-        var userOpt = userPersistencePort.findByExternalId(externalId);
-        if (userOpt.isEmpty() || !userOpt.get().getId().equals(accountId)) {
-            log.warn("User externalId={} attempted to access beneficiaries for account {}", externalId, accountId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
+        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+            return forbidden(accountId, jwt);
         }
 
         List<Beneficiary> beneficiaries = beneficiaryPersistencePort.findActiveByUserId(accountId);
@@ -78,12 +74,8 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating beneficiary for account: {}", accountId);
 
-        String externalId = jwt.getSubject();
-        var userOpt2 = userPersistencePort.findByExternalId(externalId);
-        if (userOpt2.isEmpty() || !userOpt2.get().getId().equals(accountId)) {
-            log.warn("User externalId={} attempted to create beneficiary for account {}", externalId, accountId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
+        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+            return forbidden(accountId, jwt);
         }
 
         // Check beneficiary limit
@@ -133,8 +125,13 @@ public class BeneficiaryController {
             @PathVariable UUID accountId,
             @Parameter(description = "Beneficiary ID", required = true)
             @PathVariable UUID beneficiaryId,
-            @Valid @RequestBody BeneficiaryRequest request) {
+            @Valid @RequestBody BeneficiaryRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Updating beneficiary: {} for account: {}", beneficiaryId, accountId);
+
+        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+            return forbidden(accountId, jwt);
+        }
 
         Beneficiary beneficiary = beneficiaryPersistencePort.findById(beneficiaryId).orElse(null);
         if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), accountId)) {
@@ -156,8 +153,13 @@ public class BeneficiaryController {
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId,
             @Parameter(description = "Beneficiary ID", required = true)
-            @PathVariable UUID beneficiaryId) {
+            @PathVariable UUID beneficiaryId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Deleting beneficiary: {} for account: {}", beneficiaryId, accountId);
+
+        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+            return forbidden(accountId, jwt);
+        }
 
         Beneficiary beneficiary = beneficiaryPersistencePort.findById(beneficiaryId).orElse(null);
         if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), accountId)) {
@@ -170,5 +172,17 @@ public class BeneficiaryController {
         beneficiaryPersistencePort.save(beneficiary);
 
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    private boolean accountDoesNotBelongToPrincipal(UUID accountId, Jwt jwt) {
+        String externalId = jwt.getSubject();
+        var userOpt = userPersistencePort.findByExternalId(externalId);
+        return userOpt.isEmpty() || !userOpt.get().getId().equals(accountId);
+    }
+
+    private <T> ResponseEntity<ApiResponse<T>> forbidden(UUID accountId, Jwt jwt) {
+        log.warn("User externalId={} attempted to access beneficiaries for account {}", jwt.getSubject(), accountId);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
     }
 }

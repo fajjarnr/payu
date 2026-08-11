@@ -77,8 +77,6 @@ public class KafkaUserEventPublisherAdapter implements UserEventPublisherPort {
         return Map.of(
                 "userId", event.userId().toString(),
                 "externalId", event.externalId() != null ? event.externalId() : "",
-                "email", event.email() != null ? event.email() : "",
-                "fullName", event.fullName() != null ? event.fullName() : "",
                 "createdAt", event.createdAt() != null ? event.createdAt().toString() : ""
         );
     }

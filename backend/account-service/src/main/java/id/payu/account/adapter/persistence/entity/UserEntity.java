@@ -41,6 +41,12 @@ public class UserEntity {
     @Convert(converter = EncryptedStringConverter.class)
     private String phoneNumber;
 
+    @Column(name = "email_hash", length = 64)
+    private String emailHash;
+
+    @Column(name = "phone_number_hash", length = 64)
+    private String phoneNumberHash;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status;
@@ -61,7 +67,8 @@ public class UserEntity {
     }
 
     public UserEntity(UUID id, String tenantId, String externalId, String username,
-                String email, String phoneNumber, UserStatus status, KycStatus kycStatus,
+                String email, String phoneNumber, String emailHash, String phoneNumberHash,
+                UserStatus status, KycStatus kycStatus,
                 LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.tenantId = tenantId;
@@ -69,6 +76,8 @@ public class UserEntity {
         this.username = username;
         this.email = email;
         this.phoneNumber = phoneNumber;
+        this.emailHash = emailHash;
+        this.phoneNumberHash = phoneNumberHash;
         this.status = status;
         this.kycStatus = kycStatus;
         this.createdAt = createdAt;
@@ -124,6 +133,22 @@ public class UserEntity {
         this.phoneNumber = phoneNumber;
     }
 
+    public String getEmailHash() {
+        return emailHash;
+    }
+
+    public void setEmailHash(String emailHash) {
+        this.emailHash = emailHash;
+    }
+
+    public String getPhoneNumberHash() {
+        return phoneNumberHash;
+    }
+
+    public void setPhoneNumberHash(String phoneNumberHash) {
+        this.phoneNumberHash = phoneNumberHash;
+    }
+
     public UserStatus getStatus() {
         return status;
     }
@@ -168,6 +193,8 @@ public class UserEntity {
         private String username;
         private String email;
         private String phoneNumber;
+        private String emailHash;
+        private String phoneNumberHash;
         private UserStatus status;
         private KycStatus kycStatus;
         private LocalDateTime createdAt;
@@ -203,6 +230,16 @@ public class UserEntity {
             return this;
         }
 
+        public Builder emailHash(String emailHash) {
+            this.emailHash = emailHash;
+            return this;
+        }
+
+        public Builder phoneNumberHash(String phoneNumberHash) {
+            this.phoneNumberHash = phoneNumberHash;
+            return this;
+        }
+
         public Builder status(UserStatus status) {
             this.status = status;
             return this;
@@ -225,7 +262,7 @@ public class UserEntity {
 
         public UserEntity build() {
             return new UserEntity(id, tenantId, externalId, username, email, phoneNumber,
-                    status, kycStatus, createdAt, updatedAt);
+                    emailHash, phoneNumberHash, status, kycStatus, createdAt, updatedAt);
         }
     }
 }

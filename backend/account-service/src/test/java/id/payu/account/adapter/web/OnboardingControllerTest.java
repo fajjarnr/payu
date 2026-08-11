@@ -101,8 +101,16 @@ class OnboardingControllerTest {
 
             mockMvc.perform(asyncDispatch(mvcResult))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.email").value(validRequest.email()))
-                    .andExpect(jsonPath("$.username").value(validRequest.username()));
+                    .andExpect(jsonPath("$.userId").value(registeredUser.getId().toString()))
+                    .andExpect(jsonPath("$.externalId").value(registeredUser.getExternalId()))
+                    .andExpect(jsonPath("$.status").value("ACTIVE"))
+                    .andExpect(jsonPath("$.kycStatus").value("APPROVED"))
+                    // ACCOUNT-004: no PII fields in the registration response
+                    .andExpect(jsonPath("$.email").doesNotExist())
+                    .andExpect(jsonPath("$.phoneNumber").doesNotExist())
+                    .andExpect(jsonPath("$.fullName").doesNotExist())
+                    .andExpect(jsonPath("$.nik").doesNotExist())
+                    .andExpect(jsonPath("$.username").doesNotExist());
         }
 
         @Test
