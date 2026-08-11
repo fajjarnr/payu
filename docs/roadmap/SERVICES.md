@@ -1,22 +1,24 @@
 # PayU Backend Services Status
 
-> **Last Updated**: July 17, 2026
+> **Last Updated**: August 11, 2026
 > **Total Services**: 28 (23 microservices + 5 simulators) + 1 frontend (web-app)
-> **OpenShift Status**: 🟢 All pods 1/1 Running + 44/44 backend reactor modules 100% green
+> **OpenShift Status**: 🟢 `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); lab `cluster-nkk8q` sit/uat/preprod live via ArgoCD. prod belum ada (ACCOUNT-007).
 >
-> **Note**: Full backend unit test suite (`rtk mvn -f backend/pom.xml test`) verified 100% clean (0 failures, 0 errors).
+> **Sumber kebenaran status kerja**: [`TODOS.md`](./TODOS.md) — file ini ringkasan arsitektur; angka test terverifikasi per 2026-08-11.
 
 ---
 
-## Quick Test Status (Last Known/Verified)
+## Quick Test Status (Last Known/Verified 2026-08-11)
 
 | Status                  | Count     | Notes                         |
 | ----------------------- | --------- | ----------------------------- |
-| 🟢 **E2E (Playwright)**  | 544/544   | 100% Pass per Mar 17          |
-| 🟢 **E2E (Pytest)**      | 159/159   | 100% Pass per Mar 17          |
-| 🟢 **Unit Tests**        | ~700+     | All core services passing     |
-| 🟢 **Build Success**     | 38/38     | All Maven modules SUCCESS     |
-| 🔴 **Open Bugs**         | 56        | Deep Audit 2026-03-21 items   |
+| 🟢 **api-commons**       | 178/178   | incl. RateLimitAspect (fail-closed, per-account key) |
+| 🟢 **security-starter**  | 56/56     | incl. BlindIndexService (HMAC rotation) |
+| 🟢 **account-service**   | 128/128*  | *2 errors pre-existing di VaultConfigurationTest (context JPA broken, INTEGRATION-CTX) |
+| 🟢 **auth-service**      | 82/82     | login contract 401/423/429/503, revoke, replay rejection |
+| 🟢 **transaction-service**| 142/142   | Money scale 4 (PROD-047) |
+| 🟢 **backoffice-service**| 131/131   | BlindIndexService via security-starter |
+| 🔴 **Integration tests** | account context broken pre-existing (INTEGRATION-CTX); lihat TODOS |
 
 ## Major Updates (March 2026)
 
@@ -32,12 +34,12 @@
 
 | Domain | Status | P0 Blockers |
 |:-------|:-------|:------------|
-| **Core Banking (Hexagonal)** | ⚠️ Partial | Shared starters built but unused by any service |
-| **Event Architecture** | 🔴 Dead Code | `events-starter`, `outbox-starter`, `saga-starter` = 0 consumers |
-| **Security (Zero-Trust)** | ⚠️ Partial | mTLS not enforced, secret scanning partial |
-| **Testing** | 🔴 Critical | E2E pass rate < 15%. 7 services with ZERO integration tests |
-| **Container Hardening** | ⚠️ Partial | Not all services run as non-root |
-| **Data Governance (UU PDP)** | 🔴 Not Started | No data classification, no lineage tracking |
+| **Core Banking (Hexagonal)** | ✅ Active | Shared starters (outbox, security, cache, resilience) dipakai services inti |
+| **Event Architecture** | ✅ Live | Outbox + CloudEvents + DLQ live (PARTNER-PROD-004); topik `.v1` versioned |
+| **Security (Zero-Trust)** | ⚠️ Partial | mTLS belum menyeluruh; DB RLS defense-in-depth belum (ACCOUNT-003-RLS); PKCE/MFA (LOGIN-003) |
+| **Testing** | ⚠️ Partial | Account integration context broken pre-existing (INTEGRATION-CTX); 6/8 core service integration gap (TEST-GAP) |
+| **Container Hardening** | ✅ UBI9 non-root | Semua workload UBI9, UID 1001, drop ALL caps |
+| **Data Governance (UU PDP)** | ⚠️ Partial | PII ter-enkripsi at-rest + blind index; audit-log masking live; klasifikasi menyeluruh belum |
 | **API Contracts** | ⚠️ Partial | No contract testing (Pact) in CI |
 | **Performance Testing** | 🔴 Empty | Load test scaffold empty, no Gatling simulations |
 
@@ -99,23 +101,24 @@
 #### 1. account-service (Port 8001)
 
 - ✅ User Management (User, Account, Profile)
-- ✅ PostgreSQL integration with JSONB
+- ✅ PII encrypted at rest (AES-GCM) + blind index HMAC lookup (ACCOUNT-001)
+- ✅ Registration response & outbox payload PII-minimized (ACCOUNT-004)
 - ✅ eKYC Integration with Dukcapil Simulator
-- ✅ Kafka Producer for user events
+- ✅ Tenant dari JWT claim; Hibernate tenant filter di-enforce (ACCOUNT-003)
+- ✅ Kafka events via outbox (user-created, user-updated, kyc-completed)
 - ✅ Hexagonal Architecture
-- ✅ Unit tests (OnboardingServiceTest, ControllerTest, ArchitectureTest)
+- ✅ Unit tests 128 (OnboardingControllerTest, BeneficiaryControllerAuthorizationTest, BudgetOwnershipTest, TenantFilterTest, RequestDtoMaskingTest, ArchitectureTest)
 
 #### 2. auth-service (Port 8002)
 
 - ✅ Keycloak Admin Client Integration
-- ✅ Login Proxy with WebClient (Password Grant)
-- ✅ User Registration
+- ✅ Login proxy + account lockout (5 attempts / 15 min) + risk evaluation
+- ✅ Rate limiting 10/min per IP/account, fail-closed (LOGIN-004)
+- ✅ Deterministic error contract: 200 / 401 invalid / 423 locked / 429 / 503 IdP down (LOGIN-005)
+- ✅ Logout revoke via Keycloak end_session + refresh replay ditolak (LOGIN-002)
 - ✅ OAuth2 Resource Server
-- ✅ Account Lockout (5 failed attempts, 15 min duration)
-- ✅ Rate Limiting (5 attempts per minute)
-- ✅ Password Policy Enforcement
-- ✅ Resilience4j Circuit Breaker & Retry
-- ✅ Integration Tests (Testcontainers + Keycloak)
+- ⚠️ Password grant masih dipakai (LOGIN-003 PKCE/MFA open)
+- ✅ Unit tests 82
 
 #### 3. wallet-service (Port 8004)
 
@@ -130,10 +133,11 @@
 #### 4. transaction-service (Port 8003)
 
 - ✅ Hexagonal Architecture
+- ✅ Money scale 4 HALF_EVEN — DECIMAL(19,4) parity (PROD-047)
 - ✅ Integration with wallet-service for balance operations
 - ✅ Resilience4j Circuit Breaker
 - ✅ Kafka Events: transactions.initiated, validated, completed, failed
-- ✅ Unit tests (TransactionServiceTest, ArchitectureTest)
+- ✅ Unit tests 142
 
 #### 5. compliance-service (Port 8087)
 
@@ -362,32 +366,23 @@ cd backend/<service> && pytest --cov=src            # With coverage
 - ✅ Analytics Service E2E: Complete user journey with analytics
 - ✅ podman-compose.yml: Unified dev/test environment
 
-### Unit Tests
+### Unit Tests (terverifikasi 2026-08-11)
 
-- ✅ Account Service: Service, Controller, Architecture tests (40 tests)
-- ✅ Auth Service: Integration tests with Keycloak (67 tests)
-- ✅ Wallet Service: Service, Controller, Architecture tests (compiles)
-- ✅ Transaction Service: Service, Architecture tests (60 tests)
-- ✅ Billing Service: Service, Controller, Architecture, Integration tests (51 tests)
-- ✅ Notification Service: Service, Resource, Architecture, Integration tests (51 tests)
-- ⚠️ Gateway Service: Filter, Health tests (49/94 passing)
-- ✅ Support Service: ALL PASSING (17 tests) - Reference implementation
-- ✅ KYC Service: OCR, Liveness, Face, Dukcapil unit tests
-- ✅ Analytics Service: Recommendation engine, Analytics service tests
+- ✅ api-commons: 178 (RateLimitAspect fail-closed, idempotency, money)
+- ✅ security-starter: 56 (EncryptionService rotation, BlindIndexService, masking, audit)
+- ✅ Account Service: 128 (service, controller, authorization, tenant, masking)
+- ✅ Auth Service: 82 (login contract, revoke, refresh, rate-limit)
+- ✅ Transaction Service: 142 (Money scale 4, transfer flows)
+- ✅ Backoffice Service: 131 (PII encryption, blind index, backfill)
+- ✅ Wallet Service, Billing, Notification, Gateway: green pada run terakhir (lihat CI)
+- ⚠️ Account integration context broken pre-existing (INTEGRATION-CTX di TODOS)
 
 ---
 
 ## Summary
 
-**Status**: All 28 modules are ✅ **IMPLEMENTED** and 🟢 **E2E VERIFIED**.
+**Status**: 28 module ✅ IMPLEMENTED; money-flow live di `payu-dev`; production deployment belum (ACCOUNT-007/CB-006).
 
-- Production parity images (UBI9)
-- 703/703 E2E Tests Passing
-- Core Banking & Gateway gaps closed (Mar 16)
-
-**Next Steps (Remediation)**
-
-1. Address **56 open bugs** from Deep Audit 2026-03-21 (mostly P1/P2 logic).
-2. Implement PII masking in all backoffice logs (BUG-SECURITY-004-006).
-3. Finalize IDOR/Broken Access Control fixes (BUG-SECURITY-027).
-4. Resolve "Account Lockout Bypass" in Keycloak integration (BUG-SECURITY-008).
+- Core Banking P0 security: ACCOUNT-001..004, LOGIN-002/004/005, PROD-047 CLOSED (2026-08-11)
+- SNAP-BI partner gates PARTNER-PROD-001..006 LIVE (sandbox)
+- **Lihat [`TODOS.md`](./TODOS.md)** untuk backlog aktif & gate — jangan gunakan bagian file ini sebagai sumber status kerja.
