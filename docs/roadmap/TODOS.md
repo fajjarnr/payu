@@ -63,7 +63,6 @@
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
 | CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
-| CB-004 | docs | Refresh `SERVICES.md` (stale, kontradiktif dengan TODOS) | SERVICES.md konsisten |
 | CB-010 | fx | Fee `setScale(4, HALF_EVEN)` (FX-001, FxRateService.java:108) | FX-001 closed, test green |
 | CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
 | CB-016 | transaction | Bank code BI-FAST dari request + SmartRouting (BIFAST-001, InitiateTransferCommandHandler.java:217) | Transfer non-014 benar, test green |

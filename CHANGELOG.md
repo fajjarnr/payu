@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.50] - 2026-08-11
+
+### Added
+
+- **Account registration PII minimization (ACCOUNT-004 follow-up)**: `RegisterUserRequest`/`VerifyNikRequest` now render a masked `toString()` — the AuditAspect persisted the full request (plaintext password, NIK, email, phone, fullName) into `payu.security.audit-log.v1` via `entityId`. Live-verified: audit payload now shows `email=****, nik=****`. Regression test added.
+- **Logout session revoke (LOGIN-002)**: `POST /api/v1/auth/logout` calls Keycloak's OIDC `end_session` with `client_id + client_secret + refresh_token` (confidential client requires the secret). Gateway `AuthorizationFilter` and auth-service `SecurityConfig` now whitelist the logout path — an expired access token must not block logout. Web BFF sends the refresh token in the body (OIDC pattern).
+- **Deterministic auth error contract (LOGIN-005)**: login returns 401 `AUTH_BUS_001` invalid credentials, 423 `AUTH_BUS_002` locked, 429 `RATE_LIMIT_EXCEEDED` (either limiter), 503 `SERVICE_UNAVAILABLE` IdP down; a revoked/rotated/expired refresh token is 400 `AUTH_BUS_006` (was 500). New `ServiceUnavailableException` mapped to 503 in the RFC 9457 handler.
+- **Rate-limit fail-closed (LOGIN-004)**: shared `RateLimitAspect` now enforces the `requests` alias (controllers annotate `requests=10/20/100`; the `value` default was used, so limits were never applied), keys per authenticated account falling back to client IP, and fails CLOSED with 503 when the counting cache is down (was fail-open). Resilience4j `loginRateLimiter` given explicit config (30/1m — the defaults deny nearly every login) and its fallback removed so method exceptions (locked/credentials) are no longer masked as rate limits.
+
+### Fixed
+
+- **transaction-service Money scale (PROD-047)**: domain `Money` normalized/rounded to scale 2 while the DB is `DECIMAL(19,4)` — two fractional digits silently lost per operation. `SCALE = 4` with `HALF_EVEN`; tests updated to scale-4 semantics (100.12345 → 100.1234, 100000/3 → 33333.3333).
+
+### Validation
+
+- Live on the local podman stack (PostgreSQL, Infinispan, Kafka, Keycloak, gateway, account, auth): register → PII-minimal response, encrypted email + blind index hash in DB, PII-free `user-created` outbox event, masked audit payload; login 200 → refresh 200 → logout 200 → refresh replay 400 `AUTH_BUS_006`; wrong password 401; 5 failures + correct password → 423 locked; hammer → 429 `RATE_LIMIT_EXCEEDED`.
+- Unit: api-commons 178/0, security-starter 56/0, account 128/0 (2 pre-existing VaultConfigurationTest errors, red on clean HEAD), auth 82/0, transaction 142/0, backoffice 131/0.
+
 ## [1.10.49] - 2026-08-11
 
 ### Added
