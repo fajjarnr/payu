@@ -100,11 +100,13 @@ public class FinancialEventConsumer {
 
             log.info("Dispatched webhook for financial event: type={}, eventId={}",
                     eventType, eventId);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            // PARTNER-PROD-004: never swallow a processing exception — rethrow so
+            // the Kafka error handler retries (3x) and forwards the record to
+            // <topic>.dlq instead of committing the offset and losing the event.
             log.error("Failed to process financial event: topic={}, eventType={}, error={}",
                     topic, eventType, e.getMessage(), e);
-            // Don't rethrow — allow Kafka offset commit to prevent infinite retry.
-            // Failed events are logged for manual investigation.
+            throw e;
         }
     }
 
@@ -153,40 +155,42 @@ public class FinancialEventConsumer {
 
     /**
      * Parse Kafka message value as JSON map.
-     * Handles both CloudEvent envelopes and plain JSON payloads.
+     * Handles CloudEvent envelopes and plain JSON payloads.
+     * <p>PARTNER-PROD-004: invalid JSON is NOT silently wrapped — it propagates
+     * so the record is retried and moved to the DLQ instead of being dispatched
+     * as an opaque rawPayload blob.
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> parsePayload(String value) {
+        Map<String, Object> parsed;
         try {
-            Map<String, Object> parsed = objectMapper.readValue(value, Map.class);
-
-            // If this is a CloudEvent envelope, unwrap the data field
-            if (parsed.containsKey("specversion") && parsed.containsKey("data")) {
-                Map<String, Object> unwrapped = new LinkedHashMap<>();
-                // Preserve CloudEvent metadata
-                unwrapped.put("eventId", parsed.get("id"));
-                unwrapped.put("source", parsed.get("source"));
-                unwrapped.put("eventTime", parsed.get("time"));
-                unwrapped.put("subject", parsed.get("subject"));
-
-                // Merge data payload
-                Object data = parsed.get("data");
-                if (data instanceof Map) {
-                    unwrapped.putAll((Map<String, Object>) data);
-                } else {
-                    unwrapped.put("data", data);
-                }
-                return unwrapped;
-            }
-
-            return parsed;
+            parsed = objectMapper.readValue(value, Map.class);
         } catch (Exception e) {
-            // If not valid JSON, wrap the raw string
-            log.warn("Could not parse event payload as JSON, wrapping raw value");
-            Map<String, Object> fallback = new LinkedHashMap<>();
-            fallback.put("rawPayload", value);
-            return fallback;
+            // PARTNER-PROD-004: malformed payloads must fail the record (retry + DLQ),
+            // not be dispatched as an opaque rawPayload blob.
+            throw new IllegalArgumentException("Invalid event payload JSON", e);
         }
+
+        // If this is a CloudEvent envelope, unwrap the data field
+        if (parsed.containsKey("specversion") && parsed.containsKey("data")) {
+            Map<String, Object> unwrapped = new LinkedHashMap<>();
+            // Preserve CloudEvent metadata
+            unwrapped.put("eventId", parsed.get("id"));
+            unwrapped.put("source", parsed.get("source"));
+            unwrapped.put("eventTime", parsed.get("time"));
+            unwrapped.put("subject", parsed.get("subject"));
+
+            // Merge data payload
+            Object data = parsed.get("data");
+            if (data instanceof Map) {
+                unwrapped.putAll((Map<String, Object>) data);
+            } else {
+                unwrapped.put("data", data);
+            }
+            return unwrapped;
+        }
+
+        return parsed;
     }
 
     /**

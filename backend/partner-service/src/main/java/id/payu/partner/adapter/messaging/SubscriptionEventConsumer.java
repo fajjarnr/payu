@@ -59,9 +59,12 @@ public class SubscriptionEventConsumer {
             webhookDispatcher.dispatch(type, payload);
 
             log.info("Dispatched subscription webhook: type={}, partnerId={}", type, pid);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            // PARTNER-PROD-004: never swallow a processing exception — rethrow so
+            // the Kafka error handler retries and forwards the record to <topic>.dlq
+            // instead of committing the offset and losing the event.
             log.error("Failed to process subscription event: error={}", e.getMessage(), e);
-            // Don't rethrow - let Kafka offset commit to prevent infinite retry
+            throw e;
         }
     }
 
@@ -76,8 +79,13 @@ public class SubscriptionEventConsumer {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> parseCloudEvent(String json) throws Exception {
-        return objectMapper.readValue(json, Map.class);
+    private Map<String, Object> parseCloudEvent(String json) {
+        try {
+            return objectMapper.readValue(json, Map.class);
+        } catch (Exception e) {
+            // PARTNER-PROD-004: malformed payloads must fail the record (retry + DLQ).
+            throw new IllegalArgumentException("Invalid subscription event payload JSON", e);
+        }
     }
 
     @SuppressWarnings("unchecked")

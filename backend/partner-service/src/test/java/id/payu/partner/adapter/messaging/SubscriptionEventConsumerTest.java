@@ -170,7 +170,7 @@ class SubscriptionEventConsumerTest {
     }
 
     @Test
-    @DisplayName("should handle dispatcher exception gracefully")
+    @DisplayName("should rethrow dispatcher exceptions so the record reaches the DLQ (PARTNER-PROD-004)")
     void shouldHandleDispatcherException() {
         // Given
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
@@ -179,8 +179,8 @@ class SubscriptionEventConsumerTest {
         doThrow(new RuntimeException("Dispatch failed"))
                 .when(webhookDispatcher).dispatch(any(), any());
 
-        // When - should not throw
-        assertDoesNotThrow(() -> consumer.consumeSubscriptionEvent(record));
+        // When - must propagate so the Kafka error handler retries and DLQs it
+        assertThrows(RuntimeException.class, () -> consumer.consumeSubscriptionEvent(record));
 
         // Then - dispatcher was called
         verify(webhookDispatcher).dispatch(any(), any());
