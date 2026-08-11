@@ -1560,6 +1560,93 @@ sequenceDiagram
 
 ---
 
+# 🌐 Web-App Boundary (BFF & Money Contract)
+
+> Flow sisi frontend yang punya logika nyata (bukan render UI). Backend hop tetap di flow utama (#1-45).
+
+## 46. Web Session (BFF — login/refresh/logout dari browser)
+
+```mermaid
+sequenceDiagram
+    actor Br as Browser
+    participant B as "web-app BFF (Next.js)"
+    participant G as Gateway
+    participant A as "auth-service"
+    participant KC as Keycloak
+
+    Br->>B: POST /api/auth/login (username, password)
+    B->>G: POST /api/v1/auth/login (proxy)
+    G->>A: forward
+    A->>KC: password grant (aktual) / PKCE (target IMP)
+    KC-->>A: access + refresh
+    A-->>B: 200 tokens
+    B->>B: set httpOnly cookie (access + refresh) — secure prod, sameSite strict
+    B-->>Br: 200 (cookie, bukan token di JS)
+
+    Br->>B: GET /dashboard (cookie)
+    B->>B: cookie → bearer (BFF decrypt/attach)
+    B->>G: forward dengan Authorization
+
+    Br->>B: (auto) refresh token sebelum expiry
+    B->>G: POST /api/v1/auth/refresh (refreshToken dari cookie)
+    G->>A: forward
+    A->>KC: refresh_token grant
+    KC-->>A: new tokens
+    B->>B: rotate cookie
+    alt refresh revoked/expired
+        B-->>Br: redirect /login (clear cookie)
+    end
+
+    Br->>B: POST /api/auth/logout
+    B->>G: POST /api/v1/auth/logout (refreshToken di body)
+    G->>A: forward (whitelist — token expired tetap boleh)
+    A->>KC: end_session revoke
+    KC-->>A: revoked
+    B->>B: hapus cookie
+    B-->>Br: logged out
+```
+
+| Step | Side-effect |
+|:---|:---|
+| 1 | Tokens di httpOnly cookie (`secure` prod, `sameSite=strict` — BUG-AUTH-027) — JS tidak bisa baca (anti XSS theft) |
+| 2 | BFF proxy: cookie → bearer; browser tidak pernah pegang token |
+| 3 | Refresh rotation otomatis; revoked → redirect login |
+| 4 | Logout = revoke Keycloak + hapus cookie (server-side, bukan hanya cookie) |
+
+## 47. Web Money Contract (decimal string)
+
+```mermaid
+sequenceDiagram
+    actor Br as Browser
+    participant UI as "Halaman (form/display)"
+    participant M as "currency.ts (Money = string)"
+    participant API as "BFF / API (fetch)"
+
+    Note over Br,API: Prinsip: uang SELALU decimal string — tidak pernah JS number untuk amount/balance
+
+    Br->>UI: input nominal (misal 100.1234)
+    UI->>M: parse/validasi decimal string (bukan parseFloat)
+    alt input invalid (> 4 desimal / bukan angka)
+        M-->>UI: tolak (tidak pernah round diam-diam)
+    else valid
+        M-->>API: kirim amount sebagai string (mutation payload)
+        API->>API: serialize ke body JSON (string, bukan number)
+        API->>Backend: POST (amount: "100.1234")
+        Backend-->>API: response (balance decimal string)
+        API-->>UI: tampil via formatExact (rupiah formatting)
+    end
+    Note over UI,API: roundDecimal hanya untuk DISPLAY (2 digit), bukan untuk payload
+```
+
+| Step | Side-effect |
+|:---|:---|
+| 1 | `Money = string` (currency.ts:6) — boundary type |
+| 2 | Input divalidasi, bukan di-coerce ke number |
+| 3 | Payload mutation = decimal string (PROD-043: hapus `number`/`parseFloat` di FxService, Investment, split-bill, pocket, promotion, wallet store) |
+| 4 | Format untuk display via `formatExact`/`roundDecimal` — bukan untuk request |
+
+---
+
 # 🔧 Flow Improvements (TARGET — belum diimplementasi)
 
 > Diagram target agar perilaku mirip bank/e-wallet produksi. Verifikasi implementasi = bandingkan diagram ini vs code (gap = pekerjaan). Referensi ADR-0022/0023.
