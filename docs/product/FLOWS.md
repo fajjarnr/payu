@@ -11,11 +11,11 @@
 sequenceDiagram
     actor C as Client
     participant G as Gateway
-    participant AC as account-service
+    participant AC as "account-service"
     participant KC as Keycloak
-    participant DK as dukcapil-simulator
+    participant DK as "dukcapil-simulator"
     participant DB as PostgreSQL
-    participant OB as Outbox → Kafka
+    participant OB as "Outbox → Kafka"
 
     C->>G: POST /api/v1/accounts/register (username, email, phone, password, nik, fullName)
     G->>AC: forward (JWT tenant claim)
@@ -50,11 +50,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant B as web-app BFF
+    participant B as "web-app BFF"
     participant G as Gateway
-    participant A as auth-service
+    participant A as "auth-service"
     participant KC as Keycloak
-    participant CA as Cache (rate-limit, lockout)
+    participant CA as "Cache (rate-limit, lockout)"
 
     U->>B: POST /api/auth/login (username, password)
     B->>G: POST /api/v1/auth/login
@@ -91,10 +91,10 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant G as Gateway
-    participant TX as transaction-service
-    participant WL as wallet-service
-    participant DB as PostgreSQL (transaction)
-    participant OB as Outbox → Kafka
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
+    participant DB as "PostgreSQL (transaction)"
+    participant OB as "Outbox → Kafka"
 
     U->>G: POST /v1/transfers (amount, recipient, bankCode, X-Idempotency-Key)
     G->>TX: forward
@@ -136,12 +136,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor P as Partner App
-    participant E as 3scale APIcast (user_key)
-    participant G as Gateway (/v1/partner/**)
-    participant PS as partner-service
-    participant WL as wallet-service
-    participant DB as PostgreSQL (partner)
-    participant OB as Outbox → Kafka
+    participant E as "3scale APIcast (user_key)"
+    participant G as "Gateway (/v1/partner/**)"
+    participant PS as "partner-service"
+    participant WL as "wallet-service"
+    participant DB as "PostgreSQL (partner)"
+    participant OB as "Outbox → Kafka"
 
     P->>E: POST /v1/partner/auth/token (X-CLIENT-KEY, X-TIMESTAMP, X-SIGNATURE)
     E->>G: forward (user_key valid)
@@ -179,8 +179,8 @@ sequenceDiagram
     actor P as Partner App
     participant E as 3scale APIcast
     participant G as Gateway
-    participant PS as partner-service
-    participant WL as wallet-service
+    participant PS as "partner-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     P->>E: POST /v1/partner/payments/{ref}/refund (partnerRefundNo, X-Idempotency-Key)
@@ -209,9 +209,9 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant G as Gateway
-    participant BS as billing-service
-    participant BL as biller-simulator
-    participant WL as wallet-service
+    participant BS as "billing-service"
+    participant BL as "biller-simulator"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     U->>G: POST /api/v1/payments (biller, customerId, amount, X-Idempotency-Key)
@@ -254,11 +254,11 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant G as Gateway
-    participant TX as transaction-service
-    participant WL as wallet-service
-    participant BF as bi-fast-simulator
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
+    participant BF as "bi-fast-simulator"
     participant DB as PostgreSQL
-    participant OB as Outbox → Kafka
+    participant OB as "Outbox → Kafka"
 
     U->>G: POST /v1/transfers (type=BIFAST, bankCode, recipient, amount, X-Idempotency-Key)
     G->>TX: forward
@@ -299,9 +299,9 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant G as Gateway
-    participant TX as transaction-service
-    participant WL as wallet-service
-    participant QR as qris-simulator
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
+    participant QR as "qris-simulator"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -336,9 +336,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor P as Payer
-    participant TX as transaction-service
-    participant VA as va-simulator
-    participant WL as wallet-service
+    participant TX as "transaction-service"
+    participant VA as "va-simulator"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     P->>TX: (via VA) pay VA number
@@ -367,9 +367,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant TX as transaction-service
-    participant WL as wallet-service
-    participant BF as bi-fast-simulator
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
+    participant BF as "bi-fast-simulator"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -401,8 +401,8 @@ sequenceDiagram
 sequenceDiagram
     actor O as Creator
     actor Pt as Participant
-    participant TX as transaction-service
-    participant WL as wallet-service
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -435,8 +435,8 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant G as Gateway
-    participant BS as billing-service
-    participant WL as wallet-service
+    participant BS as "billing-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     U->>G: POST /api/v1/topup (provider, walletNumber, amount, X-Idempotency-Key)
@@ -465,8 +465,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant IV as investment-service
-    participant WL as wallet-service
+    participant IV as "investment-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -505,14 +505,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant IV as investment-service
-    participant WL as wallet-service
+    participant IV as "investment-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     U->>IV: POST /investments/sell (transactionId, amount)
     IV->>DB: find transaction BUY (ownership + status COMPLETED)
     IV->>IV: harga saat ini (NAV/gold) — guard stale/≤0
-    IV->>IV: units = amount / price (scale 4, DOWN); cek units ≤ dimiliki
+    IV->>IV: units = amount / price (scale 4, DOWN)#59; cek units ≤ dimiliki
     IV->>IV: fee = sellAmount × 0.5% (scale 4), netAmount
     IV->>WL: creditBalance (netAmount, ref = SELL:{buyTxId}) — idempotent
     IV->>DB: INSERT transaction SELL (id = UUID(SELL:{buyTxId})) + balance update
@@ -534,8 +534,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant LN as lending-service
-    participant WL as wallet-service
+    participant LN as "lending-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -569,7 +569,7 @@ sequenceDiagram
 sequenceDiagram
     actor B as Buyer
     actor S as Seller
-    participant WL as wallet-service
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -604,10 +604,10 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant TX as transaction-service
-    participant KF as Kafka (transaction.completed)
-    participant PR as promotion-service
-    participant WL as wallet-service
+    participant TX as "transaction-service"
+    participant KF as "Kafka (transaction.completed)"
+    participant PR as "promotion-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -640,8 +640,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor R as Referee
-    participant PR as promotion-service
-    participant WL as wallet-service
+    participant PR as "promotion-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     R->>PR: POST /referrals/complete (referralCode, refereeAccountId)
@@ -673,7 +673,7 @@ sequenceDiagram
 sequenceDiagram
     actor PA as Partner
     actor C as Customer
-    participant PS as partner-service
+    participant PS as "partner-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -707,7 +707,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant TX as transaction-service
+    participant TX as "transaction-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -720,7 +720,7 @@ sequenceDiagram
         TX->>TX: processDue — isDueForExecution guard
         TX->>TX: initiateTransfer (reuse transfer flow #3)
         alt sukses
-            TX->>DB: executedCount+1, nextExecution dihitung ulang; COMPLETED jika habis
+            TX->>DB: executedCount+1, nextExecution dihitung ulang#59; COMPLETED jika habis
         else gagal (recurring)
             TX->>DB: tetap ACTIVE + nextExecution maju (retry siklus berikutnya)
         else gagal (one-time)
@@ -741,10 +741,10 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant ST as statement-service
-    participant WL as wallet-service
-    participant TX as transaction-service
-    participant S3 as RustFS (S3)
+    participant ST as "statement-service"
+    participant WL as "wallet-service"
+    participant TX as "transaction-service"
+    participant S3 as "RustFS (S3)"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -775,7 +775,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor OP as Ops
-    participant WL as wallet-service
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
     participant OB as Outbox
 
@@ -805,10 +805,10 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant BS as billing-service
+    participant BS as "billing-service"
     participant DB as PostgreSQL
     participant OB as Outbox
-    participant AM as Artemis (delayed)
+    participant AM as "Artemis (delayed)"
 
     loop scheduler (ShedLock, 5 min)
         BS->>DB: find due subscriptions
@@ -846,7 +846,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant P as Partner
-    participant WL as wallet-service
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     P->>WL: create rule (recipients + split type)
@@ -875,7 +875,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant PR as promotion-service
+    participant PR as "promotion-service"
     participant DB as PostgreSQL
 
     U->>PR: POST /loyalty-points/redeem (accountId, points, transactionId)
@@ -900,9 +900,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor M as Merchant
-    participant TX as transaction-service
+    participant TX as "transaction-service"
     participant DB as PostgreSQL
-    participant VA as va-simulator
+    participant VA as "va-simulator"
 
     M->>TX: create VA (bank, amount?, expiry)
     TX->>DB: INSERT VA (vaNumber generated, status ACTIVE)
@@ -939,9 +939,9 @@ Pocket (create/close/freeze/debit/credit), Virtual Card (create/freeze/unfreeze)
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant B as web-app BFF
+    participant B as "web-app BFF"
     participant G as Gateway
-    participant A as auth-service
+    participant A as "auth-service"
     participant KC as Keycloak
 
     U->>B: (auto) refresh token
@@ -976,8 +976,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant KY as kyc-service (Python)
-    participant DK as dukcapil-simulator
+    participant KY as "kyc-service (Python)"
+    participant DK as "dukcapil-simulator"
     participant DB as PostgreSQL
     participant KF as Kafka
 
@@ -1018,9 +1018,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor C as Customer
-    participant DS as dispute-service
-    participant TX as transaction-service
-    participant WL as wallet-service
+    participant DS as "dispute-service"
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
     participant KF as Kafka
     participant DB as PostgreSQL
 
@@ -1061,7 +1061,7 @@ sequenceDiagram
 sequenceDiagram
     actor C as Customer
     actor M as Merchant
-    participant PS as partner-service
+    participant PS as "partner-service"
     participant DB as PostgreSQL
 
     M->>PS: POST /merchants (partner-scoped) + generate QR
@@ -1093,8 +1093,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant LN as lending-service
-    participant LR as lending-rules
+    participant LN as "lending-service"
+    participant LR as "lending-rules"
     participant DB as PostgreSQL
 
     U->>LN: GET /pre-approval/check (userId)
@@ -1107,7 +1107,7 @@ sequenceDiagram
     LN->>LN: validasi limit/tenor
     LN->>DB: INSERT loan (status) + repayment schedule
     LN-->>U: 201 loanId
-    (repayment mengikuti flow #15)
+%%(repayment mengikuti flow #15)
 ```
 
 | Step | Side-effect |
@@ -1121,8 +1121,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant FX as fx-service
-    participant WL as wallet-service
+    participant FX as "fx-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     U->>FX: POST /conversions (from, to, amount)
@@ -1161,7 +1161,7 @@ sequenceDiagram
 sequenceDiagram
     actor P as Partner
     actor C as Customer
-    participant G as gateway-service
+    participant G as "gateway-service"
     participant DB as PostgreSQL
 
     P->>G: POST /api/v1/checkout (amount, desc, paymentMethods)
@@ -1191,7 +1191,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant PR as promotion-service
+    participant PR as "promotion-service"
     participant DB as PostgreSQL
 
     U->>PR: POST /promotions/{code}/claim (accountId)
@@ -1223,8 +1223,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant APP as Service (billing/partner)
-    participant IS as integration-service
+    participant APP as "Service (billing/partner)"
+    participant IS as "integration-service"
     participant AM as Artemis
     participant DB as PostgreSQL
 
@@ -1255,8 +1255,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant LO as loan-origination-process
-    participant LR as lending-rules
+    participant LO as "loan-origination-process"
+    participant LR as "lending-rules"
     participant DB as PostgreSQL
 
     LO->>DB: create origination case (applicant data)
@@ -1280,7 +1280,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor OP as Admin
-    participant PS as partner-service
+    participant PS as "partner-service"
     participant DB as PostgreSQL
 
     OP->>PS: POST /partners/{partnerId}/api-keys
@@ -1309,8 +1309,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant DS as dispute-service / partner-service
-    participant WL as wallet-service
+    participant DS as "dispute-service / partner-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     DS->>WL: POST /api/v1/wallets/transfer/reverse (sender, recipient, amount, refundId)
@@ -1336,10 +1336,10 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant OB as Outbox → Kafka
-    participant PS as partner-service
+    participant OB as "Outbox → Kafka"
+    participant PS as "partner-service"
     participant DB as PostgreSQL
-    participant WH as Webhook Endpoint (partner)
+    participant WH as "Webhook Endpoint (partner)"
 
     OB->>PS: FinancialEventConsumer (payu.transaction.completed.v1)
     PS->>DB: cek delivery exists (eventId + subscriptionId)? — dedup
@@ -1380,9 +1380,9 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant DB as PostgreSQL (partner + wallet)
+    participant DB as "PostgreSQL (partner + wallet)"
     participant RC as SnapBiReconciliationService
-    participant WL as wallet-service (ledger-movements)
+    participant WL as "wallet-service (ledger-movements)"
 
     loop scheduler (ShedLock, interval configurable, window 24h)
         RC->>DB: ambil COMPLETED payments + refunds (window)
@@ -1412,8 +1412,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant APP as Service (auth/billing)
-    participant NS as notification-service
+    participant APP as "Service (auth/billing)"
+    participant NS as "notification-service"
     participant AM as Artemis
     participant DB as PostgreSQL
 
@@ -1446,7 +1446,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant A as auth-service
+    participant A as "auth-service"
     participant KC as Keycloak
     participant DB as PostgreSQL
 
@@ -1473,7 +1473,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant LN as lending-service
+    participant LN as "lending-service"
     participant DB as PostgreSQL
 
     U->>LN: GET /installments/tenor-options (amount)
@@ -1500,7 +1500,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant APP as Service
-    participant IS as integration-service
+    participant IS as "integration-service"
     participant AM as Artemis
     participant DB as PostgreSQL
 
@@ -1517,7 +1517,7 @@ sequenceDiagram
     APP->>IS: POST /integration/ojk/generate-report (period)
     IS->>DB: generate report (data transaksi)
     IS-->>APP: 200 report
-    (retry/cancel mengikuti flow #35)
+%%(retry/cancel mengikuti flow #35)
 ```
 
 | Step | Side-effect |
@@ -1531,7 +1531,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor AG as Agent
-    participant BO as backoffice-service
+    participant BO as "backoffice-service"
     participant DB as PostgreSQL
 
     AG->>BO: GET /backoffice/tasks/pending (role-scoped)
@@ -1568,9 +1568,9 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant TX as transaction-service / partner-service
-    participant WL as wallet-service
-    participant DB as PostgreSQL (wallet)
+    participant TX as "transaction-service / partner-service"
+    participant WL as "wallet-service"
+    participant DB as "PostgreSQL (wallet)"
 
     TX->>WL: transfer(source, beneficiary, amount, ref) — SATU call atomik
     WL->>DB: lock kedua wallet (FOR UPDATE, urut lexicographic)
@@ -1593,8 +1593,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant CB as Callback / Payer / Scheduler
-    participant TX as service (VA / payment link / QR / checkout)
+    participant CB as "Callback / Payer / Scheduler"
+    participant TX as "service (VA / payment link / QR / checkout)"
     participant DB as PostgreSQL
 
     CB->>TX: process (callback pay / confirm / expire)
@@ -1615,8 +1615,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant ST as statement-service
-    participant WL as wallet-service
+    participant ST as "statement-service"
+    participant WL as "wallet-service"
     participant DB as PostgreSQL
 
     ST->>WL: get ledger entries periode (balance_after per entry, scale 4)
@@ -1633,9 +1633,9 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant NS as notification-service
+    participant NS as "notification-service"
     participant DB as PostgreSQL
-    participant CH as Channels (push/email/SMS)
+    participant CH as "Channels (push/email/SMS)"
 
     NS->>DB: INSERT PENDING (attempt 0)
     NS->>CH: kirim channel utama (misal push)
@@ -1662,8 +1662,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant BF as External (BI-FAST / VA / biller)
-    participant TX as transaction-service
+    participant BF as "External (BI-FAST / VA / biller)"
+    participant TX as "transaction-service"
     participant DB as PostgreSQL
 
     BF->>TX: callback (HMAC signed)
@@ -1687,7 +1687,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant TX as transaction-service
+    participant TX as "transaction-service"
     participant DB as PostgreSQL
 
     U->>TX: POST /qris/pay (X-Idempotency-Key)
