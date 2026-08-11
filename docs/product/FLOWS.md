@@ -37,13 +37,13 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Query `users` by hash (V105 unique `(tenant_id, email_hash)` / phone) |
-| 2 | Keycloak IAM user dibuat (externalId = IAM id) |
-| 3 | Dukcapil verify (fail-soft: PENDING) |
-| 4 | INSERT `users` + `profiles` (tenant dari JWT claim) |
-| 5 | Outbox `payu.account.user-created.v1` — non-PII |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Client | — | Query `users` by hash (V105 unique `(tenant_id, email_hash)` / phone) |
+| 2 | Client | 400 dup | Keycloak IAM user dibuat (externalId = IAM id) |
+| 3 | Client | — | Dukcapil verify (fail-soft: PENDING) |
+| 4 | Client | — | INSERT `users` + `profiles` (tenant dari JWT claim) |
+| 5 | Client | — | Outbox `payu.account.user-created.v1` — non-PII |
 
 ## 2. Login (Web, password grant saat ini)
 
@@ -77,13 +77,13 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Rate-limit count increment (Hot Rod, fail-closed) |
-| 2 | Lockout state read (cache) |
-| 3 | Keycloak Direct Access Grant (`grant_type=password`) |
-| 4 | Failed attempt + risk recorded; sukses → clear |
-| 5 | Session cookie httpOnly di BFF |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Rate-limit count increment (Hot Rod, fail-closed) |
+| 2 | User | — | Lockout state read (cache) |
+| 3 | User | — | Keycloak Direct Access Grant (`grant_type=password`) |
+| 4 | User | — | Failed attempt + risk recorded; sukses → clear |
+| 5 | User | — | Session cookie httpOnly di BFF |
 
 ## 3. Transfer Internal
 
@@ -122,14 +122,14 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency lookup `transactions.idempotency_key` |
-| 2 | INSERT transaction PENDING + outbox initiated (satu tx) |
-| 3 | Wallet reserve (idempotent by reference, pessimistic lock) |
-| 4 | Wallet commit (DEBIT sender) + credit (CREDIT recipient, ref txId) |
-| 5 | Kompensasi pasca-commit: credit sender ref `txId:REFUND` |
-| 6 | Completed event + ledger entries balance_after scale 4 |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency lookup `transactions.idempotency_key` |
+| 2 | User | — | INSERT transaction PENDING + outbox initiated (satu tx) |
+| 3 | User | — | Wallet reserve (idempotent by reference, pessimistic lock) |
+| 4 | User | — | Wallet commit (DEBIT sender) + credit (CREDIT recipient, ref txId) |
+| 5 | User | — | Kompensasi pasca-commit: credit sender ref `txId:REFUND` |
+| 6 | User | 201 / 400 / 409 | Completed event + ledger entries balance_after scale 4 |
 
 ## 4. SNAP-BI Payment (Partner / TokoBapak)
 
@@ -164,13 +164,13 @@ sequenceDiagram
     PS-->>P: 200 2002500 + PAYU-xxxx
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Token: HMAC verify → JWT (clientId) |
-| 2 | Payment: idempotency natural key (`uq`), PENDING |
-| 3 | Wallet settle 3-hop (reserve/commit/credit) — idempotent per ref (`snap-reserve-<ref>` dst) |
-| 4 | Ledger: RESERVATION DEBIT + CREDIT beneficiary, exact |
-| 5 | Outbox event → webhook delivery signed + reconciliation check (0 unmatched) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner | 200 JWT | Token: HMAC verify → JWT (clientId) |
+| 2 | Partner | 200 / 403 / 401 / 429 | Payment: idempotency natural key (`uq`), PENDING |
+| 3 | Partner | — | Wallet settle 3-hop (reserve/commit/credit) — idempotent per ref (`snap-reserve-<ref>` dst) |
+| 4 | Partner | — | Ledger: RESERVATION DEBIT + CREDIT beneficiary, exact |
+| 5 | Partner | 200 2002500 | Outbox event → webhook delivery signed + reconciliation check (0 unmatched) |
 
 ## 5. SNAP-BI Refund
 
@@ -195,13 +195,13 @@ sequenceDiagram
     PS-->>P: 200 2002500 + REFUND-xxxx
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Pessimistic lock payment row (serialisasi cumulative refund) |
-| 2 | Natural key idempotency `uq_snap_refund_partner_ref` |
-| 3 | Over-refund check (sum active refunds) |
-| 4 | Wallet reverse idempotent by refundId → ledger reversal |
-| 5 | Completed + reconciliation case close |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner | — | Pessimistic lock payment row (serialisasi cumulative refund) |
+| 2 | Partner | — | Natural key idempotency `uq_snap_refund_partner_ref` |
+| 3 | Partner | — | Over-refund check (sum active refunds) |
+| 4 | Partner | — | Wallet reverse idempotent by refundId → ledger reversal |
+| 5 | Partner | 200 2002500 / 400 | Completed + reconciliation case close |
 
 ## 6. Bill Payment
 
@@ -238,13 +238,13 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency validate (accountId + billerType + customerId + amount) |
-| 2 | Wallet reserve `totalAmount` = amount + fee (fee dipungut) |
-| 3 | Biller call; ambiguous 96 → PROCESSING + reconcile scheduler (60s, ShedLock) |
-| 4 | Commit → COMPLETED; reject → release + FAILED |
-| 5 | Checkpoint state machine: resume-safe per step |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency validate (accountId + billerType + customerId + amount) |
+| 2 | User | — | Wallet reserve `totalAmount` = amount + fee (fee dipungut) |
+| 3 | User | — | Biller call; ambiguous 96 → PROCESSING + reconcile scheduler (60s, ShedLock) |
+| 4 | User | — | Commit → COMPLETED; reject → release + FAILED |
+| 5 | User | 200 / 400 / 409 | Checkpoint state machine: resume-safe per step |
 
 ---
 
@@ -285,13 +285,13 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency natural key + PENDING insert + outbox initiated (satu tx) |
-| 2 | Wallet reserve (pessimistic lock, idempotent by reference) |
-| 3 | BI-FAST initiate; gagal → release (reservation belum commit — valid) |
-| 4 | Callback HMAC verified; SUCCESS → commit; FAILED → release |
-| 5 | Completed/failed event via outbox |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency natural key + PENDING insert + outbox initiated (satu tx) |
+| 2 | User | — | Wallet reserve (pessimistic lock, idempotent by reference) |
+| 3 | User | — | BI-FAST initiate; gagal → release (reservation belum commit — valid) |
+| 4 | User | — | Callback HMAC verified; SUCCESS → commit; FAILED → release |
+| 5 | User | 201 / 400 / 409 | Completed/failed event via outbox |
 
 ## 8. QRIS Payment
 
@@ -324,12 +324,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Reserve sebelum call QRIS (pola terbaik) |
-| 2 | SUCCESS → commit; FAILED/exception → release (reservation utuh) |
-| 3 | Idempotency via gateway annotation (cache-based) |
-| 4 | Completed/failed event via outbox |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Reserve sebelum call QRIS (pola terbaik) |
+| 2 | User | — | SUCCESS → commit; FAILED/exception → release (reservation utuh) |
+| 3 | User | — | Idempotency via gateway annotation (cache-based) |
+| 4 | User | 202 / 400 / 422 | Completed/failed event via outbox |
 
 ## 9. Virtual Account Payment
 
@@ -355,12 +355,12 @@ sequenceDiagram
     TX->>TX: PaymentExpiryScheduler (5 min) → VA expired → release/expire
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Callback HMAC verified (CallbackSignatureFilter) |
-| 2 | VA status paid + transaction completed |
-| 3 | Merchant credit (wallet) |
-| 4 | Scheduler expire pending VA (ShedLock, 5 min) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Payer | — | Callback HMAC verified (CallbackSignatureFilter) |
+| 2 | Payer | — | VA status paid + transaction completed |
+| 3 | Payer | — | Merchant credit (wallet) |
+| 4 | Payer | 200 / 404 | Scheduler expire pending VA (ShedLock, 5 min) |
 
 ## 10. Disbursement
 
@@ -388,12 +388,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency by key (`/by-idempotency-key/{key}`) |
-| 2 | Reserve → dispatch async → PROCESSING |
-| 3 | Callback HMAC → commit/release |
-| 4 | Batch variant: `disbursement-batch` Kafka consumer → per-item process/progress |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency by key (`/by-idempotency-key/{key}`) |
+| 2 | User | — | Reserve → dispatch async → PROCESSING |
+| 3 | User | — | Callback HMAC → commit/release |
+| 4 | User | 201 / 400 / 409 | Batch variant: `disbursement-batch` Kafka consumer → per-item process/progress |
 
 ## 11. Split Bill
 
@@ -422,12 +422,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Split bill + participant rows PENDING |
-| 2 | Accept/decline per participant (state machine) |
-| 3 | Settle → wallet debit/credit per share |
-| 4 | Event via outbox (topic split-bills) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Creator/Participant | 201 | Split bill + participant rows PENDING |
+| 2 | Creator/Participant | 200 / 400 | Accept/decline per participant (state machine) |
+| 3 | Creator/Participant | 200 | Settle → wallet debit/credit per share |
+| 4 | Creator/Participant | — | Event via outbox (topic split-bills) |
 
 ## 12. Top-up (Billing)
 
@@ -452,11 +452,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency validate (sama pola bill payment) |
-| 2 | Reserve `totalAmount` = amount + fee (fee tiered by amount) |
-| 3 | Commit → COMPLETED; reject → release + FAILED |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency validate (sama pola bill payment) |
+| 2 | User | — | Reserve `totalAmount` = amount + fee (fee tiered by amount) |
+| 3 | User | 200 / 400 | Commit → COMPLETED; reject → release + FAILED |
 
 ---
 
@@ -493,12 +493,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | DB idempotency operation (prepare → DEBIT_REQUESTED → COMPLETED) |
-| 2 | Wallet debit (ref = operation) — idempotent |
-| 3 | Persist + account balance update; gagal → refund credit |
-| 4 | Completed event via outbox |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | DB idempotency operation (prepare → DEBIT_REQUESTED → COMPLETED) |
+| 2 | User | — | Wallet debit (ref = operation) — idempotent |
+| 3 | User | — | Persist + account balance update; gagal → refund credit |
+| 4 | User | 201 / 400 | Completed event via outbox |
 
 ## 14. Investment — Jual (Redeem)
 
@@ -522,12 +522,12 @@ sequenceDiagram
     IV-->>U: 200 SELL transaction
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Ownership + status guard; harga fresh guard |
-| 2 | Wallet credit reference deterministik `SELL:{buyTransactionId}` — replay-safe |
-| 3 | Sell id derived `UUID.nameUUIDFromBytes("SELL:"+id)` — double-sell diblok |
-| 4 | Fee/net rounded scale 4 HALF_EVEN |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Ownership + status guard; harga fresh guard |
+| 2 | User | — | Wallet credit reference deterministik `SELL:{buyTransactionId}` — replay-safe |
+| 3 | User | — | Sell id derived `UUID.nameUUIDFromBytes("SELL:"+id)` — double-sell diblok |
+| 4 | User | 200 / 400 | Fee/net rounded scale 4 HALF_EVEN |
 
 ## 15. Lending — Repayment
 
@@ -556,12 +556,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency DB + pessimistic lock schedule |
-| 2 | Ambiguous wallet result → RECONCILIATION_REQUIRED (bukan commit parsial) |
-| 3 | Scheduler reconcile 60s ShedLock — resume |
-| 4 | Completed + event outbox |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency DB + pessimistic lock schedule |
+| 2 | User | — | Ambiguous wallet result → RECONCILIATION_REQUIRED (bukan commit parsial) |
+| 3 | User | — | Scheduler reconcile 60s ShedLock — resume |
+| 4 | User | 200 / 400 / 409 | Completed + event outbox |
 
 ## 16. Escrow (Marketplace)
 
@@ -593,12 +593,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | State machine ketat: HELD→RELEASED→SETTLED; HELD/EXPIRED→REFUNDED |
-| 2 | Credit idempotent by `escrowId` (anti double-credit) |
-| 3 | Refund HELD = release saja; non-HELD = credit |
-| 4 | Journal + event per transisi |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Buyer/Seller | — | State machine ketat: HELD→RELEASED→SETTLED; HELD/EXPIRED→REFUNDED |
+| 2 | Buyer/Seller | — | Credit idempotent by `escrowId` (anti double-credit) |
+| 3 | Buyer/Seller | — | Refund HELD = release saja; non-HELD = credit |
+| 4 | Buyer/Seller | 200 / 400 | Journal + event per transisi |
 
 ## 17. Cashback (Event-driven)
 
@@ -628,12 +628,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Konsumen event → rule match |
-| 2 | Wallet credit idempotent by transactionId |
-| 3 | Record CREDITED hanya setelah credit sukses; gagal → PENDING |
-| 4 | Saga compensation path (CashbackSagaOrchestrator) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Consumer (promotion-service) | — | Konsumen event → rule match |
+| 2 | Consumer (promotion-service) | — | Wallet credit idempotent by transactionId |
+| 3 | Consumer (promotion-service) | — | Record CREDITED hanya setelah credit sukses; gagal → PENDING |
+| 4 | Consumer (promotion-service) | internal | Saga compensation path (CashbackSagaOrchestrator) |
 
 ## 18. Referral — Complete & Reward
 
@@ -661,11 +661,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Referral lookup + status/expiry guard |
-| 2 | Reward grant idempotent by referralCode |
-| 3 | Completed event |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Referee | — | Referral lookup + status/expiry guard |
+| 2 | Referee | — | Reward grant idempotent by referralCode |
+| 3 | Referee | 200 / 400 | Completed event |
 
 ## 19. Payment Link (Partner)
 
@@ -695,12 +695,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Slug unik + status ACTIVE |
-| 2 | Public lookup (expiry check) |
-| 3 | `markPaid` guard ACTIVE→PAID — double-confirm IllegalStateException |
-| 4 | Webhook dedup `uq_webhook_delivery_event` |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner/Customer | 201 | Slug unik + status ACTIVE |
+| 2 | Partner/Customer | 200 / 404 | Public lookup (expiry check) |
+| 3 | Partner/Customer | 200 / 400 | `markPaid` guard ACTIVE→PAID — double-confirm IllegalStateException |
+| 4 | Partner/Customer | — | Webhook dedup `uq_webhook_delivery_event` |
 
 ## 20. Scheduled Transfer
 
@@ -729,12 +729,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Insert ACTIVE + jadwal |
-| 2 | Scheduler ShedLock (anti double-run multi-replica) |
-| 3 | Recurring gagal → retry next cycle; one-time gagal → FAILED |
-| 4 | Pause/resume/cancel ubah status — due check skip |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 201 | Insert ACTIVE + jadwal |
+| 2 | User | — | Scheduler ShedLock (anti double-run multi-replica) |
+| 3 | User | — | Recurring gagal → retry next cycle; one-time gagal → FAILED |
+| 4 | User | 200 / 400 / 409 | Pause/resume/cancel ubah status — due check skip |
 
 ## 21. Statement Generate
 
@@ -763,12 +763,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | JWT-scoped (customerId bukan dari request) |
-| 2 | Async generate → PDF → S3 → completed |
-| 3 | Closing balance derived (balik transaksi pasca-periode) |
-| 4 | Gagal → markFailed |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | JWT-scoped (customerId bukan dari request) |
+| 2 | User | — | Async generate → PDF → S3 → completed |
+| 3 | User | — | Closing balance derived (balik transaksi pasca-periode) |
+| 4 | User | 202 / 404 | Gagal → markFailed |
 
 ## 22. Settlement Batch (Daily)
 
@@ -794,12 +794,12 @@ sequenceDiagram
     OP->>WL: POST /batches/{id}/override (hanya mismatch terverifikasi)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Batch state machine (PROCESSING→COMPLETED/FAILED) |
-| 2 | Credit merchant per item (idempotent by reference) |
-| 3 | Discrepancy detect → override flow admin |
-| 4 | Revenue split terpisah (rules + stakeholders + royalty statement) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Ops | — | Batch state machine (PROCESSING→COMPLETED/FAILED) |
+| 2 | Ops | — | Credit merchant per item (idempotent by reference) |
+| 3 | Ops | — | Discrepancy detect → override flow admin |
+| 4 | Ops | 200 / 409 | Revenue split terpisah (rules + stakeholders + royalty statement) |
 
 ## 23. Subscription Charge (Recurring)
 
@@ -834,12 +834,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency per billing cycle |
-| 2 | Checkpoint: charge → wallet debit → advance cycle |
-| 3 | Dunning 3× → suspend; retry via Artemis delayed delivery |
-| 4 | ShedLock scheduler (anti double-run) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Scheduler | — | Idempotency per billing cycle |
+| 2 | Scheduler | — | Checkpoint: charge → wallet debit → advance cycle |
+| 3 | Scheduler | — | Dunning 3× → suspend; retry via Artemis delayed delivery |
+| 4 | Scheduler | internal | ShedLock scheduler (anti double-run) |
 
 ## 24. Split Payment (Revenue Split)
 
@@ -863,12 +863,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Rule + execution idempotency |
-| 2 | Debit payer + credit legs (idempotent by executionId) |
-| 3 | Reverse hanya dari COMPLETED (state machine) |
-| 4 | Ad-hoc split (tanpa rule) didukung |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner | — | Rule + execution idempotency |
+| 2 | Partner | — | Debit payer + credit legs (idempotent by executionId) |
+| 3 | Partner | — | Reverse hanya dari COMPLETED (state machine) |
+| 4 | Partner | 200 / 400 / 409 | Ad-hoc split (tanpa rule) didukung |
 
 ## 25. Loyalty Redeem
 
@@ -889,11 +889,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Pessimistic lock balance (anti race) |
-| 2 | Insert REDEEMED + balanceAfter |
-| 3 | (Catatan audit: dedup by transactionId belum — lihat TODOS CB-027) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Pessimistic lock balance (anti race) |
+| 2 | User | — | Insert REDEEMED + balanceAfter |
+| 3 | User | 200 / 400 | (Catatan audit: dedup by transactionId belum — lihat TODOS CB-027) |
 
 ## 26. Virtual Account — Register & Pay
 
@@ -919,12 +919,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | VA number unik per bank |
-| 2 | Callback HMAC + status/amount guard |
-| 3 | Merchant credit + completed |
-| 4 | Expiry scheduler (ShedLock) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Merchant | 201 | VA number unik per bank |
+| 2 | Merchant | — | Callback HMAC + status/amount guard |
+| 3 | Merchant | — | Merchant credit + completed |
+| 4 | Merchant | 200 / 400 / 404 | Expiry scheduler (ShedLock) |
 
 ---
 
@@ -965,11 +965,11 @@ sequenceDiagram
     Note over U,KC: replay refresh lama → 400 (sesi sudah revoked)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Refresh: rotate token via Keycloak; revoked → 400 AUTH_BUS_006 |
-| 2 | Logout: OIDC `end_session` revoke server-side (bukan hapus cookie saja) |
-| 3 | Whitelist logout path — expired access token tidak memblokir logout |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 200 / 400 AUTH_BUS_006 | Refresh: rotate token via Keycloak; revoked → 400 AUTH_BUS_006 |
+| 2 | User | 200 | Logout: OIDC `end_session` revoke server-side (bukan hapus cookie saja) |
+| 3 | User | — | Whitelist logout path — expired access token tidak memblokir logout |
 
 ## 28. KYC Verification Flow
 
@@ -1006,12 +1006,12 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Verification row per user (JWT-scoped, anti-akses user lain) |
-| 2 | OCR → Dukcapil verify |
-| 3 | Liveness + face match → COMPLETED |
-| 4 | Event `payu.kyc.verified` (⚠️ direct producer, bukan outbox — lihat ASYNC_COMPONENTS.md) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 201 | Verification row per user (JWT-scoped, anti-akses user lain) |
+| 2 | User | 200 / 400 | OCR → Dukcapil verify |
+| 3 | User | 200 / 400 | Liveness + face match → COMPLETED |
+| 4 | User | — | Event `payu.kyc.verified` (⚠️ direct producer, bukan outbox — lihat ASYNC_COMPONENTS.md) |
 
 ## 29. Dispute Lifecycle & Refund
 
@@ -1048,12 +1048,12 @@ sequenceDiagram
     DS->>DB: refund COMPLETED (via callback/status)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Dispute state machine: OPEN→INVESTIGATING→RESOLVED/REJECTED/ESCALATED |
-| 2 | Refund: over-refund guard (lock transaction row) |
-| 3 | Event → wallet reversal idempotent by refundId |
-| 4 | Refund status COMPLETED |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Customer | 201 | Dispute state machine: OPEN→INVESTIGATING→RESOLVED/REJECTED/ESCALATED |
+| 2 | Customer | — | Refund: over-refund guard (lock transaction row) |
+| 3 | Customer | — | Event → wallet reversal idempotent by refundId |
+| 4 | Customer | 200 / 400 / 409 | Refund status COMPLETED |
 
 ## 30. Merchant QR Payment
 
@@ -1082,11 +1082,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Merchant + QR partner-scoped (isolation matrix) |
-| 2 | Public lookup + markPaid guard (double-pay diblok) |
-| 3 | Scheduler expire QR (2 min, ShedLock) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Customer/Merchant | 200 | Merchant + QR partner-scoped (isolation matrix) |
+| 2 | Customer/Merchant | 200 / 404 | Public lookup + markPaid guard (double-pay diblok) |
+| 3 | Customer/Merchant | 200 / 400 | Scheduler expire QR (2 min, ShedLock) |
 
 ## 31. Lending — Pengajuan Pinjaman & Pre-approval
 
@@ -1110,11 +1110,11 @@ sequenceDiagram
 %%(repayment mengikuti flow #15)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Credit score via rules engine (lending-rules service) |
-| 2 | Pre-approval dengan expiry |
-| 3 | Loan + repayment schedule; repayment = flow #15 |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 200 | Credit score via rules engine (lending-rules service) |
+| 2 | User | 201 / 400 | Pre-approval dengan expiry |
+| 3 | User | — | Loan + repayment schedule; repayment = flow #15 |
 
 ## 32. FX Konversi & Reverse
 
@@ -1149,11 +1149,11 @@ sequenceDiagram
     FX-->>U: 200
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Debit/credit idempotent by conversionId |
-| 2 | Credit gagal → reverseDebit kompensasi |
-| 3 | Reverse dengan reference `txId-REV` + status guard |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Debit/credit idempotent by conversionId |
+| 2 | User | — | Credit gagal → reverseDebit kompensasi |
+| 3 | User | 200 / 400 / 409 | Reverse dengan reference `txId-REV` + status guard |
 
 ## 33. Gateway Checkout (Partner Token)
 
@@ -1180,11 +1180,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Checkout token (ACTIVE, expiry) |
-| 2 | Public page + pay dengan guard |
-| 3 | Scheduler expire token (10 min) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner/Customer | 201 | Checkout token (ACTIVE, expiry) |
+| 2 | Partner/Customer | 200 / 404 | Public page + pay dengan guard |
+| 3 | Partner/Customer | 200 / 400 | Scheduler expire token (10 min) |
 
 ## 34. Promo Claim & Redemption
 
@@ -1213,11 +1213,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Claim: guard ACTIVE + window |
-| 2 | Apply: validate + compute discount |
-| 3 | (Reward grant mengikuti pola cashback #17) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 200 / 400 | Claim: guard ACTIVE + window |
+| 2 | User | 200 / 400 | Apply: validate + compute discount |
+| 3 | User | — | (Reward grant mengikuti pola cashback #17) |
 
 ## 35. Integration Message (Retry/Cancel)
 
@@ -1245,11 +1245,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Queue + message row (PENDING) |
-| 2 | Delivery → SUCCESS/FAILED |
-| 3 | Retry re-queue; cancel terminal |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Service (billing/partner) | 202 | Queue + message row (PENDING) |
+| 2 | Service (billing/partner) | — | Delivery → SUCCESS/FAILED |
+| 3 | Service (billing/partner) | 200 / 400 | Retry re-queue; cancel terminal |
 
 ## 36. Loan Origination Process
 
@@ -1270,10 +1270,10 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Origination case + scoring |
-| 2 | Approve → handoff ke lending; reject terminal |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | internal | — | Origination case + scoring |
+| 2 | internal | 200 / 400 | Approve → handoff ke lending; reject terminal |
 
 ## 37. API Key Lifecycle (Partner)
 
@@ -1297,11 +1297,11 @@ sequenceDiagram
     Note over PS: key invalid/revoked → 401 di request boundary (PARTNER-005)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Partner-scoped (isolation matrix) + audit `@Audited` |
-| 2 | Rotate dengan grace period; revoke fail-closed |
-| 3 | Secret hanya sekali di create/rotate |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Admin | 201 | Partner-scoped (isolation matrix) + audit `@Audited` |
+| 2 | Admin | 200 | Rotate dengan grace period; revoke fail-closed |
+| 3 | Admin | 200 | Secret hanya sekali di create/rotate |
 
 ---
 
@@ -1326,11 +1326,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Lock dua wallet terurut (anti deadlock) |
-| 2 | Idempotent by refundId (REFUND_REVERSAL entry check) |
-| 3 | Ledger reversal DEBIT/CREDIT (immutable — bukan UPDATE) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | DS/Partner | — | Lock dua wallet terurut (anti deadlock) |
+| 2 | DS/Partner | — | Idempotent by refundId (REFUND_REVERSAL entry check) |
+| 3 | DS/Partner | 200 | Ledger reversal DEBIT/CREDIT (immutable — bukan UPDATE) |
 
 ## 39. Webhook Delivery Lifecycle
 
@@ -1369,12 +1369,12 @@ sequenceDiagram
     Note over OB,PS: poison/malformed event → rethrow → retry 3× → <topic>.dlq
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Dedup `uq_webhook_delivery_event` (eventId + subscription) |
-| 2 | URL re-validasi sebelum tiap attempt (DNS-rebind guard) |
-| 3 | Retry exponential + ShedLock; terminal state persistState() reload |
-| 4 | Poison → DLQ (`commitRecovered=true`) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Partner endpoint | — | Dedup `uq_webhook_delivery_event` (eventId + subscription) |
+| 2 | Partner endpoint | — | URL re-validasi sebelum tiap attempt (DNS-rebind guard) |
+| 3 | Partner endpoint | — | Retry exponential + ShedLock; terminal state persistState() reload |
+| 4 | Partner endpoint | internal | Poison → DLQ (`commitRecovered=true`) |
 
 ## 40. Reconciliation (SNAP vs Ledger)
 
@@ -1401,11 +1401,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Case unique `(reference_type, reference_id)` — dedupe replay-safe |
-| 2 | 0 unmatched = clean; unmatched → OPEN + WARN alert |
-| 3 | Auto-resolve workflow belum (manual review) — lihat TODOS |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Scheduler | — | Case unique `(reference_type, reference_id)` — dedupe replay-safe |
+| 2 | Scheduler | — | 0 unmatched = clean; unmatched → OPEN + WARN alert |
+| 3 | Scheduler | internal | Auto-resolve workflow belum (manual review) — lihat TODOS |
 
 ## 41. Notification Send
 
@@ -1434,12 +1434,12 @@ sequenceDiagram
     Note over AM,NS: jalur async: service publish ke AMQ → ArtemisCommandConsumer → send (queue payu.notification.commands)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Idempotency + status PENDING→SENT |
-| 2 | Channel sender; gagal → retry |
-| 3 | Async command via Artemis queue (payu.notification.commands) |
-| 4 | ⚠️ Provider nyata belum — LOG-mode (PROD-044, CB-029) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Idempotency + status PENDING→SENT |
+| 2 | User | — | Channel sender; gagal → retry |
+| 3 | User | — | Async command via Artemis queue (payu.notification.commands) |
+| 4 | User | 200 / 4xx | ⚠️ Provider nyata belum — LOG-mode (PROD-044, CB-029) |
 
 ## 42. Auth Register (auth-service)
 
@@ -1462,11 +1462,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Password policy enforced |
-| 2 | Keycloak user created (externalId = Keycloak id) |
-| 3 | Auth user row tersimpan |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | — | Password policy enforced |
+| 2 | User | — | Keycloak user created (externalId = Keycloak id) |
+| 3 | User | 201 / 400 | Auth user row tersimpan |
 
 ## 43. Installment Checkout (Lending)
 
@@ -1489,11 +1489,11 @@ sequenceDiagram
     end
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Tenor options (simulasi monthly) |
-| 2 | Checkout → INSTALMENT_LOAN + schedule |
-| 3 | Repayment mengikuti flow #15 |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | User | 200 | Tenor options (simulasi monthly) |
+| 2 | User | 201 / 400 | Checkout → INSTALMENT_LOAN + schedule |
+| 3 | User | — | Repayment mengikuti flow #15 |
 
 ## 44. Integration — Swift / OJK
 
@@ -1520,11 +1520,11 @@ sequenceDiagram
 %%(retry/cancel mengikuti flow #35)
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Swift: map + validasi ISO20022 → queue |
-| 2 | OJK: generate report (daily/monthly scheduler) |
-| 3 | Retry/cancel = flow #35 |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Service | 202 / 400 | Swift: map + validasi ISO20022 → queue |
+| 2 | Service | 200 | OJK: generate report (daily/monthly scheduler) |
+| 3 | Service | — | Retry/cancel = flow #35 |
 
 ## 45. Backoffice — Task Workflow
 
@@ -1552,11 +1552,11 @@ sequenceDiagram
     BO-->>AG: 200
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Role-scoped task inbox |
-| 2 | Transition dengan guard role |
-| 3 | Assign + audit `@Audited` |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Agent | 200 | Role-scoped task inbox |
+| 2 | Agent | 200 / 403 / 400 | Transition dengan guard role |
+| 3 | Agent | 200 | Assign + audit `@Audited` |
 
 ---
 
@@ -1606,12 +1606,12 @@ sequenceDiagram
     B-->>Br: logged out
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | Tokens di httpOnly cookie (`secure` prod, `sameSite=strict` — BUG-AUTH-027) — JS tidak bisa baca (anti XSS theft) |
-| 2 | BFF proxy: cookie → bearer; browser tidak pernah pegang token |
-| 3 | Refresh rotation otomatis; revoked → redirect login |
-| 4 | Logout = revoke Keycloak + hapus cookie (server-side, bukan hanya cookie) |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | Browser | 200 (cookie) | Tokens di httpOnly cookie (`secure` prod, `sameSite=strict` — BUG-AUTH-027) — JS tidak bisa baca (anti XSS theft) |
+| 2 | Browser | 200 / 302 | BFF proxy: cookie → bearer; browser tidak pernah pegang token |
+| 3 | Browser | 200 / 401 | Refresh rotation otomatis; revoked → redirect login |
+| 4 | Browser | 200 | Logout = revoke Keycloak + hapus cookie (server-side, bukan hanya cookie) |
 
 ## 47. Web Money Contract (decimal string)
 
@@ -1638,12 +1638,12 @@ sequenceDiagram
     Note over UI,API: roundDecimal hanya untuk DISPLAY (2 digit), bukan untuk payload
 ```
 
-| Step | Side-effect |
-|:---|:---|
-| 1 | `Money = string` (currency.ts:6) — boundary type |
-| 2 | Input divalidasi, bukan di-coerce ke number |
-| 3 | Payload mutation = decimal string (PROD-043: hapus `number`/`parseFloat` di FxService, Investment, split-bill, pocket, promotion, wallet store) |
-| 4 | Format untuk display via `formatExact`/`roundDecimal` — bukan untuk request |
+| Step | Actor | HTTP | Side-effect |
+|:---|:---|:---:|:---|
+| 1 | UI/API | — | `Money = string` (currency.ts:6) — boundary type |
+| 2 | UI/API | — | Input divalidasi, bukan di-coerce ke number |
+| 3 | UI/API | — | Payload mutation = decimal string (PROD-043: hapus `number`/`parseFloat` di FxService, Investment, split-bill, pocket, promotion, wallet store) |
+| 4 | UI/API | — | Format untuk display via `formatExact`/`roundDecimal` — bukan untuk request |
 
 ---
 
@@ -1672,7 +1672,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | `reserve→commit→credit` (3 call, window crash) → **satu atomic transfer** (primitive `WalletUseCase.transfer` sudah ada, belum dipakai) | Window kompensasi `:REFUND` & orphan detection jadi safety net, bukan kebutuhan; perilaku = transfer bank satu transaksi |
 | Berlaku untuk: internal transfer (flow #3), SNAP settle (flow #4), disbursement commit | Reduce hop antar service |
 
@@ -1695,7 +1695,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | `find → cek status → save` (check-then-act, race) → **conditional UPDATE `WHERE status=ACTIVE`** (atomik) | Dua callback/expire bersamaan → tepat satu menang; sisanya no-op. Idempotency settlement = pola bank |
 
 ## IMP-3. Statement — Closing Balance dari Ledger `balance_after` (flow #21)
@@ -1713,7 +1713,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | Closing di-derive dengan membalik transaksi pasca-periode (rawan drift) → **langsung dari `balance_after` ledger** | Statement = snapshot akurat; tidak bergantung transaksi pasca-periode |
 
 ## IMP-4. Notification — Retry + Fallback Channel (flow #41)
@@ -1742,7 +1742,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | Satu channel, sekali coba → **retry backoff + fallback channel** | Notifikasi tidak hilang saat satu channel down — perilaku e-wallet nyata |
 
 ## IMP-5. Callback Idempotency Seragam (flow #7, #9, #10, #26)
@@ -1766,7 +1766,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | Guard COMMIT/RELEASE entry ada sebagian (wallet) tapi tidak seragam di semua callback → **lock row + terminal check di semua callback** (VA, BI-FAST, disbursement, biller) | Double-callback tidak pernah double-mutate — konsisten lintas flow |
 
 ## IMP-6. QRIS — Idempotency DB Natural Key (flow #8)
@@ -1787,7 +1787,7 @@ sequenceDiagram
 ```
 
 | Perubahan vs aktual | Efek |
-|:---|:---|
+|:---|:---|:---:|:---|
 | Idempotency cache-only (TTL 24h, fail-open) → **DB natural key + replay check di handler** (pola transfer, CB-017) | Replay pasca-TTL/down tidak double-charge; fail-closed (ADR-0022) |
 
 ---
