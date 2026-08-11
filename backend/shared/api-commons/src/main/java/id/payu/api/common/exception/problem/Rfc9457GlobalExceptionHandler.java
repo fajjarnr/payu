@@ -6,6 +6,7 @@ import id.payu.api.common.exception.ExternalServiceException;
 import id.payu.api.common.exception.InsufficientFundsException;
 import id.payu.api.common.exception.RateLimitExceededException;
 import id.payu.api.common.exception.ResourceNotFoundException;
+import id.payu.api.common.exception.ServiceUnavailableException;
 import id.payu.api.common.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -244,6 +245,7 @@ public class Rfc9457GlobalExceptionHandler {
         if (ex instanceof ResourceNotFoundException) return HttpStatus.NOT_FOUND;
         if (ex instanceof ConflictException) return HttpStatus.CONFLICT;
         if (ex instanceof RateLimitExceededException) return HttpStatus.TOO_MANY_REQUESTS;
+        if (ex instanceof ServiceUnavailableException) return HttpStatus.SERVICE_UNAVAILABLE;
         if (ex instanceof ExternalServiceException) return HttpStatus.BAD_GATEWAY;
         if (ex instanceof ValidationException) return HttpStatus.BAD_REQUEST;
         if (ex instanceof InsufficientFundsException) return HttpStatus.UNPROCESSABLE_ENTITY;

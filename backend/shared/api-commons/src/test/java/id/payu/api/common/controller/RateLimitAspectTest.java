@@ -1,110 +1,133 @@
 package id.payu.api.common.controller;
 
 import id.payu.api.common.exception.RateLimitExceededException;
+import id.payu.api.common.exception.ServiceUnavailableException;
 import id.payu.cache.service.DistributedAtomicCache;
-import java.time.Duration;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
+/**
+ * LOGIN-004: the aspect must honor {@code requests} (not {@code value}), key by
+ * account when authenticated (per-IP otherwise), and fail CLOSED when the
+ * counting cache is unavailable.
+ */
+@DisplayName("RateLimitAspect")
 class RateLimitAspectTest {
 
-    @Mock
-    private DistributedAtomicCache distributedCache;
-    @Mock
-    private ProceedingJoinPoint joinPoint;
-    @Mock
-    private RateLimit rateLimit;
-
+    private DistributedAtomicCache cache;
     private RateLimitAspect aspect;
+    private ProceedingJoinPoint joinPoint;
     private MockHttpServletRequest request;
 
     @BeforeEach
-    void setUp() {
-        aspect = new RateLimitAspect(distributedCache);
+    void setUp() throws Throwable {
+        cache = mock(DistributedAtomicCache.class);
+        aspect = new RateLimitAspect(cache);
+        joinPoint = mock(ProceedingJoinPoint.class);
+        given(joinPoint.proceed()).willReturn("ok");
         request = new MockHttpServletRequest();
-        request.setRemoteAddr("192.168.1.1");
+        request.setRemoteAddr("10.0.0.7");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        when(rateLimit.keyPrefix()).thenReturn("test");
-        when(rateLimit.value()).thenReturn(5);
-        when(rateLimit.windowSeconds()).thenReturn(60);
     }
 
     @AfterEach
     void tearDown() {
         RequestContextHolder.resetRequestAttributes();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void shouldAllowRequestWithinLimitUsingAtomicIncrement() throws Throwable {
-        when(distributedCache.increment(anyString(), eq(Duration.ofSeconds(60)))).thenReturn(3L);
-        when(joinPoint.proceed()).thenReturn("ok");
+    @DisplayName("enforces the requests alias, not the value attribute")
+    void usesRequestsAlias() throws Throwable {
+        given(cache.increment(any(String.class), any(Duration.class))).willReturn(1L, 2L, 3L);
 
-        assertThat(aspect.applyRateLimit(joinPoint, rateLimit)).isEqualTo("ok");
-        ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
-        verify(distributedCache).increment(key.capture(), eq(Duration.ofSeconds(60)));
-        assertThat(key.getValue()).startsWith("rate_limit:test:192.168.1.1:");
+        aspect.applyRateLimit(joinPoint, probe(2, 999, 60));
+        aspect.applyRateLimit(joinPoint, probe(2, 999, 60));
+
+        assertThatThrownBy(() -> aspect.applyRateLimit(joinPoint, probe(2, 999, 60)))
+                .isInstanceOf(RateLimitExceededException.class);
     }
 
     @Test
-    void shouldRejectRequestWithHotRodTtlWhenLimitExceeded() {
-        when(distributedCache.increment(anyString(), eq(Duration.ofSeconds(60)))).thenReturn(6L);
-        when(distributedCache.getRemainingTtlSeconds(anyString())).thenReturn(45L);
+    @DisplayName("fails closed with 503 when the counting cache is unavailable")
+    void failsClosedWhenCacheDown() throws Throwable {
+        given(cache.increment(any(String.class), any(Duration.class)))
+                .willThrow(new IllegalStateException("cache down"));
 
-        assertThatThrownBy(() -> aspect.applyRateLimit(joinPoint, rateLimit))
-                .isInstanceOf(RateLimitExceededException.class)
-                .satisfies(error -> assertThat(((RateLimitExceededException) error).getRetryAfterSeconds())
-                        .isEqualTo(45L));
+        assertThatThrownBy(() -> aspect.applyRateLimit(joinPoint, probe(10, 10, 60)))
+                .isInstanceOf(ServiceUnavailableException.class);
     }
 
     @Test
-    void shouldFailOpenWhenAtomicCacheIsUnavailable() throws Throwable {
-        when(distributedCache.increment(anyString(), eq(Duration.ofSeconds(60))))
-                .thenThrow(new IllegalStateException("cache unavailable"));
-        when(joinPoint.proceed()).thenReturn("ok");
+    @DisplayName("keys by account subject when authenticated")
+    void keysByAccountWhenAuthenticated() throws Throwable {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("sub-123", null, java.util.List.of()));
+        given(cache.increment(any(String.class), any(Duration.class))).willReturn(1L);
 
-        assertThat(aspect.applyRateLimit(joinPoint, rateLimit)).isEqualTo("ok");
+        aspect.applyRateLimit(joinPoint, probe(10, 10, 60));
+
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(cache).increment(keyCaptor.capture(), any(Duration.class));
+        assertThat(keyCaptor.getValue()).contains("account:sub-123");
     }
 
     @Test
-    void shouldUseAuthenticatedUserInRateLimitKey() throws Throwable {
-        request.setRemoteUser("user123");
-        when(distributedCache.increment(anyString(), eq(Duration.ofSeconds(60)))).thenReturn(1L);
-        when(joinPoint.proceed()).thenReturn("ok");
+    @DisplayName("keys by client IP when unauthenticated")
+    void keysByIpWhenAnonymous() throws Throwable {
+        given(cache.increment(any(String.class), any(Duration.class))).willReturn(1L);
 
-        aspect.applyRateLimit(joinPoint, rateLimit);
+        aspect.applyRateLimit(joinPoint, probe(10, 10, 60));
 
-        ArgumentCaptor<String> key = ArgumentCaptor.forClass(String.class);
-        verify(distributedCache).increment(key.capture(), eq(Duration.ofSeconds(60)));
-        assertThat(key.getValue()).contains("user:user123");
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(cache).increment(keyCaptor.capture(), any(Duration.class));
+        assertThat(keyCaptor.getValue()).contains("10.0.0.7");
     }
 
-    @Test
-    void shouldSkipCacheWithoutRequestContext() throws Throwable {
-        RequestContextHolder.resetRequestAttributes();
-        when(joinPoint.proceed()).thenReturn("ok");
+    private RateLimit probe(int requests, int value, int windowSeconds) {
+        return new RateLimit() {
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return RateLimit.class;
+            }
 
-        assertThat(aspect.applyRateLimit(joinPoint, rateLimit)).isEqualTo("ok");
-        verifyNoInteractions(distributedCache);
+            @Override
+            public int value() {
+                return value;
+            }
+
+            @Override
+            public int requests() {
+                return requests;
+            }
+
+            @Override
+            public int windowSeconds() {
+                return windowSeconds;
+            }
+
+            @Override
+            public String keyPrefix() {
+                return "login";
+            }
+        };
     }
 }

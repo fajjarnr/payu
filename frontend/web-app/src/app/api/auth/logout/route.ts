@@ -10,18 +10,20 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('accessToken')?.value;
+    const refreshToken = cookieStore.get('refreshToken')?.value;
 
-    logger.info({ action: 'logout', hasToken: !!token }, 'Logout initiated');
+    logger.info({ action: 'logout', hasRefreshToken: !!refreshToken }, 'Logout initiated');
 
-    // BUG-FE-014: Await backend logout with 2s timeout to invalidate session before clearing cookies
-    if (token) {
+    // LOGIN-002: revoke the session at the identity provider with the refresh
+    // token (OIDC end_session) so the token cannot be replayed after logout.
+    if (refreshToken) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
       try {
         await fetch(`${GATEWAY_URL}/api/v1/auth/logout`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
           signal: controller.signal,
         });
       } catch (err) {

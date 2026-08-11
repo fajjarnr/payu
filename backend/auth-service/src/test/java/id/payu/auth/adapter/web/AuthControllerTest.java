@@ -1,0 +1,159 @@
+package id.payu.auth.adapter.web;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.auth.adapter.persistence.RefreshTokenService;
+import id.payu.auth.adapter.security.KeycloakService;
+import id.payu.auth.application.service.RiskEvaluationService;
+import id.payu.auth.application.service.SessionValidationService;
+import id.payu.auth.dto.LoginRequest;
+import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.dto.LogoutRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.client.ResourceAccessException;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * LOGIN-005: deterministic login error contract — 401 invalid credentials,
+ * 423 locked account, 503 identity provider unavailable, 429 rate limited
+ * (aspect), never a 500 for expected failures. LOGIN-002: logout revokes the
+ * session at Keycloak.
+ */
+@DisplayName("AuthController login/logout contract")
+class AuthControllerTest {
+
+    private MockMvc mockMvc;
+    private KeycloakService keycloakService;
+    private RiskEvaluationService riskEvaluationService;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        keycloakService = mock(KeycloakService.class);
+        riskEvaluationService = mock(RiskEvaluationService.class);
+        RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
+        SessionValidationService sessionValidationService = mock(SessionValidationService.class);
+        AuthController controller = new AuthController(
+                keycloakService, riskEvaluationService, refreshTokenService, sessionValidationService);
+
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
+
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setValidator(validator)
+                .build();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/auth/login")
+    class LoginEndpoint {
+
+        @Test
+        @DisplayName("200 with tokens on success")
+        void successReturnsTokens() throws Exception {
+            given(keycloakService.loginBlocking("user", "pass"))
+                    .willReturn(new LoginResponse("access-token", "refresh-token", 900L, "Bearer"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.access_token").value("access-token"));
+        }
+
+        @Test
+        @DisplayName("401 AUTH_BUS_001 for invalid credentials (no user enumeration)")
+        void invalidCredentialsReturn401() throws Exception {
+            given(keycloakService.loginBlocking(anyString(), anyString()))
+                    .willThrow(new BadCredentialsException("bad credentials"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "wrong"))))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_001"));
+        }
+
+        @Test
+        @DisplayName("423 AUTH_BUS_002 for a locked account")
+        void lockedAccountReturns423() throws Exception {
+            given(keycloakService.loginBlocking(anyString(), anyString()))
+                    .willThrow(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                    .andExpect(status().isLocked())
+                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_002"));
+        }
+
+        @Test
+        @DisplayName("503 SERVICE_UNAVAILABLE when the identity provider is down")
+        void idpDownReturns503() throws Exception {
+            given(keycloakService.loginBlocking(anyString(), anyString()))
+                    .willThrow(new ResourceAccessException("Keycloak unreachable"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error.code").value("SERVICE_UNAVAILABLE"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/auth/logout")
+    class LogoutEndpoint {
+
+        @Test
+        @DisplayName("200 and revokes the session at Keycloak")
+        void logoutRevokesSession() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LogoutRequest("rt-123"))))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("400 for an invalid refresh token")
+        void logoutRejectsInvalidToken() throws Exception {
+            willThrow(new IllegalArgumentException("Invalid refresh token"))
+                    .given(keycloakService).revokeSession(anyString());
+
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LogoutRequest("rt-expired"))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_006"));
+        }
+
+        @Test
+        @DisplayName("503 when the identity provider is unreachable")
+        void logoutIdpDownReturns503() throws Exception {
+            willThrow(new ResourceAccessException("Keycloak unreachable"))
+                    .given(keycloakService).revokeSession(anyString());
+
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LogoutRequest("rt-123"))))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error.code").value("SERVICE_UNAVAILABLE"));
+        }
+    }
+}

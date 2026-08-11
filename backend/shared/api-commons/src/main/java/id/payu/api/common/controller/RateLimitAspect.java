@@ -1,6 +1,7 @@
 package id.payu.api.common.controller;
 
 import id.payu.api.common.exception.RateLimitExceededException;
+import id.payu.api.common.exception.ServiceUnavailableException;
 import id.payu.api.common.constant.ApiConstants;
 import id.payu.cache.service.DistributedAtomicCache;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -8,6 +9,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -18,6 +21,11 @@ import java.time.Duration;
 /**
  * Aspect for implementing rate limiting on API endpoints.
  * Uses the shared atomic cache port to track request counts per client.
+ * <p>
+ * LOGIN-004: reads the {@code requests} alias (not {@code value}), keys by the
+ * authenticated JWT subject when present (per-account) and otherwise by client
+ * IP, and fails CLOSED — when the counting cache is unavailable the request is
+ * rejected with 503 instead of being let through unthrottled.
  */
 @Aspect
 @Component
@@ -33,7 +41,7 @@ public class RateLimitAspect {
 
     /**
      * Applies rate limiting to methods annotated with @RateLimit.
-     * Fails open if the distributed cache is unavailable.
+     * Fails closed if the distributed cache is unavailable.
      */
     @Around("@annotation(rateLimit)")
     public Object applyRateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -43,7 +51,7 @@ public class RateLimitAspect {
         }
 
         String key = buildRateLimitKey(request, rateLimit.keyPrefix(), rateLimit.windowSeconds());
-        int limit = rateLimit.value();
+        int limit = rateLimit.requests();
         long windowSeconds = rateLimit.windowSeconds();
 
         try {
@@ -56,17 +64,22 @@ public class RateLimitAspect {
         } catch (RateLimitExceededException e) {
             throw e;
         } catch (RuntimeException e) {
-            log.warn("Distributed cache unavailable for rate limiting, allowing request: {}", e.getMessage());
+            // LOGIN-004: fail-closed — no counter means no throttle, which a
+            // brute-force attacker would exploit. Reject instead of allowing.
+            log.warn("Rate limit cache unavailable, rejecting request (fail-closed): {}", e.getMessage());
+            throw new ServiceUnavailableException(
+                    "RATE_LIMITER_UNAVAILABLE",
+                    "Rate limiter temporarily unavailable — try again later",
+                    e);
         }
 
         return joinPoint.proceed();
     }
 
     /**
-     * Builds the rate limit key for Redis.
+     * Builds the rate limit key for the distributed cache.
      */
     private String buildRateLimitKey(HttpServletRequest request, String prefix, long windowSeconds) {
-        // Use IP address or user ID for rate limiting
         String identifier = getClientIdentifier(request);
         return String.format("rate_limit:%s:%s:%s",
                 prefix,
@@ -76,16 +89,18 @@ public class RateLimitAspect {
     }
 
     /**
-     * Gets the client identifier for rate limiting.
+     * Gets the client identifier for rate limiting: the authenticated principal
+     * name when present (per-account; for JWT auth this is the token subject),
+     * otherwise the client IP.
      */
     private String getClientIdentifier(HttpServletRequest request) {
-        // Try to get user ID from authentication
-        String userId = request.getRemoteUser();
-        if (userId != null) {
-            return "user:" + userId;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())
+                && authentication.getName() != null && !authentication.getName().isBlank()) {
+            return "account:" + authentication.getName();
         }
 
-        // Fall back to IP address
         return getClientIpAddress(request);
     }
 

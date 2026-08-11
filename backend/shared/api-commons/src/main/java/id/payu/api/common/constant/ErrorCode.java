@@ -94,6 +94,12 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo INTERNAL_ERROR = new ErrorInfo("INTERNAL_ERROR", "Internal server error");
 
+    /**
+     * System: Service temporarily unavailable (dependency down, fail-closed)
+     */
+    @Getter
+    public static final ErrorInfo SERVICE_UNAVAILABLE = new ErrorInfo("SERVICE_UNAVAILABLE", "Service temporarily unavailable");
+
     // ==================== AUTH SERVICE (AUTH) ====================
 
     @Getter

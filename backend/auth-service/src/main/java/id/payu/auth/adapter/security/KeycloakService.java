@@ -251,6 +251,43 @@ public class KeycloakService {
         }
     }
 
+    /**
+     * Revokes a session at Keycloak (LOGIN-002). The refresh token identifies
+     * the session; Keycloak's end_session endpoint revokes it server-side so a
+     * subsequent refresh with the same token is rejected.
+     *
+     * @param refreshToken the refresh token to revoke
+     * @throws IllegalArgumentException if the token cannot be parsed or is rejected
+     */
+    public void revokeSession(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new IllegalArgumentException("Refresh token is required");
+        }
+        String endSessionEndpoint = String.format("%s/realms/%s/protocol/openid-connect/logout",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
+        org.springframework.util.LinkedMultiValueMap<String, String> form = new org.springframework.util.LinkedMultiValueMap<>();
+        form.add("client_id", keycloakConfig.getClientId());
+        form.add("refresh_token", refreshToken);
+        org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, String>> request =
+                new org.springframework.http.HttpEntity<>(form, headers);
+
+        try {
+            org.springframework.http.ResponseEntity<String> response = restTemplate
+                    .postForEntity(endSessionEndpoint, request, String.class);
+            log.info("Keycloak session revocation returned status: {}", response.getStatusCode());
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.warn("Session revocation rejected by Keycloak: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid refresh token", e);
+        } catch (Exception e) {
+            log.error("Session revocation failed: {}", e.getMessage());
+            throw new org.springframework.web.client.ResourceAccessException(
+                    "Keycloak unreachable during logout: " + e.getMessage());
+        }
+    }
+
     public LoginResponse rateLimitFallbackBlocking(String username, String password, Throwable t) {
         log.warn("Rate limit exceeded for login attempts (blocking)");
         throw new IllegalArgumentException("Too many login attempts. Please try again later.");

@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 /**
@@ -82,6 +83,67 @@ class KeycloakServiceTest {
         ReflectionTestUtils.setField(keycloakService, "requireLowercase", true);
         ReflectionTestUtils.setField(keycloakService, "requireDigit", true);
         ReflectionTestUtils.setField(keycloakService, "requireSpecialChar", true);
+    }
+
+    @Nested
+    @DisplayName("revokeSession")
+    class RevokeSession {
+
+        private org.springframework.test.web.client.MockRestServiceServer mockServer;
+        private org.springframework.web.client.RestTemplate mockRestTemplate;
+
+        @BeforeEach
+        void setUpRestTemplate() {
+            mockRestTemplate = new org.springframework.web.client.RestTemplate();
+            mockServer = org.springframework.test.web.client.MockRestServiceServer.bindTo(mockRestTemplate).build();
+            ReflectionTestUtils.setField(keycloakService, "restTemplate", mockRestTemplate);
+        }
+
+        private void stubKeycloakConfig() {
+            given(keycloakConfig.getServerUrl()).willReturn("http://keycloak:8080");
+            given(keycloakConfig.getRealm()).willReturn("payu");
+            given(keycloakConfig.getClientId()).willReturn("payu-backend");
+        }
+
+        @Test
+        @DisplayName("calls the Keycloak end_session endpoint with client_id and refresh_token")
+        void revokesSessionAtKeycloak() {
+            stubKeycloakConfig();
+            mockServer.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                            "http://keycloak:8080/realms/payu/protocol/openid-connect/logout"))
+                    .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content()
+                            .string(org.hamcrest.Matchers.allOf(
+                                    org.hamcrest.Matchers.containsString("client_id=payu-backend"),
+                                    org.hamcrest.Matchers.containsString("refresh_token=rt-123"))))
+                    .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
+                            .withSuccess("", org.springframework.http.MediaType.TEXT_PLAIN));
+
+            keycloakService.revokeSession("rt-123");
+
+            mockServer.verify();
+        }
+
+        @Test
+        @DisplayName("rejects blank refresh tokens without calling Keycloak")
+        void rejectsBlankToken() {
+            assertThatThrownBy(() -> keycloakService.revokeSession("  "))
+                    .isInstanceOf(IllegalArgumentException.class);
+            mockServer.verify();
+        }
+
+        @Test
+        @DisplayName("propagates Keycloak rejection as invalid token")
+        void propagatesKeycloakRejection() {
+            stubKeycloakConfig();
+            mockServer.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                            "http://keycloak:8080/realms/payu/protocol/openid-connect/logout"))
+                    .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
+                            .withStatus(org.springframework.http.HttpStatus.BAD_REQUEST));
+
+            assertThatThrownBy(() -> keycloakService.revokeSession("rt-expired"))
+                    .isInstanceOf(IllegalArgumentException.class);
+            mockServer.verify();
+        }
     }
 
     @Nested

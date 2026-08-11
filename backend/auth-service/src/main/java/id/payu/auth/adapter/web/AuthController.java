@@ -8,6 +8,7 @@ import id.payu.api.common.response.ApiResponse;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginRequest;
 import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.dto.LogoutRequest;
 import id.payu.auth.dto.RegisterRequest;
 import id.payu.auth.dto.RefreshTokenRequest;
 import id.payu.auth.dto.RefreshTokenResponse;
@@ -127,7 +128,7 @@ public class AuthController extends BaseController {
             if (loginResponse == null) {
                 riskEvaluationService.recordFailedAttempt(request.username());
                 log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
-                return ResponseEntity.badRequest()
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error(
                                 ErrorCode.AUTH_BUS_001.getCode(),
                                 ErrorCode.AUTH_BUS_001.getMessage()
@@ -147,13 +148,39 @@ public class AuthController extends BaseController {
             return ResponseEntity.ok(ApiResponse.success(loginResponse));
 
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            // BUG-BE-154: Handle invalid credentials from loginBlocking directly
+            // LOGIN-005: invalid credentials are a deterministic 401, not 500/400
             riskEvaluationService.recordFailedAttempt(request.username());
             log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
-            return ResponseEntity.badRequest()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(
                             ErrorCode.AUTH_BUS_001.getCode(),
                             ErrorCode.AUTH_BUS_001.getMessage()
+                    ));
+        } catch (IllegalArgumentException e) {
+            // LOGIN-005: locked account is a deterministic 423, other credential
+            // failures (invalid/malformed) a 401 — no user enumeration in the message
+            riskEvaluationService.recordFailedAttempt(request.username());
+            log.warn("Login rejected for user: {} - {}", maskUsername(request.username()), e.getClass().getSimpleName());
+            if (e.getMessage() != null && e.getMessage().contains("locked")) {
+                return ResponseEntity.status(HttpStatus.LOCKED)
+                        .body(ApiResponse.error(
+                                ErrorCode.AUTH_BUS_002.getCode(),
+                                ErrorCode.AUTH_BUS_002.getMessage()
+                        ));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_001.getCode(),
+                            ErrorCode.AUTH_BUS_001.getMessage()
+                    ));
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            // LOGIN-005: identity provider unreachable — deterministic 503, fail-closed
+            log.error("Login failed for user: {} - identity provider unavailable: {}",
+                    maskUsername(request.username()), e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ApiResponse.error(
+                            ErrorCode.SERVICE_UNAVAILABLE.getCode(),
+                            ErrorCode.SERVICE_UNAVAILABLE.getMessage()
                     ));
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
@@ -442,6 +469,74 @@ public class AuthController extends BaseController {
             }
         } catch (Exception e) {
             log.error("Session validation failed: {}", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(
+                            ErrorCode.INTERNAL_ERROR.getCode(),
+                            ErrorCode.INTERNAL_ERROR.getMessage()
+                    ));
+        }
+    }
+
+    /**
+     * Logs out by revoking the session at the identity provider (LOGIN-002).
+     * Keycloak's end_session endpoint invalidates the refresh token server-side,
+     * so a replay of the revoked refresh token is rejected on the next use.
+     */
+    @PostMapping("/logout")
+    @Audited(
+            operation = id.payu.security.annotation.AuditOperation.LOGOUT,
+            entityType = "AuthToken",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
+    @Operation(
+            summary = "Logout and revoke session",
+            description = """
+                    Revokes the session at the identity provider using the refresh token.
+                    After revocation, the refresh token cannot be replayed to obtain new tokens.
+
+                    **Rate Limiting:** 20 requests per minute per IP
+                    """
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Session revoked successfully"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid or missing refresh token",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "503",
+                    description = "Identity provider unavailable",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @SecurityRequirements
+    @RateLimit(requests = 20, windowSeconds = 60, keyPrefix = "logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
+        try {
+            keycloakService.revokeSession(request.refreshToken());
+            log.info("Session revoked for client IP via logout");
+            return ResponseEntity.ok(ApiResponse.success(null));
+        } catch (IllegalArgumentException e) {
+            log.warn("Logout rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_006.getCode(),
+                            ErrorCode.AUTH_BUS_006.getMessage()
+                    ));
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            log.error("Logout failed — identity provider unavailable: {}", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ApiResponse.error(
+                            ErrorCode.SERVICE_UNAVAILABLE.getCode(),
+                            ErrorCode.SERVICE_UNAVAILABLE.getMessage()
+                    ));
+        } catch (Exception e) {
+            log.error("Logout failed: {}", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),
