@@ -794,7 +794,7 @@ C4Dynamic
   System(wallet_svc, "Wallet Service")
   System(account_svc, "Account Service")
   System(notification_svc, "Notification Service")
-  Queue(events, "payu.transactions", "Kafka Topic")
+  Container(events, "Kafka", "Kafka Topic", "payu.transactions")
 
   Rel(user, transaction_svc, "1. POST /v1/transfers", "HTTPS")
   Rel(transaction_svc, wallet_svc, "2. Reserve balance command", "gRPC")
@@ -948,8 +948,8 @@ C4Dynamic
   Container(write_api, "Command API", "Spring MVC", "Handles POST/PUT/DELETE")
   Container(read_api, "Query API", "Spring MVC", "Handles GET requests")
   ContainerDb(write_db, "Write Model", "PostgreSQL", "Source of truth")
-  ContainerCache(read_cache, "Read Model", "Data Grid (Hot Rod)", "Denormalized view")
-  Queue(cdc, "CDC Events", "Kafka Connect (Debezium)", "Change data capture")
+  ContainerDb(read_cache, "Read Model", "Data Grid (Hot Rod)", "Denormalized view")
+  Container(cdc, "CDC Events", "Kafka Connect", "Debezium change data capture")
 
   Rel(user, write_api, "1. POST /v1/accounts", "Command")
   Rel(write_api, write_db, "2. Execute command")
@@ -1090,7 +1090,7 @@ C4Dynamic
   Container(mobile, "Mobile App", "React Native")
   Container(auth_svc, "Auth Service", "Spring Boot 4.1")
   Container(sso, "Red Hat SSO (Keycloak)", "RHBK v26")
-  ContainerCache(cache, "Data Grid", "Hot Rod", "Token cache, rate limits")
+  ContainerDb(cache, "Data Grid", "Hot Rod", "Token cache, rate limits")
   ContainerQueue(notification, "Notification Queue", "AMQ Broker", "OTP delivery")
   Container(notification_svc, "Notification Service", "Quarkus")
   ContainerDb(user_db, "User Database", "PostgreSQL", "Credentials, devices")
@@ -1161,6 +1161,7 @@ C4Component
   Component(rate_limiter, "Rate Limiter", "RateLimitFilter (Hot Rod Sliding Window)", "Per-IP and per-user limits")
   Component(jwt_filter, "JWT Filter", "JwtValidationFilter", "Token validation and extraction")
   Component(router, "Route Registry", "RouteRegistry", "Dynamic request routing to services")
+  Component(load_balancer, "Load Balancer", "ServiceDiscoveryClient", "Resolve service URL")
   Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Per-service failure handling")
   Component(idempotency, "Idempotency", "IdempotencyFilter", "Hot Rod-backed dedup (24h TTL)")
 
