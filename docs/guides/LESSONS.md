@@ -2,6 +2,61 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-222: Retry and TimeLimiter Are Money-Write Hazards (2026-08-11)
+
+**Context**: INVEST-001 — `sellInvestment` carried `@Retry` + `@TimeLimiter` and credited the wallet with a random reference, so any retry or timeout-replay credited the wallet twice; the sell transaction id was random too, so replays created duplicates.
+
+**Lesson**:
+- A retryable method must be idempotent end-to-end: the wallet reference AND the persisted record id must be deterministic (derived from the original command), with a replay guard that returns the existing result before any side effect.
+- `@TimeLimiter` cannot cancel the in-flight method; on timeout the fallback runs while the original thread keeps executing — that alone is a double-write source. Remove it (and `@Retry`) from money-writing paths; `@CircuitBreaker` with a failed-future fallback is the safe residual.
+- Money math inside the flow must be scale-4 rounded (fee = amount × rate → `setScale(4, HALF_EVEN)`) even when the raw multiply looks harmless.
+
+**Applied evidence**: red-first replay and fee-scale tests passed; `investment-service` 54/54 (2 skipped). CHANGELOG 1.10.51; CB-023/INVEST-001 closed.
+
+## L-221: The Default HTTP Client Has No Timeout (2026-08-11)
+
+**Context**: TIMEOUT-001 — the shared `RestTemplate` bean was `new RestTemplate()`, so a hung QRIS/BI-FAST simulator blocked the caller forever; `PaymentExpiryScheduler` had already shown the correct 5s/10s contract in its own copy.
+
+**Lesson**:
+- `new RestTemplate()` (and `new HttpClient()`) default to infinite timeouts — a "missing" timeout config is a permanent hang, not a missing feature. Every HTTP client bean used against external/simulator endpoints must set connect + read timeouts at the factory.
+- Spring 7 removed the timeout getters from `SimpleClientHttpRequestFactory`; assert the private fields via reflection in the config test instead of relying on behavior tests with sleeping servers (virtual-thread servers can hang the surefire fork).
+- Keep one shared bean so every adapter inherits the timeout; per-adapter copies drift (the scheduler copy proved the contract first).
+
+**Applied evidence**: red-first `AppConfigTest.restTemplateHasBoundedTimeouts` (default 0/0) passed after the fix; `transaction-service` 148/148. CHANGELOG 1.10.51; CB-021/TIMEOUT-001 closed.
+
+## L-220: A Response Fee Is a Ledger Claim (2026-08-11)
+
+**Context**: FEE-001 — `InitiateTransferCommandResult.fee` reported 2500/5000/25000 per transfer rail while no fee was ever debited; the web-app even advertised "Rp 5.000"/"Rp 25.000" per rail.
+
+**Lesson**:
+- Any fee shown in a financial response is a claim about the ledger. If the ledger has no fee entry, the number is a lie — either collect it (with a ledger entry) or report 0 and remove the UI claim.
+- A feature that does not move money must not simulate the shape of one; keep `BigDecimal.ZERO` explicit until the real collection feature (with reserve/commit + revenue account credit) is built.
+- Check the UI when fixing a backend contract: the frontend copy was inventing fees the backend never charged.
+
+**Applied evidence**: red-first `reportsZeroFeeWhenFeeNotCollected` passed; `transaction-service` 147/147; web-app transfer page "Gratis" for all rails, `TransferPage.test.tsx` 3/3, ESLint clean. CHANGELOG 1.10.51; CB-020/FEE-001 closed.
+
+## L-219: External Contract Parameters Belong in the Request Boundary (2026-08-11)
+
+**Context**: BIFAST-001 — the BI-FAST, SKN, and RTGS legs hardcoded `beneficiaryBankCode("014")`; the transfer request carried no bank code, so any non-014 bank transfer was routed to the wrong clearing rail.
+
+**Lesson**:
+- Parameters that describe the counterparty's bank belong at the request boundary with boundary validation (3-digit numeric), not buried in an adapter or defaulted silently per rail.
+- Keep a backward-compatible default ("014") when the field is absent so existing clients keep working; assert both paths in tests.
+- Fix every leg at once (BI-FAST/SKN/RTGS) — a "request-first" fix applied to one rail leaves the sibling callers broken.
+
+**Applied evidence**: red-first tests (`usesBankCodeFromRequestForBiFastTransfer`, `defaultsToBank014WhenBankCodeAbsent`) passed; `transaction-service` 146/146, 0 failures. CHANGELOG 1.10.51; CB-016/BIFAST-001 closed.
+
+## L-218: Saga Compensation Must Match the Money State (2026-08-11)
+
+**Context**: TX-003 — internal transfer committed the sender reservation, then credited the recipient. When the recipient credit failed, the saga compensated with `releaseBalance`, but a release after a commit is a no-op/throw (reserved balance is already zero), so the sender's money was permanently lost while the transaction was marked FAILED.
+
+**Lesson**:
+- Compensation choice depends on the money state, not on the step that failed: before commit → release the reservation; after commit → refund the sender with a credit. A release after a commit is a silent money-losing no-op.
+- Give refunds a deterministic reference distinct from the original leg (`transactionId:REFUND`) so wallet idempotency cannot collide with the recipient credit and retries cannot double-credit.
+- Log which compensation branch ran; the crash window between commit and credit remains (sender debited, recipient not credited) and needs a scheduled reconciler, not a code comment.
+
+**Applied evidence**: red-first regression (`refundsSenderInsteadOfReleasingWhenInternalTransferCreditFailsAfterCommit`, `releasesReservationWhenInternalTransferCommitFails`) passed after the fix; `transaction-service` 144/144 tests, 0 failures. CHANGELOG 1.10.51; CB-014/TX-003 closed.
+
 ## L-217: A Passing Pipeline Does Not Override Failed Runtime Contracts (2026-08-06)
 
 **Context**: The UAT validation PipelineRun passed Argo sync, ZAP, k6 smoke, and

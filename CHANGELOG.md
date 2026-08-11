@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.51] - 2026-08-11
+
+### Fixed
+
+- **Internal transfer compensation after commit (TX-003/CB-014)**: `processInternalTransfer` committed the sender reservation first, then credited the recipient; if the recipient credit failed, the saga compensated with `releaseBalance` — but after a commit the reserved balance is already zero, so the release was a no-op/throw and the sender's money was permanently lost. Compensation now branches on commit state: after a successful commit the sender is refunded with `creditBalance(..., transactionId + ":REFUND")` (deterministic reference, replay-safe); a failed commit still releases the reservation. The `:REFUND` suffix keeps the refund credit distinct from the recipient credit reference so wallet idempotency cannot collide.
+
+### Fixed
+
+- **Bank code from request instead of hardcoded "014" (BIFAST-001/CB-016)**: `InitiateTransferRequest`/`InitiateTransferCommand` now carry an optional 3-digit `bankCode` validated at the boundary; BI-FAST, SKN, and RTGS legs use it with "014" as the backward-compatible default. SmartRouting service remains available for route-level selection.
+- **Transfer fee claim removed — fee = 0 consistent (FEE-001/CB-020)**: `InitiateTransferCommandResult.fee` was reported as 2500/5000/25000 per rail but no fee was ever debited — the response lied about the ledger. The response now reports `BigDecimal.ZERO` and `calculateFee` is deleted; the web-app transfer page shows "Gratis" for every rail instead of invented fees. Fee collection becomes a future feature with a real ledger entry.
+- **RestTemplate bounded timeouts (TIMEOUT-001/CB-021)**: the shared `RestTemplate` bean was `new RestTemplate()` — no connect/read timeout, so a hung QRIS or BI-FAST simulator hung the request forever. Now `SimpleClientHttpRequestFactory` with connect 5s / read 10s (same contract as `PaymentExpiryScheduler`); QRIS and BI-FAST adapters route through this bean. Spring 7 removed the factory getters, so the test asserts the private fields via reflection (documented in `AppConfigTest`).
+- **Investment sell made idempotent (INVEST-001/CB-023)**: `sellInvestment` generated a random wallet reference and a random sell transaction id, so `@Retry`/`@TimeLimiter` replays double-credited the wallet (the TimeLimiter also cannot cancel the in-flight method). Removed `@Retry` + `@TimeLimiter` (kept `@CircuitBreaker` with a failed-future fallback), made the wallet credit reference deterministic (`SELL:{buyTransactionId}`, wallet-side idempotency), derived the sell id as `UUID.nameUUIDFromBytes("SELL:" + id)` with a replay guard returning the existing sell before any credit, and rounded fee/net/sell amounts to money scale 4 (HALF_EVEN).
+
+### Validation
+
+- `transaction-service` 148 tests / 0 failures — new: `AppConfigTest.restTemplateHasBoundedTimeouts` (red-first on default 0/0), plus TX-003/BIFAST-001/FEE-001 regressions.
+- `investment-service` 54 tests / 0 failures (2 skipped) — new: sell replay returns the existing transaction with zero wallet calls, deterministic `SELL:` reference on both mutual-fund and gold paths, fee/amount scale 4.
+
 ## [1.10.50] - 2026-08-11
 
 ### Added
