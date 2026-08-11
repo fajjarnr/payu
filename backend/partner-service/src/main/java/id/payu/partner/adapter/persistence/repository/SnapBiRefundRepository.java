@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +28,7 @@ public interface SnapBiRefundRepository extends JpaRepository<SnapBiRefundEntity
 
     @Query("SELECT COALESCE(SUM(r.amount), 0) FROM SnapBiRefundEntity r WHERE r.payuReferenceNo = :payuReferenceNo")
     BigDecimal sumRefundedAmountByPayuReferenceNo(@Param("payuReferenceNo") String payuReferenceNo);
+
+    // PARTNER-PROD-005: all refunds created after a cutoff for reconciliation.
+    List<SnapBiRefundEntity> findByCreatedAtAfter(Instant createdAt);
 }

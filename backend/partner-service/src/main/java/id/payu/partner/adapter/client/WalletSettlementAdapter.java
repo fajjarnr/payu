@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -130,6 +131,54 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
 
         headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + platformToken());
         return headers;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<LedgerMovement> ledgerMovementsByReferences(List<String> referenceIds) {
+        if (referenceIds == null || referenceIds.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Object> body = Map.of("referenceIds", referenceIds);
+        Map<?, ?> response = walletClient.post()
+                .uri("/api/v1/reconciliation/ledger-movements")
+                .headers(target -> target.addAll(headers("snap-reconcile-" + UUID.randomUUID())))
+                .body(body)
+                .retrieve()
+                .body(Map.class);
+        Object data = response == null ? null : response.get("data");
+        if (!(data instanceof List<?> rows)) {
+            return List.of();
+        }
+        List<LedgerMovement> movements = new java.util.ArrayList<>();
+        for (Object row : rows) {
+            if (!(row instanceof Map<?, ?> m)) {
+                continue;
+            }
+            movements.add(new LedgerMovement(
+                    str(m.get("accountId")),
+                    str(m.get("referenceId")),
+                    str(m.get("referenceType")),
+                    str(m.get("entryType")),
+                    num(m.get("amount")),
+                    num(m.get("balanceAfter"))));
+        }
+        return movements;
+    }
+
+    private static String str(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static BigDecimal num(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return new BigDecimal(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private String platformToken() {

@@ -21,13 +21,13 @@ images:
   newTag: "1.8.84"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service:1.8.21
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newTag: "1.8.104"
@@ -60,7 +60,7 @@ images:
   newTag: "1.8.82"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.99
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-  newTag: "1.8.103"
+  newTag: "1.8.104"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service:1.8.22
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newTag: "1.8.104"
@@ -78,7 +78,7 @@ images:
   newTag: "1.8.108"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service:1.8.112
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-  newTag: "1.8.112"
+  newTag: "1.8.113"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.5.16
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newTag: "1.5.16"
@@ -546,6 +546,10 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
               value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            # PARTNER-PROD-005: run SNAP reconciliation every 5 minutes in dev so
+            # unmatched cases surface quickly; production keeps the hourly default.
+            - name: PAYU_RECONCILIATION_SNAP_INTERVAL_MS
+              value: "300000"
 - target:
     kind: Deployment
     name: product-catalog-service

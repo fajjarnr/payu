@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +31,7 @@ public interface SnapBiPaymentRepository extends JpaRepository<SnapBiPaymentEnti
             @Param("partnerId") String partnerId, @Param("referenceNo") String referenceNo);
 
     List<SnapBiPaymentEntity> findByPartnerId(String partnerId);
+
+    // PARTNER-PROD-005: all payments created after a cutoff for reconciliation.
+    List<SnapBiPaymentEntity> findByCreatedAtAfter(Instant createdAt);
 }

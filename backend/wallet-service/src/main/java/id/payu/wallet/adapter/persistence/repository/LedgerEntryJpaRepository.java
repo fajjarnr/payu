@@ -30,4 +30,9 @@ public interface LedgerEntryJpaRepository extends JpaRepository<LedgerEntryEntit
             @Param("coaCode") String coaCode,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
+
+    // PARTNER-PROD-005: batch lookup of ledger movements by external reference
+    // (SNAP payment references / refund UUIDs) for cross-service reconciliation.
+    @Query("SELECT le FROM LedgerEntryEntity le WHERE le.referenceId IN :referenceIds ORDER BY le.createdAt")
+    List<LedgerEntryEntity> findByReferenceIdIn(@Param("referenceIds") List<String> referenceIds);
 }

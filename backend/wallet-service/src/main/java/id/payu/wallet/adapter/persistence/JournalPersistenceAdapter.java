@@ -123,6 +123,16 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
     }
 
     @Override
+    public List<LedgerEntry> findLedgerEntriesByReferenceIds(List<String> referenceIds) {
+        if (referenceIds == null || referenceIds.isEmpty()) {
+            return List.of();
+        }
+        return ledgerEntryRepository.findByReferenceIdIn(referenceIds).stream()
+                .map(this::toLedgerDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ChartOfAccount saveChartOfAccount(ChartOfAccount coa) {
         ChartOfAccountEntity saved = coaRepository.save(toCoaEntity(coa));
         return toCoaDomain(saved);

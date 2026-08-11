@@ -61,6 +61,82 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 
 ---
 
+## 🏦 Core Banking MVP / Production Readiness Audit (2026-08-11)
+
+> Audit Principal Architect + Quality Engineer atas 8 core banking services (account, auth, transaction, wallet, investment, lending, fx, statement) terhadap scope MVP PRD Phase 1 (account opening & eKYC, transfer antar PayU & BI-FAST, bill payment, pocket, virtual debit card, TokoBapak) dan production gate. Sumber: `TODOS.md` aktif, `PROGRESS.md` (MVP-001/003/004, iter 2026-08-04), `SERVICES.md` (stale 2026-07-17 — jangan dipakai sebagai status mutakhir), struktur test `backend/*/src/test`, overlays `infrastructure/workloads/overlays/payu-{sit,uat,preprod,prod}`.
+
+**Verdict ringkas**:
+
+| Service | MVP (PRD Phase 1) | Production Ready | Blocker kunci |
+|:---|:---:|:---:|:---|
+| account-service | 🔴 BLOCKED | ❌ | ACCOUNT-001..004 open (P0: lookup broken, IDOR, cross-tenant, PII leak); coverage ~21% |
+| auth-service | 🔴 BLOCKED | ❌ | LOGIN-001..004, LOGIN-006 open (P0: login 500, no logout revoke, password grant, rate-limit broken, CI false green) |
+| transaction-service | 🟡 money flow live, 1 P0 open | ❌ | PROD-047 (scale 2 vs DECIMAL(19,4)); disbursement/refund live 2026-08-04 |
+| wallet-service | 🟡 money flow live, ledger verified | ❌ | Tidak ada P0 terbuka di ledger path; HA/prod gate belum |
+| investment-service | ⏸️ Phase 2+ | ❌ | Di luar scope MVP; PROD-043 (web money float) menyentuh boundary-nya |
+| lending-service | ⏸️ Phase 3+ | ❌ | Financial E2E pending (no isolated fixture, 2026-08-03); ZERO integration test (SERVICES.md stale) |
+| fx-service | ⏸️ Phase 2+ (rate saja) | ❌ | ZERO integration test; PROD-047 menyentuh conversion |
+| statement-service | ⏸️ Phase 2+ | ❌ | Minimal/ZERO integration test (SERVICES.md stale, perlu re-audit) |
+
+**Kesimpulan**: Core banking **belum MVP secara keseluruhan** — account & auth memblokir (4+6 open ticket, mayoritas P0), wallet & transaction sudah membuktikan money-flow MVP live di `payu-dev` (SNAP payment/refund 100 IDR, ledger double-entry exact, idempotency replay identik — PROGRESS.md 2026-08-04) tapi masih ditahan 1 P0 (PROD-047). **Tidak ada service core banking yang production ready**: belum ada workload dideploy ke `payu-prod` (ACCOUNT-007), `payu-dev` tanpa HPA, PDB `minAvailable: 1`, rollout `Recreate`, DR/SLO/SLI gate open. `SERVICES.md` (2026-07-17) menyatakan "✅ Complete/E2E VERIFIED" untuk semua service — **stale dan kontradiktif** dengan TODOS aktif; perlu di-refresh atau ditandai status audited.
+
+**Verifikasi cluster langsung 2026-08-11 (Kubernetes MCP, read-only)**: namespace `payu` (prod) **kosong — 0 pods**; `payu-sit/uat/preprod` juga 0 pods di cluster ini (env lab tersebut live di cluster lain `cluster-nkk8q`); `payu-dev` 33 Deployments semua 1/1 Running restart 0 (account 1.8.104, transaction 1.8.108, wallet 1.8.113, auth 1.8.84, fx 1.8.106, lending 1.8.113, investment 1.8.89, statement 1.8.84), **0 HPA**, 6 nodes Ready. Konfirmasi live: belum ada replica kedua/HA di env mana pun, dan prod benar-benar belum menerima workload.
+
+**Verifikasi source code 2026-08-11 (bukan dari docs — langsung dari `backend/*/src`)**: seluruh klaim P0 docs TERKONFIRMASI di code:
+
+| Ticket | Status di code | Bukti lokasi |
+|:---|:---|:---|
+| PROD-047 | 🔴 CONFIRMED | `transaction-service/domain/model/Money.java:40` `SCALE = 2`; `round()` setScale(2, HALF_EVEN); shared `api-commons Money.DEFAULT_SCALE=2` + `normalizeAmount` setScale(2); `MoneyTest` justru assert `100.123 → scale 2` ("maintain 2 decimal places after creation") vs DB `V22` DECIMAL(19,4) |
+| ACCOUNT-001 | 🔴 CONFIRMED | `UserEntity.email/phone` `@Convert(EncryptedStringConverter)` (AES-GCM, unique IV per converter docs) + kolom `unique`; `UserRepository.findByEmail/findByPhoneNumber` plaintext equality — ciphertext acak tak pernah match; tanpa blind index |
+| ACCOUNT-002 | 🔴 CONFIRMED (2 titik) | Budget: `BudgetController` `@PreAuthorize isAccountOwner(#accountId)` TAPI `BudgetService.getBudget/updateBudget/deleteBudget` ambil `findById(budgetId)` saja tanpa cek kepemilikan budget (BudgetService.java:99-142). Beneficiary: `PUT/DELETE` validasi hanya `beneficiary.userId == accountId` (path), TANPA cek JWT subject (BeneficiaryController.java:139-140, 162-163); GET sudah benar (cek JWT) |
+| ACCOUNT-003 | 🔴 CONFIRMED | `TenantFilter.java:21-27` percaya `X-Tenant-Id` header mentah, fallback `"default"`; repo tidak tenant-scoped; `TenantEntityListener` hanya write-time; `enableTenantFilter` tidak terlihat dipanggil per-request |
+| LOGIN-002 | 🔴 CONFIRMED | Tidak ada endpoint logout/revoke di seluruh `auth-service/src/main` |
+| LOGIN-003 | 🔴 CONFIRMED | `KeycloakService.java:435` `grant_type=password` (Direct Access Grant) |
+| — | 🟡 TEMUAN BARU | **6 dari 8 core banking (wallet, transaction, fx, lending, statement, investment) TANPA integration test** — tidak ada package `integration/` di src/test walau pom deklarasi testcontainers; hanya account (`OnboardingIntegrationTest`) dan auth (`AuthIntegrationTest`) yang punya 1 integration test. Menyangkal klaim SERVICES.md "✅ Integration Tests (Testcontainers)" untuk billing/notification (bukan core) dan mempersempit bukti ACCOUNT-006 |
+| — | 🟢 wallet lebih sehat dari docs | wallet pakai `BigDecimal` + `setScale(4, HALF_EVEN)` (WalletService.java:578), migration `V104` upgrade DECIMAL(19,4), serialization string test + `LedgerInvariantTest` + `WalletServiceIdempotencyTest` + `SettlementControllerIdempotencyTest` ada. Tapi hanya 31 `@Test` methods untuk core ledger — tipis vs transaction 134 |
+| — | ℹ️ Test surface (method @Test) | account 126 · auth 68 · transaction 134 · wallet 31 · investment 70 · lending 122 · fx 84 · statement 80 — jumlah ≠ kualitas, tapi wallet (ledger semua money movement) paling tipis |
+
+**Koreksi audit sebelumnya**: audit doc awal menilai wallet "tidak ada P0 terbuka di ledger path" — tetap benar, TAPI ketipisan 31 test + tanpa integration test = risiko ledger tidak teruji pada boundary DB (testcontainers dideklarasikan tapi 0 dipakai di core banking selain account/auth). Masuk CB-005/CB-007.
+
+**Deep audit pass 2 (2026-08-11, langsung dari code — temuan di luar P0 yang sudah dikonfirmasi)**:
+
+| Key | Temuan | Bukti lokasi |
+|:---|:---|:---|
+| FX-001 | 🔴 `fx-service` fee di-round ke **scale 2** (`setScale(2, HALF_EVEN)`) padahal DB fee sudah `DECIMAL(19,4)` (V5) — 2 digit fee hilang, pola sama dengan PROD-047 | `FxRateService.java:108`; `V5__upgrade_conversion_amounts_to_decimal_19_4.sql` |
+| TX-001 | 🟠 Topic split-bills **tidak versioned**: `payu.split-bills.created`/`.activated` tanpa suffix `.v<n>` — melanggar rule 4 (`payu.<domain>.<event-type>.v<n>`) dan menyulitkan evolution/DLQ mapping; service lain sudah benar (`payu.transaction.initiated.v1`, `payu.wallet.balance-changed.v1`, `payu.account.user-created.v1`) | `SplitBillEventPublisherAdapter.java:46,61` |
+| WL-001 | 🟠 Immutability ledger **tidak di-enforce di DB**: `ledger_entries` hanya punya CHECK `amount > 0` + `entry_type` (V3), tanpa trigger/row-security yang menolak UPDATE/DELETE; immutability hanya konvensi aplikasi (`Persistable.isNew` + `@Version`). Migrasi V102/V4 memang UPDATE backfill one-shot — OK. Risiko: bug aplikasi bisa menimpa entri finansial tanpa blocker DB | `V3__create_ledger_entries_table.sql`; `LedgerEntryEntity.java:27,88` |
+| WL-002 | 🟢 Wallet reserve/commit flow solid: idempotent via `findReservationByReference` + replay validation, pessimistic lock `findByAccountIdForUpdate` dengan double-check di dalam lock, `balanceAfter` dihitung Java, wallet+ledger+outbox dalam satu `@Transactional` | `WalletService.java:150-210` |
+| OUTBOX | 🟢 Rule 4 umumnya comply: wallet/transaction/account publish via `outboxService.createEvent` (bukan `kafkaTemplate.send()` langsung) + CloudEvents 1.0 (wallet/transaction). Pengecualian: TX-001 + PII di payload account (lihat bawah) | `WalletEventPublisherAdapter`, `TransactionEventPublisherAdapter`, `KafkaUserEventPublisherAdapter` |
+| ACCOUNT-004 | 🔴 DIPERKUAT: outbox payload `UserCreatedEvent` berisi `email` + `fullName` plaintext (PII penuh tanpa enkripsi), dan `OnboardingController.register` return `ResponseEntity<User>` domain penuh (email, phone, fullName, nik) tanpa DTO masking | `KafkaUserEventPublisherAdapter.java:76-81`; `OnboardingController.java:59` |
+| LOGIN-004 | 🔴 DIPERKUAT bukti code: `RateLimit` annotation punya `value()` default + alias `requests()`; `RateLimitAspect.java:46` membaca `rateLimit.value()` (default 100) bukan `requests=10/20` yang diisi controller, dan **fail-open** saat cache unavailable (line 36, 59) | `RateLimit.java:17-40`; `RateLimitAspect.java:36-59` |
+| MONEY | 🟢 investment/lending/statement/fx domain semuanya `BigDecimal` — tidak ada `double`/`float` di domain financial. FX rate `DECIMAL(19,8)` OK. Pengecualian: FX-001 (fee scale 2) | grep domain model masing-masing service |
+| TX-002 | ℹ️ `transaction-service` event topics pakai `payu.transaction.*.v1` (pattern `TOPIC_TRANSACTION + ".initiated.v1"`) — format valid, beda naming dari wallet/account (double-dot vs single-dot); konsisten secara internal, tidak melanggar | `TransactionEventPublisherAdapter.java:36-150` |
+
+**Action items tambahan**:
+
+| Key | Priority | Item | Done saat |
+|:---|:---:|:---|:---|
+| CB-010 | P0 | Fix fee scale 4 di `fx-service` (FX-001): `setScale(4, HALF_EVEN)` + regression test fee 4-desimal round-trip exact | FX-001 closed, test green |
+| CB-011 | P2 | Versioning topic split-bills (TX-001): `payu.split-bills.created.v1`/`.activated.v1` + update consumer/DLQ | TX-001 closed, consumer E2E green |
+| CB-012 | P1 | Enforce ledger immutability di DB (WL-001): REVOKE UPDATE/DELETE atau trigger `prevent_ledger_update` + test migration menolak UPDATE | WL-001 closed, DB-level negative test lulus |
+| CB-013 | P1 | PII outbox & response (ACCOUNT-004 lanjutan): hapus `email`/`fullName` dari `UserCreatedEvent` payload atau enkripsi; ganti `ResponseEntity<User>` dengan DTO minimum | Event + response tanpa PII penuh, leakage tests green |
+
+**Action items (masuk backlog aktif)**:
+
+| Key | Priority | Item | Done saat |
+|:---|:---:|:---|:---|
+| CB-001 | P0 | Tutup ACCOUNT-001..004 sebelum account-service masuk MVP gate: searchable blind index/HMAC tenant-scoped + unique constraint, JWT-to-resource binding pada semua query, tenant dari trusted credential + RLS, DTO/event tanpa PII penuh | Semua ACCOUNT P0 closed + cross-tenant/IDOR integration tests green |
+| CB-002 | P0 | Tutup LOGIN-001..004/006 sebelum auth-service masuk MVP gate: Keycloak DB endpoint benar + E2E browser login, logout/revoke nyata, OIDC Authorization Code + PKCE + MFA, rate-limit per-IP/per-account fail-closed | Semua LOGIN P0 closed + browser E2E login→dashboard green |
+| CB-003 | P0 | Fix `transaction-service Money` ke scale 4 (PROD-047) + regression arithmetic/serialization/DB round-trip | PROD-047 closed |
+| CB-004 | P0 | Refresh `SERVICES.md` agar konsisten dengan status audited 2026-08-11 (hapus klaim "✅ Complete" yang terbantah TODOS) | SERVICES.md tidak kontradiktif dengan TODOS |
+| CB-005 | P1 | Coverage gate core banking: account 21% → ≥80% (ACCOUNT-006), integration tests wajib untuk transaction/wallet/lending/fx/statement (Testcontainers) | JaCoCo ≥80% overall, 100% core domain, di CI required |
+| CB-006 | P1 | Production deploy core banking: promosi immutable signed image ke `payu-prod` via pipeline gates (DEPLOY-011), rolling/canary, HPA min ≥2, PDB minAvailable 2, topology spread, restore/rollback drill | ACCOUNT-007 closed + prod E2E onboarding→transfer→statement |
+| CB-007 | P1 | Money-safety regression suite lintas core banking: idempotency 10-concurrent, outbox atomic commit/rollback, DECIMAL(19,4) serialization, reversal-only correction, CloudEvent + DLQ | Suite green di CI semua core banking |
+| CB-008 | P2 | MVP-003 VA settlement live promotion + E2E (sudah implemented local 2026-08-03, live E2E pending) | VA settlement live E2E di payu-dev |
+| CB-009 | P2 | Lending financial E2E fixture terisolasi (payu-dev tidak punya isolated lending fixture) lalu integration test lending/fx/statement | Fixture + integration tests green |
+
+---
+
 ## 🏦 Partner Service Production Readiness Gate (2026-08-06)
 
 Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.

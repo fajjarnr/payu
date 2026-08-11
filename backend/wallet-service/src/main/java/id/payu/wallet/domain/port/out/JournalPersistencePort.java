@@ -19,6 +19,9 @@ public interface JournalPersistencePort {
     List<LedgerEntry> findLedgerEntriesByCoaCode(String coaCode);
     List<LedgerEntry> findLedgerEntriesByCoaCodeAndDateRange(String coaCode, LocalDateTime from, LocalDateTime to);
 
+    // PARTNER-PROD-005: ledger movements by external reference IDs for reconciliation.
+    List<LedgerEntry> findLedgerEntriesByReferenceIds(List<String> referenceIds);
+
     ChartOfAccount saveChartOfAccount(ChartOfAccount coa);
     Optional<ChartOfAccount> findChartOfAccountByCode(String code);
     List<ChartOfAccount> findAllActiveChartOfAccounts();
