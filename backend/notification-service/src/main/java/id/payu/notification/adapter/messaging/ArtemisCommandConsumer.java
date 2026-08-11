@@ -57,7 +57,7 @@ public class ArtemisCommandConsumer {
                         Message message = consumer.receive(1000);
                         if (message instanceof TextMessage textMessage) {
                             String text = textMessage.getText();
-                            LOG.infof("Received command from Artemis: %s", text);
+                            LOG.infof("Received command from Artemis: %d bytes", text.length());
                             processCommand(text);
                         }
                     }

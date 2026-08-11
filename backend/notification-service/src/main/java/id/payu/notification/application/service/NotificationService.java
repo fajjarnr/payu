@@ -6,6 +6,7 @@ import id.payu.notification.adapter.sender.SmsSender;
 import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.NotificationChannel;
 import id.payu.notification.domain.NotificationStatus;
+import id.payu.notification.domain.RecipientMasker;
 import id.payu.notification.domain.port.in.NotificationUseCase;
 import id.payu.notification.domain.port.out.NotificationRepositoryPort;
 import id.payu.notification.dto.SendNotificationRequest;
@@ -51,7 +52,7 @@ public class NotificationService implements NotificationUseCase {
     @Transactional
     public Notification send(SendNotificationRequest request, String idempotencyKey) {
         LOG.infof("Sending notification: channel=%s, recipient=%s",
-                request.channel(), request.recipient());
+                request.channel(), RecipientMasker.mask(request.recipient()));
 
         // IDEM-003: Check for existing notification with same idempotency key
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
@@ -161,7 +162,7 @@ public class NotificationService implements NotificationUseCase {
     }
 
     private void handleFailedNotification(Notification notification, String errorReason) {
-        LOG.errorf("Failed to send notification: %s", errorReason);
+        LOG.errorf("Failed to send notification: id=%s", notification.getId());
         notification.setStatus(NotificationStatus.FAILED);
         notification.setFailureReason(errorReason);
         notification.setRetryCount(notification.getRetryCount() + 1);

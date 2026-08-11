@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-223: jboss-logging Output Is Not Captured by System.setOut (2026-08-11)
+
+**Context**: PROD-045 — the first `SmsSenderLogSanitizationTest` swapped `System.out`/`System.err` around a `sender.send(...)` call and the captured buffer came back empty, so the "no raw PII in logs" assertion passed vacuously.
+
+**Lesson**:
+- jboss-logging routes to JUL when no log4j2/log4j/logback is on the classpath; in this Quarkus module logback-classic is not even a compile dependency. A `System.setOut` swap cannot capture output written through the logging backend (and a logback ConsoleAppender would hold the original stream reference anyway, making the swap useless).
+- Capture log output by attaching a `java.util.logging.Handler` to the logger name (`Logger.getLogger(SmsSender.class.getName())`) in the test, `setUseParentHandlers(false)`, and detach it in `@AfterEach`.
+- An empty capture is a vacuous pass — assert the masked value is *present* too, not only that the raw value is absent.
+
+**Applied evidence**: red-first `SmsSenderLogSanitizationTest` failed with empty capture before the handler change, then green with the JUL handler; `RecipientMaskerTest` 5/5; `notification-service` 71/71. CHANGELOG 1.10.52; PROD-045 closed.
+
 ## L-222: Retry and TimeLimiter Are Money-Write Hazards (2026-08-11)
 
 **Context**: INVEST-001 — `sellInvestment` carried `@Retry` + `@TimeLimiter` and credited the wallet with a random reference, so any retry or timeout-replay credited the wallet twice; the sell transaction id was random too, so replays created duplicates.

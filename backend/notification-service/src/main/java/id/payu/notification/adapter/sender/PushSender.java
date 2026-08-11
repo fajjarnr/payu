@@ -1,6 +1,7 @@
 package id.payu.notification.adapter.sender;
 
 import id.payu.notification.domain.Notification;
+import id.payu.notification.domain.RecipientMasker;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
@@ -15,7 +16,7 @@ public class PushSender {
 
     public boolean send(Notification notification) {
         try {
-            LOG.infof("Sending push notification to device: %s", notification.getRecipient());
+            LOG.infof("Sending push notification to device: %s", RecipientMasker.mask(notification.getRecipient()));
 
             // Mock implementation - in production, use Firebase Admin SDK
             // FirebaseMessaging.getInstance().send(message);

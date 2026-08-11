@@ -1,6 +1,7 @@
 package id.payu.notification.adapter.sender;
 
 import id.payu.notification.domain.Notification;
+import id.payu.notification.domain.RecipientMasker;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -20,7 +21,7 @@ public class EmailSender {
 
     public boolean send(Notification notification) {
         try {
-            LOG.infof("Sending email to: %s", notification.getRecipient());
+            LOG.infof("Sending email to: %s", RecipientMasker.mask(notification.getRecipient()));
 
             mailer.send(
                     Mail.withText(
@@ -28,7 +29,7 @@ public class EmailSender {
                             notification.getTitle(),
                             notification.getBody()));
 
-            LOG.infof("Email sent successfully to: %s", notification.getRecipient());
+            LOG.infof("Email sent successfully to: %s", RecipientMasker.mask(notification.getRecipient()));
             return true;
         } catch (Exception e) {
             LOG.errorf("Failed to send email: %s", e.getMessage());

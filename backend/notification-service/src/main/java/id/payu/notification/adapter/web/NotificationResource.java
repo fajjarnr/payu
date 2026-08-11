@@ -1,6 +1,7 @@
 package id.payu.notification.adapter.web;
 
 import id.payu.notification.domain.Notification;
+import id.payu.notification.domain.RecipientMasker;
 import id.payu.notification.dto.NotificationResponse;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
@@ -129,7 +130,7 @@ public class NotificationResource {
     public Response send(@Valid SendNotificationRequest request,
                          @HeaderParam("X-Idempotency-Key") String idempotencyKey) {
         LOG.infof("Received notification request: channel=%s, recipient=%s",
-                request.channel(), request.recipient());
+                request.channel(), RecipientMasker.mask(request.recipient()));
 
         Notification notification = notificationService.send(request, idempotencyKey);
         return Response.status(Response.Status.CREATED)

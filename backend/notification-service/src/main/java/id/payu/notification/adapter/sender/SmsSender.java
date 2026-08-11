@@ -1,6 +1,7 @@
 package id.payu.notification.adapter.sender;
 
 import id.payu.notification.domain.Notification;
+import id.payu.notification.domain.RecipientMasker;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -33,9 +34,7 @@ public class SmsSender {
         LOG.infof("╔══════════════════════════════════════════════════╗");
         LOG.infof("║           📱 SMS (LOG MODE)                     ║");
         LOG.infof("╠══════════════════════════════════════════════════╣");
-        LOG.infof("║ To:      %-40s║", notification.getRecipient());
-        LOG.infof("║ Subject: %-40s║", notification.getTitle());
-        LOG.infof("║ Body:    %-40s║", notification.getBody());
+        LOG.infof("║ To:      %-40s║", RecipientMasker.mask(notification.getRecipient()));
         LOG.infof("╚══════════════════════════════════════════════════╝");
         return true;
     }

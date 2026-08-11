@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.10.51` (2026-08-11) |
-| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI), PROD-043/045; money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 11 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (bersihkan CLOSED dari Active Tickets & Open Findings; Last Release 1.10.51; Active Tickets urut P0→P1) |
+| **Last Release** | `1.10.52` (2026-08-11) |
+| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI), PROD-043; money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
+| **Backlog Aktif** | 10 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (PROD-045 closed; Active Tickets urut P0→P1) |
 
 ---
 
@@ -42,7 +42,6 @@
 | LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
 | LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
 | PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
-| PROD-045 | P0 | Notification LOG mode bocor PII: recipient/title/body penuh di INFO log. Done: mask + log-sanitization test + scan log. | 🔴 Security/PII |
 | LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
 | ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
@@ -60,7 +59,7 @@
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
 | CB-002 | auth | PKCE/MFA (LOGIN-003) + E2E login browser (LOGIN-001 re-verify, LOGIN-006 gate) | LOGIN P0 closed + browser E2E green |
-| CB-029 | notification | Provider nyata fail-closed + delivery ID + mask PII (NOTIF-001/PROD-044/045) | E2E terima; log tanpa PII |
+| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — PII log sudah dimask (PROD-045 closed) | E2E terima; log tanpa PII |
 
 ### P1 — Quality & Reliability (In-Scope MVP)
 
@@ -166,7 +165,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
 | SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
-| NOTIF-001 | 🔴 | notification | LOG-mode false success + PII di log | SmsSender.java:26-54 |
+| NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID (PII log sudah dimask — PROD-045 closed) | SmsSender.java:26-54 |
 | OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert | OutboxCleanupScheduler |
 
 | FX-002 | 🟠 | fx | Reverse tanpa status REVERSED; toAmount tanpa setScale | FxConversionService.java:118-160 |

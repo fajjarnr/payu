@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.52] - 2026-08-11
+
+### Fixed
+
+- **Notification logs PII-free (PROD-045)**: `SmsSender` LOG-mode printed the full recipient, title and body; `EmailSender`, `PushSender`, `NotificationService` and `NotificationResource` logged the raw recipient; `ArtemisCommandConsumer` logged the entire raw command JSON; `handleFailedNotification` logged the raw error reason (exception text can embed the recipient). New domain `RecipientMasker` (emails `u***@example.com`, phones `+628****7890`, NIK-like `**********0001`, null/blank/short → `***`); every log site now logs only the masked value, title/body are never logged, the Artemis raw payload line became a byte count, and the failure-reason log line now carries the notification id only (reason stays in the DB row).
+
+### Validation
+
+- `notification-service` 71 tests / 0 failures — new `RecipientMaskerTest` 5/5 (email/short-email/phone/NIK/null-safe) and `SmsSenderLogSanitizationTest` (captures the LOG-mode output via a `java.util.logging` handler — logback is not on the classpath, and a `System.setOut` swap does not capture jboss-logging output — and asserts no raw recipient/title/body, masked recipient present). ArchUnit hexagonal/domain-isolation rules still green with `RecipientMasker` in the domain layer.
+
 ## [1.10.51] - 2026-08-11
 
 ### Fixed
