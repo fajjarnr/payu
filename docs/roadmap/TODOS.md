@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.35` (2026-08-05) — Data Grid config-listener NetworkPolicy, zero warn/error across all pods |
-| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge live; PARTNER-PROD-003 SSRF boundary live; PARTNER-PROD-004 DLQ live; registry incident resolved; WAF/mTLS + PROD-005/006 tetap open) |
+| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge live; 003 SSRF live; 004 DLQ live; 006 isolation matrix + merchant scoping live; sisa: WAF/mTLS, PROD-005/007-011, RLS/RBAC) |
 
 ---
 
@@ -66,6 +66,13 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.
 
 **2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
+
+**PARTNER-PROD-006 progress (2026-08-11)**: **tenant isolation & authorization sebagian besar LIVE** di `partner-service:1.8.103`:
+- **Identity dari credential/token**: SNAP-BI token → `clientId` dari JWT (HMAC-signature verified) → partner lookup; signature HMAC diverifikasi di token/payment/status/refund (`SnapBiSignatureService`). `SandboxFilter` fail-closed pada API key invalid/revoked (PARTNER-005).
+- **Ownership enforcement**: seluruh resource family partner-scoped di service layer — API key (`findKeyForPartner`), webhook (`findSubscriptionForPartner`), payment link (`getByIdForPartner`/`cancelPaymentLink`), merchant (BARU: `getMerchantForPartner`/`activateMerchantForPartner` — route unscoped `GET /merchants/{merchantId}` & `POST /merchants/{merchantId}/activate` diganti `GET/POST /merchants/partners/{partnerId}/{merchantId}(/activate)`); resource milik partner lain → `IllegalArgumentException` (400).
+- **Cross-partner negative matrix**: `PartnerIsolationMatrixTest` — partner A tidak dapat get/update/rotate/revoke API key B, get/update/delete/regenerate webhook B, get/cancel payment-link B, get/activate merchant B; semua throw. partner-service 295/295.
+- **Audit**: `@Audited` pada mutation (create/update/delete/rotate) mencatat actor + entity ID + action + result, `maskData` untuk key/secret, tanpa PII/secret (PARTNER-PROD-002).
+- **Sisa PARTNER-PROD-006**: PostgreSQL RLS/defense-in-depth (belum ada), partner-scoped RBAC roles di Keycloak (admin saat ini global), dan audit endpoint query (list) belum semua tercakup.
 
 **PARTNER-PROD-004 progress (2026-08-11)**: **event/webhook delivery durability live** di `partner-service:1.8.102`:
 - **Fix: consumer tidak lagi menelan exception**: `FinancialEventConsumer`/`SubscriptionEventConsumer` sebelumnya `catch (Exception)` → log → offset commit (event HILANG permanen, tidak pernah sampai DLQ). Sekarang malformed payload → `IllegalArgumentException`, seluruh processing exception di-`rethrow` → `events-starter` `DefaultErrorHandler` retry 3× (1s) → `DeadLetterPublishingRecoverer` → `<topic>.dlq` (`commitRecovered=true`).

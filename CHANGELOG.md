@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.47] - 2026-08-11
+
+### Added
+
+- **Partner-scoped merchant access (PARTNER-PROD-006)**: `MerchantService.getMerchantForPartner`/`activateMerchantForPartner` verify `merchant.partner.id == partnerId` before reading or mutating; the two unscoped merchant routes (`GET /merchants/{merchantId}`, `POST /merchants/{merchantId}/activate`) became partner-scoped (`/merchants/partners/{partnerId}/{merchantId}` and `.../activate`).
+- **Cross-partner isolation matrix (PARTNER-PROD-006)**: `PartnerIsolationMatrixTest` proves partner A can never read or mutate partner B resources through the service layer — API keys (get/update/rotate/revoke), webhooks (get/update/delete/regenerate), payment links (get/cancel), merchants (get/activate) all throw for a foreign `partnerId`.
+
+### Validation
+
+- `partner-service` 295 tests / 0 failures. Live `partner-service:1.8.103` (digest `sha256:7433d392...`) — SNAP-BI token through the public APIcast edge still `200`; SNAP-BI identity binding (JWT clientId → partner + HMAC signature) unchanged.
+
+### Known blockers
+
+- **PARTNER-PROD-006 remaining**: PostgreSQL RLS defense-in-depth and partner-scoped Keycloak RBAC roles (admin role is global today).
+
 ## [1.10.46] - 2026-08-11
 
 ### Fixed

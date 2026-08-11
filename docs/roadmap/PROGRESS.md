@@ -4,6 +4,11 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-006 isolation matrix + merchant scoping LIVE (partner-service `1.8.103`)**:
+> - Merchant routes unscoped diganti partner-scoped (`/merchants/partners/{partnerId}/{merchantId}`); `getMerchantForPartner`/`activateMerchantForPartner` enforce ownership.
+> - `PartnerIsolationMatrixTest`: matrix negatif cross-partner untuk API key, webhook, payment-link, merchant — partner A tidak bisa akses resource partner B (semua throw). SNAP-BI identity dari JWT clientId + HMAC (sudah live). Tests 295/295.
+> - Sisa: PostgreSQL RLS, partner-scoped Keycloak RBAC.
+
 > ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-004 delivery durability LIVE (partner-service `1.8.102`)**:
 > - Consumer tidak lagi menelan exception: malformed payload → `IllegalArgumentException`, processing exception di-`rethrow` → `DefaultErrorHandler` retry 3× → `<topic>.dlq` (sebelumnya offset commit = event hilang permanen).
 > - Live bukti: poison `{not-valid-json` → `wallet.balance.changed` → 3× retry logged → `wallet.balance.changed.dlq` (isi utuh); replay record terkoreksi → `payu.transactions.completed` → tepat satu delivery **DELIVERED 200**; delivery yang pernah blocked (metadata URL) auto-recover **DELIVERED 200** setelah URL restore (retry durable + revalidasi URL per attempt). Tests 288/288.
