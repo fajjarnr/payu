@@ -34,10 +34,10 @@ public class Money implements Comparable<Money> {
 
 
     /**
-     * Standard decimal scale for monetary values (2 decimal places).
+     * Standard decimal scale for monetary values (4 decimal places, DECIMAL(19,4)).
      * This follows ISO 4217 currency code standards for cents/pennies.
      */
-    private static final int SCALE = 2;
+    private static final int SCALE = 4;
 
     /**
      * Rounding mode for monetary calculations.
@@ -77,7 +77,7 @@ public class Money implements Comparable<Money> {
      * @param currencyCode the ISO 4217 currency code (e.g., "USD", "IDR")
      * @return a new Money instance
      * @throws IllegalArgumentException if amount is null or currency code is invalid
-     * @throws IllegalArgumentException if amount has more than 2 decimal places
+     * @throws IllegalArgumentException if amount has more than 4 decimal places
      */
     public static Money of(BigDecimal amount, String currencyCode) {
         if (amount == null) {
@@ -171,7 +171,7 @@ public class Money implements Comparable<Money> {
     /**
      * Multiplies this Money instance by a scalar.
      *
-     * <p>Result is automatically rounded to 2 decimal places to maintain
+     * <p>Result is automatically rounded to 4 decimal places to maintain
      * monetary precision.</p>
      *
      * @param multiplier the multiplication factor
@@ -408,12 +408,12 @@ public class Money implements Comparable<Money> {
     }
 
     /**
-     * Rounds this Money instance to the default scale (2 decimal places).
+     * Rounds this Money instance to the default scale (4 decimal places).
      *
      * <p>This is useful after multiplication or division operations that
-     * may result in more than 2 decimal places.</p>
+     * may result in more than 4 decimal places.</p>
      *
-     * @return a new Money instance rounded to 2 decimal places
+     * @return a new Money instance rounded to 4 decimal places
      */
     public Money round() {
         return new Money(this.amount.setScale(SCALE, ROUNDING_MODE), this.currency);

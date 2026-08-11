@@ -98,11 +98,11 @@ class MoneyTest {
         }
 
         @Test
-        @DisplayName("Should round instead of throw when amount has more than two decimal places")
-        void shouldRoundInsteadOfThrowWhenAmountHasMoreThanTwoDecimalPlaces() {
-            BigDecimal amount = new BigDecimal("100.123");
+        @DisplayName("Should round instead of throw when amount has more than four decimal places")
+        void shouldRoundInsteadOfThrowWhenAmountHasMoreThanFourDecimalPlaces() {
+            BigDecimal amount = new BigDecimal("100.12345");
             Money money = Money.of(amount, "IDR");
-            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.12"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.1234"));
         }
     }
 
@@ -163,7 +163,7 @@ class MoneyTest {
 
             Money result = money.divide(new BigDecimal("3"));
 
-            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33333.33"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33333.3333"));
         }
 
         @Test
@@ -364,13 +364,13 @@ class MoneyTest {
         }
 
         @Test
-        @DisplayName("Should round to default scale (2 decimal places)")
+        @DisplayName("Should round to default scale (4 decimal places)")
         void shouldRoundToDefaultScale() {
-            Money money = Money.of(new BigDecimal("100.456"), "IDR");
+            Money money = Money.of(new BigDecimal("100.45678"), "IDR");
 
             Money rounded = money.round();
 
-            assertThat(rounded.getAmount()).isEqualByComparingTo(new BigDecimal("100.46"));
+            assertThat(rounded.getAmount()).isEqualByComparingTo(new BigDecimal("100.4568"));
         }
 
         @Test
@@ -389,7 +389,7 @@ class MoneyTest {
         void shouldRoundAfterMultiplication() {
             Money money = Money.idr(new BigDecimal("100000"));
 
-            // 100000 * 0.333 = 33300, but with rounding to 2 decimal places
+            // 100000 * 0.333 = 33300, but with rounding to 4 decimal places
             Money result = money.multiply(new BigDecimal("0.333"));
 
             assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33300.00"));
@@ -618,21 +618,21 @@ class MoneyTest {
     class PrecisionAndScaleTests {
 
         @Test
-        @DisplayName("Should maintain 2 decimal places scale after creation")
+        @DisplayName("Should maintain 4 decimal places scale after creation")
         void shouldMaintainTwoDecimalPlacesScaleAfterCreation() {
             Money money = Money.of("100.1", "IDR"); // Only 1 decimal place
 
-            assertThat(money.getAmount().scale()).isEqualTo(2); // Should be rounded to 2
+            assertThat(money.getAmount().scale()).isEqualTo(4); // Should be rounded to 4
         }
 
         @Test
-        @DisplayName("Should maintain 2 decimal places scale after multiplication")
+        @DisplayName("Should maintain 4 decimal places scale after multiplication")
         void shouldMaintainTwoDecimalPlacesScaleAfterMultiplication() {
             Money money = Money.idr("100");
 
             Money result = money.multiply(new BigDecimal("1.5"));
 
-            assertThat(result.getAmount().scale()).isEqualTo(2);
+            assertThat(result.getAmount().scale()).isEqualTo(4);
             assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
         }
 
@@ -643,8 +643,8 @@ class MoneyTest {
 
             Money result = money.divide(new BigDecimal("3"));
 
-            // 100 / 3 = 33.3333..., rounded to 2 decimal places with HALF_EVEN
-            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33.33"));
+            // 100 / 3 = 33.3333..., rounded to 4 decimal places with HALF_EVEN
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33.3333"));
         }
     }
 
