@@ -46,6 +46,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-sso
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-api-management
       ports:
         - protocol: TCP
           port: 5432
