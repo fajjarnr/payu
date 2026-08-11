@@ -42,13 +42,15 @@ spec:
       redis: true
 
   system:
-    # System file storage via MinIO S3-compatible endpoint (see minio.yaml and
-    # system-s3 secret). S3-compatible storage removes the RWX PVC requirement
-    # that blocks system-app at 2 replicas on RWO-only EBS clusters.
+    # System file storage via EFS CSI shared volume. The sandbox cluster only
+    # has RWO EBS storage classes; EFS (RWX) lets system-app run 2 replicas
+    # against one shared filesystem. The AWS EFS CSI Driver operator provides
+    # the efs-csi StorageClass (fs-0980fe4e0dd95acb4).
     fileStorage:
-      simpleStorageService:
-        configurationSecretRef:
-          name: system-s3
+      persistentVolumeClaim:
+        storageClassName: efs-csi
+        resources:
+          requests: 5Gi
     appSpec:
       replicas: 2
     sidekiqSpec:

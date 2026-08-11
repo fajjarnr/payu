@@ -10,19 +10,20 @@ spec:
     server: 'https://acme-v02.api.letsencrypt.org/directory'
     solvers:
       # -----------------------------------------------------------------------
-      # Zone 1 (ACTIVE): apps.fajjjar.my.id → hostedZoneID Z04089013J3OEZ617CSS4
+      # Zone 1 (ACTIVE): apps.fajjjar.my.id → hostedZoneID Z03524191B5L20ILPO48O
       # Covers: *.apps.fajjjar.my.id, apps.fajjjar.my.id, fajjjar.my.id
+      # Credentials: cert-manager-route53-fajjjar (student, full zone access)
       # -----------------------------------------------------------------------
       - dns01:
           route53:
             accessKeyIDSecretRef:
-              name: cert-manager-aws-creds
+              name: cert-manager-route53-fajjjar
               key: aws_access_key_id
             secretAccessKeySecretRef:
-              name: cert-manager-aws-creds
+              name: cert-manager-route53-fajjjar
               key: aws_secret_access_key
-            hostedZoneID: 'Z04089013J3OEZ617CSS4'
-            region: us-east-1
+            hostedZoneID: 'Z03524191B5L20ILPO48O'
+            region: ap-southeast-1
         selector:
           dnsZones:
             - 'fajjjar.my.id'
