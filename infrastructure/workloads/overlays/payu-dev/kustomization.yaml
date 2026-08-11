@@ -60,7 +60,7 @@ images:
   newTag: "1.8.82"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service:1.8.99
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-  newTag: "1.8.102"
+  newTag: "1.8.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service:1.8.22
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newTag: "1.8.104"

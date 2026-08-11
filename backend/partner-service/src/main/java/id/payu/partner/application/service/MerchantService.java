@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -121,6 +122,20 @@ public class MerchantService {
     }
 
     /**
+     * PARTNER-PROD-006: get a merchant only if it belongs to the given partner.
+     */
+    @Transactional(readOnly = true)
+    public MerchantResponse getMerchantForPartner(Long partnerId, Long merchantId) {
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("MerchantEntity not found: " + merchantId));
+        if (!Objects.equals(merchant.getPartner() != null ? merchant.getPartner().getId() : null, partnerId)) {
+            throw new IllegalArgumentException(
+                    "MerchantEntity " + merchantId + " does not belong to partner " + partnerId);
+        }
+        return toMerchantResponse(merchant);
+    }
+
+    /**
      * List merchants for a partner.
      */
     @Transactional(readOnly = true)
@@ -138,6 +153,22 @@ public class MerchantService {
         merchant.activate();
         merchant = merchantRepository.save(merchant);
         log.info("Activated merchant {} (code={})", merchantId, merchant.getMerchantCode());
+        return toMerchantResponse(merchant);
+    }
+
+    /**
+     * PARTNER-PROD-006: activate a merchant only if it belongs to the given partner.
+     */
+    public MerchantResponse activateMerchantForPartner(Long partnerId, Long merchantId) {
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("MerchantEntity not found: " + merchantId));
+        if (!Objects.equals(merchant.getPartner() != null ? merchant.getPartner().getId() : null, partnerId)) {
+            throw new IllegalArgumentException(
+                    "MerchantEntity " + merchantId + " does not belong to partner " + partnerId);
+        }
+        merchant.activate();
+        merchant = merchantRepository.save(merchant);
+        log.info("Activated merchant {} (code={}) for partner {}", merchantId, merchant.getMerchantCode(), partnerId);
         return toMerchantResponse(merchant);
     }
 

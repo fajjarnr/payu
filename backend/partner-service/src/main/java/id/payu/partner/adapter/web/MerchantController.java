@@ -51,11 +51,13 @@ public class MerchantController extends BaseController {
         return created(response);
     }
 
-    @GetMapping("/{merchantId}")
-    @Operation(summary = "Get merchant details")
+    @GetMapping("/partners/{partnerId}/{merchantId}")
+    @Operation(summary = "Get merchant details (partner-scoped)")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
-    public ResponseEntity<ApiResponse<MerchantResponse>> getMerchant(@PathVariable Long merchantId) {
-        return ok(merchantService.getMerchant(merchantId));
+    public ResponseEntity<ApiResponse<MerchantResponse>> getMerchant(
+            @PathVariable Long partnerId,
+            @PathVariable Long merchantId) {
+        return ok(merchantService.getMerchantForPartner(partnerId, merchantId));
     }
 
     @GetMapping("/partners/{partnerId}")
@@ -70,12 +72,14 @@ public class MerchantController extends BaseController {
         return ok(merchants);
     }
 
-    @PostMapping("/{merchantId}/activate")
-    @Operation(summary = "Activate a pending merchant")
+    @PostMapping("/partners/{partnerId}/{merchantId}/activate")
+    @Operation(summary = "Activate a pending merchant (partner-scoped)")
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     @Audited(operation = AuditOperation.UPDATE, entityType = "MerchantEntity", level = AuditLevel.INFO)
-    public ResponseEntity<ApiResponse<MerchantResponse>> activate(@PathVariable Long merchantId) {
-        return ok(merchantService.activateMerchant(merchantId));
+    public ResponseEntity<ApiResponse<MerchantResponse>> activate(
+            @PathVariable Long partnerId,
+            @PathVariable Long merchantId) {
+        return ok(merchantService.activateMerchantForPartner(partnerId, merchantId));
     }
 
     @PostMapping("/{merchantId}/qr")

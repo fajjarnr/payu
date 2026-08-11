@@ -164,6 +164,57 @@ class MerchantServiceTest {
             assertThrows(IllegalStateException.class,
                     () -> merchantService.activateMerchant(10L));
         }
+
+        @Test
+        @DisplayName("should reject merchant belonging to another partner (PARTNER-PROD-006)")
+        void shouldRejectActivateMerchantOfAnotherPartner() {
+            PartnerEntity otherPartner = new PartnerEntity("Other Corp", "MERCHANT", "other@x.com", "08122", "key");
+            otherPartner.setId(2L);
+            MerchantEntity otherMerchant = new MerchantEntity(otherPartner, "MCH099", "Other Store",
+                    MerchantCategory.RETAIL, "Addr");
+            otherMerchant.setId(99L);
+
+            when(merchantRepository.findById(99L)).thenReturn(Optional.of(otherMerchant));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> merchantService.activateMerchantForPartner(1L, 99L));
+            verify(merchantRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("getMerchantForPartner")
+    class GetMerchantForPartnerTests {
+
+        @Test
+        @DisplayName("should return merchant owned by the partner")
+        void shouldReturnOwnedMerchant() {
+            MerchantEntity owned = new MerchantEntity(activePartner, "MCH002", "My Store",
+                    MerchantCategory.RETAIL, "Addr");
+            owned.setId(20L);
+
+            when(merchantRepository.findById(20L)).thenReturn(Optional.of(owned));
+
+            MerchantResponse response = merchantService.getMerchantForPartner(1L, 20L);
+
+            assertEquals(20L, response.getId());
+            assertEquals("My Store", response.getBusinessName());
+        }
+
+        @Test
+        @DisplayName("should reject merchant belonging to another partner (PARTNER-PROD-006)")
+        void shouldRejectMerchantOfAnotherPartner() {
+            PartnerEntity otherPartner = new PartnerEntity("Other Corp", "MERCHANT", "other@x.com", "08122", "key");
+            otherPartner.setId(2L);
+            MerchantEntity otherMerchant = new MerchantEntity(otherPartner, "MCH099", "Other Store",
+                    MerchantCategory.RETAIL, "Addr");
+            otherMerchant.setId(99L);
+
+            when(merchantRepository.findById(99L)).thenReturn(Optional.of(otherMerchant));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> merchantService.getMerchantForPartner(1L, 99L));
+        }
     }
 
     @Nested
