@@ -41,16 +41,20 @@ public class WebhookDispatcherService {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookDispatcherService.class);
     private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final int MAX_RESPONSE_BODY_BYTES = 64 * 1024;
 
     private final WebhookSubscriptionRepository subscriptionRepository;
     private final WebhookDeliveryRepository deliveryRepository;
+    private final WebhookUrlValidatorService webhookUrlValidator;
     private final HttpClient httpClient;
 
     @Autowired
     public WebhookDispatcherService(WebhookSubscriptionRepository subscriptionRepository,
-                                    WebhookDeliveryRepository deliveryRepository) {
+                                    WebhookDeliveryRepository deliveryRepository,
+                                    WebhookUrlValidatorService webhookUrlValidator) {
         this.subscriptionRepository = subscriptionRepository;
         this.deliveryRepository = deliveryRepository;
+        this.webhookUrlValidator = webhookUrlValidator;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -60,10 +64,12 @@ public class WebhookDispatcherService {
     // Visible for testing
     WebhookDispatcherService(WebhookSubscriptionRepository subscriptionRepository,
                              WebhookDeliveryRepository deliveryRepository,
-                             HttpClient httpClient) {
+                             HttpClient httpClient,
+                             WebhookUrlValidatorService webhookUrlValidator) {
         this.subscriptionRepository = subscriptionRepository;
         this.deliveryRepository = deliveryRepository;
         this.httpClient = httpClient;
+        this.webhookUrlValidator = webhookUrlValidator;
     }
 
     /**
@@ -178,9 +184,15 @@ public class WebhookDispatcherService {
      */
     void attemptDelivery(WebhookDeliveryEntity delivery, WebhookSubscriptionEntity subscription) {
         delivery.markDelivering();
-        deliveryRepository.save(delivery);
+        persistState(delivery);
 
         try {
+            // PARTNER-PROD-003: re-validate the resolved endpoint before every
+            // attempt so a URL that was public at create time but rebinds to an
+            // internal address (or was written to the DB directly) is still blocked
+            // at the last check before the socket opens.
+            webhookUrlValidator.validate(subscription.getUrl());
+
             String payload = delivery.getPayload();
             String timestamp = Instant.now().toString();
             String signature = computeHmac(subscription.getSecret(), timestamp + "." + payload);
@@ -198,21 +210,31 @@ public class WebhookDispatcherService {
                     .timeout(Duration.ofSeconds(15))
                     .build();
 
+            // PARTNER-PROD-003: bound the response body so a webhook endpoint
+            // cannot exhaust memory; the truncated prefix is stored for diagnostics.
             HttpResponse<String> response = httpClient.send(request,
-                    HttpResponse.BodyHandlers.ofString());
+                    HttpResponse.BodyHandlers.limiting(
+                            HttpResponse.BodyHandlers.ofString(), MAX_RESPONSE_BODY_BYTES));
 
             int status = response.statusCode();
+            String body = response.body();
             if (status >= 200 && status < 300) {
-                delivery.markDelivered(status, response.body());
+                delivery.markDelivered(status, body);
                 log.info("Webhook delivered: {} -> {} (HTTP {})",
                         delivery.getEventId(), subscription.getUrl(), status);
             } else {
-                delivery.markFailed(status, response.body(),
+                delivery.markFailed(status, body,
                         "Non-2xx response: " + status);
                 log.warn("Webhook delivery failed: {} -> {} (HTTP {}, attempt {}/{})",
                         delivery.getEventId(), subscription.getUrl(), status,
                         delivery.getAttemptCount(), delivery.getMaxAttempts());
             }
+        } catch (IllegalArgumentException e) {
+            // Trust-boundary rejection: do not schedule further retries for a
+            // URL that can never be delivered to.
+            delivery.markFailed(null, null, "Webhook URL blocked: " + e.getMessage());
+            log.warn("Webhook delivery blocked: {} -> {} ({})",
+                    delivery.getEventId(), subscription.getUrl(), e.getMessage());
         } catch (Exception e) {
             delivery.markFailed(null, null, e.getMessage());
             log.error("Webhook delivery error: {} -> {} ({}, attempt {}/{})",
@@ -220,7 +242,35 @@ public class WebhookDispatcherService {
                     delivery.getAttemptCount(), delivery.getMaxAttempts());
         }
 
-        deliveryRepository.save(delivery);
+        persistState(delivery);
+    }
+
+    /**
+     * PARTNER-PROD-004: persist a delivery state transition without losing the
+     * terminal state to a concurrent dispatcher's optimistic-lock update. On
+     * conflict the row is reloaded and this attempt's transition is re-applied
+     * to the fresh version, so a racing duplicate can never leave a delivery
+     * stuck in a transient state.
+     */
+    private void persistState(WebhookDeliveryEntity delivery) {
+        try {
+            deliveryRepository.save(delivery);
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            deliveryRepository.findById(delivery.getId()).ifPresent(current -> {
+                if (current.getStatus() == Status.PENDING) {
+                    current.markDelivering();
+                }
+                if (delivery.getStatus() == Status.DELIVERED) {
+                    current.markDelivered(delivery.getResponseCode(), delivery.getResponseBody());
+                } else if (delivery.getStatus() == Status.FAILED || delivery.getStatus() == Status.EXHAUSTED) {
+                    current.markFailed(delivery.getResponseCode(), delivery.getResponseBody(),
+                            delivery.getErrorMessage());
+                }
+                deliveryRepository.save(current);
+            });
+            log.warn("Reconciled delivery {} after optimistic-lock conflict (state={})",
+                    delivery.getId(), delivery.getStatus());
+        }
     }
 
     /**

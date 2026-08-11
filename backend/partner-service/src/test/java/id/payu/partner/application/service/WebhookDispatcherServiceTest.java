@@ -44,7 +44,8 @@ class WebhookDispatcherServiceTest {
 
     @BeforeEach
     void setUp() {
-        dispatcher = new WebhookDispatcherService(subscriptionRepository, deliveryRepository, httpClient);
+        dispatcher = new WebhookDispatcherService(subscriptionRepository, deliveryRepository,
+                httpClient, new WebhookUrlValidatorService());
 
         partner = new PartnerEntity();
         partner.setId(1L);
@@ -53,7 +54,7 @@ class WebhookDispatcherServiceTest {
 
         subscription = new WebhookSubscriptionEntity(
                 partner,
-                "https://api.tokobapak.com/webhooks",
+                "https://8.8.8.8/webhooks",
                 "payment.completed,payment.failed",
                 "whsec_test_secret_123"
         );
@@ -214,6 +215,77 @@ class WebhookDispatcherServiceTest {
 
         @SuppressWarnings("unchecked")
         @Test
+        @DisplayName("should block delivery to a non-public URL without making an HTTP call (PARTNER-PROD-003)")
+        void shouldBlockPrivateUrlDelivery() throws Exception {
+            subscription.setUrl("https://169.254.169.254/latest/meta-data");
+
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
+                    .thenAnswer(inv -> {
+                        WebhookDeliveryEntity d = inv.getArgument(0);
+                        d.setId(250L);
+                        return d;
+                    });
+
+            dispatcher.dispatch("payment.completed", "evt_ssrf001", Map.of("test", true));
+
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
+            verify(deliveryRepository, atLeast(2)).save(captor.capture());
+
+            WebhookDeliveryEntity finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(Status.FAILED, finalState.getStatus());
+            assertNotNull(finalState.getErrorMessage());
+            assertTrue(finalState.getErrorMessage().contains("non-public address"),
+                    "error should explain the SSRF block, was: " + finalState.getErrorMessage());
+            verify(httpClient, never()).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should reconcile terminal state when final save hits an optimistic-lock conflict (PARTNER-PROD-004)")
+        void shouldReconcileOnOptimisticLockConflict() throws Exception {
+            subscription.setUrl("https://8.8.8.8/webhooks");
+
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            java.util.concurrent.atomic.AtomicBoolean conflictThrown = new java.util.concurrent.atomic.AtomicBoolean(false);
+            when(deliveryRepository.save(any(WebhookDeliveryEntity.class)))
+                    .thenAnswer(inv -> {
+                        WebhookDeliveryEntity d = inv.getArgument(0);
+                        if (d.getId() == null) {
+                            d.setId(300L);
+                        } else if (d.getStatus() == Status.DELIVERED
+                                && conflictThrown.compareAndSet(false, true)) {
+                            throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
+                                    WebhookDeliveryEntity.class, 300L);
+                        }
+                        return d;
+                    });
+            WebhookDeliveryEntity persistedRow = new WebhookDeliveryEntity(
+                    subscription, "evt_opt001", "payment.completed", "{\"test\":true}");
+            persistedRow.setId(300L);
+            when(deliveryRepository.findById(300L)).thenReturn(java.util.Optional.of(persistedRow));
+
+            HttpResponse<String> mockResponse = mock(HttpResponse.class);
+            when(mockResponse.statusCode()).thenReturn(200);
+            when(mockResponse.body()).thenReturn("OK");
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenReturn(mockResponse);
+
+            dispatcher.dispatch("payment.completed", "evt_opt001", Map.of("test", true));
+
+            ArgumentCaptor<WebhookDeliveryEntity> captor =
+                    ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
+            verify(deliveryRepository, atLeast(3)).save(captor.capture());
+            WebhookDeliveryEntity reconciled = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(Status.DELIVERED, reconciled.getStatus());
+            assertEquals(200, reconciled.getResponseCode());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
         @DisplayName("should include correct headers in webhook request")
         void shouldIncludeCorrectHeaders() throws Exception {
             when(subscriptionRepository.findActiveByEventType("payment.completed"))
@@ -238,7 +310,7 @@ class WebhookDispatcherServiceTest {
             verify(httpClient).send(requestCaptor.capture(), any());
 
             HttpRequest request = requestCaptor.getValue();
-            assertEquals("https://api.tokobapak.com/webhooks",
+            assertEquals("https://8.8.8.8/webhooks",
                     request.uri().toString());
             assertTrue(request.headers().firstValue("Content-Type")
                     .orElse("").contains("application/json"));

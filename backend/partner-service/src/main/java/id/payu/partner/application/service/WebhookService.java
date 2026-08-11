@@ -38,13 +38,16 @@ public class WebhookService {
     private final WebhookSubscriptionRepository subscriptionRepository;
     private final WebhookDeliveryRepository deliveryRepository;
     private final PartnerRepository partnerRepository;
+    private final WebhookUrlValidatorService webhookUrlValidator;
 
     public WebhookService(WebhookSubscriptionRepository subscriptionRepository,
                           WebhookDeliveryRepository deliveryRepository,
-                          PartnerRepository partnerRepository) {
+                          PartnerRepository partnerRepository,
+                          WebhookUrlValidatorService webhookUrlValidator) {
         this.subscriptionRepository = subscriptionRepository;
         this.deliveryRepository = deliveryRepository;
         this.partnerRepository = partnerRepository;
+        this.webhookUrlValidator = webhookUrlValidator;
     }
 
     /**
@@ -58,6 +61,9 @@ public class WebhookService {
         if (!partner.isActive()) {
             throw new IllegalStateException("Cannot create webhook for inactive partner");
         }
+
+        // PARTNER-PROD-003: trust-boundary validation before persistence
+        webhookUrlValidator.validate(dto.getUrl());
 
         if (subscriptionRepository.existsByPartnerIdAndUrl(partnerId, dto.getUrl())) {
             throw new IllegalStateException("Webhook subscription already exists for this URL");
@@ -89,6 +95,8 @@ public class WebhookService {
         WebhookSubscriptionEntity subscription = findSubscriptionForPartner(partnerId, subscriptionId);
 
         if (dto.getUrl() != null) {
+            // PARTNER-PROD-003: trust-boundary validation on URL change
+            webhookUrlValidator.validate(dto.getUrl());
             subscription.setUrl(dto.getUrl());
         }
         if (dto.getEvents() != null) {

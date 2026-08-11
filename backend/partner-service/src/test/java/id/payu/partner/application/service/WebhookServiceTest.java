@@ -42,6 +42,9 @@ class WebhookServiceTest {
     @Mock
     private PartnerRepository partnerRepository;
 
+    @Mock
+    private WebhookUrlValidatorService webhookUrlValidator;
+
     @InjectMocks
     private WebhookService webhookService;
 
@@ -149,7 +152,7 @@ class WebhookServiceTest {
         @DisplayName("should fail for duplicate URL")
         void shouldFailForDuplicateUrl() {
             WebhookSubscriptionDTO dto = new WebhookSubscriptionDTO();
-            dto.setUrl("https://api.tokobapak.com/webhooks");
+            dto.setUrl("https://api.example.com/wh");
             dto.setEvents("*");
 
             when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
@@ -157,6 +160,23 @@ class WebhookServiceTest {
 
             assertThrows(IllegalStateException.class,
                     () -> webhookService.createSubscription(1L, dto));
+        }
+
+        @Test
+        @DisplayName("should reject webhook URL resolving to a non-public address (PARTNER-PROD-003)")
+        void shouldRejectInternalWebhookUrl() {
+            WebhookSubscriptionDTO dto = new WebhookSubscriptionDTO();
+            dto.setUrl("https://169.254.169.254/latest/meta-data");
+            dto.setEvents("*");
+
+            when(partnerRepository.findById(1L)).thenReturn(Optional.of(activePartner));
+
+            WebhookService realValidatorService = new WebhookService(
+                    subscriptionRepository, deliveryRepository, partnerRepository, new WebhookUrlValidatorService());
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> realValidatorService.createSubscription(1L, dto));
+            verify(subscriptionRepository, never()).save(any());
         }
 
         @Test
