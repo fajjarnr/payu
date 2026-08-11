@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.35` (2026-08-05) |
-| **Core Banking MVP** | 🔴 Belum MVP — auth blocked (LOGIN-001..006 open); wallet/transaction money-flow live. Account P0 (ACCOUNT-001..004) CLOSED, LOGIN-002/004/005 CLOSED, PROD-047 CLOSED (2026-08-11) 2026-08-11 (blind index, IDOR, trusted tenant, PII). Belum ada service production ready. |
+| **Core Banking MVP** | 🔴 Belum MVP — auth belum strong auth (LOGIN-003 PKCE/MFA open); money-flow live. Account P0 (ACCOUNT-001..004), LOGIN-002/004/005, PROD-047 CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII, revoke, rate-limit, error contract, Money scale 4). Belum ada service production ready. |
 | **Backlog Aktif** | 14 tickets + 23 action items (CB-*) + gates partner/platform (2026-08-11) |
 | **Last Updated** | 2026-08-11 (ACCOUNT-001..004 closed, CB-001/CB-013 closed) |
 
