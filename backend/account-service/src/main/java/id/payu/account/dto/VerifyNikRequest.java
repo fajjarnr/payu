@@ -19,4 +19,13 @@ public record VerifyNikRequest(
 
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Birth date must be in YYYY-MM-DD format")
     String birthDate
-) {}
+) {
+    /**
+     * Masked toString: audited endpoints persist entityId (toString) into the
+     * audit outbox — NIK/fullName must never leave in plaintext.
+     */
+    @Override
+    public String toString() {
+        return "VerifyNikRequest[nik=****, fullName=****, birthPlace=****, birthDate=" + birthDate + "]";
+    }
+}

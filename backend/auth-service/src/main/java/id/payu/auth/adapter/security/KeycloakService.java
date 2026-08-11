@@ -216,7 +216,7 @@ public class KeycloakService {
      * @return LoginResponse containing access tokens
      * @throws IllegalArgumentException if login fails
      */
-    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "rateLimitFallbackBlocking")
+    @RateLimiter(name = "loginRateLimiter")
     public LoginResponse loginBlocking(String username, String password) {
         if (isAccountLocked(username)) {
             log.warn("Login attempt for locked account: {}", maskUsername(username));
@@ -270,6 +270,11 @@ public class KeycloakService {
         headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
         org.springframework.util.LinkedMultiValueMap<String, String> form = new org.springframework.util.LinkedMultiValueMap<>();
         form.add("client_id", keycloakConfig.getClientId());
+        if (keycloakConfig.getClientSecret() != null && !keycloakConfig.getClientSecret().isBlank()) {
+            // Confidential client: Keycloak's end_session requires client
+            // authentication (id_token_hint or client secret) to revoke.
+            form.add("client_secret", keycloakConfig.getClientSecret());
+        }
         form.add("refresh_token", refreshToken);
         org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, String>> request =
                 new org.springframework.http.HttpEntity<>(form, headers);
@@ -287,13 +292,6 @@ public class KeycloakService {
                     "Keycloak unreachable during logout: " + e.getMessage());
         }
     }
-
-    public LoginResponse rateLimitFallbackBlocking(String username, String password, Throwable t) {
-        log.warn("Rate limit exceeded for login attempts (blocking)");
-        throw new IllegalArgumentException("Too many login attempts. Please try again later.");
-    }
-
-
 
     /**
      * Blocking version of refreshToken for use in servlet (non-reactive) contexts.

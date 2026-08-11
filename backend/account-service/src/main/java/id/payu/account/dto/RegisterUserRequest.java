@@ -33,4 +33,15 @@ public record RegisterUserRequest(
     @NotBlank(message = "Password is required")
     @Sensitive(value = SensitivityLevel.CRITICAL)
     String password
-) {}
+) {
+    /**
+     * Masked toString: the AuditAspect persists entityId (toString) into the
+     * audit outbox — a raw record toString leaked email/phone/fullName/NIK and
+     * the plaintext password into payu.security.audit-log.v1.
+     */
+    @Override
+    public String toString() {
+        return "RegisterUserRequest[externalId=" + externalId + ", username=" + username
+                + ", email=****, phoneNumber=****, fullName=****, nik=****, password=****]";
+    }
+}

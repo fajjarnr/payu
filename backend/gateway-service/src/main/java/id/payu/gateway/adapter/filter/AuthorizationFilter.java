@@ -57,6 +57,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/login",
         "/api/v1/auth/register",       // IAM user provisioning during onboarding
+        "/api/v1/auth/logout",         // LOGIN-002: OIDC end_session — authenticated by the refresh token itself
         "/api/v1/accounts/register",   // Only registration is public (BUG-BE-006 fix)
         "/api/v1/auth/refresh",
         "/api/v1/otp/send",

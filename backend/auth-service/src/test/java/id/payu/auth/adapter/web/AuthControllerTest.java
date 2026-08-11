@@ -115,12 +115,42 @@ class AuthControllerTest {
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error.code").value("SERVICE_UNAVAILABLE"));
         }
+
+        @Test
+        @DisplayName("429 RATE_LIMIT_EXCEEDED when either rate limiter denies the attempt")
+        void rateLimitedReturns429() throws Exception {
+            given(keycloakService.loginBlocking(anyString(), anyString()))
+                    .willThrow(new id.payu.auth.exception.AuthDomainException.AuthRateLimitExceededException());
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(jsonPath("$.error.code").value("RATE_LIMIT_EXCEEDED"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/v1/auth/refresh")
+    class RefreshEndpoint {
+
+        @Test
+        @DisplayName("400 AUTH_BUS_006 for a revoked or expired refresh token")
+        void revokedTokenReturns400() throws Exception {
+            given(keycloakService.refreshTokenBlocking(anyString()))
+                    .willThrow(new IllegalArgumentException("Keycloak rejected the refresh token"));
+
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new id.payu.auth.dto.RefreshTokenRequest("revoked-token"))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_006"));
+        }
     }
 
     @Nested
     @DisplayName("POST /api/v1/auth/logout")
     class LogoutEndpoint {
-
         @Test
         @DisplayName("200 and revokes the session at Keycloak")
         void logoutRevokesSession() throws Exception {

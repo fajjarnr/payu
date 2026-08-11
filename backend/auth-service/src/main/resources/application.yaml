@@ -93,6 +93,16 @@ resilience4j:
         wait-duration: 1s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
+  ratelimiter:
+    instances:
+      loginRateLimiter:
+        # Global ceiling across the whole service; the per-IP/per-account
+        # brute-force control is the @RateLimit aspect (10/min). Without an
+        # explicit config Resilience4j defaults (50 permits / 500ns refresh)
+        # deny almost every login.
+        limit-for-period: 30
+        limit-refresh-period: 1m
+        timeout-duration: 0s
 # Account Lockout Configuration
 payu:
   security:

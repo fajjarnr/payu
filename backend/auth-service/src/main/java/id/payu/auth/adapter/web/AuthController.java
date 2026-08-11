@@ -156,6 +156,20 @@ public class AuthController extends BaseController {
                             ErrorCode.AUTH_BUS_001.getCode(),
                             ErrorCode.AUTH_BUS_001.getMessage()
                     ));
+        } catch (id.payu.api.common.exception.RateLimitExceededException e) {
+            // LOGIN-005: rate limited (either limiter) is a deterministic 429
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error(
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getCode(),
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
+                    ));
+        } catch (io.github.resilience4j.ratelimiter.RequestNotPermitted e) {
+            // LOGIN-005: Resilience4j @RateLimiter denial is also a 429
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error(
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getCode(),
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
+                    ));
         } catch (IllegalArgumentException e) {
             // LOGIN-005: locked account is a deterministic 423, other credential
             // failures (invalid/malformed) a 401 — no user enumeration in the message
@@ -323,6 +337,22 @@ public class AuthController extends BaseController {
                     .body(ApiResponse.error(
                             ErrorCode.AUTH_BUS_006.getCode(),
                             ErrorCode.AUTH_BUS_006.getMessage()
+                    ));
+        } catch (IllegalArgumentException e) {
+            // LOGIN-002: a revoked/rotated/expired refresh token (Keycloak
+            // invalid_grant) is a deterministic 400, not a 500
+            log.warn("Refresh token rejected for IP: {} - {}",
+                    getClientIpAddress(httpRequest), e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_006.getCode(),
+                            ErrorCode.AUTH_BUS_006.getMessage()
+                    ));
+        } catch (id.payu.api.common.exception.RateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error(
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getCode(),
+                            ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
                     ));
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
