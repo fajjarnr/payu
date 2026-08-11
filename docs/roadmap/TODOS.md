@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.35` (2026-08-05) — Data Grid config-listener NetworkPolicy, zero warn/error across all pods |
-| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge E2E hijau; PARTNER-PROD-003 webhook SSRF boundary live; registry incident 31 image rebuild; WAF/mTLS tetap open) |
+| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge live; PARTNER-PROD-003 SSRF boundary live; PARTNER-PROD-004 DLQ live; registry incident resolved; WAF/mTLS + PROD-005/006 tetap open) |
 
 ---
 
@@ -66,6 +66,12 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.
 
 **2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
+
+**PARTNER-PROD-004 progress (2026-08-11)**: **event/webhook delivery durability live** di `partner-service:1.8.102`:
+- **Fix: consumer tidak lagi menelan exception**: `FinancialEventConsumer`/`SubscriptionEventConsumer` sebelumnya `catch (Exception)` → log → offset commit (event HILANG permanen, tidak pernah sampai DLQ). Sekarang malformed payload → `IllegalArgumentException`, seluruh processing exception di-`rethrow` → `events-starter` `DefaultErrorHandler` retry 3× (1s) → `DeadLetterPublishingRecoverer` → `<topic>.dlq` (`commitRecovered=true`).
+- **Live bukti (sandbox `cluster-9knnm`)**: publish poison `{not-valid-json` ke `wallet.balance.changed` → 3× `Failed to process financial event: Invalid event payload JSON` → `Forwarding failed record to DLQ: wallet.balance.changed.dlq` → record poison utuh di DLQ (offset tidak di-commit sebagai sukses). **DLQ→replay**: publish ulang record terkoreksi (`dlq-replay-002`, CloudEvent valid) ke `payu.transactions.completed` → konsumen → webhook → tepat satu delivery row **DELIVERED 200**. **Retry durable + revalidasi URL**: delivery yang pernah `FAILED Webhook URL blocked` (169.254.169.254) otomatis menjadi **DELIVERED 200** setelah URL subscription di-restore — retry scheduler (ShedLock, 30s, backoff exponential 4^n×30s s/d maxAttempts 10) + `WebhookUrlValidator` re-check di setiap attempt.
+- Tests: `FinancialEventConsumerTest` 3 kasus + `SubscriptionEventConsumerTest` flipped → partner-service 288/288.
+- **Sisa PARTNER-PROD-004**: DLQ consumer/alert otomatis (saat ini manual replay via runbook; backlog/poison-event dashboard belum ada), dan double-dispatch race `SnapBiPaymentService` (direct dispatch + outbox→consumer untuk event yang sama — mitigated `uq_webhook_delivery_event` + `persistState()` reconcile, namun masih ada window `existsByEventIdAndSubscription_Id` check-then-insert non-atomik).
 
 **PARTNER-PROD-003 progress (2026-08-11)**: **webhook trust boundary live** di `partner-service:1.8.101`:
 - `WebhookUrlValidatorService` (application service): HTTPS-only (tanpa userinfo), host wajib resolve, dan SEMUA resolved address harus publik — loopback/RFC1918 (10/8, 172.16/12, 192.168/16)/link-local 169.254.0.0/16 + metadata 169.254.169.254/CGNAT 100.64.0.0/10/ULA fc00::/7/broadcast/0.0.0.0 ditolak. Validasi di create, update, DAN sebelum setiap delivery attempt (guard DNS rebinding — URL yang public saat create tapi berubah internal saat delivery tetap diblok di check terakhir sebelum socket dibuka). Redirect `NEVER` (sudah ada); response body dibatasi `BodyHandlers.limiting` 64 KiB.

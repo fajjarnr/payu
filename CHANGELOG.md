@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.46] - 2026-08-11
+
+### Fixed
+
+- **Kafka consumer exceptions no longer swallowed (PARTNER-PROD-004)**: `FinancialEventConsumer` and `SubscriptionEventConsumer` previously caught every exception, logged, and let the offset commit — a poison or failing record was permanently lost and could never reach a DLQ. Malformed payloads now raise `IllegalArgumentException` instead of being dispatched as an opaque `rawPayload` blob, and processing exceptions are rethrown so the `events-starter` `DefaultErrorHandler` retries 3x (1s backoff) and forwards the record to `<topic>.dlq` (`DeadLetterPublishingRecoverer`, `commitRecovered=true`).
+
+### Validation
+
+- `partner-service` 288 tests / 0 failures — new `FinancialEventConsumerTest` (valid CloudEvent dispatch, malformed payload rethrows, dispatch failure rethrows) and `SubscriptionEventConsumerTest` flipped from swallow to propagate.
+- Live (sandbox `cluster-9knnm`, `partner-service:1.8.102`): poison `{not-valid-json` published to `wallet.balance.changed` → 3 logged retries (`Invalid event payload JSON`) → record forwarded to `wallet.balance.changed.dlq` with original content, offset never committed as success. DLQ→replay: corrected CloudEvent `dlq-replay-002` re-published to `payu.transactions.completed` → exactly one delivery row `DELIVERED 200`. Durable retry: a delivery previously `FAILED Webhook URL blocked` (metadata URL) auto-recovered to `DELIVERED 200` after the subscription URL was restored — retry scheduler (ShedLock, 30s, exponential backoff) re-validates the URL on every attempt.
+
 ## [1.10.45] - 2026-08-11
 
 ### Added
