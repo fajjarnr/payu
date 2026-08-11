@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.45] - 2026-08-11
+
+### Added
+
+- **Webhook SSRF trust boundary (PARTNER-PROD-003)**: new `WebhookUrlValidatorService` — HTTPS-only (no userinfo), every resolved address of the webhook host must be public; loopback, RFC1918, link-local/metadata (169.254.169.254), CGNAT 100.64/10, IPv6 ULA, broadcast and 0.0.0.0 are rejected. Validation runs at subscription create, on URL update, and again before every delivery attempt, so a DNS rebinding between registration and dispatch is blocked at the last check before the socket opens (redirects were already `NEVER`).
+- **Bounded webhook response bodies (PARTNER-PROD-003)**: delivery now reads the response through `HttpResponse.BodyHandlers.limiting(ofString(), 64 KiB)` so a webhook endpoint cannot exhaust memory; the truncated prefix is stored for diagnostics.
+- **Delivery state reconciliation on optimistic-lock conflict (PARTNER-PROD-004 prep)**: `persistState()` reloads and re-applies the terminal transition when the final save hits an `ObjectOptimisticLockingFailureException`, so a racing dispatcher can never strand a delivery in `DELIVERING`. Observed live before the fix: payload delivered (HTTP 200) but row stuck in `DELIVERING` forever.
+- **Dev registry recovery (INFRA-018)**: all 31 pinned `payu-dev` image tags were wiped from the registry (even `latest` manifest returned 404). Rebuilt and re-pushed every service at its pinned tag via `scripts/build-push-ocp.sh`; `partner-service` moved to `1.8.100`/`1.8.101`; 46/46 pods Running, 0 pull failures.
+
+### Fixed
+
+- **Webhook URL validation wired into the API (PARTNER-PROD-003)**: `WebhookService.createSubscription`/`updateSubscription` reject non-public endpoints with `IllegalArgumentException` (400 via `Rfc9457PartnerExceptionHandler`) before persistence.
+
+### Validation
+
+- `partner-service` 285 tests / 0 failures — includes `WebhookUrlValidatorServiceTest` (21 cases: public v4/v6 accepted; http/userinfo/missing-host/loopback/RFC1918/link-local/metadata/CGNAT/broadcast/ULA/unresolvable rejected; mixed-resolution rejected), create-time rejection, delivery-time block (no HTTP call), and reconcile-on-conflict.
+- Live (sandbox `cluster-9knnm`, `partner-service:1.8.101`): webhook subscription → `https://postman-echo.com/post` → payment `PAYU-c3c33672-...` → delivery row **DELIVERED HTTP 200**; URL rewritten via DB to `https://169.254.169.254/latest/meta-data` → next payment → delivery **FAILED `Webhook URL blocked: resolves to a non-public address: 169.254.169.254`** with no outbound HTTP call.
+
 ## [1.10.44] - 2026-08-11
 
 ### Added

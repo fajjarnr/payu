@@ -19,7 +19,7 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
 | **Last Release** | `1.10.35` (2026-08-05) — Data Grid config-listener NetworkPolicy, zero warn/error across all pods |
-| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge E2E hijau via APIcast: token→payment→status→refund 200, quota 429, failover OK, bypass route dihapus; WAF/mTLS tetap open) |
+| **Last Updated** | 2026-08-11 (PARTNER-PROD-001 edge E2E hijau; PARTNER-PROD-003 webhook SSRF boundary live; registry incident 31 image rebuild; WAF/mTLS tetap open) |
 
 ---
 
@@ -66,6 +66,13 @@ Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate
 Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.
 
 **2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
+
+**PARTNER-PROD-003 progress (2026-08-11)**: **webhook trust boundary live** di `partner-service:1.8.101`:
+- `WebhookUrlValidatorService` (application service): HTTPS-only (tanpa userinfo), host wajib resolve, dan SEMUA resolved address harus publik — loopback/RFC1918 (10/8, 172.16/12, 192.168/16)/link-local 169.254.0.0/16 + metadata 169.254.169.254/CGNAT 100.64.0.0/10/ULA fc00::/7/broadcast/0.0.0.0 ditolak. Validasi di create, update, DAN sebelum setiap delivery attempt (guard DNS rebinding — URL yang public saat create tapi berubah internal saat delivery tetap diblok di check terakhir sebelum socket dibuka). Redirect `NEVER` (sudah ada); response body dibatasi `BodyHandlers.limiting` 64 KiB.
+- **Fix race optimistic-lock**: delivery terminal state hilang saat save final kena `ObjectOptimisticLockingFailureException` (teramati live: webhook terkirim HTTP 200 ke postman-echo tapi row stuck `DELIVERING`). `persistState()` reload + re-apply transisi terminal ke version fresh → tidak ada delivery yang terjebak transient state.
+- **Live bukti** (sandbox `cluster-9knnm`): webhook subscription partner 1 → `https://postman-echo.com/post` (event `payment.completed`) → payment `PAYU-c3c33672-...` → delivery row **DELIVERED HTTP 200** (payload bertanda tangan HMAC diterima endpoint publik); URL di-set ke `https://169.254.169.254/latest/meta-data` via DB (simulasi rebind/bypass) → payment berikutnya → delivery **FAILED `Webhook URL blocked: resolves to a non-public address: 169.254.169.254`** tanpa HTTP call. Create/update-time rejection di-cover unit test (IllegalArgumentException → 400 via `Rfc9457PartnerExceptionHandler`).
+- Tests: `WebhookUrlValidatorServiceTest` 21 kasus, `WebhookServiceTest` +1, `WebhookDispatcherServiceTest` +2 (block + reconcile) → partner-service 285/285.
+- **Sisa**: egress proxy/policy eksplisit untuk delivery (netpol `allow-all-egress` dev), scan response body size di endpoint penerima, dan test DNS-rebind harness terisolasi (saat ini guard re-validate per-attempt + unit tests).
 
 **PARTNER-PROD-001 progress (2026-08-11, sandbox `cluster-9knnm`)**: blocker sync system-master **RESOLVED** — cluster upgrade 4.18→4.19→4.20 selesai, `system-app` 3/3, Backend/Product/Application/ProxyConfigPromote semua Synced=True. **Public edge APIcast production LIVE** (`https://api-payu-apicast-production.apps.fajjjar.my.id`):
 - **Bug fix: auth contract CR ≠ runtime**: CRD `products.capabilities.3scale.net` **tidak mendukung field `credentials`** di `appKeyAppID`, operator menyisakan `credentials_location=query` dan service `backend_version=1` (user_key) — semua kombinasi header app_id/app_key 403 `Authentication parameters missing`. Fix: `payu-capabilities.yaml` kedua Product kini memakai `authentication.userkey` (`authUserKey: user_key`, `credentials: headers`); operator re-sync → proxy `auth_user_key=user_key`, `credentials_location=headers`; ProxyConfigPromote di-delete & re-create; APIcast di-restart (`APICAST_CONFIGURATION_LOADER=boot` memuat config hanya saat boot — restart wajib setelah promote/config change).
@@ -148,7 +155,7 @@ Dev loop (2026-07-31 → 2026-08-04): `web-app:1.5.3` deployed; unit 1187 pass; 
 | READY-062 | P3 | ML | ONNX fraud detection model |
 | DEVSECOPS-015 | P3 | DevSecOps | Security Findings Dashboard Grafana |
 | DEVSECOPS-016 | P3 | DevSecOps | Service template scaffolder |
-| INFRA-018 | P3 | Registry | Setup registry GC policy |
+| INFRA-018 | P3 | Registry | Setup registry GC policy — **2026-08-11 incident**: seluruh 31 image tag pinned di `payu-dev` hilang dari registry (manifest `latest` pun 404; kemungkinan prune/GC atau storage registry di-reset saat upgrade cluster). Semua image di-rebuild + di-push ulang via `scripts/build-push-ocp.sh`; `partner-service` naik ke `1.8.100`/`1.8.101`; 46/46 pods Running. Investigasi penyebab prune tetap open + butuh policy GC eksplisit. |
 | INFRA-019 | P3 | Registry | Configure Quay.io auto-prune policy |
 | DEVSECOPS-005 | P3 | Network | EgressNetworkPolicy + Istio egress gateway |
 | DEVSECOPS-007 | P3 | Security | LUKS encryption PV + Vault DEK rotation |

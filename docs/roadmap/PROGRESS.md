@@ -4,6 +4,12 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-003 webhook trust boundary LIVE**:
+> - `WebhookUrlValidatorService` (partner-service `1.8.101`): HTTPS-only tanpa userinfo, seluruh resolved address wajib publik (loopback/RFC1918/169.254.169.254 metadata/CGNAT/ULA/broadcast ditolak); validasi create/update + setiap delivery attempt (DNS-rebind guard); redirect `NEVER`; response body bounded 64 KiB.
+> - Fix race optimistic-lock `persistState()`: reload + re-apply transisi terminal — tidak ada delivery stuck `DELIVERING` (kasus ini teramati live sebelum fix).
+> - Live bukti: webhook → `postman-echo.com/post` → payment `PAYU-c3c33672-...` → **DELIVERED HTTP 200** (payload HMAC bertanda tangan diterima); URL di-rewrite DB ke metadata endpoint → **FAILED `Webhook URL blocked`** tanpa HTTP call. Tests 285/285.
+> - **Incident registry (INFRA-018)**: 31 image tag pinned `payu-dev` hilang dari registry (manifest `latest` 404) → rebuild + push ulang semua service; `partner-service` `1.8.99`→`1.8.100`/`1.8.101`; 46/46 pods Running. Investigasi penyebab prune open.
+
 > ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-001 public edge LIVE (sandbox `cluster-9knnm`)**:
 > - **Blocker sync system-master resolved** setelah cluster upgrade 4.18→4.19→4.20 selesai: `system-app` 3/3, Backend/Product/Application/ProxyConfigPromote capabilities semua `Synced=True` (sebelumnya Puma timeout 40s pada `/check.txt` selama upgrade berjalan).
 > - **Root cause 403 `Authentication parameters missing`**: CRD capabilities tidak punya field `credentials` pada `appKeyAppID` → operator meninggalkan `credentials_location=query` sementara service `backend_version=1` (user_key); APIcast (loader `boot`) juga masih memegang config v8 lama karena tidak reload setelah promote. Fix declarative: Product CR pindah ke `userkey` auth (`user_key` header) + re-promote + rollout restart APIcast.

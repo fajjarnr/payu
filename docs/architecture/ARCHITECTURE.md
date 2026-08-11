@@ -76,14 +76,14 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 | Layer                     | Red Hat Product                      | Portable Alternative       |
 | ------------------------- | ------------------------------------ | -------------------------- |
 | **Container Platform**    | Red Hat OpenShift 4.20+              | Kubernetes (EKS/GKE/AKS)   |
-| **Core Banking Services** | Red Hat Runtimes (Spring Boot 3.4)   | Spring Boot                |
+| **Core Banking Services** | Red Hat Runtimes (Spring Boot 4.1)   | Spring Boot                |
 | **Supporting Services**   | Red Hat Build of Quarkus 3.x         | Quarkus                    |
 | **ML/Data Services**      | Python 3.12 (UBI-based)              | Python FastAPI             |
 | **API Gateway**           | Red Hat Build of Quarkus             | Any API Gateway            |
 | **Event Streaming**       | AMQ Streams (Kafka)                  | Apache Kafka, Confluent    |
 | **Message Queue**         | AMQ Broker (Artemis)                 | ActiveMQ Artemis, RabbitMQ |
-| **Database**              | Crunchy PostgreSQL 16                | Any PostgreSQL             |
-| **Caching**               | Red Hat Data Grid (RESP mode)        | Redis, ElastiCache         |
+| **Database**              | CNPG (CloudNativePG) 16              | PostgreSQL; AWS RDS untuk production target |
+| **Caching**               | Red Hat Data Grid (Hot Rod; REST v2 untuk Python)        | Redis, ElastiCache         |
 | **Identity & Access**     | Red Hat Build of Keycloak (RHBK) v26 | Keycloak, Auth0            |
 | **Service Mesh**          | OpenShift Service Mesh               | Istio, Linkerd             |
 | **Logging**               | OpenShift Logging (LokiStack)        | Grafana Loki               |
@@ -101,7 +101,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │                  RED HAT OPENSHIFT 4.20+ ECOSYSTEM                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  CORE BANKING (Spring Boot 3.4)        SUPPORTING (Spring Boot 3.4)         │
+│  CORE BANKING (Spring Boot 4.1)        SUPPORTING (Spring Boot 4.1)         │
 │  ┌──────────────────────────────┐     ┌─────────────────────────────────┐    │
 │  │ account-svc   auth-svc       │     │ backoffice-svc  partner-svc     │    │
 │  │ transaction-svc wallet-svc   │     │ promotion-svc   support-svc     │    │
@@ -173,20 +173,20 @@ C4Container
     Container(gateway, "API Gateway", "Quarkus Native", "Rate limiting, JWT validation, routing")
 
     System_Boundary(core_banking, "Core Banking Services") {
-      Container(account_svc, "Account Service", "Spring Boot 3.4", "User accounts, multi-pocket, profile")
-      Container(auth_svc, "Auth Service", "Spring Boot 3.4", "Authentication, MFA, OAuth2")
-      Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Transfers, BI-FAST, QRIS")
-      Container(wallet_svc, "Wallet Service", "Spring Boot 3.4", "Double-entry ledger, balance management")
-      Container(investment_svc, "Investment Service", "Spring Boot 3.4", "Mutual funds, Gold investment")
-      Container(lending_svc, "Lending Service", "Spring Boot 3.4", "Loans, PayLater, credit scoring")
-      Container(fx_svc, "FX Service", "Spring Boot 3.4", "Currency exchange rates")
-      Container(statement_svc, "Statement Service", "Spring Boot 3.4", "PDF E-Statement generation")
+      Container(account_svc, "Account Service", "Spring Boot 4.1", "User accounts, multi-pocket, profile")
+      Container(auth_svc, "Auth Service", "Spring Boot 4.1", "Authentication, MFA, OAuth2")
+      Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Transfers, BI-FAST, QRIS")
+      Container(wallet_svc, "Wallet Service", "Spring Boot 4.1", "Double-entry ledger, balance management")
+      Container(investment_svc, "Investment Service", "Spring Boot 4.1", "Mutual funds, Gold investment")
+      Container(lending_svc, "Lending Service", "Spring Boot 4.1", "Loans, PayLater, credit scoring")
+      Container(fx_svc, "FX Service", "Spring Boot 4.1", "Currency exchange rates")
+      Container(statement_svc, "Statement Service", "Spring Boot 4.1", "PDF E-Statement generation")
     }
 
     System_Boundary(supporting_services, "Supporting Services") {
       Container(kyc_svc, "KYC Service", "Python FastAPI", "OCR, liveness detection")
       Container(notification_svc, "Notification Service", "Quarkus Native", "Push, SMS, Email")
-      Container(billing_svc, "Billing Service", "Spring Boot 3.4", "Bill payments")
+      Container(billing_svc, "Billing Service", "Spring Boot 4.1", "Bill payments")
       Container(gateway_svc, "Gateway Service", "Quarkus Native", "Internal API gateway")
       Container(api_portal_svc, "API Portal Service", "Quarkus Native", "OpenAPI docs & sandbox")
       Container(analytics_svc, "Analytics Service", "Python FastAPI", "Fraud scoring, insights")
@@ -194,15 +194,15 @@ C4Container
     }
 
     System_Boundary(admin_services, "Admin & Supporting Services") {
-      Container(backoffice_svc, "Backoffice Service", "Spring Boot 3.4", "Internal admin operations")
-      Container(partner_svc, "Partner Service", "Spring Boot 3.4", "Partner integration, webhooks")
-      Container(promotion_svc, "Promotion Service", "Spring Boot 3.4", "Campaigns, vouchers, rewards")
-      Container(support_svc, "Support Service", "Spring Boot 3.4", "Customer support, ticketing")
-      Container(compliance_svc, "Compliance Service", "Spring Boot 3.4", "Regulatory compliance, AML")
-      Container(cms_svc, "CMS Service", "Spring Boot 3.4", "Banners, promos, dynamic content")
-      Container(dispute_svc, "Dispute Service", "Spring Boot 3.4", "Refund & dispute resolution")
-      Container(product_catalog_svc, "Product Catalog Service", "Spring Boot 3.4", "Partner product registry")
-      Container(integration_svc, "Integration Service", "Spring Boot 3.4", "External system integration")
+      Container(backoffice_svc, "Backoffice Service", "Spring Boot 4.1", "Internal admin operations")
+      Container(partner_svc, "Partner Service", "Spring Boot 4.1", "Partner integration, webhooks")
+      Container(promotion_svc, "Promotion Service", "Spring Boot 4.1", "Campaigns, vouchers, rewards")
+      Container(support_svc, "Support Service", "Spring Boot 4.1", "Customer support, ticketing")
+      Container(compliance_svc, "Compliance Service", "Spring Boot 4.1", "Regulatory compliance, AML")
+      Container(cms_svc, "CMS Service", "Spring Boot 4.1", "Banners, promos, dynamic content")
+      Container(dispute_svc, "Dispute Service", "Spring Boot 4.1", "Refund & dispute resolution")
+      Container(product_catalog_svc, "Product Catalog Service", "Spring Boot 4.1", "Partner product registry")
+      Container(integration_svc, "Integration Service", "Spring Boot 4.1", "External system integration")
     }
 
     ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets")
@@ -214,7 +214,7 @@ C4Container
     ContainerQueue(kafka_streams, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event streaming, CDC")
     ContainerQueue(amq_broker, "AMQ Broker (Artemis)", "AMQP 1.0", "Point-to-point messaging")
 
-    ContainerDb(cache, "Data Grid", "Redis RESP (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
+    ContainerDb(cache, "Data Grid", "Hot Rod (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
 
     Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24", "Identity & access management")
   }
@@ -269,10 +269,10 @@ C4Container
 | ------------------------ | ------------------------------------------- |
 | **Domain-Driven Design** | Services aligned with banking domains       |
 | **Database per Service** | Each service owns its data store            |
-| **Event Sourcing**       | Complete audit trail for all transactions   |
+| **Immutable Ledger**     | Double-entry, no UPDATE/DELETE on financial facts; corrections via reversal entries |
 | **CQRS**                 | Separated read/write models for performance |
-| **Saga Pattern**         | Distributed transaction management          |
-| **Zero Trust**           | mTLS between all services                   |
+| **Saga Pattern**         | Distributed transaction management via saga-starter |
+| **Zero Trust**           | mTLS between all services (UAT+)           |
 
 ---
 
@@ -331,7 +331,7 @@ C4Container
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Technology**       | Java 21, Spring Boot 4.1.x                      |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8001                                            |
 | **Responsibilities** | User accounts, multi-pocket, profile management |
@@ -377,7 +377,7 @@ account-service/
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak            |
+| **Technology**       | Java 21, Spring Boot 4.1.x, Keycloak            |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8002                                            |
 | **Responsibilities** | Authentication, MFA, OAuth2, session management |
@@ -395,8 +395,8 @@ account-service/
 
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                  |
-| **Database**         | PostgreSQL + Event Store                    |
+| **Technology**       | Java 21, Spring Boot 4.1.x                  |
+| **Database**         | PostgreSQL + Outbox (transactional)       |
 | **Port**             | 8003                                        |
 | **Responsibilities** | Transfer, BI-FAST, QRIS, payment processing |
 
@@ -415,7 +415,7 @@ account-service/
 
 | Attribute            | Value                             |
 | -------------------- | --------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x        |
+| **Technology**       | Java 21, Spring Boot 4.1.x        |
 | **Database**         | PostgreSQL (Double-entry ledger)  |
 | **Port**             | 8004                              |
 | **Responsibilities** | Balance management, ledger, holds |
@@ -446,7 +446,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                       |
+| **Technology**       | Java 21, Spring Boot 4.1.x                       |
 | **Database**         | PostgreSQL                                          |
 | **Port**             | 8005                                                |
 | **Responsibilities** | Bill payments (PLN, PDAM, BPJS), wallet integration |
@@ -459,7 +459,7 @@ CREATE TABLE ledger_entries (
 | -------------------- | ----------------------------------------------- |
 | **Technology**       | Java 21, Quarkus 3.x (Native)                   |
 | **Database**         | PostgreSQL                                      |
-| **Cache**            | Red Hat Data Grid (RESP mode)                   |
+| **Cache**            | Red Hat Data Grid (Hot Rod; REST v2 untuk Python)                   |
 | **Messaging**        | AMQ Broker (AMQP 1.0)                           |
 | **Port**             | 8006                                            |
 | **Responsibilities** | Push notifications, SMS, Email, in-app messages |
@@ -516,7 +516,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                          |
+| **Technology**       | Java 21, Spring Boot 4.1.x                          |
 | **Database**         | PostgreSQL                                          |
 | **Port**             | 8009                                                |
 | **Responsibilities** | Mutual funds, Gold investment, Portfolio management |
@@ -527,7 +527,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                  |
+| **Technology**       | Java 21, Spring Boot 4.1.x                  |
 | **Database**         | PostgreSQL                                  |
 | **Port**             | 8010                                        |
 | **Responsibilities** | Loans, PayLater, Credit scoring integration |
@@ -538,7 +538,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                            |
 | -------------------- | ------------------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x                       |
+| **Technology**       | Java 21, Spring Boot 4.1.x                       |
 | **Database**         | PostgreSQL                                       |
 | **Port**             | 8011                                             |
 | **Responsibilities** | Internal admin dashboard, audit, user management |
@@ -549,7 +549,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                             |
 | -------------------- | ------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                        |
+| **Technology**       | Java 21, Spring Boot 4.1.x                        |
 | **Database**         | PostgreSQL                                        |
 | **Port**             | 8012                                              |
 | **Responsibilities** | Partner integration, API key management, webhooks |
@@ -560,7 +560,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                        |
 | -------------------- | -------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                   |
+| **Technology**       | Java 21, Spring Boot 4.1.x                   |
 | **Database**         | PostgreSQL                                   |
 | **Port**             | 8013                                         |
 | **Responsibilities** | Promo campaigns, vouchers, rewards, cashback |
@@ -571,7 +571,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                          |
 | -------------------- | ---------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                     |
+| **Technology**       | Java 21, Spring Boot 4.1.x                     |
 | **Database**         | PostgreSQL                                     |
 | **Port**             | 8014                                           |
 | **Responsibilities** | Customer support, ticketing, FAQ, chat support |
@@ -582,7 +582,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                |
 | -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Technology**       | Java 21, Spring Boot 4.1.x           |
 | **Database**         | PostgreSQL                           |
 | **Port**             | 8015                                 |
 | **Responsibilities** | PDF E-Statement generation & storage |
@@ -615,7 +615,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                                 |
 | -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                            |
+| **Technology**       | Java 21, Spring Boot 4.1.x                            |
 | **Database**         | PostgreSQL                                            |
 | **Port**             | 8087                                                  |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
@@ -626,7 +626,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                |
 | -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Technology**       | Java 21, Spring Boot 4.1.x           |
 | **Database**         | PostgreSQL                           |
 | **Port**             | 8095                                 |
 | **Responsibilities** | Banners, Promos, Dynamic App Content |
@@ -637,7 +637,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                     |
 | -------------------- | ----------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                |
+| **Technology**       | Java 21, Spring Boot 4.1.x                |
 | **Database**         | PostgreSQL                                |
 | **Port**             | 8096                                      |
 | **Responsibilities** | Currency exchange rates, conversion logic |
@@ -648,7 +648,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                                  |
 | -------------------- | ------------------------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x                             |
+| **Technology**       | Java 21, Spring Boot 4.1.x                             |
 | **Database**         | PostgreSQL                                             |
 | **Port**             | 8098                                                   |
 | **Responsibilities** | Refund processing, dispute resolution, chargeback mgmt |
@@ -659,7 +659,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                        |
 | -------------------- | -------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                   |
+| **Technology**       | Java 21, Spring Boot 4.1.x                   |
 | **Database**         | PostgreSQL                                   |
 | **Port**             | 8100                                         |
 | **Responsibilities** | Partner product registry, catalog management |
@@ -670,7 +670,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Technology**       | Java 21, Spring Boot 4.1.x                      |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8101                                            |
 | **Responsibilities** | External system integration, adapter management |
@@ -831,59 +831,40 @@ C4Dynamic
 
 ### 4.3 Compensating Transactions
 
+Saga orchestration dipakai untuk distributed transaction. Implementasi memakai
+`saga-starter` (bukan Axon): orchestrator mengelola step + compensation dengan
+persistence transaksional dan retry.
+
 ```java
-@Saga
-public class TransferSaga {
+// Pola: extend SagaOrchestrator<T> + daftarkan SagaStep dengan compensation
+@Component
+public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaContext> {
 
-    @StartSaga
-    @SagaEventHandler(associationProperty = "transactionId")
-    public void handle(TransferInitiatedEvent event) {
-        // Step 1: Reserve balance from sender
-        commandGateway.send(new ReserveBalanceCommand(
-            event.getSenderId(),
-            event.getAmount()
+    public TransferSagaOrchestrator(
+            SagaRepository sagaRepository,
+            @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
+            @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
+            PlatformTransactionManager transactionManager,
+            WalletServicePort walletServicePort) {
+        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, transactionManager);
+        initialize("TRANSFER_SAGA", List.of(
+            SagaStep.<TransferSagaContext>withCompensation(
+                "RESERVE_BALANCE", this::reserveBalanceStep, this::compensateReserve
+            ),
+            SagaStep.<TransferSagaContext>withCompensation(
+                "CREDIT_RECIPIENT", this::creditRecipientStep, this::compensateCredit
+            )
         ));
     }
 
-    @SagaEventHandler(associationProperty = "transactionId")
-    public void handle(BalanceReservedEvent event) {
-        // Step 2: Credit to recipient
-        commandGateway.send(new CreditAccountCommand(
-            event.getRecipientId(),
-            event.getAmount()
-        ));
-    }
-
-    @SagaEventHandler(associationProperty = "transactionId")
-    public void handle(BalanceReservationFailedEvent event) {
-        // Compensation: No action needed (nothing committed yet)
-        commandGateway.send(new FailTransactionCommand(
-            event.getTransactionId(),
-            "Insufficient balance"
-        ));
-        SagaLifecycle.end();
-    }
-
-    @SagaEventHandler(associationProperty = "transactionId")
-    public void handle(CreditFailedEvent event) {
-        // Compensation: Release reserved balance
-        commandGateway.send(new ReleaseBalanceCommand(
-            event.getSenderId(),
-            event.getAmount()
-        ));
-    }
-
-    @EndSaga
-    @SagaEventHandler(associationProperty = "transactionId")
-    public void handle(TransferCompletedEvent event) {
-        // Success: Commit the reservation
-        commandGateway.send(new CommitBalanceCommand(
-            event.getSenderId(),
-            event.getAmount()
-        ));
-    }
+    // Step 1: reserve sender balance; compensation: release reservation
+    // Step 2: credit recipient; compensation: reverse credit via ledger reversal
 }
 ```
+
+Compensation untuk data finansial wajib lewat **reversal entry** (immutable
+ledger), bukan DELETE. Contoh produksi: `CashbackSagaOrchestrator` di
+`promotion-service` (backend/promotion-service/.../application/saga/).
 
 ---
 
@@ -912,7 +893,7 @@ C4Container
   }
 
   System_Boundary(caching_layer, "Caching Layer") {
-    ContainerDb(data_grid, "Data Grid", "Red Hat Data Grid (Redis RESP)", "Multi-layer caching")
+    ContainerDb(data_grid, "Data Grid", "Red Hat Data Grid (Hot Rod)", "Multi-layer caching")
   }
 
   System_Boundary(event_streaming, "Event Streaming") {
@@ -924,9 +905,9 @@ C4Container
     ContainerQueue(amq, "AMQ Broker (Artemis)", "AMQP 1.0", "Notification queue")
   }
 
-  Container(account_svc, "Account Service", "Spring Boot 3.4")
-  Container(transaction_svc, "Transaction Service", "Spring Boot 3.4")
-  Container(wallet_svc, "Wallet Service", "Spring Boot 3.4")
+  Container(account_svc, "Account Service", "Spring Boot 4.1")
+  Container(transaction_svc, "Transaction Service", "Spring Boot 4.1")
+  Container(wallet_svc, "Wallet Service", "Spring Boot 4.1")
   Container(kyc_svc, "KYC Service", "Python FastAPI")
   Container(notification_svc, "Notification Service", "Quarkus Native")
   Container(analytics_svc, "Analytics Service", "Python FastAPI")
@@ -967,7 +948,7 @@ C4Dynamic
   Container(write_api, "Command API", "Spring MVC", "Handles POST/PUT/DELETE")
   Container(read_api, "Query API", "Spring MVC", "Handles GET requests")
   ContainerDb(write_db, "Write Model", "PostgreSQL", "Source of truth")
-  ContainerCache(read_cache, "Read Model", "Data Grid (Redis)", "Denormalized view")
+  ContainerCache(read_cache, "Read Model", "Data Grid (Hot Rod)", "Denormalized view")
   Queue(cdc, "CDC Events", "Kafka Connect (Debezium)", "Change data capture")
 
   Rel(user, write_api, "1. POST /v1/accounts", "Command")
@@ -979,38 +960,31 @@ C4Dynamic
   Rel(read_api, read_cache, "7. Read from cache")
 ```
 
-### 5.3 Event Store Schema
+### 5.3 Transactional Outbox
+
+Event publication atomik dengan business transaction. Producer menulis event ke
+tabel outbox dalam transaksi yang sama, relayer mem-publish ke Kafka (format
+CloudEvents 1.0.2, topic `payu.<domain>.<event-type>.v<n>`). Implementasi:
+`backend/shared/outbox-starter/`.
 
 ```sql
--- Event Store for Event Sourcing
-CREATE TABLE event_store (
-    event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    aggregate_id UUID NOT NULL,
+-- Outbox table (per service schema)
+CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     aggregate_type VARCHAR(100) NOT NULL,
+    aggregate_id VARCHAR(100) NOT NULL,
     event_type VARCHAR(100) NOT NULL,
-    event_data JSONB NOT NULL,
-    metadata JSONB,
-    version BIGINT NOT NULL,
+    payload JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',  -- PENDING, PUBLISHED, FAILED
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    CONSTRAINT unique_aggregate_version
-        UNIQUE (aggregate_id, version)
+    published_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_event_store_aggregate
-    ON event_store(aggregate_id, version);
-CREATE INDEX idx_event_store_type
-    ON event_store(event_type, created_at);
-
--- Snapshot store for performance
-CREATE TABLE event_snapshots (
-    aggregate_id UUID PRIMARY KEY,
-    aggregate_type VARCHAR(100) NOT NULL,
-    state JSONB NOT NULL,
-    version BIGINT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+CREATE INDEX idx_outbox_status_created ON outbox_events(status, created_at);
 ```
+
+Immutable ledger: entri finansial tidak pernah di-UPDATE/DELETE; koreksi lewat
+reversal entry (double-entry debit+credit) dengan audit trail.
 
 ### 5.4 Entity Relationship Diagram
 
@@ -1118,7 +1092,7 @@ C4Dynamic
 
   Person(user, "User")
   Container(mobile, "Mobile App", "React Native")
-  Container(auth_svc, "Auth Service", "Spring Boot 3.4")
+  Container(auth_svc, "Auth Service", "Spring Boot 4.1")
   Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24")
   ContainerCache(cache, "Data Grid", "Redis", "Token cache, rate limits")
   ContainerQueue(notification, "Notification Queue", "AMQ Broker", "OTP delivery")
@@ -1404,7 +1378,7 @@ C4Deployment
 
     Deployment_Node(infra_namespace, "Namespace: payu-infrastructure", "OpenShift") {
       ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka KRaft Cluster")
-      ContainerDb(redis_cluster, "Data Grid", "Redis Cluster")
+      ContainerDb(redis_cluster, "Data Grid", "Hot Rod Cluster")
       Container(sso_cluster, "Red Hat SSO", "RHBK v26")
       Container(monitoring, "Monitoring Stack", "Prometheus + Grafana")
       Container(tracing, "Distributed Tracing", "Jaeger")
@@ -1588,7 +1562,7 @@ C4Context
 
   System_Boundary(payu_boundary, "PayU Digital Banking") {
     Container(partner_api, "Partner API", "REST API", "External payment gateway")
-    Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Payment processing")
+    Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Payment processing")
     ContainerQueue(webhook_queue, "Webhook Queue", "AMQ Broker", "Async callbacks")
     ContainerDb(transactions_db, "Transactions DB", "PostgreSQL", "Payment records")
   }
@@ -1833,9 +1807,9 @@ C4Container
 
   System_Boundary(backend, "Backend Services") {
     Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "Rate limiting, routing")
-    Container(account_svc, "Account Service", "Spring Boot 3.4", "User accounts")
-    Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Transactions")
-    Container(partner_svc, "Partner Service", "Spring Boot 3.4", "Partner integration")
+    Container(account_svc, "Account Service", "Spring Boot 4.1", "User accounts")
+    Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Transactions")
+    Container(partner_svc, "Partner Service", "Spring Boot 4.1", "Partner integration")
   }
 
   Rel(customer, mobile_app, "Uses")
