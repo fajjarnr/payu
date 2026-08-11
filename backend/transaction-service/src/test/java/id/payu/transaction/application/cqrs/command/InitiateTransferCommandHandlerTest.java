@@ -23,8 +23,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -115,7 +118,8 @@ class InitiateTransferCommandHandlerTest {
                 null,
                 null,
                 "idem-skn-001",
-                "user-001");
+                "user-001",
+                null);
         when(walletServicePort.reserveBalance(
                 eq(command.senderAccountId()), eq(transactionId.toString()), eq(command.amount().getAmount())))
                 .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
@@ -138,6 +142,198 @@ class InitiateTransferCommandHandlerTest {
     }
 
     @Test
+    void usesBankCodeFromRequestForBiFastTransfer() throws Exception {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr("100000"),
+                "test transfer",
+                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                null,
+                null,
+                "idem-bifast-bankcode-001",
+                "user-001",
+                "002");
+        when(walletServicePort.reserveBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
+                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                        .reservationId("reservation-bifast-002")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        handler.handle(command);
+
+        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.dto.BifastTransferRequest.class);
+        verify(bifastServicePort).initiateTransfer(captured.capture());
+        assertThat(captured.getValue().getBeneficiaryBankCode()).isEqualTo("002");
+    }
+
+    @Test
+    void defaultsToBank014WhenBankCodeAbsent() throws Exception {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr("100000"),
+                "test transfer",
+                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                null,
+                null,
+                "idem-bifast-default-001",
+                "user-001",
+                null);
+        when(walletServicePort.reserveBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
+                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                        .reservationId("reservation-bifast-014")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        handler.handle(command);
+
+        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.dto.BifastTransferRequest.class);
+        verify(bifastServicePort).initiateTransfer(captured.capture());
+        assertThat(captured.getValue().getBeneficiaryBankCode()).isEqualTo("014");
+    }
+
+    @Test
+    void reportsZeroFeeWhenFeeNotCollected() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr("100000"),
+                "test transfer",
+                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                null,
+                null,
+                "idem-bifast-fee-001",
+                "user-001",
+                "014");
+        when(walletServicePort.reserveBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
+                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                        .reservationId("reservation-bifast-fee-001")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.fee()).isEqualTo(java.math.BigDecimal.ZERO);
+    }
+
+    @Test
+    void refundsSenderInsteadOfReleasingWhenInternalTransferCreditFailsAfterCommit() {
+        UUID transactionId = UUID.randomUUID();
+        String recipientAccountNumber = "1234567890";
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                recipientAccountNumber,
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-internal-credit-fail-001",
+                "user-001",
+                null);
+        when(walletServicePort.reserveBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100").getAmount())))
+                .thenReturn(ReserveBalanceResponse.builder()
+                        .reservationId("reservation-internal-credit-fail-001")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+        doThrow(new RuntimeException("recipient wallet not found"))
+                .when(walletServicePort).creditBalance(eq(recipientAccountNumber), eq(transactionId.toString()), eq(Money.idr("100").getAmount()));
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.FAILED.name());
+        verify(walletServicePort).commitBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq("reservation-internal-credit-fail-001"), eq(Money.idr("100").getAmount()));
+        verify(walletServicePort).creditBalance(
+                eq(senderAccountId.toString()), eq(transactionId + ":REFUND"), eq(Money.idr("100").getAmount()));
+        verify(walletServicePort, never()).releaseBalance(any(UUID.class), anyString(), anyString(), any(java.math.BigDecimal.class));
+    }
+
+    @Test
+    void releasesReservationWhenInternalTransferCommitFails() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-internal-commit-fail-001",
+                "user-001",
+                null);
+        when(walletServicePort.reserveBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100").getAmount())))
+                .thenReturn(ReserveBalanceResponse.builder()
+                        .reservationId("reservation-internal-commit-fail-001")
+                        .status("RESERVED")
+                        .build());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+        doThrow(new RuntimeException("commit failed"))
+                .when(walletServicePort).commitBalance(eq(senderAccountId), eq(transactionId.toString()), eq("reservation-internal-commit-fail-001"), eq(Money.idr("100").getAmount()));
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.FAILED.name());
+        verify(walletServicePort).releaseBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq("reservation-internal-commit-fail-001"), eq(Money.idr("100").getAmount()));
+        verify(walletServicePort, never()).creditBalance(eq(senderAccountId.toString()), eq(transactionId + ":REFUND"), any(java.math.BigDecimal.class));
+    }
+
+    @Test
     void persistsRecipientAccountNumberForInternalTransferRefunds() {
         UUID transactionId = UUID.randomUUID();
         String recipientAccountNumber = "1234567890";
@@ -150,7 +346,8 @@ class InitiateTransferCommandHandlerTest {
                 null,
                 null,
                 "idem-internal-refund-001",
-                "user-001");
+                "user-001",
+                null);
         when(walletServicePort.reserveBalance(
                 eq(command.senderAccountId()), eq(transactionId.toString()), eq(command.amount().getAmount())))
                 .thenReturn(ReserveBalanceResponse.builder()

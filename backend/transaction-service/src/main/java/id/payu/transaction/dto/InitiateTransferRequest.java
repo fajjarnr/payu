@@ -25,7 +25,7 @@ public class InitiateTransferRequest {
     public InitiateTransferRequest() {
     }
 
-    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo) {
+    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo, String bankCode) {
         this.senderAccountId = senderAccountId;
         this.recipientAccountNumber = recipientAccountNumber;
         this.amount = amount;
@@ -36,6 +36,7 @@ public class InitiateTransferRequest {
         this.deviceId = deviceId;
         this.idempotencyKey = idempotencyKey;
         this.memo = memo;
+        this.bankCode = bankCode;
     }
 
     public static InitiateTransferRequestBuilder builder() {
@@ -53,6 +54,7 @@ public class InitiateTransferRequest {
         private String deviceId;
         private String idempotencyKey;
         private String memo;
+        private String bankCode;
 
         public InitiateTransferRequestBuilder senderAccountId(UUID senderAccountId) {
             this.senderAccountId = senderAccountId;
@@ -94,9 +96,13 @@ public class InitiateTransferRequest {
             this.memo = memo;
             return this;
         }
+        public InitiateTransferRequestBuilder bankCode(String bankCode) {
+            this.bankCode = bankCode;
+            return this;
+        }
 
         public InitiateTransferRequest build() {
-            return new InitiateTransferRequest(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo);
+            return new InitiateTransferRequest(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo, bankCode);
         }
     }
 
@@ -180,6 +186,14 @@ public class InitiateTransferRequest {
         this.memo = memo;
     }
 
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
+    }
+
 
     @NotNull(message = "Sender account ID is required")
     private UUID senderAccountId;
@@ -219,4 +233,8 @@ public class InitiateTransferRequest {
 
     @Size(max = 140, message = "Memo must not exceed 140 characters")
     private String memo;
+
+    @Size(min = 3, max = 3, message = "Bank code must be exactly 3 digits")
+    @Pattern(regexp = "^[0-9]+$", message = "Bank code must contain only digits")
+    private String bankCode;
 }

@@ -147,7 +147,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 transaction.getId(),
                 transaction.getReferenceNumber(),
                 transaction.getStatus().name(),
-                calculateFee(transaction.getType()),
+                BigDecimal.ZERO,
                 getEstimatedCompletionTime(transaction.getType())
         );
     }
@@ -215,7 +215,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     .amount(command.amount().getAmount())
                     .currency(command.amount().getCurrency().getCurrencyCode())
                     .beneficiaryAccountNumber(command.recipientAccountNumber())
-                    .beneficiaryBankCode("014")
+                    .beneficiaryBankCode(resolveBankCode(command))
                     .beneficiaryAccountName("Beneficiary")
                     .senderAccountNumber(command.senderAccountId().toString())
                     .senderAccountName("Sender")
@@ -258,6 +258,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * BUG-BE-007 fix: Previously, INTERNAL_TRANSFER was left stuck in VALIDATING status.
      */
     private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
+        boolean committed = false;
         try {
             // For internal transfers, commit the reservation immediately
             walletServicePort.commitBalance(
@@ -266,6 +267,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     reservationId,
                     command.amount().getAmount()
             );
+            committed = true;
 
             // Credit the recipient
             walletServicePort.creditBalance(
@@ -282,16 +284,29 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     transaction.getId(), e.getMessage());
 
             try {
-                walletServicePort.releaseBalance(
-                        command.senderAccountId(),
-                        transaction.getId().toString(),
-                        reservationId,
-                        command.amount().getAmount()
-                );
-                log.info("Balance released successfully for transaction: {}", transaction.getId());
+                if (committed) {
+                    // SAGA COMPENSATION after commit: the reservation is gone, so releasing is a no-op
+                    // and the sender's money would be lost. Refund the sender with a deterministic
+                    // reference (suffix :REFUND) so a retry cannot double-credit.
+                    walletServicePort.creditBalance(
+                            command.senderAccountId().toString(),
+                            transaction.getId() + ":REFUND",
+                            command.amount().getAmount()
+                    );
+                } else {
+                    walletServicePort.releaseBalance(
+                            command.senderAccountId(),
+                            transaction.getId().toString(),
+                            reservationId,
+                            command.amount().getAmount()
+                    );
+                }
+                log.info("Balance refunded successfully for transaction: {}", transaction.getId());
             } catch (Exception compensationError) {
-                log.error("Failed to release balance during compensation for transaction: {}. Error: {}",
+                log.error("Failed to refund balance during compensation for transaction: {}. Error: {}",
                         transaction.getId(), compensationError.getMessage());
+                // ponytail: crash window between commit and credit leaves sender debited without
+                // recipient credit; recovery needs a scheduled reconciler (see TODOS CB-015)
             }
 
             transaction.setStatus(TransactionStatus.FAILED);
@@ -314,7 +329,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                         .amount(command.amount().getAmount())
                         .currency(command.amount().getCurrency().getCurrencyCode())
                         .beneficiaryAccountNumber(command.recipientAccountNumber())
-                        .beneficiaryBankCode("014")
+                        .beneficiaryBankCode(resolveBankCode(command))
                         .beneficiaryAccountName("Beneficiary")
                         .senderAccountNumber(command.senderAccountId().toString())
                         .senderAccountName("Sender")
@@ -329,7 +344,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 request.setAmount(command.amount().getAmount());
                 request.setCurrency(command.amount().getCurrency().getCurrencyCode());
                 request.setBeneficiaryAccountNumber(command.recipientAccountNumber());
-                request.setBeneficiaryBankCode("014");
+                request.setBeneficiaryBankCode(resolveBankCode(command));
                 request.setBeneficiaryAccountName("Beneficiary");
                 request.setBeneficiaryBankName("Bank");
                 request.setSenderAccountNumber(command.senderAccountId().toString());
@@ -359,18 +374,12 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             transactionPersistencePort.save(transaction);
         }
     }
-    private String generateReferenceNumber() {
-        return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+    private String resolveBankCode(InitiateTransferCommand command) {
+        return command.bankCode() != null && !command.bankCode().isBlank() ? command.bankCode() : "014";
     }
 
-    private BigDecimal calculateFee(TransactionType type) {
-        return switch (type) {
-            case INTERNAL_TRANSFER -> BigDecimal.ZERO;
-            case BIFAST_TRANSFER -> new BigDecimal("2500");
-            case SKN_TRANSFER -> new BigDecimal("5000");
-            case RTGS_TRANSFER -> new BigDecimal("25000");
-            default -> BigDecimal.ZERO;
-        };
+    private String generateReferenceNumber() {
+        return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
     private String getEstimatedCompletionTime(TransactionType type) {

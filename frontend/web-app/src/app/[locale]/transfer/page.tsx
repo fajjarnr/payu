@@ -34,7 +34,7 @@ const TRANSFER_TYPES: { type: TransferType; label: string; description: string; 
     label: 'BI-FAST',
     description: 'Transfer real-time antar bank nasional',
     icon: Zap,
-    fee: 'Rp 5.000',
+    fee: 'Gratis',
     maxLimit: 'Rp 250.000.000',
     processingTime: 'Seketika'
   },
@@ -43,7 +43,7 @@ const TRANSFER_TYPES: { type: TransferType; label: string; description: string; 
     label: 'SKN',
     description: 'Transfer kliring nasional',
     icon: Truck,
-    fee: 'Rp 2.900',
+    fee: 'Gratis',
     maxLimit: 'Rp 100.000.000',
     processingTime: 'Hari kerja'
   },
@@ -52,7 +52,7 @@ const TRANSFER_TYPES: { type: TransferType; label: string; description: string; 
     label: 'RTGS',
     description: 'Transfer real-time gross settlement',
     icon: Clock,
-    fee: 'Rp 25.000',
+    fee: 'Gratis',
     maxLimit: 'Tidak terbatas',
     processingTime: 'Seketika'
   }

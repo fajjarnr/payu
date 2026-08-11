@@ -58,7 +58,11 @@ public record InitiateTransferCommand(
         String idempotencyKey,
 
         @NotBlank(message = "User ID is required")
-        String userId
+        String userId,
+
+        @Size(min = 3, max = 3, message = "Bank code must be exactly 3 digits")
+        @Pattern(regexp = "^[0-9]+$", message = "Bank code must contain only digits")
+        String bankCode
 ) implements Command<InitiateTransferCommandResult> {
 
     /**
@@ -94,7 +98,8 @@ public record InitiateTransferCommand(
                 request.getTransactionPin(),
                 request.getDeviceId(),
                 request.getIdempotencyKey(),
-                userId
+                userId,
+                request.getBankCode()
         );
     }
 }
