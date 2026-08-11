@@ -1057,10 +1057,10 @@ oc get routes -n payu-dev
 
 ### B. Related Documentation
 
-- [Container Troubleshooting Guide](./CONTAINER_TROUBLESHOOTING.md)
+- [Troubleshooting Guide](../TROUBLESHOOTING.md)
 - [Infrastructure Deployment Guide](./INFRASTRUCTURE_DEPLOYMENT.md)
 - [Kafka Topic Standards](./KAFKA_TOPIC_STANDARDS.md)
-- [Multi-Region Failover Job](../../infrastructure/openshift/multi-region/failover/failover-job.yaml)
+- [Multi-Region Failover Job](../../infrastructure/platform/multi-region/failover/failover-job.yaml)
 
 ### C. DR Scripts Index
 

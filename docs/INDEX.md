@@ -6,7 +6,6 @@ Welcome to the PayU Developer Documentation. This platform provides comprehensiv
 
 - [Developer Onboarding](guides/ONBOARDING.md) - Set up your development environment
 - [API Standards](api/API_STANDARDS.md) - REST API design guidelines
-- [Contributing Guide](../CONTRIBUTING.md) - Git workflow and coding standards
 - [Database & Cache Optimization](guides/DATABASE_CACHE_OPTIMIZATION.md) - Best practices for DB & Redis
 - [Java Container Strategy](guides/JAVA_CONTAINER_STRATEGY.md) - Container configurations
 - [HashiCorp Vault Integration](guides/VAULT.md) - Vault integration & secrets
@@ -22,6 +21,7 @@ Welcome to the PayU Developer Documentation. This platform provides comprehensiv
 - [Service Status](roadmap/SERVICES.md) - Detailed implementation status & test results
 - [Event Catalog](architecture/EVENT_CATALOG.md) - Domain events and Kafka topics
 - [Gateway Architecture](roadmap/GATEWAY_ARCH.md) - Payment gateway design for partners
+- [DevSecOps Architecture](architecture/DEVSECOPS_ARCHITECTURE.md) - Pipeline, namespace strategy, security gates
 
 ### Backend Services (Port-Ordered Registry)
 
@@ -135,4 +135,4 @@ Each service exposes OpenAPI documentation:
 
 ---
 
-*Last Updated: July 2026*
+*Last Updated: August 2026*

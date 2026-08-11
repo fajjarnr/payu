@@ -829,10 +829,10 @@ Is it a state store?
 
 ## References
 
-- [ADR-0005: Kafka as Event Streaming Platform](/docs/adr/0005-kafka-event-streaming.md)
+- [ADR-0005: Kafka as Event Streaming Platform](../adr/0005-kafka-event-streaming.md)
 - [Confluent Schema Registry Documentation](https://docs.confluent.io/platform/current/schema-registry/index.html)
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
-- [PayU Disaster Recovery Plan](/docs/operations/DISASTER_RECOVERY.md)
+- [PayU Disaster Recovery Plan](../operations/DISASTER_RECOVERY.md)
 
 ---
 

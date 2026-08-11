@@ -193,7 +193,6 @@ spec:
 ## Related Runbooks
 - [SLO Availability Breach](./slo-availability.md)
 - [High Error Rate](./high-error-rate.md)
-- [Database Connection Pool Exhaustion](./database-connection-pool.md)
 
 ## Escalation
 1. **Immediate**: Platform Team on-call

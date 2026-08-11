@@ -1,7 +1,7 @@
 # PayU UAT Deployment Runbook
 
 `payu-uat` adalah environment acceptance dengan QA dan Product Owner approval.
-Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
+Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md).
 
 ## Environment contract
 

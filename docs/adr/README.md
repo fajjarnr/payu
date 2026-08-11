@@ -23,6 +23,11 @@ This directory contains the historical record of architectural decisions made fo
 | [0014](0014-api-management-platform.md)         | API Management Platform Selection        | Proposed | 2026-03-02 |
 | [0015](0015-process-automation-rhpam.md)        | Process Automation (RHPAM/Kogito/Drools) | Accepted | 2026-03-11 |
 | [0016](0016-arch-006-phase-a-strategy.md)       | ARCH-006 Phase A: Spring Boot 4.1.0 Platform Migration | Deferred | 2026-06-14 |
+| [0017](0017-infinispan-hotrod-migration.md)     | Native Hot Rod Migration with REST Interoperability    | Accepted | 2026-07-17 |
+| [0018](0018-kyc-hybrid-model.md)                | KYC — Hybrid Model (PayU as KYC Service)               | Accepted | 2026-05-07 |
+| [0019](0019-statement-dual-format.md)           | Statement Format — Dual Output (PDF + JSON/CSV)        | Accepted | 2026-05-07 |
+| [0020](0020-support-centralized.md)             | Support — PayU Handles All (Single-Tenant)             | Accepted | 2026-05-07 |
+| [0021](0021-cms-single-tenant.md)               | CMS — Single-Tenant                                    | Accepted | 2026-05-07 |
 
 ## 🚀 How to Create a New ADR
 

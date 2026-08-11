@@ -1,6 +1,6 @@
 # PayU Development Deployment Runbook
 
-Runbook ini untuk environment integrasi `payu-dev`. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) terlebih dahulu; kontrak teknisnya berasal dari [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
+Runbook ini untuk environment integrasi `payu-dev`. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) terlebih dahulu; kontrak teknisnya berasal dari [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md).
 
 ## Tujuan dan batasan
 

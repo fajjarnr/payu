@@ -1,6 +1,6 @@
-# ADR-001: KYC — Hybrid Model (PayU as KYC Service)
+# ADR-0018: KYC — Hybrid Model (PayU as KYC Service)
 
-**Status**: Decided  
+**Status**: Accepted  
 **Date**: 2026-05-07  
 **Deciders**: PayU Engineering Team
 

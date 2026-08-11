@@ -80,6 +80,4 @@ dps        # podman ps
 
 ## Referensi
 
-- [Podman Migration Guide](docs/operations/PODMAN_MIGRATION_GUIDE.md)
-- [Quadlet README](infrastructure/quadlet/README.md)
-- [Podman Aliases](scripts/README-Podman.md)
+- [Podman Migration Guide](../operations/PODMAN_MIGRATION_GUIDE.md)

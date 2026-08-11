@@ -34,7 +34,7 @@ different environment.
 
 ### Document ownership and source precedence
 
-1. `infrastructure/DEVSECOPS_ARCHITECTURE.md` is the architecture and gate
+1. `architecture/DEVSECOPS_ARCHITECTURE.md` is the architecture and gate
    contract.
 2. This file is the shared bootstrap/dependency/rollback MOP.
 3. The five environment files are the execution and evidence procedures.
@@ -65,8 +65,8 @@ Current state differs from older docs:
 |:---|:---|:---|
 | Namespaces | `infrastructure/foundation/namespaces/` | Creates `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |
 | Operators | `infrastructure/foundation/cluster-operators/` | Installs CNPG, Data Grid, AMQ Streams, AMQ Broker, RHBK, 3scale, GitOps, Pipelines, Vault Secrets, Tempo, Compliance |
-| Database | `infrastructure/platform/data/base/cnpg-*.yaml` | CloudNativePG `payu-database` in `payu-dev`; not Crunchy |
-| Kafka | `infrastructure/platform/data/base/kafka-amqstreams.yaml` | AMQ Streams `payu-kafka` in `payu-dev` |
+| Database | `infrastructure/platform/data/base/cnpg-*.yaml` | Base manifest location; always apply via `data/overlays/<env>` |
+| Kafka | `infrastructure/platform/data/base/kafka-amqstreams.yaml` | Base manifest location; always apply via `data/overlays/<env>` |
 | Cache | `infrastructure/platform/data/base/datagrid.yaml` + environment overlay | Infinispan `payu-cache` (operator-managed); dev uses plain Hot Rod/no endpoint auth, production uses mTLS; cache `payu` (RESP removed — ARCH-007) |
 | AMQ Broker | `infrastructure/platform/amq-broker/base/` | `payu-broker` with CORE, AMQP, and STOMP on `61616` |
 | Identity | `infrastructure/platform/identity/overlays/<env>/` | RHBK `payu-keycloak` in `payu-sso`; verify CR conditions before declaring healthy |
@@ -208,7 +208,7 @@ Render all mandatory roots:
 ```bash
 rtk oc kustomize infrastructure/foundation/namespaces >/tmp/payu-mop/namespaces.yaml
 rtk oc kustomize infrastructure/foundation/cluster-operators >/tmp/payu-mop/operators.yaml
-rtk oc kustomize infrastructure/platform/data/base >/tmp/payu-mop/data.yaml
+rtk oc kustomize infrastructure/platform/data/overlays/dev >/tmp/payu-mop/data.yaml
 rtk oc kustomize infrastructure/platform/messaging/overlays/payu-dev >/tmp/payu-mop/messaging.yaml
 rtk oc kustomize infrastructure/platform/amq-broker/base >/tmp/payu-mop/amq-broker.yaml
 rtk oc kustomize infrastructure/platform/api-management >/tmp/payu-mop/api-management.yaml
@@ -257,7 +257,7 @@ Do not proceed until each required CSV is `Succeeded`.
 ### 3. Deploy Data, Kafka, and Cache
 
 ```bash
-rtk oc apply -k infrastructure/platform/data/base -n payu-dev
+rtk oc apply -k infrastructure/platform/data/overlays/dev -n payu-dev
 rtk oc apply -k infrastructure/platform/messaging/overlays/payu-dev -n payu-dev
 ```
 
@@ -399,7 +399,7 @@ All application workloads and SSO routes use base domain `*.apps.fajjjar.my.id` 
    - Target domain: `apps.fajjjar.my.id`
    - Default certificate secret: `shared-ingress-cert`
 
-3. **AWS Route 53 Alias A-Record Configuration**:
+2. **AWS Route 53 Alias A-Record Configuration**:
    - Hosted Zone: `apps.fajjjar.my.id.` (`hostedZoneID: Z04089013J3OEZ617CSS4`)
    - Target NLB: `router-shared-ingress` LoadBalancer DNS (`HostedZoneId: Z26RNL4JYFTOTI`)
    - Records: Apex `apps.fajjjar.my.id` and Wildcard `*.apps.fajjjar.my.id` Alias A records mapped to `router-shared-ingress` NLB.

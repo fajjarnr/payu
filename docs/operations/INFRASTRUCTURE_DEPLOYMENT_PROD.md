@@ -1,6 +1,6 @@
 # PayU Production Deployment Runbook
 
-`payu` adalah production namespace. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md). Tidak ada langkah di file ini yang memberi izin bypass.
+`payu` adalah production namespace. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md). Tidak ada langkah di file ini yang memberi izin bypass.
 
 ## Release blocked until hard gates pass
 

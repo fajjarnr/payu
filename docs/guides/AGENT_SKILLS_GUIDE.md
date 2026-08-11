@@ -193,7 +193,7 @@ Platform PayU memanfaatkan kapabilitas native dari **Claude Code** untuk menjala
 ## 📜 Golden Rules
 
 1. **Source of Truth**: Selalu edit konfigurasi di folder `.agents/`.
-2. **Agent Focus**: Gunakan agen spesifik untuk tugas yang sesuai (lihat [AGENTS-MAP.md](../.agents/AGENTS-MAP.md)).
+2. **Agent Focus**: Gunakan agen spesifik untuk tugas yang sesuai (lihat [AGENTS-MAP.md](../../.agents/agents/AGENTS-MAP.md)).
 3. **Audit Before Release**: Jangan pernah merge kode tanpa laporan sukses dari `@auditor` dan `@tester`.
 4. **Use Debugging Skill**: Sebelum fix bug, jalankan `@debugging-methodology` untuk root cause analysis.
 

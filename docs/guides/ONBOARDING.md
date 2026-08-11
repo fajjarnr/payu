@@ -211,7 +211,7 @@ Untuk panduan lebih lengkap, lihat **[docs/TROUBLESHOOTING.md](../TROUBLESHOOTIN
 
 1. **[INDEX.md](../INDEX.md)** - Peta navigasi dokumentasi.
 2. **[ARCHITECTURE.md](../architecture/ARCHITECTURE.md)** - Memahami desain sistem.
-3. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Git workflow & branch naming.
+3. **[CONTRIBUTING.md](../../AGENTS.md)** - Git workflow & branch naming.
 4. **[LESSONS.md](./LESSONS.md)** - Pola dan pelajaran teknis masa lalu.
 5. **[AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md)** - Cara bekerja dengan AI Assistant.
 

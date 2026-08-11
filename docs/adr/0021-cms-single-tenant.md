@@ -1,6 +1,6 @@
-# ADR-004: CMS — PayU Only (Single-Tenant)
+# ADR-0021: CMS — PayU Only (Single-Tenant)
 
-**Status**: Decided  
+**Status**: Accepted  
 **Date**: 2026-05-07  
 **Deciders**: PayU Engineering Team
 

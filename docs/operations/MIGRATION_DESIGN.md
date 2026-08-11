@@ -230,7 +230,7 @@ To migrate the persistent datasets and application components reliably, the back
 7. **Application Components Scale-Up**: Re-enable and restore the application components sequentially, starting with the backend dependencies and worker processes (`backend-worker`), search service (`system-searchd`), main developer portal web application (`system-app`), and background queues (`system-sidekiq`).
 
 The detailed Method of Procedure (MOP) step-by-step checklist for migrating Red Hat 3scale API Management (v2.15) can be found in the service-specific MOP file:
-* **[MOP_3SCALE.md](file:///home/ubuntu/payu/docs/operations/MOP_3SCALE.md)**: Manual pre-requisite, migration, and post-migration checklists in standard spreadsheet format.
+* **[MOP_3SCALE.md](MOP_3SCALE.md)**: Manual pre-requisite, migration, and post-migration checklists in standard spreadsheet format.
 
 ### 4.3 RHPAM (Git Repositories & Engine State)
 RHPAM stores project git trees in Business Central and transaction states in KIE databases.

@@ -338,7 +338,7 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 
 ## 14. Technical Architecture Overview
 
-> Detail lengkap tersedia di [ARCHITECTURE.md](./ARCHITECTURE.md)
+> Detail lengkap tersedia di [ARCHITECTURE.md](../architecture/ARCHITECTURE.md)
 
 ### 14.1 Microservices Stack
 
@@ -391,7 +391,7 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 
 ## 15. TokoBapak Integration
 
-PayU akan terintegrasi dengan [TokoBapak](../tokobapak) e-commerce platform sebagai **External Banking Provider**.
+PayU akan terintegrasi dengan TokoBapak e-commerce platform sebagai **External Banking Provider**.
 
 ### 15.1 Integration Pattern
 

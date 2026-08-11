@@ -1,6 +1,6 @@
 # PayU Preprod Deployment Runbook
 
-`payu-preprod` adalah production mirror dan final resilience gate. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
+`payu-preprod` adalah production mirror dan final resilience gate. Baca [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md).
 
 ## Environment contract
 

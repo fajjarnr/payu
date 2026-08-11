@@ -283,8 +283,8 @@ payu-services (ApplicationSet)
 
 **Available Runbooks**:
 
-1. [SLO Availability Breach](/docs/operations/runbooks/slo-availability.md)
-2. [Error Budget Exhaustion](/docs/operations/runbooks/error-budget.md)
+1. [SLO Availability Breach](../operations/runbooks/slo-availability.md)
+2. [Error Budget Exhaustion](../operations/runbooks/error-budget.md)
 
 **Runbook Structure**:
 

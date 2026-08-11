@@ -1,6 +1,6 @@
-# ADR-002: Statement Format — Dual Output (PDF + JSON/CSV)
+# ADR-0019: Statement Format — Dual Output (PDF + JSON/CSV)
 
-**Status**: Decided  
+**Status**: Accepted  
 **Date**: 2026-05-07  
 **Deciders**: PayU Engineering Team
 

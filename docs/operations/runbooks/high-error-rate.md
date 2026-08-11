@@ -201,7 +201,6 @@ spring:
 ## Related Runbooks
 - [Service Degradation](./service-degradation.md)
 - [SLO Availability Breach](./slo-availability.md)
-- [Database Connection Pool Exhaustion](./database-connection-pool.md)
 
 ## Escalation
 1. **Immediate**: Platform Team on-call

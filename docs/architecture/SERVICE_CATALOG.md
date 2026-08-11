@@ -153,7 +153,7 @@
 | **Port** | 8080 (container) |
 | **Responsibilities** | Transaction dispute management, chargebacks |
 | **Owner** | Core Banking Team |
-| **Documentation** | [README.md](../../backend/dispute-service/README.md) |
+| **Documentation** | [README.md](../../backend/dispute-service/) |
 
 ---
 
@@ -166,7 +166,7 @@
 | **Port** | 8080 (container) |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
 | **Owner** | Compliance Team |
-| **Documentation** | [README.md](../../backend/compliance-service/README.md) |
+| **Documentation** | [README.md](../../backend/compliance-service/) |
 
 ---
 
@@ -221,7 +221,7 @@
 | **Port** | 8080 (container) |
 | **Responsibilities** | Customer support, ticketing, FAQ, chat support |
 | **Owner** | Customer Experience Team |
-| **Documentation** | [README.md](../../backend/support-service/README.md) |
+| **Documentation** | [README.md](../../backend/support-service/) |
 
 ---
 
@@ -247,7 +247,7 @@
 | **Port** | 8081 (container) |
 | **Responsibilities** | Centralized OpenAPI Docs & Sandbox |
 | **Owner** | Platform Team |
-| **Documentation** | [README.md](../../backend/api-portal-service/README.md) |
+| **Documentation** | [README.md](../../backend/api-portal-service/) |
 
 ---
 
@@ -311,7 +311,7 @@
 | **Port** | 8080 (container) |
 | **Responsibilities** | Legacy system adapter, batch processing reconciliations |
 | **Owner** | Platform Team |
-| **Documentation** | [README.md](../../backend/integration-service/README.md) |
+| **Documentation** | [README.md](../../backend/integration-service/) |
 
 ---
 
@@ -385,7 +385,7 @@
 | **Technology** | Java 21, Quarkus 3.x |
 | **Port** | 8085 (container) |
 | **Responsibilities** | Virtual Account (VA) payment simulation |
-| **Documentation** | [README.md](../../backend/simulators/va-simulator/README.md) |
+| **Documentation** | [README.md](../../backend/simulators/va-simulator/) |
 
 ---
 
@@ -393,8 +393,8 @@
 
 | Library | Purpose | Documentation |
 |---------|---------|---------------|
-| **security-starter** | PII encryption, Data masking, Audit logging | [README.md](../../backend/shared/security-starter/README.md) |
-| **resilience-starter** | Circuit Breaker, Retry, Bulkhead | [README.md](../../backend/shared/resilience-starter/README.md) |
+| **security-starter** | PII encryption, Data masking, Audit logging | [README.md](../../backend/shared/security-starter/) |
+| **resilience-starter** | Circuit Breaker, Retry, Bulkhead | [README.md](../../backend/shared/resilience-starter/) |
 | **cache-starter** | Multi-layer caching (Redis + Caffeine) | [README.md](../../backend/shared/cache-starter/README.md) |
 
 ---

@@ -1,6 +1,6 @@
-# ADR-003: Support — PayU Handles All (Single-Tenant)
+# ADR-0020: Support — PayU Handles All (Single-Tenant)
 
-**Status**: Decided  
+**Status**: Accepted  
 **Date**: 2026-05-07  
 **Deciders**: PayU Engineering Team
 

@@ -1372,7 +1372,7 @@ T5 VERIFY: HTTP 200 (status=ACTIVE post-unfreeze)
 
 Full chain proven: APIcast (user_key) → backend authrep (provider_key) → gateway-service → wallet-service → Postgres.
 
-> **Caveat**: As of Jun 2026, 3scale is **not yet deployed** to `payu-dev` (namespace does not exist). The above verification was a pilot run from a previous environment. Current `payu-dev` has APIcast stubs ready but not applied. See [READY-074](../../roadmap/TODOS.md) for re-registration steps.
+> **Caveat**: As of Jun 2026, 3scale is **not yet deployed** to `payu-dev` (namespace does not exist). The above verification was a pilot run from a previous environment. Current `payu-dev` has APIcast stubs ready but not applied. See [READY-074](../roadmap/TODOS.md) for re-registration steps.
 
 ---
 

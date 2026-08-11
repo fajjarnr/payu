@@ -156,7 +156,7 @@ Dev loop (2026-07-31 → 2026-08-04): `web-app:1.5.3` deployed; unit 1187 pass; 
 
 ## 🛡️ DEVSECOPS-017 — Production-Ready Architecture Implementation
 
-Success criteria: every mandatory control in `infrastructure/DEVSECOPS_ARCHITECTURE.md`
+Success criteria: every mandatory control in `architecture/DEVSECOPS_ARCHITECTURE.md`
 has repository tests plus live-cluster evidence. A manifest existing in Git is not
 completion evidence.
 

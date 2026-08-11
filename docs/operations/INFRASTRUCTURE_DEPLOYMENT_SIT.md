@@ -1,7 +1,7 @@
 # PayU SIT Deployment Runbook
 
 `payu-sit` adalah system-integration gate setelah `payu-dev`. Kontraknya
-diturunkan dari [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../../infrastructure/DEVSECOPS_ARCHITECTURE.md).
+diturunkan dari [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md).
 
 ## Environment contract
 

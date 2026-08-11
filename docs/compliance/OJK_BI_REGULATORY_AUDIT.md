@@ -345,7 +345,7 @@ public record TransferRequest(
 - 3 Medium-severity (accepted risk with mitigation)
 - 8 Low-severity (documented)
 
-See [PENTEST_REPORT.md](./security/PENTEST_REPORT.md) for full details.
+See [PENTEST_REPORT.md](../security/PENTEST_REPORT.md) for full details.
 
 ---
 
@@ -685,7 +685,7 @@ LAYER 3: MANUAL REVIEW (24 hours)
 | **Full System Restore** | Monthly | Dev | ✅ Active |
 | **Failover Test** | Quarterly | Staging | ✅ Active |
 
-See [DISASTER_RECOVERY.md](./operations/DISASTER_RECOVERY.md) for full procedures.
+See [DISASTER_RECOVERY.md](../operations/DISASTER_RECOVERY.md) for full procedures.
 
 ---
 
@@ -914,7 +914,7 @@ SECURITY RISKS
 
 | Audit Type | Date | Firm | Result | Report |
 |------------|------|------|--------|--------|
-| **Penetration Test** | Jan 2026 | [External Firm] | ✅ Passed (0 Critical, 0 High) | [PENTEST_REPORT.md](./security/PENTEST_REPORT.md) |
+| **Penetration Test** | Jan 2026 | [External Firm] | ✅ Passed (0 Critical, 0 High) | [PENTEST_REPORT.md](../security/PENTEST_REPORT.md) |
 | **PCI DSS Assessment** | Dec 2025 | [QSA Firm] | ✅ Compliant (Level 1) | PCI_DSS_REPORT.pdf |
 | **ISO 27001 Audit** | Nov 2025 | [Certification Body] | ✅ Certified | ISO_27001_CERT.pdf |
 | **OJK Compliance Review** | Jan 2026 | Internal | ✅ Compliant | This document |
@@ -986,10 +986,10 @@ Q2 2026: Production Launch
 
 | Document | Description | Location |
 |----------|-------------|----------|
-| **Architecture Documentation** | System architecture, design decisions | [ARCHITECTURE.md](./architecture/ARCHITECTURE.md) |
-| **Penetration Test Report** | Security testing results | [PENTEST_REPORT.md](./security/PENTEST_REPORT.md) |
-| **Disaster Recovery Plan** | Backup & restore procedures | [DISASTER_RECOVERY.md](./operations/DISASTER_RECOVERY.md) |
-| **Product Requirements** | Product features, requirements | [PRD.md](./product/PRD.md) |
+| **Architecture Documentation** | System architecture, design decisions | [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) |
+| **Penetration Test Report** | Security testing results | [PENTEST_REPORT.md](../security/PENTEST_REPORT.md) |
+| **Disaster Recovery Plan** | Backup & restore procedures | [DISASTER_RECOVERY.md](../operations/DISASTER_RECOVERY.md) |
+| **Product Requirements** | Product features, requirements | [PRD.md](../product/PRD.md) |
 | **Security Policies** | Security standards, procedures | SECURITY.md |
 | **Incident Response Plan** | Security incident handling | INCIDENT_RESPONSE.md |
 | **Data Retention Policy** | Data retention schedules | RETENTION_POLICY.md |
