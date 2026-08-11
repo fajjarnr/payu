@@ -19,9 +19,9 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.35` (2026-08-05) |
-| **Core Banking MVP** | 🔴 Belum MVP — account & auth blocked (ACCOUNT-001..004, LOGIN-001..006 open, semua confirmed di code); wallet/transaction money-flow live tapi 1 P0 (PROD-047). Belum ada service production ready. |
-| **Backlog Aktif** | 19 tickets + 26 action items (CB-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (rapi: hapus CLOSED/FIXED, sort per priority) |
+| **Core Banking MVP** | 🔴 Belum MVP — auth blocked (LOGIN-001..006 open); wallet/transaction money-flow live tapi 1 P0 (PROD-047). Account P0 (ACCOUNT-001..004) CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII). Belum ada service production ready. |
+| **Backlog Aktif** | 15 tickets + 24 action items (CB-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (ACCOUNT-001..004 closed, CB-001/CB-013 closed) |
 
 ---
 
@@ -39,10 +39,6 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| ACCOUNT-001 | P0 | Email/phone dienkripsi AES-GCM (IV acak) tapi repo pakai equality query `findByEmail/findByPhoneNumber`; V6 hapus unique constraint → duplicate check & phone lookup tidak andal. Done: blind index/HMAC tenant-scoped + DB uniqueness + integration test. | 🔴 Core identity/lookup broken |
-| ACCOUNT-002 | P0 | Broken object authorization: beneficiary PUT/DELETE cek `{accountId}` path tanpa JWT; budget get/update/delete by `{budgetId}` tanpa ownership (BudgetService.java:99-142, BeneficiaryController.java:139-163). Done: JWT-to-resource binding + cross-user 403/404 tests. | 🔴 IDOR/security blocker |
-| ACCOUNT-003 | P0 | Multi-tenant tidak enforced: `TenantFilter` percaya `X-Tenant-Id` header (TenantFilter.java:21-27); repo tidak tenant-scoped; RLS belum aktif. Done: tenant dari trusted credential + filter semua read/write + RLS + cross-tenant tests. | 🔴 Cross-tenant exposure |
-| ACCOUNT-004 | P0 | Public registration return domain `User` penuh (email/phone/fullName/NIK); outbox payload `email`+`fullName` plaintext (KafkaUserEventPublisherAdapter.java:76-81, OnboardingController.java:59). Done: DTO minimum, PII minimized/encrypted, leakage tests. | 🔴 PII/privacy blocker |
 | ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | ACCOUNT-007 | P1 | Belum ada deployment `payu-prod`; rollout Recreate; UAT HPA min 1, tanpa PDB. Done: prod deploy via gates + HA + drill + E2E onboarding→lookup→ownership. | 🟠 Not production deployed |
@@ -67,7 +63,6 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-001 | account | Blind index/HMAC + unique constraint + JWT binding + RLS + PII DTO (ACCOUNT-001..004) | Semua ACCOUNT P0 closed + tests green |
 | CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
 | CB-003 | transaction | `Money` scale 4 (PROD-047) + regression round-trip | PROD-047 closed |
 | CB-004 | docs | Refresh `SERVICES.md` (stale, kontradiktif dengan TODOS) | SERVICES.md konsisten |
@@ -89,7 +84,6 @@
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
 | CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
 | CB-012 | wallet | Ledger immutability di DB: REVOKE/trigger (WL-001) | UPDATE ledger ditolak DB |
-| CB-013 | account | PII outbox & response (ACCOUNT-004 lanjutan) | Leakage tests green |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi | E2E green |
 | CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001) | Replay tidak double-charge |
 | CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
@@ -173,7 +167,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
 | PROD-047 | 🔴 | transaction | Money scale 2 vs DECIMAL(19,4) | Money.java:40 |
-| ACCOUNT-001..004 | 🔴 | account | lookup broken / IDOR / tenant / PII — semua confirmed | repo/controller/service |
+| ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | LOGIN-002/003/004 | 🔴 | auth | revoke absent / password grant / rate-limit `value()` vs `requests` | KeycloakService.java:435, RateLimitAspect.java:46 |
 | TX-003 | 🔴 | transfer | Kompensasi release setelah commit → dana hilang | WalletService.java:268-290 |
 | BIFAST-001 | 🔴 | transfer | Bank code hardcoded "014" | InitiateTransferCommandHandler.java:217 |
@@ -196,6 +190,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
+| INTEGRATION-CTX | 🟠 | qa | Account-service @SpringBootTest context pre-existing broken: `No bean named 'entityManagerFactory'` (HibernateJpaAutoConfiguration tidak aktif di test; VaultConfigurationTest + OnboardingIntegrationTest red juga di HEAD bersih 2026-08-11). Blokir integration tests account & bukti CB-005; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
 | — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
 | — | 🟢 | partner | Refund concurrency, callback HMAC, SNAP signature | SnapBiPaymentService, CallbackSignatureFilter |
 

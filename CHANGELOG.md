@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.49] - 2026-08-11
+
+### Added
+
+- **Shared `BlindIndexService` (security-starter, ACCOUNT-001)**: deterministic HMAC-SHA256 blind index over PII encrypted at rest with a random IV (AES-GCM), with key rotation support (`lookupIndexes` covers previous keys, `currentVersion()` for re-index). Promoted from the backoffice-service local copy; bean is conditional on `payu.security.blind-index-key` (set in account and backoffice, absent elsewhere). Backoffice behavior unchanged.
+- **Account blind-index PII lookup (ACCOUNT-001)**: `users.email_hash` / `phone_number_hash` (Flyway V105) with tenant-scoped uniqueness `UNIQUE (tenant_id, email_hash)` / `(tenant_id, phone_number_hash)`; `UserPersistenceAdapter` now queries by hash (email normalized lowercase) instead of equality against ciphertext. Duplicate email rejected per tenant; the same email may exist in another tenant.
+- **Register response DTO (ACCOUNT-004)**: `POST /api/v1/accounts/register` returns `RegisterUserResponse` (userId, externalId, status, kycStatus, createdAt) instead of the full domain `User` — email/phone/fullName/NIK no longer leave the service through the public endpoint. The `UserCreated` outbox payload carries only userId/externalId/createdAt (email/fullName removed from `UserCreatedEvent`).
+- **Tenant from trusted credential (ACCOUNT-003)**: `TenantFilter` derives the tenant from the signed JWT `tenant_id` claim and ignores the client-controlled `X-Tenant-Id` header; anonymous requests default. New `TenantEnforcementAspect` enables the Hibernate `tenantFilter` on every persistence access (previously never enabled, so `tenant_id` never constrained reads). `budgets` gained `tenant_id` (V106). Removed the duplicate local `TenantContext`/`TenantAware` that shadowed the shared security-starter classes.
+
+### Fixed
+
+- **Beneficiary IDOR (ACCOUNT-002)**: beneficiary PUT/DELETE only checked `{accountId}` against the beneficiary row without any JWT binding — any authenticated user could mutate another user's beneficiaries. Both endpoints now bind the principal exactly like GET/POST (403 on mismatch).
+- **Budget ownership (ACCOUNT-002)**: `BudgetService.getBudget/updateBudget/deleteBudget` now require the owning accountId and return the same "not found" result for foreign budgets (no existence oracle).
+
+### Validation
+
+- `security-starter` 56 tests / 0 failures (new `BlindIndexServiceTest` 6/6: determinism, normalization, rotation, weak-key rejection); `backoffice-service` 131 tests / 0 failures after the blind-index move.
+- `account-service` 128 unit tests / 0 failures — new: `BeneficiaryControllerAuthorizationTest` (5, incl. cross-user PUT/DELETE 403), `BudgetOwnershipTest` (4), `TenantFilterTest` (4, header-ignored/claim-derived/cleared), `KafkaUserEventPublisherAdapterTest` (payload has no PII), PII-leak assertions on the register response. 2 pre-existing errors in `VaultConfigurationTest` (also red on clean HEAD).
+- Verified against real PostgreSQL 16 (podman): V105/V106 apply clean; duplicate `(tenant_id, email_hash)` rejected by the DB unique index, same value accepted in another tenant; tenant-filtered query returns only the current tenant's row.
+- Known remaining: account-service `@SpringBootTest` JPA context is broken pre-existing (`No bean named 'entityManagerFactory'`), so the new `BlindIndexAndTenantIsolationIntegrationTest` (Testcontainers) cannot run until that context loads; DB-level PostgreSQL RLS remains defense-in-depth follow-up (same as PARTNER-PROD-006).
+
 ## [1.10.48] - 2026-08-11
 
 ### Added
