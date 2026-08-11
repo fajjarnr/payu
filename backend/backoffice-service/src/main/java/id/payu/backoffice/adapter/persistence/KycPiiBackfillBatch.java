@@ -1,6 +1,7 @@
 package id.payu.backoffice.adapter.persistence;
 
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
+import id.payu.security.crypto.BlindIndexService;
 import id.payu.backoffice.adapter.persistence.repository.KycReviewRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

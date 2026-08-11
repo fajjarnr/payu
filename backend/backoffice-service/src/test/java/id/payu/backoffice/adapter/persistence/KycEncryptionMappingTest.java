@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.security.annotation.Sensitive;
 import id.payu.security.converter.EncryptedStringConverter;
+import id.payu.security.crypto.BlindIndexService;
 import jakarta.persistence.Convert;
 import org.junit.jupiter.api.Test;
 

@@ -4,6 +4,7 @@ import id.payu.backoffice.adapter.persistence.entity.KycReviewEntity;
 import id.payu.backoffice.adapter.persistence.repository.KycReviewRepository;
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.domain.KycStatus;
+import id.payu.security.crypto.BlindIndexService;
 import id.payu.backoffice.domain.port.outbound.KycReviewRepositoryPort;
 import java.util.List;
 import java.util.Optional;

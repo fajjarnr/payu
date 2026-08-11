@@ -3,6 +3,7 @@ package id.payu.security.config;
 // Jasypt integration disabled until compatible version is available
 // import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import id.payu.security.crypto.EncryptionService;
+import id.payu.security.crypto.BlindIndexService;
 import id.payu.security.masking.DataMaskingAspect;
 import id.payu.security.masking.LogbackMaskingFilter;
 import id.payu.security.audit.AuditAspect;
@@ -100,6 +101,17 @@ public class SecurityAutoConfiguration {
         log.info("Encryption not enabled — EncryptedStringConverter will operate in pass-through mode");
         EncryptedStringConverter.setEncryptionDisabled(true);
         return new EncryptedStringConverter();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "payu.security", name = "blind-index-key")
+    public BlindIndexService blindIndexService(Environment environment) {
+        String key = environment.getProperty("payu.security.blind-index-key");
+        String version = environment.getProperty("payu.security.blind-index-key-version");
+        String previousKeys = environment.getProperty("payu.security.blind-index-previous-keys", "");
+        log.info("Initializing BlindIndexService (key version {})", version);
+        return new BlindIndexService(key, version, previousKeys);
     }
 
     @Bean
