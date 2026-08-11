@@ -8,63 +8,20 @@ test.describe('Login Flow', () => {
 
   test('should display login page correctly', async ({ page }) => {
     await expect(page).toHaveTitle(/PayU/);
-    // Use i18n translation text
     await expect(page.getByText('Selamat Datang Kembali')).toBeVisible();
     await expect(page.getByText('Masuk ke dashboard finansial Anda')).toBeVisible();
   });
 
   test('should have branding panel on desktop', async ({ page }) => {
-    // Check for left branding panel (visible on desktop)
     const brandingPanel = page.locator('aside[aria-label="Branding"]');
     await expect(brandingPanel).toBeVisible();
-
-    // Check for branding text
     await expect(page.getByText('Platform Perbankan Digital Masa Depan')).toBeVisible();
   });
 
-  test('should have username and password fields', async ({ page }) => {
-    // Username field with id="username"
-    await expect(page.getByPlaceholder('username123')).toBeVisible();
-    // Password field
-    await expect(page.getByPlaceholder('••••••••')).toBeVisible();
-  });
-
-  test('should have forgot password link', async ({ page }) => {
-    const forgotLink = page.getByText('Lupa password?');
-    await expect(forgotLink).toBeVisible();
-    await expect(forgotLink).toHaveAttribute('href', '/forgot-password');
-  });
-
-  test('should validate required fields', async ({ page }) => {
-    await page.click('button[type="submit"]');
-
-    // Check for validation errors - wait for form validation to complete
-    await page.waitForTimeout(500);
-
-    // Check that we're still on login page (validation failed)
-    await expect(page.getByText('Selamat Datang Kembali')).toBeVisible();
-  });
-
-  test('should allow typing in username field', async ({ page }) => {
-    const usernameInput = page.getByPlaceholder('username123');
-    await usernameInput.fill('testuser');
-    await expect(usernameInput).toHaveValue('testuser');
-  });
-
-  test('should allow typing in password field', async ({ page }) => {
-    const passwordInput = page.getByPlaceholder('••••••••');
-    await passwordInput.fill('password123');
-    await expect(passwordInput).toHaveValue('password123');
-  });
-
-  test('should mask password input', async ({ page }) => {
-    const passwordInput = page.getByPlaceholder('••••••••');
-    await passwordInput.fill('mypassword');
-    await expect(passwordInput).toHaveValue('mypassword');
-
-    // Verify input type is password
-    const inputType = await passwordInput.getAttribute('type');
-    expect(inputType).toBe('password');
+  test('should render the OIDC sign-in button and NO local password form (LOGIN-003)', async ({ page }) => {
+    await expect(page.getByTestId('login-submit-button')).toBeVisible();
+    await expect(page.getByPlaceholder('username123')).toHaveCount(0);
+    await expect(page.getByPlaceholder('••••••••')).toHaveCount(0);
   });
 
   test('should have register link', async ({ page }) => {
@@ -76,88 +33,16 @@ test.describe('Login Flow', () => {
   test('should navigate to registration page', async ({ page }) => {
     await page.click('text=Daftar Sekarang');
     await expect(page).toHaveURL(/\/onboarding/);
-    await expect(page.getByText('Unggah e-KTP')).toBeVisible();
-  });
-
-  test('should show loading state during login', async ({ page }) => {
-    await page.fill('input[placeholder="username123"]', 'testuser');
-    await page.fill('input[placeholder="••••••••"]', 'password123');
-
-    // Set up timeout to catch the loading state
-    const submitPromise = page.click('button[type="submit"]');
-
-    // Check for loading text - use more flexible matching
-    await page.waitForTimeout(100);
-    const loadingText = page.getByText('Masuk...');
-    // Loading may appear briefly, use waitFor with timeout
-    try {
-      await expect(loadingText).toBeVisible({ timeout: 2000 });
-    } catch {
-      // Loading state may pass too quickly in test environment
-    }
-
-    await submitPromise;
-  });
-
-  test('should have proper form labels', async ({ page }) => {
-    await expect(page.getByText('Username')).toBeVisible();
-    // Use exact match to avoid matching 'Lupa password?' link
-    await expect(page.getByText('Password', { exact: true })).toBeVisible();
-  });
-
-  test('should have accessible form controls', async ({ page }) => {
-    const usernameInput = page.getByPlaceholder('username123');
-    const passwordInput = page.getByPlaceholder('••••••••');
-
-    // Check for proper attributes
-    await expect(usernameInput).toBeVisible();
-    await expect(passwordInput).toBeVisible();
-
-    // Check that inputs are focusable
-    await usernameInput.focus();
-    await expect(usernameInput).toBeFocused();
-
-    await passwordInput.focus();
-    await expect(passwordInput).toBeFocused();
-  });
-
-  test('should have proper styling on focus', async ({ page }) => {
-    const usernameInput = page.getByPlaceholder('username123');
-    await usernameInput.focus();
-
-    // Check for ring effect (focus ring)
-    const focusedElement = page.locator(':focus');
-    await expect(focusedElement).toBeVisible();
-  });
-
-  test('should submit form with valid credentials format', async ({ page }) => {
-    await page.fill('input[placeholder="username123"]', 'validuser123');
-    await page.fill('input[placeholder="••••••••"]', 'ValidPass123!');
-
-    // Form should be submittable
-    const submitButton = page.locator('button[type="submit"]');
-    await expect(submitButton).toBeEnabled();
-
-    // Note: Actual login will fail in test environment, but form submission should work
-    await page.click('button[type="submit"]');
-
-    // Wait briefly for any loading state
-    await page.waitForTimeout(500);
   });
 
   test('should be responsive on mobile viewport', async ({ page }) => {
-    // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-
-    // Refresh page with new viewport
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Check that elements are still visible and properly sized
     await expect(page.getByText('Selamat Datang Kembali')).toBeVisible();
-    await expect(page.getByPlaceholder('username123')).toBeVisible();
+    await expect(page.getByTestId('login-submit-button')).toBeVisible();
 
-    // Take screenshot for visual regression
     await page.screenshot({
       path: 'e2e/screenshots/login-mobile.png',
       fullPage: true
@@ -165,15 +50,13 @@ test.describe('Login Flow', () => {
   });
 
   test('should display security features on branding panel', async ({ page }) => {
-    // Check for security features in branding panel
     await expect(page.getByText('Keamanan Tingkat Enterprise')).toBeVisible();
     await expect(page.getByText('Enkripsi End-to-End Standar Militer')).toBeVisible();
     await expect(page.getByText('Monitoring Transaksi Real-time AI')).toBeVisible();
   });
 
-  test('should have "or" divider between form and register link', async ({ page }) => {
-    const orDivider = page.getByText('Atau');
-    await expect(orDivider).toBeVisible();
+  test('should have "or" divider between sign-in and register link', async ({ page }) => {
+    await expect(page.getByText('Atau')).toBeVisible();
   });
 
   test('should have no account text with register link', async ({ page }) => {
@@ -182,64 +65,74 @@ test.describe('Login Flow', () => {
   });
 });
 
-test.describe('Login Flow - Success Path', () => {
-  test.beforeEach(async ({ page }) => {
-    // Mock the BFF login endpoint to return a successful auth response.
-    // The real backend is not available in E2E tests, so we intercept the fetch
-    // to /api/auth/login and return a valid user + set auth cookies.
-    await page.route('**/api/auth/login', async (route) => {
-      const response = await route.fetch();
-      // If the backend responds (e.g., dev env with real gateway), let it through
-      if (response.ok()) return route.continue();
-
-      // Otherwise, return a mock success response matching the BFF shape:
-      // { success: true, data: { user: {...}, expiresIn: ... } }
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: {
-            user: {
-              id: 'e2e-user-001',
-              accountId: 'ACC-E2E-001',
-              username: 'customer1',
-              fullName: 'Customer Satu',
-              email: 'customer1@payu.id',
-              roles: ['CUSTOMER'],
-              kycStatus: 'VERIFIED',
-            },
-            expiresIn: 900,
-          },
-        }),
-        headers: {
-          'Set-Cookie': [
-            'accessToken=mock-e2e-token; Path=/; HttpOnly; SameSite=Strict',
-            'refreshToken=mock-e2e-refresh; Path=/; HttpOnly; SameSite=Strict',
-          ].join(', '),
-        },
-      });
-    });
-  });
-
-  test('should complete successful login journey', async ({ page }) => {
+test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
+  test('sign-in button redirects to the BFF authorize endpoint', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Fill in credentials with valid-looking data (mocked backend)
-    await page.fill('input[placeholder="username123"]', 'customer1');
-    await page.fill('input[placeholder="••••••••"]', 'P@ssw0rd123');
+    // Intercept the Keycloak authorize redirect to stop the flow at the IdP
+    await page.route('**/realms/payu/protocol/openid-connect/auth?**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Keycloak login page</body></html>' }),
+    );
 
-    // Submit form
-    await page.click('button[type="submit"]');
+    await page.click('[data-testid="login-submit-button"]');
 
-    // Wait for redirect to dashboard (the onSuccess handler calls router.push('/dashboard'))
-    await page.waitForURL('**/dashboard**', { timeout: 15000 });
+    // The BFF must redirect to Keycloak's authorization endpoint
+    await page.waitForURL('**/realms/payu/protocol/openid-connect/auth?**', { timeout: 10000 });
+    const url = new URL(page.url());
+    expect(url.searchParams.get('client_id')).toBe('payu-web-app');
+    expect(url.searchParams.get('response_type')).toBe('code');
+    expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+    expect(url.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(url.searchParams.get('redirect_uri')).toContain('/api/auth/callback');
+  });
 
-    // Verify we landed on the dashboard
-    await expect(page).toHaveURL(/\/dashboard/);
-    // Dashboard should show the main navigation or time-based greeting
-    await expect(page.getByText(/Selamat (Datang|Pagi|Siang|Sore|Malam)/)).toBeVisible({ timeout: 10000 });
+  test('callback with mismatched CSRF state never reaches the gateway', async ({ page }) => {
+    await page.route('**/api/v1/auth/callback', () => { throw new Error('must not be called'); });
+
+    // Drive the callback URL directly with a state that does not match the cookie
+    await page.goto('/login');
+    await page.evaluate(() => {
+      document.cookie = 'oidc_state=expected-state-1234567890; path=/';
+      document.cookie = 'pkce_verifier=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789; path=/';
+    });
+    await page.goto('/api/auth/callback?code=x&state=attacker-state-123456789');
+    await page.waitForURL('**/login?error=invalid_state**', { timeout: 10000 });
+  });
+
+  test('real login lands on the dashboard with httpOnly cookies (LOGIN-001)', async ({ page }) => {
+    // Requires the local podman stack (Keycloak on :8099 with the seeded realm).
+    // The seeded users carry a temporary password, so the first login shows
+    // Keycloak's "update password" page; update it and continue.
+    const newPassword = 'Dev-customer1-new-2026';
+    await page.goto('/login');
+    await page.click('[data-testid="login-submit-button"]');
+    await page.waitForURL('**/realms/payu/protocol/openid-connect/auth?**', { timeout: 15000 });
+
+    if (await page.getByRole('button', { name: 'Sign In' }).isVisible().catch(() => false)) {
+      await page.getByRole('textbox', { name: 'Username or email' }).fill('customer1');
+      await page.getByRole('textbox', { name: 'Password' }).fill('Dev-customer1-change-me');
+      await page.getByRole('button', { name: 'Sign In' }).click();
+    }
+
+    // Handle the temporary-password update page if shown (fresh realm import).
+    const updatePassword = page.getByText(/Update Password|Perbarui Password/i);
+    if (await updatePassword.isVisible().catch(() => false)) {
+      await page.locator('#new-password').fill(newPassword);
+      await page.locator('#confirm-password').fill(newPassword);
+      await page.getByRole('button', { name: /Submit|Kirim/i }).click();
+    }
+
+    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    const cookies = await page.context().cookies();
+    const accessCookie = cookies.find((c) => c.name === 'accessToken');
+    expect(accessCookie).toBeDefined();
+    expect(accessCookie?.httpOnly).toBe(true);
+    expect(accessCookie?.sameSite).toBe('Strict');
+    const refreshCookie = cookies.find((c) => c.name === 'refreshToken');
+    expect(refreshCookie?.httpOnly).toBe(true);
+    // The PKCE verifier must be consumed (deleted)
+    expect(cookies.find((c) => c.name === 'pkce_verifier')).toBeUndefined();
   });
 });
 
@@ -248,7 +141,6 @@ test.describe('Login Flow - Accessibility', () => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // h1 is the branding panel title, h2 is the form title
     const h1 = page.locator('h1');
     await expect(h1).toBeVisible();
     await expect(h1).toContainText('Platform Perbankan');
@@ -258,42 +150,17 @@ test.describe('Login Flow - Accessibility', () => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Find form inputs by role — more robust than :focus + Tab from cold state
-    const usernameInput = page.getByPlaceholder('username123');
-    const passwordInput = page.getByPlaceholder('••••••••');
-    const forgotPasswordLink = page.getByTestId('forgot-password-link');
+    const signInButton = page.getByTestId('login-submit-button');
+    const registerLink = page.getByTestId('register-link');
 
-    // Verify all interactive elements are in the DOM and focusable
-    await expect(usernameInput).toBeVisible();
-    await expect(passwordInput).toBeVisible();
-    await expect(forgotPasswordLink).toBeVisible();
+    await expect(signInButton).toBeVisible();
+    await expect(registerLink).toBeVisible();
 
-    // Tab sequence: username → forgot-password-link → password
-    await usernameInput.focus();
-    await expect(usernameInput).toBeFocused();
+    await signInButton.focus();
+    await expect(signInButton).toBeFocused();
 
     await page.keyboard.press('Tab');
     await page.waitForTimeout(150);
-    await expect(forgotPasswordLink).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    await page.waitForTimeout(150);
-    await expect(passwordInput).toBeFocused();
-  });
-
-  test('should submit form with Enter key', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    await page.fill('input[placeholder="username123"]', 'testuser');
-    await page.fill('input[placeholder="••••••••"]', 'password123');
-
-    // Press Enter on password field
-    await page.keyboard.press('Enter');
-
-    // Form should submit - check for either navigation or loading state
-    await page.waitForTimeout(1000);
-    const currentURL = page.url();
-    expect(currentURL).toBeTruthy();
+    await expect(registerLink).toBeFocused();
   });
 });

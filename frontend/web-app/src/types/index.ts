@@ -16,13 +16,6 @@ export const registerUserSchema = z.object({
 
 export type RegisterUserRequest = z.infer<typeof registerUserSchema>;
 
-export const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-export type LoginRequest = z.infer<typeof loginSchema>;
-
 export type KycStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
 
 export interface User {

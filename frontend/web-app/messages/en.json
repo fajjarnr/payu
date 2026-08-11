@@ -296,8 +296,9 @@
     "welcomeBack": "Welcome Back",
     "subtitle": "Sign in to your financial dashboard",
     "forgotPassword": "Forgot password?",
-    "loginButton": "Sign In",
+    "loginButton": "Sign In with PayU",
     "loggingIn": "Signing in...",
+    "oidcNote": "You will be redirected to our secure identity provider. Your credentials never reach PayU.",
     "or": "Or",
     "branding": {
       "tag": "Enterprise Grade Security",

@@ -171,3 +171,4 @@ infrastructure/foundation/hostedcluster/
 
 graphify-out/charts/
 graphify-out/
+.playwright-mcp/

@@ -1,31 +1,26 @@
 package id.payu.auth.adapter.security;
 
-import id.payu.auth.application.service.RiskEvaluationService;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
-import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginResponse;
-import id.payu.cache.service.CacheService;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-
-import jakarta.ws.rs.core.Response;
-import java.time.Duration;
-
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+
+import jakarta.ws.rs.core.Response;
 
 @Component
 @RequiredArgsConstructor
@@ -34,20 +29,8 @@ public class KeycloakService {
 
     private final Keycloak keycloakAdmin;
     private final KeycloakConfig keycloakConfig;
-    private final WebClient.Builder webClientBuilder;
-    private final RiskEvaluationService riskEvaluationService;
     private final ObjectMapper objectMapper;
-    private final CacheService cacheService;
     private final org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-
-    private static final String FAILED_ATTEMPTS_KEY_PREFIX = "auth:failedAttempts:";
-    // BUG-SECURITY-008 FIX: TTL now derived from lockoutDurationMinutes (configurable) instead of hardcoded 15min
-
-    @Value("${payu.security.max-login-attempts:5}")
-    private int maxLoginAttempts;
-
-    @Value("${payu.security.lockout-duration-minutes:15}")
-    private int lockoutDurationMinutes;
 
     @Value("${payu.security.password-policy.min-length:8}")
     private int passwordMinLength;
@@ -64,176 +47,36 @@ public class KeycloakService {
     @Value("${payu.security.password-policy.require-special-char:true}")
     private boolean requireSpecialChar;
 
-    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "rateLimitFallback")
-    public Mono<LoginResponse> login(String username, String password) {
-        if (isAccountLocked(username)) {
-            log.warn("Login attempt for locked account: {}", maskUsername(username));
-            return Mono.error(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
-        }
-
-        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
-
-        WebClient webClient = webClientBuilder
-                .baseUrl(tokenEndpoint)
-                .build();
-
-        return webClient.post()
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(jsonResponse -> {
-                    try {
-                        log.info("Keycloak token obtained successfully for user: {}", maskUsername(username));
-                        JsonNode root = objectMapper.readTree(jsonResponse);
-                        String accessToken = root.get("access_token").asText();
-                        String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
-                        long expiresIn = root.get("expires_in").asLong();
-                        String tokenType = root.get("token_type").asText();
-                        return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
-                    } catch (Exception e) {
-                        log.error("Failed to deserialize Keycloak response for user {}: {}",
-                                username, e.getMessage(), e);
-                        throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
-                    }
-                })
-                .doOnSuccess(response -> {
-                    clearFailedAttempts(username);
-                    log.info("Successful login for user: {}", maskUsername(username));
-                })
-                .doOnError(error -> {
-                    recordFailedAttemptInternal(username);
-                    log.error("Login failed for user {}: {}", maskUsername(username), error.getMessage(), error);
-                })
-                .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed: " + error.getClass().getSimpleName() + " - " + error.getMessage()));
-    }
-
-    public Mono<Boolean> validateCredentials(String username, String password) {
-        if (isAccountLocked(username)) {
-            return Mono.just(false);
-        }
-
-        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
-
-        WebClient webClient = webClientBuilder
-                .baseUrl(tokenEndpoint)
-                .build();
-
-        return webClient.post()
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(response -> true)
-                .onErrorResume(error -> {
-                    recordFailedAttemptInternal(username);
-                    return Mono.just(false);
-                });
-    }
-
-    public Mono<LoginResponse> refreshToken(String refreshToken) {
-        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
-
-        WebClient webClient = webClientBuilder
-                .baseUrl(tokenEndpoint)
-                .build();
-
-        return webClient.post()
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(buildRefreshForm(refreshToken)))
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(jsonResponse -> {
-                    try {
-                        JsonNode root = objectMapper.readTree(jsonResponse);
-                        String accessToken = root.get("access_token").asText();
-                        String newRefreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
-                        long expiresIn = root.get("expires_in").asLong();
-                        String tokenType = root.get("token_type").asText();
-                        return new LoginResponse(accessToken, newRefreshToken, expiresIn, tokenType);
-                    } catch (Exception e) {
-                        log.error("Failed to deserialize refresh token response: {}",
-                                e.getMessage(), e);
-                        throw new IllegalArgumentException("Failed to parse refresh response: " + e.getMessage(), e);
-                    }
-                })
-                .doOnSuccess(response -> log.info("Token refreshed successfully"))
-                .doOnError(error -> log.error("Token refresh failed: {}", error.getMessage()))
-                .onErrorMap(error -> new IllegalArgumentException("Failed to refresh token"));
-    }
-
-    public Mono<LoginResponse> rateLimitFallback(String username, String password, Throwable t) {
-        log.warn("Rate limit exceeded for login attempts");
-        return Mono.error(new IllegalArgumentException("Too many login attempts. Please try again later."));
-    }
-
-
-
     /**
-     * Blocking version of validateCredentials for use in servlet (non-reactive) contexts.
-     * This method blocks the thread until the validation completes.
+     * LOGIN-003: exchange an OIDC authorization code (PKCE) at the Keycloak
+     * token endpoint with the confidential web client (payu-web-app). The
+     * browser never sends credentials to this service — Keycloak's
+     * authorization endpoint authenticated the user and returned the code.
      *
-     * @param username the username
-     * @param password the password
-     * @return true if credentials are valid, false otherwise
+     * @param code         the authorization code from the OIDC callback
+     * @param codeVerifier the PKCE code_verifier held by the BFF
+     * @param redirectUri  the exact redirect_uri used in the authorize request
+     * @return token response
+     * @throws IllegalArgumentException when Keycloak rejects the code (invalid/expired)
+     * @throws ResourceAccessException  when the identity provider is unreachable
      */
-    public Boolean validateCredentialsBlocking(String username, String password) {
-        if (isAccountLocked(username)) {
-            return false;
-        }
-
+    public LoginResponse exchangeAuthorizationCode(String code, String codeVerifier, String redirectUri) {
         String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
                 keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
 
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
-        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
-                new org.springframework.http.HttpEntity<>(buildLoginForm(username, password), headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "authorization_code");
+        form.add("client_id", keycloakConfig.getWebClientId());
+        form.add("client_secret", keycloakConfig.getWebClientSecret());
+        form.add("code", code);
+        form.add("code_verifier", codeVerifier);
+        form.add("redirect_uri", redirectUri);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 
         try {
-            org.springframework.http.ResponseEntity<String> response = restTemplate
-                    .postForEntity(tokenEndpoint, request, String.class);
-            return response.getStatusCode().is2xxSuccessful();
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
-            recordFailedAttemptInternal(username);
-            return false;
-        } catch (Exception e) {
-            log.error("Error validating credentials synchronously", e);
-            recordFailedAttemptInternal(username);
-            return false;
-        }
-    }
-
-    /**
-     * Blocking version of login for use in servlet (non-reactive) contexts.
-     * This method blocks the thread until the login completes.
-     *
-     * @param username the username
-     * @param password the password
-     * @return LoginResponse containing access tokens
-     * @throws IllegalArgumentException if login fails
-     */
-    @RateLimiter(name = "loginRateLimiter")
-    public LoginResponse loginBlocking(String username, String password) {
-        if (isAccountLocked(username)) {
-            log.warn("Login attempt for locked account: {}", maskUsername(username));
-            throw new IllegalArgumentException("Account temporarily locked due to too many failed attempts");
-        }
-
-        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
-
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
-        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
-                new org.springframework.http.HttpEntity<>(buildLoginForm(username, password), headers);
-
-        try {
-            org.springframework.http.ResponseEntity<String> response = restTemplate
-                    .postForEntity(tokenEndpoint, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, request, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
             String accessToken = root.get("access_token").asText();
@@ -241,20 +84,25 @@ public class KeycloakService {
             long expiresIn = root.get("expires_in").asLong();
             String tokenType = root.get("token_type").asText();
 
-            clearFailedAttempts(username);
-            log.info("Successful login for user: {}", maskUsername(username));
+            log.info("OIDC authorization code exchanged successfully");
             return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
+        } catch (HttpClientErrorException e) {
+            log.warn("Authorization code exchange rejected by Keycloak: {}", e.getStatusCode());
+            throw new IllegalArgumentException("Invalid or expired authorization code", e);
+        } catch (ResourceAccessException e) {
+            log.error("Keycloak unreachable during code exchange: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            recordFailedAttemptInternal(username);
-            log.error("Login failed for user {}: {}", maskUsername(username), e.getMessage());
-            throw new IllegalArgumentException("Invalid credentials or login failed: " + e.getMessage());
+            log.error("Failed to exchange authorization code: {}", e.getMessage());
+            throw new IllegalArgumentException("Failed to exchange authorization code", e);
         }
     }
 
     /**
      * Revokes a session at Keycloak (LOGIN-002). The refresh token identifies
      * the session; Keycloak's end_session endpoint revokes it server-side so a
-     * subsequent refresh with the same token is rejected.
+     * subsequent refresh with the same token is rejected. Uses the web client
+     * because the session was issued through the OIDC authorization-code flow.
      *
      * @param refreshToken the refresh token to revoke
      * @throws IllegalArgumentException if the token cannot be parsed or is rejected
@@ -266,36 +114,33 @@ public class KeycloakService {
         String endSessionEndpoint = String.format("%s/realms/%s/protocol/openid-connect/logout",
                 keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
 
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
-        org.springframework.util.LinkedMultiValueMap<String, String> form = new org.springframework.util.LinkedMultiValueMap<>();
-        form.add("client_id", keycloakConfig.getClientId());
-        if (keycloakConfig.getClientSecret() != null && !keycloakConfig.getClientSecret().isBlank()) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("client_id", keycloakConfig.getWebClientId());
+        if (keycloakConfig.getWebClientSecret() != null && !keycloakConfig.getWebClientSecret().isBlank()) {
             // Confidential client: Keycloak's end_session requires client
             // authentication (id_token_hint or client secret) to revoke.
-            form.add("client_secret", keycloakConfig.getClientSecret());
+            form.add("client_secret", keycloakConfig.getWebClientSecret());
         }
         form.add("refresh_token", refreshToken);
-        org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, String>> request =
-                new org.springframework.http.HttpEntity<>(form, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 
         try {
-            org.springframework.http.ResponseEntity<String> response = restTemplate
-                    .postForEntity(endSessionEndpoint, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(endSessionEndpoint, request, String.class);
             log.info("Keycloak session revocation returned status: {}", response.getStatusCode());
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
+        } catch (HttpClientErrorException e) {
             log.warn("Session revocation rejected by Keycloak: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid refresh token", e);
         } catch (Exception e) {
             log.error("Session revocation failed: {}", e.getMessage());
-            throw new org.springframework.web.client.ResourceAccessException(
-                    "Keycloak unreachable during logout: " + e.getMessage());
+            throw new ResourceAccessException("Keycloak unreachable during logout: " + e.getMessage());
         }
     }
 
     /**
-     * Blocking version of refreshToken for use in servlet (non-reactive) contexts.
-     * This method blocks the thread until the token refresh completes.
+     * Blocking version of refresh for the web session (BFF refresh endpoint).
+     * Uses the web client because the refresh token was issued to it.
      *
      * @param refreshToken the refresh token
      * @return LoginResponse containing new access tokens
@@ -305,14 +150,13 @@ public class KeycloakService {
         String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
                 keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
 
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
-        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
-                new org.springframework.http.HttpEntity<>(buildRefreshForm(refreshToken), headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(buildRefreshForm(refreshToken), headers);
 
         try {
-            org.springframework.http.ResponseEntity<String> response = restTemplate
-                    .postForEntity(tokenEndpoint, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, request, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
             String accessToken = root.get("access_token").asText();
@@ -326,72 +170,6 @@ public class KeycloakService {
             log.error("Token refresh failed (blocking): {}", e.getMessage());
             throw new IllegalArgumentException("Failed to parse refresh response or server error: " + e.getMessage(), e);
         }
-    }
-
-    private Mono<LoginResponse> loginInternal(String username, String password) {
-        if (isAccountLocked(username)) {
-            log.warn("Login attempt for locked account: {}", username);
-            return Mono.error(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
-        }
-
-        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
-
-        WebClient webClient = webClientBuilder
-                .baseUrl(tokenEndpoint)
-                .build();
-
-        return webClient.post()
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(jsonResponse -> {
-                    try {
-                        JsonNode root = objectMapper.readTree(jsonResponse);
-                        String accessToken = root.get("access_token").asText();
-                        String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
-                        long expiresIn = root.get("expires_in").asLong();
-                        String tokenType = root.get("token_type").asText();
-                        return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
-                    } catch (Exception e) {
-                        log.error("Failed to deserialize Keycloak response for user {}: {}",
-                                username, e.getMessage(), e);
-                        throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
-                    }
-                })
-                .doOnSuccess(response -> {
-                    clearFailedAttempts(username);
-                    log.info("Successful login for user: {}", maskUsername(username));
-                })
-                .doOnError(error -> {
-                    recordFailedAttemptInternal(username);
-                    log.error("Login failed for user {}: {}", maskUsername(username), error.getMessage());
-                })
-                .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed"));
-    }
-
-    // BUG-SECURITY-009 FIX: Use synchronized block on interned key to prevent race condition
-    private void recordFailedAttemptInternal(String username) {
-        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
-        Duration lockoutTtl = Duration.ofMinutes(lockoutDurationMinutes);
-        synchronized (key.intern()) {
-            FailedAttempt attempt = cacheService.get(key, FailedAttempt.class,
-                    () -> new FailedAttempt(0, 0L));
-
-            if (attempt == null) {
-                attempt = new FailedAttempt(0, 0L);
-            }
-
-            attempt.increment();
-            if (attempt.getCount() >= maxLoginAttempts) {
-                attempt.setLockUntil(System.currentTimeMillis() + lockoutTtl.toMillis());
-                log.warn("Account locked: {} until {}", maskUsername(username), attempt.getLockUntil());
-            }
-            // BUG-SECURITY-008 FIX: use lockoutTtl derived from config instead of hardcoded 15min
-            cacheService.put(key, attempt, lockoutTtl);
-        }
-        riskEvaluationService.recordFailedAttempt(username);
     }
 
     public String createUser(String username, String email, String password, String fullName) {
@@ -431,22 +209,6 @@ public class KeycloakService {
         return userId;
     }
 
-    private boolean isAccountLocked(String username) {
-        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
-        FailedAttempt attempt = cacheService.get(key, FailedAttempt.class);
-        if (attempt == null) {
-            return false;
-        }
-        return attempt.getCount() >= maxLoginAttempts &&
-                System.currentTimeMillis() < attempt.getLockUntil();
-    }
-
-    private void clearFailedAttempts(String username) {
-        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
-        cacheService.invalidate(key);
-        riskEvaluationService.clearFailedAttempts(username);
-    }
-
     private void validatePassword(String password) {
         if (password == null || password.length() < passwordMinLength) {
             throw new IllegalArgumentException("Password must be at least " + passwordMinLength + " characters long");
@@ -465,63 +227,13 @@ public class KeycloakService {
         }
     }
 
-    private MultiValueMap<String, String> buildLoginForm(String username, String password) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("grant_type", "password");
-        form.add("client_id", keycloakConfig.getClientId());
-        form.add("client_secret", keycloakConfig.getClientSecret());
-        form.add("username", username);
-        form.add("password", password);
-        return form;
-    }
-
     private MultiValueMap<String, String> buildRefreshForm(String refreshToken) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "refresh_token");
-        form.add("client_id", keycloakConfig.getClientId());
-        form.add("client_secret", keycloakConfig.getClientSecret());
+        form.add("client_id", keycloakConfig.getWebClientId());
+        form.add("client_secret", keycloakConfig.getWebClientSecret());
         form.add("refresh_token", refreshToken);
         return form;
-    }
-
-    /**
-     * Serializable class for storing failed login attempts in Redis.
-     * Must be public and have a default constructor for JSON serialization.
-     */
-    public static class FailedAttempt {
-        private int count;
-        private long lockUntil;
-
-        // Default constructor for JSON deserialization
-        public FailedAttempt() {
-            this.count = 0;
-            this.lockUntil = 0L;
-        }
-
-        public FailedAttempt(int count, long lockUntil) {
-            this.count = count;
-            this.lockUntil = lockUntil;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        public void setCount(int count) {
-            this.count = count;
-        }
-
-        public void increment() {
-            this.count++;
-        }
-
-        public long getLockUntil() {
-            return lockUntil;
-        }
-
-        public void setLockUntil(long lockUntil) {
-            this.lockUntil = lockUntil;
-        }
     }
 
     /**

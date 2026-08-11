@@ -1,20 +1,12 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, LoginRequest } from '@/types';
 import { useSearchParams } from 'next/navigation';
-import { Link, useRouter } from '@/lib/navigation';
+import { Link } from '@/lib/navigation';
 import Image from 'next/image';
-import { useAuthStore } from '@/stores';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { CheckCircle2, ShieldCheck, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, ArrowRight, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Suspense, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { Suspense, useEffect } from 'react';
 
 /**
  * Page wrapper — provides Suspense boundary required by useSearchParams().
@@ -37,10 +29,6 @@ function LoginSkeleton() {
         <div className="w-full max-w-[420px] space-y-8">
           <div className="h-10 w-48 bg-muted rounded-xl" />
           <div className="h-5 w-64 bg-muted/60 rounded-xl" />
-          <div className="space-y-4">
-            <div className="h-12 bg-muted/30 rounded-lg" />
-            <div className="h-12 bg-muted/30 rounded-lg" />
-          </div>
           <div className="h-12 bg-emerald-800/50 rounded-lg" />
         </div>
       </div>
@@ -48,69 +36,15 @@ function LoginSkeleton() {
   );
 }
 
+/**
+ * LOGIN-003: the browser is redirected to Keycloak's own login page through
+ * the BFF OIDC authorize endpoint (authorization-code + PKCE). Credentials
+ * never touch the web-app or auth-service — Keycloak authenticates the user.
+ */
 function LoginForm() {
   const t = useTranslations('auth');
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
-
-  // Read callbackUrl set by middleware when redirecting unauthenticated users.
-  // Sanitize: only allow relative paths to prevent open-redirect attacks.
-  const [showPassword, setShowPassword] = useState(false);
-
-  const rawCallback = searchParams.get('callbackUrl') || '/dashboard';
-  const callbackUrl = rawCallback.startsWith('/') && !rawCallback.startsWith('//') ? rawCallback : '/dashboard';
-
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
-    resolver: zodResolver(loginSchema)
-  });
-
-  const mutation = useMutation({
-    mutationFn: async (data: LoginRequest) => {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch((e) => {
-          console.error('[LoginPage] Failed to parse login error response:', e);
-          return { message: 'Login failed' };
-        });
-        throw new Error(err.message || t('loginFailed'));
-      }
-      return res.json();
-    },
-    onSuccess: (response) => {
-      const user = response.data?.user;
-      
-      if (response.data?.mfa_required) {
-        toast.warning(response.data.message || t('mfaRequired'));
-        return;
-      }
-      
-      if (user) {
-        setAuth(user, user.accountId || user.id);
-        toast.success(t('loginSuccess') || 'Login successful!');
-        // Use locale-aware router for navigation (BUG-I18N-002)
-        // Fallback: if next-intl router.push fails (e.g., SSR mismatch), use window.location
-        try {
-          router.push(callbackUrl);
-        } catch (err) {
-          console.error('[LoginPage] Router push failed, falling back to window.location:', err);
-          window.location.href = callbackUrl;
-        }
-      } else {
-        toast.error(t('invalidResponse'));
-      }
-    },
-    onError: (error) => {
-      console.error('Login failed:', error);
-      const msg = error instanceof Error ? error.message : t('loginFailed');
-      toast.error(msg);
-    },
-  });
+  const error = searchParams.get('error');
 
   useEffect(() => {
     document.title = `${t('loginButton')} | PayU Digital Banking`;
@@ -123,7 +57,7 @@ function LoginForm() {
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-bank-green/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
-        
+
         {/* Pattern Overlay */}
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" aria-hidden="true" />
 
@@ -167,7 +101,7 @@ function LoginForm() {
         </div>
       </aside>
 
-      {/* Right Panel - Form */}
+      {/* Right Panel - Sign in */}
       <main className="flex-1 flex items-center justify-center p-8 bg-background relative" aria-labelledby="login-title">
         <div className="w-full max-w-[420px] space-y-8">
             <div className="text-center lg:text-left space-y-2">
@@ -175,69 +109,26 @@ function LoginForm() {
                 <p className="text-muted-foreground">{t('subtitle')}</p>
             </div>
 
-            <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="username">Username</Label>
-                        <Input
-                            id="username"
-                            data-testid="username-input"
-                            placeholder="username123"
-                            {...register('username')}
-                            className="h-12 bg-muted/30"
-                            disabled={mutation.isPending}
-                            aria-invalid={!!errors.username}
-                        />
-                         {errors.username && <p className="text-red-500 text-xs font-medium" role="alert">{errors.username.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="password">Password</Label>
-                            <Link href="/forgot-password" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                                {t('forgotPassword')}
-                            </Link>
-                        </div>
-                        <div className="relative">
-                            <Input
-                                id="password"
-                                data-testid="password-input"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
-                                {...register('password')}
-                                className="h-12 bg-muted/30 pr-12"
-                                disabled={mutation.isPending}
-                                aria-invalid={!!errors.password}
-                            />
-                            <button
-                                type="button"
-                                data-testid="password-toggle"
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
-                                onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                disabled={mutation.isPending}
-                            >
-                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
-                        </div>
-                        {errors.password && <p className="text-red-500 text-xs font-medium" role="alert">{errors.password.message}</p>}
-                    </div>
-                </div>
+            {error && (
+              <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive" role="alert" data-testid="login-error">
+                {t('loginFailed')}
+              </p>
+            )}
 
+            <div className="space-y-6">
                 <Button
-                    type="submit"
+                    type="button"
                     data-testid="login-submit-button"
                     className="w-full h-12 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-800/20 transition-all active:scale-[0.98]"
-                    disabled={mutation.isPending}
+                    onClick={() => { window.location.href = '/api/auth/authorize'; }}
                 >
-                    {mutation.isPending ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('loggingIn')}
-                        </>
-                    ) : (
-                        t('loginButton')
-                    )}
+                    <Lock className="mr-2 h-4 w-4" />
+                    {t('loginButton')}
                 </Button>
-            </form>
+                <p className="text-xs text-muted-foreground text-center">
+                    {t('oidcNote')}
+                </p>
+            </div>
 
             <div className="relative" aria-hidden="true">
                 <div className="absolute inset-0 flex items-center">

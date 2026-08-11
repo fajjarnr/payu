@@ -3,16 +3,17 @@ package contracts.auth
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description "Should authenticate user and return token"
+    description "Should exchange OIDC authorization code with PKCE verifier and return token"
     request {
         method POST()
-        url "/api/v1/auth/login"
+        url "/api/v1/auth/callback"
         headers {
             header("Content-Type", "application/json")
         }
         body([
-            username: $(anyNonBlankString()),
-            password: $(anyNonBlankString())
+            code: $(anyNonBlankString()),
+            codeVerifier: $(anyNonBlankString()),
+            redirectUri: $(anyNonBlankString())
         ])
     }
     response {

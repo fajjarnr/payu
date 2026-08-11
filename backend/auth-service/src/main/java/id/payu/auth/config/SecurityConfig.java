@@ -41,7 +41,7 @@ public class SecurityConfig {
     private String jwkSetUri;
 
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/v1/auth/login",
+        "/api/v1/auth/callback", // LOGIN-003: OIDC code exchange — the code IS the auth artifact
         "/api/v1/auth/register",
         "/api/v1/auth/logout", // LOGIN-002: OIDC end_session — authenticated by the refresh token itself
         "/api/v1/auth/refresh",

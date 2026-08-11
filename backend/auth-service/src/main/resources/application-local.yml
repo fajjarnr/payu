@@ -20,6 +20,8 @@ payu:
     realm: ${KEYCLOAK_REALM:payu}
     client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
     client-secret: ${KEYCLOAK_CLIENT_SECRET:payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
+    web-client-id: ${PAYU_KEYCLOAK_WEB_CLIENT_ID:payu-web-app}
+    web-client-secret: ${PAYU_KEYCLOAK_WEB_CLIENT_SECRET:payu-web-d3v-0nly-s3cr3t-f84a9b2c7e1d6a0f5b3e8c4d9a7f2e1b}
     admin:
       username: ${KEYCLOAK_ADMIN_USERNAME:admin}
       password: ${KEYCLOAK_ADMIN_PASSWORD:admin}

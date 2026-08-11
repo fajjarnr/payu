@@ -36,9 +36,9 @@ public abstract class ContractVerifierBase {
     void setUpContractMocks() {
         RestAssuredMockMvc.mockMvc(mockMvc);
 
-        // Stub KeycloakService to return a successful login response for any valid-looking credentials.
-        // The contract sends anyNonBlankString() for username/password, so we always return success.
-        given(keycloakService.loginBlocking(anyString(), anyString()))
+        // Stub KeycloakService to return a successful exchange for any valid-looking code.
+        // The contract sends anyNonBlankString() for code/verifier/redirectUri, so we always return success.
+        given(keycloakService.exchangeAuthorizationCode(anyString(), anyString(), anyString()))
                 .willReturn(new LoginResponse(
                         "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test-access-token",
                         "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test-refresh-token",

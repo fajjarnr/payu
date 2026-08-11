@@ -61,57 +61,56 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/v1/auth/login")
-    class LoginEndpoint {
+    @DisplayName("POST /api/v1/auth/callback")
+    class CallbackEndpoint {
+
+        private static final String CALLBACK_BODY =
+                "{\"code\":\"auth-code-1\",\"codeVerifier\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"redirectUri\":\"http://localhost:3001/api/auth/callback\"}";
 
         @Test
-        @DisplayName("200 with tokens on success")
+        @DisplayName("200 with tokens on successful code exchange")
         void successReturnsTokens() throws Exception {
-            given(keycloakService.loginBlocking("user", "pass"))
+            given(keycloakService.exchangeAuthorizationCode("auth-code-1", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "http://localhost:3001/api/auth/callback"))
                     .willReturn(new LoginResponse("access-token", "refresh-token", 900L, "Bearer"));
 
-            mockMvc.perform(post("/api/v1/auth/login")
+            mockMvc.perform(post("/api/v1/auth/callback")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                            .content(CALLBACK_BODY))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.access_token").value("access-token"));
         }
 
         @Test
-        @DisplayName("401 AUTH_BUS_001 for invalid credentials (no user enumeration)")
-        void invalidCredentialsReturn401() throws Exception {
-            given(keycloakService.loginBlocking(anyString(), anyString()))
-                    .willThrow(new BadCredentialsException("bad credentials"));
+        @DisplayName("400 AUTH_BUS_009 for an invalid or expired authorization code")
+        void invalidCodeReturns400() throws Exception {
+            given(keycloakService.exchangeAuthorizationCode(anyString(), anyString(), anyString()))
+                    .willThrow(new IllegalArgumentException("Keycloak rejected the authorization code"));
 
-            mockMvc.perform(post("/api/v1/auth/login")
+            mockMvc.perform(post("/api/v1/auth/callback")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "wrong"))))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_001"));
+                            .content(CALLBACK_BODY))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_009"));
         }
 
         @Test
-        @DisplayName("423 AUTH_BUS_002 for a locked account")
-        void lockedAccountReturns423() throws Exception {
-            given(keycloakService.loginBlocking(anyString(), anyString()))
-                    .willThrow(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
-
-            mockMvc.perform(post("/api/v1/auth/login")
+        @DisplayName("400 for a request missing the code or code verifier")
+        void missingFieldsReturn400() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/callback")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
-                    .andExpect(status().isLocked())
-                    .andExpect(jsonPath("$.error.code").value("AUTH_BUS_002"));
+                            .content("{\"code\":\"only-code\"}"))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("503 SERVICE_UNAVAILABLE when the identity provider is down")
         void idpDownReturns503() throws Exception {
-            given(keycloakService.loginBlocking(anyString(), anyString()))
+            given(keycloakService.exchangeAuthorizationCode(anyString(), anyString(), anyString()))
                     .willThrow(new ResourceAccessException("Keycloak unreachable"));
 
-            mockMvc.perform(post("/api/v1/auth/login")
+            mockMvc.perform(post("/api/v1/auth/callback")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                            .content(CALLBACK_BODY))
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error.code").value("SERVICE_UNAVAILABLE"));
         }
@@ -119,12 +118,12 @@ class AuthControllerTest {
         @Test
         @DisplayName("429 RATE_LIMIT_EXCEEDED when either rate limiter denies the attempt")
         void rateLimitedReturns429() throws Exception {
-            given(keycloakService.loginBlocking(anyString(), anyString()))
+            given(keycloakService.exchangeAuthorizationCode(anyString(), anyString(), anyString()))
                     .willThrow(new id.payu.auth.exception.AuthDomainException.AuthRateLimitExceededException());
 
-            mockMvc.perform(post("/api/v1/auth/login")
+            mockMvc.perform(post("/api/v1/auth/callback")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new LoginRequest("user", "pass"))))
+                            .content(CALLBACK_BODY))
                     .andExpect(status().isTooManyRequests())
                     .andExpect(jsonPath("$.error.code").value("RATE_LIMIT_EXCEEDED"));
         }

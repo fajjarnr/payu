@@ -4,6 +4,13 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-11 — Login web LIVE end-to-end (LOGIN-001/003/006 + CB-002 closed, release 1.10.52)**:
+> - Web login migrated from password grant to **OIDC Authorization Code + PKCE** (MFA deferred per ADR-0023): auth-service `POST /api/v1/auth/callback` (exchange via confidential `payu-web-app` client), BFF `GET /api/auth/authorize` + `GET /api/auth/callback` (state + verifier httpOnly cookies, S256), login page → Keycloak redirect. Password-grant endpoint + cache lockout removed.
+> - Keycloak issuer pinned (`KC_HOSTNAME=http://localhost:8099`, strict) — token issuer kini stabil, refresh/revoke jalan; semua `OIDC_ISSUER`/`OIDC_JWK_SET_URI`/`KEYCLOAK_URL` di compose mengarah ke URL yang sama (pola L-116 lokal).
+> - **Browser E2E live di podman stack**: login → Keycloak → dashboard dengan cookie httpOnly Strict (token tak terbaca JS), refresh 200, logout 200. Playwright `login-flow.spec.ts` 14/14; auth-service 76/76; web-app 1202/1202.
+> - **LOGIN-006 gate CI**: `scripts/login-gate.sh` + `login-gate-compose.yml` (image publik: postgres/Infinispan/Keycloak) + `.github/workflows/login-gate.yml` — fail-closed, termasuk penolakan callback tanpa state valid.
+> - Image lokal mengikuti semver `1.10.52` (auth/gateway/web-app). Sisa P0 di jalur In-Scope: tidak ada (ACCOUNT-005/006/007, PROD-044/046 P1 open; INTEGRATION-CTX gateway integration suites pre-existing red).
+
 > ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-005 reconciliation LIVE (partner `1.8.104` / wallet `1.8.113`)**:
 > - `SnapBiReconciliationService` (ShedLock, interval 1h prod / 5m dev, window 24h): COMPLETED payment wajib 2 leg ledger (DEBIT RESERVATION/COMMIT + CREDIT), refund wajib REFUND_REVERSAL, movement tanpa record COMPLETED = orphan; unmatched → `snap_reconciliation_cases` OPEN (V19, unique, dedupe) + WARN alert.
 > - wallet-service endpoint trusted `POST /api/v1/reconciliation/ledger-movements` (azp payu-backend).

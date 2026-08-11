@@ -29,6 +29,13 @@ x-local-security-environment: &local-security-environment
 x-app-defaults: &app-defaults
   pull_policy: build
   user: "1001"
+  # Keycloak is pinned to http://localhost:8099 (KC_HOSTNAME_STRICT=true) so all
+  # tokens carry one issuer. Containers reach it through the host's published
+  # port via the host-gateway mapping. Trade-off: in-container healthchecks that
+  # curl localhost:8080 hit the host-published port of the same stack instead of
+  # the container itself (harmless for local dev; do not copy to a cluster).
+  extra_hosts:
+    - "localhost:host-gateway"
   read_only: true
   cap_drop:
     - ALL
@@ -218,7 +225,13 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
       # Resolve URLs from the caller so both container DNS (:8080) and host-run
       # development (:8099) receive an issuer they can reach.
-      KC_HOSTNAME_STRICT: "false"
+      # Pin the frontend hostname so every token (browser-issued or internal)
+      # carries the SAME issuer — otherwise refresh/revoke fail with
+      # "Invalid token issuer" (L-116 pattern applied locally).
+      # Full URL so the issuer is exactly http://localhost:8099 regardless of
+      # which host each request arrives on (browser or container).
+      KC_HOSTNAME: http://localhost:8099
+      KC_HOSTNAME_STRICT: "true"
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://payu-database-rw:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-payu}
@@ -288,8 +301,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
       BLIND_INDEX_KEY: ${BLIND_INDEX_KEY:-payu-local-blind-index-key-dev-only-32}
       BLIND_INDEX_KEY_VERSION: ${BLIND_INDEX_KEY_VERSION:-local-v1}
       BLIND_INDEX_PREVIOUS_KEYS: ${BLIND_INDEX_PREVIOUS_KEYS:-}
@@ -334,10 +347,12 @@ services:
       - 8002:8080
     environment:
       <<: *local-security-environment
-      PAYU_KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
+      PAYU_KEYCLOAK_SERVER_URL: http://localhost:8099
       PAYU_KEYCLOAK_REALM: payu
       PAYU_KEYCLOAK_CLIENT_ID: payu-backend
       PAYU_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
+      PAYU_KEYCLOAK_WEB_CLIENT_ID: ${PAYU_KEYCLOAK_WEB_CLIENT_ID:-payu-web-app}
+      PAYU_KEYCLOAK_WEB_CLIENT_SECRET: ${PAYU_KEYCLOAK_WEB_CLIENT_SECRET:-payu-web-d3v-0nly-s3cr3t-f84a9b2c7e1d6a0f5b3e8c4d9a7f2e1b}
       PAYU_KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       PAYU_KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       OTEL_ENDPOINT: http://jaeger:4317
@@ -347,13 +362,13 @@ services:
       DATABASE_URL: jdbc:postgresql://payu-database-rw:5432/payu_auth
       SERVER_PORT: "8080"
       PORT: "8080"
-      KEYCLOAK_URL: http://payu-keycloak-service:8080
+      KEYCLOAK_URL: http://localhost:8099
       KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -383,7 +398,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service:local
+    image: localhost/payu-auth-service:1.10.52
   transaction-service:
     <<: *app-defaults
     build:
@@ -408,8 +423,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -461,8 +476,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -511,8 +526,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -562,8 +577,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -620,8 +635,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payu-database-rw:5432/payu_lending
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -666,8 +681,8 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -715,8 +730,8 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -771,8 +786,8 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -830,8 +845,8 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -886,11 +901,11 @@ services:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://payu-database-rw:5432/payu_notification
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://localhost:8099/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -913,7 +928,7 @@ services:
     image: localhost/payu-notification-service:local
   gateway-service:
     <<: *app-defaults
-    image: localhost/payu-gateway-service:local
+    image: localhost/payu-gateway-service:1.10.52
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -925,7 +940,7 @@ services:
     environment:
       <<: *local-security-environment
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
-      KEYCLOAK_URL: http://payu-keycloak-service:8080
+      KEYCLOAK_URL: http://localhost:8099
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       ROUTES_ACCOUNT_URL: http://account-service:8080
@@ -982,11 +997,11 @@ services:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://payu-database-rw:5432/payu_gateway
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://localhost:8099/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -1028,8 +1043,8 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -1083,9 +1098,9 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
-      PAYU_KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
+      PAYU_KEYCLOAK_SERVER_URL: http://localhost:8099
       PAYU_KEYCLOAK_REALM: payu
       PAYU_KEYCLOAK_CLIENT_ID: payu-backend
       PAYU_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c}
@@ -1137,8 +1152,8 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -1186,8 +1201,8 @@ services:
       SERVER_PORT: "8080"
       PORT: "8080"
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -1249,11 +1264,11 @@ services:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://payu-database-rw:5432/payu_api_portal
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://payu-keycloak-service:8080/realms/payu
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://localhost:8099/realms/payu
       SERVER_PORT: "8080"
       PORT: "8080"
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -1321,7 +1336,7 @@ services:
       SERVICE_VERSION: ${STATEMENT_SERVICE_VERSION:-1.8.84}
       SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_TRANSACTION_URL: http://transaction-service:8080
-      KEYCLOAK_SERVER_URL: http://payu-keycloak-service:8080
+      KEYCLOAK_SERVER_URL: http://localhost:8099
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
       JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -1331,8 +1346,8 @@ services:
       PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       SPRING_PROFILES_ACTIVE: container
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       DB_HOST: payu-database-rw
@@ -1485,8 +1500,8 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1537,10 +1552,10 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://payu-keycloak-service:8080/realms/payu
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8099/realms/payu
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
       FX_PROVIDER_URL: ${FX_PROVIDER_URL:-}
       FX_PROVIDER_SOURCE: ${FX_PROVIDER_SOURCE:-}
       FX_PROVIDER_API_KEY: ${FX_PROVIDER_API_KEY:-}
@@ -1592,13 +1607,13 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
       TRANSACTION_SERVICE_URL: http://transaction-service:8080
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://payu-keycloak-service:8080/realms/payu
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8099/realms/payu
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
     depends_on:
       payu-cache:
         condition: service_healthy
@@ -1645,8 +1660,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BOOTSTRAP: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1701,8 +1716,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       KAFKA_BROKERS: payu-kafka-kafka-bootstrap:29092
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
 
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
@@ -1739,8 +1754,8 @@ services:
       NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3001}
       GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
       NODE_ENV: production
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
       APP_VERSION: ${APP_VERSION:-1.5.16}
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-payu-local-next-server-actions-key-change-outside-development}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
@@ -1759,7 +1774,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app:local
+    image: localhost/payu-web-app:1.10.52
 
   lending-rules:
     <<: *app-defaults
@@ -1799,8 +1814,8 @@ services:
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       LENDING_RULES_URL: http://lending-rules:8080
-      OIDC_ISSUER: http://payu-keycloak-service:8080/realms/payu
-      OIDC_JWK_SET_URI: http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: http://localhost:8099/realms/payu
+      OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
       JAVA_TOOL_OPTIONS: --enable-native-access=ALL-UNNAMED
       PAYU_SECURITY_ENCRYPTION_SALT: ${ENCRYPTION_SALT:-local-development-salt}
       WEBHOOK_SECURITY_SECRET: ${WEBHOOK_SECRET:-local-development-webhook-secret}

@@ -79,8 +79,8 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Should allow public access to login endpoint")
-    void shouldAllowPublicAccessToLoginEndpoint() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/login"))
+    void shouldAllowPublicAccessToCallbackEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/callback"))
                 .andExpect(status().isMethodNotAllowed()); // 405 because we need POST
     }
 

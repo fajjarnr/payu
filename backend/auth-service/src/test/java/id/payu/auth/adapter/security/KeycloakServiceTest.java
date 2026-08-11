@@ -3,9 +3,7 @@ package id.payu.auth.adapter.security;
 import id.payu.auth.application.service.RiskEvaluationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
-import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginResponse;
-import id.payu.cache.service.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,18 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
-import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -47,28 +38,10 @@ class KeycloakServiceTest {
     private KeycloakConfig keycloakConfig;
 
     @Mock
-    private WebClient.Builder webClientBuilder;
-
-    @Mock
-    private WebClient webClient;
-
-    @Mock
-    private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
-
-    @Mock
-    private WebClient.RequestBodySpec requestBodySpec;
-
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
-
-    @Mock
-    private ClientResponse clientResponse;
+    private ObjectMapper objectMapper;
 
     @Mock
     private RiskEvaluationService riskEvaluationService;
-
-    @Mock
-    private CacheService cacheService;
 
     @InjectMocks
     private KeycloakService keycloakService;
@@ -76,8 +49,6 @@ class KeycloakServiceTest {
     @BeforeEach
     void setUp() {
         // Set default values via reflection
-        ReflectionTestUtils.setField(keycloakService, "maxLoginAttempts", 5);
-        ReflectionTestUtils.setField(keycloakService, "lockoutDurationMinutes", 15);
         ReflectionTestUtils.setField(keycloakService, "passwordMinLength", 8);
         ReflectionTestUtils.setField(keycloakService, "requireUppercase", true);
         ReflectionTestUtils.setField(keycloakService, "requireLowercase", true);
@@ -97,23 +68,26 @@ class KeycloakServiceTest {
             mockRestTemplate = new org.springframework.web.client.RestTemplate();
             mockServer = org.springframework.test.web.client.MockRestServiceServer.bindTo(mockRestTemplate).build();
             ReflectionTestUtils.setField(keycloakService, "restTemplate", mockRestTemplate);
+            ReflectionTestUtils.setField(keycloakService, "objectMapper", new ObjectMapper());
         }
 
         private void stubKeycloakConfig() {
             given(keycloakConfig.getServerUrl()).willReturn("http://keycloak:8080");
             given(keycloakConfig.getRealm()).willReturn("payu");
-            given(keycloakConfig.getClientId()).willReturn("payu-backend");
+            given(keycloakConfig.getWebClientId()).willReturn("payu-web-app");
+            given(keycloakConfig.getWebClientSecret()).willReturn("web-secret");
         }
 
         @Test
-        @DisplayName("calls the Keycloak end_session endpoint with client_id and refresh_token")
+        @DisplayName("calls the Keycloak end_session endpoint with the web client and refresh_token")
         void revokesSessionAtKeycloak() {
             stubKeycloakConfig();
             mockServer.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
                             "http://keycloak:8080/realms/payu/protocol/openid-connect/logout"))
                     .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content()
                             .string(org.hamcrest.Matchers.allOf(
-                                    org.hamcrest.Matchers.containsString("client_id=payu-backend"),
+                                    org.hamcrest.Matchers.containsString("client_id=payu-web-app"),
+                                    org.hamcrest.Matchers.containsString("client_secret=web-secret"),
                                     org.hamcrest.Matchers.containsString("refresh_token=rt-123"))))
                     .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
                             .withSuccess("", org.springframework.http.MediaType.TEXT_PLAIN));
@@ -141,6 +115,71 @@ class KeycloakServiceTest {
                             .withStatus(org.springframework.http.HttpStatus.BAD_REQUEST));
 
             assertThatThrownBy(() -> keycloakService.revokeSession("rt-expired"))
+                    .isInstanceOf(IllegalArgumentException.class);
+            mockServer.verify();
+        }
+    }
+
+    @Nested
+    @DisplayName("exchangeAuthorizationCode")
+    class ExchangeAuthorizationCode {
+
+        private org.springframework.test.web.client.MockRestServiceServer mockServer;
+        private org.springframework.web.client.RestTemplate mockRestTemplate;
+
+        @BeforeEach
+        void setUpRestTemplate() {
+            mockRestTemplate = new org.springframework.web.client.RestTemplate();
+            mockServer = org.springframework.test.web.client.MockRestServiceServer.bindTo(mockRestTemplate).build();
+            ReflectionTestUtils.setField(keycloakService, "restTemplate", mockRestTemplate);
+            ReflectionTestUtils.setField(keycloakService, "objectMapper", new ObjectMapper());
+        }
+
+        private void stubKeycloakConfig() {
+            given(keycloakConfig.getServerUrl()).willReturn("http://keycloak:8080");
+            given(keycloakConfig.getRealm()).willReturn("payu");
+            given(keycloakConfig.getWebClientId()).willReturn("payu-web-app");
+            given(keycloakConfig.getWebClientSecret()).willReturn("web-secret");
+        }
+
+        @Test
+        @DisplayName("exchanges the authorization code with PKCE verifier using the web client")
+        void exchangesCodeWithPkceVerifier() {
+            stubKeycloakConfig();
+            String tokenJson = """
+                    {"access_token":"at-123","refresh_token":"rt-456","expires_in":900,"token_type":"Bearer"}""";
+            mockServer.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                            "http://keycloak:8080/realms/payu/protocol/openid-connect/token"))
+                    .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content()
+                            .string(org.hamcrest.Matchers.allOf(
+                                    org.hamcrest.Matchers.containsString("grant_type=authorization_code"),
+                                    org.hamcrest.Matchers.containsString("client_id=payu-web-app"),
+                                    org.hamcrest.Matchers.containsString("client_secret=web-secret"),
+                                    org.hamcrest.Matchers.containsString("code=auth-code-1"),
+                                    org.hamcrest.Matchers.containsString("code_verifier=verifier-123"),
+                                    org.hamcrest.Matchers.containsString("redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fapi%2Fauth%2Fcallback"))))
+                    .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
+                            .withSuccess(tokenJson, org.springframework.http.MediaType.APPLICATION_JSON));
+
+            LoginResponse response = keycloakService.exchangeAuthorizationCode(
+                    "auth-code-1", "verifier-123", "http://localhost:3001/api/auth/callback");
+
+            assertThat(response.accessToken()).isEqualTo("at-123");
+            assertThat(response.refreshToken()).isEqualTo("rt-456");
+            assertThat(response.expiresIn()).isEqualTo(900L);
+            mockServer.verify();
+        }
+
+        @Test
+        @DisplayName("propagates Keycloak invalid_grant rejection")
+        void propagatesInvalidGrantRejection() {
+            stubKeycloakConfig();
+            mockServer.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                            "http://keycloak:8080/realms/payu/protocol/openid-connect/token"))
+                    .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
+                            .withStatus(org.springframework.http.HttpStatus.BAD_REQUEST));
+
+            assertThatThrownBy(() -> keycloakService.exchangeAuthorizationCode("expired", "verifier", "http://localhost:3001/api/auth/callback"))
                     .isInstanceOf(IllegalArgumentException.class);
             mockServer.verify();
         }
@@ -233,166 +272,4 @@ class KeycloakServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("Account Lockout")
-    class AccountLockout {
-
-        @Test
-        @DisplayName("should not be locked initially")
-        void shouldNotBeLockedInitially() throws Exception {
-            // Given
-            String username = "testuser";
-            when(cacheService.get("auth:failedAttempts:" + username, KeycloakService.FailedAttempt.class)).thenReturn(null);
-
-            // When
-            boolean locked = invokeIsAccountLocked(username);
-
-            // Then
-            assertThat(locked).isFalse();
-        }
-
-        @Test
-        @DisplayName("should lock account after max failed attempts")
-        void shouldLockAccountAfterMaxFailedAttempts() throws Exception {
-            // Given
-            String username = "testuser";
-            long futureLockTime = System.currentTimeMillis() + 15 * 60 * 1000; // 15 minutes from now
-            KeycloakService.FailedAttempt lockedAttempt = new KeycloakService.FailedAttempt(5, futureLockTime);
-
-            when(cacheService.get("auth:failedAttempts:" + username, KeycloakService.FailedAttempt.class)).thenReturn(lockedAttempt);
-
-            // When
-            boolean locked = invokeIsAccountLocked(username);
-
-            // Then
-            assertThat(locked).isTrue();
-        }
-
-        @Test
-        @DisplayName("should not be locked when count is below max")
-        void shouldNotBeLockedWhenCountBelowMax() throws Exception {
-            // Given
-            String username = "testuser";
-            KeycloakService.FailedAttempt attempt = new KeycloakService.FailedAttempt(3, 0L);
-
-            when(cacheService.get("auth:failedAttempts:" + username, KeycloakService.FailedAttempt.class)).thenReturn(attempt);
-
-            // When
-            boolean locked = invokeIsAccountLocked(username);
-
-            // Then
-            assertThat(locked).isFalse();
-        }
-
-        @Test
-        @DisplayName("should not be locked when lock has expired")
-        void shouldNotBeLockedWhenLockExpired() throws Exception {
-            // Given
-            String username = "testuser";
-            long pastLockTime = System.currentTimeMillis() - 1000; // 1 second ago
-            KeycloakService.FailedAttempt expiredAttempt = new KeycloakService.FailedAttempt(5, pastLockTime);
-
-            when(cacheService.get("auth:failedAttempts:" + username, KeycloakService.FailedAttempt.class)).thenReturn(expiredAttempt);
-
-            // When
-            boolean locked = invokeIsAccountLocked(username);
-
-            // Then
-            assertThat(locked).isFalse();
-        }
-
-        @Test
-        @DisplayName("should clear failed attempts on success")
-        void shouldClearFailedAttemptsOnSuccess() throws Exception {
-            // Given
-            String username = "testuser";
-
-            // When - clear attempts
-            invokeClearFailedAttempts(username);
-
-            // Then - verify cache invalidation was called
-            verify(cacheService).invalidate("auth:failedAttempts:" + username);
-            verify(riskEvaluationService).clearFailedAttempts(username);
-        }
-
-        @Test
-        @DisplayName("should record failed attempt via cache")
-        void shouldRecordFailedAttemptViaCache() throws Exception {
-            // Given
-            String username = "testuser";
-            KeycloakService.FailedAttempt existingAttempt = new KeycloakService.FailedAttempt(2, 0L);
-
-            when(cacheService.get(eq("auth:failedAttempts:" + username), eq(KeycloakService.FailedAttempt.class), any()))
-                    .thenReturn(existingAttempt);
-
-            // When
-            invokeRecordFailedAttempt(username);
-
-            // Then
-            verify(cacheService).put(eq("auth:failedAttempts:" + username), any(KeycloakService.FailedAttempt.class), eq(Duration.ofMinutes(15)));
-            verify(riskEvaluationService).recordFailedAttempt(username);
-        }
-
-        private boolean invokeIsAccountLocked(String username) throws Exception {
-            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("isAccountLocked", String.class);
-            method.setAccessible(true);
-            return (boolean) method.invoke(keycloakService, username);
-        }
-
-        private void invokeRecordFailedAttempt(String username) throws Exception {
-            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("recordFailedAttemptInternal", String.class);
-            method.setAccessible(true);
-            method.invoke(keycloakService, username);
-        }
-
-        private void invokeClearFailedAttempts(String username) throws Exception {
-            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("clearFailedAttempts", String.class);
-            method.setAccessible(true);
-            method.invoke(keycloakService, username);
-        }
-    }
-
-    @Nested
-    @DisplayName("Rate Limit Fallback")
-    class RateLimitFallback {
-
-        @Test
-        @DisplayName("should return error mono when rate limited")
-        void shouldReturnErrorWhenRateLimited() {
-            // When
-            Mono<LoginResponse> result = keycloakService.rateLimitFallback("user", "pass", new RuntimeException("Rate limited"));
-
-            // Then
-            StepVerifier.create(result)
-                    .expectErrorMatches(error ->
-                        error instanceof IllegalArgumentException &&
-                        error.getMessage().contains("Too many login attempts"))
-                    .verify();
-        }
-    }
-
-    @Nested
-    @DisplayName("Credential Validation")
-    class CredentialValidation {
-
-        @Test
-        @DisplayName("should return false for locked account")
-        void shouldReturnFalseForLockedAccount() throws Exception {
-            // Given
-            String username = "testuser";
-            String password = "password";
-            long futureLockTime = System.currentTimeMillis() + 15 * 60 * 1000;
-            KeycloakService.FailedAttempt lockedAttempt = new KeycloakService.FailedAttempt(5, futureLockTime);
-
-            when(cacheService.get("auth:failedAttempts:" + username, KeycloakService.FailedAttempt.class)).thenReturn(lockedAttempt);
-
-            // When
-            Mono<Boolean> result = keycloakService.validateCredentials(username, password);
-
-            // Then
-            StepVerifier.create(result)
-                    .expectNext(false)
-                    .verifyComplete();
-        }
-    }
 }

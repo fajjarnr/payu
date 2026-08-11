@@ -45,11 +45,11 @@ class AuthorizationFilterTest {
 
     @Test
     @DisplayName("Should bypass authorization for public auth login endpoint")
-    void testPublicEndpointBypass_Login() {
+    void testPublicEndpointBypass_Callback() {
         // The auth endpoint is public but returns 404/503 in test since backend is not available
         given()
             .when()
-            .get("/api/v1/auth/login")
+            .get("/api/v1/auth/callback")
             .then()
             .statusCode(anyOf(is(200), is(404), is(503)));
     }

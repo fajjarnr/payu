@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthService, type LoginRequest, type LoginResponse } from '@/services/AuthService';
+import { AuthService } from '@/services/AuthService';
 import api from '@/lib/api';
 
 const mockFetch = vi.fn();
@@ -31,73 +31,6 @@ describe('AuthService', () => {
     const instance1 = AuthService.getInstance();
     const instance2 = AuthService.getInstance();
     expect(instance1).toBe(instance2);
-  });
-
-  describe('login', () => {
-    it('should successfully login without storing tokens in localStorage', async () => {
-      const mockResponse: LoginResponse = {
-        success: true,
-        data: {
-          user: {
-            id: 'user-123',
-            externalId: 'ext-123',
-            username: 'testuser',
-            email: 'test@example.com',
-            fullName: 'Test User',
-            nik: '1234567890123456',
-            kycStatus: 'PENDING',
-            createdAt: '2024-01-01T00:00:00Z',
-            updatedAt: '2024-01-01T00:00:00Z'
-          }
-        }
-      };
-
-      mockFetch.mockResolvedValue({ ok: true, json: async () => mockResponse });
-
-      const credentials: LoginRequest = {
-        username: 'testuser',
-        password: 'password123',
-      };
-
-      const result = await AuthService.getInstance().login(credentials);
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(credentials),
-      });
-      // SECURITY: Tokens are NOT stored in localStorage
-      // They are managed via httpOnly cookies by the backend
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should handle login response without storing tokens locally', async () => {
-      const mockResponse: LoginResponse = {
-        success: true,
-        data: {
-          user: {
-            id: 'user-123',
-            externalId: 'ext-123',
-            username: 'testuser',
-            email: 'test@example.com',
-            fullName: 'Test User',
-            nik: '1234567890123456',
-            kycStatus: 'PENDING',
-            createdAt: '2024-01-01T00:00:00Z',
-            updatedAt: '2024-01-01T00:00:00Z'
-          }
-        }
-      };
-
-      mockFetch.mockResolvedValue({ ok: true, json: async () => mockResponse });
-
-      await AuthService.getInstance().login({ username: 'test', password: 'pass' });
-
-      // SECURITY: Tokens are NOT stored in localStorage
-      // Backend manages tokens via httpOnly cookies
-      expect(AuthService.getInstance().isAuthenticated()).toBe(true);
-    });
   });
 
   describe('logout', () => {

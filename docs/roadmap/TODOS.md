@@ -19,9 +19,9 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.52` (2026-08-11) |
-| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI); money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 9 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (PROD-043 closed; Active Tickets urut P0→P1) |
+| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: ACCOUNT-005/006/007 (P1) + PROD-044/046 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
+| **Backlog Aktif** | 6 tickets + 33 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (LOGIN-003/006/001 + CB-002 closed; Active Tickets urut P0→P1) |
 
 ---
 
@@ -39,9 +39,6 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + E2E. | 🔴 Strong authentication absent |
-| LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
-| LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
 | ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | ACCOUNT-007 | P1 | Belum ada deployment `payu-prod`; rollout Recreate; UAT HPA min 1, tanpa PDB. Done: prod deploy via gates + HA + drill + E2E onboarding→lookup→ownership. | 🟠 Not production deployed |
@@ -53,18 +50,12 @@
 
 ## 🎯 Backlog Aksi (urut per priority)
 
-### P0 — Money & Security Blockers (In-Scope MVP, ADR-0023)
-
-| Key | Domain | Item | Done saat |
-|:---|:---|:---|:---|
-| CB-002 | auth | PKCE/MFA (LOGIN-003) + E2E login browser (LOGIN-001 re-verify, LOGIN-006 gate) | LOGIN P0 closed + browser E2E green |
-| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — PII log sudah dimask (PROD-045 closed) | E2E terima; log tanpa PII |
-
 ### P1 — Quality & Reliability (In-Scope MVP)
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
 | CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
+| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — PII log sudah dimask (PROD-045 closed) | E2E terima; log tanpa PII |
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
 | CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
 | CB-012 | wallet | Ledger immutability di DB: REVOKE/trigger (WL-001) | UPDATE ledger ditolak DB |
@@ -161,7 +152,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 |:---|:---:|:---|:---|:---|
 
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
-| LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
 | SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID (PII log sudah dimask — PROD-045 closed) | SmsSender.java:26-54 |
@@ -172,7 +162,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | TX-004 | 🟠 | transaction | Scheduled transfer tanpa idempotency key | ScheduledTransferService.java:172-230 |
 | WL-001 | 🟠 | wallet | Ledger immutability tidak di-enforce DB | V3 schema, LedgerEntryEntity |
 | QRIS-001 | 🟠 | transaction | Idempotency cache-only fail-open (TTL 24h) | DistributedCacheIdempotencyRepository |
-| AUTH-001 | 🟠 | auth | `evaluateRisk()` tidak dipakai; lockout cache-based | KeycloakService.java:359,412 |
 | PROMO-001 | 🟠 | promotion | Cashback record duplikat saat replay | CashbackSagaOrchestrator.java:119-140 |
 | PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
 | PROMO-003 | 🟠 | promotion | `claimPromotion` tanpa dedup by transactionId — replay/double-submit → 2 reward AWARDED (maxRedemptions atomik ✓, tapi per-user/per-transaction tidak ada guard) | PromotionService.java:139-180 |

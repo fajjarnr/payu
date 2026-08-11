@@ -17,6 +17,13 @@ public class KeycloakConfig {
     private String realm;
     private String clientId;
     private String clientSecret;
+    /**
+     * Web-app OIDC client (payu-web-app) — confidential client used for the
+     * OIDC authorization-code + PKCE exchange (LOGIN-003). The browser-facing
+     * flow must never use the payu-backend service client password grant.
+     */
+    private String webClientId;
+    private String webClientSecret;
     private Admin admin;
 
     @Data

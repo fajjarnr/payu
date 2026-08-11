@@ -55,9 +55,9 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     // BUG-AUTH-023: Tightened broad prefix patterns to specific endpoints
     // to prevent unintended access to arbitrary sub-paths
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/v1/auth/login",
-        "/api/v1/auth/register",       // IAM user provisioning during onboarding
-        "/api/v1/auth/logout",         // LOGIN-002: OIDC end_session — authenticated by the refresh token itself
+        "/api/v1/auth/callback",   // LOGIN-003: OIDC code exchange — the code IS the auth artifact
+        "/api/v1/auth/register",   // IAM user provisioning during onboarding
+        "/api/v1/auth/logout",     // LOGIN-002: OIDC end_session — authenticated by the refresh token itself
         "/api/v1/accounts/register",   // Only registration is public (BUG-BE-006 fix)
         "/api/v1/auth/refresh",
         "/api/v1/otp/send",
@@ -84,7 +84,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     // Exact match public endpoints (must match exactly)
     private static final String[] EXACT_PUBLIC_ENDPOINTS = {
         "/api/v1/accounts/register",
-        "/api/v1/auth/login"
+        "/api/v1/auth/callback"
     };
 
     @Inject

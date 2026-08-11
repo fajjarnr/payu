@@ -1,10 +1,5 @@
 import type { User } from '@/types';
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
 /**
  * BFF login response — tokens are in httpOnly cookies, never in the payload.
  */
@@ -60,34 +55,6 @@ export class AuthService {
       AuthService.instance = new AuthService();
     }
     return AuthService.instance;
-  }
-
-  /**
-   * Authenticates user credentials.
-   * Tokens are set by backend as httpOnly cookies - not stored client-side.
-   *
-   * @param credentials User login credentials
-   * @returns Login response with token metadata (tokens are in cookies)
-   */
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(credentials),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch((e) => {
-        console.error('[AuthService] Failed to parse login error response:', e);
-        return {};
-      });
-      throw new Error(err.message || 'Login failed');
-    }
-
-    const data: LoginResponse = await res.json();
-    this.authenticated = true;
-    return data;
   }
 
   /**

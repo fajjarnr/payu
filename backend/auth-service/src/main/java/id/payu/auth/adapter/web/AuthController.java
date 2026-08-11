@@ -6,9 +6,9 @@ import id.payu.api.common.controller.RateLimit;
 import id.payu.api.common.exception.BusinessException;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.auth.domain.model.LoginContext;
-import id.payu.auth.dto.LoginRequest;
 import id.payu.auth.dto.LoginResponse;
 import id.payu.auth.dto.LogoutRequest;
+import id.payu.auth.dto.OidcCallbackRequest;
 import id.payu.auth.dto.RegisterRequest;
 import id.payu.auth.dto.RefreshTokenRequest;
 import id.payu.auth.dto.RefreshTokenResponse;
@@ -39,6 +39,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 import id.payu.security.annotation.AuditOperation;
 
@@ -67,7 +69,13 @@ public class AuthController extends BaseController {
         return username.substring(0, 3) + "****" + (username.contains("@") ? username.substring(username.indexOf("@")) : "");
     }
 
-    @PostMapping("/login")
+    /**
+     * LOGIN-003: OIDC authorization-code + PKCE callback. The browser was
+     * redirected to Keycloak's login page (BFF /api/auth/authorize) and
+     * Keycloak redirected back with a code; this endpoint exchanges the code
+     * and PKCE verifier for tokens. Credentials never reach this service.
+     */
+    @PostMapping("/callback")
     @Audited(
             operation = id.payu.security.annotation.AuditOperation.LOGIN,
             entityType = "User",
@@ -75,87 +83,59 @@ public class AuthController extends BaseController {
             level = AuditLevel.INFO
     )
     @Operation(
-            summary = "User login",
+            summary = "OIDC authorization code exchange (PKCE)",
             description = """
-                    Authenticates a user with username and password.
-                    Returns JWT access token on success or prompts for MFA if risk evaluation requires it.
+                    Exchanges an OIDC authorization code + PKCE verifier for tokens.
+                    The user authenticated at Keycloak's own login page; this
+                    endpoint never receives credentials.
 
-                    **Risk-based Authentication:**
-                    - Low risk: Returns access token immediately
-                    - Medium/High risk: Returns MFA token for OTP verification
-
-                    **Rate Limiting:** 10 requests per minute per IP
+                    **Errors:** 400 AUTH_BUS_009 invalid/expired code, 429 rate
+                    limited, 503 identity provider unavailable.
                     """
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "Successful login",
+                    description = "Successful exchange",
                     content = @Content(schema = @Schema(implementation = LoginResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "Invalid credentials | Invalid request format",
+                    description = "Invalid or expired authorization code",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "429",
-                    description = "Too many login attempts",
+                    description = "Too many attempts",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
-    @SecurityRequirements  // No authentication required for login
-    @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "login")
-    public ResponseEntity<ApiResponse<?>> login(
-            @Valid @RequestBody LoginRequest request,
+    @SecurityRequirements  // No authentication required — the code IS the auth artifact
+    @RateLimit(requests = 30, windowSeconds = 60, keyPrefix = "login-callback")
+    public ResponseEntity<ApiResponse<?>> callback(
+            @Valid @RequestBody OidcCallbackRequest request,
             HttpServletRequest httpRequest
     ) {
-        LoginContext context = buildLoginContext(request.username(), httpRequest);
-
         try {
-            // BUG-BE-154: Removed double password call — login directly instead of
-            // validating credentials first then logging in again (was sending password twice to Keycloak)
+            LoginResponse loginResponse = keycloakService.exchangeAuthorizationCode(
+                    request.code(), request.codeVerifier(), request.redirectUri());
 
-            // Evaluate risk for telemetry
-            riskEvaluationService.evaluateRisk(context);
-
-            // Direct login — returns tokens if credentials are valid, throws on failure
-            LoginResponse loginResponse = keycloakService.loginBlocking(
-                    request.username(),
-                    request.password()
-            );
-
-            if (loginResponse == null) {
-                riskEvaluationService.recordFailedAttempt(request.username());
-                log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error(
-                                ErrorCode.AUTH_BUS_001.getCode(),
-                                ErrorCode.AUTH_BUS_001.getMessage()
-                        ));
+            // Risk telemetry (non-critical): derive the username from the ID token.
+            // It must never prevent a successful login from returning tokens.
+            String username = extractPreferredUsername(loginResponse.accessToken());
+            if (username != null) {
+                try {
+                    riskEvaluationService.recordSuccessfulLogin(
+                            username, buildLoginContext(username, httpRequest));
+                } catch (Exception riskEx) {
+                    log.warn("Failed to record successful login for risk profile (non-critical): {} - {}",
+                            riskEx.getClass().getSimpleName(), riskEx.getMessage());
+                }
             }
 
-            // Clear failed attempts counter on successful login
-            // Non-critical risk telemetry — must NEVER prevent successful login from returning tokens
-            try {
-                riskEvaluationService.recordSuccessfulLogin(request.username(), context);
-            } catch (Exception riskEx) {
-                log.warn("Failed to record successful login for risk profile (non-critical): {} - {}",
-                        riskEx.getClass().getSimpleName(), riskEx.getMessage());
-            }
-
-            log.info("Successful login for user: {}", maskUsername(request.username()));
+            log.info("OIDC login completed for user: {}", maskUsername(username == null ? "unknown" : username));
             return ResponseEntity.ok(ApiResponse.success(loginResponse));
 
-        } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            // LOGIN-005: invalid credentials are a deterministic 401, not 500/400
-            riskEvaluationService.recordFailedAttempt(request.username());
-            log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error(
-                            ErrorCode.AUTH_BUS_001.getCode(),
-                            ErrorCode.AUTH_BUS_001.getMessage()
-                    ));
         } catch (id.payu.api.common.exception.RateLimitExceededException e) {
             // LOGIN-005: rate limited (either limiter) is a deterministic 429
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -171,26 +151,17 @@ public class AuthController extends BaseController {
                             ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
                     ));
         } catch (IllegalArgumentException e) {
-            // LOGIN-005: locked account is a deterministic 423, other credential
-            // failures (invalid/malformed) a 401 — no user enumeration in the message
-            riskEvaluationService.recordFailedAttempt(request.username());
-            log.warn("Login rejected for user: {} - {}", maskUsername(request.username()), e.getClass().getSimpleName());
-            if (e.getMessage() != null && e.getMessage().contains("locked")) {
-                return ResponseEntity.status(HttpStatus.LOCKED)
-                        .body(ApiResponse.error(
-                                ErrorCode.AUTH_BUS_002.getCode(),
-                                ErrorCode.AUTH_BUS_002.getMessage()
-                        ));
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            // LOGIN-003: Keycloak rejected the code (invalid/expired) — deterministic 400
+            log.warn("OIDC code exchange rejected: {}", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(
-                            ErrorCode.AUTH_BUS_001.getCode(),
-                            ErrorCode.AUTH_BUS_001.getMessage()
+                            ErrorCode.AUTH_BUS_009.getCode(),
+                            ErrorCode.AUTH_BUS_009.getMessage()
                     ));
         } catch (org.springframework.web.client.ResourceAccessException e) {
             // LOGIN-005: identity provider unreachable — deterministic 503, fail-closed
-            log.error("Login failed for user: {} - identity provider unavailable: {}",
-                    maskUsername(request.username()), e.getClass().getSimpleName());
+            log.error("OIDC code exchange failed - identity provider unavailable: {}",
+                    e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(ApiResponse.error(
                             ErrorCode.SERVICE_UNAVAILABLE.getCode(),
@@ -198,12 +169,33 @@ public class AuthController extends BaseController {
                     ));
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
-            log.error("Login failed for user: {} - {}", maskUsername(request.username()), e.getClass().getSimpleName());
+            log.error("OIDC code exchange failed: {}", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),
                             ErrorCode.INTERNAL_ERROR.getMessage()
                     ));
+        }
+    }
+
+    /**
+     * Decodes preferred_username from the access token payload (unverified —
+     * telemetry only; the token was just issued by Keycloak over TLS).
+     */
+    private String extractPreferredUsername(String accessToken) {
+        if (accessToken == null) return null;
+        try {
+            String[] parts = accessToken.split("\\.");
+            if (parts.length != 3) return null;
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            int idx = payload.indexOf("\"preferred_username\":");
+            if (idx < 0) return null;
+            int start = payload.indexOf('"', idx + 20) + 1;
+            int end = payload.indexOf('"', start);
+            if (start <= 0 || end <= start) return null;
+            return payload.substring(start, end);
+        } catch (Exception e) {
+            return null;
         }
     }
 

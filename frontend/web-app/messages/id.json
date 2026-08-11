@@ -296,8 +296,9 @@
     "welcomeBack": "Selamat Datang Kembali",
     "subtitle": "Masuk ke dashboard finansial Anda",
     "forgotPassword": "Lupa password?",
-    "loginButton": "Masuk ke Akun",
+    "loginButton": "Masuk dengan PayU",
     "loggingIn": "Masuk...",
+    "oidcNote": "Anda akan diarahkan ke penyedia identitas aman kami. Kredensial Anda tidak pernah sampai ke PayU.",
     "or": "Atau",
     "branding": {
       "tag": "Keamanan Tingkat Enterprise",

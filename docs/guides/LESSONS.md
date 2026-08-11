@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-225: Token Issuer Must Be Pinned, or Refresh Dies at Keycloak (2026-08-11)
+
+**Context**: LOGIN-003 — after moving the web login to OIDC authorization-code + PKCE, the browser got tokens with `iss=http://localhost:8099/realms/payu` (Keycloak derives the frontend URL from the *request's* Host with `KC_HOSTNAME_STRICT=false`). The gateway/auth-service rejected them (issuer mismatch, the L-116 trap), and once the validators were aligned, Keycloak itself rejected the refresh with `Invalid token issuer. Expected 'http://payu-keycloak-service:8080/realms/payu'` — the *issuance* host (browser, localhost:8099) and the *refresh* host (internal call, payu-keycloak-service:8080) produce different frontend URLs, so no per-request issuer can ever be refreshed.
+
+**Lesson**:
+- With `KC_HOSTNAME_STRICT=false` the issuer is per-request — browser-issued tokens can never be refreshed or revoked by internal callers. Pin it: `KC_HOSTNAME=http://localhost:8099` + `KC_HOSTNAME_STRICT=true` (full URL, `KC_HOSTNAME_PORT` alone was not honored), then point **every** `OIDC_ISSUER`/`OIDC_JWK_SET_URI`/`KEYCLOAK_URL`/`PAYU_KEYCLOAK_SERVER_URL`/`QUARKUS_OIDC_AUTH_SERVER_URL` at that one URL (the L-116 "change every service at once" rule).
+- Containers reaching the pinned `localhost` URL need a host-gateway mapping; `--add-host localhost:host-gateway` is not enough for the JVM — the JDK connects only to the *first* resolved address (loopback) and never falls back, so the local runtime bind-mounts a minimal `/etc/hosts` (`169.254.1.2 localhost`). Curl falls back to the next address and hides this; always test the actual runtime.
+- `podman restart` keeps the container's **original image reference** — after rebuilding an image you must recreate the container (`rm` + `run`), not restart it. The gateway kept serving the old whitelist for three debugging rounds because of this.
+- `podman-compose` (Python provider) cannot resolve services whose block it fails to parse, and the Containerfiles copy pre-built `target/` jars — `podman build` without `mvn package` silently ships the previous jar.
+
+**Applied evidence**: browser E2E login → dashboard with httpOnly Strict cookies, refresh 200, logout 200 on the local podman stack; `auth-service` 76/76, `web-app` 1202/1202, Playwright login 14/14; CHANGELOG 1.10.52; LOGIN-003/006/001 + CB-002 closed (MFA deferred per ADR-0023).
+
 ## L-224: JS Number Money Must Be Cut at the Type Boundary (2026-08-11)
 
 **Context**: PROD-043 — the web-app still sent money as JS numbers: `register('amount', { valueAsNumber: true })` on the exchange form, `parseFloat(newBillAmount)` for split-bill totals, `sum + b.totalAmount` reduce, and `number`-typed money fields in FxService/InvestmentService/PromotionService/wallet store. TypeScript never caught any of it because the *types* said `number`.

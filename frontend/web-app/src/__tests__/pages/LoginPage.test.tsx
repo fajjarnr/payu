@@ -21,9 +21,11 @@ vi.mock('next-intl', () => ({
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
+
+import { useSearchParams } from 'next/navigation';
 
 // Mock stores
 vi.mock('@/stores/authStore', () => ({
@@ -75,17 +77,12 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  it('should render the login form', () => {
-    render(<LoginPage />);
-
-    expect(screen.getByTestId('username-input')).toBeInTheDocument();
-    expect(screen.getByTestId('password-input')).toBeInTheDocument();
-  });
-
-  it('should render the login submit button', () => {
+  it('should render the OIDC sign-in button (LOGIN-003: no local password form)', () => {
     render(<LoginPage />);
 
     expect(screen.getByTestId('login-submit-button')).toBeInTheDocument();
+    expect(screen.queryByTestId('username-input')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('password-input')).not.toBeInTheDocument();
   });
 
   it('should render branding elements', () => {
@@ -96,9 +93,11 @@ describe('LoginPage', () => {
     expect(payuElements.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('should render forgot password link', () => {
+  it('should show an error banner when the OIDC flow failed', () => {
+    // Re-render with error search param
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('error=authentication_failed') as unknown as import('next/navigation').ReadonlyURLSearchParams);
     render(<LoginPage />);
 
-    expect(screen.getByTestId('forgot-password-link')).toBeInTheDocument();
+    expect(screen.getByTestId('login-error')).toBeInTheDocument();
   });
 });

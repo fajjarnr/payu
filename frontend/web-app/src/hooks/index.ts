@@ -1,6 +1,6 @@
 'use client';
 
-export { useLogin, useLogout, useRefreshToken, useAuth } from './useAuth';
+export { useLogout, useRefreshToken, useAuth } from './useAuth';
 export { useSilentRefresh } from './useSilentRefresh';
 export {
   useBalance,

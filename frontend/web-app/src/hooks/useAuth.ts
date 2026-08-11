@@ -5,39 +5,8 @@ import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import { useAuthStore, useWalletStore, useNotificationStore, useTransactionStore, useUIStore } from '@/stores';
 import ABTestingService from '@/services/ABTestingService';
-import type { LoginRequest } from '@/types';
 import { createLocaleHref } from '@/lib/navigation';
 import { useLocale } from 'next-intl';
-
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-  const { setAuth, setTokenExpiry } = useAuthStore();
-
-  return useMutation({
-    mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
-    ...MutationPresets.nonFinancial,
-    onSuccess: async (response) => {
-      // Tokens are managed via httpOnly cookies by the backend
-      // We only store user profile and account ID in the store
-      const user = response.data?.user;
-      if (user) {
-        // BUG-CROSS-033 FIX: Use explicit accountId from JWT claims,
-        // not user.id (which is JWT 'sub' / userId)
-        const accountId = user.accountId || user.id;
-        setAuth(user, accountId);
-      }
-      // Track when the accessToken cookie will expire so useSilentRefresh
-      // can proactively refresh before it expires (no token is exposed here)
-      const expiresIn: number = response.data?.expiresIn ?? 900; // seconds
-      setTokenExpiry(Date.now() + expiresIn * 1000);
-
-      await queryClient.invalidateQueries({ queryKey: ['auth'] });
-    },
-    onError: (error) => {
-      console.error('Login failed:', error);
-    }
-  });
-};
 
 export const useLogout = () => {
   const queryClient = useQueryClient();

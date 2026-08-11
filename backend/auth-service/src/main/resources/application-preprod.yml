@@ -19,6 +19,8 @@ payu:
     server-url: ${KEYCLOAK_SERVER_URL:https://sso-preprod.payu.id}
     realm: ${KEYCLOAK_REALM:payu}
     client-id: ${KEYCLOAK_CLIENT_ID:payu-backend}
+    web-client-id: ${PAYU_KEYCLOAK_WEB_CLIENT_ID}
+    web-client-secret: ${PAYU_KEYCLOAK_WEB_CLIENT_SECRET}
     client-secret: ${KEYCLOAK_CLIENT_SECRET}
     admin:
       username: ${KEYCLOAK_ADMIN_USERNAME}

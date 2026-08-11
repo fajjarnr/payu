@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useLogin, useLogout, useRefreshToken, useAuth } from '@/hooks/useAuth';
+import { useLogout, useRefreshToken, useAuth } from '@/hooks/useAuth';
 import AuthService from '@/services/AuthService';
 import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../../messages/id.json';
@@ -40,132 +40,6 @@ const mockLocation = { href: '' };
 Object.defineProperty(window, 'location', {
   writable: true,
   value: mockLocation
-});
-
-describe('useLogin hook', () => {
-  let queryClient: QueryClient;
-
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider locale="id" messages={messages}>{children}</NextIntlClientProvider>
-    </QueryClientProvider>
-  );
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false }
-      }
-    });
-    vi.clearAllMocks();
-    mockLocation.href = '';
-  });
-
-  it('should be defined', () => {
-    expect(useLogin).toBeDefined();
-  });
-
-  it('should login successfully with valid credentials', async () => {
-    const mockLoginResponse = {
-      success: true,
-      data: {
-        user: {
-          id: 'user-123',
-          externalId: 'ext-123',
-          username: 'testuser',
-          email: 'test@example.com',
-          fullName: 'Test User',
-          nik: '1234567890123456',
-          kycStatus: 'PENDING' as const,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z'
-        }
-      }
-    };
-
-    vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);
-
-    const { result } = renderHook(() => useLogin(), { wrapper });
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        username: 'testuser',
-        password: 'password123'
-      });
-    });
-
-    expect(AuthService.login).toHaveBeenCalledWith({
-      username: 'testuser',
-      password: 'password123'
-    });
-    // setAuth now only takes (user, accountId) - tokens are in httpOnly cookies
-    expect(mockSetAuth).toHaveBeenCalledWith(
-      expect.any(Object),
-      'user-123'
-    );
-  });
-
-  it('should invalidate auth queries on successful login', async () => {
-    const mockLoginResponse = {
-      success: true,
-      data: {
-        user: {
-          id: 'user-123',
-          externalId: 'ext-123',
-          username: 'testuser',
-          email: 'test@example.com',
-          fullName: 'Test User',
-          nik: '1234567890123456',
-          kycStatus: 'PENDING' as const,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z'
-        }
-      }
-    };
-
-    vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);
-
-    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-    const { result } = renderHook(() => useLogin(), { wrapper });
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        username: 'testuser',
-        password: 'password123'
-      });
-    });
-
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['auth'] });
-  });
-
-  it('should handle login error', async () => {
-    const mockError = new Error('Invalid credentials');
-    vi.mocked(AuthService.login).mockRejectedValue(mockError);
-
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const { result } = renderHook(() => useLogin(), { wrapper });
-
-    let error: Error | null = null;
-    try {
-      await act(async () => {
-        await result.current.mutateAsync({
-          username: 'wronguser',
-          password: 'wrongpassword'
-        });
-      });
-    } catch (e) {
-      error = e as Error;
-    }
-
-    expect(error).toBeTruthy();
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Login failed:', mockError);
-
-    consoleErrorSpy.mockRestore();
-  });
-
 });
 
 describe('useLogout hook', () => {
@@ -319,37 +193,7 @@ describe('useAuth integration', () => {
     mockLocation.href = '';
   });
 
-  it('should handle complete auth flow: login -> logout', async () => {
-    const mockLoginResponse = {
-      success: true,
-      data: {
-        user: {
-          id: 'user-123',
-          externalId: 'ext-123',
-          username: 'testuser',
-          email: 'test@example.com',
-          fullName: 'Test User',
-          nik: '1234567890123456',
-          kycStatus: 'PENDING' as const,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z'
-        }
-      }
-    };
-
-    vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);
-
-    // Login
-    const { result: loginResult } = renderHook(() => useLogin(), { wrapper });
-
-    await loginResult.current.mutateAsync({
-      username: 'testuser',
-      password: 'password123'
-    });
-
-    // Verify login succeeded
-    expect(mockSetAuth).toHaveBeenCalled();
-
+  it('should handle logout', async () => {
     // Logout
     const { result: logoutResult } = renderHook(() => useLogout(), { wrapper });
 

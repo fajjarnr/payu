@@ -128,6 +128,11 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo AUTH_BUS_007 = new ErrorInfo("AUTH_BUS_007", "Maximum login attempts exceeded");
 
+    @Getter
+    public static final ErrorInfo AUTH_BUS_008 = new ErrorInfo("AUTH_BUS_008", "User already exists");
+    @Getter
+    public static final ErrorInfo AUTH_BUS_009 = new ErrorInfo("AUTH_BUS_009", "Invalid or expired authorization code");
+
     // ==================== ACCOUNT SERVICE (ACC) ====================
 
     @Getter
