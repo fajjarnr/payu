@@ -6,7 +6,6 @@ resources:
 - ../../base
 - keycloak-client-secret-generator.yaml
 - network-policy-payu-sso-postgres.yaml
-- partner-api-route.yaml
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service:1.8.104
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service

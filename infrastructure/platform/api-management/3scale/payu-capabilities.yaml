@@ -24,9 +24,8 @@ spec:
   deployment:
     apicastHosted:
       authentication:
-        appKeyAppID:
-          appID: "X-PayU-App-Id"
-          appKey: "X-PayU-App-Key"
+        userkey:
+          authUserKey: "user_key"
           credentials: "headers"
   backendUsages:
     payu_backend:
@@ -135,9 +134,8 @@ spec:
   deployment:
     apicastHosted:
       authentication:
-        appKeyAppID:
-          appID: "X-PayU-App-Id"
-          appKey: "X-PayU-App-Key"
+        userkey:
+          authUserKey: "user_key"
           credentials: "headers"
   backendUsages:
     payu_backend:
