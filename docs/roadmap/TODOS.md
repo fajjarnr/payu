@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.10.35` (2026-08-05) |
-| **Core Banking MVP** | 🔴 Belum MVP — auth belum strong auth (LOGIN-003 PKCE/MFA open); money-flow live. Account P0 (ACCOUNT-001..004), LOGIN-002/004/005, PROD-047 CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII, revoke, rate-limit, error contract, Money scale 4). Belum ada service production ready. |
-| **Backlog Aktif** | 9 tickets + 23 action items (CB-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (IMP-1..6 flow improvements masuk backlog CB-034..038; ADR-0022/0023; backlog re-map per scope) |
+| **Last Release** | `1.10.51` (2026-08-11) |
+| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI), PROD-043/045; money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
+| **Backlog Aktif** | 11 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (bersihkan CLOSED dari Active Tickets & Open Findings; Last Release 1.10.51; Active Tickets urut P0→P1) |
 
 ---
 
@@ -39,18 +39,15 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
+| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
+| LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
+| PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
+| PROD-045 | P0 | Notification LOG mode bocor PII: recipient/title/body penuh di INFO log. Done: mask + log-sanitization test + scan log. | 🔴 Security/PII |
+| LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
 | ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | ACCOUNT-007 | P1 | Belum ada deployment `payu-prod`; rollout Recreate; UAT HPA min 1, tanpa PDB. Done: prod deploy via gates + HA + drill + E2E onboarding→lookup→ownership. | 🟠 Not production deployed |
-| LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
-| LOGIN-002 | P0 | Logout tanpa revoke: tidak ada endpoint logout di auth-service; raw Keycloak refresh token langsung diteruskan. **CLOSED 2026-08-11**: `POST /api/v1/auth/logout` → Keycloak end_session (client_id+client_secret+refresh_token), gateway+SecurityConfig whitelist logout, replay refresh pasca-revoke → 400 AUTH_BUS_006. Live: login 200 → refresh 200 → logout 200 → replay 400. | ✅ Revoke + replay rejection live |
-| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
-| LOGIN-004 | P0 | Rate-limit: `RateLimitAspect` baca `value()` bukan `requests=10/20` (RateLimitAspect.java:46); fail-open cache down; client key `unknown`. **CLOSED 2026-08-11**: alias `requests` + fail-closed 503 + key per-account (JWT sub)/per-IP. | ✅ Brute-force control fixed |
-| LOGIN-005 | P1 | Error contract login: `IllegalArgumentException` → 500; E2E terima false-green (503 valid / 500 salah password). **CLOSED 2026-08-11**: live-verified 200/401 invalid/423 locked/429 RATE_LIMIT_EXCEEDED/400 revoked-refresh — deterministik tanpa user enumeration; refresh replay 400 AUTH_BUS_006. | ✅ Contract fixed live |
-| LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
-| PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
 | PROD-044 | P1 | Notification false success: SMS LOG mode `return true`, push mock, mailer `smtp.example.com` + `mock:true` (SmsSender.java:26-54, PushSender.java:8-23). Done: provider nyata fail-closed + delivery ID + E2E. | 🔴 Feature unusable |
-| PROD-045 | P0 | Notification LOG mode bocor PII: recipient/title/body penuh di INFO log. Done: mask + log-sanitization test + scan log. | 🔴 Security/PII |
 | PROD-046 | P1 | Kontrak referral web↔backend tidak cocok (referralCode/totalEarnings). Done: DTO selaras + E2E atau hapus klaim fitur. | 🟠 Partial feature |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
@@ -167,12 +164,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
-| TX-003 | 🟢 | transfer | Kompensasi internal transfer: setelah commit, kompensasi = refund sender (`creditBalance` `transactionId:REFUND`), bukan release (release no-op pasca-commit). **CLOSED 2026-08-11** (CB-014) | InitiateTransferCommandHandler.processInternalTransfer |
-| BIFAST-001 | 🟢 | transfer | Bank code dari request (optional, default "014") untuk BI-FAST/SKN/RTGS. **CLOSED 2026-08-11** (CB-016) | InitiateTransferCommandHandler.resolveBankCode |
-| FEE-001 | 🟢 | transfer | Fee klaim dihapus — response fee=0, UI "Gratis". **CLOSED 2026-08-11** (CB-020, keputusan: fee=0 konsisten; pemungutan fee = fitur baru dgn ledger entry) | InitiateTransferCommandHandler.buildResult |
-| TIMEOUT-001 | 🟢 | transfer | RestTemplate bean ber-timeout (connect 5s/read 10s) — QRIS & BI-FAST fail-fast, bukan hang. **CLOSED 2026-08-11** (CB-021) | AppConfig.restTemplate |
 | SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
-| INVEST-001 | 🟢 | investment | Sell idempotent: reference "SELL:{txId}", sell-id deterministik + replay guard, @Retry/@TimeLimiter dihapus, fee scale 4. **CLOSED 2026-08-11** (CB-023) | InvestmentApplicationService.sellInvestment |
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success + PII di log | SmsSender.java:26-54 |
 | OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert | OutboxCleanupScheduler |
