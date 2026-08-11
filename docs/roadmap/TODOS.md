@@ -43,10 +43,10 @@
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | ACCOUNT-007 | P1 | Belum ada deployment `payu-prod`; rollout Recreate; UAT HPA min 1, tanpa PDB. Done: prod deploy via gates + HA + drill + E2E onboarding→lookup→ownership. | 🟠 Not production deployed |
 | LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
-| LOGIN-002 | P0 | Logout tanpa revoke: tidak ada endpoint logout di auth-service; raw Keycloak refresh token langsung diteruskan. Done: revoke nyata + replay refresh ditolak. | 🔴 Session revocation absent |
+| LOGIN-002 | P0 | Logout tanpa revoke: tidak ada endpoint logout di auth-service; raw Keycloak refresh token langsung diteruskan. **CLOSED 2026-08-11**: `POST /api/v1/auth/logout` → Keycloak end_session (client_id+refresh_token) + BFF kirim refresh token; replay refresh ditolak IdP pasca-revoke. | ✅ Revoke live (verify E2E di deploy) |
 | LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
-| LOGIN-004 | P0 | Rate-limit: `RateLimitAspect` baca `value()` bukan `requests=10/20` (RateLimitAspect.java:46); fail-open cache down; client key `unknown`. Done: alias annotation + per-IP/per-account fail-safe. | 🔴 Brute-force control broken |
-| LOGIN-005 | P1 | Error contract login: `IllegalArgumentException` → 500; E2E terima false-green (503 valid / 500 salah password). Done: 401/423/429/503 deterministic tanpa user enumeration. | 🟠 Contract gap |
+| LOGIN-004 | P0 | Rate-limit: `RateLimitAspect` baca `value()` bukan `requests=10/20` (RateLimitAspect.java:46); fail-open cache down; client key `unknown`. **CLOSED 2026-08-11**: alias `requests` + fail-closed 503 + key per-account (JWT sub)/per-IP. | ✅ Brute-force control fixed |
+| LOGIN-005 | P1 | Error contract login: `IllegalArgumentException` → 500; E2E terima false-green (503 valid / 500 salah password). **CLOSED 2026-08-11**: 401 invalid / 423 locked / 429 rate-limit / 503 IdP down, deterministik tanpa user enumeration. | ✅ Contract fixed |
 | LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
 | PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
 | PROD-044 | P1 | Notification false success: SMS LOG mode `return true`, push mock, mailer `smtp.example.com` + `mock:true` (SmsSender.java:26-54, PushSender.java:8-23). Done: provider nyata fail-closed + delivery ID + E2E. | 🔴 Feature unusable |
@@ -63,8 +63,7 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
-| CB-003 | transaction | `Money` scale 4 (PROD-047) + regression round-trip | PROD-047 closed |
+| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green || CB-003 | transaction | `Money` scale 4 (PROD-047) + regression round-trip | PROD-047 closed |
 | CB-004 | docs | Refresh `SERVICES.md` (stale, kontradiktif dengan TODOS) | SERVICES.md konsisten |
 | CB-010 | fx | Fee `setScale(4, HALF_EVEN)` (FX-001, FxRateService.java:108) | FX-001 closed, test green |
 | CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
@@ -168,7 +167,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 |:---|:---:|:---|:---|:---|
 | PROD-047 | 🔴 | transaction | Money scale 2 vs DECIMAL(19,4) | Money.java:40 |
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
-| LOGIN-002/003/004 | 🔴 | auth | revoke absent / password grant / rate-limit `value()` vs `requests` | KeycloakService.java:435, RateLimitAspect.java:46 |
+| LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
 | TX-003 | 🔴 | transfer | Kompensasi release setelah commit → dana hilang | WalletService.java:268-290 |
 | BIFAST-001 | 🔴 | transfer | Bank code hardcoded "014" | InitiateTransferCommandHandler.java:217 |
 | FEE-001 | 🔴 | transfer | Fee 2500/5000/25000 hanya di response | InitiateTransferCommandHandler.java:366-373 |
