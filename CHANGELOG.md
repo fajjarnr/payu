@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.44] - 2026-08-11
+
+### Added
+
+- **3scale Product auth spec aligned with runtime (PARTNER-PROD-001)**: `payu-capabilities.yaml` products (`payu-api`, `payu-product`) now declare `authentication.userkey` (`authUserKey: user_key`, `credentials: headers`) instead of `appKeyAppID`. The capabilities CRD has no `credentials` field, so the operator left `credentials_location=query` and the services stayed on `backend_version=1` (user_key) — header/query app_id+app_key authentication always returned `403 Authentication parameters missing`. After the fix, clients authenticate through the public APIcast edge with the `user_key` header.
+- **PARTNER-PROD-001 public edge E2E evidence (live, sandbox `cluster-9knnm`)**: full SNAP-BI money flow through `https://api-payu-apicast-production.apps.fajjjar.my.id` verified — `POST /v1/partner/auth/token` → 200 JWT (HMAC X-SIGNATURE, fixture partner `cli_pdgate01`), `POST /v1/partner/payments` → 200 `2002500`, `GET /v1/partner/payments/{ref}` → 200 `COMPLETED`, `POST /v1/partner/payments/{ref}/refund` → 200 `COMPLETED`. Wallet ledger double-entry round-trip exact (DEBIT 999,900 / CREDIT 500,100 / REFUND_REVERSAL back to 1,000,000 / 500,000). Negative: no credentials 403, wrong `user_key` 403, invalid signature `4012504`, bogus token `4012506`. Quota: Basic plan `hits` limit 5/min → 6th request `429` (raised to 60/min after proof). Failover: pod delete of one APIcast replica served without gap.
+
+### Fixed
+
+- **APIcast stale configuration after promote (PARTNER-PROD-001)**: `APICAST_CONFIGURATION_LOADER=boot` loads the proxy config only at boot; config promoted later (e.g. `credentials_location` change) is never picked up. Runbook now requires an APIcast rollout restart after any product/promote change; the master config endpoint (`/master/api/proxy/configs/:environment.json`) is confirmed healthy (`200` with both master and `system-master-apicast` tokens).
+- **Public gateway bypass route removed (PARTNER-PROD-001)**: deleted `infrastructure/workloads/overlays/payu-dev/partner-api-route.yaml` and its kustomization entry — the direct `partner-api.apps.cluster-9knnm...` Route to `gateway-service` bypassed 3scale auth/quota. Overlay re-applied; only the `web-app` route remains. Gateway ingress stays restricted to the `payu-api-management` namespace via the `allow-3scale-to-gateway-service` NetworkPolicy.
+
+### Known blockers
+
+- **PARTNER-PROD-001 remaining**: WAF (Coraza, DEPLOY-006), mTLS APIcast→gateway (private backend is in-cluster HTTP + netpol), per-IP rate limit policy, and 3scale usage limits are not declarative in the capabilities CRD (set via system API; documented in `infrastructure/platform/api-management/3scale/README.md`).
+
 ## [1.10.43] - 2026-08-10
 
 ### Added

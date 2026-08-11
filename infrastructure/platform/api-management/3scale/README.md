@@ -133,6 +133,34 @@ In the 3scale Admin Portal:
 5. 3scale injects `X-PayU-Partner-Id` and `X-PayU-Plan-Id` headers
 6. PayU gateway-service handles banking-specific auth (HMAC, JWT)
 
+## Operational notes (verified 2026-08-11, 3scale 2.16.4)
+
+- **Client authentication**: the `Product` CR must declare `authentication.userkey`
+  (`authUserKey: user_key`, `credentials: headers`). The capabilities CRD has **no
+  `credentials` field on `appKeyAppID`**, so the operator leaves
+  `credentials_location=query` and the service keeps `backend_version=1`
+  (user_key) — header app_id/app_key auth then always fails with
+  `403 Authentication parameters missing`. Clients send the application's
+  `user_key` (visible in `Admin API → accounts/{id}/applications`) as the
+  `user_key` header.
+- **APIcast config loading**: `APICAST_CONFIGURATION_LOADER=boot` reads the proxy
+  config once at startup. After any Product/promote/config change you MUST
+  `oc rollout restart deployment/apicast-production` (and staging) or the edge
+  keeps serving the stale config (symptom: new auth/quota settings ignored).
+- **ProxyConfigPromote is one-shot**: it refuses further updates once Ready.
+  Re-promote by deleting and recreating the CR (operator re-syncs from the
+  Product CR and promotes the latest sandbox config).
+- **Usage limits are not declarative**: the capabilities CRD does not support
+  plan usage limits. Set them via the system API, e.g.
+  `POST /admin/api/application_plans/{plan_id}/metrics/{metric_id}/limits.json
+  -d period=minute&value=60` (limit id returned; update with `PUT .../limits/{id}.json`).
+- **Health checks**: `GET /master/api/proxy/configs/production.json?access_token=...`
+  (master domain) returns 200 and is the endpoint APIcast polls; `GET /master/api/providers`
+  returns 404 for collection GET by design (only POST create exists).
+- **Gateway trust boundary**: the `allow-3scale-to-gateway-service` NetworkPolicy
+  restricts gateway-service ingress to the `payu-api-management` namespace;
+  production still requires mTLS between APIcast and gateway (Service Mesh).
+
 ## Security Notes
 
 - Never commit 3scale passwords or provider access tokens

@@ -4,6 +4,12 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-11 — Partner Service Production Readiness Gate: PARTNER-PROD-001 public edge LIVE (sandbox `cluster-9knnm`)**:
+> - **Blocker sync system-master resolved** setelah cluster upgrade 4.18→4.19→4.20 selesai: `system-app` 3/3, Backend/Product/Application/ProxyConfigPromote capabilities semua `Synced=True` (sebelumnya Puma timeout 40s pada `/check.txt` selama upgrade berjalan).
+> - **Root cause 403 `Authentication parameters missing`**: CRD capabilities tidak punya field `credentials` pada `appKeyAppID` → operator meninggalkan `credentials_location=query` sementara service `backend_version=1` (user_key); APIcast (loader `boot`) juga masih memegang config v8 lama karena tidak reload setelah promote. Fix declarative: Product CR pindah ke `userkey` auth (`user_key` header) + re-promote + rollout restart APIcast.
+> - **E2E dari luar cluster via `api-payu-apicast-production.apps.fajjjar.my.id`**: token → payment → status → refund semua **200** dengan signature SNAP-BI asli; ledger wallet double-entry round-trip exact (999,900 → 500,100 → kembali 1,000,000/500,000); negative auth (403 missing/failed, `4012504`, `4012506`); quota Basic plan 5/min → **429** pada request ke-6 (dinaikkan ke 60/min); failover pod-delete tanpa gap; bypass Route `partner-api` → gateway dihapus (manifest + live), ingress gateway kini hanya dari namespace `payu-api-management`.
+> - **Sisa PARTNER-PROD-001**: WAF Coraza (DEPLOY-006), mTLS APIcast→gateway (saat ini in-cluster HTTP + netpol), per-IP rate limit, runbook maintenance APIcast (restart setelah promote). Gate PARTNER-PROD-002 s/d 011 tetap OPEN.
+
 > ✅ **2026-08-05 — Lab cluster `cluster-nkk8q` payu-sit platform bootstrap (GitOps + operators)**:
 > - **ArgoCD bootstrapped**: 8 `AppProject` (payu-dev/sit/uat/preprod/payu + monitoring/platform/preview), 3 `ApplicationSet` (`payu-environments`, `payu-environment-platform`, `payu-identity`) → 18 `Application` generated; workloads `payu-dev/sit/uat/preprod` Synced, messaging `sit/uat/preprod` Healthy, identity `sit/uat/preprod` Synced.
 > - **ArgoCD CR declarative**: `kustomizeBuildOptions: --enable-helm` + `extraConfig` HPA health check (target-missing = Progressing) applied via manifest (no `oc patch`); application-controller resource limits dropped after repeated OOMKill at 2Gi.
