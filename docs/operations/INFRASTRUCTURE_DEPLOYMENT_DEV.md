@@ -16,6 +16,7 @@ dan secret runtime dari Vault/VSO.
 | Data/cache | `infrastructure/platform/data/overlays/dev` |
 | Messaging | `infrastructure/platform/messaging/overlays/payu-dev` |
 | Identity | `infrastructure/platform/identity/overlays/dev` di `payu-sso` |
+| API management | `infrastructure/platform/api-management/3scale` di `payu-api-management` |
 | GitOps workload | Application `payu-dev` |
 | Cache | Plain Hot Rod, endpoint auth/encryption disabled; dev-only |
 | HA profile | Overlay dev; jangan dipakai sebagai baseline capacity production |
@@ -31,6 +32,70 @@ dan secret runtime dari Vault/VSO.
 Jangan melompati dependency hanya karena pod aplikasi dapat dibuat. Aplikasi
 yang `Running` tetapi database, cache, broker, atau VSO belum `Ready` belum
 merupakan deployment berhasil.
+
+## API management (3scale)
+
+3scale di `payu-api-management` melayani public edge untuk workload PayU.
+Kontrak deployment (lihat `infrastructure/platform/api-management/3scale/`):
+
+- `apimanager.yaml` — APIManager dengan storage `system` di **EFS CSI**
+  (`efs-csi` StorageClass, RWX). APIManager ini tidak pakai MinIO S3 untuk
+  system file storage; `simpleStorageService` tidak dipakai.
+- `payu-capabilities.yaml` — Backend/Product/ApplicationPlan declarative
+  (Backend `payu-backend` → `gateway-service`, Product `payu-api` +
+  `payu-product` dengan mapping rules).
+- `threescale-provider-account` secret — `adminURL` (payu-admin route) +
+  `token` (dari `system-seed`). Wajib ada sebelum capabilities reconcile.
+- ClusterIssuer `letsencrypt-prod-issuer` — DNS01 Route53, zone
+  `apps.fajjjar.my.id` (`Z03524191B5L20ILPO48O`), credential secret
+  `cert-manager-route53-fajjjar` (copy `kube-system/aws-creds`).
+
+Fakta lapangan (2026-08-11):
+
+- APIManager recreate membutuhkan re-deploy proxy config + promote ke
+  production agar zync membuat route; bila routes zync hilang, operator
+  `Product`/`Backend` gagal dengan 503 karena `payu-admin` unreachable.
+- `threescale-provider-account` **tidak** dibuat ulang otomatis oleh operator
+  setelah APIManager recreate; buat manual dari `system-seed.ADMIN_ACCESS_TOKEN`.
+- Product error `backend usage does not have valid backend reference` adalah
+  race saat Backend baru Synced; fix dengan annotate force reconcile
+  (`apps.3scale.net/reconcile`).
+- Operator 3scale kadang tetap `Reconciling not finished` walaupun semua
+  deployment ready; API tetap live lewat APIcast. Jangan mengejar
+  `Available=True` sebagai satu-satunya bukti.
+- Zync-managed routes tidak otomatis ter-recreate setelah APIManager
+  recreate (Red Hat Solution 7139600). Resync resmi:
+  `oc rsh <system-sidekiq-pod> bash -c 'bundle exec rake zync:resync:domains'`.
+- Promote proxy config via API sering `403 Access denied`; gunakan
+  `ProxyConfigPromote` CR (declarative) — `productCRName` + `production: true`.
+- Backend service sync (app key tidak dikenal → APIcast 403) butuh
+  `BackendStorageRewriteWorker.perform_async("Service", [<service_id>])`
+  via rails runner di system-app; arg pertama **class name string**, bukan id.
+- Route manual yang host-nya sama dengan route zync akan membuat route zync
+  `Rejected` ("already exposes ... and is older"). Hapus route manual, jangan
+  duplikasi host dengan zync-managed route.
+- `backend-cron` crash `Errno::ENOENT dev/stdout` bila `CONFIG_LOG_PATH`
+  menunjuk path yang tidak ada; set `CONFIG_LOG_PATH=/tmp`.
+
+Bootstrap API management:
+
+```bash
+rtk oc apply -k infrastructure/platform/api-management/3scale
+rtk oc apply -f infrastructure/platform/api-management/3scale/payu-capabilities.yaml
+rtk oc get backend,product -n payu-api-management
+# bila Product gagal "backend usage does not have valid backend reference":
+rtk oc annotate product payu-api payu-product -n payu-api-management \
+  apps.3scale.net/reconcile="$(date +%s)" --overwrite
+```
+
+Verifikasi edge:
+
+```bash
+curl -sk -o /dev/null -w '%{http_code}\n' \
+  --resolve api-payu-apicast-production.apps.fajjjar.my.id:443:$(dig +short api-payu-apicast-production.apps.fajjjar.my.id) \
+  "https://api-payu-apicast-production.apps.fajjjar.my.id/v1/partner/payment-links?user_key=test"
+# 403 = APIcast auth boundary aktif (bukan 404/503)
+```
 
 ## Preflight dan render
 
