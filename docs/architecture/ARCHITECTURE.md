@@ -91,7 +91,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 | **Developer Hub**         | Red Hat Developer Hub                | Backstage.io (CNCF)        |
 | **Shared Libraries**      | Security, Resilience, Cache Starters | Spring Boot Starters       |
 
-> **Portability Note**: All components use standard APIs (OIDC, RESP, Kafka Protocol, SQL, AMQP).
+> **Portability Note**: All components use standard APIs (OIDC, Hot Rod, Kafka Protocol, SQL, AMQP).
 > Code remains portable - only configuration changes needed to switch providers.
 
 ### Polyglot Microservices Strategy
@@ -168,8 +168,8 @@ C4Container
 
   System_Boundary(payu_platform, "PayU Digital Banking Platform") {
     Container(mobile, "Mobile App", "React Native / Expo", "Customer-facing mobile application")
-    Container(web_app, "Web App", "Next.js 15", "Customer web portal")
-    Container(admin_web, "Admin Dashboard", "Next.js 15", "Internal administration interface")
+    Container(web_app, "Web App", "Next.js 16", "Customer web portal")
+    Container(admin_web, "Admin Dashboard", "Next.js 16", "Internal administration interface")
     Container(gateway, "API Gateway", "Quarkus Native", "Rate limiting, JWT validation, routing")
 
     System_Boundary(core_banking, "Core Banking Services") {
@@ -206,17 +206,17 @@ C4Container
     }
 
     ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets")
-    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Event Store", "Transaction records, events")
+    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Outbox", "Transaction records, events")
     ContainerDb(wallet_db, "Wallet Database", "PostgreSQL 16", "Double-entry ledger")
     ContainerDb(kyc_db, "KYC Database", "PostgreSQL 16", "eKYC data (JSONB)")
-    ContainerDb(analytics_db, "Analytics Database", "TimescaleDB", "Time-series analytics")
+    ContainerDb(analytics_db, "Analytics Database", "PostgreSQL 16 + TimescaleDB ext", "Time-series analytics")
 
     ContainerQueue(kafka_streams, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event streaming, CDC")
     ContainerQueue(amq_broker, "AMQ Broker (Artemis)", "AMQP 1.0", "Point-to-point messaging")
 
     ContainerDb(cache, "Data Grid", "Hot Rod (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
 
-    Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24", "Identity & access management")
+    Container(sso, "Red Hat SSO (RHBK)", "Keycloak v26", "Identity & access management")
   }
 
   System_Ext(bi_fast, "BI-FAST Simulator", "External transfer network")
@@ -506,7 +506,7 @@ CREATE TABLE ledger_entries (
 | Attribute            | Value                                             |
 | -------------------- | ------------------------------------------------- |
 | **Technology**       | Python 3.12, FastAPI (UBI-based)                  |
-| **Database**         | TimescaleDB                                       |
+| **Database**         | PostgreSQL 16 + TimescaleDB ext                                       |
 | **Port**             | 8008                                              |
 | **Responsibilities** | Fraud scoring, user insights, time-series metrics |
 
@@ -683,7 +683,7 @@ CREATE TABLE ledger_entries (
 | ---------------------- | ----------- | ------------------------------------ |
 | **security-starter**   | Spring Boot | Encryption, Masking, Audit           |
 | **resilience-starter** | Spring Boot | Circuit Breaker, Retry, Bulkhead     |
-| **cache-starter**      | Spring Boot | Multi-layer Redis + Caffeine cache   |
+| **cache-starter**      | Spring Boot | Multi-layer Hot Rod + Caffeine cache   |
 | **grpc-starter**       | Spring Boot | gRPC server/client auto-config       |
 | **events-starter**     | Spring Boot | CloudEvent envelope, Kafka producers |
 | **outbox-starter**     | Spring Boot | Transactional outbox pattern         |
@@ -878,7 +878,7 @@ C4Container
 
   System_Boundary(core_banking_db, "Core Banking Data Layer") {
     ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets, profiles")
-    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Event Store", "Transaction records, audit trail")
+    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Outbox", "Transaction records, audit trail")
     ContainerDb(wallet_db, "Wallet Database", "PostgreSQL 16", "Double-entry ledger")
     ContainerDb(auth_db, "Auth Database", "PostgreSQL 16", "Sessions, devices, MFA")
     ContainerDb(investment_db, "Investment Database", "PostgreSQL 16", "Portfolios, mutual funds")
@@ -888,7 +888,7 @@ C4Container
   System_Boundary(supporting_db, "Supporting Services Data Layer") {
     ContainerDb(kyc_db, "KYC Database", "PostgreSQL 16 (JSONB)", "eKYC documents, OCR results")
     ContainerDb(notification_db, "Notification Database", "PostgreSQL 16", "Notification history")
-    ContainerDb(analytics_db, "Analytics Database", "TimescaleDB", "Time-series metrics, fraud data")
+    ContainerDb(analytics_db, "Analytics Database", "PostgreSQL 16 + TimescaleDB ext", "Time-series metrics, fraud data")
     ContainerDb(cms_db, "CMS Database", "PostgreSQL 16", "Banners, promotions, content")
   }
 
@@ -898,7 +898,7 @@ C4Container
 
   System_Boundary(event_streaming, "Event Streaming") {
     ContainerQueue(kafka, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event log, CDC")
-    ContainerQueue(event_store, "Event Store", "PostgreSQL 16", "Event sourcing storage")
+    ContainerQueue(outbox, "Outbox", "PostgreSQL 16 (per service)", "Transactional outbox for event publishing")
   }
 
   System_Boundary(message_queue, "Message Queue") {
@@ -917,7 +917,7 @@ C4Container
   Rel(account_svc, kafka, "Publishes events")
 
   Rel(transaction_svc, transactions_db, "Reads/Writes")
-  Rel(transaction_svc, event_store, "Appends events")
+  Rel(transaction_svc, outbox, "Writes events atomically")
   Rel(transaction_svc, kafka, "Publishes events")
   Rel(transaction_svc, data_grid, "Idempotency check")
 
@@ -935,8 +935,8 @@ C4Container
   Rel(analytics_svc, kafka, "Consumes events")
 ```
 
-> **Portability**: All services use standard Redis clients (`spring-data-redis`, `quarkus-redis-client`).
-> Can switch to AWS ElastiCache, Azure Cache, or plain Redis by changing configuration only.
+> **Portability**: All services use standard Hot Rod clients (`spring-data-infinispan`/`hotrod-client`); Python pakai REST v2 (`/rest/v2/caches/`).
+> Data Grid endpoint tanpa RESP — migrasi ke cache lain membutuhkan adapter tersendiri.
 
 ### 5.2 CQRS Implementation (C4 Dynamic)
 
@@ -1038,50 +1038,46 @@ C4Deployment
     Container(client_app, "Client Applications", "Mobile App, Web Browser")
   }
 
-  Deployment_Node(perimeter, "Perimeter Security Layer", "AWS WAF + Shield") {
-    Container(waf, "Web Application Firewall", "AWS WAF", "Bot protection, rate limiting")
-    Container(ddos, "DDoS Protection", "AWS Shield", "DDoS mitigation")
+  Deployment_Node(perimeter, "Edge Layer", "DNS + TLS + APIcast") {
+    Container(dns, "Route 53", "Wildcard *.apps.fajjjar.my.id", "Apex + wildcard alias ke shared ingress NLB")
+    Container(ingress, "Shared IngressController", "OpenShift Router", "TLS 1.3 termination, wildcard cert via cert-manager")
+    Container(apicast, "3scale APIcast", "Nginx + Lua", "API key validation, rate plans, analytics")
   }
 
-  Deployment_Node(network, "Network Security Layer", "AWS VPC") {
-    Container(lb, "Load Balancer", "AWS ALB", "SSL termination, routing")
-    Container(vpn, "VPN Gateway", "AWS VPN", "Internal access")
+  Deployment_Node(network, "Network Security Layer", "OpenShift NetworkPolicy") {
+    Container(np, "Default-deny + allow rules", "NetworkPolicy", "Per-namespace zero-trust; egress allow-all pola dev")
+    Container(mtls, "Service Mesh mTLS", "Istio (UAT+)", "PeerAuthentication STRICT")
   }
 
-  Deployment_Node(platform, "Application Platform", "OpenShift 4.20") {
-    Deployment_Node(gateway_zone, "DMZ Zone") {
-      Container(api_gateway, "API Gateway", "Quarkus Native", "JWT validation, rate limiting")
-      Container(ingress, "Ingress Gateway", "Istio", "mTLS termination")
+  Deployment_Node(platform, "Application Platform", "OpenShift 4.20+") {
+    Deployment_Node(gateway_zone, "Gateway Zone") {
+      Container(api_gateway, "Gateway Service", "Quarkus", "JWT validation, SNAP-BI, idempotency, rate limiting")
     }
 
-    Deployment_Node(service_zone, "Service Zone (mTLS)") {
+    Deployment_Node(service_zone, "Service Zone") {
       Container(services, "Microservices", "Spring Boot/Quarkus/Python", "Business logic")
-      ContainerDb(databases, "Databases", "PostgreSQL", "Encrypted data at rest")
+      ContainerDb(databases, "Databases", "CNPG PostgreSQL", "Encrypted data at rest")
     }
 
     Deployment_Node(infra_zone, "Infrastructure Zone") {
       Container(sso, "SSO (RHBK)", "Red Hat Build of Keycloak v26", "OAuth2/OIDC provider")
-      Container(vault, "HashiCorp Vault", "Vault", "Secret management")
+      Container(vault, "HashiCorp Vault", "Vault", "Secret management, auto-unseal AWS KMS")
     }
   }
 
   Deployment_Node(monitoring, "Security Monitoring", "Dedicated") {
-    Container(falco, "Falco", "Runtime security", "Container threat detection")
+    Container(rhacs, "RHACS", "Runtime security", "eBPF-based collector; Falco di-skip (RHCOS + RHACS cukup)")
     Container(siem, "Wazuh", "SIEM", "Security monitoring")
   }
 
-  Rel(client_app, waf, "HTTPS", "TLS 1.3")
-  Rel(waf, ddos, "Protected traffic")
-  Rel(ddos, lb, "HTTPS")
-  Rel(lb, ingress, "HTTPS")
-  Rel(ingress, api_gateway, "mTLS")
+  Rel(client_app, apicast, "HTTPS", "TLS 1.3")
+  Rel(apicast, api_gateway, "Internal", "X-PayU-Partner-Id/Plan-Id/Request-Id headers")
   Rel(api_gateway, sso, "Validate token", "OIDC")
-  Rel(api_gateway, services, "mTLS", "Service mesh")
-  Rel(services, vault, "Fetch secrets", "AppRole")
+  Rel(api_gateway, services, "Routes to")
+  Rel(services, vault, "Fetch secrets", "VSO (VaultStaticSecret)")
   Rel(services, databases, "Encrypted connection")
-  Rel(vpn, service_zone, "Internal access")
-  Rel(services, falco, "Security events", "Syslog")
-  Rel(falco, siem, "Forward logs")
+  Rel(services, rhacs, "Security events")
+  Rel(rhacs, siem, "Forward logs")
 ```
 
 ### 6.2 Authentication Flow (C4 Dynamic)
@@ -1093,8 +1089,8 @@ C4Dynamic
   Person(user, "User")
   Container(mobile, "Mobile App", "React Native")
   Container(auth_svc, "Auth Service", "Spring Boot 4.1")
-  Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24")
-  ContainerCache(cache, "Data Grid", "Redis", "Token cache, rate limits")
+  Container(sso, "Red Hat SSO (Keycloak)", "RHBK v26")
+  ContainerCache(cache, "Data Grid", "Hot Rod", "Token cache, rate limits")
   ContainerQueue(notification, "Notification Queue", "AMQ Broker", "OTP delivery")
   Container(notification_svc, "Notification Service", "Quarkus")
   ContainerDb(user_db, "User Database", "PostgreSQL", "Credentials, devices")
@@ -1162,13 +1158,13 @@ C4Component
 
   Container(gateway, "API Gateway", "Quarkus Native (gateway-service)")
 
-  Component(rate_limiter, "Rate Limiter", "RateLimitFilter (Redis Sliding Window)", "Per-IP and per-user limits")
+  Component(rate_limiter, "Rate Limiter", "RateLimitFilter (Hot Rod Sliding Window)", "Per-IP and per-user limits")
   Component(jwt_filter, "JWT Filter", "JwtValidationFilter", "Token validation and extraction")
   Component(router, "Route Registry", "RouteRegistry", "Dynamic request routing to services")
   Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Per-service failure handling")
-  Component(idempotency, "Idempotency", "IdempotencyFilter", "Redis-backed dedup (24h TTL)")
+  Component(idempotency, "Idempotency", "IdempotencyFilter", "Hot Rod-backed dedup (24h TTL)")
 
-  ComponentDb(redis, "Data Grid", "Redis", "Rate limit counters, token cache")
+  ComponentDb(redis, "Data Grid", "Hot Rod", "Rate limit counters, token cache")
 
   Rel(gateway, rate_limiter, "Checks")
   Rel(rate_limiter, redis, "Reads/Writes")
@@ -1181,6 +1177,10 @@ C4Component
 ```
 
 ### 7.2 Istio Service Mesh
+
+> Status: manifests di `infrastructure/platform/mesh/` (Service Mesh/OSSM 3.4).
+> Enforcement STRICT untuk UAT ke atas; `payu-dev` memakai NetworkPolicy
+> (egress allow-all pola dev, zero-trust ingress) — lihat INFRASTRUCTURE_DEPLOYMENT.md.
 
 ```yaml
 apiVersion: security.istio.io/v1beta1
@@ -1262,7 +1262,7 @@ PayU operates as a payment gateway serving multiple external partners (TokoBapak
 
 | Concern                          | Tier 1 (3scale)                | Tier 2 (gateway-service)          |
 | -------------------------------- | ------------------------------- | --------------------------------- |
-| **Public endpoint**              | ✅ `payu-apicast.apps.payu.ocp.fajjjar.my.id` | Internal only |
+| **Public endpoint**              | ✅ `api-payu-apicast-production.apps.fajjjar.my.id` | Internal only |
 | **API key provisioning**         | ✅ Developer Portal, self-service | N/A |
 | **Per-partner rate limits**      | ✅ Rate Plans (e.g., 1000 req/min for TokoBapak) | Per-IP / per-user (defense in depth) |
 | **Usage analytics**              | ✅ Per-partner dashboards | Internal observability |
@@ -1270,7 +1270,7 @@ PayU operates as a payment gateway serving multiple external partners (TokoBapak
 | **SNAP-BI compliance**           | N/A                             | ✅ SNAP-BI headers + body validation |
 | **HMAC request signing**         | N/A                             | ✅ Partner HMAC validation |
 | **JWT auth (Keycloak)**          | N/A                             | ✅ OAuth2 Resource Server |
-| **Idempotency keys**             | N/A                             | ✅ Redis-backed dedup (24h TTL) |
+| **Idempotency keys**             | N/A                             | ✅ Hot Rod-backed dedup (24h TTL) |
 | **mTLS to backend**              | N/A                             | ✅ Istio STRICT mode |
 
 #### 7.3.3 Header Forwarding Contract
@@ -1309,9 +1309,9 @@ Manifests ready at `infrastructure/platform/api-management/3scale/`:
 #### 7.3.5 3scale Deployment Prerequisites
 
 1. **License**: Red Hat 3scale license secret in `payu-api-management` namespace (not committed)
-2. **Wildcard DNS**: `*.apps.payu.ocp.fajjjar.my.id` → NLB ingress (private zone `payu.ocp.fajjjar.my.id`)
+2. **Wildcard DNS**: `*.apps.fajjjar.my.id` → shared ingress NLB
 3. **Database**: 3scale requires its own PostgreSQL (separate from PayU's `payu-postgres-0`)
-4. **Redis**: Shared with PayU's `payu-cache` (or dedicated) for Backend Listener storage
+4. **Backend Redis**: dedicated (bukan `payu-cache`)'s `payu-cache` (or dedicated) for Backend Listener storage
 5. **Tenant secrets**: `system-seed`, `backend-redis`, `backend-listener-secret`, `backend-worker-secret`
 
 #### 7.3.6 Application Registration (post-deploy)
@@ -1321,18 +1321,14 @@ For each partner (e.g., TokoBapak), register an Application in 3scale Developer 
 ```bash
 # Create Application via 3scale Admin API
 APICAST_ACCESS_TOKEN=$(oc get secret system-seed -n payu-api-management -o jsonpath='{.data.ACCESS_TOKEN}' | base64 -d)
-curl -X POST "https://payu-admin.apps.payu.ocp.fajjjar.my.id/admin/api/services/{service_id}/applications.json" \
+curl -X POST "https://payu-admin.apps.fajjjar.my.id/admin/api/services/{service_id}/applications.json" \
   -H "Authorization: Bearer ${APICAST_ACCESS_TOKEN}" \
   -d "access_token=${USER_KEY}&application_id=tokobapak&plan_id=premium"
 ```
 
 Application receives a `user_key` (or OAuth client_credentials). Partner includes this in `Authorization: Bearer` header on every API call. APIcast validates the key against the rate plan, attaches `X-PayU-*` headers, and forwards to the PayU gateway-service.
 
-#### 7.3.7 Fallback to Kong (lab/early partners)
-
-For lab deployments with <5 partners, a lightweight Kong deployment can substitute for 3scale to avoid the heavy system deployment. Manifests at `infrastructure/platform/api-management/kong/`. Kong is API-compatible with 3scale's APIcast for basic rate limiting + key validation. When partner count grows ≥5, migrate to full 3scale per ADR-0014.
-
-#### 7.3.8 E2E Verification (cards CRUD via APIcast)
+#### 7.3.7 E2E Verification (cards CRUD via APIcast)
 
 Verified end-to-end via 3scale APIcast on Jun 15 (READY-022, iter 9):
 
@@ -1356,113 +1352,77 @@ Full chain proven: APIcast (user_key) → backend authrep (provider_key) → gat
 
 ```mermaid
 C4Deployment
-  title PayU on OpenShift 4.20+ - Production Deployment
+  title PayU on OpenShift 4.20+ - Deployment
 
-  Deployment_Node(aws_region, "AWS Region: ap-southeast-1", "Cloud Region") {
+  Deployment_Node(aws_region, "AWS Region: ap-southeast-1", "OpenShift cluster, 3 AZ (3 control-plane + 5 workers)") {
 
-    Deployment_Node(az_a, "Availability Zone A", "AWS AZ") {
-      Node(eks_a, "EKS Node Group", "Kubernetes Worker Nodes") {
-        Container(account_pod, "Account Service", "Pod: 3 replicas")
-        Container(wallet_pod, "Wallet Service", "Pod: 3 replicas")
-        ContainerDb(pg_primary, "PostgreSQL Primary", "RDS Multi-AZ")
-      }
+    Deployment_Node(platform_ns, "Platform Namespaces", "openshift-operators, payu-cicd, payu-sso, payu-api-management") {
+      ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka (payu-kafka)")
+      ContainerDb(data_grid, "Data Grid", "Hot Rod (payu-cache, port 11222)")
+      Container(amq, "AMQ Broker", "CORE/AMQP/STOMP :61616")
+      Container(sso_cluster, "Red Hat SSO", "RHBK v26 (payu-keycloak, payu-sso)")
+      Container(vault, "Vault", "Raft 3/3 + AWS KMS auto-unseal")
+      Container(gitops, "GitOps", "ArgoCD ApplicationSets (automated sync, prune, self-heal)")
+      Container(tekton, "CI/CD", "Tekton Pipelines (payu-cicd)")
+      Container(monitoring, "Monitoring", "Prometheus + Grafana + LokiStack + Jaeger")
     }
 
-    Deployment_Node(az_b, "Availability Zone B", "AWS AZ") {
-      Node(eks_b, "EKS Node Group", "Kubernetes Worker Nodes") {
-        Container(transaction_pod, "Transaction Service", "Pod: 5 replicas")
-        Container(auth_pod, "Auth Service", "Pod: 3 replicas")
-        ContainerDb(pg_standby, "PostgreSQL Standby", "RDS Multi-AZ (Sync Replication)")
-      }
+    Deployment_Node(app_ns, "Application Namespaces", "payu-dev, payu-sit, payu-uat, payu-preprod, payu") {
+      Container(workloads, "Microservices", "Spring Boot 4.1 / Quarkus / Python (immutable digest images)")
+      ContainerDb(cnpg, "CNPG PostgreSQL", "payu-database, 3 instances, walStorage, Barman Cloud backup (S3)")
     }
 
-    Deployment_Node(infra_namespace, "Namespace: payu-infrastructure", "OpenShift") {
-      ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka KRaft Cluster")
-      ContainerDb(redis_cluster, "Data Grid", "Hot Rod Cluster")
-      Container(sso_cluster, "Red Hat SSO", "RHBK v26")
-      Container(monitoring, "Monitoring Stack", "Prometheus + Grafana")
-      Container(tracing, "Distributed Tracing", "Jaeger")
-    }
-
-    Deployment_Node(ingress_layer, "Ingress Layer", "Istio") {
-      Container(istio_ingress, "Istio Ingress Gateway", "Load Balancer + mTLS")
-      Container(waf, "WAF + DDoS", "AWS Shield + WAF")
+    Deployment_Node(edge, "Edge", "Shared IngressController + 3scale APIcast") {
+      Container(apicast, "APIcast", "Public partner edge (api-payu-apicast-*.apps.fajjjar.my.id)", "user_key auth, rate plans")
+      Container(ingress, "Shared Ingress", "wildcard *.apps.fajjjar.my.id, cert-manager TLS")
     }
   }
 
-  Rel(az_a, az_b, "DB Replication", "Sync")
-  Rel(istio_ingress, account_pod, "mTLS", "Service Mesh")
-  Rel(istio_ingress, transaction_pod, "mTLS", "Service Mesh")
-  Rel(account_pod, pg_primary, "ReadWrite")
-  Rel(transaction_pod, pg_primary, "ReadWrite")
-  Rel(account_pod, kafka_cluster, "Events")
-  Rel(transaction_pod, kafka_cluster, "Events")
-  Rel(auth_pod, redis_cluster, "Sessions")
-  Rel(istio_ingress, sso_cluster, "OIDC")
-  Rel(waf, istio_ingress, "HTTPS")
+  Rel(apicast, workloads, "Internal routing", "X-PayU-* headers")
+  Rel(workloads, cnpg, "ReadWrite")
+  Rel(workloads, kafka_cluster, "Events via outbox")
+  Rel(workloads, data_grid, "Hot Rod cache / REST v2 (Python)")
+  Rel(workloads, vault, "Secrets via VSO")
+  Rel(workloads, gitops, "GitOps reconciled")
+  Rel(tekton, gitops, "Promote digest, write-back")
+  Rel(ingress, apicast, "HTTPS")
 ```
 
-### 8.2 Helm Chart Structure
+### 8.2 Manifest Structure (Kustomize + Overlays)
+
+Deployment memakai Kustomize dengan base + environment overlays (bukan Helm):
 
 ```text
-payu-helm/
-├── charts/
-│   ├── account-service/
-│   │   ├── Chart.yaml
-│   │   ├── values.yaml
-│   │   └── templates/
-│   │       ├── deployment.yaml
-│   │       ├── service.yaml
-│   │       ├── hpa.yaml
-│   │       ├── configmap.yaml
-│   │       └── secret.yaml
-│   ├── transaction-service/
-│   ├── wallet-service/
-│   └── ...
-├── values/
-│   ├── production.yaml
-│   ├── sit.yaml
-│   └── development.yaml
-└── Chart.yaml
+infrastructure/
+├── foundation/
+│   ├── namespaces/                 # payu-dev, payu-sit, payu-uat, payu-preprod, payu, payu-cicd
+│   └── cluster-operators/          # CNPG, Data Grid, AMQ Streams, RHBK, 3scale, GitOps, Pipelines, VSO
+├── platform/
+│   ├── data/base/                  # CNPG cluster, Data Grid, Kafka, outbox bootstrap
+│   ├── data/overlays/<env>/        # Per-environment sizing/security
+│   ├── messaging/overlays/<env>/
+│   ├── identity/overlays/<env>/    # RHBK Keycloak
+│   ├── api-management/             # 3scale (operator shell + gated APIManager)
+│   ├── security/                   # cert-manager, vault, chaos (litmus/kraken), rhtas
+│   └── cicd/                       # argocd, tekton
+└── workloads/
+    ├── base/                       # Deployment/Service/HPA template
+    └── overlays/<env>/             # payu-dev, payu-sit, payu-uat, payu-preprod, payu-prod
 ```
+
+Apply selalu via overlay environment; image digests immutable (promote by digest, bukan tag).
 
 ### 8.3 CI/CD Pipeline
 
 > **Amendment (Mar 2026)**: CI/CD uses **Tekton Pipelines** + **ArgoCD GitOps**, not GitHub Actions.
-> See `infrastructure/tekton/` and `infrastructure/argocd/` for manifests.
+> Manifests di `infrastructure/platform/cicd/tekton/` dan `infrastructure/platform/cicd/argocd/`.
 
-```yaml
-# Tekton Pipeline (simplified)
-apiVersion: tekton.dev/v1
-kind: Pipeline
-metadata:
-  name: payu-service-pipeline
-  namespace: payu-ci
-spec:
-  params:
-    - name: SERVICE_NAME
-    - name: GIT_REVISION
-  tasks:
-    - name: unit-test
-      taskRef:
-        name: maven-test
-    - name: arch-test
-      taskRef:
-        name: archunit-test
-    - name: build-image
-      taskRef:
-        name: buildah
-      runAfter: [unit-test, arch-test]
-    - name: trivy-scan
-      taskRef:
-        name: trivy-scanner
-      runAfter: [build-image]
-    - name: update-manifests
-      taskRef:
-        name: git-update-deployment
-      runAfter: [trivy-scan]
-  # ArgoCD auto-syncs from updated manifests
-```
+Pipeline promotion (`payu-deploy-gitops-pipeline`, namespace `payu-cicd`) mengalir
+melalui gate per environment: SIT (ZAP → Schemathesis → LitmusChaos → k6),
+UAT (Schemathesis → k6 → QA/PO), preprod (Kraken + Cerberus), prod (Argo
+Rollouts + approval). Test pipeline (`payu-test-pipeline`) menjalankan fetch,
+unit, architecture (ArchUnit), dan integration dengan fail-closed security
+gates (Trivy, Grype, Semgrep, ZAP, Schemathesis).
 
 ---
 
@@ -1664,117 +1624,12 @@ Content-Type: application/json
 }
 ```
 
-### 10.3 Integration with payment-service
+### 10.3 Client Integration Guide (TokoBapak)
 
-Update TokoBapak's `payment-service` to integrate with PayU:
-
-```java
-// PayU Client Configuration
-@Configuration
-public class PayuClientConfig {
-
-    @Bean
-    public PayuClient payuClient(
-        @Value("${payu.base-url}") String baseUrl,
-        @Value("${payu.client-id}") String clientId,
-        @Value("${payu.client-secret}") String clientSecret
-    ) {
-        return PayuClient.builder()
-            .baseUrl(baseUrl)
-            .clientId(clientId)
-            .clientSecret(clientSecret)
-            .connectTimeout(Duration.ofSeconds(5))
-            .readTimeout(Duration.ofSeconds(30))
-            .build();
-    }
-}
-
-// PayU Payment Provider Implementation
-@Service
-@RequiredArgsConstructor
-public class PayuPaymentProvider implements PaymentProvider {
-
-    private final PayuClient payuClient;
-    private final StreamBridge streamBridge;
-
-    @Override
-    public PaymentResult processPayment(ProcessPaymentRequest request) {
-        // Create payment request to PayU
-        PayuPaymentRequest payuRequest = PayuPaymentRequest.builder()
-            .merchantReference(request.getOrderId())
-            .amount(new Amount(request.getAmount(), "IDR"))
-            .customer(mapCustomer(request))
-            .paymentMethod("PAYU_BALANCE")
-            .callbackUrl(webhookUrl)
-            .build();
-
-        PayuPaymentResponse response = payuClient.createPayment(payuRequest);
-
-        return PaymentResult.builder()
-            .paymentId(response.getPaymentId())
-            .status(PaymentStatus.PENDING)
-            .paymentUrl(response.getPaymentUrl())
-            .build();
-    }
-
-    // Webhook handler for PayU callbacks
-    @PostMapping("/webhooks/payu")
-    public ResponseEntity<Void> handlePayuWebhook(
-        @RequestHeader("X-Payu-Signature") String signature,
-        @RequestBody PayuWebhookEvent event
-    ) {
-        // Verify signature
-        if (!payuClient.verifySignature(signature, event)) {
-            return ResponseEntity.status(401).build();
-        }
-
-        // Publish event to Kafka
-        PaymentProcessedEvent processedEvent = PaymentProcessedEvent.builder()
-            .paymentId(event.getPaymentId())
-            .orderId(event.getMerchantReference())
-            .status(mapStatus(event.getStatus()))
-            .transactionId(event.getTransactionId())
-            .amount(event.getAmount().getValue())
-            .build();
-
-        streamBridge.send("paymentEvents-out-0", processedEvent);
-
-        return ResponseEntity.ok().build();
-    }
-}
-```
-
-### 10.4 SDK Design (Optional)
-
-```xml
-<!-- Maven Dependency -->
-<dependency>
-    <groupId>id.payu</groupId>
-    <artifactId>payu-java-sdk</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-```java
-// Usage Example
-PayuClient payu = PayuClient.builder()
-    .apiKey("pk_live_xxxxx")
-    .secretKey("sk_live_xxxxx")
-    .build();
-
-// Create payment
-Payment payment = payu.payments().create(
-    CreatePaymentRequest.builder()
-        .merchantReference("ORDER-123")
-        .amount(150000L)
-        .currency("IDR")
-        .customerPhone("+6281234567890")
-        .build()
-);
-
-// Check status
-Payment status = payu.payments().get(payment.getId());
-```
+Contoh implementasi client (Java integration + SDK usage) dipindah ke
+[frontend/developer-docs/TOKOBAPAK_INTEGRATION.md](../../frontend/developer-docs/TOKOBAPAK_INTEGRATION.md).
+Section ini berisi pola `PayuClient`, webhook handler dengan verifikasi
+`X-Payu-Signature`, dan target SDK `payu-java-sdk` (belum dipublikasikan).
 
 ---
 
@@ -1792,9 +1647,9 @@ C4Container
 
   System_Boundary(frontend_apps, "Frontend Applications") {
     Container(mobile_app, "Mobile App", "Expo (React Native)", "iOS/Android customer app")
-    Container(web_app, "Web App", "Next.js 15 + Tailwind CSS 4", "Customer web portal")
-    Container(admin_dashboard, "Admin Dashboard", "Next.js 15 + shadcn/ui", "Internal admin UI")
-    Container(developer_docs, "Developer Portal", "Next.js 15 + shadcn/ui", "API documentation & sandbox")
+    Container(web_app, "Web App", "Next.js 16 + Tailwind CSS 4", "Customer web portal")
+    Container(admin_dashboard, "Admin Dashboard", "Next.js 16 + shadcn/ui", "Internal admin UI")
+    Container(developer_docs, "Developer Portal", "Next.js 16 + shadcn/ui", "API documentation & sandbox")
   }
 
   System_Boundary(shared_layer, "Shared Frontend Layer") {
@@ -1806,7 +1661,7 @@ C4Container
   }
 
   System_Boundary(backend, "Backend Services") {
-    Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "Rate limiting, routing")
+    Container(api_gateway, "API Gateway", "Quarkus (gateway-service)", "Rate limiting, routing")
     Container(account_svc, "Account Service", "Spring Boot 4.1", "User accounts")
     Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Transactions")
     Container(partner_svc, "Partner Service", "Spring Boot 4.1", "Partner integration")
@@ -1834,8 +1689,8 @@ C4Container
 
 | Platform             | Technology                          | Purpose          | Directory                  |
 | -------------------- | ----------------------------------- | ---------------- | -------------------------- |
-| **Web App**          | Next.js 15 + Tailwind CSS 4         | Customer portal  | `frontend/web-app/`        |
-| **Developer Portal** | Next.js 15 + shadcn/ui              | Partner API docs | `frontend/developer-docs/` |
+| **Web App**          | Next.js 16 + Tailwind CSS 4         | Customer portal  | `frontend/web-app/`        |
+| **Developer Portal** | Next.js 16 + shadcn/ui              | Partner API docs | `frontend/developer-docs/` |
 | **Mobile App**       | Expo (React Native)                 | iOS/Android/Web  | `frontend/mobile/`         |
 | **Shared**           | TypeScript, Zustand, TanStack Query | Cross-platform   | -                          |
 
@@ -1877,6 +1732,16 @@ Testing Native Features (5% of time):
 
 ### 12.1 Multi-AZ Deployment
 
+| Component    | Realita saat ini (lab/prod-target)                          |
+| ------------ | ----------------------------------------------------------- |
+| Cluster      | OCP 4.20+, 8 nodes (3 control-plane + 5 workers) tersebar 3 AZ |
+| PostgreSQL   | CNPG `payu-database` 3 instance (primary + 2 replica), `walStorage` WAL, Barman Cloud backup (S3-compatible) |
+| Vault        | Raft 3/3 + AWS KMS auto-unseal, snapshot S3 tiap 6 jam      |
+| Data Grid    | `payu-cache` operator-managed, `WellFormed`                 |
+| Kafka        | AMQ Streams `payu-kafka`, topics + `.dlq` declared          |
+| Storage      | EBS gp3 (RWO) per instance; EFS CSI (RWX) untuk 3scale system |
+| DR gate      | `PROD-READINESS` open — Rollouts, storage, Vault HA/DR, approvals belum terbukti |
+
 ### 12.2 Recovery Objectives
 
 | Metric                             | Target                           |
@@ -1888,13 +1753,13 @@ Testing Native Features (5% of time):
 
 ### 12.3 Backup Strategy
 
-| Data Type      | Backup Method            | Frequency  | Retention        |
-| -------------- | ------------------------ | ---------- | ---------------- |
-| PostgreSQL     | RDS Automated            | Continuous | 7 days           |
-| PostgreSQL     | Manual Snapshots         | Weekly     | 1 year           |
-| Data Grid      | Cluster backup           | Daily      | 7 days           |
-| Kafka          | Log retention            | Continuous | 7 days           |
-| S3 (Documents) | Cross-region replication | Real-time  | Compliance-based |
+| Data Type   | Backup Method                  | Frequency  | Retention        |
+| ----------- | ------------------------------ | ---------- | ---------------- |
+| PostgreSQL  | CNPG Barman Cloud (S3-compatible) | WAL archiving | 7 days (lab) |
+| PostgreSQL  | CNPG scheduled backups         | Daily      | 1 year           |
+| Data Grid   | Cluster backup                 | Daily      | 7 days           |
+| Kafka       | Log retention                  | Continuous | 7 days           |
+| Vault       | Raft snapshot ke AWS S3 (KMS-SSE) | Tiap 6 jam | 30 days      |
 
 ---
 
@@ -2034,19 +1899,21 @@ Features:
 | Component            | Decision                       | Notes                           |
 | -------------------- | ------------------------------ | ------------------------------- |
 | **Cloud Provider**   | AWS                            | Region: ap-southeast-1          |
-| **Cluster**          | Single cluster, Multi-AZ       | Cost-effective for lab          |
+| **Cluster**          | Single cluster, Multi-AZ       | 3 AZ, cost-effective untuk lab  |
 | **Platform**         | Red Hat OpenShift 4.20+        | Full ecosystem                  |
-| **PostgreSQL**       | AWS RDS (primary)              | + Crunchy Operator for learning |
-| **Object Storage**   | OpenShift Data Foundation + S3 | ODF for persistence             |
-| **Backup Retention** | 7 days (lab)                   | Extend for production           |
+| **PostgreSQL**       | CNPG (CloudNativePG)           | Production target: AWS RDS      |
+| **Block Storage**    | EBS gp3 (RWO)                  | Per-instance volumes            |
+| **Shared Storage**   | EFS CSI (RWX)                  | 3scale system file storage      |
+| **Object Storage**   | AWS S3                         | Vault snapshot, Barman backup (ODF tidak dipakai di lab) |
+| **Backup Retention** | 7 days (lab)                   | Extend untuk production         |
 
 ### 14.3 Security Tools
 
 | Category               | Tool                  | Purpose                          |
 | ---------------------- | --------------------- | -------------------------------- |
-| **Key Management**     | HashiCorp Vault       | Secrets, PKI, transit encryption |
+| **Key Management**     | HashiCorp Vault       | Secrets, auto-unseal AWS KMS     |
 | **Container Security** | RHACS (OpenShift ACS) | Image scanning, runtime          |
-| **Runtime Security**   | Falco                 | Container runtime threats        |
+| **Runtime Security**   | RHACS SecuredCluster  | eBPF collector (Falco di-skip — RHCOS immutable + RHACS cukup) |
 | **SIEM**               | Wazuh                 | Security monitoring, compliance  |
 | **Alerting**           | AlertManager → Gmail  | Email notifications              |
 
@@ -2090,11 +1957,11 @@ Features:
 ```text
 Phase 1: Foundation (Infrastructure)
 ├── 1. OpenShift cluster setup + namespaces (5 envs)
-├── 2. PostgreSQL (RDS) + Data Grid deployment
+├── 2. PostgreSQL (CNPG) + Data Grid deployment
 ├── 3. AMQ Streams (Kafka) deployment
 ├── 4. Red Hat SSO (Keycloak) setup
 ├── 5. HashiCorp Vault deployment
-├── 6. Wazuh + Falco setup
+├── 6. Wazuh + RHACS setup
 └── 7. CI/CD pipeline (OpenShift Pipelines + GitOps)
 
 Phase 2: Simulators & Gateway
@@ -2116,9 +1983,9 @@ Phase 4: Supporting Services
 └── 4. analytics-service (insights)
 
 Phase 5: Frontend Applications
-├── 1. Web App (Next.js 15) - frontend/web-app/
+├── 1. Web App (Next.js 16) - frontend/web-app/
 ├── 2. Mobile App (Expo) - frontend/mobile/
-└── 3. Developer Portal (Next.js 15) - frontend/developer-docs/
+└── 3. Developer Portal (Next.js 16) - frontend/developer-docs/
 
 Phase 6: Additional Services
 ├── 1. backoffice-service (admin dashboard)
@@ -2145,28 +2012,31 @@ Phase 7: Integration
 | Component       | Version   |
 | --------------- | --------- |
 | Java            | 21 LTS    |
-| Spring Boot     | 3.4.x     |
-| Quarkus         | 3.17.x    |
+| Spring Boot     | 4.1.x     |
+| Quarkus         | 3.x (BOM platform) |
 | Python          | 3.12      |
 | FastAPI         | 0.115.x   |
-| Next.js         | 15.x      |
+| Next.js         | 16.x      |
 | Expo            | 52.x      |
-| Kafka           | 3.7.x     |
-| PostgreSQL      | 16.x      |
-| Redis/Data Grid | 7.x / 8.x |
+| Kafka           | AMQ Streams (Strimzi CRD) |
+| PostgreSQL      | 16.x (CNPG 1.30) |
+| Data Grid       | 8.x (Hot Rod / REST v2) |
 | OpenShift       | 4.20+     |
-| Istio           | 1.23.x    |
+| Service Mesh    | Istio (OSSM 3.4, UAT+) |
 
 ### B. Compliance Checklist
 
-- [x] PCI DSS v4.0 Audit (94/100 — Feb 2026)
+- [x] PCI DSS v4.0 Audit (94/100 — Feb 20, 2026, SEC-AUDIT-2026-002)
 - [ ] ISO 27001 Certification
 - [ ] SOC 2 Type II Report
-- [x] OJK Compliance Audit (95/100 — Feb 2026)
+- [x] OJK Compliance Audit (95/100 — Feb 20, 2026, SEC-AUDIT-2026-002)
 - [ ] BI-FAST Participation
 - [ ] QRIS Certification
 - [ ] Penetration Test (Annual)
-- [x] Security Audit (P19 full platform audit — Feb 2026)
+- [x] Security Audit (full platform audit — Feb 2026)
+
+> Sumber: [PCI-DSS & UU PDP Audit Report](../security/PCI-DSS-UU-PDP-AUDIT-REPORT.md),
+> [OJK/BI Regulatory Audit](../compliance/OJK_BI_REGULATORY_AUDIT.md). Overall score 95/100.
 
 ### C. References
 
@@ -2180,7 +2050,7 @@ Phase 7: Integration
 
 ---
 
-**Document Version**: 3.0.0
-**Last Updated**: March 22, 2026
+**Document Version**: 3.1.0
+**Last Updated**: August 11, 2026
 **Owner**: Engineering Team PayU
-**Status**: Production-Ready (23 services deployed on OpenShift)
+**Status**: Production-Ready (23 microservices + 5 simulators + web-app on OpenShift)
