@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Web-app money stays decimal strings (PROD-043)**: the exchange page coerced the amount with `valueAsNumber` and multiplied it by the FX rate as a JS float; split-bill sent `parseFloat(newBillAmount)` as the bill total and summed/divided totals with `number`; FxService/InvestmentService/PromotionService and the wallet store typed money fields as `number`; the rewards page summed cashback with `+`. Now: exchange amount is a zod-validated decimal string (`/^\d+(?:\.\d{1,4})?$/`) sent verbatim, the manual `amount * rate` float preview was removed (server estimate is the display source), split-bill uses `parseCurrencyExact`/`addCurrency`/`divideCurrency`, and all money wire types are `Money` (string). New BigInt-based helpers in `currency.ts`: `compareCurrency` (sign/order compare) and `divideCurrency` (scale-4 HALF_EVEN division, used for equal bill splits), plus exported `formatExactDecimal` (grouped string formatting without `Number()`). The pocket progress bars keep `Number()` only for the display-only balance/target ratio (no money value crosses a number).
+
+### Validation
+
+- `web-app`: 1208 tests / 0 failures (1 skipped) — new red-first `compareCurrency`/`divideCurrency` precision tests (exact beyond safe integers, HALF_EVEN ties); `tsc --noEmit`, ESLint, and `next build` all clean. Only remaining `parseFloat` in the app is inside the unused `parseIndonesianAmount` helper (no production caller).
+
+### Fixed
+
 - **Notification logs PII-free (PROD-045)**: `SmsSender` LOG-mode printed the full recipient, title and body; `EmailSender`, `PushSender`, `NotificationService` and `NotificationResource` logged the raw recipient; `ArtemisCommandConsumer` logged the entire raw command JSON; `handleFailedNotification` logged the raw error reason (exception text can embed the recipient). New domain `RecipientMasker` (emails `u***@example.com`, phones `+628****7890`, NIK-like `**********0001`, null/blank/short → `***`); every log site now logs only the masked value, title/body are never logged, the Artemis raw payload line became a byte count, and the failure-reason log line now carries the notification id only (reason stays in the DB row).
 
 ### Validation

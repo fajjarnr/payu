@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import type { Money } from '@/lib/currency';
 
 export type PromotionStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
 // XBUG-011: Superset of backend Reward.RewardType + Promotion.PromotionType values
@@ -103,7 +104,7 @@ export interface LoyaltyBalanceResponse {
 export interface Cashback {
   id: string;
   accountId: string;
-  amount: number;
+  amount: Money;
   type: 'PERCENTAGE' | 'FIXED';
   referenceId: string;
   merchantName?: string;
@@ -115,7 +116,7 @@ export interface Cashback {
 
 export interface CreateCashbackRequest {
   accountId: string;
-  amount: number;
+  amount: Money;
   type: 'PERCENTAGE' | 'FIXED';
   referenceId: string;
   merchantName?: string;
@@ -124,10 +125,10 @@ export interface CreateCashbackRequest {
 
 export interface CashbackSummaryResponse {
   accountId: string;
-  totalCashback: number;
-  pendingCashback: number;
-  creditedCashback: number;
-  expiredCashback: number;
+  totalCashback: Money;
+  pendingCashback: Money;
+  creditedCashback: Money;
+  expiredCashback: Money;
 }
 
 export interface Referral {
@@ -136,7 +137,7 @@ export interface Referral {
   refereeAccountId?: string;
   code: string;
   status: 'PENDING' | 'COMPLETED' | 'EXPIRED';
-  rewardAmount: number;
+  rewardAmount: Money;
   referralDate?: string;
   completedDate?: string;
   expiresAt: string;
@@ -145,7 +146,7 @@ export interface Referral {
 
 export interface CreateReferralRequest {
   referrerAccountId: string;
-  rewardAmount: number;
+  rewardAmount: Money;
   expiryDays: number;
 }
 
@@ -159,7 +160,7 @@ export interface ReferralSummaryResponse {
   totalReferrals: number;
   completedReferrals: number;
   pendingReferrals: number;
-  totalEarnings: number;
+  totalEarnings: Money;
 }
 
 export class PromotionService {

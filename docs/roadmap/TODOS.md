@@ -19,9 +19,9 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.52` (2026-08-11) |
-| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI), PROD-043; money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 10 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (PROD-045 closed; Active Tickets urut P0→P1) |
+| **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: LOGIN-003 (PKCE), LOGIN-006 (gate CI); money-flow live (ACCOUNT-001..004, LOGIN-002/004/005, PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
+| **Backlog Aktif** | 9 tickets + 34 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (PROD-043 closed; Active Tickets urut P0→P1) |
 
 ---
 
@@ -39,9 +39,8 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
+| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + E2E. | 🔴 Strong authentication absent |
 | LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
-| PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
 | LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
 | ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |

@@ -21,7 +21,7 @@ const mockAccount: InvestmentAccount = {
   id: 'inv_acc_001',
   userId: 'user_123',
   accountType: 'PREMIUM',
-  balance: 50000000,
+  balance: '50000000',
   currency: 'IDR',
   status: 'ACTIVE',
   createdAt: '2026-02-18T10:00:00Z',
@@ -32,7 +32,7 @@ const mockOrder: InvestmentOrder = {
   userId: 'user_123',
   type: 'GOLD',
   action: 'BUY',
-  amount: 5000000,
+  amount: '5000000',
   units: 5,
   status: 'COMPLETED',
   createdAt: '2026-02-18T10:00:00Z',
@@ -41,11 +41,11 @@ const mockOrder: InvestmentOrder = {
 const mockGoldHolding: GoldHolding = {
   userId: 'user_123',
   totalWeightGrams: 10.5,
-  currentValuePerGram: 1050000,
-  totalValue: 11025000,
+  currentValuePerGram: '1050000',
+  totalValue: '11025000',
   holdings: [
-    { purchaseDate: '2026-01-15', weightGrams: 5.0, purchasePrice: 1000000 },
-    { purchaseDate: '2026-02-01', weightGrams: 5.5, purchasePrice: 1020000 },
+    { purchaseDate: '2026-01-15', weightGrams: 5.0, purchasePrice: '1000000' },
+    { purchaseDate: '2026-02-01', weightGrams: 5.5, purchasePrice: '1020000' },
   ],
 };
 
@@ -75,7 +75,7 @@ describe('InvestmentService', () => {
       const result = await InvestmentService.getAccount();
 
       expect(api.get).toHaveBeenCalledWith('/investments/accounts/me');
-      expect(result.balance).toBe(50000000);
+      expect(result.balance).toBe('50000000');
     });
   });
 
@@ -84,7 +84,7 @@ describe('InvestmentService', () => {
     it('should buy a fixed deposit', async () => {
       const request: BuyDepositRequest = {
         accountId: 'acc_123',
-        amount: 10000000,
+        amount: '10000000',
         tenure: 12,
       };
 
@@ -106,7 +106,7 @@ describe('InvestmentService', () => {
       const request: BuyMutualFundRequest = {
         accountId: 'acc_123',
         fundCode: 'fund_001',
-        amount: 1000000,
+        amount: '1000000',
       };
 
       const fundOrder = { ...mockOrder, type: 'MUTUAL_FUND' as const };
@@ -125,7 +125,7 @@ describe('InvestmentService', () => {
   describe('buyGold', () => {
     it('should buy gold', async () => {
       const request: BuyGoldRequest = {
-        amount: 5000000,
+        amount: '5000000',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockOrder });
@@ -135,7 +135,7 @@ describe('InvestmentService', () => {
       expect(api.post).toHaveBeenCalledWith('/investments/gold', request, {
         headers: { 'X-Idempotency-Key': expect.any(String) },
       });
-      expect(result.amount).toBe(5000000);
+      expect(result.amount).toBe('5000000');
     });
   });
 
@@ -144,7 +144,7 @@ describe('InvestmentService', () => {
       const request: SellInvestmentRequest = {
         accountId: 'acc_123',
         transactionId: 'inv_001',
-        amount: 3000000,
+        amount: '3000000',
       };
 
       const sellOrder = { ...mockOrder, action: 'SELL' as const };
@@ -169,7 +169,7 @@ describe('InvestmentService', () => {
       expect(api.get).toHaveBeenCalledWith('/investments/gold/me');
       expect(result.totalWeightGrams).toBe(10.5);
       expect(result.holdings).toHaveLength(2);
-      expect(result.totalValue).toBe(11025000);
+      expect(result.totalValue).toBe('11025000');
     });
   });
 });

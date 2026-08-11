@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
+import type { Money } from '@/lib/currency';
 
 // --- Interfaces matching backend InvestmentController ---
 
@@ -7,7 +8,7 @@ export interface InvestmentAccount {
   id: string;
   userId: string;
   accountType: string;
-  balance: number;
+  balance: Money;
   currency: string;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   createdAt: string;
@@ -21,7 +22,7 @@ export type CreateAccountRequest = Record<string, never>;
 // BUG-CROSS-050: Backend BuyDepositRequest: accountId, amount, tenure (Integer)
 export interface BuyDepositRequest {
   accountId: string;
-  amount: number;
+  amount: Money;
   tenure: number;
 }
 
@@ -29,18 +30,18 @@ export interface BuyDepositRequest {
 export interface BuyMutualFundRequest {
   accountId: string;
   fundCode: string;
-  amount: number;
+  amount: Money;
 }
 
 // BUG-CROSS-052: Backend BuyGoldRequest: only amount
 export interface BuyGoldRequest {
-  amount: number;
+  amount: Money;
 }
 
 export interface SellInvestmentRequest {
   accountId: string;
   transactionId: string;
-  amount: number;
+  amount: Money;
 }
 
 export interface InvestmentOrder {
@@ -48,7 +49,7 @@ export interface InvestmentOrder {
   userId: string;
   type: 'DEPOSIT' | 'MUTUAL_FUND' | 'GOLD';
   action: 'BUY' | 'SELL';
-  amount: number;
+  amount: Money;
   units?: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   createdAt: string;
@@ -57,9 +58,9 @@ export interface InvestmentOrder {
 export interface GoldHolding {
   userId: string;
   totalWeightGrams: number;
-  currentValuePerGram: number;
-  totalValue: number;
-  holdings: { purchaseDate: string; weightGrams: number; purchasePrice: number }[];
+  currentValuePerGram: Money;
+  totalValue: Money;
+  holdings: { purchaseDate: string; weightGrams: number; purchasePrice: Money }[];
 }
 
 // Legacy aliases for backward compatibility
@@ -70,7 +71,7 @@ export interface InvestmentProduct {
   name: string;
   type: InvestmentType;
   riskLevel: RiskLevel;
-  minInvestment: number;
+  minInvestment: Money;
   expectedReturn: number;
   currency: string;
   description: string;
@@ -79,9 +80,9 @@ export interface InvestmentProduct {
 export interface Portfolio {
   id: string;
   userId: string;
-  totalValue: number;
-  totalInvested: number;
-  unrealizedPnl: number;
+  totalValue: Money;
+  totalInvested: Money;
+  unrealizedPnl: Money;
   currency: string;
   holdings: Holding[];
 }
@@ -89,9 +90,9 @@ export interface Holding {
   productId: string;
   productName: string;
   units: number;
-  currentValue: number;
-  investedValue: number;
-  pnl: number;
+  currentValue: Money;
+  investedValue: Money;
+  pnl: Money;
   pnlPercentage: number;
 }
 

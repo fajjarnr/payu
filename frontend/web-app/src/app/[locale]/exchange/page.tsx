@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { exchangeSchema, type ExchangeRequest } from '@/types';
 import { useFxRate, useFxEstimate, useFxConversion, useFxConversions } from '@/hooks';
 import { useAuthStore, useUIStore } from '@/stores';
 import { SUPPORTED_CURRENCIES } from '@/services/FxService';
+import { compareCurrency, formatExactDecimal, type Money } from '@/lib/currency';
 import DashboardLayout from "@/components/DashboardLayout";
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import clsx from 'clsx';
@@ -32,7 +33,7 @@ export default function ExchangePage() {
     defaultValues: {
       fromCurrency: 'IDR',
       toCurrency: 'USD',
-      amount: 0,
+      amount: '',
     }
   });
 
@@ -45,12 +46,12 @@ export default function ExchangePage() {
   const { data: fxRate, isLoading: isLoadingRate, error: rateError, refetch: refetchRate } = useFxRate(
     fromCurrency,
     toCurrency,
-    amount > 0 && fromCurrency !== toCurrency
+    compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency
   );
 
   // Estimate conversion (real-time preview)
   const estimateMutation = useFxEstimate();
-  const [estimatedAmount, setEstimatedAmount] = useState<number | null>(null);
+  const [estimatedAmount, setEstimatedAmount] = useState<Money | null>(null);
 
   // Execute conversion
   const conversionMutation = useFxConversion();
@@ -72,7 +73,7 @@ export default function ExchangePage() {
 
   // Handle amount change with debounce
   useEffect(() => {
-    if (amount > 0 && fromCurrency !== toCurrency) {
+    if (compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency) {
       const timer = setTimeout(async () => {
         try {
           const result = await estimateMutationRef.current.mutateAsync({
@@ -93,29 +94,18 @@ export default function ExchangePage() {
   // React 19 "adjusting state during render" — when the input is cleared or
   // currencies match, reset the previous estimate during render (avoids the
   // cascading-render warning from setState-in-effect).
-  if (!(amount > 0 && fromCurrency !== toCurrency) && estimatedAmount !== null) {
+  if (!(compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency) && estimatedAmount !== null) {
     setEstimatedAmount(null);
   }
 
-  // Calculate converted amount manually if we have the rate
-  const manualConvertedAmount = useMemo(() => {
-    if (fxRate && amount > 0) {
-      return amount * fxRate.rate;
-    }
-    return null;
-  }, [fxRate, amount]);
-
-  const displayAmount = estimatedAmount ?? manualConvertedAmount;
+  const displayAmount = estimatedAmount;
 
   // Format currency
-  const formatCurrency = (value: number, currencyCode: string) => {
+  const formatCurrency = (value: Money | number, currencyCode: string) => {
     const currency = SUPPORTED_CURRENCIES[currencyCode];
-    if (!currency) return `${value.toFixed(2)} ${currencyCode}`;
+    if (!currency) return `${value} ${currencyCode}`;
 
-    return `${currency.symbol}${value.toLocaleString('en-US', {
-      minimumFractionDigits: currency.decimalPlaces,
-      maximumFractionDigits: currency.decimalPlaces,
-    })}`;
+    return `${currency.symbol}${formatExactDecimal(value, currency.decimalPlaces)}`;
   };
 
   const onSubmit = async (data: ExchangeRequest) => {
@@ -136,7 +126,7 @@ export default function ExchangePage() {
     }, {
       onSuccess: () => {
         addToast(`Successfully exchanged ${formatCurrency(data.amount, data.fromCurrency)} to ${data.toCurrency}`, 'success');
-        setValue('amount', 0);
+        setValue('amount', '');
         setEstimatedAmount(null);
       },
       onError: (error: Error) => {
@@ -258,7 +248,7 @@ export default function ExchangePage() {
                       </div>
                       <div className="relative group">
                         <Input
-                          {...register('amount', { valueAsNumber: true })}
+                          {...register('amount')}
                           type="number"
                           step="any"
                           min="0"
@@ -315,7 +305,7 @@ export default function ExchangePage() {
                               </span>
                               <span className="text-muted-foreground">=</span>
                               <span className="text-3xl font-bold text-primary">
-                                {fxRate.rate.toFixed(4)} {toCurrency}
+                                {formatExactDecimal(fxRate.rate, 4)} {toCurrency}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -381,7 +371,7 @@ export default function ExchangePage() {
                     <ButtonMotion className="w-full">
                       <Button
                         type="submit"
-                        disabled={conversionMutation.isPending || (fromCurrency === toCurrency) || amount <= 0 || !fxRate}
+                        disabled={conversionMutation.isPending || (fromCurrency === toCurrency) || compareCurrency(amount, '0') <= 0 || !fxRate}
                         className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20"
                         onClick={handleSubmit(onSubmit)}
                       >
@@ -478,11 +468,11 @@ export default function ExchangePage() {
                             </div>
                             <div className="flex items-baseline gap-2">
                               <span className="text-sm font-bold text-foreground">
-                                {fromInfo?.symbol}{conversion.fromAmount.toLocaleString()}
+                                {fromInfo?.symbol}{formatExactDecimal(conversion.fromAmount, fromInfo?.decimalPlaces)}
                               </span>
                               <span className="text-muted-foreground">→</span>
                               <span className="text-sm font-bold text-primary">
-                                {toInfo?.symbol}{conversion.toAmount.toLocaleString()}
+                                {toInfo?.symbol}{formatExactDecimal(conversion.toAmount, toInfo?.decimalPlaces)}
                               </span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">

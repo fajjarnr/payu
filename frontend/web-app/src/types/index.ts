@@ -376,7 +376,9 @@ export interface CurrencyInfo {
 export const exchangeSchema = z.object({
   fromCurrency: z.enum(['IDR', 'USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'CNY'] as const),
   toCurrency: z.enum(['IDR', 'USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'CNY'] as const),
-  amount: z.number().positive('Amount must be positive'),
+  amount: z
+    .string()
+    .regex(/^\d+(?:\.\d{1,4})?$/, 'Amount must be a decimal string with up to 4 digits'),
 });
 
 export type ExchangeRequest = z.infer<typeof exchangeSchema>;

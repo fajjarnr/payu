@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-224: JS Number Money Must Be Cut at the Type Boundary (2026-08-11)
+
+**Context**: PROD-043 — the web-app still sent money as JS numbers: `register('amount', { valueAsNumber: true })` on the exchange form, `parseFloat(newBillAmount)` for split-bill totals, `sum + b.totalAmount` reduce, and `number`-typed money fields in FxService/InvestmentService/PromotionService/wallet store. TypeScript never caught any of it because the *types* said `number`.
+
+**Lesson**:
+- Retype money fields to `Money` (decimal string) in the service contracts first — a `number` type is an invitation to coercion everywhere it is read. After retyping, `tsc` points at every consumer that still does float math.
+- Remove numeric form coercion (`valueAsNumber`) and float preview math (`amount * rate`); the server estimate endpoint is the display source of truth.
+- Keep BigInt helpers in `currency.ts` for the arithmetic that UI legitimately does (sums, equal splits): `compareCurrency` and `divideCurrency` (scale-4 HALF_EVEN). BigInt *literals* (`0n`) fail `tsc` when the target is below ES2020 — use `BigInt(0)` calls like the existing `addCurrency`.
+
+**Applied evidence**: red-first `compareCurrency`/`divideCurrency` precision tests (exact beyond safe integers, HALF_EVEN ties); `web-app` 1208 tests / 0 failures, `tsc --noEmit`, ESLint, `next build` all clean. CHANGELOG 1.10.52; PROD-043 closed.
+
 ## L-223: jboss-logging Output Is Not Captured by System.setOut (2026-08-11)
 
 **Context**: PROD-045 — the first `SmsSenderLogSanitizationTest` swapped `System.out`/`System.err` around a `sender.send(...)` call and the captured buffer came back empty, so the "no raw PII in logs" assertion passed vacuously.

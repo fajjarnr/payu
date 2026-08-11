@@ -13,8 +13,8 @@ const mockRate: FxRateResponse = {
   id: 'rate_001',
   fromCurrency: 'USD',
   toCurrency: 'IDR',
-  rate: 15750.0,
-  inverseRate: 0.0000635,
+  rate: '15750',
+  inverseRate: '0.0000635',
   validFrom: '2026-02-18T00:00:00Z',
   validUntil: '2026-02-18T23:59:59Z',
 };
@@ -24,11 +24,11 @@ const mockConversion: FxConversionResponse = {
   accountId: 'acc_123',
   fromCurrency: 'USD',
   toCurrency: 'IDR',
-  fromAmount: 100,
-  toAmount: 1575000,
-  exchangeRate: 15750.0,
-  fee: 5000,
-  effectiveAmount: 1570000,
+  fromAmount: '100',
+  toAmount: '1575000',
+  exchangeRate: '15750',
+  fee: '5000',
+  effectiveAmount: '1570000',
   conversionDate: '2026-02-18T10:00:00Z',
   status: 'COMPLETED',
 };
@@ -54,7 +54,7 @@ describe('FxService', () => {
       const result = await service.getCurrentRate('USD', 'IDR');
 
       expect(api.get).toHaveBeenCalledWith('/fx/rates/USD/IDR');
-      expect(result.rate).toBe(15750.0);
+      expect(result.rate).toBe('15750');
       expect(result.fromCurrency).toBe('USD');
       expect(result.toCurrency).toBe('IDR');
     });
@@ -76,7 +76,7 @@ describe('FxService', () => {
       const request: ConvertCurrencyRequest = {
         fromCurrency: 'USD',
         toCurrency: 'IDR',
-        amount: 100,
+        amount: '100',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockConversion });
@@ -84,7 +84,7 @@ describe('FxService', () => {
       const result = await service.estimateConversion(request);
 
       expect(api.post).toHaveBeenCalledWith('/fx/conversions/estimate', request);
-      expect(result.toAmount).toBe(1575000);
+      expect(result.toAmount).toBe('1575000');
     });
   });
 
@@ -93,7 +93,7 @@ describe('FxService', () => {
       const request: FxConversionRequest = {
         fromCurrency: 'USD',
         toCurrency: 'IDR',
-        amount: 100,
+        amount: '100',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockConversion });
@@ -152,7 +152,7 @@ describe('FxService', () => {
 
     it('should handle unknown currency', () => {
       const result = service.formatCurrency(100, 'XYZ');
-      expect(result).toBe('100.00 XYZ');
+      expect(result).toBe('100 XYZ');
     });
   });
 

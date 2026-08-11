@@ -77,7 +77,6 @@ function roundDecimal(value: string, decimals: number): string {
   const result = `${integer}${decimals ? `.${fraction}` : ''}`;
   return negative && result !== '0' && !/^0\.0+$/.test(result) ? `-${result}` : result;
 }
-
 function formatExact(value: CurrencyInput, decimals: number, locale: string): string | null {
   const normalized = decimalString(value);
   if (!normalized) return null;
@@ -88,6 +87,15 @@ function formatExact(value: CurrencyInput, decimals: number, locale: string): st
   const groupedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'id-ID' ? '.' : ',');
   const decimalSeparator = locale === 'id-ID' ? ',' : '.';
   return `${negative ? '-' : ''}${groupedInteger}${fraction ? decimalSeparator + fraction : ''}`;
+}
+
+/**
+ * Format a decimal money string with grouping and fixed decimals, no symbol
+ * (locale: 'id-ID' → 1.234,56 ; default en-US → 1,234.56). Returns '0' on invalid input.
+ */
+export function formatExactDecimal(value: CurrencyInput | null | undefined, decimals = 0, locale = 'en-US'): string {
+  if (value === null || value === undefined) return '0';
+  return formatExact(value, decimals, locale) ?? '0';
 }
 
 /**
@@ -175,6 +183,47 @@ export function addCurrency(left: CurrencyInput, right: CurrencyInput): Money {
   const integer = scale ? digits.slice(0, -scale) : digits;
   const fraction = scale ? digits.slice(-scale).replace(/0+$/, '') : '';
   return `${negative ? '-' : ''}${integer}${fraction ? `.${fraction}` : ''}`;
+}
+
+/** Compare decimal money values without passing through IEEE-754 numbers. */
+export function compareCurrency(left: CurrencyInput, right: CurrencyInput): -1 | 0 | 1 {
+  const leftValue = decimalString(left) ?? '0';
+  const rightValue = decimalString(right) ?? '0';
+  const scale = Math.max(leftValue.split('.')[1]?.length ?? 0, rightValue.split('.')[1]?.length ?? 0);
+  const scaled = (value: string): bigint => {
+    const negative = value.startsWith('-');
+    const unsigned = negative ? value.slice(1) : value;
+    const [integer, fraction = ''] = unsigned.split('.');
+    const result = BigInt(`${integer}${fraction.padEnd(scale, '0')}`);
+    return negative ? -result : result;
+  };
+  const diff = scaled(leftValue) - scaled(rightValue);
+  return diff < BigInt(0) ? -1 : diff > BigInt(0) ? 1 : 0;
+}
+
+/**
+ * Divide decimal money by an integer divisor, rounded to money scale
+ * (default 4, HALF_EVEN) — e.g. equal bill split.
+ */
+export function divideCurrency(value: CurrencyInput, divisor: number, decimals = 4): Money {
+  const normalized = decimalString(value) ?? '0';
+  if (divisor === 0) return '0';
+  const negative = normalized.startsWith('-');
+  const unsigned = negative ? normalized.slice(1) : normalized;
+  const [integer, fraction = ''] = unsigned.split('.');
+  const scaled = BigInt(`${integer}${fraction.padEnd(decimals, '0')}`);
+  const d = BigInt(Math.abs(divisor));
+  let quotient = scaled / d;
+  const remainder = scaled % d;
+  if (remainder * BigInt(2) > d || (remainder * BigInt(2) === d && quotient % BigInt(2) === BigInt(1))) {
+    quotient += BigInt(1);
+  }
+  const digits = quotient.toString().padStart(decimals + 1, '0');
+  const resultInteger = decimals ? digits.slice(0, -decimals) : digits;
+  let resultFraction = decimals ? digits.slice(-decimals) : '';
+  resultFraction = resultFraction.replace(/0+$/, '');
+  const result = `${resultInteger}${resultFraction ? `.${resultFraction}` : ''}`;
+  return negative && result !== '0' ? `-${result}` : result;
 }
 
 /**

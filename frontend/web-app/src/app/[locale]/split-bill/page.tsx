@@ -25,6 +25,7 @@ import {
   useActivateSplitBill,
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { addCurrency, divideCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import type { SplitBillParticipant } from '@/services/TransactionService';
 
 export default function SplitBillPage() {
@@ -43,7 +44,7 @@ export default function SplitBillPage() {
   const splitBills = ((Array.isArray(splitBillsData) ? splitBillsData : []) as unknown as Array<{
     id: string;
     description: string;
-    totalAmount: number;
+    totalAmount: Money;
     currency: string;
     status: string;
     createdAt: string;
@@ -51,14 +52,14 @@ export default function SplitBillPage() {
       id: string;
       accountId: string;
       name: string;
-      amount: number;
+      amount: Money;
       status: string;
-      paidAmount: number;
+      paidAmount: Money;
     }>;
   }>);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: Money | number) =>
+    formatExactDecimal(amount, 0, 'id-ID');
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -80,7 +81,7 @@ export default function SplitBillPage() {
     createSplitBill.mutate(
       {
         title: newBillName,
-        totalAmount: parseFloat(newBillAmount),
+        totalAmount: parseCurrencyExact(newBillAmount),
         currency: 'IDR',
         creatorAccountId: acctId,
         splitType: 'EQUAL',
@@ -152,7 +153,7 @@ export default function SplitBillPage() {
                   <div>
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total</p>
                     <p className="text-2xl font-bold text-foreground mt-0.5">
-                      {formatCurrency(splitBills.reduce((sum, b) => sum + b.totalAmount, 0))}
+                      {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), '0'))}
                     </p>
                   </div>
                 </div>
@@ -266,7 +267,7 @@ export default function SplitBillPage() {
                             onClick={() =>
                               addParticipant.mutate({
                                 id: bill.id,
-                                participant: { accountId: '', accountName: 'Teman Baru', amountOwed: bill.totalAmount / 2, status: 'PENDING' } as SplitBillParticipant,
+                                participant: { accountId: '', accountName: 'Teman Baru', amountOwed: divideCurrency(bill.totalAmount, 2), status: 'PENDING' } as SplitBillParticipant,
                               })
                             }
                             className="text-xs font-bold tracking-widest uppercase gap-1"

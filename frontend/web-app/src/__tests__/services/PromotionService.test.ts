@@ -357,7 +357,7 @@ describe('PromotionService', () => {
           {
             id: 'cashback_1',
             accountId: 'acc_123',
-            amount: 10000,
+            amount: '10000',
             type: 'PERCENTAGE',
             referenceId: 'txn_123',
             merchantName: 'Tokopedia',
@@ -368,7 +368,7 @@ describe('PromotionService', () => {
           {
             id: 'cashback_2',
             accountId: 'acc_123',
-            amount: 5000,
+            amount: '5000',
             type: 'FIXED',
             referenceId: 'txn_456',
             status: 'PENDING',
@@ -395,7 +395,7 @@ describe('PromotionService', () => {
             {
               id: `cashback_${status}`,
               accountId: 'acc_123',
-              amount: 1000,
+              amount: '1000',
               type: 'FIXED',
               referenceId: 'txn_ref',
               status: status as Cashback['status'],
@@ -416,10 +416,10 @@ describe('PromotionService', () => {
       it('should fetch cashback summary for account', async () => {
         const mockSummary = {
           accountId: 'acc_123',
-          totalCashback: 150000,
-          pendingCashback: 25000,
-          creditedCashback: 100000,
-          expiredCashback: 25000,
+          totalCashback: '150000',
+          pendingCashback: '25000',
+          creditedCashback: '100000',
+          expiredCashback: '25000',
         };
 
         vi.mocked(api.get).mockResolvedValue({ data: mockSummary });
@@ -427,8 +427,8 @@ describe('PromotionService', () => {
         const result = await service.getCashback('acc_123');
 
         expect(api.get).toHaveBeenCalledWith('/cashbacks/account/acc_123/summary');
-        expect(result.totalCashback).toBe(150000);
-        expect(result.creditedCashback).toBe(100000);
+        expect(result.totalCashback).toBe('150000');
+        expect(result.creditedCashback).toBe('100000');
       });
     });
   });
@@ -438,7 +438,7 @@ describe('PromotionService', () => {
       it('should create new referral', async () => {
         const mockRequest: CreateReferralRequest = {
           referrerAccountId: 'acc_123',
-          rewardAmount: 50000,
+          rewardAmount: '50000',
           expiryDays: 30,
         };
 
@@ -447,7 +447,7 @@ describe('PromotionService', () => {
           referrerAccountId: 'acc_123',
           code: 'REF123ABC',
           status: 'PENDING',
-          rewardAmount: 50000,
+          rewardAmount: '50000',
           expiresAt: '2024-01-31T00:00:00Z',
           createdAt: '2024-01-01T10:00:00Z',
         };
@@ -475,7 +475,7 @@ describe('PromotionService', () => {
           refereeAccountId: 'acc_456',
           code: 'REF123ABC',
           status: 'COMPLETED',
-          rewardAmount: 50000,
+          rewardAmount: '50000',
           referralDate: '2024-01-01T10:00:00Z',
           completedDate: '2024-01-15T10:00:00Z',
           expiresAt: '2024-01-31T00:00:00Z',
@@ -499,7 +499,7 @@ describe('PromotionService', () => {
           referrerAccountId: 'acc_789',
           code: 'MYREFCODE',
           status: 'PENDING',
-          rewardAmount: 75000,
+          rewardAmount: '75000',
           expiresAt: '2024-02-01T00:00:00Z',
           createdAt: '2024-01-01T10:00:00Z',
         };
@@ -522,7 +522,7 @@ describe('PromotionService', () => {
             refereeAccountId: 'acc_456',
             code: 'REF1',
             status: 'COMPLETED',
-            rewardAmount: 50000,
+            rewardAmount: '50000',
             referralDate: '2024-01-01T10:00:00Z',
             completedDate: '2024-01-10T10:00:00Z',
             expiresAt: '2024-01-31T00:00:00Z',
@@ -533,7 +533,7 @@ describe('PromotionService', () => {
             referrerAccountId: 'acc_123',
             code: 'REF2',
             status: 'PENDING',
-            rewardAmount: 50000,
+            rewardAmount: '50000',
             expiresAt: '2024-02-01T00:00:00Z',
             createdAt: '2024-01-05T10:00:00Z',
           },
@@ -557,7 +557,7 @@ describe('PromotionService', () => {
           totalReferrals: 10,
           completedReferrals: 7,
           pendingReferrals: 3,
-          totalEarnings: 350000,
+          totalEarnings: '350000',
         };
 
         vi.mocked(api.get).mockResolvedValue({ data: mockSummary });
@@ -567,7 +567,7 @@ describe('PromotionService', () => {
         expect(api.get).toHaveBeenCalledWith('/referrals/referrer/acc_123/summary');
         expect(result.totalReferrals).toBe(10);
         expect(result.completedReferrals).toBe(7);
-        expect(result.totalEarnings).toBe(350000);
+        expect(result.totalEarnings).toBe('350000');
       });
     });
   });

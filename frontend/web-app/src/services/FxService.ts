@@ -1,12 +1,13 @@
 import api from '@/lib/api';
+import { formatExactDecimal, type Money } from '@/lib/currency';
 
 // FX Rate Types
 export interface FxRate {
   id: string;
   fromCurrency: string;
   toCurrency: string;
-  rate: number;
-  inverseRate: number;
+  rate: Money;
+  inverseRate: Money;
   validFrom: string;
   validUntil: string;
 }
@@ -22,11 +23,11 @@ export interface FxConversion {
   accountId: string;
   fromCurrency: string;
   toCurrency: string;
-  fromAmount: number;
-  toAmount: number;
-  exchangeRate: number;
-  fee: number;
-  effectiveAmount: number;
+  fromAmount: Money;
+  toAmount: Money;
+  exchangeRate: Money;
+  fee: Money;
+  effectiveAmount: Money;
   conversionDate: string;
   status: FxConversionStatus;
 }
@@ -38,7 +39,7 @@ export type FxConversionResponse = FxConversion;
 export interface ConvertCurrencyRequest {
   fromCurrency: string;
   toCurrency: string;
-  amount: number;
+  amount: Money;
 }
 
 export type FxConversionRequest = ConvertCurrencyRequest;
@@ -173,16 +174,13 @@ export class FxService {
     return response.data;
   }
 
-  formatCurrency(amount: number, currencyCode: string): string {
+  formatCurrency(amount: Money | number, currencyCode: string): string {
     const currency = SUPPORTED_CURRENCIES[currencyCode];
     if (!currency) {
-      return `${amount.toFixed(2)} ${currencyCode}`;
+      return `${amount} ${currencyCode}`;
     }
 
-    const formattedAmount = amount.toLocaleString('en-US', {
-      minimumFractionDigits: currency.decimalPlaces,
-      maximumFractionDigits: currency.decimalPlaces,
-    });
+    const formattedAmount = formatExactDecimal(amount, currency.decimalPlaces);
 
     return `${currency.symbol}${formattedAmount}`;
   }

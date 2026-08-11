@@ -240,13 +240,13 @@ export interface SplitBill {
   id: string;
   creatorAccountId: string;
   title: string;
-  totalAmount: number;
+  totalAmount: Money;
   currency: string;
   splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
   status: 'DRAFT' | 'ACTIVE' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   participants: SplitBillParticipant[];
-  totalPaid?: number;
-  remainingAmount?: number;
+  totalPaid?: Money;
+  remainingAmount?: Money;
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -258,9 +258,9 @@ export interface SplitBillParticipant {
   accountId: string;
   accountNumber?: string;
   accountName: string;
-  amountOwed: number;
-  amountPaid?: number;
-  remainingAmount?: number;
+  amountOwed: Money;
+  amountPaid?: Money;
+  remainingAmount?: Money;
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'PARTIALLY_PAID' | 'SETTLED';
   settledAt?: string;
 }
@@ -268,7 +268,7 @@ export interface SplitBillParticipant {
 export interface CreateSplitBillRequest {
   creatorAccountId: string;
   title: string;
-  totalAmount: number;
+  totalAmount: Money;
   currency?: string;
   splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
   participants: Omit<SplitBillParticipant, 'id' | 'status' | 'settledAt' | 'amountPaid' | 'remainingAmount'>[];

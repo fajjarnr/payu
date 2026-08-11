@@ -1,9 +1,10 @@
 import { create } from 'zustand';
+import type { Money } from '@/lib/currency';
 
 export interface WalletBalance {
   walletId: string;
-  balance: number;
-  availableBalance: number;
+  balance: Money;
+  availableBalance: Money;
   currency: string;
   lastUpdated: string;
 }
@@ -11,7 +12,7 @@ export interface WalletBalance {
 export interface RecentTransaction {
   id: string;
   type: 'credit' | 'debit';
-  amount: number;
+  amount: Money;
   currency: string;
   description: string;
   status: 'completed' | 'pending' | 'failed';

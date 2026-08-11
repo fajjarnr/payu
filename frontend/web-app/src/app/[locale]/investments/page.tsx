@@ -4,17 +4,11 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/lib/currency';
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
   const { data: account, isLoading: loadingAccount, isError: accountError } = useInvestmentAccount();
-
-  const formatCurrency = (amount: number, currency: string) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-    }).format(amount);
 
   const hasAccount = Boolean(account) && !accountError;
 
@@ -38,7 +32,7 @@ export default function InvestmentsPage() {
                     {loadingAccount
                       ? '...'
                       : account && !accountError
-                        ? formatCurrency(account.balance, account.currency)
+                        ? formatCurrency(account.balance, { withDecimals: false })
                         : t('accountUnavailable')}
                   </h3>
                   {hasAccount && <p className="mt-3 text-sm text-muted-foreground">{t('accountSource')}</p>}

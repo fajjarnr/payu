@@ -7,6 +7,8 @@ import { describe, it, expect } from 'vitest';
 import {
   formatCurrency,
   addCurrency,
+  compareCurrency,
+  divideCurrency,
   formatCurrencyWithoutSymbol,
   parseCurrency,
   formatTransactionAmount,
@@ -414,6 +416,24 @@ describe('currency.ts - Precision Tests', () => {
     expect(roundCurrency(1.5)).toBe(2);
     expect(roundCurrency(2.5)).toBe(2);
     expect(roundCurrency(-1.5)).toBe(-2);
+  });
+});
+
+describe('currency.ts - PROD-043 Money Helpers', () => {
+  it('compares decimal strings without Number() coercion', () => {
+    expect(compareCurrency('100.1234', '100.1235')).toBe(-1);
+    expect(compareCurrency('100.1234', '100.1234')).toBe(0);
+    expect(compareCurrency('100.1235', '100.1234')).toBe(1);
+    expect(compareCurrency('0.0001', '0')).toBe(1);
+    expect(compareCurrency('9007199254740993', '9007199254740992')).toBe(1);
+  });
+
+  it('divides money at scale 4 with HALF_EVEN rounding', () => {
+    expect(divideCurrency('100.1234', 2)).toBe('50.0617');
+    expect(divideCurrency('1', 3)).toBe('0.3333');
+    expect(divideCurrency('0.0005', 2)).toBe('0.0002');
+    expect(divideCurrency('100.1234', 4)).toBe('25.0308');
+    expect(divideCurrency('9007199254740993', 2)).toBe('4503599627370496.5');
   });
 });
 

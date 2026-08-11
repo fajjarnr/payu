@@ -8,6 +8,7 @@ import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/c
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLoyaltyBalance, useCashbacks, useReferralSummary, useActivePromotions } from '@/hooks';
+import { addCurrency, formatExactDecimal, type Money } from '@/lib/currency';
 import { useAuthStore } from '@/stores/authStore';
 import type { LoyaltyBalanceResponse, Cashback, ReferralSummaryResponse, Promotion } from '@/services/PromotionService';
 
@@ -42,9 +43,9 @@ export default function RewardsPage() {
   }));
 
   // Compute cashback summary from actual data
-  const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => sum + cb.amount, 0);
-  const cashbackPending = cashbackHistory.filter(cb => cb.status === 'pending').reduce((sum, cb) => sum + cb.amount, 0);
-  const cashbackTotal = cashbackCredited + cashbackPending;
+  const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => addCurrency(sum, cb.amount), '0');
+  const cashbackPending = cashbackHistory.filter(cb => cb.status === 'pending').reduce((sum, cb) => addCurrency(sum, cb.amount), '0');
+  const cashbackTotal = addCurrency(cashbackCredited, cashbackPending);
 
   const referralSummary = referralData as ReferralSummaryResponse | undefined;
   const referralStats = {
@@ -66,8 +67,8 @@ export default function RewardsPage() {
     endDate: p.endDate,
   }));
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: Money) => {
+    return formatExactDecimal(amount, 0, 'id-ID');
   };
 
   return (
@@ -249,7 +250,7 @@ export default function RewardsPage() {
                           </div>
                           <div className="flex justify-between items-center pt-3">
                             <span className="text-sm text-gray-400">Kadaluarsa</span>
-                            <span className="font-bold text-red-400">{formatCurrency(0)}</span>
+                            <span className="font-bold text-red-400">{formatCurrency('0')}</span>
                           </div>
                         </div>
                       </div>
