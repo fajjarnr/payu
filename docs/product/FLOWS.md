@@ -3,6 +3,7 @@
 > Diagram flow per fitur berdasarkan **code aktual** (2026-08-11, release 1.10.51).
 > Tujuan: referensi audit implementasi — bandingkan diagram vs code untuk deteksi gap/bug flow.
 > Format: mermaid `sequenceDiagram` + tabel side-effect (DB/event). Detail endpoint: [`FEATURES.md`](./FEATURES.md).
+> Section **Flow Improvements** di bawah berisi diagram **TARGET (belum diimplementasi)** — behavior bank-like yang akan diterapkan; jangan dianggap code aktual.
 
 ## 1. Register (Onboarding + eKYC)
 
@@ -1559,4 +1560,149 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-11. Verifikasi code: release 1.10.51. Catatan: login masih password grant (LOGIN-003 PKCE open — diagram akan berubah saat OIDC flow diimplementasikan; MFA di-defer per keputusan 2026-08-11).*
+# 🔧 Flow Improvements (TARGET — belum diimplementasi)
+
+> Diagram target agar perilaku mirip bank/e-wallet produksi. Verifikasi implementasi = bandingkan diagram ini vs code (gap = pekerjaan). Referensi ADR-0022/0023.
+
+## IMP-1. Transfer Internal & SNAP Settle — Atomic 1-hop (menggantikan flow #3, #4)
+
+```mermaid
+sequenceDiagram
+    participant TX as transaction-service / partner-service
+    participant WL as wallet-service
+    participant DB as PostgreSQL (wallet)
+
+    TX->>WL: transfer(source, beneficiary, amount, ref) — SATU call atomik
+    WL->>DB: lock kedua wallet (FOR UPDATE, urut lexicographic)
+    WL->>DB: cek idempotency by ref (entry REFERENCE sudah ada?)
+    alt replay
+        WL-->>TX: return existing (tanpa mutasi)
+    else
+        WL->>WL: source.debit(amount) + beneficiary.credit(amount) — satu transaksi DB
+        WL->>DB: ledger DEBIT source + CREDIT beneficiary (balance_after scale 4)
+        WL-->>TX: sukses atomik
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| `reserve→commit→credit` (3 call, window crash) → **satu atomic transfer** (primitive `WalletUseCase.transfer` sudah ada, belum dipakai) | Window kompensasi `:REFUND` & orphan detection jadi safety net, bukan kebutuhan; perilaku = transfer bank satu transaksi |
+| Berlaku untuk: internal transfer (flow #3), SNAP settle (flow #4), disbursement commit | Reduce hop antar service |
+
+## IMP-2. Callback & Expiry — Atomic Status Transition (flow #9, #19, #30, #33)
+
+```mermaid
+sequenceDiagram
+    participant CB as Callback / Payer / Scheduler
+    participant TX as service (VA / payment link / QR / checkout)
+    participant DB as PostgreSQL
+
+    CB->>TX: process (callback pay / confirm / expire)
+    TX->>DB: UPDATE ... SET status=PAID WHERE id=? AND status=ACTIVE
+    alt rowCount = 1 (transisi menang)
+        TX->>DB: lanjutkan side-effect (credit merchant, event) — sekali saja
+        TX-->>CB: 200
+    else rowCount = 0 (sudah PAID/EXPIRED)
+        TX-->>CB: no-op deterministik (double-callback/expire aman)
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| `find → cek status → save` (check-then-act, race) → **conditional UPDATE `WHERE status=ACTIVE`** (atomik) | Dua callback/expire bersamaan → tepat satu menang; sisanya no-op. Idempotency settlement = pola bank |
+
+## IMP-3. Statement — Closing Balance dari Ledger `balance_after` (flow #21)
+
+```mermaid
+sequenceDiagram
+    participant ST as statement-service
+    participant WL as wallet-service
+    participant DB as PostgreSQL
+
+    ST->>WL: get ledger entries periode (balance_after per entry, scale 4)
+    WL-->>ST: opening = balance_after entry pertama (sebelum periode), closing = balance_after entry terakhir
+    ST->>ST: generatePdf (snapshot running balance — bukan derive)
+    ST->>DB: markCompleted (opening/closing dari ledger)
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Closing di-derive dengan membalik transaksi pasca-periode (rawan drift) → **langsung dari `balance_after` ledger** | Statement = snapshot akurat; tidak bergantung transaksi pasca-periode |
+
+## IMP-4. Notification — Retry + Fallback Channel (flow #41)
+
+```mermaid
+sequenceDiagram
+    participant NS as notification-service
+    participant DB as PostgreSQL
+    participant CH as Channels (push/email/SMS)
+
+    NS->>DB: INSERT PENDING (attempt 0)
+    NS->>CH: kirim channel utama (misal push)
+    alt gagal (attempt < max)
+        NS->>DB: attempt+1, retry backoff (scheduler)
+        NS->>CH: kirim ulang
+    else gagal (attempt habis)
+        NS->>CH: FALLBACK channel (misal SMS) — urutan push→email→SMS
+        alt fallback sukses
+            NS->>DB: SENT (delivery info: channel final)
+        else
+            NS->>DB: FAILED (manual review)
+        end
+    else sukses
+        NS->>DB: SENT (delivery ID provider)
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Satu channel, sekali coba → **retry backoff + fallback channel** | Notifikasi tidak hilang saat satu channel down — perilaku e-wallet nyata |
+
+## IMP-5. Callback Idempotency Seragam (flow #7, #9, #10, #26)
+
+```mermaid
+sequenceDiagram
+    participant BF as External (BI-FAST / VA / biller)
+    participant TX as transaction-service
+    participant DB as PostgreSQL
+
+    BF->>TX: callback (HMAC signed)
+    TX->>TX: verify signature + timestamp window
+    TX->>DB: lock transaction row (FOR UPDATE)
+    TX->>DB: cek status terminal (COMPLETED/FAILED/EXPIRED)?
+    alt terminal
+        TX-->>BF: 200 no-op (deterministik, tanpa mutasi ulang)
+    else non-terminal
+        TX->>DB: transisi status + side-effect (commit/release/credit)
+        TX-->>BF: 200
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Guard COMMIT/RELEASE entry ada sebagian (wallet) tapi tidak seragam di semua callback → **lock row + terminal check di semua callback** (VA, BI-FAST, disbursement, biller) | Double-callback tidak pernah double-mutate — konsisten lintas flow |
+
+## IMP-6. QRIS — Idempotency DB Natural Key (flow #8)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant TX as transaction-service
+    participant DB as PostgreSQL
+
+    U->>TX: POST /qris/pay (X-Idempotency-Key)
+    TX->>DB: findByIdempotencyKey (natural key di TransactionEntity)
+    alt replay
+        TX-->>U: existing result (tanpa call QRIS/wallet)
+    else
+        TX->>DB: INSERT PENDING + reserve → call QRIS → commit/release (seperti aktual)
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Idempotency cache-only (TTL 24h, fail-open) → **DB natural key + replay check di handler** (pola transfer, CB-017) | Replay pasca-TTL/down tidak double-charge; fail-closed (ADR-0022) |
+
+---
+
+*Last updated: 2026-08-11. Verifikasi code: release 1.10.51 (flow 1-45 = aktual; IMP-1..6 = TARGET belum diimplementasi). Catatan: login masih password grant (LOGIN-003 PKCE open — diagram akan berubah saat OIDC flow diimplementasikan; MFA di-defer per keputusan 2026-08-11).*

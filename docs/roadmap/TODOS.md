@@ -20,8 +20,8 @@
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.35` (2026-08-05) |
 | **Core Banking MVP** | 🔴 Belum MVP — auth belum strong auth (LOGIN-003 PKCE/MFA open); money-flow live. Account P0 (ACCOUNT-001..004), LOGIN-002/004/005, PROD-047 CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII, revoke, rate-limit, error contract, Money scale 4). Belum ada service production ready. |
-| **Backlog Aktif** | 9 tickets + 19 action items (CB-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (ADR-0022 money/idempotency standard + ADR-0023 MVP scope; backlog re-map per scope) |
+| **Backlog Aktif** | 9 tickets + 23 action items (CB-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (IMP-1..6 flow improvements masuk backlog CB-034..038; ADR-0022/0023; backlog re-map per scope) |
 
 ---
 
@@ -77,6 +77,10 @@
 | CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
 | CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) — jalur SNAP in-scope | Replay tanpa duplikat |
 | CB-028 | dispute | Lock over-refund di `assertRefundable` (DISPUTE-001) | Concurrent partial refund aman |
+| CB-034 | transaction | **IMP-1 Atomic 1-hop transfer** (FLOWS.md): internal transfer & SNAP settle pakai `WalletUseCase.transfer` atomik (debit+credit 1 tx, lock 2 wallet terurut) menggantikan reserve→commit→credit; kompensasi `:REFUND` jadi safety net bukan kebutuhan | Window crash hilang, E2E + race test green |
+| CB-035 | transaction | **IMP-2 Atomic status transition** (FLOWS.md): callback/expire VA, payment link, QR merchant, checkout token pakai conditional UPDATE `WHERE status=ACTIVE` (anti race double-callback) | Double-callback/expire → 1 menang, test green |
+| CB-037 | notification | **IMP-4 Retry + fallback channel** (FLOWS.md): notification retry backoff + fallback push→email→SMS (pendamping CB-029 provider) | Gagal channel → fallback sukses, test green |
+| CB-038 | transaction | **IMP-5 Callback idempotency seragam** (FLOWS.md): lock row + terminal check di semua callback (VA, BI-FAST, disbursement, biller) | Double-callback tidak double-mutate, test green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection | CI gate aktif |
 
@@ -86,11 +90,12 @@
 |:---|:---|:---|:---|
 | CB-008 | transaction | MVP-003 VA settlement live E2E di payu-dev (QRIS/VA di luar MVP) | Live E2E green |
 | CB-011 | transaction | Versioning topic split-bills (TX-001) | Topic `.v1`, consumer updated |
-| CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001) — QRIS Phase 2 | Replay tidak double-charge |
+| CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001 / IMP-6 FLOWS.md) — QRIS Phase 2 | Replay tidak double-charge |
 | CB-022 | billing | Subscription charge: wire wallet debit checkpoint (SUB-001) atau suspend | Charge hanya setelah debit sukses |
 | CB-024 | lending | PayLater: @Version + idempotency + money movement (PAYLATER-001) | Race/idempotency tests green |
 | CB-025 | fx | FX reverse guard: status REVERSED + setScale (FX-002) | Double-reverse ditolak |
 | CB-031 | transaction | Scheduled transfer idempotency (TX-004) | Overlap tidak double debit |
+| CB-036 | statement | **IMP-3 Statement closing balance dari ledger `balance_after`** (FLOWS.md) — bukan derive transaksi pasca-periode | Opening/closing = ledger snapshot, test green |
 
 ### P3 — Backlog Lanjutan
 
@@ -185,6 +190,12 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
+| IMP-1 | 🟠 | transfer | Flow improvement target: settle 3-hop → atomic 1-hop (`WalletUseCase.transfer` sudah ada, belum dipakai) — CB-034 | FLOWS.md IMP-1 |
+| IMP-2 | 🟠 | transaction | Flow improvement target: callback/expire check-then-act → conditional UPDATE atomik — CB-035 | FLOWS.md IMP-2 |
+| IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — CB-036 | FLOWS.md IMP-3 |
+| IMP-4 | 🟠 | notification | Flow improvement target: retry + fallback channel — CB-037 | FLOWS.md IMP-4 |
+| IMP-5 | 🟠 | transaction | Flow improvement target: callback idempotency seragam (lock + terminal check) — CB-038 | FLOWS.md IMP-5 |
+| IMP-6 | 🟠 | transaction | Flow improvement target: QRIS idempotency DB — CB-017 | FLOWS.md IMP-6 |
 | INTEGRATION-CTX | 🟠 | qa | Account-service @SpringBootTest context pre-existing broken: `No bean named 'entityManagerFactory'` (HibernateJpaAutoConfiguration tidak aktif di test; VaultConfigurationTest + OnboardingIntegrationTest red juga di HEAD bersih 2026-08-11). Blokir integration tests account & bukti CB-005; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
 | — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
 | — | 🟢 | partner | Refund concurrency, callback HMAC, SNAP signature | SnapBiPaymentService, CallbackSignatureFilter |
