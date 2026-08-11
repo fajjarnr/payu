@@ -17,386 +17,200 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). Snapshot 2026-08-04: `payu-dev` has 47 Running/Ready pods and 33 deployments; quota `limits.cpu` is `30/64` and `requests.cpu` is `4/16`; no HPA is installed in `payu-dev`. VSO 2/2 Running; vector→Loki delivery remains blocked by gateway RBAC (operator 6.5.1 empty rego). |
-| **Last Release** | `1.10.35` (2026-08-05) — Data Grid config-listener NetworkPolicy, zero warn/error across all pods |
-| **Last Updated** | 2026-08-11 (PROD-005 reconciliation live: 0 unmatched + case detection; sisa: WAF/mTLS, PROD-007-011, RLS/RBAC) |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
+| **Last Release** | `1.10.35` (2026-08-05) |
+| **Core Banking MVP** | 🔴 Belum MVP — account & auth blocked (ACCOUNT-001..004, LOGIN-001..006 open, semua confirmed di code); wallet/transaction money-flow live tapi 1 P0 (PROD-047). Belum ada service production ready. |
+| **Backlog Aktif** | 19 tickets + 26 action items (CB-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (rapi: hapus CLOSED/FIXED, sort per priority) |
 
 ---
 
-## Deferred Scope — Mobile App (2026-08-06)
+## ⏸️ Deferred Scope
 
-Seluruh scope `frontend/mobile` ditunda dan dikeluarkan dari MVP/production gate aktif agar delivery berfokus pada backend dan `frontend/web-app`. Jangan mengerjakan upgrade, bug, test baseline, atau release mobile sampai scope ini diaktifkan kembali oleh product owner. Finding `PROD-035`, `PROD-038`, dan `READY-061` tetap dicatat sebagai deferred debt, bukan blocker release backend/web-app.
-
----
-
-## 🐛 Active Tickets
-
-| Key | Priority | Summary | Status |
-|:---|:---:|:---|:---|
-| INFRA-029 | P1 | Enable audit log forwarding: install cluster-logging + ClusterLogForwarder dengan `inputRefs: [audit]` ke SIEM (Wazuh INFRA-011) — satu-satunya kontrol CIS tersisa (`ocp4-cis-audit-log-forwarding-enabled`). **2026-08-01**: Logging 6.5 + LokiStack (S3/KMS) + CLF `instance` audit→lokiStack, CLF Authorized/Valid/Ready=True, collector 9/9; CIS kontrol terpenuhi. Sisa: Wazuh SIEM (INFRA-011) sebagai sink tambahan + verifikasi log arrival. | 🟢 Live (CIS satisfied) — Wazuh sink + log delivery pending |
-| PARTNER-001 | P0 | Kontrak route SNAP-BI publik belum dapat dipakai: `POST /v1/partner/auth/token` pada `gateway-service` live menghasilkan `404`, karena catch-all gateway hanya berada di `/api/v1` dan route registry mengharuskan path aktual `/api/v1/v1/partner/**`. Konfigurasi 3scale meneruskan path tanpa rewrite. Done saat path kontrak `/v1/partner/**` mencapai `partner-service` tanpa prefix ganda dan memiliki regression/E2E test. | ✅ FIXED 2026-08-08 — gateway kini punya `PartnerContractResource` (`/v1/partner/**`) berbagi `GatewayDispatchService` dengan catch-all `/api/v1`; live smoke `POST /v1/partner/auth/token` → `401 Invalid Client Key` (routed ke partner-service, bukan 404); regression `PartnerContractResourceTest` 3/3. |
-| PARTNER-002 | P0 | Endpoint token SNAP-BI salah terkena mandatory idempotency gateway: `POST /api/v1/v1/partner/auth/token` tanpa `Idempotency-Key` menghasilkan `400 GAT_IDM_001`. Root cause: `IdempotencyFilter.FINANCIAL_PATHS` mencocokkan seluruh prefix `/api/v1/v1/partner`, termasuk `/auth/token`; hanya payment/refund write yang boleh diwajibkan idempotency. | ✅ FIXED 2026-08-08 — `IdempotencyFilter` mengecualikan path `/auth/token` dari mandatory idempotency (SNAP-BI client-key HMAC adalah authnya); live: token tanpa key → 401 (bukan GAT_IDM_001), payments tanpa key → 400 GAT_IDM_001 (tetap enforced); regression `IdempotencyFilterEnforcedTest` 5/5. |
-| PARTNER-003 | P1 | Missing required SNAP-BI headers menghasilkan HTTP `500 INTERNAL_ERROR`, bukan client error SNAP-BI/RFC 9457. Reproduksi langsung ke `partner-service /v1/partner/auth/token`; root cause shared `Rfc9457GlobalExceptionHandler` tidak menangani `MissingRequestHeaderException`, sehingga jatuh ke generic exception handler. Done saat missing-header menghasilkan deterministic 4xx + regression test. | ✅ FIXED 2026-08-08 — `Rfc9457GlobalExceptionHandler` menangani `MissingRequestHeaderException` → `400 MISSING_REQUIRED_HEADER`; live via gateway: missing `X-CLIENT-KEY` → 400; regression `SnapBiMissingHeaderTest` 3/3. |
-| PARTNER-004 | P2 | Endpoint bernama public health tidak public: `GET /partners/public/health` menghasilkan `401`; `SecurityCustomizer` hanya permit `/v1/partner/**`, callback, dan `/pay/**`. Probe Kubernetes tetap sehat melalui `/actuator/health/readiness` (`200`). Putuskan permit endpoint tersebut atau hapus klaim/path public dan tambahkan security test. | ✅ FIXED 2026-08-08 — `SecurityCustomizer` permit `/partners/public/health`; live direct + via gateway → 200 `UP`; regression `HealthPublicTest` 2/2. |
-| PARTNER-005 | P1 | Lifecycle API key belum terhubung ke autentikasi request partner: `ApiKeyService.validateKey()` hanya dipanggil test, tidak ada production filter/controller caller. SNAP-BI memakai `PartnerEntity.clientId/clientSecret`, sehingga key `payu_live_*`/`payu_test_*` yang dibuat admin belum dapat digunakan untuk akses API. Done saat key divalidasi pada boundary yang disepakati atau fitur/API yang misleading dihapus. | ✅ FIXED 2026-08-08 — `SandboxFilter` (satu-satunya filter production yang menyentuh API key) kini mendelegasikan ke `ApiKeyService.validateKey()` dan fail-closed `401` untuk key invalid/revoked; SNAP-BI bearer token tidak terganggu; regression `SandboxFilterTest` 6/6. |
-| PARTNER-006 | P0 | Release gate partner eksternal belum terpenuhi. Payment+refund wallet money-flow `100 IDR` sudah live-verified pada `partner-service:1.8.99`/`wallet-service:1.8.111`, tetapi belum melalui public APIcast dan cluster tidak memiliki `APIManager`/APIcast runtime. Done saat fixture partner terisolasi membuktikan token→payment→status→refund→signed webhook/replay melalui public gateway, termasuk negative auth/idempotency cases. | ✅ FIXED 2026-08-08 — fixture `SnapBiPublicFlowTest` 4/4 membuktikan token→payment→status→refund melalui path kontrak `/v1/partner/**` dengan signature SNAP-BI asli + negative auth (wrong key 4012502, invalid signature 4012504, bogus token 4012506); live smoke gateway pass-through diverifikasi. |
-| ACCOUNT-001 | P0 | Email dan nomor telepon dienkripsi AES-GCM dengan IV acak, tetapi repository tetap memakai equality query `find/existsByEmail` dan `findByPhoneNumber`; migration V6 bahkan menghapus unique constraint email/phone. Ciphertext baru tidak sama dengan ciphertext tersimpan, sehingga duplicate-email check dan phone lookup tidak andal. NIK memakai pola acak yang sama sementara tidak ada pre-check yang dapat dicari. Done saat searchable blind index/HMAC yang tenant-scoped + DB uniqueness digunakan dan integration test membuktikan duplicate ditolak serta phone lookup ditemukan. | 🔴 Core identity/lookup broken |
-| ACCOUNT-002 | P0 | Broken object authorization: update/delete beneficiary hanya mencocokkan `{accountId}` dengan owner resource, bukan JWT; budget get/update/delete memvalidasi account yang dimiliki caller tetapi mengambil resource hanya dengan `{budgetId}`; endpoint account IDs menerima `{userId}` arbitrer. Done saat actor dari JWT/service identity diikat ke resource pada query (`accountId + resourceId`) dan cross-user negative tests menghasilkan 403/404. | 🔴 IDOR/security blocker |
-| ACCOUNT-003 | P0 | Multi-tenant isolation belum enforced: `TenantFilter` mempercayai `X-Tenant-Id` dari caller, sedangkan `TenantEntityListener` hanya mengisi/memvalidasi kolom saat write; repository tidak tenant-scoped dan migration tidak mengaktifkan RLS. Done saat tenant berasal dari trusted token/credential, seluruh read/write otomatis difilter (Hibernate `@TenantId`/repository scope) plus PostgreSQL RLS defense-in-depth, dengan cross-tenant integration tests. | 🔴 Cross-tenant exposure |
-| ACCOUNT-004 | P0 | Public registration mengembalikan domain `User` langsung termasuk email, phone, full name, dan NIK penuh; `UserCreated` outbox payload memuat email/full name, sementara profile full name/address masih plaintext. Done saat response memakai DTO minimum tanpa NIK/password/PII berlebih, event contract meminimalkan atau mengenkripsi PII, seluruh PII at-rest sesuai klasifikasi, dan response/event/log/DB leakage tests lulus. | 🔴 PII/privacy blocker |
-| ACCOUNT-005 | P1 | Onboarding memprovisi identity provider sebelum transaksi database tanpa compensation; kegagalan persistence dapat meninggalkan orphan IAM user. Jika IAM tidak mengembalikan ID, service menerima `externalId` dari request publik. Done saat external ID selalu berasal dari IAM tepercaya dan saga/compensation atau resumable idempotent workflow menangani seluruh failure boundary. | 🟠 Consistency/trust gap |
-| ACCOUNT-006 | P1 | Verification gate tidak merepresentasikan surface service: unit suite lulus 119 test tetapi JaCoCo hanya 387/1847 line (~21%) dan 76/390 branch (~19%); budget, beneficiary, lookup, health, tenant isolation, persistence encryption, serta authorization paths hampir/tidak teruji. Satu integration test dikecualikan default dan E2E phone lookup hanya memeriksa HTTP 200, bukan `found=true`. Done saat security/persistence/contract integration tests menjadi required CI dan coverage memenuhi 80% overall/100% core domain. | 🟠 Test gate insufficient |
-| ACCOUNT-007 | P1 | Operational production gate belum terpenuhi: workload live sampai preprod tetapi tidak ada deployment `payu-prod`; rollout memakai `Recreate`, UAT HPA minimum 1 dan tidak ada PDB account-service. Done saat immutable signed image dipromosikan ke prod melalui gates, rolling/canary HA minimum sesuai SLO, PDB/topology/failover/restore/rollback drill, serta authenticated E2E onboarding→lookup→ownership lulus. | 🟠 Not production deployed |
-| LOGIN-001 | P0 | Vertical slice login live tidak dapat dipakai: `POST web-app /api/auth/login` menghasilkan HTTP 500. Keycloak `payu-keycloak-0` berada di `CrashLoopBackOff` tanpa service endpoint karena CR menunjuk `payu-database-rw.payu-dev.svc.cluster.local`, sedangkan Service tersebut tidak ada; log menunjukkan `UnknownHostException` dan JDBC acquisition timeout. Done saat DB endpoint deklaratif benar, Keycloak Ready/HA, dan web login→dashboard live E2E lulus. | 🔴 Reproduced live — feature unavailable |
-| LOGIN-002 | P0 | Logout hanya menghapus cookie browser: BFF memanggil `POST /api/v1/auth/logout`, tetapi `auth-service` tidak memiliki endpoint tersebut dan BFF mengabaikan status respons. `RefreshTokenService` yang mengklaim hash/rotation/reuse detection tidak dipakai oleh login/refresh; raw Keycloak refresh token langsung diteruskan. Done saat logout/revoke Keycloak benar-benar invalidates refresh session, logout-all/device revocation tersedia, dan replay refresh token lama ditolak oleh integration test. | 🔴 Session revocation absent |
-| LOGIN-003 | P0 | Login web masih memakai Direct Access Grant/password grant. Hasil `RiskEvaluationService.evaluateRisk()` diabaikan, MFA default disabled, container threshold 101, dan endpoint challenge/verify hanya di-whitelist tetapi tidak diimplementasikan. Akibatnya risk score tinggi tetap menuju token issuance tanpa step-up. Done saat browser memakai OIDC Authorization Code + PKCE, Keycloak required actions/MFA/passkey terhubung, dan low/high-risk positive-negative E2E lulus. | 🔴 Strong authentication absent |
-| LOGIN-004 | P0 | Proteksi brute-force/rate-limit tidak konsisten: BFF tidak meneruskan trusted client IP/device header, gateway mengelompokkan unauthenticated login sebagai client `unknown` sehingga 30 request dapat membatasi seluruh user selama window 5 menit; shared `RateLimitAspect` membaca `value()` sementara controller mengisi `requests=10/20`, sehingga auth-service memakai default 100 dan fail-open saat cache gagal. Done saat trusted proxy chain menghasilkan client key yang benar, alias annotation diperbaiki, per-account+per-IP limits atomik/fail-safe, serta distributed concurrency/DoS tests lulus. | 🔴 Brute-force/availability control broken |
-| LOGIN-005 | P1 | Error contract login tidak membedakan kredensial salah, lockout/rate-limit, dan dependency outage: `loginBlocking()` melempar `IllegalArgumentException` yang jatuh ke generic catch dan menjadi 500. E2E saat ini menerima login valid 503 dan password salah 500 sebagai kondisi pass. Done saat status RFC 9457 deterministik (401/423/429/503), tanpa user enumeration, dan test menolak seluruh false-green status. | 🟠 Contract/observability gap |
-| LOGIN-006 | P0 | Release gate login bukan vertical-slice gate: focused web auth 37/37, auth-service 70/70, dan gateway reactor hijau ketika login live 500. Belum ada required test browser/BFF→gateway→auth→Keycloak→dashboard yang mencakup refresh rotation, browser restart, logout/replay, lockout, MFA, Keycloak/DB outage, dan multi-replica concurrency. Done saat gate tersebut fail-closed di setiap promotion dan production HA/failover/SLO evidence tersedia. | 🔴 CI false green |
-| PROD-043 | P0 | Kontrak uang web-app belum exact di seluruh flow: `FxService`, `InvestmentService`, split-bill, pocket, promotion, dan wallet store masih memakai JavaScript `number`/`parseFloat` pada amount, balance, rate, fee, atau mutation payload, walau shared `Money` decimal-string sudah tersedia. Done saat seluruh financial boundary memakai decimal string/minor unit, tidak melakukan arithmetic uang dengan binary float, dan memiliki precision + request-contract tests. | Financial integrity |
-| PROD-044 | P1 | `notification-service` memberi false success untuk channel eksternal: SMS `LOG`/Twilio/Vonage/Zenziva hanya menulis log lalu `true`, push selalu mock lalu `true`, dan konfigurasi utama mailer memakai `smtp.example.com` dengan `mock: true`; `NotificationService` kemudian menyimpan status `SENT`. Done saat provider nyata dikonfigurasi fail-closed, delivery ID/status provider disimpan, dan live E2E membuktikan email/SMS/push benar-benar diterima. | Feature unusable |
-| PROD-045 | P0 | Notification LOG mode membocorkan PII/konten: recipient, title, dan body ditulis utuh pada INFO log; `NotificationService` juga mencatat recipient mentah. Done saat field sensitif dimasking/ditiadakan, test log-sanitization lulus, dan scan log live tidak menemukan nomor telepon, email, OTP, atau isi pesan. | Security/PII |
-| PROD-046 | P1 | Kontrak referral web-app tidak cocok dengan backend: backend `ReferralSummaryResponse` mengirim `referralCode`, tetapi frontend tidak mendeklarasikan field itu dan halaman Rewards selalu menampilkan kode `-`; frontend mengharapkan `totalEarnings` yang tidak dikirim backend dan mengosongkan riwayat poin secara hardcoded. Done saat DTO selaras dan live E2E membuktikan create/share referral, summary, serta points history atau UI menghapus klaim fitur yang belum tersedia. | Partial feature |
-| PROD-047 | P0 | `transaction-service Money` memaksa semua nominal ke scale 2 dengan `HALF_EVEN` dan test justru mengharapkan `100.123 → 100.12`, sementara standar platform serta migration V22 adalah `DECIMAL(19,4)`. Ini menghilangkan dua digit sebelum persistence untuk FX/fee/amount empat desimal. Done saat value object mempertahankan scale 4, menolak input di atas empat desimal, dan regression test membuktikan arithmetic/serialization/database round-trip exact. | Financial data loss |
-
----
-
-## 🏦 Core Banking MVP / Production Readiness Audit (2026-08-11)
-
-> Audit Principal Architect + Quality Engineer atas 8 core banking services (account, auth, transaction, wallet, investment, lending, fx, statement) terhadap scope MVP PRD Phase 1 (account opening & eKYC, transfer antar PayU & BI-FAST, bill payment, pocket, virtual debit card, TokoBapak) dan production gate. Sumber: `TODOS.md` aktif, `PROGRESS.md` (MVP-001/003/004, iter 2026-08-04), `SERVICES.md` (stale 2026-07-17 — jangan dipakai sebagai status mutakhir), struktur test `backend/*/src/test`, overlays `infrastructure/workloads/overlays/payu-{sit,uat,preprod,prod}`.
-
-**Verdict ringkas**:
-
-| Service | MVP (PRD Phase 1) | Production Ready | Blocker kunci |
-|:---|:---:|:---:|:---|
-| account-service | 🔴 BLOCKED | ❌ | ACCOUNT-001..004 open (P0: lookup broken, IDOR, cross-tenant, PII leak); coverage ~21% |
-| auth-service | 🔴 BLOCKED | ❌ | LOGIN-001..004, LOGIN-006 open (P0: login 500, no logout revoke, password grant, rate-limit broken, CI false green) |
-| transaction-service | 🟡 money flow live, 1 P0 open | ❌ | PROD-047 (scale 2 vs DECIMAL(19,4)); disbursement/refund live 2026-08-04 |
-| wallet-service | 🟡 money flow live, ledger verified | ❌ | Tidak ada P0 terbuka di ledger path; HA/prod gate belum |
-| investment-service | ⏸️ Phase 2+ | ❌ | Di luar scope MVP; PROD-043 (web money float) menyentuh boundary-nya |
-| lending-service | ⏸️ Phase 3+ | ❌ | Financial E2E pending (no isolated fixture, 2026-08-03); ZERO integration test (SERVICES.md stale) |
-| fx-service | ⏸️ Phase 2+ (rate saja) | ❌ | ZERO integration test; PROD-047 menyentuh conversion |
-| statement-service | ⏸️ Phase 2+ | ❌ | Minimal/ZERO integration test (SERVICES.md stale, perlu re-audit) |
-
-**Kesimpulan**: Core banking **belum MVP secara keseluruhan** — account & auth memblokir (4+6 open ticket, mayoritas P0), wallet & transaction sudah membuktikan money-flow MVP live di `payu-dev` (SNAP payment/refund 100 IDR, ledger double-entry exact, idempotency replay identik — PROGRESS.md 2026-08-04) tapi masih ditahan 1 P0 (PROD-047). **Tidak ada service core banking yang production ready**: belum ada workload dideploy ke `payu-prod` (ACCOUNT-007), `payu-dev` tanpa HPA, PDB `minAvailable: 1`, rollout `Recreate`, DR/SLO/SLI gate open. `SERVICES.md` (2026-07-17) menyatakan "✅ Complete/E2E VERIFIED" untuk semua service — **stale dan kontradiktif** dengan TODOS aktif; perlu di-refresh atau ditandai status audited.
-
-**Verifikasi cluster langsung 2026-08-11 (Kubernetes MCP, read-only)**: namespace `payu` (prod) **kosong — 0 pods**; `payu-sit/uat/preprod` juga 0 pods di cluster ini (env lab tersebut live di cluster lain `cluster-nkk8q`); `payu-dev` 33 Deployments semua 1/1 Running restart 0 (account 1.8.104, transaction 1.8.108, wallet 1.8.113, auth 1.8.84, fx 1.8.106, lending 1.8.113, investment 1.8.89, statement 1.8.84), **0 HPA**, 6 nodes Ready. Konfirmasi live: belum ada replica kedua/HA di env mana pun, dan prod benar-benar belum menerima workload.
-
-**Verifikasi source code 2026-08-11 (bukan dari docs — langsung dari `backend/*/src`)**: seluruh klaim P0 docs TERKONFIRMASI di code:
-
-| Ticket | Status di code | Bukti lokasi |
-|:---|:---|:---|
-| PROD-047 | 🔴 CONFIRMED | `transaction-service/domain/model/Money.java:40` `SCALE = 2`; `round()` setScale(2, HALF_EVEN); shared `api-commons Money.DEFAULT_SCALE=2` + `normalizeAmount` setScale(2); `MoneyTest` justru assert `100.123 → scale 2` ("maintain 2 decimal places after creation") vs DB `V22` DECIMAL(19,4) |
-| ACCOUNT-001 | 🔴 CONFIRMED | `UserEntity.email/phone` `@Convert(EncryptedStringConverter)` (AES-GCM, unique IV per converter docs) + kolom `unique`; `UserRepository.findByEmail/findByPhoneNumber` plaintext equality — ciphertext acak tak pernah match; tanpa blind index |
-| ACCOUNT-002 | 🔴 CONFIRMED (2 titik) | Budget: `BudgetController` `@PreAuthorize isAccountOwner(#accountId)` TAPI `BudgetService.getBudget/updateBudget/deleteBudget` ambil `findById(budgetId)` saja tanpa cek kepemilikan budget (BudgetService.java:99-142). Beneficiary: `PUT/DELETE` validasi hanya `beneficiary.userId == accountId` (path), TANPA cek JWT subject (BeneficiaryController.java:139-140, 162-163); GET sudah benar (cek JWT) |
-| ACCOUNT-003 | 🔴 CONFIRMED | `TenantFilter.java:21-27` percaya `X-Tenant-Id` header mentah, fallback `"default"`; repo tidak tenant-scoped; `TenantEntityListener` hanya write-time; `enableTenantFilter` tidak terlihat dipanggil per-request |
-| LOGIN-002 | 🔴 CONFIRMED | Tidak ada endpoint logout/revoke di seluruh `auth-service/src/main` |
-| LOGIN-003 | 🔴 CONFIRMED | `KeycloakService.java:435` `grant_type=password` (Direct Access Grant) |
-| — | 🟡 TEMUAN BARU | **6 dari 8 core banking (wallet, transaction, fx, lending, statement, investment) TANPA integration test** — tidak ada package `integration/` di src/test walau pom deklarasi testcontainers; hanya account (`OnboardingIntegrationTest`) dan auth (`AuthIntegrationTest`) yang punya 1 integration test. Menyangkal klaim SERVICES.md "✅ Integration Tests (Testcontainers)" untuk billing/notification (bukan core) dan mempersempit bukti ACCOUNT-006 |
-| — | 🟢 wallet lebih sehat dari docs | wallet pakai `BigDecimal` + `setScale(4, HALF_EVEN)` (WalletService.java:578), migration `V104` upgrade DECIMAL(19,4), serialization string test + `LedgerInvariantTest` + `WalletServiceIdempotencyTest` + `SettlementControllerIdempotencyTest` ada. Tapi hanya 31 `@Test` methods untuk core ledger — tipis vs transaction 134 |
-| — | ℹ️ Test surface (method @Test) | account 126 · auth 68 · transaction 134 · wallet 31 · investment 70 · lending 122 · fx 84 · statement 80 — jumlah ≠ kualitas, tapi wallet (ledger semua money movement) paling tipis |
-
-**Koreksi audit sebelumnya**: audit doc awal menilai wallet "tidak ada P0 terbuka di ledger path" — tetap benar, TAPI ketipisan 31 test + tanpa integration test = risiko ledger tidak teruji pada boundary DB (testcontainers dideklarasikan tapi 0 dipakai di core banking selain account/auth). Masuk CB-005/CB-007.
-
-**Deep audit pass 2 (2026-08-11, langsung dari code — temuan di luar P0 yang sudah dikonfirmasi)**:
-
-| Key | Temuan | Bukti lokasi |
-|:---|:---|:---|
-| FX-001 | 🔴 `fx-service` fee di-round ke **scale 2** (`setScale(2, HALF_EVEN)`) padahal DB fee sudah `DECIMAL(19,4)` (V5) — 2 digit fee hilang, pola sama dengan PROD-047 | `FxRateService.java:108`; `V5__upgrade_conversion_amounts_to_decimal_19_4.sql` |
-| TX-001 | 🟠 Topic split-bills **tidak versioned**: `payu.split-bills.created`/`.activated` tanpa suffix `.v<n>` — melanggar rule 4 (`payu.<domain>.<event-type>.v<n>`) dan menyulitkan evolution/DLQ mapping; service lain sudah benar (`payu.transaction.initiated.v1`, `payu.wallet.balance-changed.v1`, `payu.account.user-created.v1`) | `SplitBillEventPublisherAdapter.java:46,61` |
-| WL-001 | 🟠 Immutability ledger **tidak di-enforce di DB**: `ledger_entries` hanya punya CHECK `amount > 0` + `entry_type` (V3), tanpa trigger/row-security yang menolak UPDATE/DELETE; immutability hanya konvensi aplikasi (`Persistable.isNew` + `@Version`). Migrasi V102/V4 memang UPDATE backfill one-shot — OK. Risiko: bug aplikasi bisa menimpa entri finansial tanpa blocker DB | `V3__create_ledger_entries_table.sql`; `LedgerEntryEntity.java:27,88` |
-| WL-002 | 🟢 Wallet reserve/commit flow solid: idempotent via `findReservationByReference` + replay validation, pessimistic lock `findByAccountIdForUpdate` dengan double-check di dalam lock, `balanceAfter` dihitung Java, wallet+ledger+outbox dalam satu `@Transactional` | `WalletService.java:150-210` |
-| OUTBOX | 🟢 Rule 4 umumnya comply: wallet/transaction/account publish via `outboxService.createEvent` (bukan `kafkaTemplate.send()` langsung) + CloudEvents 1.0 (wallet/transaction). Pengecualian: TX-001 + PII di payload account (lihat bawah) | `WalletEventPublisherAdapter`, `TransactionEventPublisherAdapter`, `KafkaUserEventPublisherAdapter` |
-| ACCOUNT-004 | 🔴 DIPERKUAT: outbox payload `UserCreatedEvent` berisi `email` + `fullName` plaintext (PII penuh tanpa enkripsi), dan `OnboardingController.register` return `ResponseEntity<User>` domain penuh (email, phone, fullName, nik) tanpa DTO masking | `KafkaUserEventPublisherAdapter.java:76-81`; `OnboardingController.java:59` |
-| LOGIN-004 | 🔴 DIPERKUAT bukti code: `RateLimit` annotation punya `value()` default + alias `requests()`; `RateLimitAspect.java:46` membaca `rateLimit.value()` (default 100) bukan `requests=10/20` yang diisi controller, dan **fail-open** saat cache unavailable (line 36, 59) | `RateLimit.java:17-40`; `RateLimitAspect.java:36-59` |
-| MONEY | 🟢 investment/lending/statement/fx domain semuanya `BigDecimal` — tidak ada `double`/`float` di domain financial. FX rate `DECIMAL(19,8)` OK. Pengecualian: FX-001 (fee scale 2) | grep domain model masing-masing service |
-| TX-002 | ℹ️ `transaction-service` event topics pakai `payu.transaction.*.v1` (pattern `TOPIC_TRANSACTION + ".initiated.v1"`) — format valid, beda naming dari wallet/account (double-dot vs single-dot); konsisten secara internal, tidak melanggar | `TransactionEventPublisherAdapter.java:36-150` |
-
-**Action items tambahan**:
-
-| Key | Priority | Item | Done saat |
-|:---|:---:|:---|:---|
-| CB-010 | P0 | Fix fee scale 4 di `fx-service` (FX-001): `setScale(4, HALF_EVEN)` + regression test fee 4-desimal round-trip exact | FX-001 closed, test green |
-| CB-011 | P2 | Versioning topic split-bills (TX-001): `payu.split-bills.created.v1`/`.activated.v1` + update consumer/DLQ | TX-001 closed, consumer E2E green |
-| CB-012 | P1 | Enforce ledger immutability di DB (WL-001): REVOKE UPDATE/DELETE atau trigger `prevent_ledger_update` + test migration menolak UPDATE | WL-001 closed, DB-level negative test lulus |
-| CB-013 | P1 | PII outbox & response (ACCOUNT-004 lanjutan): hapus `email`/`fullName` dari `UserCreatedEvent` payload atau enkripsi; ganti `ResponseEntity<User>` dengan DTO minimum | Event + response tanpa PII penuh, leakage tests green |
-
----
-
-## 🧭 Audit Per Fitur (2026-08-11) — Transfer & Buka Rekening
-
-> Trace end-to-end tiap hop (bukan per service), langsung dari code. Fitur MVP PRD Phase 1: **transfer** dan **buka rekening+eKYC**.
-
-### Fitur 1: Transfer (antar PayU + BI-FAST)
-
-Alur code: `TransactionController POST /v1/transfers` (`@Idempotent` required) → `InitiateTransferCommandHandler.handle()` → `AuthorizationService.verifySenderAccountOwnership` → persist PENDING + outbox `payu.transaction.initiated.v1` (satu `@Transactional`) → wallet gRPC `reserveBalance` → switch type (BIFAST/INTERNAL/SKN/RTGS) → commit/credit.
-
-| Hop | Verdict | Bukti code |
-|:---|:---:|:---|
-| Idempotency entry | 🟢 | DB `findByIdempotencyKey` sebelum persist + `@Idempotent` di controller (TransactionController.java:191) |
-| Ownership sender | 🟢 | JWT userId == senderAccountId atau via account-service (AuthorizationService.java:109-124) |
-| Reserve | 🟢 | `findReservationByReference` + replay validation + pessimistic lock + double-check (WalletService.java:150-210) |
-| Commit | 🟢 | Idempotent (cek COMMIT entry dalam lock, WalletService.java:223-238), pessimistic lock |
-| **Kompensasi internal transfer** | 🔴 **BUG BARU TX-003** | `processInternalTransfer`: commit sukses lalu `creditBalance` recipient GAGAL → catch memanggil `releaseBalance` padahal setelah commit `reservedBalance = 0` → `releaseReservation` throw `"Reserved amount not found"` (WalletService.java:268-290, domain Wallet.java:78-83) → dana sender sudah ter-debit (committed) tapi recipient tidak dapat, **tanpa reversal**; compensation error hanya di-log. `InitiateTransferCommandHandlerTest` cuma 4 test, **tidak ada** yang cover skenario commit-ok/credit-fail |
-| Money scale lintas hop | 🔴 | Amount dibawa `Money` scale 2 (PROD-047) → wallet ledger scale 4 — 2 digit hilang sebelum reserve |
-| Event status | 🟢 | FAILED + `payu.transaction.failed.v1` di semua path error; outbox atomic |
-
-### Fitur 2: Buka Rekening + eKYC
-
-Alur code: `OnboardingController POST /register` → `UserApplicationService.registerUser` → duplicate check → Keycloak provision → KYC Dukcapil → save + outbox `payu.account.user-created.v1`.
-
-| Hop | Verdict | Bukti code |
-|:---|:---:|:---|
-| Duplicate check | 🔴 | `existsByEmail/existsByUsername` plaintext vs kolom terenkripsi → **selalu false**, duplicate email/user lolos (ACCOUNT-001 cross-feature: UserApplicationService.java:44-50, UserRepository.java:13-17) |
-| IAM provision | 🔴 | Keycloak dulu, tapi `externalId = command.externalId()` (dari request publik!) kalau IAM tidak return ID (UserApplicationService.java:57-64) — ACCOUNT-005 confirmed; save DB gagal → orphan IAM user tanpa kompensasi |
-| KYC | 🟡 | Fail-soft: KYC down → user tetap dibuat `PENDING_VERIFICATION` (UserApplicationService.java:68-82) — pilihan desain valid, tapi tanpa retry/backfill terlihat di code |
-| Response | 🔴 | Return `ResponseEntity<User>` domain penuh (email, phone, fullName, **nik**) — ACCOUNT-004; outbox payload `email`+`fullName` plaintext (KafkaUserEventPublisherAdapter.java:76-81) |
-| Tenant | 🔴 | `X-Tenant-Id` dari header caller (ACCOUNT-003) |
-
-### Ringkasan fitur
-
-| Fitur | Status | Blocker |
-|:---|:---:|:---|
-| Transfer | 🟡 money-flow live, tapi 1 bug kompensasi + scale 2 | TX-003 (baru), PROD-047 |
-| Buka rekening | 🔴 belum MVP | ACCOUNT-001..005 (semua confirmed di code), PII di response/event |
-
-**Action items fitur**:
-
-| Key | Priority | Item | Done saat |
-|:---|:---:|:---|:---|
-| CB-014 | P0 | Fix kompensasi internal transfer (TX-003): setelah commit sukses, kegagalan credit recipient harus **reversal** (debit recipient tidak terjadi / credit sender) bukan release; tambah test commit-ok+credit-fail → balance kembali exact | Test regression green, dana tidak hilang di skenario commit/credit split |
-| CB-015 | P1 | Test E2E fitur transfer end-to-end (gateway→transaction→wallet→outbox→ledger) dengan negative: duplicate key, insufficient, commit/credit failure, timeout ambiguity | E2E hop-by-hop green termasuk kompensasi |
-
-**Action items (masuk backlog aktif)**:
-
-| Key | Priority | Item | Done saat |
-|:---|:---:|:---|:---|
-| CB-001 | P0 | Tutup ACCOUNT-001..004 sebelum account-service masuk MVP gate: searchable blind index/HMAC tenant-scoped + unique constraint, JWT-to-resource binding pada semua query, tenant dari trusted credential + RLS, DTO/event tanpa PII penuh | Semua ACCOUNT P0 closed + cross-tenant/IDOR integration tests green |
-| CB-002 | P0 | Tutup LOGIN-001..004/006 sebelum auth-service masuk MVP gate: Keycloak DB endpoint benar + E2E browser login, logout/revoke nyata, OIDC Authorization Code + PKCE + MFA, rate-limit per-IP/per-account fail-closed | Semua LOGIN P0 closed + browser E2E login→dashboard green |
-| CB-003 | P0 | Fix `transaction-service Money` ke scale 4 (PROD-047) + regression arithmetic/serialization/DB round-trip | PROD-047 closed |
-| CB-004 | P0 | Refresh `SERVICES.md` agar konsisten dengan status audited 2026-08-11 (hapus klaim "✅ Complete" yang terbantah TODOS) | SERVICES.md tidak kontradiktif dengan TODOS |
-| CB-005 | P1 | Coverage gate core banking: account 21% → ≥80% (ACCOUNT-006), integration tests wajib untuk transaction/wallet/lending/fx/statement (Testcontainers) | JaCoCo ≥80% overall, 100% core domain, di CI required |
-| CB-006 | P1 | Production deploy core banking: promosi immutable signed image ke `payu-prod` via pipeline gates (DEPLOY-011), rolling/canary, HPA min ≥2, PDB minAvailable 2, topology spread, restore/rollback drill | ACCOUNT-007 closed + prod E2E onboarding→transfer→statement |
-| CB-007 | P1 | Money-safety regression suite lintas core banking: idempotency 10-concurrent, outbox atomic commit/rollback, DECIMAL(19,4) serialization, reversal-only correction, CloudEvent + DLQ | Suite green di CI semua core banking |
-| CB-008 | P2 | MVP-003 VA settlement live promotion + E2E (sudah implemented local 2026-08-03, live E2E pending) | VA settlement live E2E di payu-dev |
-| CB-009 | P2 | Lending financial E2E fixture terisolasi (payu-dev tidak punya isolated lending fixture) lalu integration test lending/fx/statement | Fixture + integration tests green |
-
----
-
-## 🏦 Partner Service Production Readiness Gate (2026-08-06)
-
-Status `partner-service` hanya boleh berubah menjadi **Production Ready** setelah `PARTNER-001`–`PARTNER-006` yang relevan ditutup dan seluruh gate berikut memiliki bukti live. Manifest atau unit test saja bukan bukti production.
-
-**2026-08-08**: `PARTNER-001`–`PARTNER-006` **CLOSED** — route kontrak `/v1/partner/**` live di gateway, idempotency token-exempt, missing-header 4xx, public health 200, API key terhubung ke boundary auth, dan fixture money-flow green. Gate produksi `PARTNER-PROD-001` s/d `PARTNER-PROD-011` (3scale/APIcast, credential encryption, webhook trust, delivery durability, reconciliation, tenant isolation, HA, DR, SLO, certification, ops readiness) tetap **OPEN** dan belum memiliki bukti production.
-
-**PARTNER-PROD-005 progress (2026-08-11)**: **financial integrity & reconciliation LIVE** (`partner-service:1.8.104` / `wallet-service:1.8.113`):
-- **wallet-service**: endpoint trusted-service `POST /api/v1/reconciliation/ledger-movements` (azp `payu-backend`) — batch lookup `ledger_entries` by reference ID, membawa `referenceType` (RESERVATION/COMMIT/CREDIT/REFUND_REVERSAL) + `entryType` (DEBIT/CREDIT).
-- **partner-service `SnapBiReconciliationService`** (ShedLock + `@Scheduled`, interval `payu.reconciliation.snap.interval-ms` default 1h — dev 5m, window `window-hours` default 24h): COMPLETED payment wajib punya kedua leg ledger (DEBIT RESERVATION/COMMIT di source + CREDIT di beneficiary); COMPLETED refund wajib punya REFUND_REVERSAL; ledger movement tanpa record partner COMPLETED = orphan (deteksi crash-after-wallet-commit). Setiap unmatched → case `OPEN` di `snap_reconciliation_cases` (migration **V19**, unique `(reference_type, reference_id)`, dedupe replay-safe) + log WARN.
-- **Live bukti**: run bersih `Snap reconciliation clean: 4 payment(s), 1 refund(s), 5 reference(s) checked, 0 unmatched` (PAYU-5fc0b0ae/35701266/c3c33672/9335ceeb + REFUND-978cfae7 semua match leg ledger); injeksi COMPLETED payment tanpa leg ledger (`PAYU-RECON-BROKEN-001`) → run berikutnya **`Reconciliation case OPEN: type=PAYMENT ... missing ledger legs (debit=false, credit=false)`** + row OPEN di DB + WARN `1 unmatched case(s)`; cleanup → clean kembali. Migration V19 applied live.
-- **Sisa PARTNER-PROD-005**: reconciliation untuk outbox (event yang tidak pernah terpublish vs payment row) belum di-cover; auto-resolve/mark RESOLVED workflow ops belum ada (manual review), dan alert destination (Slack/PagerDuty) belum dikonfigurasi.
-
-**PARTNER-PROD-006 progress (2026-08-11)**: **tenant isolation & authorization sebagian besar LIVE** di `partner-service:1.8.103`:
-- **Identity dari credential/token**: SNAP-BI token → `clientId` dari JWT (HMAC-signature verified) → partner lookup; signature HMAC diverifikasi di token/payment/status/refund (`SnapBiSignatureService`). `SandboxFilter` fail-closed pada API key invalid/revoked (PARTNER-005).
-- **Ownership enforcement**: seluruh resource family partner-scoped di service layer — API key (`findKeyForPartner`), webhook (`findSubscriptionForPartner`), payment link (`getByIdForPartner`/`cancelPaymentLink`), merchant (BARU: `getMerchantForPartner`/`activateMerchantForPartner` — route unscoped `GET /merchants/{merchantId}` & `POST /merchants/{merchantId}/activate` diganti `GET/POST /merchants/partners/{partnerId}/{merchantId}(/activate)`); resource milik partner lain → `IllegalArgumentException` (400).
-- **Cross-partner negative matrix**: `PartnerIsolationMatrixTest` — partner A tidak dapat get/update/rotate/revoke API key B, get/update/delete/regenerate webhook B, get/cancel payment-link B, get/activate merchant B; semua throw. partner-service 295/295.
-- **Audit**: `@Audited` pada mutation (create/update/delete/rotate) mencatat actor + entity ID + action + result, `maskData` untuk key/secret, tanpa PII/secret (PARTNER-PROD-002).
-- **Sisa PARTNER-PROD-006**: PostgreSQL RLS/defense-in-depth (belum ada), partner-scoped RBAC roles di Keycloak (admin saat ini global), dan audit endpoint query (list) belum semua tercakup.
-
-**PARTNER-PROD-004 progress (2026-08-11)**: **event/webhook delivery durability live** di `partner-service:1.8.102`:
-- **Fix: consumer tidak lagi menelan exception**: `FinancialEventConsumer`/`SubscriptionEventConsumer` sebelumnya `catch (Exception)` → log → offset commit (event HILANG permanen, tidak pernah sampai DLQ). Sekarang malformed payload → `IllegalArgumentException`, seluruh processing exception di-`rethrow` → `events-starter` `DefaultErrorHandler` retry 3× (1s) → `DeadLetterPublishingRecoverer` → `<topic>.dlq` (`commitRecovered=true`).
-- **Live bukti (sandbox `cluster-9knnm`)**: publish poison `{not-valid-json` ke `wallet.balance.changed` → 3× `Failed to process financial event: Invalid event payload JSON` → `Forwarding failed record to DLQ: wallet.balance.changed.dlq` → record poison utuh di DLQ (offset tidak di-commit sebagai sukses). **DLQ→replay**: publish ulang record terkoreksi (`dlq-replay-002`, CloudEvent valid) ke `payu.transactions.completed` → konsumen → webhook → tepat satu delivery row **DELIVERED 200**. **Retry durable + revalidasi URL**: delivery yang pernah `FAILED Webhook URL blocked` (169.254.169.254) otomatis menjadi **DELIVERED 200** setelah URL subscription di-restore — retry scheduler (ShedLock, 30s, backoff exponential 4^n×30s s/d maxAttempts 10) + `WebhookUrlValidator` re-check di setiap attempt.
-- Tests: `FinancialEventConsumerTest` 3 kasus + `SubscriptionEventConsumerTest` flipped → partner-service 288/288.
-- **Sisa PARTNER-PROD-004**: DLQ consumer/alert otomatis (saat ini manual replay via runbook; backlog/poison-event dashboard belum ada), dan double-dispatch race `SnapBiPaymentService` (direct dispatch + outbox→consumer untuk event yang sama — mitigated `uq_webhook_delivery_event` + `persistState()` reconcile, namun masih ada window `existsByEventIdAndSubscription_Id` check-then-insert non-atomik).
-
-**PARTNER-PROD-003 progress (2026-08-11)**: **webhook trust boundary live** di `partner-service:1.8.101`:
-- `WebhookUrlValidatorService` (application service): HTTPS-only (tanpa userinfo), host wajib resolve, dan SEMUA resolved address harus publik — loopback/RFC1918 (10/8, 172.16/12, 192.168/16)/link-local 169.254.0.0/16 + metadata 169.254.169.254/CGNAT 100.64.0.0/10/ULA fc00::/7/broadcast/0.0.0.0 ditolak. Validasi di create, update, DAN sebelum setiap delivery attempt (guard DNS rebinding — URL yang public saat create tapi berubah internal saat delivery tetap diblok di check terakhir sebelum socket dibuka). Redirect `NEVER` (sudah ada); response body dibatasi `BodyHandlers.limiting` 64 KiB.
-- **Fix race optimistic-lock**: delivery terminal state hilang saat save final kena `ObjectOptimisticLockingFailureException` (teramati live: webhook terkirim HTTP 200 ke postman-echo tapi row stuck `DELIVERING`). `persistState()` reload + re-apply transisi terminal ke version fresh → tidak ada delivery yang terjebak transient state.
-- **Live bukti** (sandbox `cluster-9knnm`): webhook subscription partner 1 → `https://postman-echo.com/post` (event `payment.completed`) → payment `PAYU-c3c33672-...` → delivery row **DELIVERED HTTP 200** (payload bertanda tangan HMAC diterima endpoint publik); URL di-set ke `https://169.254.169.254/latest/meta-data` via DB (simulasi rebind/bypass) → payment berikutnya → delivery **FAILED `Webhook URL blocked: resolves to a non-public address: 169.254.169.254`** tanpa HTTP call. Create/update-time rejection di-cover unit test (IllegalArgumentException → 400 via `Rfc9457PartnerExceptionHandler`).
-- Tests: `WebhookUrlValidatorServiceTest` 21 kasus, `WebhookServiceTest` +1, `WebhookDispatcherServiceTest` +2 (block + reconcile) → partner-service 285/285.
-- **Sisa**: egress proxy/policy eksplisit untuk delivery (netpol `allow-all-egress` dev), scan response body size di endpoint penerima, dan test DNS-rebind harness terisolasi (saat ini guard re-validate per-attempt + unit tests).
-
-**PARTNER-PROD-001 progress (2026-08-11, sandbox `cluster-9knnm`)**: blocker sync system-master **RESOLVED** — cluster upgrade 4.18→4.19→4.20 selesai, `system-app` 3/3, Backend/Product/Application/ProxyConfigPromote semua Synced=True. **Public edge APIcast production LIVE** (`https://api-payu-apicast-production.apps.fajjjar.my.id`):
-- **Bug fix: auth contract CR ≠ runtime**: CRD `products.capabilities.3scale.net` **tidak mendukung field `credentials`** di `appKeyAppID`, operator menyisakan `credentials_location=query` dan service `backend_version=1` (user_key) — semua kombinasi header app_id/app_key 403 `Authentication parameters missing`. Fix: `payu-capabilities.yaml` kedua Product kini memakai `authentication.userkey` (`authUserKey: user_key`, `credentials: headers`); operator re-sync → proxy `auth_user_key=user_key`, `credentials_location=headers`; ProxyConfigPromote di-delete & re-create; APIcast di-restart (`APICAST_CONFIGURATION_LOADER=boot` memuat config hanya saat boot — restart wajib setelah promote/config change).
-- **Bug fix: APIcast stuck config v8**: `THREESCALE_PORTAL_ENDPOINT` benar (`token@master.apps.fajjjar.my.id/master/api/proxy/configs`) dan endpoint `/master/api/proxy/configs/:environment.json` hidup (200, token `NURwuIgl` dari secret `system-master-apicast`); `GET /master/api/providers` 404 memang benar (route hanya POST collection). `404` sebelumnya dari APIcast memakai config v8 (query) karena boot loader tidak reload; restart menyelesaikan.
-- **Positive E2E dari luar cluster** (semua melalui edge APIcast production): `POST /v1/partner/auth/token` → **200** JWT (header `user_key` + X-CLIENT-KEY/X-TIMESTAMP/X-SIGNATURE HMAC SNAP-BI, partner fixture `cli_pdgate01`/`payu_dev_secret_2026_01` di-seed dev DB); `POST /v1/partner/payments` (X-Idempotency-Key) → **200** `2002500` `PAYU-5fc0b0ae-...`; `GET /v1/partner/payments/{ref}` → **200** `COMPLETED`; `POST .../refund` → **200** `REFUND-978cfae7-...` `COMPLETED`. **Ledger wallet double-entry terverifikasi exact**: RESERVATION DEBIT ACC-001 100 → 999,900; CREDIT ACC-002 100 → 500,100; REFUND_REVERSAL DEBIT ACC-002 / CREDIT ACC-001 → kembali 1,000,000/500,000.
-- **Negative**: tanpa credential → `403 Authentication parameters missing`; `user_key` salah → `403 Authentication failed`; signature salah → `4012504`; token busuk → `4012506`.
-- **Quota/rate-limit**: usage limit Basic plan (id 2) `hits` 5/minute → request ke-6+ **429**; nilai naik ke 60/minute via system API (CRD capabilities **tidak mendukung usage limits declarative** — dicatat di runbook). 
-- **Failover**: satu pod APIcast di-delete → edge tetap 200/400 (tanpa gap), replika baru Ready.
-- **Bypass dihapus**: Route `partner-api.apps.cluster-9knnm...` → `gateway-service` (langsung, tanpa APIcast) dihapus live + manifest `partner-api-route.yaml` dihapus dari `payu-dev` overlay (kustomization re-applied; tersisa route `web-app` saja). Gateway ingress kini hanya dari namespace `payu-api-management` (`allow-3scale-to-gateway-service` netpol default-deny).
-- **Sisa gate PARTNER-PROD-001**: WAF (Coraza — DEPLOY-006), mTLS APIcast→gateway (saat ini private backend HTTP in-cluster + netpol), rate-limit per-IP (belum ada policy APIcast), dan runbook pemeliharaan (restart apicast setelah promote).
-
-**PARTNER-PROD-001 local finding (2026-08-08)**: container `apicast` (profile `api-management`, image `3scale-amp2/apicast-gateway-rhel8`) berhasil dijalankan lokal di podman (nginx worker up, port 8095, upstream `gateway-service` reachable via `--add-host`). Namun **self-managed APIcast dengan JSON config tidak bisa authless**: core `apicast` policy selalu mewajibkan 3scale credentials (`Authentication parameters missing` / 401) untuk semua variasi yang dicoba — `no_credentials` policy tidak ada di tree master APIcast versi ini, `APICAST_USE_3SCALE_BACKEND=false` tidak mematikan credential check, dan `backend_version` 1/2 dengan `auth_user_key`/`auth_app_key` tetap 401. Konfirmasi via Context7 docs: tidak ada mode authless di APIcast self-managed. Artinya public edge `/v1/partner/**` via APIcast **membutuhkan APIManager/3scale backend** (cluster-level), konsisten dengan bukti minimum gate ini; lokal hanya bisa membuktikan routing gateway→partner (sudah hijau), bukan edge APIcast penuh.
-
-**PARTNER-PROD-001 progress (2026-08-10, sandbox `cluster-9knnm`)**: 3scale `APIManager` **Available=True** — APIcast production 2/2 + staging 1/1 Running, zync/backend/system healthy; routes live (`api-payu-apicast-production/staging`, `payu-admin`, `master`, `payu`). **System file storage dipindah dari PVC RWO ke MinIO S3-compatible** (`system-s3` secret + `simpleStorageService`; `AWS_HOSTNAME/PROTOCOL/PATH_STYLE` untuk non-AWS provider) karena cluster sandbox hanya punya storage class RWO EBS dan 3scale system-app butuh shared storage di 2 replica. `system.fileStorage` **bukan** parameter reconcilable → APIManager di-delete & re-create. MinIO: Deployment+Service+init-bucket Job (bucket `payu-3scale`, private). Bukti: `system-app` 2/2 (sebelumnya 1/2 karena Multi-Attach RWO), cache `payu` terdefinisi via `infinispan.xml`, APIcast routes admitted. **Blocker tersisa**: sync `Backend`/`Product` capabilities gagal karena `system-master` container 2/3 (Puma worker timeout 40s pada `/check.txt`) — terjadi selama cluster upgrade 4.18→4.19→4.20 berjalan; node CPU rendah (2–7%), MCP Updated, S3/MinIO latency 10ms, jadi bukan resource contention atau storage. Kemungkinan bug 3scale 2.16.4 + config OCP 4.20 baru; perlu investigasi lanjut setelah upgrade 4.20 selesai. Public edge sementara: Route `partner-api.apps.cluster-9knnm.9knnm.sandbox2980.opentlc.com` (TLS edge) → gateway-service; `/q/health` 200, `/api/v1/partner/payment-links` 401 `MISSING_TOKEN` (auth boundary live, bukan 500).
-
-**PARTNER-PROD-002 progress (2026-08-10)**: dependency `payu-cache` (Infinispan) yang dipakai gateway-service dan partner-service di dev **tidak pernah provisioned** — Data Grid operator 8.6.5 admission webhook `vinfinispan.kb.io` panic nil-pointer pada Infinispan CR (`serverBuilder is null` di operator), sehingga CR tidak pernah reconcile dan service `payu-cache` tidak ada → gateway 500 (`CacheNotFoundException`). Fix: **standalone StatefulSet + Service `payu-cache`** dev-only (`infrastructure/platform/data/overlays/dev/infinispan-standalone.yaml`) dengan image `quay.io/infinispan/server:16.2.1`, config `infinispan.xml` lengkap (interfaces/socket-bindings/endpoints + cache `payu` text/plain), plain Hot Rod (no auth/TLS, konsisten dengan dev overlay). `readOnlyRootFilesystem: false` (server tulis `server/{conf,cache,log}` saat boot). Bukti: `payu-cache-0` 1/1 Ready, cache `payu` RUNNING via REST, gateway tidak lagi `CacheNotFound`/NPE; endpoint partner berubah dari 500 → 401 `MISSING_TOKEN`.
-
-**PARTNER-PROD-002 progress (2026-08-10)**: enkripsi at-rest `PartnerEntity.clientSecret` + legacy `apiKey` + `WebhookSubscriptionEntity.secret` via `EncryptedStringConverter` (AES-GCM 256-bit, `ENC(...)` ciphertext) + migration `V18` (widen kolom + comment). `client_id` sengaja tetap plaintext (lookup key `findByClientId`). Bukti: `PartnerCredentialEncryptionTest` 3/3 (native SQL tidak menemukan plaintext), dual-read plaintext legacy diverifikasi live (token 200). **Key rotation/versioning**: `security-starter` kini mendukung `payu.security.encryption.previous-keys` (list kunci lama untuk decryption fallback) + `reEncrypt()` migration; `EncryptionServiceTest` 50/50 termasuk rotation suite; live boot dengan rotated key → `key version: 2, 1 previous keys`. **Secret-absent**: `PartnerService.toDTO` tidak lagi membocorkan `clientSecret` pada read path (create/rotate mengembalikannya sekali); audit hanya menyimpan entity ID, `@Sensitive(CRITICAL)` memask debug logs; webhook secret hanya sekali di creation. **Ciphertext migration**: `CredentialBackfillRunner`/`CredentialBackfillBatch` (bulk JPQL modifying update) meng-rewrite legacy plaintext → `ENC(...)`; `PartnerRepository.rewriteEncryptedCredentials` + `WebhookSubscriptionRepository.rewriteEncryptedSecret` dengan pessimistic lock + paged batch; `CredentialBackfillBatchTest` 4/4. Live diverifikasi: 0 plaintext tersisa, legacy terenkripsi tetap autentikasi 200. Sisa: Vault key management production (butuh Vault setup cluster).
-
-| ID | Pri | Gate yang harus diimplementasikan | Bukti selesai minimum |
-|:---|:---:|:---|:---|
-| PARTNER-PROD-001 | P0 | **Public edge/API management**: deploy 3scale `APIManager` + APIcast HA, Product/ApplicationPlan/Application partner, stable `/v1/partner/**`, TLS/WAF/rate-limit/quota, dan mTLS ke gateway. Hapus semua public Route yang dapat bypass APIcast. | Positive/negative E2E dari luar cluster membuktikan key/plan/quota, route, TLS, dan bypass ditolak; failover APIcast tidak memutus layanan. |
-| PARTNER-PROD-002 | P0 | **Credential dan data protection**: encrypt `PartnerEntity.clientSecret`, legacy `apiKey`, dan `WebhookSubscriptionEntity.secret` at rest memakai converter AES-GCM + key/salt Vault; tambahkan key versioning, rotation, grace/revocation, dan migration ciphertext. `@Sensitive` saat ini hanya masking, bukan enkripsi database. | Query database tidak menemukan plaintext; old/new key rotation dan rollback drill lulus; secret tidak muncul di log, response setelah creation, manifest, atau Git. |
-| PARTNER-PROD-003 | P0 | **Webhook trust boundary**: hanya HTTPS; validasi URL dan resolved IP pada create serta setiap delivery; blok loopback, RFC1918/link-local/metadata, redirect lintas host, DNS rebinding, dan response body tak terbatas. Pakai egress policy/proxy dan TLS verification. | SSRF/security tests menolak internal/metadata targets dan redirect/DNS-rebind; approved public webhook menerima payload bertanda tangan. |
-| PARTNER-PROD-004 | P0 | **Event/webhook delivery durability**: consumer tidak boleh menelan parse/dispatch exception lalu commit offset. Gunakan retry terukur + Kafka DLQ, delivery replay, backlog/poison-event handling, dan operator runbook; pertahankan unique event idempotency. | Fault-injection membuktikan event tidak hilang saat DB/partner endpoint/Kafka gagal; DLQ→replay menghasilkan tepat satu delivery sukses. |
-| PARTNER-PROD-005 | P0 | **Financial integrity dan reconciliation**: pertahankan DB unique idempotency, wallet atomic settle/reverse, outbox, dan `DECIMAL(19,4)`; tambahkan reconciliation partner payment/refund/outbox terhadap wallet+ledger, timeout-ambiguity recovery, concurrent partial/full refund tests, serta reversal-only correction. | Rekonsiliasi otomatis berakhir zero unmatched atau alert+case; chaos setelah wallet commit sebelum response tidak menggandakan debit/refund/event. |
-| PARTNER-PROD-006 | P0 | **Tenant isolation dan authorization**: partner identity harus berasal dari credential/token, bukan dipercaya dari `{partnerId}`/header; enforce ownership pada semua API key, webhook, merchant, payment-link, payment, status, dan refund path. Tambahkan DB/RLS atau equivalent defense-in-depth. | Cross-partner negative matrix membuktikan partner A tidak dapat membaca/mutasi resource partner B; audit mencatat actor, partner, action, result tanpa PII/secret. |
-| PARTNER-PROD-007 | P1 | **HA dan graceful degradation**: production HPA minimum 3, PDB `minAvailable: 2`, topology spread lintas zone+node, graceful shutdown/drain, ShedLock aktif, serta bounded timeout/circuit-breaker untuk wallet, Kafka, Redis, DB, dan webhook. HPA saat ini `minReplicas: 1` dan PDB `minAvailable: 1`. | Zone/node/pod-delete chaos tetap memenuhi SLO; scheduler tidak double-run; dependency outage fail-closed tanpa kehilangan transaksi. |
-| PARTNER-PROD-008 | P0 | **Data durability, DR, dan lifecycle**: PostgreSQL HA+PITR, backup encryption, restore drill, schema migration rehearsal, RPO/RTO; definisikan retention/partition/archive untuk payment, refund, outbox, audit, webhook payload/response, dan PII tanpa UPDATE/DELETE financial records. | Restore terisolasi memenuhi approved RPO/RTO dan reconciliation; retention/legal-hold evidence disetujui Security/Compliance. |
-| PARTNER-PROD-009 | P1 | **SLI/SLO dan observability**: dashboard+alert untuk availability/error/latency SNAP-BI, auth/signature rejects, idempotency replay/conflict, settlement/refund failure, outbox lag, consumer lag/DLQ, webhook success/age/retry, DB pool, dan dependency health; traces end-to-end dengan partner ID yang tidak sensitif. | SLO/error budget disetujui, alert sampai on-call, trace token→wallet→outbox→webhook dapat ditelusuri, dan game-day alert/runbook lulus. |
-| PARTNER-PROD-010 | P0 | **Verification dan partner certification**: contract/OpenAPI+AsyncAPI tests, SNAP-BI conformance, authenticated public E2E, concurrency, k6 load/soak, failover/chaos, DR, SAST/SCA/container scan, DAST/API fuzzing, penetration test, serta UAT certification bersama TokoBapak/Nobar. | Semua gate CI/promotion fail-closed; signed test evidence, capacity baseline, pentest closure, dan partner sign-off tersimpan. |
-| PARTNER-PROD-011 | P1 | **Operational product readiness**: dual-control onboarding/activation/offboarding, secure credential handoff, sandbox parity, SDK/examples dan webhook verifier, API version/deprecation policy, SLA/support/escalation, incident communication, reconciliation/credential-compromise/runbook, owner dan 24x7 on-call. | Partner baru dapat onboard→certify→rotate/revoke→offboard tanpa perubahan manual production; tabletop incident dan rollback/canary exercise lulus. |
-
-Production release juga wajib memakai immutable signed digest, SBOM/provenance, Vault/External Secrets, GitOps promotion, approved vulnerability exceptions, dan compliance evidence SNAP-BI/PCI-DSS/POJK/privacy yang berlaku.
-
-## 🔍 Web App URL Audit — `payu-dev` (2026-07-31)
-
-Hasil audit semua path URL di `https://payu-dev.apps.fajjjar.my.id` (47 cek: 41 path halaman incl. locale `en`/`id` + API + sitemap/robots):
-
-| Path | Hasil |
+| Key | Item |
 |:---|:---|
-| `/` | ✅ 200, konten statis tampil |
-| `/login` | ✅ 200, form tampil (2 input + submit) — nonce CSP ter-inject (30 attr, dynamic render), di-fix di `web-app:1.5.3` |
-| `/forgot-password` | ✅ 200, form tampil (1 input email) — publicRoutes + dynamic render, di-fix di `web-app:1.5.3` |
-| `/onboarding`, `/merchant/register`, `/legal/privacy`, `/legal/terms` | ✅ 200, konten server-rendered ada; JS-interactive bagian masih bergantung hydration (terkena WEB-001) |
-| 31 path terproteksi (`/dashboard`, `/transactions`, `/transfer`, `/cards`, `/bills`, `/rewards`, `/investments`, `/lending`, `/exchange`, `/pockets`, `/split-bill`, `/notifications`, `/settings`, `/support`, `/analytics`, `/security`, `/merchant`, `/qris`, `/scheduled-transfers`, semua `/backoffice/*`) | 🔒 200 → redirect ke `/login?callbackUrl=...` (expected; login form sekarang bisa dipakai) |
-| `/api/health` | ✅ 200 `{"status":"healthy"}` |
-| `/api/v1/cards` (no-auth) | ✅ 401 (gateway reachable) |
-| `/api/auth/login` (POST) | ✅ 200 + Set-Cookie; login E2E live (browser) → dashboard |
-| `/sitemap.xml`, `/robots.txt` | ✅ base URL dev `payu-dev.apps.fajjjar.my.id` (di-fix di `web-app:1.5.3`) |
-| `/nope` (unknown) | ✅ 404 (di-fix di `web-app:1.5.3`) |
+| READY-061 | Mobile app (seluruh `frontend/mobile`) — ditunda dari MVP/production gate sampai diaktifkan product owner. Jangan kerjakan upgrade/bug/test mobile. |
+| PROD-035 | Mobile idempotency durability (SecureStore 2048B limit) — deferred bersama mobile |
+| PROD-038 | Mobile money precision (JS `number` untuk amount) — deferred bersama mobile |
 
-Bukti kunci (2026-07-31): HTML `/login` punya 32 `<script>` tanpa satu pun atribut `nonce`; header CSP `script-src 'self' 'nonce-…'`; console browser "Executing inline script violates the following Content Security Policy directive"; log web-app `Login proxy error ... SSL routines:tls_get_more_records:packet length too long`.
+---
 
-Dev loop (2026-07-31 → 2026-08-04): `web-app:1.5.3` deployed; unit 1187 pass; live `/login` form, `/forgot-password` form, 404, sitemap dev domain verified. Data Grid dev selesai: `SPRING_MAIN_SOURCES` bridge dihapus (auto-config metadata include `HotRodCacheConfig`); label `app.kubernetes.io/managed-by: platform-team` di semua base deployment (L-146); health check Hot Rod lazy-start + cache bernama `payu` (`HotRodCacheSupport`); Data Grid dev dikelola operator dengan plain Hot Rod/no endpoint auth dan cache `payu` text/plain; production overlays retain mTLS; deployment manual + Service `payu-cache-resp` dihapus. E2E login-flow live pass lagi: password `customer1` di-reset ke `Customer1-test` di Keycloak dev (partial import tidak membawa password benar — L-149), `scripts/e2e/auth-login.sh` host SSO di-fix, `ALL 6 TESTS PASSED`, `/dashboard` 200 dengan cookie; 0 error cache selama login. E2E lain ALL PASS (16 suite): wallet-balance 8/8, transaction-history, cards-crud 14/14, api-portal 4/4, partner-integration 5/5, billing-billers 6/6, lending-investment 8/8, transaction-disbursements 9/9, account-service 5/5, promotion-catalog 7/7, fx-rates 13/13, cms-statement 7/7, verify-nik-cache T1/T2 200, notification-health 3/3 (NOTIF-001 — L-156). Broker AMQ CrashLoop diperbaiki (L-154). Audit 2026-08-06 mengonfirmasi endpoint integration `GET /messages`, `GET /messages/{messageId}/status`, retry, dan cancel sekarang sudah ada; skenario integration-dispute perlu direrun karena runner lokal membutuhkan fixture secret yang tidak tersedia, bukan lagi diklasifikasikan endpoint-absent. Sisa role-scoped T4/T5 + support T4 memerlukan role admin/backoffice. Canary gate diterima 2026-08-01 (pods 23/23, errs 0, latency 1–2ms); release `1.10.0`.
+## 🔴 Active Tickets
+
+| Key | Pri | Summary | Status |
+|:---|:---:|:---|:---|
+| ACCOUNT-001 | P0 | Email/phone dienkripsi AES-GCM (IV acak) tapi repo pakai equality query `findByEmail/findByPhoneNumber`; V6 hapus unique constraint → duplicate check & phone lookup tidak andal. Done: blind index/HMAC tenant-scoped + DB uniqueness + integration test. | 🔴 Core identity/lookup broken |
+| ACCOUNT-002 | P0 | Broken object authorization: beneficiary PUT/DELETE cek `{accountId}` path tanpa JWT; budget get/update/delete by `{budgetId}` tanpa ownership (BudgetService.java:99-142, BeneficiaryController.java:139-163). Done: JWT-to-resource binding + cross-user 403/404 tests. | 🔴 IDOR/security blocker |
+| ACCOUNT-003 | P0 | Multi-tenant tidak enforced: `TenantFilter` percaya `X-Tenant-Id` header (TenantFilter.java:21-27); repo tidak tenant-scoped; RLS belum aktif. Done: tenant dari trusted credential + filter semua read/write + RLS + cross-tenant tests. | 🔴 Cross-tenant exposure |
+| ACCOUNT-004 | P0 | Public registration return domain `User` penuh (email/phone/fullName/NIK); outbox payload `email`+`fullName` plaintext (KafkaUserEventPublisherAdapter.java:76-81, OnboardingController.java:59). Done: DTO minimum, PII minimized/encrypted, leakage tests. | 🔴 PII/privacy blocker |
+| ACCOUNT-005 | P1 | Onboarding: IAM provision tanpa kompensasi (orphan user); `externalId` dari request publik kalau IAM tak return ID (UserApplicationService.java:57-64). Done: external ID dari IAM + saga/compensation. | 🟠 Consistency/trust gap |
+| ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
+| ACCOUNT-007 | P1 | Belum ada deployment `payu-prod`; rollout Recreate; UAT HPA min 1, tanpa PDB. Done: prod deploy via gates + HA + drill + E2E onboarding→lookup→ownership. | 🟠 Not production deployed |
+| LOGIN-001 | P0 | Login web live: dulu HTTP 500 (Keycloak CrashLoop karena DB endpoint race — **root cause resolved 2026-08-11**, Keycloak Ready=True, CB-019 closed). Sisa: re-verify browser E2E login→dashboard setelah cluster up. | 🟡 Keycloak OK — E2E re-verify pending |
+| LOGIN-002 | P0 | Logout tanpa revoke: tidak ada endpoint logout di auth-service; raw Keycloak refresh token langsung diteruskan. Done: revoke nyata + replay refresh ditolak. | 🔴 Session revocation absent |
+| LOGIN-003 | P0 | Password grant (KeycloakService.java:435); `evaluateRisk()` tidak dipakai (AUTH-001); MFA disabled. Done: OIDC Authorization Code + PKCE + MFA + E2E. | 🔴 Strong authentication absent |
+| LOGIN-004 | P0 | Rate-limit: `RateLimitAspect` baca `value()` bukan `requests=10/20` (RateLimitAspect.java:46); fail-open cache down; client key `unknown`. Done: alias annotation + per-IP/per-account fail-safe. | 🔴 Brute-force control broken |
+| LOGIN-005 | P1 | Error contract login: `IllegalArgumentException` → 500; E2E terima false-green (503 valid / 500 salah password). Done: 401/423/429/503 deterministic tanpa user enumeration. | 🟠 Contract gap |
+| LOGIN-006 | P0 | Release gate login bukan vertical slice (unit hijau tapi login live gagal). Done: gate browser BFF→gateway→auth→Keycloak fail-closed di CI. | 🔴 CI false green |
+| PROD-043 | P0 | Web-app money pakai JS `number`/`parseFloat` (FxService, Investment, split-bill, pocket, promotion, wallet store). Done: decimal string/minor unit + precision tests. | 🔴 Financial integrity |
+| PROD-044 | P1 | Notification false success: SMS LOG mode `return true`, push mock, mailer `smtp.example.com` + `mock:true` (SmsSender.java:26-54, PushSender.java:8-23). Done: provider nyata fail-closed + delivery ID + E2E. | 🔴 Feature unusable |
+| PROD-045 | P0 | Notification LOG mode bocor PII: recipient/title/body penuh di INFO log. Done: mask + log-sanitization test + scan log. | 🔴 Security/PII |
+| PROD-046 | P1 | Kontrak referral web↔backend tidak cocok (referralCode/totalEarnings). Done: DTO selaras + E2E atau hapus klaim fitur. | 🟠 Partial feature |
+| PROD-047 | P0 | `transaction-service Money` scale 2 HALF_EVEN vs standar DECIMAL(19,4) — 2 digit hilang (Money.java:40, MoneyTest assert scale 2). Done: scale 4 + round-trip exact tests. | 🔴 Financial data loss |
+| INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
+
+---
+
+## 🎯 Backlog Aksi (urut per priority)
+
+### P0 — Money & Security Blockers
+
+| Key | Domain | Item | Done saat |
+|:---|:---|:---|:---|
+| CB-001 | account | Blind index/HMAC + unique constraint + JWT binding + RLS + PII DTO (ACCOUNT-001..004) | Semua ACCOUNT P0 closed + tests green |
+| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
+| CB-003 | transaction | `Money` scale 4 (PROD-047) + regression round-trip | PROD-047 closed |
+| CB-004 | docs | Refresh `SERVICES.md` (stale, kontradiktif dengan TODOS) | SERVICES.md konsisten |
+| CB-010 | fx | Fee `setScale(4, HALF_EVEN)` (FX-001, FxRateService.java:108) | FX-001 closed, test green |
+| CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
+| CB-016 | transaction | Bank code BI-FAST dari request + SmartRouting (BIFAST-001, InitiateTransferCommandHandler.java:217) | Transfer non-014 benar, test green |
+| CB-020 | transaction | Fee transfer dipungut (FEE-001) atau fee=0 konsisten; ledger fee entry | Ledger = response, test green |
+| CB-021 | transaction | Timeout RestTemplate QRIS & BI-FAST + circuit breaker (TIMEOUT-001) | Hang → release/FAILED, test green |
+| CB-022 | billing | Subscription charge: wire wallet debit checkpoint (SUB-001) atau suspend | Charge hanya setelah debit sukses |
+| CB-023 | investment | Sell idempotent: reference tetap + fee scale (INVEST-001) | Replay → 1 credit, test green |
+| CB-024 | lending | PayLater: @Version + idempotency + money movement (PAYLATER-001) | Race/idempotency tests green |
+| CB-029 | notification | Provider nyata fail-closed + delivery ID + mask PII (NOTIF-001/PROD-044/045) | E2E terima; log tanpa PII |
+
+### P1 — Quality & Reliability
+
+| Key | Domain | Item | Done saat |
+|:---|:---|:---|:---|
+| CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
+| CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
+| CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
+| CB-012 | wallet | Ledger immutability di DB: REVOKE/trigger (WL-001) | UPDATE ledger ditolak DB |
+| CB-013 | account | PII outbox & response (ACCOUNT-004 lanjutan) | Leakage tests green |
+| CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi | E2E green |
+| CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001) | Replay tidak double-charge |
+| CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
+| CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) | Replay tanpa duplikat |
+| CB-028 | dispute | Lock over-refund di `assertRefundable` (DISPUTE-001) | Concurrent partial refund aman |
+| PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
+| PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection | CI gate aktif |
+
+### P2 — Hardening & Secondary
+
+| Key | Domain | Item | Done saat |
+|:---|:---|:---|:---|
+| CB-008 | transaction | MVP-003 VA settlement live E2E di payu-dev | Live E2E green |
+| CB-009 | lending | Lending financial E2E fixture + integration test lending/fx/statement | Fixture + tests green |
+| CB-011 | transaction | Versioning topic split-bills (TX-001) | Topic `.v1`, consumer updated |
+| CB-025 | fx | FX reverse guard: status REVERSED + setScale (FX-002) | Double-reverse ditolak |
+| CB-027 | promotion | Dedup loyalty redeem (PROMO-002) | Replay tidak double redeem |
+| CB-030 | promotion | Referral lock + dedup (REFERRAL-001) | Double-complete mustahil |
+| CB-031 | transaction | Scheduled transfer idempotency (TX-004) | Overlap tidak double debit |
+
+### P3 — Backlog Lanjutan
+
+| Key | Domain | Item |
+|:---|:---|:---|
+| READY-022 | qa | 80% coverage audited 4-22% (4 service) |
+| READY-060 | card | Card tokenization + 3DS |
+| READY-062 | ml | ONNX fraud detection model |
+| DEVSECOPS-015 | devsecops | Security Findings Dashboard Grafana |
+| DEVSECOPS-016 | devsecops | Service template scaffolder |
+
+---
+
+## 🏦 Partner Service Production Readiness Gate
+
+Status `partner-service` hanya Production Ready setelah seluruh gate berikut memiliki bukti live. Manifest/unit test bukan bukti production. `PARTNER-001..006` CLOSED (2026-08-08). Progress per gate:
+
+| Gate | Pri | Status | Sisa |
+|:---|:---:|:---|:---|
+| PARTNER-PROD-001 | P0 | 🟢 Public edge APIcast LIVE (sandbox): E2E luar cluster 200, quota 429, failover OK, bypass route dihapus | WAF Coraza (DEPLOY-006), mTLS APIcast→gateway, rate-limit per-IP, runbook restart apicast |
+| PARTNER-PROD-002 | P0 | 🟢 Enkripsi at-rest + rotation + backfill LIVE (V18, 0 plaintext) | Vault key management production |
+| PARTNER-PROD-003 | P0 | 🟢 Webhook trust boundary LIVE (URL validator, SSRF block, DNS-rebind guard, 64KiB limit) | Egress policy eksplisit, response-body scan endpoint penerima |
+| PARTNER-PROD-004 | P0 | 🟢 Delivery durability LIVE (retry 3× + DLQ + replay, `uq_webhook_delivery_event`) | DLQ consumer/alert otomatis, double-dispatch race window non-atomik |
+| PARTNER-PROD-005 | P0 | 🟢 Reconciliation LIVE (`SnapBiReconciliationService` + V19 cases, 0 unmatched) | Reconcile outbox, auto-resolve workflow, alert destination |
+| PARTNER-PROD-006 | P0 | 🟢 Tenant isolation LIVE (ownership semua resource, isolation matrix 295/295, audit) | PostgreSQL RLS, partner-scoped Keycloak roles, audit list query |
+| PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout |
+| PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR, restore drill, RPO/RTO, retention/archive |
+| PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces end-to-end |
+| PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/conformance, k6 load/soak, chaos, pentest, partner sign-off |
+| PARTNER-PROD-011 | P1 | ⏸️ Belum | Dual-control onboarding, SLA/escalation, runbook, on-call |
+
+> Local APIcast (profile `api-management`) tidak bisa authless (verified via Context7) — public edge butuh APIManager (cluster-level).
+
+---
 
 ## 🚀 Platform Deploy Queue
 
-| Key | Priority | Category | Summary |
+| Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| DEPLOY-006 | P1 | Security | Deploy Coraza WAF (INFRA-015) + remediate CIS findings (SEC-020) + Wazuh SIEM (INFRA-011) |
-| DEPLOY-011 | P1 | Promotion | Make the existing SIT/UAT/preprod/prod workload overlays deploy-safe: remove dev secrets/endpoints, add environment-isolated DB/Kafka/Data Grid paths and immutable images, correct prod namespace/RBAC, raise quotas, and run gates sequentially. **2026-08-01**: overlays deploy-safe + SIT workloads deployed (40/40 pods Running) + Tekton `payu-deploy-gitops-pipeline` SIT pilot SUCCEEDED (argocd-sync-wait, ZAP baseline, Schemathesis, Litmus pod-delete Pass, k6 smoke). Sisa: UAT→preprod→prod promotion via pipeline (digest pinning + E2E gates per env). | 🟢 SIT pilot green — UAT/preprod/prod pending |
-| DEPLOY-011 | P1 | Promotion | **2026-08-01 update**: UAT pipeline SUCCEEDED (gates: sync-wait, Schemathesis, k6 load, k6 smoke) — UAT 31/31 live. Preprod workloads live + app Synced/Healthy; preprod pipeline run: sync-wait Succeeded, `preprod-kraken-gate` blocked (OPS-2026-08-01-05). Sisa: kraken gate → preprod pipeline green → prod promotion. | 🟢 SIT+UAT green — preprod gate pending, prod pending |
-| DEPLOY-011 | P1 | Promotion | **2026-08-05 (lab `cluster-nkk8q`)**: payu-sit platform bootstrap selesai — ArgoCD 18 Applications (4 sit apps Synced+Healthy), Vault HA 3/3 (awskms) + VSS 16/16, operator VSO/Litmus/Kyverno/RHBK live, CNPG+Infinispan+Keycloak (realm `payu` imported) Ready, 62 pods Running/0 bad, image streams dev→sit/uat/preprod di-mirror. Sisa: pipeline promotion gates (ZAP/Schemathesis/k6/Litmus) utk env lab; payu-uat/preprod masih Progressing (fix yang sama sedang roll out); prod apps OutOfSync (prod sync window). | 🟢 SIT live — pipeline gates pending |
-| DEPLOY-011 | P1 | Promotion | **2026-08-05 lanjutan (lab `cluster-nkk8q`)**: payu-uat & payu-preprod LIVE — 12 apps Synced+Healthy (payu/data/identity/messaging × sit/uat/preprod); keycloak role + schema grants per env (CNPG PG16), realm `payu` imported di uat/preprod; VSS 16/16 per env; pods sit 48/uat 59/preprod 64 Running, 0 bad; cyclic VSS drift (payu-keycloak-client-secrets duplikat workloads+identity) di-fix. Sisa: pipeline promotion gates (ZAP/Schemathesis/k6/Litmus); Infinispan WellFormed=False quirk (3-replica, view lengkap); prod apps OutOfSync (prod sync window); data-* Jobs Missing (one-shot TTL, by design). | 🟢 SIT+UAT+preprod live — pipeline gates pending |
-| DEPLOY-011 | P1 | Promotion | **2026-08-05 pipeline (lab `cluster-nkk8q`)**: `payu-deploy-gitops-pipeline` SIT GREEN — 7 tasks Succeeded (sync-wait, k6 smoke ~39k iter, ZAP baseline, Schemathesis 44 cases/3809 checks, notify); ~11 min. Fixes: allow-cicd-ingress netpol, k6 `/q/health`, schemathesis exclude not_a_server_error + endpoint filter, litmus RBAC + CRDs, chaos-gate-enabled param. Sisa: litmus gate off (chaos-operator reconcile broken + Kyverno admission rejects pod — follow-up), Infinispan Hot Rod mTLS (analytics 500), prod sync window. | 🟢 SIT pipeline green — litmus gate follow-up |
-| DEPLOY-011 | P1 | Promotion | **2026-08-06 validation**: dev test `account-service-test-8wq8w` completed; immutable `promote-image` copied the verified digest into `payu-sit`; `account-service-deploy-sit-6d4jx` completed with GitOps write-back, Argo sync-wait, ZAP, k6, and Schemathesis green. | 🟢 SIT validated — UAT/preprod/prod pending |
-| INFRA-026 | P1 | Secrets | **2026-08-05 (lab `cluster-nkk8q`)**: Vault HA (Raft 3 node + awskms auto-unseal via CCO CredentialsRequest, KMS key + S3 snapshot bucket dibuat di akun cluster `405894847531`/`ap-southeast-1`) live; init job: `operator init` → root token persist → `configure.sh` (kv-v2, kubernetes auth, role payu-sit/uat/preprod/prod); secrets di-seed per env; VSS 16/16 Ready di payu-sit. Sisa: snapshot CronJob S3 verify + DR restore drill di cluster lab; auto-unseal key backup. | 🟢 Vault HA live — snapshot verify pending |
-| OPS-2026-08-01-05 | P2 | Chaos | Kraken/preprod gate runtime: cerberus FIX (kubeconfig_path — L-185, "client set"; SCC anyuid + FS writable). krkn rootfs `ro` oleh CRI-O → FIX manifest: emptyDir di `/home/krkn/kraken` + `/tmp` utk fixperms+kraken container (OPS-2026-08-01-05, L-188 pattern). Sisa: re-run `preprod-kraken-gate` saat kapasitas CPU pulih (HPA max 5→3 dikomit). | 🔄 Manifest fixed — gate re-run pending |
-| OPS-2026-08-01-04 | P2 | Observability | Log delivery ke Loki: DNS fixed (egress allow-all, L-188) + TLS CA fixed (`tls.ca: loki-gateway-ca-bundle` di CLF) — vector sekarang connect & handshake OK. Sisa: gateway 403 Forbidden karena loki-operator 6.5.1 render `loki-gateway` ConfigMap dgn `lokistack-gateway.rego` + `rbac.yaml` KOSONG (0 bytes) utk `tenants.mode: openshift-logging` (reproduksi: delete cm + recreate LokiStack → sama). SAR logcollector→collect audit logs = allowed; SA gateway punya tokenreview+SAR. Dugaan bug operator (keluarga LOG-2236) → butuh RH support/upgrade 6.5.x; workaround bila perlu: tenant static/dynamic. | 🔄 Delivery blocked (operator bug) |
-| INFRA-026 | P1 | Secrets | **2026-08-01**: DR restore drill: `vault operator raft snapshot restore -force` SUCCEEDED — prod state loaded (recovery shares 5/3, raft peers vault-0/1/2, auth roles payu-sit/uat/preprod/prod/vault-admin/vault-snapshot), KMS auto-unseal OK. Sisa: verifikasi `kv get` via k8s auth gagal 403 (snapshot 00:54 pre-date current token-reviewer context; L-192 auth-delegator added) → refresh snapshot pasca-HA-migration + re-verify via generate-root/recovery. | 🟢 Restore verified — kv readback pending |
-| DEPLOY-009 | P2 | CI/CD | **2026-08-06**: Tekton Results operator/API/retention agent live with 365d policy. Live `TektonResult` still uses the operator-managed PostgreSQL (`is_external_db=false`); the repository note claiming CNPG HA migration is stale and must be corrected before production. Sisa: external HA PostgreSQL with durable secret, Chains SLSA/Rekor verification, retention evidence, Renovate (DEVSECOPS-011). | 🔄 Sebagian selesai |
-| DEVSECOPS-017 | P1 | CI/CD Secrets | Tekton Buildah now requires the `redhat-registry-pull` workspace. Declarative VSO wiring is live; provision the `payu-cicd` policy/role and populate Vault `secret/payu/cicd/redhat-registry` key `dockerconfigjson` from the approved Red Hat Customer Portal credential. Do not create a placeholder Secret. | 🔴 External Vault/registry prerequisite |
-| OPS-2026-04-08-02 | P2 | Ops | 🔄 Verified k6 script structure OK. Gateway unreachable from local (sock/dns). Must run via k6 Operator in OCP or port-forward gateway. See `tests/performance/k6/RUNBOOK.md` | 🔄 Operator-only |
-| READY-029 | P2 | Performance | Gatling: defer to cluster integration test phase (needs port-forward or in-cluster runner) | 🔄 Operator-only |
-| READY-030 | P2 | Performance | SOAK 24h: defer to staging environment | 🔄 Staging-only |
-| READY-022 | P2 | Test | 80% coverage: audited 4-22% across 4 services. Sprint planning needed | 🔄 Planned |
-| READY-060 | P3 | Card | Card tokenization + 3DS |
-| READY-061 | ⏸️ | Mobile | **DEFERRED** — Expo SDK 55 + RN 0.85 upgrade; di luar backend/web-app release gate sampai diaktifkan kembali. |
-| READY-062 | P3 | ML | ONNX fraud detection model |
-| DEVSECOPS-015 | P3 | DevSecOps | Security Findings Dashboard Grafana |
-| DEVSECOPS-016 | P3 | DevSecOps | Service template scaffolder |
-| INFRA-018 | P3 | Registry | Setup registry GC policy — **2026-08-11 incident**: seluruh 31 image tag pinned di `payu-dev` hilang dari registry (manifest `latest` pun 404; kemungkinan prune/GC atau storage registry di-reset saat upgrade cluster). Semua image di-rebuild + di-push ulang via `scripts/build-push-ocp.sh`; `partner-service` naik ke `1.8.100`/`1.8.101`; 46/46 pods Running. Investigasi penyebab prune tetap open + butuh policy GC eksplisit. |
-| INFRA-019 | P3 | Registry | Configure Quay.io auto-prune policy |
+| DEPLOY-006 | P1 | Security | Coraza WAF (INFRA-015) + Wazuh SIEM (INFRA-011) + sisa CIS `audit-log-forwarding-enabled` sink |
+| DEPLOY-011 | P1 | Promotion | SIT/UAT/preprod LIVE di lab `cluster-nkk8q` (ArgoCD 18 apps, Vault HA, pipeline SIT green: sync-wait + k6 + ZAP + Schemathesis). Sisa: litmus gate, preprod kraken gate, Infinispan Hot Rod mTLS (analytics 500), prod sync window + promotion via pipeline |
+| INFRA-026 | P1 | Secrets | Vault HA live + restore drill verified. Sisa: snapshot S3 CronJob verify, kv readback via k8s auth, auto-unseal key backup |
+| DEPLOY-009 | P2 | CI/CD | Tekton Results live (365d); sisa: external HA PostgreSQL, Chains SLSA/Rekor evidence, Renovate |
+| DEVSECOPS-017 | P1 | Secrets | Tekton Buildah butuh `redhat-registry-pull` workspace + Vault `secret/payu/cicd/redhat-registry` (prerequisite eksternal — jangan placeholder) |
+| OPS-2026-08-01-05 | P2 | Chaos | Kraken manifest fixed (emptyDir + SCC); re-run preprod gate saat CPU pulih |
+| OPS-2026-08-01-04 | P2 | Observability | Log delivery: vector connect OK; blocked 403 `lokistack-gateway.rego` kosong (operator bug LOG-2236 → RH support / tenant workaround) |
+| OPS-2026-04-08-02 | P2 | Performance | k6 via operator/port-forward only (gateway unreachable dari host) |
+| READY-029 | P2 | Performance | Gatling defer ke cluster phase |
+| READY-030 | P2 | Performance | SOAK 24h defer ke staging |
+| INFRA-018 | P3 | Registry | Image hilang dari registry saat upgrade (31 tag) — investigasi prune + policy GC eksplisit |
+| INFRA-019 | P3 | Registry | Quay.io auto-prune policy |
 | DEVSECOPS-005 | P3 | Network | EgressNetworkPolicy + Istio egress gateway |
 | DEVSECOPS-007 | P3 | Security | LUKS encryption PV + Vault DEK rotation |
 | DEVSECOPS-012 | P3 | Cost | Monthly cost report workflow |
 
-## 🛡️ DEVSECOPS-017 — Production-Ready Architecture Implementation
+---
 
-Success criteria: every mandatory control in `architecture/DEVSECOPS_ARCHITECTURE.md`
-has repository tests plus live-cluster evidence. A manifest existing in Git is not
-completion evidence.
+## 📋 Open Findings — Audit 2026-08-11 (ringkas, detail lengkap di source code)
 
-- [ ] Remove tracked credentials/private keys; replace runtime delivery with Vault and External Secrets. The Argo CD image-updater key is removed from the current tree, but its deploy key must be revoked/rotated and Git-history purge requires an approved coordinated MOP.
-- [ ] Bootstrap a real `payu-vault` ClusterSecretStore backed by production Vault/KMS, then provision the Argo CD repository credential through External Secrets. Back up/rotate the operator-generated Chains key or migrate signing to approved KMS; do not create placeholder Secrets.
-- [ ] Wire a secure Pipelines-as-Code Repository/webhook for the monorepo with changed-service dispatch and a Vault-backed Git write credential. PaC operator/CRD is live but no `Repository` is applied because platform Vault has no webhook/Git credential path; the current pipeline can be run manually and its existing GitOps writeback remains the safe promotion path.
-- [ ] Resolve the lab-only RHTAS CNPG archive failure (`barman-cloud-wal-archive`, exit status 4) and verify the 3-instance cluster reaches `readyInstances=3`; do not change production storage/HA contracts to mask this environment issue.
-- [ ] Tekton Tasks/Pipelines are live and fail-closed. Promotion now enforces digest-only write-back, quality-gate Trivy exits non-zero on findings, and Pact is opt-in until its broker/provider contract exists. Scoped RHACS identity, OCI signature/attestation, and internal Rekor transparency still need fresh positive/negative evidence; signed-image admission is Enforce (`require-cosign-signature`, 31 `payu-dev` images previously signed).
-- [ ] Promote the Buildah-produced digest through all environments; retain signed SLSA provenance and pipeline results for 365 days using an HA Results backend.
-- [ ] Complete the remaining durable platform stores: production Vault/KMS bootstrap, LokiStack on the dedicated KMS/S3 bucket, and Tekton Results on HA PostgreSQL. ESO is cluster-wide Ready; placeholder Vault and community non-FIPS Loki remain excluded.
-- [ ] After workload redistribution and a disruption-budget review, rightsize the original `1a` MachineSet from three replicas to one so steady state is one worker per AZ.
-- [ ] Configure a real drift alert destination (Slack/PagerDuty) through Vault; current scanner runs fail-safe and logs findings when the endpoint is absent.
-- [ ] Run positive and negative E2E security gates, DR/rollback exercises, reviewer audit, then reconcile architecture and PCI evidence documents with runtime truth.
+> Verifikasi berbasis source code (bukan docs). Detail trace per fitur: `FEATURES.md`, `ASYNC_COMPONENTS.md`, PROGRESS.md.
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| PROD-047 | 🔴 | transaction | Money scale 2 vs DECIMAL(19,4) | Money.java:40 |
+| ACCOUNT-001..004 | 🔴 | account | lookup broken / IDOR / tenant / PII — semua confirmed | repo/controller/service |
+| LOGIN-002/003/004 | 🔴 | auth | revoke absent / password grant / rate-limit `value()` vs `requests` | KeycloakService.java:435, RateLimitAspect.java:46 |
+| TX-003 | 🔴 | transfer | Kompensasi release setelah commit → dana hilang | WalletService.java:268-290 |
+| BIFAST-001 | 🔴 | transfer | Bank code hardcoded "014" | InitiateTransferCommandHandler.java:217 |
+| FEE-001 | 🔴 | transfer | Fee 2500/5000/25000 hanya di response | InitiateTransferCommandHandler.java:366-373 |
+| TIMEOUT-001 | 🔴 | transfer | RestTemplate tanpa timeout (QRIS & BI-FAST) | QrisServiceAdapter.java:18-23 |
+| SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
+| INVEST-001 | 🔴 | investment | Sell double-credit (reference random + @Retry) | InvestmentApplicationService.java:426-471 |
+| PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
+| NOTIF-001 | 🔴 | notification | LOG-mode false success + PII di log | SmsSender.java:26-54 |
+| OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert | OutboxCleanupScheduler |
+| FX-001 | 🟠 | fx | Fee setScale(2) vs DB 19,4 | FxRateService.java:108 |
+| FX-002 | 🟠 | fx | Reverse tanpa status REVERSED; toAmount tanpa setScale | FxConversionService.java:118-160 |
+| TX-001 | 🟠 | transaction | Topic split-bills tanpa `.v<n>` | SplitBillEventPublisherAdapter.java:46 |
+| TX-004 | 🟠 | transaction | Scheduled transfer tanpa idempotency key | ScheduledTransferService.java:172-230 |
+| WL-001 | 🟠 | wallet | Ledger immutability tidak di-enforce DB | V3 schema, LedgerEntryEntity |
+| QRIS-001 | 🟠 | transaction | Idempotency cache-only fail-open (TTL 24h) | DistributedCacheIdempotencyRepository |
+| AUTH-001 | 🟠 | auth | `evaluateRisk()` tidak dipakai; lockout cache-based | KeycloakService.java:359,412 |
+| PROMO-001 | 🟠 | promotion | Cashback record duplikat saat replay | CashbackSagaOrchestrator.java:119-140 |
+| PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
+| DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
+| REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
+| TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
+| — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
+| — | 🟢 | partner | Refund concurrency, callback HMAC, SNAP signature | SnapBiPaymentService, CallbackSignatureFilter |
 
 ---
 
-## 🔍 Ponytail Audit — Over-Engineering & Dead Code (2026-07-02)
+## 🛡️ DEVSECOPS-017 — Production-Ready Architecture
 
-| # | Key | Category | Summary |
-|:---:|:---|:---|:---|
+Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTURE.md` punya repository tests + bukti live cluster.
 
-## 📝 Platform Workload Audit Details
-### ⚙️ INFRA-025: Infinispan Hot Rod Migration
-* **Original**: Netty SSL ApplicationProtocolNegotiationHandler warnings & `ISPN005061` RESP unclosed iterator warnings.
-* **Status**: 🟢 DEV STABLE / PROMOTION OPEN. Local mTLS is verified for `cache-starter` and Quarkus gateway Hot Rod plus KYC/analytics REST. `payu-dev` now deliberately uses plain Hot Rod without endpoint authentication; production overlays retain mTLS. `cache-starter` uses Infinispan 16.2.1 native Hot Rod with a lazy `RemoteCacheManager`, 10,000-entry invalidated near cache, and explicit UTF-8 JSON-text values in the `payu` cache. Auth refresh tokens, partner SNAP-BI tokens, API-commons atomic paths, and Quarkus gateway paths use Hot Rod. KYC and analytics idempotency use authenticated Data Grid REST because the Python Hot Rod client is unmaintained.
-* **Remaining**: Production promotion (SIT/UAT/preprod/prod) — canary gate diterima 2026-08-01 (pods 23/23 Running/Ready, errs 0, latency 1–2ms; detail `ARCH007_CANARY.md`). TLS/mTLS secrets untuk env promosi sudah operator-managed di Vault (SIT `WellFormed=True`).
-* **Updated**: 2026-08-04; CRD fields validated with `oc explain` before apply.
-
-### 🔐 SEC-020: Remediate CIS/PCI platform failures (platform-security)
-* **Problem**: Scan live `ocp4-cis-1-9` + `ocp4-pci-dss-4-0` pada 2026-07-22 berstatus `NON-COMPLIANT`. Terdapat 25 FAIL (16 kontrol unik); sembilan kontrol bersama adalah:
-  1. `ocp4-cis-api-server-encryption-provider-cipher`: Cipher enkripsi API server tidak aman.
-  2. `ocp4-cis-audit-log-forwarding-enabled`: Audit log forwarding ke SIEM eksternal belum diaktifkan.
-  3. `ocp4-cis-audit-profile-set`: Profil audit API server belum dikonfigurasi.
-  4. `ocp4-cis-configure-network-policies-namespaces`: Terdapat namespace tanpa NetworkPolicy default-deny.
-  5. `ocp4-cis-ingress-controller-tls-cipher-suites`: TLS cipher suites pada default Ingress Controller belum dikeraskan.
-  6. `ocp4-cis-kubeadmin-removed`: Akun bootstrap `kubeadmin` belum dihapus/dinonaktifkan dari cluster.
-  7. `ocp4-cis-ocp-allowed-registries`: Daftar registry eksternal yang diizinkan belum didefinisikan.
-  8. `ocp4-cis-ocp-allowed-registries-for-import`: Aturan import image registry belum dibatasi.
-  9. `ocp4-cis-scc-limit-container-allowed-capabilities`: Security Context Constraints (SCC) belum membatasi capabilities container secara ketat.
-* **PCI-only gaps**: Container Security Operator, File Integrity Operator + notification, OAuth inactivity timeout, non-HTPasswd IDP, TLS on every Route, dan Security Profiles Operator.
-* **Impact**: Platform OpenShift rentan terhadap celah keamanan CIS Benchmark dan tidak memenuhi kepatuhan regulasi OJK/PCI-DSS.
-* **Fix**: Susun MOP per kontrol dengan backup, diff, canary, dan rollback. Jangan aktifkan `autoApplyRemediations`; perubahan APIServer, IngressController, OAuth, Image, SCC, dan audit forwarding memerlukan review dampak cluster.
-* **Status (2026-07-31)**: ✅ 8/9 remediated. Scan ulang `payu-cis` (TailoredProfile) = **1 FAIL tersisa**:
-  1. `api-server-encryption-provider-cipher` → PASS — `APIServer.spec.encryption.type: aesgcm` (ComplianceRemediation `Applied`).
-  2. `audit-profile-set` → PASS — `audit.profile: WriteRequestBodies` (Applied).
-  3. `ingress-controller-tls-cipher-suites` → PASS — custom TLS profile, min TLS 1.2, cipher kuat (Applied).
-  4. `configure-network-policies-namespaces` → PASS — `default-deny-ingress` di `payu-cicd`; namespace operator di-exempt via `ocp4-var-network-policies-namespaces-exempt-regex` (TailoredProfile `payu-cis`).
-  5. `kubeadmin-removed` → PASS — secret `kubeadmin` di `kube-system` dihapus.
-  6. `ocp-allowed-registries` / `allowed-registries-for-import` → PASS — `image.config.openshift.io/cluster` dibatasi ke internal registry + 8 registry publik yang dipakai workloads.
-  7. `scc-limit-container-allowed-capabilities` → PASS — SCC ODF/pipelines di-exempt via variable regex TailoredProfile; SCC default tidak diubah.
-  8. `audit-log-forwarding-enabled` → ❌ FAIL — belum ada `ClusterLogForwarder`/`openshift-logging`; butuh SIEM sink → INFRA-029.
-* **Catatan**: `ocp4-cis-node-master` COMPLIANT; `ocp4-cis-node-worker` ERROR (pre-existing, investigasi terpisah). Compliance Operator tetap `autoApplyRemediations: false`.
-
-## 🔎 Deep Production-Readiness Audit — Backend & Web App (2026-08-03)
-
-Audit berbasis source, CodeGraph, focused build/test, dan verifikasi dokumentasi library via Context7. Item di bawah ini adalah blocker/gap yang perlu ditutup; bukan klaim bahwa implementasinya sudah production-ready.
-
-| ID | Pri | Area | Bukti | Minimum done |
-|---|---|---|---|---|
-| PROD-002 | P0 | FX | Stub hanya aktif pada profile `local`; profile non-local punya HTTP provider configurable dan fail-closed bila provider belum dikonfigurasi. `FX_PROVIDER_URL` kini dibind ke `fx.provider.url`, blank URL tetap memilih unavailable adapter, dan deployment mengekspos URL/source ConfigMap serta API-key Secret reference. Provider response wajib pair/base, rate positif, source, dan timestamp fresh; `source`/`observed_at` diaudit di `fx_rates` (Flyway V6). Approved provider URL/credential dan live provider evidence masih open. | Konfigurasikan approved provider melalui `service-endpoints`/`fx-provider-credentials`, lalu buktikan rate live, freshness, source, dan pair audit di cluster. |
-| PROD-018 | P2 | Analytics CI | First GitHub run `30836757966` failed at the coverage step: CI lacked `SECRET_KEY` and test dependency `Faker`; local reproduction also found API tests using unresolved `Depends`, real DB/Kafka/OTLP startup, stale response-envelope assertions, and WebSocket importing unavailable `PyJWT`. Workflow now supplies deterministic CI-only settings/dependencies, app tests isolate external services, response factories avoid Pydantic field collisions, and WebSocket uses the existing `python-jose` dependency. Local gate: `189 passed, 1 skipped`, coverage `84.86%`; analytics image `1.8.95` is live; post-fix GitHub run `30878225559` is green. | Activate job `analytics-tests` as a required branch-protection check (admin API verification currently returns `401`). |
-
-### Additional findings from deeper pass
-
-| ID | Pri | Area | Bukti | Minimum done |
-|---|---|---|---|---|
-| WEB-002 | P1 | Web-app CI | `npm test` with a leaked `NODE_ENV=production` loads React production builds, which ship no `act` export → every `@testing-library/react` suite crashes with `React.act is not a function` (react-testing-library#1399, React packaging decision). | ✅ FIXED 2026-08-05: test scripts force `NODE_ENV=test`; 91 files / 1206 passed / 1 skipped, lint + type-check + build clean. |
-
-### Follow-up audit — Graphify + CodeGraph
-
-| ID | Pri | Area | Bukti | Minimum done |
-|---|---|---|---|---|
-| PROD-035 | ⏸️ | Mobile idempotency durability — **DEFERRED** | `frontend/mobile/utils/idempotency.ts:124-152` menulis hingga 100 record metadata ke satu SecureStore value dan menelan error write. Expo SecureStore membatasi value sekitar 2048 byte; recovery key dapat hilang jauh sebelum 100 record, sementara request tetap diteruskan. | Jangan implementasikan sampai scope mobile diaktifkan kembali; saat aktif, simpan record per key atau gunakan storage yang sesuai dan fail closed saat write gagal. |
-| PROD-038 | ⏸️ | Mobile money precision — **DEFERRED** | `frontend/mobile/types/index.ts:55-95` memodelkan transaction/transfer/top-up/QRIS amount sebagai JavaScript `number`, sehingga arithmetic dan round-trip nominal tidak exact. | Jangan implementasikan sampai scope mobile diaktifkan kembali; saat aktif, gunakan decimal string atau minor-unit integer dengan precision test. |
-
-### Verification evidence
-
-- Local Podman remediation 2026-08-06: Podman Compose provider terpasang; combined `apps` + `api-management` config valid; static parity `22/22` dan non-destructive runtime smoke `3/3` lulus. PostgreSQL, Data Grid, Kafka, Artemis, dan Keycloak healthy; account/auth/gateway masing-masing start dari host dan liveness `UP`. Account Flyway v104 menutup mismatch `beneficiaries.tenant_id`; local profile dan quick-start sekarang mengikuti port/database/credential development stack aktual.
-- Feature-centric login audit 2026-08-06: flow yang diperiksa adalah browser login form → Next.js BFF/httpOnly cookies → gateway validation/rate-limit → auth-service → Keycloak → validate/dashboard → refresh/logout. Live in-pod request menghasilkan login `500`, dashboard redirect `307`, refresh tanpa cookie `401`, dan logout lokal `200`; Keycloak `0/1 CrashLoopBackOff` serta endpoint service kosong. Focused web auth 37/37 dan backend auth/gateway reactor `BUILD SUCCESS`, membuktikan gate sekarang false green. Context7 Keycloak 26.5.2 mengonfirmasi Direct Access Grants dinonaktifkan secara default untuk client baru, Authorization Code adalah flow web yang direkomendasikan, dan token harus direvoke melalui OIDC revocation/logout endpoint.
-- Audit account-service 2026-08-06: reactor unit `BUILD SUCCESS`, account-service 119 tests (0 failure, 2 skipped); JaCoCo line 387 covered/1460 missed dan branch 76 covered/314 missed. Explicit `OnboardingIntegrationTest` tidak dapat berjalan lokal karena Docker socket tidak tersedia; test memang dikecualikan oleh default Surefire group. Context7 Hibernate mengonfirmasi `AttributeConverter` diterapkan pada typed query values dan discriminator multitenancy memerlukan tenant filter/`@TenantId`, yang tidak digunakan service ini.
-- Runtime account-service 2026-08-06: readiness `UP`; dev/SIT/UAT/preprod Ready `1/1`, `1/1`, `2/2`, `1/1`; prod absent. UAT HPA `min=1,max=3`, rollout `Recreate`, dan tidak ada PDB account-service. Authenticated E2E lokal tidak direrun karena `/tmp/client-secret.txt` tidak tersedia; tidak dibuat secret placeholder.
-- Audit 2026-08-06: web-app `npm test -- --run` = 91 files, 1206 pass, 1 skipped; `npm run type-check` dan `npm run lint` exit 0. Green unit gates tidak menutup gap kontrak uang/referral karena service tests memakai mocked API.
-- Audit 2026-08-06: notification reactor `mvn -f backend/pom.xml -pl notification-service -am test` BUILD SUCCESS; source/runtime config tetap membuktikan SMS log fallback, push mock, dan Quarkus mailer `mock: true`. Dokumentasi resmi Quarkus mengharuskan `quarkus.mailer.mock=false` untuk delivery SMTP nyata.
-- Audit 2026-08-06: `integration-service` sekarang menyediakan list/status/retry/cancel messages. Rerun script integration/promotion lokal berhenti sebelum request karena fixture `/tmp/client-secret.txt` tidak tersedia; tidak ada secret placeholder yang dibuat.
-- Pass: `mvn -f backend/pom.xml -pl fx-service -am test`, `gateway-service -am test`, dan `transaction-service -am test`.
-- Pass: `mvn -f backend/pom.xml -pl dispute-service,lending-service,investment-service,billing-service,promotion-service -am test` — reactor `BUILD SUCCESS`; target services reported 88, 81, 48, 107, dan 242 tests tanpa failure.
-- Pass: web `npm run lint` dan `npm run build`.
-- Pass: web `npm test -- --run` — 90 test files, 1203 passed, 1 skipped; `npm run lint` (changed files), `npm run type-check`, `npm run build`, dan `npm audit --omit=dev` (0 vulnerabilities) pass. Analytics pytest dan full lint legacy warning tetap open findings terpisah.
-- Pass: lending PayLater boundary red-first regression, focused controller/validation suite `9/9`, full lending reactor `93/93`, package `BUILD SUCCESS`; image `1.8.107` pod Ready `1/1`, restart `0`, liveness/readiness `UP`. No authenticated financial mutation was run without an isolated fixture.
-- Pass: mobile clean install `npm ci --ignore-scripts` added `1667` packages with exit `0`; focused Jest `1/1`, changed-file ESLint `0 errors/0 warnings`, Expo web export, dan Expo Android export semuanya exit `0`. Metro NativeWind wrapper dan package exports diaktifkan agar CSS Tailwind serta Axios memilih entrypoint platform yang benar.
-- Pass: PROD-034 red-first concurrent mutation regression failed on the old request-key cancellation, then API + storage + offline focused Jest `27/27`, changed-file ESLint `0 errors/0 warnings`, Expo web export exit `0`, dan Expo Android export exit `0`. Mobile has no OpenShift workload to deploy; read-only request dedupe remains enabled.
-- Known baseline: full mobile Jest dan `tsc --noEmit` masih gagal pada TurboModule `SettingsManager`, JSX di file test `.ts`, dan fixture expiry idempotency; finding ini tidak berasal dari PROD-039/037 dan tetap perlu audit berikutnya.
-- Graph evidence: fast-path `graphify query` menghubungkan mobile mutation/idempotency dengan backend payment/ledger/outbox; `codegraph explore` menelusuri controller → service → port/adapter pada wallet, billing, dan mobile API.
-- Context7 checks: Expo SecureStore value limit/error behavior dan web availability; Axios retry reuses original request config. Rujukan: [Expo SecureStore](https://github.com/expo/expo/blob/main/docs/public/llms-sdk-v51.0.0.txt), [Axios retry](https://github.com/axios/axios/blob/v1.x/docs/pages/advanced/retry.md).
-- Context7 checks: Spring Boot actuator liveness/readiness; Next.js session validation in Proxy, environment variables, CSP, dan error boundaries. Rujukan resmi: [Spring Boot Actuator](https://github.com/spring-projects/spring-boot/blob/main/documentation/spring-boot-docs/src/docs/antora/modules/reference/pages/actuator/endpoints.adoc), [Next.js authentication](https://github.com/vercel/next.js/blob/canary/docs/01-app/02-guides/authentication.mdx), [Next.js Proxy](https://github.com/vercel/next.js/blob/canary/docs/01-app/03-api-reference/03-file-conventions/proxy.mdx), [Next.js CSP](https://github.com/vercel/next.js/blob/canary/docs/01-app/02-guides/content-security-policy.mdx).
+- [ ] Vault-backed Argo CD credential via ESO (`payu-vault` ClusterSecretStore); revoke/rotate deploy key lama + Git-history purge MOP
+- [ ] Pipelines-as-Code Repository/webhook (changed-service dispatch) dengan Vault Git credential
+- [ ] RHTAS CNPG archive failure (`barman-cloud-wal-archive` exit 4) — 3-instance cluster readyInstances=3
+- [ ] Chains SLSA/Rekor fresh evidence + signed-image admission Enforce (31 image)
+- [ ] Promosi digest Buildah semua env + Results HA 365d
+- [ ] Platform stores: prod Vault/KMS, LokiStack KMS/S3, Tekton Results HA PG
+- [ ] Rightsize MachineSet `1a` 3→1 replica (setelah disruption-budget review)
+- [ ] Drift alert destination nyata (Slack/PagerDuty) via Vault
+- [ ] E2E security gates + DR/rollback exercise + reviewer audit + reconcile evidence docs
