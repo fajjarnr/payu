@@ -28,6 +28,8 @@ This directory contains the historical record of architectural decisions made fo
 | [0019](0019-statement-dual-format.md)           | Statement Format — Dual Output (PDF + JSON/CSV)        | Accepted | 2026-05-07 |
 | [0020](0020-support-centralized.md)             | Support — PayU Handles All (Single-Tenant)             | Accepted | 2026-05-07 |
 | [0021](0021-cms-single-tenant.md)               | CMS — Single-Tenant                                    | Accepted | 2026-05-07 |
+| [0022](0022-money-idempotency-standard.md)       | Money & Idempotency Standard (Financial Integrity)     | Accepted | 2026-08-11 |
+| [0023](0023-mvp-scope.md)                        | MVP Scope Definition (Core Banking)                    | Accepted | 2026-08-11 |
 
 ## 🚀 How to Create a New ADR
 

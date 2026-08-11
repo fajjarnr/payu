@@ -20,8 +20,8 @@
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.35` (2026-08-05) |
 | **Core Banking MVP** | 🔴 Belum MVP — auth belum strong auth (LOGIN-003 PKCE/MFA open); money-flow live. Account P0 (ACCOUNT-001..004), LOGIN-002/004/005, PROD-047 CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII, revoke, rate-limit, error contract, Money scale 4). Belum ada service production ready. |
-| **Backlog Aktif** | 14 tickets + 23 action items (CB-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (ACCOUNT-001..004 closed, CB-001/CB-013 closed) |
+| **Backlog Aktif** | 9 tickets + 19 action items (CB-*) + gates partner/platform (2026-08-11) |
+| **Last Updated** | 2026-08-11 (ADR-0022 money/idempotency standard + ADR-0023 MVP scope; backlog re-map per scope) |
 
 ---
 
@@ -58,21 +58,14 @@
 
 ## 🎯 Backlog Aksi (urut per priority)
 
-### P0 — Money & Security Blockers
+### P0 — Money & Security Blockers (In-Scope MVP, ADR-0023)
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
-| CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
-| CB-016 | transaction | Bank code BI-FAST dari request + SmartRouting (BIFAST-001, InitiateTransferCommandHandler.java:217) | Transfer non-014 benar, test green |
-| CB-020 | transaction | Fee transfer dipungut (FEE-001) atau fee=0 konsisten; ledger fee entry | Ledger = response, test green |
-| CB-021 | transaction | Timeout RestTemplate QRIS & BI-FAST + circuit breaker (TIMEOUT-001) | Hang → release/FAILED, test green |
-| CB-022 | billing | Subscription charge: wire wallet debit checkpoint (SUB-001) atau suspend | Charge hanya setelah debit sukses |
-| CB-023 | investment | Sell idempotent: reference tetap + fee scale (INVEST-001) | Replay → 1 credit, test green |
-| CB-024 | lending | PayLater: @Version + idempotency + money movement (PAYLATER-001) | Race/idempotency tests green |
+| CB-002 | auth | PKCE/MFA (LOGIN-003) + E2E login browser (LOGIN-001 re-verify, LOGIN-006 gate) | LOGIN P0 closed + browser E2E green |
 | CB-029 | notification | Provider nyata fail-closed + delivery ID + mask PII (NOTIF-001/PROD-044/045) | E2E terima; log tanpa PII |
 
-### P1 — Quality & Reliability
+### P1 — Quality & Reliability (In-Scope MVP)
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
@@ -81,29 +74,31 @@
 | CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
 | CB-012 | wallet | Ledger immutability di DB: REVOKE/trigger (WL-001) | UPDATE ledger ditolak DB |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi | E2E green |
-| CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001) | Replay tidak double-charge |
 | CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
-| CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) | Replay tanpa duplikat |
+| CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) — jalur SNAP in-scope | Replay tanpa duplikat |
 | CB-028 | dispute | Lock over-refund di `assertRefundable` (DISPUTE-001) | Concurrent partial refund aman |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection | CI gate aktif |
 
-### P2 — Hardening & Secondary
+### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-008 | transaction | MVP-003 VA settlement live E2E di payu-dev | Live E2E green |
-| CB-009 | lending | Lending financial E2E fixture + integration test lending/fx/statement | Fixture + tests green |
+| CB-008 | transaction | MVP-003 VA settlement live E2E di payu-dev (QRIS/VA di luar MVP) | Live E2E green |
 | CB-011 | transaction | Versioning topic split-bills (TX-001) | Topic `.v1`, consumer updated |
+| CB-017 | transaction | QRIS idempotency DB fallback + fail-closed (QRIS-001) — QRIS Phase 2 | Replay tidak double-charge |
+| CB-022 | billing | Subscription charge: wire wallet debit checkpoint (SUB-001) atau suspend | Charge hanya setelah debit sukses |
+| CB-024 | lending | PayLater: @Version + idempotency + money movement (PAYLATER-001) | Race/idempotency tests green |
 | CB-025 | fx | FX reverse guard: status REVERSED + setScale (FX-002) | Double-reverse ditolak |
-| CB-027 | promotion | Dedup loyalty redeem (PROMO-002) | Replay tidak double redeem |
-| CB-030 | promotion | Referral lock + dedup (REFERRAL-001) | Double-complete mustahil |
 | CB-031 | transaction | Scheduled transfer idempotency (TX-004) | Overlap tidak double debit |
 
 ### P3 — Backlog Lanjutan
 
 | Key | Domain | Item |
 |:---|:---|:---|
+| CB-009 | lending | Lending financial E2E fixture + integration test lending/fx/statement (defer) |
+| CB-027 | promotion | Dedup loyalty redeem (PROMO-002) (defer) |
+| CB-030 | promotion | Referral lock + dedup (REFERRAL-001) (defer) |
 | READY-022 | qa | 80% coverage audited 4-22% (4 service) |
 | READY-060 | card | Card tokenization + 3DS |
 | READY-062 | ml | ONNX fraud detection model |
@@ -165,12 +160,12 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
-| TX-003 | 🔴 | transfer | Kompensasi release setelah commit → dana hilang | WalletService.java:268-290 |
-| BIFAST-001 | 🔴 | transfer | Bank code hardcoded "014" | InitiateTransferCommandHandler.java:217 |
-| FEE-001 | 🔴 | transfer | Fee 2500/5000/25000 hanya di response | InitiateTransferCommandHandler.java:366-373 |
-| TIMEOUT-001 | 🔴 | transfer | RestTemplate tanpa timeout (QRIS & BI-FAST) | QrisServiceAdapter.java:18-23 |
+| TX-003 | 🟢 | transfer | Kompensasi internal transfer: setelah commit, kompensasi = refund sender (`creditBalance` `transactionId:REFUND`), bukan release (release no-op pasca-commit). **CLOSED 2026-08-11** (CB-014) | InitiateTransferCommandHandler.processInternalTransfer |
+| BIFAST-001 | 🟢 | transfer | Bank code dari request (optional, default "014") untuk BI-FAST/SKN/RTGS. **CLOSED 2026-08-11** (CB-016) | InitiateTransferCommandHandler.resolveBankCode |
+| FEE-001 | 🟢 | transfer | Fee klaim dihapus — response fee=0, UI "Gratis". **CLOSED 2026-08-11** (CB-020, keputusan: fee=0 konsisten; pemungutan fee = fitur baru dgn ledger entry) | InitiateTransferCommandHandler.buildResult |
+| TIMEOUT-001 | 🟢 | transfer | RestTemplate bean ber-timeout (connect 5s/read 10s) — QRIS & BI-FAST fail-fast, bukan hang. **CLOSED 2026-08-11** (CB-021) | AppConfig.restTemplate |
 | SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
-| INVEST-001 | 🔴 | investment | Sell double-credit (reference random + @Retry) | InvestmentApplicationService.java:426-471 |
+| INVEST-001 | 🟢 | investment | Sell idempotent: reference "SELL:{txId}", sell-id deterministik + replay guard, @Retry/@TimeLimiter dihapus, fee scale 4. **CLOSED 2026-08-11** (CB-023) | InvestmentApplicationService.sellInvestment |
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success + PII di log | SmsSender.java:26-54 |
 | OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert | OutboxCleanupScheduler |
