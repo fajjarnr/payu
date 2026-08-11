@@ -63,7 +63,6 @@
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
 | CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
-| CB-010 | fx | Fee `setScale(4, HALF_EVEN)` (FX-001, FxRateService.java:108) | FX-001 closed, test green |
 | CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
 | CB-016 | transaction | Bank code BI-FAST dari request + SmartRouting (BIFAST-001, InitiateTransferCommandHandler.java:217) | Transfer non-014 benar, test green |
 | CB-020 | transaction | Fee transfer dipungut (FEE-001) atau fee=0 konsisten; ledger fee entry | Ledger = response, test green |
@@ -175,7 +174,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success + PII di log | SmsSender.java:26-54 |
 | OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert | OutboxCleanupScheduler |
-| FX-001 | 🟠 | fx | Fee setScale(2) vs DB 19,4 | FxRateService.java:108 |
+
 | FX-002 | 🟠 | fx | Reverse tanpa status REVERSED; toAmount tanpa setScale | FxConversionService.java:118-160 |
 | TX-001 | 🟠 | transaction | Topic split-bills tanpa `.v<n>` | SplitBillEventPublisherAdapter.java:46 |
 | TX-004 | 🟠 | transaction | Scheduled transfer tanpa idempotency key | ScheduledTransferService.java:172-230 |
