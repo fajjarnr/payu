@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -421,8 +422,6 @@ public class InvestmentApplicationService implements
     @Transactional
     // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "sellInvestmentFallback")
-    @Retry(name = "walletService")
-    @TimeLimiter(name = "walletService")
     public CompletableFuture<InvestmentTransaction> sellInvestment(String accountId, UUID transactionId, BigDecimal amount) {
         log.info("Processing investment sell for account: {}, transaction: {}, amount: {}", accountId, transactionId, amount);
 
@@ -434,6 +433,17 @@ public class InvestmentApplicationService implements
             throw new IllegalArgumentException("Transaction does not belong to account: " + accountId);
         }
 
+        // INVEST-001: deterministic sell id + replay guard — a retried sell must
+        // return the original result, never credit the wallet twice.
+        UUID sellTransactionId = UUID.nameUUIDFromBytes(
+                ("SELL:" + transactionId).getBytes(StandardCharsets.UTF_8));
+        return investmentPersistencePort.findTransactionById(sellTransactionId)
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> executeSell(existingTransaction, accountId, transactionId, amount, sellTransactionId));
+    }
+
+    private CompletableFuture<InvestmentTransaction> executeSell(InvestmentTransaction existingTransaction, String accountId,
+                                                                 UUID transactionId, BigDecimal amount, UUID sellTransactionId) {
         if (existingTransaction.getStatus() != TransactionStatus.COMPLETED) {
             throw new IllegalArgumentException("Cannot sell investment with status: " + existingTransaction.getStatus());
         }
@@ -464,16 +474,16 @@ public class InvestmentApplicationService implements
             throw new IllegalArgumentException("Insufficient units to sell");
         }
 
-        BigDecimal sellAmount = unitsToSell.multiply(currentPrice);
-        BigDecimal fee = sellAmount.multiply(BigDecimal.valueOf(0.005));
-        BigDecimal netAmount = sellAmount.subtract(fee);
+        BigDecimal sellAmount = unitsToSell.multiply(currentPrice).setScale(4, RoundingMode.HALF_EVEN);
+        BigDecimal fee = sellAmount.multiply(BigDecimal.valueOf(0.005)).setScale(4, RoundingMode.HALF_EVEN);
+        BigDecimal netAmount = sellAmount.subtract(fee).setScale(4, RoundingMode.HALF_EVEN);
 
         walletServicePort.creditBalance(investmentPersistencePort.findAccountById(UUID.fromString(accountId))
-                .orElseThrow().getUserId(), netAmount);
+                .orElseThrow().getUserId(), netAmount, "SELL:" + transactionId);
 
         LocalDateTime now = LocalDateTime.now();
         InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
-                .id(UUID.randomUUID())
+                .id(sellTransactionId)
                 .accountId(accountId)
                 .type(TransactionType.SELL)
                 .investmentType(existingTransaction.getInvestmentType())

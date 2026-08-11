@@ -334,9 +334,122 @@ class InvestmentApplicationServiceTest {
 
             assertThat(soldTransaction).isNotNull();
             assertThat(soldTransaction.getType()).isEqualTo(TransactionType.SELL);
-            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class));
+            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class), eq("SELL:" + transactionId));
             verify(investmentPersistencePort).saveTransaction(any(InvestmentTransaction.class));
             verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
+        }
+
+        @Test
+        @DisplayName("should not double-credit when sell is replayed")
+        void shouldNotDoubleCreditWhenSellIsReplayed() throws ExecutionException, InterruptedException {
+            UUID transactionId = UUID.randomUUID();
+            UUID sellTransactionId = UUID.nameUUIDFromBytes(("SELL:" + transactionId).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+            InvestmentTransaction existingSell = InvestmentTransaction.builder()
+                    .id(sellTransactionId)
+                    .accountId(testAccountId)
+                    .type(TransactionType.SELL)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
+                    .investmentId("MMF001")
+                    .amount(new BigDecimal("800000.0000"))
+                    .price(new BigDecimal("1600.0000"))
+                    .units(new BigDecimal("500.0000"))
+                    .fee(new BigDecimal("4000.0000"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            InvestmentTransaction buyTransaction = InvestmentTransaction.builder()
+                    .id(transactionId)
+                    .accountId(testAccountId)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
+                    .investmentId("MMF001")
+                    .amount(testAmount)
+                    .price(new BigDecimal("1500.0000"))
+                    .units(new BigDecimal("666.6666"))
+                    .fee(new BigDecimal("2000.0000"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.findTransactionById(transactionId))
+                    .willReturn(Optional.of(buyTransaction));
+            given(investmentPersistencePort.findTransactionById(sellTransactionId))
+                    .willReturn(Optional.of(existingSell));
+
+            CompletableFuture<InvestmentTransaction> result = investmentApplicationService.sellInvestment(
+                    testAccountId, transactionId, new BigDecimal("500.0000"));
+
+            assertThat(result.get().getId()).isEqualTo(sellTransactionId);
+            verify(walletServicePort, never()).creditBalance(anyString(), any(BigDecimal.class));
+            verify(walletServicePort, never()).creditBalance(anyString(), any(BigDecimal.class), anyString());
+            verify(investmentPersistencePort, never()).saveTransaction(any(InvestmentTransaction.class));
+        }
+
+        @Test
+        @DisplayName("should round sell fee to money scale 4")
+        void shouldRoundSellFeeToMoneyScale() throws ExecutionException, InterruptedException {
+            UUID transactionId = UUID.randomUUID();
+
+            InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
+                    .id(transactionId)
+                    .accountId(testAccountId)
+                    .type(TransactionType.BUY)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
+                    .investmentId("MMF001")
+                    .amount(testAmount)
+                    .price(new BigDecimal("1500.0000"))
+                    .units(new BigDecimal("666.6666"))
+                    .fee(new BigDecimal("2000.0000"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.of(existingTransaction));
+
+            MutualFund fund = MutualFund.builder()
+                    .id(UUID.randomUUID())
+                    .code("MMF001")
+                    .name("PayU Money Market Fund")
+                    .type(FundType.MONEY_MARKET)
+                    .navPerUnit(new BigDecimal("1600.0000"))
+                    .minimumInvestment(new BigDecimal("10000.0000"))
+                    .managementFee(new BigDecimal("0.0050"))
+                    .redemptionFee(new BigDecimal("0.0020"))
+                    .status(FundStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.getLatestFundPrice("MMF001")).willReturn(fund);
+
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(BigDecimal.ZERO)
+                    .availableBalance(BigDecimal.ZERO)
+                    .status(AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
+
+            InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
+                    .id(UUID.nameUUIDFromBytes(("SELL:" + transactionId).getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                    .accountId(testAccountId)
+                    .type(TransactionType.SELL)
+                    .investmentType(InvestmentType.MUTUAL_FUND)
+                    .investmentId("MMF001")
+                    .amount(new BigDecimal("800000.0000"))
+                    .price(new BigDecimal("1600.0000"))
+                    .units(new BigDecimal("500.0000"))
+                    .fee(new BigDecimal("4000.0000"))
+                    .status(TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class))).willReturn(sellTransaction);
+
+            investmentApplicationService.sellInvestment(testAccountId, transactionId, new BigDecimal("500.0000")).get();
+
+            var captured = org.mockito.ArgumentCaptor.forClass(InvestmentTransaction.class);
+            verify(investmentPersistencePort).saveTransaction(captured.capture());
+            assertThat(captured.getValue().getFee().scale()).isEqualTo(4);
+            assertThat(captured.getValue().getAmount().scale()).isEqualTo(4);
         }
 
         @Test
@@ -788,7 +901,7 @@ class InvestmentApplicationServiceTest {
 
             assertThat(sold.getType()).isEqualTo(TransactionType.SELL);
             assertThat(sold.getInvestmentType()).isEqualTo(InvestmentType.GOLD);
-            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class));
+            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class), eq("SELL:" + transactionId));
         }
     }
 
