@@ -19,8 +19,8 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.35` (2026-08-05) |
-| **Core Banking MVP** | 🔴 Belum MVP — auth blocked (LOGIN-001..006 open); wallet/transaction money-flow live tapi 1 P0 (PROD-047). Account P0 (ACCOUNT-001..004) CLOSED 2026-08-11 (blind index, IDOR, trusted tenant, PII). Belum ada service production ready. |
-| **Backlog Aktif** | 15 tickets + 24 action items (CB-*) + gates partner/platform (2026-08-11) |
+| **Core Banking MVP** | 🔴 Belum MVP — auth blocked (LOGIN-001..006 open); wallet/transaction money-flow live. Account P0 (ACCOUNT-001..004) CLOSED, LOGIN-002/004/005 CLOSED, PROD-047 CLOSED (2026-08-11) 2026-08-11 (blind index, IDOR, trusted tenant, PII). Belum ada service production ready. |
+| **Backlog Aktif** | 14 tickets + 23 action items (CB-*) + gates partner/platform (2026-08-11) |
 | **Last Updated** | 2026-08-11 (ACCOUNT-001..004 closed, CB-001/CB-013 closed) |
 
 ---
@@ -52,7 +52,6 @@
 | PROD-044 | P1 | Notification false success: SMS LOG mode `return true`, push mock, mailer `smtp.example.com` + `mock:true` (SmsSender.java:26-54, PushSender.java:8-23). Done: provider nyata fail-closed + delivery ID + E2E. | 🔴 Feature unusable |
 | PROD-045 | P0 | Notification LOG mode bocor PII: recipient/title/body penuh di INFO log. Done: mask + log-sanitization test + scan log. | 🔴 Security/PII |
 | PROD-046 | P1 | Kontrak referral web↔backend tidak cocok (referralCode/totalEarnings). Done: DTO selaras + E2E atau hapus klaim fitur. | 🟠 Partial feature |
-| PROD-047 | P0 | `transaction-service Money` scale 2 HALF_EVEN vs standar DECIMAL(19,4) — 2 digit hilang (Money.java:40, MoneyTest assert scale 2). Done: scale 4 + round-trip exact tests. | 🔴 Financial data loss |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
 ---
@@ -63,7 +62,7 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green || CB-003 | transaction | `Money` scale 4 (PROD-047) + regression round-trip | PROD-047 closed |
+| CB-002 | auth | Keycloak endpoint benar + E2E login + logout revoke + PKCE/MFA + rate-limit fail-closed (LOGIN-001..004/006) | LOGIN P0 closed + browser E2E green |
 | CB-004 | docs | Refresh `SERVICES.md` (stale, kontradiktif dengan TODOS) | SERVICES.md konsisten |
 | CB-010 | fx | Fee `setScale(4, HALF_EVEN)` (FX-001, FxRateService.java:108) | FX-001 closed, test green |
 | CB-014 | transaction | Kompensasi internal transfer: reversal bukan release setelah commit (TX-003) | Dana tidak hilang, test green |
@@ -165,7 +164,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| PROD-047 | 🔴 | transaction | Money scale 2 vs DECIMAL(19,4) | Money.java:40 |
+
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | LOGIN-003 | 🔴 | auth | password grant masih aktif; PKCE/MFA belum (AUTH-001: `evaluateRisk()` sudah dipanggil AuthController) | KeycloakService.java:435 |
 | TX-003 | 🔴 | transfer | Kompensasi release setelah commit → dana hilang | WalletService.java:268-290 |
