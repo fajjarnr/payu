@@ -98,6 +98,8 @@
 |:---|:---|:---|
 | CB-009 | lending | Lending financial E2E fixture + integration test lending/fx/statement (defer) |
 | CB-027 | promotion | Dedup loyalty redeem (PROMO-002) (defer) |
+| CB-032 | promotion | Dedup promo claim by transactionId (PROMO-003) + unique constraint (defer) |
+| CB-033 | promotion | Reward percentage scale 4 (PROMO-004) — ADR-0022 compliance (defer) |
 | CB-030 | promotion | Referral lock + dedup (REFERRAL-001) (defer) |
 | READY-022 | qa | 80% coverage audited 4-22% (4 service) |
 | READY-060 | card | Card tokenization + 3DS |
@@ -178,6 +180,8 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | AUTH-001 | 🟠 | auth | `evaluateRisk()` tidak dipakai; lockout cache-based | KeycloakService.java:359,412 |
 | PROMO-001 | 🟠 | promotion | Cashback record duplikat saat replay | CashbackSagaOrchestrator.java:119-140 |
 | PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
+| PROMO-003 | 🟠 | promotion | `claimPromotion` tanpa dedup by transactionId — replay/double-submit → 2 reward AWARDED (maxRedemptions atomik ✓, tapi per-user/per-transaction tidak ada guard) | PromotionService.java:139-180 |
+| PROMO-004 | 🟠 | promotion | `calculateRewardAmount` PERCENTAGE `divide(..., 2, HALF_EVEN)` — scale 2, melanggar ADR-0022 (scale 4 wajib) | PromotionService.java:184-191 |
 | DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |

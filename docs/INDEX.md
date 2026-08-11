@@ -21,6 +21,7 @@ Welcome to the PayU Developer Documentation. This platform provides comprehensiv
 - [Service Status](roadmap/SERVICES.md) - Detailed implementation status & test results
 - [Feature Catalog](product/FEATURES.md) - Feature list per service (core banking)
 - [Async Components](product/ASYNC_COMPONENTS.md) - Kafka consumers, schedulers, gRPC
+- [Feature Flows](product/FLOWS.md) - Per-feature flow diagrams (audit reference)
 - [Event Catalog](architecture/EVENT_CATALOG.md) - Domain events and Kafka topics
 - [Gateway Architecture](roadmap/GATEWAY_ARCH.md) - Payment gateway design for partners
 - [DevSecOps Architecture](architecture/DEVSECOPS_ARCHITECTURE.md) - Pipeline, namespace strategy, security gates
