@@ -350,6 +350,8 @@ class ReferralServiceTest {
         assertEquals(2, summary.totalReferrals());
         assertEquals(1, summary.completedReferrals());
         assertEquals(1, summary.pendingReferrals());
+        // PROD-046: totalEarnings = completed referrer rewards, scale 4
+        assertEquals(new BigDecimal("50.0000"), summary.totalEarnings());
     }
 
     @Test

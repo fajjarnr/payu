@@ -136,11 +136,20 @@ public class ReferralService {
             .map(Referral::getReferralCode)
             .orElse(null);
 
+        // PROD-046: earnings = sum of completed referrer rewards, DECIMAL(19,4) HALF_EVEN
+        BigDecimal totalEarnings = referrals.stream()
+            .filter(r -> r.getStatus() == ReferralStatus.COMPLETED)
+            .map(Referral::getReferrerReward)
+            .filter(java.util.Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(4, java.math.RoundingMode.HALF_EVEN);
+
         return new ReferralSummaryResponse(
             referralCode,
             (int) totalReferrals,
             (int) completedReferrals,
-            (int) pendingReferrals
+            (int) pendingReferrals,
+            totalEarnings
         );
     }
 

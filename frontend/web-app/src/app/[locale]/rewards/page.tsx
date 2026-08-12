@@ -49,7 +49,7 @@ export default function RewardsPage() {
 
   const referralSummary = referralData as ReferralSummaryResponse | undefined;
   const referralStats = {
-    code: '-',
+    code: referralSummary?.referralCode ?? '-',
     totalReferrals: referralSummary?.totalReferrals ?? 0,
     completedReferrals: referralSummary?.completedReferrals ?? 0,
     pendingReferrals: referralSummary?.pendingReferrals ?? 0,

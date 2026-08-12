@@ -438,17 +438,21 @@ describe('PromotionService', () => {
       it('should create new referral', async () => {
         const mockRequest: CreateReferralRequest = {
           referrerAccountId: 'acc_123',
-          rewardAmount: '50000',
-          expiryDays: 30,
+          referrerReward: '50000',
+          refereeReward: '25000',
+          rewardType: 'CASHBACK',
+          expiryDate: '2024-01-31T00:00:00Z',
         };
 
         const mockReferral: Referral = {
           id: 'ref_123',
           referrerAccountId: 'acc_123',
-          code: 'REF123ABC',
+          referralCode: 'REF123ABC',
+          referrerReward: '50000',
+          refereeReward: '25000',
+          rewardType: 'CASHBACK',
           status: 'PENDING',
-          rewardAmount: '50000',
-          expiresAt: '2024-01-31T00:00:00Z',
+          expiryDate: '2024-01-31T00:00:00Z',
           createdAt: '2024-01-01T10:00:00Z',
         };
 
@@ -458,7 +462,7 @@ describe('PromotionService', () => {
 
         expect(api.post).toHaveBeenCalledWith('/referrals', mockRequest);
         expect(result.status).toBe('PENDING');
-        expect(result.code).toBeDefined();
+        expect(result.referralCode).toBeDefined();
       });
     });
 
@@ -473,12 +477,13 @@ describe('PromotionService', () => {
           id: 'ref_123',
           referrerAccountId: 'acc_123',
           refereeAccountId: 'acc_456',
-          code: 'REF123ABC',
+          referralCode: 'REF123ABC',
+          referrerReward: '50000',
+          refereeReward: '25000',
+          rewardType: 'CASHBACK',
           status: 'COMPLETED',
-          rewardAmount: '50000',
-          referralDate: '2024-01-01T10:00:00Z',
-          completedDate: '2024-01-15T10:00:00Z',
-          expiresAt: '2024-01-31T00:00:00Z',
+          completedAt: '2024-01-15T10:00:00Z',
+          expiryDate: '2024-01-31T00:00:00Z',
           createdAt: '2024-01-01T10:00:00Z',
         };
 
@@ -497,10 +502,12 @@ describe('PromotionService', () => {
         const mockReferral: Referral = {
           id: 'ref_456',
           referrerAccountId: 'acc_789',
-          code: 'MYREFCODE',
+          referralCode: 'MYREFCODE',
+          referrerReward: '75000',
+          refereeReward: '25000',
+          rewardType: 'CASHBACK',
           status: 'PENDING',
-          rewardAmount: '75000',
-          expiresAt: '2024-02-01T00:00:00Z',
+          expiryDate: '2024-02-01T00:00:00Z',
           createdAt: '2024-01-01T10:00:00Z',
         };
 
@@ -509,7 +516,7 @@ describe('PromotionService', () => {
         const result = await service.getReferralByCode('MYREFCODE');
 
         expect(api.get).toHaveBeenCalledWith('/referrals/code/MYREFCODE');
-        expect(result.code).toBe('MYREFCODE');
+        expect(result.referralCode).toBe('MYREFCODE');
       });
     });
 
@@ -520,21 +527,24 @@ describe('PromotionService', () => {
             id: 'ref_1',
             referrerAccountId: 'acc_123',
             refereeAccountId: 'acc_456',
-            code: 'REF1',
+            referralCode: 'REF1',
+            referrerReward: '50000',
+            refereeReward: '25000',
+            rewardType: 'CASHBACK',
             status: 'COMPLETED',
-            rewardAmount: '50000',
-            referralDate: '2024-01-01T10:00:00Z',
-            completedDate: '2024-01-10T10:00:00Z',
-            expiresAt: '2024-01-31T00:00:00Z',
+            completedAt: '2024-01-10T10:00:00Z',
+            expiryDate: '2024-01-31T00:00:00Z',
             createdAt: '2024-01-01T10:00:00Z',
           },
           {
             id: 'ref_2',
             referrerAccountId: 'acc_123',
-            code: 'REF2',
+            referralCode: 'REF2',
+            referrerReward: '50000',
+            refereeReward: '25000',
+            rewardType: 'CASHBACK',
             status: 'PENDING',
-            rewardAmount: '50000',
-            expiresAt: '2024-02-01T00:00:00Z',
+            expiryDate: '2024-02-01T00:00:00Z',
             createdAt: '2024-01-05T10:00:00Z',
           },
         ];
@@ -553,7 +563,7 @@ describe('PromotionService', () => {
     describe('getReferralSummary', () => {
       it('should fetch referral summary for referrer', async () => {
         const mockSummary = {
-          referrerAccountId: 'acc_123',
+          referralCode: 'REF123ABC',
           totalReferrals: 10,
           completedReferrals: 7,
           pendingReferrals: 3,

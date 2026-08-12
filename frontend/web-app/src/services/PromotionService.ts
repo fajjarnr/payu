@@ -135,19 +135,22 @@ export interface Referral {
   id: string;
   referrerAccountId: string;
   refereeAccountId?: string;
-  code: string;
+  referralCode: string;
+  referrerReward: Money;
+  refereeReward: Money;
+  rewardType: 'CASHBACK' | 'POINTS';
   status: 'PENDING' | 'COMPLETED' | 'EXPIRED';
-  rewardAmount: Money;
-  referralDate?: string;
-  completedDate?: string;
-  expiresAt: string;
+  completedAt?: string;
+  expiryDate: string;
   createdAt: string;
 }
 
 export interface CreateReferralRequest {
   referrerAccountId: string;
-  rewardAmount: Money;
-  expiryDays: number;
+  referrerReward: Money;
+  refereeReward: Money;
+  rewardType: 'CASHBACK' | 'POINTS';
+  expiryDate: string;
 }
 
 export interface CompleteReferralRequest {
@@ -156,7 +159,7 @@ export interface CompleteReferralRequest {
 }
 
 export interface ReferralSummaryResponse {
-  referrerAccountId: string;
+  referralCode?: string;
   totalReferrals: number;
   completedReferrals: number;
   pendingReferrals: number;
