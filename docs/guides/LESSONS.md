@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-231: @Version Entities + Unidirectional OneToMany + NOT NULL FK = Three Traps (2026-08-12)
+
+**Context**: DISPUTE-002 — dispute update flows (investigate/evidence/reject/resolve) all 500/409'd once the integration tests could run.
+
+**Lesson**:
+- `JpaRepository.save()` on a NEW instance that carries an existing id is `persist` when `@Version` is present (`isNew()` = version==null) → `EntityExistsException`. Re-saving a loaded aggregate MUST update the managed entity in place (load-by-id → copy state → save), never build-and-save.
+- Unidirectional `@OneToMany @JoinColumn` writes the child FK in a SEPARATE UPDATE after the INSERT — a NOT NULL FK column rejects the INSERT first. Make it bidirectional (`@ManyToOne` owned side) or the column nullable. Never map the same column twice (basic + join) — the basic attribute writes NULL.
+- Orphan-removal hates collection replacement: `clear()` + `addAll()` on the same instance, never `setList(newList)`.
+- Auto-refund side effects in a resolve flow surface as mystery 409s in tests — the missing piece was a `@Primary` port mock, not app code.
+
+**Applied evidence**: dispute-service 120/120 incl. integration group; CHANGELOG 1.10.60; DISPUTE-002 closed.
+
 ## L-230: Notification False-Success — the Lie Lives in Config, Not Just Code (2026-08-12)
 
 **Context**: PROD-044 — SmsSender/PushSender returned `true` from LOG-mode fallback for every provider, so notifications were marked SENT that were never delivered. Two lies: the code fallback and the config (`quarkus.mailer.mock=true` + `SMS_PROVIDER` default `LOG` in the BASE `application.yml`, inherited by prod).

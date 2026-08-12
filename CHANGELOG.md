@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.60] - 2026-08-12
+
+### Fixed
+
+- **Dispute persistence defects (DISPUTE-002)**: (a) `DisputePersistenceAdapter.save` built a new entity with an existing id — with `@Version`, Spring Data `save()` treated it as persist → `EntityExistsException` on every update (investigate/evidence/reject/resolve all 500/409'd). Now updates the managed entity in place (refund-adapter pattern). (b) `dispute_evidence` used a unidirectional `@OneToMany @JoinColumn` whose FK write arrives as a separate UPDATE — too late for the NOT NULL column — and a duplicate basic `disputeId` mapping wrote NULL. Converted to a bidirectional `@ManyToOne` owned side so Hibernate writes `dispute_id` in the INSERT itself; the evidence sync keeps the same collection instance (orphan-removal safety). (c) `resolveDispute` auto-creates a full refund, which hit the real `TransactionRestAdapter` in the integration test — added the missing `@Primary TransactionLookupPort` mock.
+
+### Validation
+
+- `dispute-service` 120 tests / 0 failures (integration group included) — `DisputeControllerIntegrationTest` 6/6 (was 3 red), `RefundControllerIntegrationTest` 9/9, `RefundConcurrencyIntegrationTest` green.
+
 ## [1.10.59] - 2026-08-12
 
 ### Fixed
