@@ -1,5 +1,6 @@
 package id.payu.promotion.domain.port.out;
 
+import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.domain.model.LoyaltyPoints;
 
 import java.util.List;
@@ -13,4 +14,10 @@ public interface LoyaltyPointsRepositoryPort {
     Integer calculateBalanceByAccountId(String accountId);
     void lockAccount(String accountId);
     void flush();
+
+    /**
+     * PROMO-002 (CB-027): redemption dedup guard for a given transaction.
+     */
+    List<LoyaltyPoints> findByAccountIdAndTransactionIdAndTransactionType(
+            String accountId, String transactionId, TransactionType transactionType);
 }

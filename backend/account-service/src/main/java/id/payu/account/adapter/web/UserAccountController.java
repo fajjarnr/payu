@@ -2,6 +2,8 @@ package id.payu.account.adapter.web;
 
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.UserPersistencePort;
+import id.payu.account.dto.UserProfileResponse;
+import id.payu.api.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -60,5 +62,27 @@ public class UserAccountController {
 
         log.debug("Found {} accounts for user externalId={}", accountIds.size(), userId);
         return ResponseEntity.ok(accountIds);
+    }
+
+    /**
+     * Returns the user profile for an externalId (GRPC-008).
+     * Used by lending-service enhanced credit scoring (kycStatus, account tenure).
+     */
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get user profile by externalId",
+               description = "Returns profile data for a user (by Keycloak externalId)")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(
+            @Parameter(description = "Keycloak externalId (sub claim)")
+            @PathVariable String userId) {
+
+        log.debug("Looking up user profile for externalId={}", userId);
+
+        Optional<User> userOpt = userPersistencePort.findByExternalId(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("ACC_404", "User not found: " + userId));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(UserProfileResponse.from(userOpt.get())));
     }
 }

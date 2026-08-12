@@ -84,6 +84,16 @@ public class LoyaltyPointsService {
         LOG.info("Redeeming points: accountId={}, points={}",
             request.accountId(), request.points());
 
+        // PROMO-002 (CB-027): reject replayed redemptions before touching the
+        // balance. The partial unique index uq_loyalty_redeem_account_transaction
+        // is the durable guard; this check gives a clean business error.
+        if (request.transactionId() != null && !request.transactionId().isBlank()
+                && !loyaltyPointsRepository.findByAccountIdAndTransactionIdAndTransactionType(
+                        request.accountId(), request.transactionId(), TransactionType.REDEEMED).isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Points already redeemed for transaction: " + request.transactionId());
+        }
+
         // Use atomic balance calculation with pessimistic lock to prevent race conditions
         Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 

@@ -149,6 +149,15 @@ public class PromotionService {
             throw new IllegalArgumentException("PromotionEntity is expired or not yet started");
         }
 
+        // PROMO-003 (CB-032): reject replays before any state change — one reward
+        // per transactionId. The unique index uq_rewards_account_transaction is the
+        // durable guard; this check gives a clean business error.
+        if (request.transactionId() != null && !request.transactionId().isBlank()
+                && rewardRepository.findByTransactionId(request.transactionId()).isPresent()) {
+            throw new IllegalArgumentException(
+                    "Reward already claimed for transaction: " + request.transactionId());
+        }
+
         // BUG-BE-063 Fix: Use atomic increment to prevent race condition on maxRedemptions
         // The old code: read count → check < max → increment was vulnerable to concurrent claims
         // both passing the check before either increments.
@@ -187,7 +196,7 @@ public class PromotionService {
     private BigDecimal calculateRewardAmount(Promotion promotion, BigDecimal transactionAmount) {
         return switch (promotion.getRewardType()) {
             case PERCENTAGE -> transactionAmount.multiply(promotion.getRewardValue())
-                .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_EVEN);
+                .divide(BigDecimal.valueOf(100), 4, java.math.RoundingMode.HALF_EVEN);
             case FIXED_AMOUNT -> promotion.getRewardValue();
             case POINTS -> promotion.getRewardValue();
         };

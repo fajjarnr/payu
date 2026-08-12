@@ -39,7 +39,7 @@ public class EnhancedCreditScoringService {
         fact.setScore(baseScore);
 
         try {
-            UserResponse user = accountClient.getUserById(userId);
+            UserResponse user = accountClient.getUserById(userId.toString()).getData();
             fact.setKycStatus(user.kycStatus());
 
             Period accountTenure = Period.between(
@@ -49,17 +49,21 @@ public class EnhancedCreditScoringService {
             int months = accountTenure.getYears() * 12 + accountTenure.getMonths();
             fact.setTenureMonths(months);
 
-            TransactionSummaryResponse summary = transactionClient.getTransactionSummary(userId);
-            if (summary != null) {
-                fact.setTotalTransactions(summary.totalTransactions());
-                fact.setTotalAmount(summary.totalAmount());
-                
-                if (summary.totalTransactions() > 0) {
-                    BigDecimal successRate = new BigDecimal(summary.successfulTransactions())
-                            .divide(new BigDecimal(summary.totalTransactions()), 4, RoundingMode.HALF_EVEN);
-                    fact.setSuccessRate(successRate);
-                } else {
-                    fact.setSuccessRate(BigDecimal.ZERO);
+            java.util.List<java.util.UUID> accountIds = accountClient.getAccountIdsByUserId(userId.toString());
+            if (accountIds != null && !accountIds.isEmpty()) {
+                TransactionSummaryResponse summary = transactionClient
+                        .getTransactionSummary(accountIds.get(0)).getData();
+                if (summary != null) {
+                    fact.setTotalTransactions(Math.toIntExact(summary.totalTransactions()));
+                    fact.setTotalAmount(summary.totalAmount());
+
+                    if (summary.totalTransactions() > 0) {
+                        BigDecimal successRate = new BigDecimal(summary.successfulTransactions())
+                                .divide(new BigDecimal(summary.totalTransactions()), 4, RoundingMode.HALF_EVEN);
+                        fact.setSuccessRate(successRate);
+                    } else {
+                        fact.setSuccessRate(BigDecimal.ZERO);
+                    }
                 }
             }
 

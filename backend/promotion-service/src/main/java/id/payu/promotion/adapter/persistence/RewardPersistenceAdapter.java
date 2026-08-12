@@ -34,4 +34,9 @@ public class RewardPersistenceAdapter implements RewardPersistencePort {
     public List<Reward> findByAccountId(String accountId) {
         return repository.findByAccountId(accountId).stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public Optional<Reward> findByTransactionId(String transactionId) {
+        return repository.findByTransactionId(transactionId).map(mapper::toDomain);
+    }
 }

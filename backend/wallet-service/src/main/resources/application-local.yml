@@ -4,13 +4,11 @@ spring:
     vault:
       enabled: false  # Disabled for local dev by default
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_wallet}
-    username: ${DATABASE_USERNAME:payu}
-    password: ${DATABASE_PASSWORD:payu_secret}
     primary:
-      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_wallet}
-      username: ${DB_USERNAME:payu}
-      password: ${DB_PASSWORD:payu_secret}
+      hikari:
+        jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_wallet}
+        username: ${DB_USERNAME:payu}
+        password: ${DB_PASSWORD:payu_secret}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

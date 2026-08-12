@@ -21,6 +21,7 @@ import id.payu.transaction.dto.InterbankTransferCallbackRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.dto.TransactionResponse;
 import id.payu.transaction.dto.TransactionRefundDetailsResponse;
+import id.payu.transaction.dto.TransactionSummaryResponse;
 import id.payu.transaction.dto.UpdateTransactionTagsRequest;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
@@ -61,9 +62,12 @@ public class TransactionController extends BaseController {
 
 
     private final TransactionUseCase transactionUseCase;
+    private final id.payu.transaction.application.service.AccountTransactionSummaryService accountTransactionSummaryService;
 
-    public TransactionController(TransactionUseCase transactionUseCase) {
+    public TransactionController(TransactionUseCase transactionUseCase,
+                                 id.payu.transaction.application.service.AccountTransactionSummaryService accountTransactionSummaryService) {
         this.transactionUseCase = transactionUseCase;
+        this.accountTransactionSummaryService = accountTransactionSummaryService;
     }
 
     /**
@@ -359,6 +363,31 @@ public class TransactionController extends BaseController {
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
         // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
+    }
+
+    /**
+     * Aggregate summary of an account's transactions (GRPC-008).
+     * Consumed by lending-service enhanced credit scoring.
+     */
+    @GetMapping("/accounts/{accountId}/summary")
+    @Operation(
+            summary = "Get account transaction summary",
+            description = "Aggregates transaction totals, success/failure counts and date range for an account."
+    )
+    @PreAuthorize("hasAuthority('read:transaction')")
+    public ResponseEntity<ApiResponse<TransactionSummaryResponse>> getAccountSummary(
+            @Parameter(description = "Account ID", required = true)
+            @PathVariable UUID accountId
+    ) {
+        try {
+            String userId = extractUserId();
+            return ResponseEntity.ok(ApiResponse.success(
+                    accountTransactionSummaryService.summarize(accountId, userId)));
+        } catch (BusinessException e) {
+            log.warn("Error retrieving summary for account: {} - {}", accountId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getCode(), e.getMessage()));
+        }
     }
 
     /**

@@ -77,8 +77,12 @@ class EnhancedCreditScoringServiceTest {
                 java.time.Instant.now()
         );
 
-        when(accountClient.getUserById(userId)).thenReturn(user);
-        when(transactionClient.getTransactionSummary(userId)).thenReturn(summary);
+        when(accountClient.getUserById(userId.toString()))
+                .thenReturn(id.payu.api.common.response.ApiResponse.success(user));
+        when(accountClient.getAccountIdsByUserId(userId.toString()))
+                .thenReturn(java.util.List.of(userId));
+        when(transactionClient.getTransactionSummary(userId))
+                .thenReturn(id.payu.api.common.response.ApiResponse.success(summary));
 
         BigDecimal score = service.calculateEnhancedCreditScore(userId, baseScore);
         assertEquals(0, new BigDecimal("650").compareTo(score), "Expected credit score to be 650");
@@ -123,8 +127,12 @@ class EnhancedCreditScoringServiceTest {
                 java.time.Instant.now()
         );
 
-        when(accountClient.getUserById(userId)).thenReturn(user);
-        when(transactionClient.getTransactionSummary(userId)).thenReturn(summary);
+        when(accountClient.getUserById(userId.toString()))
+                .thenReturn(id.payu.api.common.response.ApiResponse.success(user));
+        when(accountClient.getAccountIdsByUserId(userId.toString()))
+                .thenReturn(java.util.List.of(userId));
+        when(transactionClient.getTransactionSummary(userId))
+                .thenReturn(id.payu.api.common.response.ApiResponse.success(summary));
 
         BigDecimal score = service.calculateEnhancedCreditScore(userId, baseScore);
         assertEquals(0, new BigDecimal("475").compareTo(score), "Expected credit score to be 475");

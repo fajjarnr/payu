@@ -20,6 +20,10 @@ public class ReferralPersistenceAdapter implements ReferralRepositoryPort {
     public Referral save(Referral value) { return mapper.toDomain(repository.save(mapper.toEntity(value))); }
     public Optional<Referral> findById(UUID id) { return repository.findById(id).map(mapper::toDomain); }
     public Optional<Referral> findByReferralCode(String code) { return repository.findByReferralCode(code).map(mapper::toDomain); }
+
+    public Optional<Referral> findByReferralCodeForUpdate(String code) {
+        return repository.findByReferralCodeForUpdate(code).map(mapper::toDomain);
+    }
     public List<Referral> findByReferrerAccountId(String id) {
         return repository.findByReferrerAccountId(id).stream().map(mapper::toDomain).toList();
     }

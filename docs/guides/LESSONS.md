@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-236: Datasource Prefix Drift + Migration/Entity Drift Hide Behind Hand-Patched Live DBs (2026-08-12)
+
+**Context**: WALLET-001/WALLET-002 + GRPC-008 batch. Two wallet "verified live" bugs were invisible to the running stack: (1) `application-local.yml` (the default profile!) placed credentials under `spring.datasource.primary.*` while `datasource-starter` binds `spring.datasource.primary.hikari.*` — so the starter bean backed off and Boot fell back to a pool with `autoCommit=true`, which combined with `hibernate.connection.provider_disables_autocommit` produces `Cannot commit when autoCommit is true` on every transaction; (2) V10 DDL created `split_recipients.type` + `split_payment_legs.credited_at` while entities map `recipient_type`/`settled_at` — fresh installs fail Hibernate validate, but the live DB was hand-patched so the app booted fine.
+
+**Lesson**:
+- A live DB patched by hand is the worst hiding place for migration/entity drift — add a boot regression test (`@SpringBootTest` + Testcontainers PG + `spring.flyway.enabled=true` + `ddl-auto=validate`) so a fresh-DB boot is CI-verifiable.
+- Config prefix drift (`.hikari` vs not) is silent: the wrong-prefix pool still connects, only the auto-commit/limit knobs silently use Hikari defaults. Assert the pool's `getConnection().getAutoCommit()` in a test — it catches the regression the moment anyone drops `auto-commit: false`.
+- Seeding via `JdbcTemplate` on a pool with `autoCommit=false` leaves the row invisible to other connections — seed inside `TransactionTemplate` (or make the INSERT idempotent with `ON CONFLICT DO NOTHING` when the pool may be shared across test methods).
+- The migration fix must be idempotent (`ADD COLUMN IF NOT EXISTS` + copy + `DROP COLUMN IF EXISTS`) so it applies to both fresh and hand-patched DBs.
+- `new RestTemplate(factory)` from `rest-client-starter` has no `JavaTimeModule` — parsing `Instant`/`LocalDate` from a JSON API response fails; parse timestamps as `String` and convert manually.
+
 ## L-234: podman-compose up Dependency Resolution + Stale-Image Restart Traps (2026-08-12)
 
 **Context**: CB-008/011/017/022/024/025/031/036 batch — full podman-compose redeploy. `podman-compose up -d --profile apps` hung for 30+ min and then **removed the core infra containers** (kafka/artemis/keycloak) while failing dependency resolution (`"payu-kafka" is not a valid container`) because the python provider resolves `depends_on` against container names, not service names.

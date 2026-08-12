@@ -4,12 +4,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Client for Transaction Service - Feign could be used alternatively
+ * Client for Transaction Service.
+ * GRPC-008: aligned with the actual transaction-service contract
+ * (GET /api/v1/transactions?accountId=..&startDate=..&endDate=.. and
+ * GET /api/v1/transactions/{transactionId}, both wrapped in ApiResponse).
  */
 @Component
 public class TransactionServiceClient {
@@ -24,19 +30,19 @@ public class TransactionServiceClient {
     }
 
     /**
-     * Get transactions for a user within a date range
+     * Get transactions for an account within a date range.
      */
-    public List<StatementService.TransactionRecord> getTransactions(String customerId, LocalDate startDate, LocalDate endDate) {
-        String url = transactionServiceUrl + "/api/v1/transactions/customer/" + customerId
-            + "?startDate=" + startDate + "&endDate=" + endDate;
+    public List<StatementService.TransactionRecord> getTransactions(String accountId, LocalDate startDate, LocalDate endDate) {
+        String url = transactionServiceUrl + "/api/v1/transactions?accountId=" + accountId
+            + "&startDate=" + startDate + "&endDate=" + endDate;
 
         try {
             TransactionListResponse response = restTemplate.getForObject(url, TransactionListResponse.class);
 
-            if (response != null && response.getTransactions() != null) {
-                return response.getTransactions().stream()
+            if (response != null && response.getData() != null) {
+                return response.getData().stream()
                     .map(t -> new StatementService.TransactionRecord(
-                        t.getDate(),
+                        toLocalDate(t.getCreatedAt()),
                         t.getDescription(),
                         t.getAmount(),
                         "CREDIT".equals(t.getType()) ? TransactionType.CREDIT : TransactionType.DEBIT
@@ -47,7 +53,7 @@ public class TransactionServiceClient {
             return new ArrayList<>();
         } catch (Exception e) {
             // BUG-BE-053: Do NOT silently swallow — log and propagate so statement fails explicitly
-            throw new RuntimeException("Failed to fetch transactions for customer " + customerId + ": " + e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch transactions for account " + accountId + ": " + e.getMessage(), e);
         }
     }
 
@@ -58,14 +64,15 @@ public class TransactionServiceClient {
         String url = transactionServiceUrl + "/api/v1/transactions/" + transactionId;
 
         try {
-            TransactionDto response = restTemplate.getForObject(url, TransactionDto.class);
+            TransactionEnvelope response = restTemplate.getForObject(url, TransactionEnvelope.class);
 
-            if (response != null) {
+            if (response != null && response.getData() != null) {
+                TransactionDto t = response.getData();
                 return new StatementService.TransactionRecord(
-                    response.getDate(),
-                    response.getDescription(),
-                    response.getAmount(),
-                    "CREDIT".equals(response.getType()) ? TransactionType.CREDIT : TransactionType.DEBIT
+                    toLocalDate(t.getCreatedAt()),
+                    t.getDescription(),
+                    t.getAmount(),
+                    "CREDIT".equals(t.getType()) ? TransactionType.CREDIT : TransactionType.DEBIT
                 );
             }
 
@@ -75,30 +82,55 @@ public class TransactionServiceClient {
         }
     }
 
-    private static class TransactionListResponse {
-        private List<TransactionDto> transactions;
+    private static LocalDate toLocalDate(String createdAt) {
+        if (createdAt == null || createdAt.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(createdAt).atZone(ZoneId.systemDefault()).toLocalDate();
+        } catch (Exception e) {
+            return LocalDate.parse(createdAt);
+        }
+    }
 
-        public List<TransactionDto> getTransactions() {
-            return transactions;
+    /** ApiResponse envelope: { success, data, ... } */
+    private static class TransactionListResponse {
+        private List<TransactionDto> data;
+
+        public List<TransactionDto> getData() {
+            return data;
         }
 
-        public void setTransactions(List<TransactionDto> transactions) {
-            this.transactions = transactions;
+        public void setData(List<TransactionDto> data) {
+            this.data = data;
+        }
+    }
+
+    /** ApiResponse envelope for a single transaction: { success, data: {...} } */
+    private static class TransactionEnvelope {
+        private TransactionDto data;
+
+        public TransactionDto getData() {
+            return data;
+        }
+
+        public void setData(TransactionDto data) {
+            this.data = data;
         }
     }
 
     private static class TransactionDto {
-        private LocalDate date;
+        private String createdAt;
         private String description;
         private String type;
-        private java.math.BigDecimal amount;
+        private BigDecimal amount;
 
-        public LocalDate getDate() {
-            return date;
+        public String getCreatedAt() {
+            return createdAt;
         }
 
-        public void setDate(LocalDate date) {
-            this.date = date;
+        public void setCreatedAt(String createdAt) {
+            this.createdAt = createdAt;
         }
 
         public String getDescription() {
@@ -117,11 +149,11 @@ public class TransactionServiceClient {
             this.type = type;
         }
 
-        public java.math.BigDecimal getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
 
-        public void setAmount(java.math.BigDecimal amount) {
+        public void setAmount(BigDecimal amount) {
             this.amount = amount;
         }
     }

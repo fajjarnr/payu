@@ -21,6 +21,9 @@ public interface LoyaltyPointsRepository extends JpaRepository<LoyaltyPointsEnti
 
     List<LoyaltyPointsEntity> findByAccountIdAndTransactionId(String accountId, String transactionId);
 
+    List<LoyaltyPointsEntity> findByAccountIdAndTransactionIdAndTransactionType(
+            String accountId, String transactionId, id.payu.promotion.domain.TransactionType transactionType);
+
     /**
      * Find the most recent loyalty points record for an account with pessimistic lock.
      * This prevents race conditions during concurrent balance updates.

@@ -12,4 +12,9 @@ public interface RewardPersistencePort {
     Optional<Reward> findById(UUID id);
 
     List<Reward> findByAccountId(String accountId);
+
+    /**
+     * PROMO-003 (CB-032): duplicate claim guard for a given transaction.
+     */
+    Optional<Reward> findByTransactionId(String transactionId);
 }

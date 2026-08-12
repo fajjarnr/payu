@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.64] - 2026-08-12
+
+### Fixed
+
+- **WALLET-002 (🔴 boot blocker)**: app tidak bisa boot pada fresh DB — `V10__create_split_payment_tables.sql` membuat `split_recipients.type` + `split_payment_legs.credited_at`, sedangkan entity `SplitRecipientEntity`/`SplitPaymentLegEntity` memetakan `recipient_type`/`settled_at` → Hibernate validate gagal (live DB lama hand-patched sehingga tak terdeteksi). Migration idempotent baru **V113** (ADD IF NOT EXISTS + rename + drop kolom lama) + regression test `SchemaMigrationIntegrityTest` (boot context dengan Testcontainers PG + Flyway + validate).
+- **WALLET-001 (🔴 runtime, verified live)**: `application-local.yml` (profil default!) menaruh kredensial di `spring.datasource.primary.*` tanpa prefix `.hikari` → datasource-starter tidak ter-bind, Boot fallback ke pool `autoCommit=true` + `hibernate.connection.provider_disables_autocommit` → transaksi commit gagal `Cannot commit when autoCommit is true`. Fix: local yml pakai prefix `spring.datasource.primary.hikari.*` (konsisten dengan base yml yang sudah `auto-commit: false`). Regression: `TransactionalPoolAutoCommitTest` (assert pool autoCommit=false + jalur `getAvailableBalance` commit bersih terhadap Testcontainers PG; test gagal bila auto-commit=true).
+- **GRPC-008 (🔴 internal contract drift)**: tiga kontrak REST internal diperbaiki (404 di semua jalur):
+  - `statement-service` `TransactionServiceClient` kini memanggil endpoint yang ada — `GET /api/v1/transactions?accountId=&startDate=&endDate=` (bukan `/customer/{id}` yang tidak ada) + parse envelope `ApiResponse.data` + `createdAt` → `LocalDate` (RestTemplate tanpa JavaTimeModule, parse manual).
+  - `account-service` endpoint baru `GET /api/v1/accounts/users/{userId}` (profil user by externalId: kycStatus/createdAt/status — data yang dibutuhkan credit scoring) + `UserProfileResponse` DTO + test MockMvc. `GET /api/v1/accounts/users/{userId}/account-ids` sudah ada dan dipakai lending.
+  - `transaction-service` endpoint baru `GET /api/v1/transactions/accounts/{accountId}/summary` (`AccountTransactionSummaryService` agregasi total/sent/received/success/failed/date-range; loop halaman 100 — ponytail ceiling, upgrade ke SQL aggregate saat volume menuntut) + `TransactionSummaryResponse` + 2 unit test.
+  - `lending-service` `AccountClient`/`TransactionClient` di-align ke endpoint nyata (Feign `ApiResponse<T>`), `EnhancedCreditScoringService` resolve account-ids dulu lalu summary per-account; `TransactionSummaryResponse` userId→accountId; `EnhancedCreditScoringServiceTest` di-update.
+
+### Changed
+
+- **CB-033 promotion (PROMO-004)**: `calculateRewardAmount` PERCENTAGE `divide(..., 4, HALF_EVEN)` (sebelumnya scale 2) — ADR-0022 scale-4 compliance; test scale 4 di `PromotionServiceClaimDedupAndScaleTest`.
+- **CB-032 promotion (PROMO-003)**: `claimPromotion` dedup by `transactionId` — cek `findByTransactionId` sebelum increment/state change (replay → error, tidak bakar redemption count) + unique partial index `uq_rewards_account_transaction` (migration **V12**, dedup data lama).
+- **CB-027 promotion (PROMO-002)**: `redeemPoints` dedup by `(accountId, transactionId)` + `TransactionType.REDEEMED` — cek sebelum advisory lock (replay tidak lock/burn) + unique partial index `uq_loyalty_redeem_account_transaction` (V12).
+- **CB-030 promotion (REFERRAL-001)**: `completeReferral` load via `findByReferralCodeForUpdate` (`@Lock PESSIMISTIC_WRITE`) — dua completion konkuren tidak bisa double-grant; unit test memverifikasi jalur lock dipakai.
+
+### Deployed
+
+- Podman stack `1.10.64`: 34 container healthy; migration V113 (wallet) + V12 (promotion) applied live; live smoke: account profile 200 (kycStatus PENDING), account-ids 200, wallet balance 200 (`500000.0`), summary endpoint security-wired (403 = realm client-scope belum punya `read:transaction`, di luar scope). Semua service tanpa ERROR/WARN di log post-restart.
+
 ## [1.10.63] - 2026-08-12
 
 ### Added

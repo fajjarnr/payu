@@ -28,6 +28,12 @@ public class LoyaltyPointsPersistenceAdapter implements LoyaltyPointsRepositoryP
     public List<LoyaltyPoints> findByAccountIdOrderByCreatedAtDesc(String accountId) {
         return repository.findByAccountIdOrderByCreatedAtDesc(accountId).stream().map(mapper::toDomain).toList();
     }
+
+    public List<LoyaltyPoints> findByAccountIdAndTransactionIdAndTransactionType(
+            String accountId, String transactionId, id.payu.promotion.domain.TransactionType transactionType) {
+        return repository.findByAccountIdAndTransactionIdAndTransactionType(accountId, transactionId, transactionType)
+                .stream().map(mapper::toDomain).toList();
+    }
     public Integer calculateBalanceByAccountId(String accountId) { return repository.calculateBalanceByAccountId(accountId); }
     public void lockAccount(String accountId) {
         entityManager.createNativeQuery("SELECT pg_advisory_xact_lock(hashtext(:accountId))")

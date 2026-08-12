@@ -78,7 +78,9 @@ public class ReferralService {
 
     @Transactional
     public Referral completeReferral(CompleteReferralRequest request) {
-        Referral referral = referralRepository.findByReferralCode(request.referralCode())
+        // REFERRAL-001 (CB-030): pessimistic lock so concurrent completions of the
+        // same code serialize; the second one sees status != PENDING and fails.
+        Referral referral = referralRepository.findByReferralCodeForUpdate(request.referralCode())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid referral code"));
 
         if (referral.getStatus() != ReferralStatus.PENDING) {
