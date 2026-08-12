@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.73] - 2026-08-12
+
+### Changed
+
+- **GRPC-005 (statement)**: `TransactionServiceClient` migrasi REST → **gRPC** ke `TransactionGrpcService` (GRPC-002, live 9090) — statement tidak lagi sync REST ke transaction-service. Channel via `GrpcChannelSupport` (deadline 30s); filter tanggal statement di client; API class + DTO (`statement.dto`) tidak berubah — suite 56/56 green; live podman healthy 0 ERROR/WARN.
+
 ## [1.10.72] - 2026-08-12
 
 ### Added
