@@ -109,7 +109,7 @@ payu:
     max-login-attempts: 5
     lockout-duration-minutes: 15
     password-policy:
-      min-length: 8
+      min-length: 12
       require-uppercase: true
       require-lowercase: true
       require-digit: true

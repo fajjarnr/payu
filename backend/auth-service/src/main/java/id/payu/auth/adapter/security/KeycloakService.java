@@ -32,7 +32,7 @@ public class KeycloakService {
     private final ObjectMapper objectMapper;
     private final org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
 
-    @Value("${payu.security.password-policy.min-length:8}")
+    @Value("${payu.security.password-policy.min-length:12}")
     private int passwordMinLength;
 
     @Value("${payu.security.password-policy.require-uppercase:true}")

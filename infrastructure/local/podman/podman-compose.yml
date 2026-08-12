@@ -172,7 +172,7 @@ services:
       - payu-network
     environment:
       AMQ_USER: admin
-      AMQ_PASSWORD: admin
+      AMQ_PASSWORD: payu-local-artemis-2026-x7q
       AMQ_QUEUES: payu.notification.commands,payu.integration.commands,payu.billing.scheduled,payu.kyc.commands
       AMQ_REQUIRE_LOGIN: "true"
       AMQ_JOURNAL_TYPE: nio
@@ -845,7 +845,7 @@ services:
       ARTEMIS_HOST: artemis
       ARTEMIS_PORT: "61616"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
-      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-admin}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
       DB_URL: jdbc:postgresql://payu-database-rw:5432/payu_billing
       DATABASE_URL: jdbc:postgresql://payu-database-rw:5432/payu_billing
       SERVER_PORT: "8080"
@@ -902,7 +902,7 @@ services:
       ARTEMIS_HOST: artemis
       ARTEMIS_PORT: "61616"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
-      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-admin}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://payu-database-rw:5432/payu_notification
       QUARKUS_DATASOURCE_USERNAME: payu
@@ -1421,7 +1421,7 @@ services:
       ARTEMIS_HEARTBEAT_SEND_MS: "30000"
       ARTEMIS_HEARTBEAT_RECEIVE_MS: "30000"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
-      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-admin}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
     depends_on:
       payu-database-rw:
         condition: service_healthy
@@ -1678,7 +1678,7 @@ services:
       ARTEMIS_HOST: artemis
       ARTEMIS_PORT: "61616"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
-      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-admin}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
     depends_on:
       payu-cache:
         condition: service_healthy

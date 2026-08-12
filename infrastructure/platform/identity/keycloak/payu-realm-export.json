@@ -55,6 +55,14 @@
   },
   "users": [
     {
+      "username": "service-account-payu-backend",
+      "enabled": true,
+      "serviceAccountClientId": "payu-backend",
+      "realmRoles": [
+        "USER"
+      ]
+    },
+    {
       "username": "customer1",
       "enabled": true,
       "emailVerified": true,

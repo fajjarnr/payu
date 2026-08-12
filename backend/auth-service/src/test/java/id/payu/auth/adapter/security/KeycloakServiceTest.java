@@ -49,7 +49,7 @@ class KeycloakServiceTest {
     @BeforeEach
     void setUp() {
         // Set default values via reflection
-        ReflectionTestUtils.setField(keycloakService, "passwordMinLength", 8);
+        ReflectionTestUtils.setField(keycloakService, "passwordMinLength", 12);
         ReflectionTestUtils.setField(keycloakService, "requireUppercase", true);
         ReflectionTestUtils.setField(keycloakService, "requireLowercase", true);
         ReflectionTestUtils.setField(keycloakService, "requireDigit", true);
@@ -218,7 +218,7 @@ class KeycloakServiceTest {
 
             assertThatThrownBy(() -> invokeValidatePassword(shortPassword))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("at least 8 characters");
+                    .hasMessageContaining("at least 12 characters");
         }
 
         @Test
@@ -254,7 +254,7 @@ class KeycloakServiceTest {
         @Test
         @DisplayName("should reject password without special character")
         void shouldRejectPasswordWithoutSpecialChar() {
-            String noSpecial = "Password123";
+            String noSpecial = "Password12345";
 
             assertThatThrownBy(() -> invokeValidatePassword(noSpecial))
                     .isInstanceOf(IllegalArgumentException.class)
