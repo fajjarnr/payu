@@ -34,8 +34,12 @@ public class DisputeEvidenceEntity {
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
-    @Column(name = "dispute_id", nullable = false)
-    private UUID disputeId;
+    // DISPUTE-002: owned side of the parent relationship — Hibernate writes
+    // dispute_id in the INSERT itself (the old unidirectional @JoinColumn
+    // update came too late for the NOT NULL constraint).
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "dispute_id", nullable = false)
+    private DisputeEntity dispute;
 
     @Column(name = "file_name", nullable = false, length = 255)
     private String fileName;

@@ -98,8 +98,7 @@ public class DisputeEntity {
     @Column(name = "escalated_at")
     private Instant escalatedAt;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "dispute_id")
+    @OneToMany(mappedBy = "dispute", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<DisputeEvidenceEntity> evidenceList = new ArrayList<>();
 

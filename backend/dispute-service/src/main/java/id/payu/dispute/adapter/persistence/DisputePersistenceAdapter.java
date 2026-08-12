@@ -10,6 +10,7 @@ import id.payu.dispute.domain.port.out.DisputePersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,7 +30,14 @@ public class DisputePersistenceAdapter implements DisputePersistencePort {
 
     @Override
     public Dispute save(Dispute dispute) {
-        DisputeEntity entity = toEntity(dispute);
+        // DISPUTE-002: with @Version, JpaRepository.save() on a NEW instance that
+        // already has an id (re-save of a loaded dispute) is treated as persist ->
+        // EntityExistsException. Update the managed entity in place instead.
+        DisputeEntity entity = dispute.getId() == null
+                ? toEntity(dispute)
+                : disputeJpaRepository.findById(dispute.getId())
+                        .map(existing -> updateEntity(existing, dispute))
+                        .orElseGet(() -> toEntity(dispute));
         DisputeEntity saved = disputeJpaRepository.save(entity);
         return toDomain(saved);
     }
@@ -97,12 +105,35 @@ public class DisputePersistenceAdapter implements DisputePersistencePort {
         disputeJpaRepository.deleteById(id);
     }
 
-    private DisputeEntity toEntity(Dispute dispute) {
-        List<DisputeEvidenceEntity> evidenceEntities = dispute.getEvidenceList().stream()
-                .map(this::toEvidenceEntity)
-                .collect(Collectors.toList());
+    // DISPUTE-002: copy state onto the managed entity. The evidence collection
+    // is kept as the SAME collection instance (orphan-removal breaks when the
+    // reference is replaced); orphan deletion + reinsert keeps rows consistent.
+    private DisputeEntity updateEntity(DisputeEntity entity, Dispute dispute) {
+        entity.setTransactionId(dispute.getTransactionId());
+        entity.setCustomerId(dispute.getCustomerId());
+        entity.setMerchantId(dispute.getMerchantId());
+        entity.setDisputedAmount(dispute.getDisputedAmount());
+        entity.setCurrency(dispute.getCurrency());
+        entity.setReason(dispute.getReason());
+        entity.setStatus(dispute.getStatus());
+        entity.setInvestigationId(dispute.getInvestigationId());
+        entity.setResolutionType(dispute.getResolutionType());
+        entity.setResolution(dispute.getResolution());
+        entity.setRejectionReason(dispute.getRejectionReason());
+        entity.setEscalationReason(dispute.getEscalationReason());
+        entity.setOpenedAt(dispute.getOpenedAt());
+        entity.setInvestigationStartedAt(dispute.getInvestigationStartedAt());
+        entity.setResolvedAt(dispute.getResolvedAt());
+        entity.setRejectedAt(dispute.getRejectedAt());
+        entity.setEscalatedAt(dispute.getEscalatedAt());
+        entity.getEvidenceList().clear();
+        dispute.getEvidenceList().forEach(evidence ->
+                entity.getEvidenceList().add(toEvidenceEntity(evidence, entity)));
+        return entity;
+    }
 
-        return DisputeEntity.builder()
+    private DisputeEntity toEntity(Dispute dispute) {
+        DisputeEntity entity = DisputeEntity.builder()
                 .id(dispute.getId())
                 .transactionId(dispute.getTransactionId())
                 .customerId(dispute.getCustomerId())
@@ -121,8 +152,11 @@ public class DisputePersistenceAdapter implements DisputePersistencePort {
                 .resolvedAt(dispute.getResolvedAt())
                 .rejectedAt(dispute.getRejectedAt())
                 .escalatedAt(dispute.getEscalatedAt())
-                .evidenceList(evidenceEntities)
+                .evidenceList(new ArrayList<>())
                 .build();
+        dispute.getEvidenceList().forEach(evidence ->
+                entity.getEvidenceList().add(toEvidenceEntity(evidence, entity)));
+        return entity;
     }
 
     private Dispute toDomain(DisputeEntity entity) {
@@ -153,10 +187,10 @@ public class DisputePersistenceAdapter implements DisputePersistencePort {
                 .build();
     }
 
-    private DisputeEvidenceEntity toEvidenceEntity(DisputeEvidence evidence) {
+    private DisputeEvidenceEntity toEvidenceEntity(DisputeEvidence evidence, DisputeEntity parent) {
         return DisputeEvidenceEntity.builder()
                 .id(evidence.getId())
-                .disputeId(null) // Set by parent entity
+                .dispute(parent)
                 .fileName(evidence.getFileName())
                 .fileUrl(evidence.getFileUrl())
                 .uploadedBy(evidence.getUploadedBy())

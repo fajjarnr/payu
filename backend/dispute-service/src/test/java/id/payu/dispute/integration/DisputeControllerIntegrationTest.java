@@ -16,8 +16,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +32,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import id.payu.dispute.domain.model.TransactionDetails;
+import id.payu.dispute.domain.port.out.TransactionLookupPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
@@ -53,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class DisputeControllerIntegrationTest {
 
     @TestConfiguration
+    @EnableWebSecurity
     @EnableMethodSecurity
     static class TestSecurityConfiguration {
 
@@ -63,6 +68,13 @@ class DisputeControllerIntegrationTest {
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
+        }
+
+        @Bean
+        @Primary
+        TransactionLookupPort transactionLookupPort() {
+            return transactionId -> java.util.Optional.of(
+                    new TransactionDetails(new BigDecimal("100000.00"), "IDR"));
         }
     }
 
