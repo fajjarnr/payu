@@ -146,6 +146,14 @@ public class GrpcStarterProperties {
         @Data
         public static class Auth {
             private boolean enabled = true;
+
+            /**
+             * GRPC-014: when true, gRPC calls without a valid Bearer token are
+             * rejected with UNAUTHENTICATED. Default false for compatibility —
+             * service-to-service calls do not carry tokens yet (mesh mTLS is the
+             * live control). Turn on per-server once clients send tokens.
+             */
+            private boolean requireToken = false;
         }
 
         @Data

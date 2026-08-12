@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.71] - 2026-08-12
+
+### Fixed
+
+- **GRPC-009 (billing)**: `WalletAdapter` + `WalletClient` (bean REST mati, `@Deprecated`) dihapus — service pakai `WalletPort` → gRPC `@Primary`; `BillingIntegrationTest` mock `WalletPort` (mock `WalletClient` selama ini tidak efektif).
+- **GRPC-014 (shared)**: enforcement auth gRPC configurable `payu.grpc.interceptors.auth.require-token` (default false — client belum kirim token; mesh mTLS kontrol live) — anonymous ditolak `UNAUTHENTICATED` saat flag aktif; `GrpcAuthInterceptorEnforcementTest`.
+- **GRPC-018 (shared)**: grpc-java bump **1.69.0 → 1.83.1** (Context7-verified) — 8 service suite green.
+
 ## [1.10.70] - 2026-08-12
 
 ### Fixed

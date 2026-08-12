@@ -49,9 +49,15 @@ public class GrpcAuthInterceptor {
     public static class ServerInterceptor implements io.grpc.ServerInterceptor {
 
         private final JwtDecoder jwtDecoder;
+        private final boolean requireToken;
 
         public ServerInterceptor(JwtDecoder jwtDecoder) {
+            this(jwtDecoder, false);
+        }
+
+        public ServerInterceptor(JwtDecoder jwtDecoder, boolean requireToken) {
             this.jwtDecoder = jwtDecoder;
+            this.requireToken = requireToken;
         }
 
         @Override
@@ -100,6 +106,13 @@ public class GrpcAuthInterceptor {
                     log.debug("Authenticated gRPC call - user: {}, tenant: {}, method: {}",
                             userId, tenantId, call.getMethodDescriptor().getFullMethodName());
 
+                } else if (requireToken) {
+                    // GRPC-014: enforcement mode — reject calls without a token
+                    log.warn("Rejected anonymous gRPC call - method: {}",
+                            call.getMethodDescriptor().getFullMethodName());
+                    call.close(Status.UNAUTHENTICATED
+                            .withDescription("Authentication required"), headers);
+                    return new ServerCall.Listener<ReqT>() {};
                 } else {
                     // Allow anonymous access (some endpoints may be public)
                     log.debug("Anonymous gRPC call - method: {}",

@@ -1,6 +1,6 @@
 package id.payu.billing.integration;
 
-import id.payu.billing.adapter.client.WalletClient;
+import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.CreatePaymentRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -40,7 +40,7 @@ public class BillingIntegrationTest {
     int port;
 
     @MockitoBean
-    WalletClient walletClient;
+    WalletPort walletPort;
 
     @MockitoBean
     OutboxService outboxService;
@@ -53,13 +53,11 @@ public class BillingIntegrationTest {
 
     @Test
     void testCreatePaymentFlow() {
-        // Mock Wallet Service response
-        WalletClient.ReserveResponse mockResponse = new WalletClient.ReserveResponse(
-                "res-123", "ACC-001", "REF-BILL-001", "RESERVED"
-        );
+        // Mock Wallet Service response (GRPC-009: mock the port, not the dead REST client)
+        WalletPort.ReserveResult mockResult = new WalletPort.ReserveResult("res-123", "RESERVED");
 
-        Mockito.when(walletClient.reserveBalance(Mockito.anyString(), Mockito.any()))
-                .thenReturn(mockResponse);
+        Mockito.when(walletPort.reserveBalance(Mockito.anyString(), Mockito.any(), Mockito.anyString()))
+                .thenReturn(mockResult);
 
         // Prepare Request
         // Correct order: accountId, billerCode, customerId, amount

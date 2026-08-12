@@ -59,8 +59,9 @@ public class GrpcStarterAutoConfiguration {
     @ConditionalOnProperty(prefix = "payu.grpc.interceptors.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "grpcAuthServerInterceptor")
     public ServerInterceptor grpcAuthServerInterceptor(JwtDecoder jwtDecoder) {
-        log.info("Registering gRPC auth server interceptor");
-        return new GrpcAuthInterceptor.ServerInterceptor(jwtDecoder);
+        boolean requireToken = properties.getInterceptors().getAuth().isRequireToken();
+        log.info("Registering gRPC auth server interceptor (requireToken={})", requireToken);
+        return new GrpcAuthInterceptor.ServerInterceptor(jwtDecoder, requireToken);
     }
 
     @Bean
