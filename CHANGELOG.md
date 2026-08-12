@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.59] - 2026-08-12
+
+### Fixed
+
+- **Notification senders fail closed (PROD-044 partial / NOTIF-001)**: `SmsSender` and `PushSender` returned `true` through the LOG-mode path for every provider — notifications were marked SENT that were never delivered (false success). Default provider is now `NONE` → `send()` returns `false` (retried with backoff, then FAILED); not-yet-implemented providers (TWILIO/VONAGE/ZENZIVA/FCM) and unknown values also fail closed instead of falling back to LOG. LOG mode remains an explicit dev tool (`payu.sms.provider=LOG`, `payu.push.provider=LOG`). Email used the imperative Quarkus `Mailer` (blocking; throws on SMTP failure) — its lie was config: the base `application.yml` shipped `quarkus.mailer.mock=true` + `SMS_PROVIDER` default `LOG`, inherited by prod. Now `mock: false` in base, SMS/PUSH default `NONE`, explicit LOG only in the `local` profile and the podman stack env. `KEYCLOAK_REALM` also gained a default so the `@QuarkusTest` context can boot.
+- Fail-closed tests red-first: `SmsSenderFailClosedTest` (default/unknown/unimplemented → false, explicit LOG → true), `PushSenderFailClosedTest` (default/FCM → false, LOG → true).
+
+### Remaining (prerequisite: provider credentials)
+
+- Real provider integration (Twilio/Vonage/Zenziva, FCM), provider delivery ID, E2E receive — tracked as PROD-044/CB-029/NOTIF-001.
+
 ## [1.10.58] - 2026-08-12
 
 ### Added

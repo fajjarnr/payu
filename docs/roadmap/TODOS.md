@@ -40,7 +40,7 @@
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
-| PROD-044 | P1 | Notification false success: SMS LOG mode `return true`, push mock, mailer `smtp.example.com` + `mock:true` (SmsSender.java:26-54, PushSender.java:8-23). Done: provider nyata fail-closed + delivery ID + E2E. | 🔴 Feature unusable |
+| PROD-044 | P1 | Notification false success — **PARTIAL 2026-08-12**: fail-closed live (SMS/PUSH default NONE → false, LOG hanya eksplisit, `mailer.mock` tidak diwariskan ke prod, `KEYCLOAK_REALM` default). Sisa (butuh credential provider eksternal): provider nyata + delivery ID + E2E terima. | 🟠 Fail-closed live — provider pending |
 | PROD-046 | P1 | Kontrak referral web↔backend tidak cocok (referralCode/totalEarnings). Done: DTO selaras + E2E — CLOSED 2026-08-12 (totalEarnings real di backend summary, tipe web selaras, UI pakai referralCode). | ✅ Closed |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
@@ -53,7 +53,7 @@
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
 | CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
-| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — PII log sudah dimask (PROD-045 closed) | E2E terima; log tanpa PII |
+| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — fail-closed DONE 2026-08-12; sisa provider nyata + delivery ID + E2E (butuh credential provider eksternal) | E2E terima; log tanpa PII |
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
 | CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi | E2E green |
@@ -145,7 +145,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit | SubscriptionService.java:395-401 |
 | PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement | PayLaterTransactionService.java:36-115 |
-| NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID (PII log sudah dimask — PROD-045 closed) | SmsSender.java:26-54 |
+| NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID — **PARTIAL 2026-08-12** (fail-closed live, lihat PROD-044); sisa provider nyata + delivery ID butuh credential eksternal | SmsSender.java:26-54 |
 | OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert — CLOSED (CB-018, 2026-08-12): archive in-place + ERROR alert `OUTBOX-001 ALERT`, tidak pernah delete. Sisa: sink alert nyata (Slack/PagerDuty) via Vault (DEVSECOPS-017 drift alert) + auto-move ke `.dlq` | OutboxCleanupScheduler |
 
 | FX-002 | 🟠 | fx | Reverse tanpa status REVERSED; toAmount tanpa setScale | FxConversionService.java:118-160 |

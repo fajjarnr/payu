@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-230: Notification False-Success — the Lie Lives in Config, Not Just Code (2026-08-12)
+
+**Context**: PROD-044 — SmsSender/PushSender returned `true` from LOG-mode fallback for every provider, so notifications were marked SENT that were never delivered. Two lies: the code fallback and the config (`quarkus.mailer.mock=true` + `SMS_PROVIDER` default `LOG` in the BASE `application.yml`, inherited by prod).
+
+**Lesson**:
+- A sender must fail closed: default provider `NONE` → `false`. Dev tools (LOG mode) must be explicit, per-environment, never the fallback for an unknown/unimplemented provider.
+- Quarkus imperative `Mailer.send()` is already blocking — it throws on SMTP failure. Don't add await machinery; check the config: `mock: true` in a base yml silently disables every environment that doesn't override it.
+- Placeholders without defaults (`${KEYCLOAK_REALM}`) break `@QuarkusTest` boot at augmentation — give them defaults.
+- Pre-existing @QuarkusTest infra in notification-service (PU/entity registration on H2) is broken separately; do not conflate with sender behavior. (Tracked.)
+
+**Applied evidence**: notification default suite 78/78; fail-closed tests green; CHANGELOG 1.10.59; PROD-044 fail-closed part shipped, provider part pending credentials.
+
 ## L-229: Cross-System Provisioning Needs Fail-Closed + Compensation (2026-08-12)
 
 **Context**: ACCOUNT-005 — account-service provisioned the Keycloak identity first, then created the local user. Two trust/consistency gaps: (a) when IAM returned no user id, the code fell back to the client-supplied `externalId` — a public caller could seed arbitrary identity data; (b) if local persistence failed after provisioning, the Keycloak user stayed as an orphan with no cleanup path.
