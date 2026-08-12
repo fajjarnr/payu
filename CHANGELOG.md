@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.74] - 2026-08-12
+
+### Changed
+
+- **GRPC-001 follow-up**: pemanggil account-service bermigrasi ke gRPC (server GRPC-001 live): transaction `AccountServiceAdapter` (account-ids via `GetAccountsByUser`, CB/Retry + fail-safe empty list — deny by default) dan lending `AccountGrpcClient` (account-ids; `getUserById` profile tetap REST — belum ada RPC gRPC). `common.proto` lending disinkronkan (PageRequest). Deployed 1.10.74, healthy, 0 ERROR/WARN.
+
 ## [1.10.73] - 2026-08-12
 
 ### Changed

@@ -1,0 +1,121 @@
+syntax = "proto3";
+package payu.account;
+
+import "payu/common/common.proto";
+
+option java_multiple_files = true;
+option java_package = "id.payu.account.grpc";
+option java_outer_classname = "AccountServiceProto";
+
+/**
+ * AccountService provides gRPC interface for account operations.
+ * This service is used for inter-service communication.
+ */
+service AccountService {
+  /**
+   * Get account by ID
+   */
+  rpc GetAccount(GetAccountRequest) returns (AccountResponse);
+
+  /**
+   * Get accounts by user ID
+   */
+  rpc GetAccountsByUser(GetAccountsByUserRequest) returns (stream AccountResponse);
+
+  /**
+   * Verify account exists and is active
+   */
+  rpc VerifyAccount(VerifyAccountRequest) returns (AccountVerificationResponse);
+
+  /**
+   * Create a new account
+   */
+  rpc CreateAccount(CreateAccountRequest) returns (AccountResponse);
+
+  /**
+   * Update account information
+   */
+  rpc UpdateAccount(UpdateAccountRequest) returns (AccountResponse);
+
+  /**
+   * Get account by account number
+   */
+  rpc GetAccountByNumber(GetAccountByNumberRequest) returns (AccountResponse);
+
+  /**
+   * Check if account exists
+   */
+  rpc AccountExists(AccountExistsRequest) returns (AccountExistsResponse);
+}
+
+message GetAccountRequest {
+  string account_id = 1;
+}
+
+message GetAccountsByUserRequest {
+  string user_id = 1;
+  payu.common.PageRequest page = 2;
+}
+
+message VerifyAccountRequest {
+  string account_id = 1;
+  string account_number = 2;
+}
+
+message AccountVerificationResponse {
+  bool valid = 1;
+  string account_id = 2;
+  string account_number = 3;
+  AccountStatus status = 4;
+  payu.common.ErrorDetail error = 5;
+}
+
+message CreateAccountRequest {
+  string user_id = 1;
+  string account_type = 2;
+  string currency = 3;
+  map<string, string> metadata = 4;
+}
+
+message UpdateAccountRequest {
+  string account_id = 1;
+  string account_type = 2;
+  AccountStatus status = 3;
+  map<string, string> metadata = 4;
+}
+
+message GetAccountByNumberRequest {
+  string account_number = 1;
+}
+
+message AccountExistsRequest {
+  string account_id = 1;
+}
+
+message AccountExistsResponse {
+  bool exists = 1;
+  AccountStatus status = 2;
+}
+
+message AccountResponse {
+  string account_id = 1;
+  string user_id = 2;
+  string account_number = 3;
+  string account_type = 4;
+  AccountStatus status = 5;
+  string currency = 6;
+  payu.common.Timestamp created_at = 7;
+  payu.common.Timestamp updated_at = 8;
+  payu.common.AuditInfo audit = 9;
+  map<string, string> metadata = 10;
+  payu.common.ErrorDetail error = 11;
+}
+
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
+  SUSPENDED = 3;
+  CLOSED = 4;
+  PENDING_VERIFICATION = 5;
+}

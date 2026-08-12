@@ -22,11 +22,16 @@ public class EnhancedCreditScoringService {
     private static final Logger log = LoggerFactory.getLogger(EnhancedCreditScoringService.class);
 
     private final AccountClient accountClient;
+    private final id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient;
     private final TransactionClient transactionClient;
     private final RulesEngineService rulesEngineService;
 
-    public EnhancedCreditScoringService(AccountClient accountClient, TransactionClient transactionClient, RulesEngineService rulesEngineService) {
+    public EnhancedCreditScoringService(AccountClient accountClient,
+                                        id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient,
+                                        TransactionClient transactionClient,
+                                        RulesEngineService rulesEngineService) {
         this.accountClient = accountClient;
+        this.accountGrpcClient = accountGrpcClient;
         this.transactionClient = transactionClient;
         this.rulesEngineService = rulesEngineService;
     }
@@ -49,7 +54,7 @@ public class EnhancedCreditScoringService {
             int months = accountTenure.getYears() * 12 + accountTenure.getMonths();
             fact.setTenureMonths(months);
 
-            java.util.List<java.util.UUID> accountIds = accountClient.getAccountIdsByUserId(userId.toString());
+            java.util.List<java.util.UUID> accountIds = accountGrpcClient.getAccountIdsByUserId(userId.toString());
             if (accountIds != null && !accountIds.isEmpty()) {
                 TransactionSummaryResponse summary = transactionClient
                         .getTransactionSummary(accountIds.get(0)).getData();

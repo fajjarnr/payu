@@ -29,13 +29,16 @@ class EnhancedCreditScoringServiceTest {
     @Mock
     private TransactionClient transactionClient;
 
+    @Mock
+    private id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient;
+
     private RulesEngineService rulesEngineService;
     private EnhancedCreditScoringService service;
 
     @BeforeEach
     void setUp() {
         rulesEngineService = new RulesEngineService();
-        service = new EnhancedCreditScoringService(accountClient, transactionClient, rulesEngineService);
+        service = new EnhancedCreditScoringService(accountClient, accountGrpcClient, transactionClient, rulesEngineService);
     }
 
     @Test
@@ -79,7 +82,7 @@ class EnhancedCreditScoringServiceTest {
 
         when(accountClient.getUserById(userId.toString()))
                 .thenReturn(id.payu.api.common.response.ApiResponse.success(user));
-        when(accountClient.getAccountIdsByUserId(userId.toString()))
+        when(accountGrpcClient.getAccountIdsByUserId(userId.toString()))
                 .thenReturn(java.util.List.of(userId));
         when(transactionClient.getTransactionSummary(userId))
                 .thenReturn(id.payu.api.common.response.ApiResponse.success(summary));
@@ -129,7 +132,7 @@ class EnhancedCreditScoringServiceTest {
 
         when(accountClient.getUserById(userId.toString()))
                 .thenReturn(id.payu.api.common.response.ApiResponse.success(user));
-        when(accountClient.getAccountIdsByUserId(userId.toString()))
+        when(accountGrpcClient.getAccountIdsByUserId(userId.toString()))
                 .thenReturn(java.util.List.of(userId));
         when(transactionClient.getTransactionSummary(userId))
                 .thenReturn(id.payu.api.common.response.ApiResponse.success(summary));

@@ -5,19 +5,133 @@ option java_multiple_files = true;
 option java_package = "id.payu.grpc.common";
 option java_outer_classname = "CommonProto";
 
+/**
+ * Money value object representing a monetary amount with currency.
+ * Uses string for amount to preserve BigDecimal precision.
+ */
 message Money {
+  // ISO 4217 currency code (e.g., "IDR", "USD")
   string currency = 1;
+
+  // Amount as string to maintain precision (e.g., "100000.00")
   string amount = 2;
 }
 
+/**
+ * Timestamp for cross-service communication.
+ * Compatible with Google Protobuf Timestamp.
+ */
 message Timestamp {
+  // Seconds since Unix epoch (1970-01-01T00:00:00Z)
   int64 seconds = 1;
+
+  // Nanoseconds adjustment (0-999999999)
   int32 nanos = 2;
 }
 
+/**
+ * Pagination request for list operations.
+ */
+message PageRequest {
+  // Page number (0-indexed)
+  int32 page = 1;
+
+  // Page size (max 1000)
+  int32 size = 2;
+
+  // Sort specification (e.g., "createdAt,desc")
+  string sort = 3;
+}
+
+/**
+ * Pagination response metadata.
+ */
+message PageResponse {
+  // Current page number (0-indexed)
+  int32 page = 1;
+
+  // Page size
+  int32 size = 2;
+
+  // Total number of elements across all pages
+  int64 total = 3;
+
+  // Total number of pages
+  int32 total_pages = 4;
+
+  // Whether this is the first page
+  bool first = 5;
+
+  // Whether this is the last page
+  bool last = 6;
+}
+
+/**
+ * Error detail for structured error responses.
+ */
 message ErrorDetail {
+  // Error code (e.g., "WALLET_001", "TXN_404")
   string code = 1;
+
+  // Human-readable error message
   string message = 2;
+
+  // Field name for validation errors
   string field = 3;
+
+  // Additional error metadata
   map<string, string> metadata = 4;
+}
+
+/**
+ * Empty message for void responses.
+ */
+message Empty {}
+
+/**
+ * Status wrapper for single entity operations.
+ */
+message StatusResponse {
+  bool success = 1;
+  string message = 2;
+  ErrorDetail error = 3;
+  Timestamp timestamp = 4;
+}
+
+/**
+ * UUID wrapper for service-to-service communication.
+ */
+message Uuid {
+  string value = 1;
+}
+
+/**
+ * Audit information for entity tracking.
+ */
+message AuditInfo {
+  string created_by = 1;
+  string updated_by = 2;
+  Timestamp created_at = 3;
+  Timestamp updated_at = 4;
+  int64 version = 5;
+}
+
+/**
+ * Tenant information for multi-tenant services.
+ */
+message TenantContext {
+  string tenant_id = 1;
+  string tenant_code = 2;
+}
+
+/**
+ * User context for authenticated requests.
+ */
+message UserContext {
+  string user_id = 1;
+  string email = 2;
+  string phone_number = 3;
+  repeated string roles = 4;
+  repeated string permissions = 5;
+  TenantContext tenant = 6;
 }
