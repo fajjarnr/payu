@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.75] - 2026-08-12
+
+### Added
+
+- **GRPC-001 lengkap**: RPC `GetUserProfile` di `AccountService.proto` + `AccountGrpcService` (kycStatus/createdAt/status untuk credit scoring; `AccountGrpcServiceTest` 8 test) — lending `AccountGrpcClient.getUserProfile` menggantikan Feign `getUserById`; Feign `AccountClient` lending dihapus total (semua query sync ke account-service kini gRPC). `common.proto` lending + proto account disinkronkan. Deployed 1.10.75, healthy, gRPC 9090 listening, 0 ERROR/WARN.
+
 ## [1.10.74] - 2026-08-12
 
 ### Changed

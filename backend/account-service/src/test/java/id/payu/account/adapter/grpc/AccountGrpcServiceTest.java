@@ -33,12 +33,14 @@ import static org.mockito.Mockito.when;
 class AccountGrpcServiceTest {
 
     private AccountPersistencePort persistencePort;
+    private id.payu.account.domain.port.out.UserPersistencePort userPersistencePort;
     private AccountGrpcService service;
 
     @BeforeEach
     void setUp() {
         persistencePort = mock(AccountPersistencePort.class);
-        service = new AccountGrpcService(persistencePort);
+        userPersistencePort = mock(id.payu.account.domain.port.out.UserPersistencePort.class);
+        service = new AccountGrpcService(persistencePort, userPersistencePort);
     }
 
     private Account account(UUID id, String number, AccountStatus status) {
@@ -142,6 +144,41 @@ class AccountGrpcServiceTest {
         assertThat(observer.error).isNull();
         assertThat(observer.value.getExists()).isTrue();
         assertThat(observer.value.getStatus().name()).isEqualTo("ACTIVE");
+    }
+
+    @Test
+    void getUserProfileReturnsKycAndTenureData() {
+        id.payu.account.domain.model.User user = id.payu.account.domain.model.User.builder()
+                .id(UUID.randomUUID())
+                .externalId("ext-1")
+                .username("scorer")
+                .kycStatus(id.payu.account.domain.model.KycStatus.VERIFIED)
+                .status(id.payu.account.domain.model.UserStatus.ACTIVE)
+                .createdAt(LocalDateTime.of(2025, 1, 1, 0, 0))
+                .build();
+        when(userPersistencePort.findByExternalId("ext-1")).thenReturn(Optional.of(user));
+
+        RecordingObserver<id.payu.account.grpc.UserProfileResponse> observer = new RecordingObserver<>();
+        service.getUserProfile(id.payu.account.grpc.GetUserProfileRequest.newBuilder()
+                .setUserId("ext-1").build(), observer);
+
+        assertThat(observer.error).isNull();
+        assertThat(observer.value.getKycStatus()).isEqualTo("VERIFIED");
+        assertThat(observer.value.getUsername()).isEqualTo("scorer");
+        assertThat(observer.value.getCreatedAt().getSeconds()).isGreaterThan(0);
+    }
+
+    @Test
+    void getUserProfileUnknownReturnsNotFound() {
+        when(userPersistencePort.findByExternalId("nobody")).thenReturn(Optional.empty());
+
+        RecordingObserver<id.payu.account.grpc.UserProfileResponse> observer = new RecordingObserver<>();
+        service.getUserProfile(id.payu.account.grpc.GetUserProfileRequest.newBuilder()
+                .setUserId("nobody").build(), observer);
+
+        assertThat(observer.error).isInstanceOf(StatusRuntimeException.class);
+        assertThat(((StatusRuntimeException) observer.error).getStatus().getCode())
+                .isEqualTo(Status.Code.NOT_FOUND);
     }
 
     @Test

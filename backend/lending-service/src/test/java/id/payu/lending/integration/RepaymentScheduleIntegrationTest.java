@@ -2,7 +2,6 @@ package id.payu.lending.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.lending.adapter.external.AccountClient;
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.LoanType;
@@ -49,7 +48,7 @@ class RepaymentScheduleIntegrationTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private AccountClient accountClient;
+    private id.payu.lending.adapter.client.AccountGrpcClient accountClient;
 
     @MockitoBean
     private TransactionClient transactionClient;

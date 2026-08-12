@@ -43,6 +43,11 @@ service AccountService {
   rpc GetAccountByNumber(GetAccountByNumberRequest) returns (AccountResponse);
 
   /**
+   * Get user profile by external id (lending credit scoring)
+   */
+  rpc GetUserProfile(GetUserProfileRequest) returns (UserProfileResponse);
+
+  /**
    * Check if account exists
    */
   rpc AccountExists(AccountExistsRequest) returns (AccountExistsResponse);
@@ -86,6 +91,23 @@ message UpdateAccountRequest {
 
 message GetAccountByNumberRequest {
   string account_number = 1;
+}
+
+message GetUserProfileRequest {
+  string user_id = 1;
+}
+
+message UserProfileResponse {
+  string user_id = 1;
+  string external_id = 2;
+  string username = 3;
+  string email = 4;
+  string phone_number = 5;
+  string full_name = 6;
+  AccountStatus status = 7;
+  string kyc_status = 8;
+  payu.common.Timestamp created_at = 9;
+  payu.common.ErrorDetail error = 10;
 }
 
 message AccountExistsRequest {

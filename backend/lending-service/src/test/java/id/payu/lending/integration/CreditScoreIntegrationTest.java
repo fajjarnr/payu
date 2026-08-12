@@ -2,7 +2,6 @@ package id.payu.lending.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.lending.adapter.external.AccountClient;
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +40,7 @@ class CreditScoreIntegrationTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private AccountClient accountClient;
+    private id.payu.lending.adapter.client.AccountGrpcClient accountClient;
 
     @MockitoBean
     private TransactionClient transactionClient;

@@ -1,6 +1,5 @@
 package id.payu.lending.application.service;
 
-import id.payu.lending.adapter.external.AccountClient;
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.CreditScoringFact;
 import id.payu.lending.dto.TransactionSummaryResponse;
@@ -21,16 +20,13 @@ public class EnhancedCreditScoringService {
 
     private static final Logger log = LoggerFactory.getLogger(EnhancedCreditScoringService.class);
 
-    private final AccountClient accountClient;
     private final id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient;
     private final TransactionClient transactionClient;
     private final RulesEngineService rulesEngineService;
 
-    public EnhancedCreditScoringService(AccountClient accountClient,
-                                        id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient,
+    public EnhancedCreditScoringService(id.payu.lending.adapter.client.AccountGrpcClient accountGrpcClient,
                                         TransactionClient transactionClient,
                                         RulesEngineService rulesEngineService) {
-        this.accountClient = accountClient;
         this.accountGrpcClient = accountGrpcClient;
         this.transactionClient = transactionClient;
         this.rulesEngineService = rulesEngineService;
@@ -44,7 +40,7 @@ public class EnhancedCreditScoringService {
         fact.setScore(baseScore);
 
         try {
-            UserResponse user = accountClient.getUserById(userId.toString()).getData();
+            UserResponse user = accountGrpcClient.getUserProfile(userId.toString());
             fact.setKycStatus(user.kycStatus());
 
             Period accountTenure = Period.between(

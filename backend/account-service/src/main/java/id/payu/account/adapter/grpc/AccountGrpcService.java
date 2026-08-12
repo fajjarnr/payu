@@ -30,9 +30,12 @@ import java.util.UUID;
 public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBase {
 
     private final AccountPersistencePort persistencePort;
+    private final id.payu.account.domain.port.out.UserPersistencePort userPersistencePort;
 
-    public AccountGrpcService(AccountPersistencePort persistencePort) {
+    public AccountGrpcService(AccountPersistencePort persistencePort,
+                              id.payu.account.domain.port.out.UserPersistencePort userPersistencePort) {
         this.persistencePort = persistencePort;
+        this.userPersistencePort = userPersistencePort;
     }
 
     @Override
@@ -125,6 +128,46 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
                     .setExists(account != null)
                     .setStatus(account != null ? toGrpcStatus(account.getStatus()) : id.payu.account.grpc.AccountStatus.ACCOUNT_STATUS_UNSPECIFIED)
                     .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void getUserProfile(id.payu.account.grpc.GetUserProfileRequest request,
+                               StreamObserver<id.payu.account.grpc.UserProfileResponse> responseObserver) {
+        try {
+            id.payu.account.domain.model.User user = userPersistencePort
+                    .findByExternalId(request.getUserId()).orElse(null);
+            if (user == null) {
+                responseObserver.onError(Status.NOT_FOUND
+                        .withDescription("User not found: " + request.getUserId())
+                        .asRuntimeException());
+            } else {
+                id.payu.account.grpc.UserProfileResponse.Builder builder =
+                        id.payu.account.grpc.UserProfileResponse.newBuilder()
+                                .setUserId(user.getId().toString())
+                                .setExternalId(user.getExternalId() == null ? "" : user.getExternalId())
+                                .setUsername(user.getUsername() == null ? "" : user.getUsername())
+                                .setEmail(user.getEmail() == null ? "" : user.getEmail())
+                                .setPhoneNumber(user.getPhoneNumber() == null ? "" : user.getPhoneNumber())
+                                .setFullName(user.getFullName() == null ? "" : user.getFullName())
+                                .setKycStatus(user.getKycStatus() == null ? "" : user.getKycStatus().name());
+                if (user.getStatus() != null) {
+                    builder.setStatus(switch (user.getStatus()) {
+                        case ACTIVE -> id.payu.account.grpc.AccountStatus.ACTIVE;
+                        case LOCKED, SUSPENDED -> id.payu.account.grpc.AccountStatus.SUSPENDED;
+                        case PENDING_VERIFICATION -> id.payu.account.grpc.AccountStatus.PENDING_VERIFICATION;
+                    });
+                }
+                if (user.getCreatedAt() != null) {
+                    builder.setCreatedAt(id.payu.grpc.common.Timestamp.newBuilder()
+                            .setSeconds(user.getCreatedAt().atZone(java.time.ZoneOffset.UTC).toEpochSecond())
+                            .build());
+                }
+                responseObserver.onNext(builder.build());
+            }
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

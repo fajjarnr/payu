@@ -3,6 +3,7 @@ package id.payu.lending.adapter.client;
 import id.payu.grpc.starter.config.GrpcChannelSupport;
 import id.payu.account.grpc.AccountServiceGrpc;
 import id.payu.account.grpc.GetAccountsByUserRequest;
+import id.payu.account.grpc.GetUserProfileRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import jakarta.annotation.PostConstruct;
@@ -16,8 +17,7 @@ import java.util.UUID;
 
 /**
  * gRPC client for account-service (GRPC-001 server live).
- * Replaces the Feign REST call for account-id resolution; the user-profile
- * lookup (getUserById) has no gRPC RPC yet and stays REST.
+ * Replaces the Feign REST calls for account-id resolution and user profile.
  */
 @Component
 public class AccountGrpcClient {
@@ -40,6 +40,31 @@ public class AccountGrpcClient {
     void destroy() {
         if (channel != null) {
             channel.shutdown();
+        }
+    }
+
+    /**
+     * User profile for credit scoring (kycStatus, createdAt tenure).
+     */
+    public id.payu.lending.dto.UserResponse getUserProfile(String userId) {
+        try {
+            id.payu.account.grpc.UserProfileResponse profile = stub.getUserProfile(
+                    GetUserProfileRequest.newBuilder().setUserId(userId).build());
+            return new id.payu.lending.dto.UserResponse(
+                    java.util.UUID.fromString(profile.getUserId()),
+                    profile.getExternalId(),
+                    profile.getUsername(),
+                    profile.getEmail(),
+                    profile.getPhoneNumber(),
+                    profile.getFullName(),
+                    null,
+                    profile.getStatus().name(),
+                    profile.getKycStatus(),
+                    java.time.LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochSecond(profile.getCreatedAt().getSeconds()),
+                            java.time.ZoneOffset.UTC));
+        } catch (io.grpc.StatusRuntimeException e) {
+            throw new RuntimeException("Failed to fetch user profile via gRPC: " + e.getStatus(), e);
         }
     }
 
