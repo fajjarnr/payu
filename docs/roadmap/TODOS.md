@@ -164,7 +164,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — CB-036 | FLOWS.md IMP-3 |
 | IMP-4 | 🟠 | notification | Flow improvement target: retry + fallback channel — CB-037 | FLOWS.md IMP-4 |
 | IMP-6 | 🟠 | transaction | Flow improvement target: QRIS idempotency DB — CB-017 | FLOWS.md IMP-6 |
-| INTEGRATION-CTX | 🟠 | qa | Account-service @SpringBootTest context pre-existing broken: `No bean named 'entityManagerFactory'` (HibernateJpaAutoConfiguration tidak aktif di test; VaultConfigurationTest + OnboardingIntegrationTest red juga di HEAD bersih 2026-08-11). Blokir integration tests account & bukti CB-005; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
+| INTEGRATION-CTX | 🟠 | qa | Account-service integration test context: **VaultConfigurationTest FIXED** (2026-08-12: mock DataSource di TestJpaConfig) → default suite 132/132. Sisa: OnboardingIntegrationTest + BlindIndexAndTenantIsolationIntegrationTest masih `No bean named 'entityManagerFactory'` — test tanpa `@ActiveProfiles("test")` (activeProfiles=[]), dan app pakai multi-DS custom (`spring.datasource.primary.*`, bukan `spring.datasource.*`) sehingga dynamic property + `@ServiceConnection` tidak di-honor; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
 | — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
 | — | 🟢 | partner | Refund concurrency, callback HMAC, SNAP signature | SnapBiPaymentService, CallbackSignatureFilter |
 
