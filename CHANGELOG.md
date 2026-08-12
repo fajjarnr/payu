@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.67] - 2026-08-12
+
+### Fixed
+
+- **GRPC-015 (wallet)**: gRPC `getHistory` kini honor `PageRequest` (page/size) — sebelumnya streaming seluruh ledger entries; halaman di luar range → kosong; tanpa PageRequest → semua (kompatibel). `WalletGrpcServiceGetHistoryPagingTest` 3 test.
+- **GRPC-006 (integration)**: dependency mati `grpc-starter` dihapus dari pom (0 proto/0 kode/0 config) — build + test green.
+
+### Deployed
+
+- Podman stack `1.10.67` (wallet): healthy, 0 ERROR/WARN di log.
+
 ## [1.10.66] - 2026-08-12
 
 ### Fixed

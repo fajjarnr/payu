@@ -310,8 +310,15 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
             List<LedgerEntry> entries = walletService.getLedgerEntriesByAccountId(accountId);
 
-            for (LedgerEntry entry : entries) {
-                id.payu.wallet.grpc.LedgerEntry grpcEntry = toGrpcLedgerEntry(entry);
+            // GRPC-015: honor PageRequest instead of streaming the whole history.
+            int page = request.hasPage() ? request.getPage().getPage() : 0;
+            int size = request.hasPage() && request.getPage().getSize() > 0
+                    ? request.getPage().getSize() : entries.size();
+            int from = Math.min(page * size, entries.size());
+            int to = Math.min(from + size, entries.size());
+
+            for (int i = from; i < to; i++) {
+                id.payu.wallet.grpc.LedgerEntry grpcEntry = toGrpcLedgerEntry(entries.get(i));
                 responseObserver.onNext(grpcEntry);
             }
 

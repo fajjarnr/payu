@@ -87,13 +87,6 @@
             <version>${camel.version}</version>
         </dependency>
 
-        <!-- PayU gRPC Starter -->
-        <dependency>
-            <groupId>id.payu</groupId>
-            <artifactId>grpc-starter</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- PayU Shared Starters -->
         <dependency>
             <groupId>id.payu</groupId>
