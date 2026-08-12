@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-232: Fallback Chains Need an Order + a Ceiling Comment (2026-08-12)
+
+**Context**: CB-037 — notification retry existed (2/4/8 min backoff) but a failed channel went straight to retry; no cross-channel fallback. FLOWS.md IMP-4 defines the order: push → email → SMS.
+
+**Lesson**:
+- Build the chain as primary-channel-first, then the documented order minus duplicates. First success wins; only when ALL channels fail do you schedule the retry. Log the fallback (WARN, channel + notification id) — silent fallback is another false-success cousin.
+- Plain-JUnit beats fighting a broken @QuarkusTest infra: package-private `@Inject` fields are directly assignable from a same-package test (service + mock senders + mock repository port), and `@Transactional`/scheduler annotations are inert without the runtime — the unit under test is the pure logic.
+- `handleFailedNotification` sets FAILED then immediately reschedules to PENDING while retries remain — assert the FINAL state (PENDING + scheduledAt + retryCount), not the intermediate FAILED.
+
+**Applied evidence**: notification 82/82; `NotificationServiceFallbackTest` 4/4 red-first; CHANGELOG 1.10.61; CB-037 closed.
+
 ## L-231: @Version Entities + Unidirectional OneToMany + NOT NULL FK = Three Traps (2026-08-12)
 
 **Context**: DISPUTE-002 — dispute update flows (investigate/evidence/reject/resolve) all 500/409'd once the integration tests could run.

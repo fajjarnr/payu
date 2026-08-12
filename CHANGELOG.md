@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.61] - 2026-08-12
+
+### Added
+
+- **Notification fallback channel (CB-037 / IMP-4)**: when the primary channel fails, `NotificationService` tries the remaining channels in FLOWS.md order (PUSH → EMAIL → SMS) before scheduling a retry — first success delivers (status SENT, fallback WARN log with channel). Applied to both the direct send path and `retryPendingNotifications`; the existing exponential backoff (2/4/8 min, max 3) is unchanged. `ponytail:` the same recipient string is reused across channels; a per-channel recipient map is the upgrade path once real providers land.
+
+### Validation
+
+- `notification-service` 82 tests / 0 failures (default suite) — new plain-JUnit `NotificationServiceFallbackTest` 4/4: SMS→email fallback, SMS+email→push fallback, all-fail → retry scheduled with backoff, primary success never touches fallback senders.
+
 ## [1.10.60] - 2026-08-12
 
 ### Fixed
