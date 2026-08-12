@@ -162,7 +162,7 @@ class DisbursementServiceTest {
             disbursement.process();
             disbursement.setReservationId("reservation-001");
 
-            when(disbursementRepository.findById(any()))
+            when(disbursementRepository.findByIdForUpdate(any()))
                     .thenReturn(Optional.of(disbursement));
             when(disbursementRepository.save(any()))
                     .thenAnswer(invocation -> invocation.getArgument(0));
@@ -175,6 +175,54 @@ class DisbursementServiceTest {
             assertThat(result.getBankReference()).isEqualTo("BANK-REF-123");
             assertThat(result.getCompletedAt()).isNotNull();
             verify(walletService).commitBalance(any(), any(), eq("reservation-001"), any());
+        }
+
+        @Test
+        @DisplayName("Double COMPLETED callback is a no-op, commit runs once (IMP-5)")
+        void shouldNotCommitTwiceOnDoubleCompleteCallback() {
+            // Given
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
+                    SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-456"
+            );
+            disbursement.process();
+            disbursement.setReservationId("reservation-002");
+
+            when(disbursementRepository.findByIdForUpdate(any()))
+                    .thenReturn(Optional.of(disbursement));
+            when(disbursementRepository.save(any()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            // When
+            disbursementService.completeDisbursement(disbursement.getId(), "BANK-REF-1");
+            DisbursementEntity second = disbursementService.completeDisbursement(disbursement.getId(), "BANK-REF-1");
+
+            // Then
+            assertThat(second.getStatus()).isEqualTo(DisbursementStatus.COMPLETED);
+            verify(walletService, times(1)).commitBalance(any(), any(), eq("reservation-002"), any());
+        }
+
+        @Test
+        @DisplayName("FAILED callback after COMPLETED does not release funds (IMP-5)")
+        void shouldNotReleaseFundsWhenFailArrivesAfterComplete() {
+            // Given
+            DisbursementEntity disbursement = DisbursementEntity.createWithIdempotencyKey(
+                    SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-789"
+            );
+            disbursement.process();
+            disbursement.setReservationId("reservation-003");
+
+            when(disbursementRepository.findByIdForUpdate(any()))
+                    .thenReturn(Optional.of(disbursement));
+            when(disbursementRepository.save(any()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            // When
+            disbursementService.completeDisbursement(disbursement.getId(), "BANK-REF-2");
+            DisbursementEntity second = disbursementService.failDisbursement(disbursement.getId(), "late failure");
+
+            // Then
+            assertThat(second.getStatus()).isEqualTo(DisbursementStatus.COMPLETED);
+            verify(walletService, never()).releaseBalance(any(), any(), eq("reservation-003"), any());
         }
     }
 
@@ -192,7 +240,7 @@ class DisbursementServiceTest {
             disbursement.process();
             disbursement.setReservationId("reservation-001");
 
-            when(disbursementRepository.findById(any()))
+            when(disbursementRepository.findByIdForUpdate(any()))
                     .thenReturn(Optional.of(disbursement));
             when(disbursementRepository.save(any()))
                     .thenAnswer(invocation -> invocation.getArgument(0));

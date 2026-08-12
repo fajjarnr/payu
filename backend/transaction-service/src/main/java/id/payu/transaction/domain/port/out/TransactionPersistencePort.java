@@ -13,6 +13,12 @@ public interface TransactionPersistencePort {
     List<TransactionEntity> findByAccountId(UUID accountId, int page, int size);
     long countByAccountId(UUID accountId);
     List<TransactionEntity> findByReferenceNumber(String referenceNumber);
+
+    /**
+     * IMP-5: row locked FOR UPDATE — serializes concurrent callbacks so the
+     * terminal-status check in the settle flow is race-free.
+     */
+    List<TransactionEntity> findByReferenceNumberForUpdate(String referenceNumber);
     Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey);
     List<TransactionEntity> findExpiredPendingTransactions(Instant now);
     List<TransactionEntity> saveAll(Iterable<TransactionEntity> transactions);

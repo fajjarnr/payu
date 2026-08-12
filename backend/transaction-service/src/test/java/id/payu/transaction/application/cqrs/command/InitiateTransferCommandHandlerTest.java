@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,7 +66,7 @@ class InitiateTransferCommandHandlerTest {
                 .status(TransactionStatus.PENDING)
                 .reservationId("reservation-001")
                 .build();
-        when(transactionPersistencePort.findByReferenceNumber("TXN-CALLBACK-001"))
+        when(transactionPersistencePort.findByReferenceNumberForUpdate("TXN-CALLBACK-001"))
                 .thenReturn(List.of(transaction));
         when(transactionPersistencePort.save(transaction)).thenReturn(transaction);
 
@@ -92,7 +93,7 @@ class InitiateTransferCommandHandlerTest {
                 .status(TransactionStatus.PENDING)
                 .reservationId("reservation-002")
                 .build();
-        when(transactionPersistencePort.findByReferenceNumber("TXN-CALLBACK-002"))
+        when(transactionPersistencePort.findByReferenceNumberForUpdate("TXN-CALLBACK-002"))
                 .thenReturn(List.of(transaction));
         when(transactionPersistencePort.save(transaction)).thenReturn(transaction);
 
@@ -104,6 +105,32 @@ class InitiateTransferCommandHandlerTest {
         verify(walletServicePort).releaseBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq("reservation-002"), eq(Money.idr("100000").getAmount()));
         verify(eventPublisherPort).publishTransactionFailed(transaction, "Beneficiary account rejected");
+    }
+
+    @Test
+    void doubleCompletedCallbackCommitsAndPublishesOnce() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        TransactionEntity transaction = TransactionEntity.builder()
+                .id(transactionId)
+                .referenceNumber("TXN-CALLBACK-003")
+                .senderAccountId(senderAccountId)
+                .amount(Money.idr("100000"))
+                .type(TransactionType.BIFAST_TRANSFER)
+                .status(TransactionStatus.PENDING)
+                .reservationId("reservation-003")
+                .build();
+        when(transactionPersistencePort.findByReferenceNumberForUpdate("TXN-CALLBACK-003"))
+                .thenReturn(List.of(transaction));
+        when(transactionPersistencePort.save(transaction)).thenReturn(transaction);
+
+        handler.settleInterbankTransfer("TXN-CALLBACK-003", "COMPLETED", null);
+        TransactionEntity second = handler.settleInterbankTransfer("TXN-CALLBACK-003", "COMPLETED", null);
+
+        assertThat(second.getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        verify(walletServicePort, times(1)).commitBalance(
+                eq(senderAccountId), eq(transactionId.toString()), eq("reservation-003"), eq(Money.idr("100000").getAmount()));
+        verify(eventPublisherPort, times(1)).publishTransactionCompleted(transaction);
     }
 
     @Test

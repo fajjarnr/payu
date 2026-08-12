@@ -1,7 +1,9 @@
 package id.payu.transaction.adapter.persistence.repository;
 
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,6 +36,10 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionEntit
      * Global index ensures efficient lookup across all partitions.
      */
     Optional<TransactionEntity> findByReferenceNumber(String referenceNumber);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM TransactionEntity t WHERE t.referenceNumber = :referenceNumber")
+    Optional<TransactionEntity> findByReferenceNumberForUpdate(@Param("referenceNumber") String referenceNumber);
     Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey);
 
     /**

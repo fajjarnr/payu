@@ -200,8 +200,15 @@ public class DisbursementService implements DisbursementUseCase {
     public DisbursementEntity completeDisbursement(UUID id, String bankReference) {
         log.info("Completing disbursement: {} with bank reference: {}", id, bankReference);
 
-        DisbursementEntity disbursement = disbursementRepository.findById(id)
+        // IMP-5: row FOR UPDATE + terminal check — of two concurrent callbacks
+        // (COMPLETED racing FAILED) exactly one mutates; the loser is a no-op.
+        DisbursementEntity disbursement = disbursementRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
+
+        if (disbursement.getStatus() != DisbursementStatus.PROCESSING) {
+            log.info("Disbursement {} already in terminal status {}, callback no-op", id, disbursement.getStatus());
+            return disbursement;
+        }
 
         // Transition to COMPLETED
         disbursement.complete(bankReference);
@@ -222,8 +229,14 @@ public class DisbursementService implements DisbursementUseCase {
     public DisbursementEntity failDisbursement(UUID id, String reason) {
         log.info("Failing disbursement: {} with reason: {}", id, reason);
 
-        DisbursementEntity disbursement = disbursementRepository.findById(id)
+        // IMP-5: row FOR UPDATE + terminal check (see completeDisbursement)
+        DisbursementEntity disbursement = disbursementRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
+
+        if (disbursement.getStatus() != DisbursementStatus.PROCESSING) {
+            log.info("Disbursement {} already in terminal status {}, callback no-op", id, disbursement.getStatus());
+            return disbursement;
+        }
 
         // Transition to FAILED
         disbursement.fail(reason);

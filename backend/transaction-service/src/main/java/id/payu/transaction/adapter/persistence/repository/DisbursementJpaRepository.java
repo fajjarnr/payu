@@ -1,7 +1,9 @@
 package id.payu.transaction.adapter.persistence.repository;
 
 import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,10 @@ import java.util.UUID;
 public interface DisbursementJpaRepository extends JpaRepository<DisbursementEntity, UUID>, DisbursementJpaRepositoryCustom {
 
     Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM DisbursementEntity d WHERE d.id = :id")
+    Optional<DisbursementEntity> findByIdForUpdate(@Param("id") UUID id);
 
     @Query("SELECT d FROM DisbursementEntity d WHERE d.sourceAccountId = :accountId ORDER BY d.createdAt DESC")
     List<DisbursementEntity> findBySourceAccountId(@Param("accountId") UUID sourceAccountId,

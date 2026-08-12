@@ -163,7 +163,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
     @Transactional
     public TransactionEntity settleInterbankTransfer(String referenceNumber, String status, String failureReason) {
-        TransactionEntity transaction = transactionPersistencePort.findByReferenceNumber(referenceNumber)
+        // IMP-5: lock the row FOR UPDATE so concurrent callbacks serialize; the
+        // terminal check below is then race-free (exactly one callback mutates).
+        TransactionEntity transaction = transactionPersistencePort.findByReferenceNumberForUpdate(referenceNumber)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + referenceNumber));

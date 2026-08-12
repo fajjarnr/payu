@@ -71,6 +71,14 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
+    public List<TransactionEntity> findByReferenceNumberForUpdate(String referenceNumber) {
+        if (shardingConfig.isEnabled()) {
+            log.debug("Finding transaction by reference number for update {}", referenceNumber);
+        }
+        return transactionJpaRepository.findByReferenceNumberForUpdate(referenceNumber).stream().toList();
+    }
+
+    @Override
     public Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transactions by idempotency key {}", idempotencyKey);

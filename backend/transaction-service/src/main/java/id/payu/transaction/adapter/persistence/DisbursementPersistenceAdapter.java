@@ -55,6 +55,11 @@ public class DisbursementPersistenceAdapter implements DisbursementRepositoryPor
     }
 
     @Override
+    public Optional<DisbursementEntity> findByIdForUpdate(UUID id) {
+        return jpaRepository.findByIdForUpdate(id);
+    }
+
+    @Override
     public Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey) {
         return jpaRepository.findByIdempotencyKey(idempotencyKey);
     }

@@ -1749,7 +1749,9 @@ sequenceDiagram
 |:---|:---|:---:|:---|
 | Satu channel, sekali coba → **retry backoff + fallback channel** | Notifikasi tidak hilang saat satu channel down — perilaku e-wallet nyata |
 
-## IMP-5. Callback Idempotency Seragam (flow #7, #9, #10, #26)
+## IMP-5. Callback Idempotency Seragam (flow #7, #9, #10, #26) ✅ DONE (CB-038, 1.10.53)
+
+> **Status**: implemented 2026-08-12 — BI-FAST settle dan disbursement callback lock row FOR UPDATE + terminal check (VA callback sudah aman via conditional UPDATE CB-035). Biller tidak punya callback endpoint (bill-payment sinkron).
 
 ```mermaid
 sequenceDiagram
@@ -1796,4 +1798,4 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1 & IMP-2 = DONE; IMP-3..6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*
+*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1, IMP-2 & IMP-5 = DONE; IMP-3, IMP-4, IMP-6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*
