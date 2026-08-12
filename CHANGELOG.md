@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.57] - 2026-08-12
+
+### Added
+
+- **Onboarding IAM provision fail-closed + saga compensation (ACCOUNT-005)**: `UserApplicationService.registerUser` no longer falls back to the client-supplied `externalId` when IAM returns no user id — the request is rejected (a public caller must not seed identity data; the fallback was the trust gap). When local persistence fails after Keycloak provisioning, the IAM identity is removed via a new compensation path: `IdentityProviderPort.deleteUser` → gateway `DELETE /api/v1/auth/users/{userId}` → `AuthController.deleteUser` → `KeycloakService.deleteUser` (admin-client `users().get(id).remove()`). Compensation is best-effort behind the `authService` circuit breaker; a failed cleanup logs an orphan alert for manual action. The registration conflict (concurrent duplicate) path now also compensates.
+
+### Validation
+
+- `account-service` 132 tests, only the 2 pre-existing `VaultConfigurationTest` context errors (documented INTEGRATION-CTX, unchanged); `UserApplicationServiceTest` 9/9 with the two new ACCOUNT-005 tests (fail-closed, compensation).
+- `auth-service` 82 tests / 0 failures — `KeycloakServiceTest` deleteUser (success / blank id / propagated Keycloak error), `AuthControllerTest` DELETE contract (200 / 4xx / 500 `INTERNAL_ERROR`).
+
 ## [1.10.56] - 2026-08-12
 
 ### Added

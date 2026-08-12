@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-229: Cross-System Provisioning Needs Fail-Closed + Compensation (2026-08-12)
+
+**Context**: ACCOUNT-005 — account-service provisioned the Keycloak identity first, then created the local user. Two trust/consistency gaps: (a) when IAM returned no user id, the code fell back to the client-supplied `externalId` — a public caller could seed arbitrary identity data; (b) if local persistence failed after provisioning, the Keycloak user stayed as an orphan with no cleanup path.
+
+**Lesson**:
+- Never fall back to client-supplied identity fields when the authoritative source (IAM) is silent — reject instead. A public request body is untrusted input; a null IAM response is an outage, not a license to improvise.
+- For two-phase provisioning across systems, the second phase's failure MUST trigger a best-effort compensation of the first (delete the IAM user). Compensation itself may fail — log it as an orphan alert; that line IS the operational handoff.
+- Keycloak admin-client 26: `UserResource.remove()` returns `void` (throws on non-2xx) — no status check needed; `UsersResource.get(id)` chain mocks need deep stubbing (`realm`/`users`/`get`), with `lenient()` when a test skips the IAM call.
+- Stale shared-starter JARs in `~/.m2` cause phantom "cannot find symbol" compile errors (e.g. `ErrorCode.AUTH_BUS_009` exists in source but auth-service compiled against an old `api-commons` install). Reinstall the starter (`mvn -f backend/shared/<x>/pom.xml install -DskipTests`) before chasing a "pre-existing compile break".
+
+**Applied evidence**: account 132 tests (only the 2 documented pre-existing Vault context errors), auth 82/82; CHANGELOG 1.10.57; ACCOUNT-005 closed.
+
 ## L-228: Testcontainers on podman — Driver Pinning + MockMvc Security (2026-08-12)
 
 **Context**: CB-028 — dispute-service integration tests never ran (TEST-GAP): surefire excludes the `integration` group by default, and when run manually they died at context load. Two hidden traps:
