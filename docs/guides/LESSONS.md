@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-228: Testcontainers on podman — Driver Pinning + MockMvc Security (2026-08-12)
+
+**Context**: CB-028 — dispute-service integration tests never ran (TEST-GAP): surefire excludes the `integration` group by default, and when run manually they died at context load. Two hidden traps:
+
+**Lesson**:
+- Testcontainers `PostgreSQLContainer.getJdbcUrl()` ALWAYS appends `?loggerLevel=OFF` (set in `configure()`), and a `driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver` in `application-test.yml` (meant for `jdbc:tc:` URLs) makes Hikari reject a plain `jdbc:postgresql://` URL. Fix: override in `@DynamicPropertySource` — URL minus the query string, plus `driver-class-name: postgres::getDriverClassName`.
+- With `@SpringBootTest` + `@AutoConfigureMockMvc` (no `springSecurity()` post-processor), `@WithMockUser` is NOT populated into the request — the `AnonymousAuthenticationFilter` overwrites it and every request 403s. The passing sibling test pattern: `@AutoConfigureMockMvc(addFilters = false)` + `@EnableWebSecurity` + `@EnableMethodSecurity` in the test config + `@WithMockUser(roles = "X")` — method security (`@PreAuthorize`) still evaluates with the mock user.
+- Run integration tests on the podman lab: `DOCKER_HOST=unix:///run/user/1000/podman/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn test -Dtest.excluded.groups=`.
+- Symptom pattern: never-run integration tests that fail at load are usually TWO stacked bugs (driver mismatch + security wiring), not one.
+
+**Applied evidence**: RefundControllerIntegrationTest 9/9 green (was context-load error); new RefundConcurrencyIntegrationTest red-first (2×60000 both succeeded) then green (exactly 1) — CHANGELOG 1.10.55; CB-028 closed; residual DISPUTE-002 tracked.
+
 ## L-227: Unique Index + DataIntegrityViolation Catch = Deterministic Replay No-Op (2026-08-12)
 
 **Context**: CB-026/PROMO-001 — cashback saga replayed for the same source transaction produced a second cashback record (at-least-once delivery + saga retry). The fix: `CREATE UNIQUE INDEX uq_cashback_transaction_id` + catch `DataIntegrityViolationException` in the record step and return the existing row as success.

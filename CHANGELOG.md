@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.55] - 2026-08-12
+
+### Added
+
+- **Refund creation serialized per transaction (CB-028 / DISPUTE-001)**: `assertRefundable`'s sum-then-check raced — two concurrent partial refunds both read zero active refunds and together exceeded the transaction amount. `createFullRefund`/`createPartialRefund` now take a transaction-scoped PostgreSQL advisory lock (`pg_advisory_xact_lock(hashtextextended(transaction_id))`, new `RefundPersistencePort.lockTransaction`) before the sum; the lock works even when no refund rows exist yet and releases at commit/rollback. Exactly one of two concurrent refunds wins; the loser is rejected deterministically.
+- **Dispute-service integration tests unblocked (TEST-GAP partial)**: the three `*IntegrationTest` classes never ran — `application-test.yml` pinned `org.testcontainers.jdbc.ContainerDatabaseDriver` while the tests passed a plain `jdbc:postgresql://` URL (Testcontainers' `getJdbcUrl()` always appends `?loggerLevel=OFF`), and MockMvc never populated `@WithMockUser` (no `springSecurity()` post-processor) so every request hit the filter chain as anonymous → 403. Fixed via `DynamicPropertySource` overriding URL (strip query) + `driver-class-name: postgres::getDriverClassName` + `@AutoConfigureMockMvc(addFilters = false)` + `@EnableWebSecurity` + `@WithMockUser(roles = ...)` — the pattern already used by the passing `RefundControllerSecurityTest`. `RefundControllerIntegrationTest` 9/9 green, `RefundConcurrencyIntegrationTest` green (red-first: both 60000 refunds succeeded before the lock; exactly one after).
+
+### Validation
+
+- `dispute-service` 104 tests / 0 failures (default suite, CI-identical); with the `integration` group: 117/120 — the 3 red are pre-existing DisputeService persistence defects, tracked as `DISPUTE-002`.
+
 ## [1.10.54] - 2026-08-12
 
 ### Added
