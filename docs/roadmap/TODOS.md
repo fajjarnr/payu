@@ -58,7 +58,7 @@
 | CB-007 | qa | Money-safety regression suite lintas core — **CLOSED 2026-08-12** (13 passed / 2 skipped live: atomic transfer + replay idempotency + ledger double-entry + register + statement + ownership guard). Wiring pipeline ikut fase platform Tekton (DEPLOY-009), bukan GH Actions (project pindah dari GH Actions); billing coverage nunggu podman-compose parser fixed (L-225); QRIS positive case saat provider tersedia | Suite green (live) |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi — **E2E green 2026-08-12** (atomic 1-hop CB-034 + replay idempotency + ledger DEBIT/CREDIT legs + balance after) | E2E green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
-| PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection | CI gate aktif |
+| PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` SUDAH ada (push/PR paths + workflow_dispatch); sisa = setting GitHub branch protection (butuh `gh`/admin repo, belum tersedia di sesi ini) | CI gate aktif via GitHub settings |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
