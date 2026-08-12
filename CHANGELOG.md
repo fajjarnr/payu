@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.56] - 2026-08-12
+
+### Added
+
+- **Outbox failed events archived + alerted, never deleted (CB-018 / OUTBOX-001)**: `OutboxCleanupScheduler` previously DELETEd failed events past `failed-retention-days` (7) with only an INFO line — an at-least-once delivery trace could vanish silently. Failed events are now counted (`OutboxRepository.countFailedEventsOlderThan`, replaces the `@Modifying` delete — its removal is compile-time proof no code path deletes) and the cleanup run emits an `OUTBOX-001 ALERT` ERROR (count, cutoff, maxRetries) while rows stay archived in `outbox_events` as the audit record. Operator replays manually or moves them to the `.dlq` topic; alert is log-level until the platform drift-alert destination lands (DEVSECOPS-017).
+
+### Validation
+
+- `outbox-starter` 103 tests / 0 failures — scheduler test rewritten red-first to count+alert (no delete), integration test asserts the old failed event is counted but still present in the DB.
+
 ## [1.10.55] - 2026-08-12
 
 ### Added
