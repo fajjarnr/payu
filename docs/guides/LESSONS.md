@@ -2,6 +2,19 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-233: Realm Policy Drift + podman run DNS/Hosts Traps (2026-08-12)
+
+**Context**: CB-007 — registration 500'd with an opaque `invalidPasswordMinLengthMessage` because the Keycloak realm enforced length(12) while auth-service validated min 8; then the rebuilt auth-service container couldn't reach Keycloak or resolve its own name.
+
+**Lesson**:
+- Password policy has ONE source of truth: the realm. Service-side validation must match it or every registration fails at the IdP with a 500 instead of a deterministic 400.
+- `podman run` on an existing network does NOT reliably register the container name with aardvark DNS — add `--network-alias <name>` explicitly, or clients get DNS timeouts/503s.
+- `podman run` also skips the compose `extra_hosts` + minimal `/etc/hosts` mount (L-226): without `--add-host localhost:host-gateway` + the hosts bind-mount, JVM clients of the pinned `http://localhost:8099` Keycloak issuer throw JAX-RS `ProcessingException`.
+- A restarted Infinispan cache can hang serving HotRod while the container looks healthy ("unhealthy" healthcheck + client `NoCachePingOperation` timeouts) — clean recreate (`rm` + up) instead of restart.
+- Realm export `realmRoles` on service-account users is ignored by `--import-realm` — apply role assignments live via the admin API and keep the manifest as documentation.
+
+**Applied evidence**: regression suite 13/13 green live (CB-007/CB-015); register E2E through account→gateway→auth→Keycloak; CHANGELOG 1.10.62.
+
 ## L-232: Fallback Chains Need an Order + a Ceiling Comment (2026-08-12)
 
 **Context**: CB-037 — notification retry existed (2/4/8 min backoff) but a failed channel went straight to retry; no cross-channel fallback. FLOWS.md IMP-4 defines the order: push → email → SMS.

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.62] - 2026-08-12
+
+### Added
+
+- **Money-safety regression suite green against current contracts (CB-007 / CB-015)**: `tests/regression/test_financial_flows.py` modernized to the current platform — service-token auth (client_credentials), `wallets/{accountId}/balance|transactions|ledger` with the `ApiResponse` envelope, the atomic 1-hop wallet transfer (CB-034) with replay-same-referenceId no-double-debit, the user-facing `/transactions/transfer` sender-ownership guard asserted as 403, current register/statement contracts, and per-framework openapi/health paths. **Live evidence on the podman stack: 13 passed / 2 skipped / 0 failed** (transfer + replay idempotency + ledger DEBIT/CREDIT legs + register + statement).
+
+### Fixed
+
+- **Auth password policy aligned with the realm (min 12)**: the Keycloak realm enforces `length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(3)`; auth-service validated min 8, so registration failed at Keycloak with an opaque 500 (`invalidPasswordMinLengthMessage`) instead of a deterministic 400. `payu.security.password-policy.min-length` is now 12 (config + `@Value` default); tests updated.
+- **Keycloak realm manifest**: `payu-backend` service account now carries the `USER` realm role (client_credentials tokens gain `write:transaction` etc. via the authorities converter); note: realm export import ignores `realmRoles` for service-account users — the assignment must also be applied live (documented).
+- **Local compose**: `ARTEMIS_PASSWORD` default is now a strong dev secret (the JMS starter rejects the weak `admin` default in `container`/`grpc` profiles, which had billing crash-looping); artemis `AMQ_PASSWORD` matches.
+
 ## [1.10.61] - 2026-08-12
 
 ### Added
