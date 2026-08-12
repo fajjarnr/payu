@@ -16,9 +16,12 @@ import java.time.temporal.ChronoUnit;
 /**
  * Scheduler for cleaning up old outbox events.
  * <p>
- * This component periodically removes published and failed events that are older
- * than the configured retention period. This prevents the outbox table from
- * growing indefinitely.
+ * This component periodically removes published events older than the configured
+ * retention period and ALERTS on failed events instead of deleting them
+ * (OUTBOX-001): a failed event is a financial-integrity trace that must never
+ * disappear silently — it stays archived in {@code outbox_events} and the
+ * cleanup run emits an ERROR alert (count + cutoff) until an operator replays
+ * it or moves it to the {@code .dlq} topic.
  * <p>
  * The cleanup is disabled by default and can be enabled via configuration:
  * <pre>{@code
@@ -44,7 +47,7 @@ public class OutboxCleanupScheduler {
     private final OutboxProperties outboxProperties;
 
     /**
-     * Scheduled cleanup task that removes old published and failed events.
+     * Scheduled cleanup task.
      * <p>
      * The schedule is configurable via {@code payu.outbox.cleanup.cron}.
      * Default: daily at 2 AM.
@@ -69,15 +72,23 @@ public class OutboxCleanupScheduler {
                         publishedDeleted, outboxProperties.getCleanup().getRetentionDays());
             }
 
-            // Delete old failed events
-            int failedDeleted = outboxRepository.deleteFailedEventsOlderThan(
+            // OUTBOX-001: failed events are NEVER deleted — count them and alert
+            // so a lost event always has a trace. Replay manually or move to the
+            // .dlq topic; the archived rows are the audit record.
+            // ponytail: log-level alert until the platform drift-alert destination
+            // (Slack/PagerDuty via Vault) lands; same alert line can feed a
+            // Prometheus log-rule alert.
+            long failedArchived = outboxRepository.countFailedEventsOlderThan(
                     outboxProperties.getPublisher().getMaxRetries(), failedCutoff);
-            if (failedDeleted > 0) {
-                log.info("Deleted {} failed events older than {} days",
-                        failedDeleted, outboxProperties.getCleanup().getFailedRetentionDays());
+            if (failedArchived > 0) {
+                log.error("OUTBOX-001 ALERT: {} failed events older than {} days remain archived in outbox_events — "
+                                + "not deleted; replay them or move to the .dlq topic. cutoff={}, maxRetries={}",
+                        failedArchived, outboxProperties.getCleanup().getFailedRetentionDays(),
+                        failedCutoff, outboxProperties.getPublisher().getMaxRetries());
             }
 
-            log.info("Outbox cleanup completed. Total deleted: {}", publishedDeleted + failedDeleted);
+            log.info("Outbox cleanup completed. Deleted published: {}, archived failed (alerted): {}",
+                    publishedDeleted, failedArchived);
 
         } catch (Exception e) {
             log.error("Error during outbox cleanup", e);

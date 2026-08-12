@@ -61,7 +61,7 @@ class OutboxCleanupSchedulerTest {
         @DisplayName("should delete published events older than retention period")
         void shouldDeleteOldPublishedEvents() {
             when(outboxRepository.deletePublishedEventsOlderThan(any(Instant.class))).thenReturn(10);
-            when(outboxRepository.deleteFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(0);
+            when(outboxRepository.countFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(0L);
 
             scheduler.cleanupOldEvents();
 
@@ -75,16 +75,16 @@ class OutboxCleanupSchedulerTest {
         }
 
         @Test
-        @DisplayName("should delete failed events older than retention period with max retries")
-        void shouldDeleteOldFailedEvents() {
+        @DisplayName("OUTBOX-001: failed events are archived (never deleted) and alerted")
+        void shouldAlertOnFailedEventsInsteadOfDeleting() {
             when(outboxRepository.deletePublishedEventsOlderThan(any(Instant.class))).thenReturn(0);
-            when(outboxRepository.deleteFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(5);
+            when(outboxRepository.countFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(5L);
 
             scheduler.cleanupOldEvents();
 
             ArgumentCaptor<Integer> retriesCaptor = ArgumentCaptor.forClass(Integer.class);
             ArgumentCaptor<Instant> cutoffCaptor = ArgumentCaptor.forClass(Instant.class);
-            verify(outboxRepository).deleteFailedEventsOlderThan(retriesCaptor.capture(), cutoffCaptor.capture());
+            verify(outboxRepository).countFailedEventsOlderThan(retriesCaptor.capture(), cutoffCaptor.capture());
 
             assertThat(retriesCaptor.getValue()).isEqualTo(3);
 
@@ -102,8 +102,8 @@ class OutboxCleanupSchedulerTest {
             // Should not throw
             scheduler.cleanupOldEvents();
 
-            // Failed events deletion should not be called (exception occurred before)
-            verify(outboxRepository, never()).deleteFailedEventsOlderThan(anyInt(), any(Instant.class));
+            // Failed events count should not be called (exception occurred before)
+            verify(outboxRepository, never()).countFailedEventsOlderThan(anyInt(), any(Instant.class));
         }
 
         @Test
@@ -113,7 +113,7 @@ class OutboxCleanupSchedulerTest {
             cleanupProperties.setFailedRetentionDays(14);
 
             when(outboxRepository.deletePublishedEventsOlderThan(any(Instant.class))).thenReturn(0);
-            when(outboxRepository.deleteFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(0);
+            when(outboxRepository.countFailedEventsOlderThan(anyInt(), any(Instant.class))).thenReturn(0L);
 
             scheduler.cleanupOldEvents();
 

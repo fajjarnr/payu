@@ -371,9 +371,9 @@ class OutboxServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("Should delete failed events older than cutoff date")
+        @DisplayName("OUTBOX-001: failed events past cutoff are counted, never deleted")
         @Transactional
-        void shouldDeleteOldFailedEvents() {
+        void shouldCountFailedEventsWithoutDeleting() {
             // Given
             Instant oldCreatedAt = Instant.now().minus(10, ChronoUnit.DAYS);
             OutboxEvent oldFailedEvent = createFailedEventAt("Wallet", "w-1", "Event1", oldCreatedAt, 5);
@@ -386,12 +386,12 @@ class OutboxServiceIntegrationTest {
 
             // When
             Instant cutoffDate = Instant.now().minus(7, ChronoUnit.DAYS);
-            int deleted = outboxRepository.deleteFailedEventsOlderThan(3, cutoffDate);
+            long archived = outboxRepository.countFailedEventsOlderThan(3, cutoffDate);
             entityManager.flush();
 
-            // Then
-            assertThat(deleted).isEqualTo(1);
-            assertThat(outboxRepository.findById(oldFailedEvent.getId())).isEmpty();
+            // Then: counted but still archived (no DELETE)
+            assertThat(archived).isEqualTo(1);
+            assertThat(outboxRepository.findById(oldFailedEvent.getId())).isPresent();
             assertThat(outboxRepository.findById(recentFailedEvent.getId())).isPresent();
         }
 

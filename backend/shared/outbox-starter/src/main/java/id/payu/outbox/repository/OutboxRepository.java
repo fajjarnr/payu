@@ -151,16 +151,16 @@ public interface OutboxRepository extends JpaRepository<OutboxEvent, UUID> {
     int deletePublishedEventsOlderThan(@Param("cutoffDate") Instant cutoffDate);
 
     /**
-     * Deletes all failed events (exceeded max retries) older than the specified cutoff date.
-     * Used for cleanup of old, unrecoverable events.
+     * Counts failed events (exceeded max retries) older than the given cutoff.
+     * OUTBOX-001: failed events are never deleted — they are archived in place
+     * and this count drives the cleanup alert so an event cannot disappear silently.
      *
      * @param maxRetries the maximum number of retry attempts
-     * @param cutoffDate the date before which failed events should be deleted
-     * @return the number of rows deleted
+     * @param cutoffDate the date before which failed events should be counted
+     * @return the number of archived failed events
      */
-    @Modifying
-    @Query("DELETE FROM OutboxEvent o WHERE o.publishedAt IS NULL AND o.retryCount >= :maxRetries AND o.createdAt < :cutoffDate")
-    int deleteFailedEventsOlderThan(@Param("maxRetries") int maxRetries, @Param("cutoffDate") Instant cutoffDate);
+    @Query("SELECT COUNT(o) FROM OutboxEvent o WHERE o.publishedAt IS NULL AND o.retryCount >= :maxRetries AND o.createdAt < :cutoffDate")
+    long countFailedEventsOlderThan(@Param("maxRetries") int maxRetries, @Param("cutoffDate") Instant cutoffDate);
 
     /**
      * Finds an event by ID with pessimistic locking.
