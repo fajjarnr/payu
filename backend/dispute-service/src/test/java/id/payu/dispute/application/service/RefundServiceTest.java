@@ -79,6 +79,7 @@ class RefundServiceTest {
             assertThat(result.getCurrency()).isEqualTo(CURRENCY);
             assertThat(result.getReason()).isEqualTo(REASON);
             assertThat(result.getStatus()).isEqualTo(RefundStatus.PENDING);
+            verify(refundPersistencePort).lockTransaction(TRANSACTION_ID);
             verify(refundPersistencePort).save(any(Refund.class));
             verify(refundEventPublisherPort).publishRefundRequested(expectedRefund, transactionDetails);
         }
@@ -98,6 +99,7 @@ class RefundServiceTest {
             // Then
             assertThat(result.getAmount()).isEqualByComparingTo("125000.00");
             assertThat(result.getCurrency()).isEqualTo("USD");
+            verify(refundPersistencePort).lockTransaction(TRANSACTION_ID);
         }
 
         @Test

@@ -14,4 +14,11 @@ public interface RefundPersistencePort {
     List<Refund> findByStatus(RefundStatus status);
     List<Refund> findAll();
     void deleteById(UUID id);
+
+    /**
+     * DISPUTE-001: serialize refund creation per transaction. Transaction-scoped
+     * PostgreSQL advisory lock — works even when no refund rows exist yet, so
+     * concurrent sum-then-check cannot over-refund.
+     */
+    void lockTransaction(UUID transactionId);
 }

@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>These tests verify the full HTTP layer with actual database using Testcontainers.</p>
  */
 @SpringBootTest(classes = DisputeServiceApplication.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("integration")
@@ -74,7 +74,8 @@ class DisputeControllerIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.url", () -> postgres.getJdbcUrl().split("\\?")[0]);
+        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }

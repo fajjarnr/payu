@@ -151,6 +151,8 @@ public class RefundService implements RefundUseCase {
     }
 
     private void assertRefundable(UUID transactionId, BigDecimal requestedAmount, BigDecimal transactionAmount) {
+        refundPersistencePort.lockTransaction(transactionId);
+
         BigDecimal activeRefunds = refundPersistencePort.findByTransactionId(transactionId).stream()
                 .filter(refund -> refund.getStatus() == RefundStatus.PENDING
                         || refund.getStatus() == RefundStatus.PROCESSING

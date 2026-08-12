@@ -58,6 +58,11 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
     }
 
     @Override
+    public void lockTransaction(UUID transactionId) {
+        refundJpaRepository.lockTransaction(transactionId.toString());
+    }
+
+    @Override
     public List<Refund> findAll() {
         return refundJpaRepository.findAll()
                 .stream()

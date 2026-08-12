@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.test.context.support.WithAnonymousUser;
@@ -48,15 +49,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>These tests verify the full HTTP layer with actual database using Testcontainers.</p>
  */
 @SpringBootTest(classes = DisputeServiceApplication.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("integration")
 @Import(RefundControllerIntegrationTest.TestSecurityConfiguration.class)
-@WithMockUser(authorities = "dispute_agent")
+@WithMockUser(roles = "DISPUTE_AGENT")
 class RefundControllerIntegrationTest {
 
     @TestConfiguration
+    @EnableWebSecurity
     @EnableMethodSecurity
     static class TestSecurityConfiguration {
 
@@ -85,7 +87,8 @@ class RefundControllerIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.url", () -> postgres.getJdbcUrl().split("\\?")[0]);
+        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
