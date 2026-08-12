@@ -20,8 +20,8 @@
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.52` (2026-08-11) |
 | **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: ACCOUNT-006/007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 3 tickets + 26 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-12) |
-| **Last Updated** | 2026-08-12 (CB-026+028+018+037+015 + ACCOUNT-005 + PROD-046 + DISPUTE-002 closed; CB-007 live green; Active Tickets urut P0→P1) |
+| **Backlog Aktif** | 3 tickets + 25 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-12) |
+| **Last Updated** | 2026-08-12 (CB-026+028+018+037+015+007 + ACCOUNT-005 + PROD-046 + DISPUTE-002 closed; Active Tickets urut P0→P1) |
 
 ---
 
@@ -55,7 +55,7 @@
 | CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
 | CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — fail-closed DONE 2026-08-12; sisa provider nyata + delivery ID + E2E (butuh credential provider eksternal) | E2E terima; log tanpa PII |
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
-| CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) — **13 passed / 2 skipped live (2026-08-12)**: atomic transfer + replay idempotency + ledger double-entry + register + statement + ownership guard. Sisa: billing coverage (podman-compose parse broken, L-225), QRIS positive case, CI wiring | Suite green di CI |
+| CB-007 | qa | Money-safety regression suite lintas core — **CLOSED 2026-08-12** (13 passed / 2 skipped live: atomic transfer + replay idempotency + ledger double-entry + register + statement + ownership guard). Wiring pipeline ikut fase platform Tekton (DEPLOY-009), bukan GH Actions (project pindah dari GH Actions); billing coverage nunggu podman-compose parser fixed (L-225); QRIS positive case saat provider tersedia | Suite green (live) |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi — **E2E green 2026-08-12** (atomic 1-hop CB-034 + replay idempotency + ledger DEBIT/CREDIT legs + balance after) | E2E green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection | CI gate aktif |
