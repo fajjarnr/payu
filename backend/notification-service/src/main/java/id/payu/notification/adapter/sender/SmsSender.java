@@ -8,26 +8,39 @@ import org.jboss.logging.Logger;
 
 /**
  * SMS sender with configurable provider mode.
+ * <p>
+ * PROD-044: fail-closed by default. Without an explicitly configured real
+ * provider ({@code payu.sms.provider=TWILIO|VONAGE|ZENZIVA}) or an explicit
+ * dev {@code LOG} mode, {@link #send} returns {@code false} — a notification
+ * must never be reported SENT when nothing was delivered.
  */
 @ApplicationScoped
 public class SmsSender {
 
     private static final Logger LOG = Logger.getLogger(SmsSender.class);
 
-    @ConfigProperty(name = "payu.sms.provider", defaultValue = "LOG")
+    @ConfigProperty(name = "payu.sms.provider", defaultValue = "NONE")
     String smsProvider;
 
     public boolean send(Notification notification) {
-        return switch (smsProvider.toUpperCase()) {
+        return switch (smsProvider == null ? "NONE" : smsProvider.toUpperCase()) {
             case "LOG" -> sendViaLog(notification);
-            case "TWILIO" -> sendViaTwilio(notification);
-            case "VONAGE" -> sendViaVonage(notification);
-            case "ZENZIVA" -> sendViaZenziva(notification);
+            case "NONE" -> failClosed(notification);
+            case "TWILIO", "VONAGE", "ZENZIVA" -> {
+                LOG.warnf("SMS provider '%s' is not implemented yet — failing closed", smsProvider);
+                yield failClosed(notification);
+            }
             default -> {
-                LOG.warnf("Unknown SMS provider '%s', falling back to LOG mode", smsProvider);
-                yield sendViaLog(notification);
+                LOG.warnf("Unknown SMS provider '%s' — failing closed", smsProvider);
+                yield failClosed(notification);
             }
         };
+    }
+
+    private boolean failClosed(Notification notification) {
+        LOG.errorf("SMS not delivered: no working provider configured (payu.sms.provider='%s') — " +
+                "fail-closed, notification will be retried then marked FAILED", smsProvider);
+        return false;
     }
 
     private boolean sendViaLog(Notification notification) {
@@ -37,20 +50,5 @@ public class SmsSender {
         LOG.infof("║ To:      %-40s║", RecipientMasker.mask(notification.getRecipient()));
         LOG.infof("╚══════════════════════════════════════════════════╝");
         return true;
-    }
-
-    private boolean sendViaTwilio(Notification notification) {
-        LOG.warnf("Twilio SMS provider not yet implemented — falling back to LOG mode");
-        return sendViaLog(notification);
-    }
-
-    private boolean sendViaVonage(Notification notification) {
-        LOG.warnf("Vonage SMS provider not yet implemented — falling back to LOG mode");
-        return sendViaLog(notification);
-    }
-
-    private boolean sendViaZenziva(Notification notification) {
-        LOG.warnf("Zenziva SMS provider not yet implemented — falling back to LOG mode");
-        return sendViaLog(notification);
     }
 }

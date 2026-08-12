@@ -24,6 +24,10 @@ spring:
 payu:
   gateway:
     url: ${GATEWAY_URL:http://localhost:8080}
+  sms:
+    provider: ${SMS_PROVIDER:LOG}
+  push:
+    provider: ${PUSH_PROVIDER:LOG}
   keycloak:
     server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8099}
     realm: ${KEYCLOAK_REALM:payu}
@@ -44,3 +48,7 @@ management:
   zipkin:
     tracing:
       endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
+
+quarkus:
+  mailer:
+    mock: ${MAILER_MOCK:true}

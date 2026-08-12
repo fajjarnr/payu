@@ -10,7 +10,7 @@ quarkus:
           paths: "/public/health,/q/health/*"
           policy: permit
   oidc:
-    auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM}
+    auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM:payu}
     client-id: ${OIDC_CLIENT_ID:notification-service}
     connection-delay: 30S
     token:
@@ -52,7 +52,7 @@ quarkus:
     start-tls: REQUIRED
     username: ${SMTP_USERNAME:}
     password: ${SMTP_PASSWORD:}
-    mock: true
+    mock: false
   smallrye-openapi:
     info-title: PayU Notification Service API
     info-version: 1.0.0
@@ -71,10 +71,12 @@ quarkus:
           "service.environment":
             value: dev
             type: STRING
-# SMS provider configuration
+# SMS provider configuration — PROD-044: fail-closed by default (NONE).
+# Set SMS_PROVIDER=LOG only for explicit dev-mode logging; real providers
+# (TWILIO/VONAGE/ZENZIVA) are not implemented yet and also fail closed.
 payu:
   sms:
-    provider: ${SMS_PROVIDER:LOG}
+    provider: ${SMS_PROVIDER:NONE}
     # twilio:
     #   account-sid: ${TWILIO_SID:}
     #   auth-token: ${TWILIO_TOKEN:}
@@ -85,6 +87,8 @@ payu:
     # zenziva:
     #   userkey: ${ZENZIVA_USERKEY:}
     #   passkey: ${ZENZIVA_PASSKEY:}
+  push:
+    provider: ${PUSH_PROVIDER:NONE}
 "%dev":
   quarkus:
     hibernate-orm:

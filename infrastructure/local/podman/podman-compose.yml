@@ -912,6 +912,9 @@ services:
       PORT: "8080"
       OIDC_ISSUER: http://localhost:8099/realms/payu
       OIDC_JWK_SET_URI: http://localhost:8099/realms/payu/protocol/openid-connect/certs
+      SMS_PROVIDER: LOG
+      PUSH_PROVIDER: LOG
+      QUARKUS_MAILER_MOCK: "true"
     depends_on:
       payu-cache:
         condition: service_healthy
