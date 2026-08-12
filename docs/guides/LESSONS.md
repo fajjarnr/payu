@@ -2,6 +2,16 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-239: Phantom gRPC Protos + Test-Context gRPC Server Bind (2026-08-12)
+
+**Context**: GRPC-001/002 — AccountService/TransactionService protos existed with zero server implementations; services fell back to REST silently. Also, once real `@GrpcService` servers were added, every `@SpringBootTest` context started a real Netty server on 9090 and failed with `Failed to bind to address 0.0.0.0:9090` when the port was taken.
+
+**Lesson**:
+- A proto without an implementation is a phantom contract — callers silently degrade to REST and nobody notices. When adding the server: read RPCs first, keep money writes `UNIMPLEMENTED` fail-closed until they carry idempotency semantics (don't invent non-idempotent writes over gRPC).
+- Any test profile that boots the app with a gRPC server bean must set `payu.grpc.server.enabled: false` (the starter property — NOT `spring.grpc.server.enabled`), otherwise the Netty bind collides (or fails in CI).
+- ArchUnit layered rules don't know about new adapter packages — add the layer (`Adapter.Grpc`) explicitly or the rule fails with confusing "may only be accessed by" violations.
+- Generated gRPC enums may not mirror domain enums (proto `AccountStatus` has no FROZEN) — map explicitly and test the mapping.
+
 ## L-238: A Scanned @SpringBootConfiguration in the App Package Tree Poisons Every Test Context (2026-08-12)
 
 **Context**: INTEGRATION-CTX — `OnboardingIntegrationTest`/`BlindIndexAndTenantIsolationIntegrationTest` failed with `No bean named 'entityManagerFactory'` even with Testcontainers + `@DynamicPropertySource`. Root cause: `MonitoringTestConfiguration` (a `@SpringBootConfiguration` with `@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration, DataSourceAutoConfiguration, FlywayAutoConfiguration, ...})`) lived in `id.payu.account.monitoring` — inside the application's component-scan path. Every full-context test that scanned the app silently lost JPA/DataSource/Flyway/Kafka/Security auto-configuration. The monitoring tests "worked" only because `@SpringBootTest` discovered that class as their configuration, while the integration tests (different package) discovered `AccountServiceApplication` and got the poisoned scan. `@ConditionalOnProperty`/`@Profile` gating did NOT help — `@EnableAutoConfiguration(exclude=...)` is processed by the import selector regardless of conditions on the hosting class.
