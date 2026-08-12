@@ -8,12 +8,15 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface CashbackRepository extends JpaRepository<CashbackEntity, UUID> {
 
     List<CashbackEntity> findByAccountId(String accountId);
+
+    Optional<CashbackEntity> findByTransactionId(String transactionId);
 
     @Query("SELECT c FROM CashbackEntity c WHERE c.accountId = :accountId AND c.createdAt >= :start AND c.createdAt <= :end")
     List<CashbackEntity> findByAccountIdAndDateRange(@Param("accountId") String accountId,

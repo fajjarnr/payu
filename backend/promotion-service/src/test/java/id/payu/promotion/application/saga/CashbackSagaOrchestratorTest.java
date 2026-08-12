@@ -284,6 +284,42 @@ class CashbackSagaOrchestratorTest {
     }
 
     @Test
+    void testSaga_Replay_DuplicateTransactionRecordIsNoOp() {
+        // Given
+        CreateCashbackRequest request = new CreateCashbackRequest(
+            TEST_ACCOUNT_ID,
+            TEST_TRANSACTION_ID,
+            new BigDecimal("1000.00"),
+            "MERCHANT001",
+            "GROCERY",
+            null
+        );
+
+        CashbackSagaContext context = new CashbackSagaContext(request);
+        Cashback existing = createTestCashback(UUID.randomUUID(), new BigDecimal("20.00"));
+
+        when(walletServicePort.creditWallet(any(), any(), any(), any()))
+            .thenReturn(true);
+        when(sagaRepository.save(any()))
+            .thenAnswer(inv -> inv.getArgument(0));
+        when(sagaRepository.findById(any()))
+            .thenReturn(Optional.empty());
+        // PROMO-001: unique index on transaction_id rejects the duplicate insert
+        when(cashbackRepository.save(any(Cashback.class)))
+            .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key value violates unique constraint uq_cashback_transaction_id"));
+        when(cashbackRepository.findByTransactionId(TEST_TRANSACTION_ID))
+            .thenReturn(Optional.of(existing));
+
+        // When
+        SagaResult<CashbackSagaContext> result = orchestrator.executeCashbackSaga(context);
+
+        // Then: replay is a success no-op returning the existing record
+        assertTrue(result.isSuccess());
+        assertEquals(SagaState.COMPLETED, result.getFinalState());
+        assertEquals(existing.getId(), result.getData().getCashback().getId());
+    }
+
+    @Test
     void testSaga_Atomicity_WalletCreditMustSucceedBeforeCashbackRecord() {
         // This test verifies the core requirement of BUG-BE-062:
         // Cashback status should only be CREDITED after wallet credit succeeds

@@ -144,6 +144,23 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             return StepResult.success(context, Map.of(
                 "cashbackId", cashback.getId().toString()
             ));
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // PROMO-001: replay of an already-recorded transaction — the unique
+            // index on transaction_id rejects the duplicate insert. Return the
+            // existing record as a deterministic no-op (wallet credit is
+            // idempotent by reference, so no money moves twice).
+            LOG.info("Cashback already recorded for transaction={}, replay no-op", context.getTransactionId());
+            return cashbackRepository.findByTransactionId(context.getTransactionId())
+                .map(existing -> {
+                    context.setCashback(existing);
+                    context.setCashbackId(existing.getId());
+                    context.setCashbackRecorded(true);
+                    return StepResult.success(context, Map.of(
+                        "cashbackId", existing.getId().toString(),
+                        "replay", "true"
+                    ));
+                })
+                .orElseGet(() -> StepResult.failure(context, "Duplicate cashback insert but no existing record found: " + e.getMessage(), e));
         } catch (Exception e) {
             LOG.error("Failed to record cashback: error={}", e.getMessage());
             return StepResult.failure(context, "Failed to record cashback: " + e.getMessage(), e);
