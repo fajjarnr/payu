@@ -31,23 +31,19 @@ def pytest_configure(config):
     """Configure pytest markers"""
     config.addinivalue_line(
         "markers",
-        "critical: Critical financial flows that must always work",
-        error=True
+        "critical: Critical financial flows that must always work"
     )
     config.addinivalue_line(
         "markers",
-        "regression: Tests that prevent feature regressions",
-        error=True
+        "regression: Tests that prevent feature regressions"
     )
     config.addinivalue_line(
         "markers",
-        "performance: Performance and SLA tests",
-        error=True
+        "performance: Performance and SLA tests"
     )
     config.addinivalue_line(
         "markers",
-        "smoke: Quick smoke tests",
-        error=True
+        "smoke: Quick smoke tests"
     )
 
 

@@ -28,6 +28,7 @@ BILLING_URL = "http://localhost:8005"
 
 TEST_USERNAME = "customer1"
 TEST_PASSWORD = "P@ssw0rd123"
+TEST_CLIENT_SECRET = "payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c"
 TEST_OTP = "123456"
 
 
@@ -36,21 +37,23 @@ TEST_OTP = "123456"
 # =============================================================================
 @pytest.fixture
 def auth_token():
-    """Authenticate via Keycloak and return access token"""
+    """Service-to-service token via Keycloak client_credentials grant.
+
+    LOGIN-003 removed the password grant from the web path; the regression
+    suite authenticates as the trusted payu-backend service client instead.
+    """
     payload = {
-        "grant_type": "password",
+        "grant_type": "client_credentials",
         "client_id": "payu-backend",
-        "username": TEST_USERNAME,
-        "password": TEST_PASSWORD
+        "client_secret": TEST_CLIENT_SECRET
     }
 
-    # Login via Keycloak
     response = requests.post(
         f"{KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token",
         data=payload,
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
-    assert response.status_code == 200, f"Login failed: {response.text}"
+    assert response.status_code == 200, f"Token request failed: {response.text}"
 
     data = response.json()
     return data.get("access_token")
