@@ -29,6 +29,10 @@ public class NotificationService implements NotificationUseCase {
     private static final Logger LOG = Logger.getLogger(NotificationService.class);
     private static final int MAX_RETRY_ATTEMPTS = 3;
 
+    // IMP-4 / CB-037: fallback channel order (FLOWS.md) — push, then email, then SMS.
+    private static final List<NotificationChannel> FALLBACK_ORDER =
+            List.of(NotificationChannel.PUSH, NotificationChannel.EMAIL, NotificationChannel.SMS);
+
     @Inject
     NotificationRepositoryPort repositoryPort;
 
@@ -77,17 +81,11 @@ public class NotificationService implements NotificationUseCase {
 
         notification = repositoryPort.save(notification);
 
-        // Send based on channel
+        // Send based on channel, with fallback chain (IMP-4)
         try {
             notification.setStatus(NotificationStatus.SENDING);
 
-            boolean success = switch (request.channel()) {
-                case EMAIL -> emailSender.send(notification);
-                case SMS -> smsSender.send(notification);
-                case PUSH, IN_APP -> pushSender.send(notification);
-            };
-
-            if (success) {
+            if (attemptSendWithFallback(notification)) {
                 notification.setStatus(NotificationStatus.SENT);
                 notification.setSentAt(LocalDateTime.now());
                 LOG.infof("Notification sent: id=%s", notification.getId());
@@ -99,6 +97,39 @@ public class NotificationService implements NotificationUseCase {
         }
 
         return repositoryPort.save(notification);
+    }
+
+    /**
+     * IMP-4 / CB-037: try the primary channel, then fall back through
+     * PUSH -> EMAIL -> SMS. Returns true when any channel delivered.
+     * ponytail: the same recipient string is reused across channels — per-channel
+     * addresses (phone vs email vs device token) need a per-channel recipient map
+     * once real providers land.
+     */
+    private boolean attemptSendWithFallback(Notification notification) {
+        List<NotificationChannel> chain = new java.util.ArrayList<>();
+        chain.add(notification.getChannel());
+        for (NotificationChannel candidate : FALLBACK_ORDER) {
+            if (!chain.contains(candidate)) {
+                chain.add(candidate);
+            }
+        }
+
+        for (NotificationChannel channel : chain) {
+            boolean success = switch (channel) {
+                case EMAIL -> emailSender.send(notification);
+                case SMS -> smsSender.send(notification);
+                case PUSH, IN_APP -> pushSender.send(notification);
+            };
+            if (success) {
+                if (channel != notification.getChannel()) {
+                    LOG.warnf("Notification %s delivered via fallback channel %s (primary %s failed)",
+                            notification.getId(), channel, notification.getChannel());
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -140,13 +171,7 @@ public class NotificationService implements NotificationUseCase {
 
             try {
                 notification.setStatus(NotificationStatus.SENDING);
-                boolean success = switch (notification.getChannel()) {
-                    case EMAIL -> emailSender.send(notification);
-                    case SMS -> smsSender.send(notification);
-                    case PUSH, IN_APP -> pushSender.send(notification);
-                };
-
-                if (success) {
+                if (attemptSendWithFallback(notification)) {
                     notification.setStatus(NotificationStatus.SENT);
                     notification.setSentAt(LocalDateTime.now());
                     LOG.infof("Notification retry successful: id=%s", notification.getId());
