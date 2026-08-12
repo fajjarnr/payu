@@ -28,7 +28,7 @@ import java.util.Map;
  *   <li>payment.expired → payment.expired</li>
  *   <li>wallet.balance.changed → wallet.balance.changed</li>
  *   <li>investment-events → investment.* (purchased/redeemed/matured)</li>
- *   <li>payu.split-bills.* → split-bill.created/completed/payment.made</li>
+ *   <li>payu.split-bills.*.v1 → split-bill.created/completed/payment.made</li>
  *   <li>merchant.settlements → settlement.completed</li>
  *   <li>payment.link.events → payment-link.created/completed</li>
  * </ul>
@@ -57,11 +57,11 @@ public class FinancialEventConsumer {
                     "payment.expired",
                     "wallet.balance.changed",
                     "investment-events",
-                    "payu.split-bills.created",
-                    "payu.split-bills.activated",
-                    "payu.split-bills.cancelled",
-                    "payu.split-bills.payment.made",
-                    "payu.split-bills.completed",
+                    "payu.split-bills.created.v1",
+                    "payu.split-bills.activated.v1",
+                    "payu.split-bills.cancelled.v1",
+                    "payu.split-bills.payment.made.v1",
+                    "payu.split-bills.completed.v1",
                     "merchant.settlements",
                     "payment.link.events",
                     "escrow.held",
@@ -137,11 +137,11 @@ public class FinancialEventConsumer {
             case "payment.expired" -> "payment.expired";
             case "wallet.balance.changed" -> "wallet.balance.changed";
             case "investment-events" -> "investment.updated";
-            case "payu.split-bills.created" -> "split-bill.created";
-            case "payu.split-bills.activated" -> "split-bill.activated";
-            case "payu.split-bills.cancelled" -> "split-bill.cancelled";
-            case "payu.split-bills.payment.made" -> "split-bill.payment.made";
-            case "payu.split-bills.completed" -> "split-bill.completed";
+            case "payu.split-bills.created.v1" -> "split-bill.created";
+            case "payu.split-bills.activated.v1" -> "split-bill.activated";
+            case "payu.split-bills.cancelled.v1" -> "split-bill.cancelled";
+            case "payu.split-bills.payment.made.v1" -> "split-bill.payment.made";
+            case "payu.split-bills.completed.v1" -> "split-bill.completed";
             case "merchant.settlements" -> "settlement.completed";
             case "payment.link.events" -> "payment-link.updated";
             case "escrow.held" -> "escrow.held";

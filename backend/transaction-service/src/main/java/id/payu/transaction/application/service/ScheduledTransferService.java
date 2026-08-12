@@ -183,6 +183,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     .currency(scheduledTransfer.getCurrency())
                     .description(scheduledTransfer.getDescription())
                     .type(id.payu.transaction.dto.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
+                    .idempotencyKey("SCH-" + scheduledTransfer.getId() + "-" + scheduledTransfer.getExecutedCount())
                     .build();
 
             InitiateTransferCommand command = InitiateTransferCommand.from(request, scheduledTransfer.getSenderAccountId().toString());

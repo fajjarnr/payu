@@ -51,6 +51,9 @@ class SubscriptionServiceTest {
     @Mock
     org.springframework.jms.core.JmsTemplate jmsTemplate;
 
+    @Mock
+    id.payu.billing.domain.port.out.WalletPort walletPort;
+
     private SubscriptionPlan samplePlan;
     private UUID planId;
     private UUID subscriptionId;
@@ -101,6 +104,12 @@ class SubscriptionServiceTest {
         lenient().doNothing().when(eventPort).publishSubscriptionCreated(any(Subscription.class));
         lenient().doNothing().when(eventPort).publishChargeSucceeded(any(Subscription.class), any(SubscriptionCharge.class));
         lenient().doNothing().when(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+
+        // Default wallet behavior: reserve succeeds and commits without error
+        lenient().when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+                .thenReturn(new id.payu.billing.domain.port.out.WalletPort.ReserveResult("reservation-1", "RESERVED"));
+        lenient().doNothing().when(walletPort).commitReservation(anyString());
+        lenient().doNothing().when(walletPort).releaseReservation(anyString());
     }
 
     // ═══════════════════════════════════════════════════════
@@ -540,6 +549,72 @@ class SubscriptionServiceTest {
 
             verify(persistencePort).saveCharge(any(SubscriptionCharge.class));
             verify(persistencePort, atLeast(1)).saveSubscription(any(Subscription.class));
+        }
+
+        @Test
+        @DisplayName("should not mark charge succeeded when wallet reserve fails (SUB-001)")
+        void shouldNotMarkSucceededWhenWalletReserveFails() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+            when(walletPort.reserveBalance(anyString(), any(BigDecimal.class), anyString()))
+                    .thenReturn(new id.payu.billing.domain.port.out.WalletPort.ReserveResult(null, "FAILED"));
+
+            subscriptionService.processDueSubscriptions();
+
+            ArgumentCaptor<SubscriptionCharge> captor = ArgumentCaptor.forClass(SubscriptionCharge.class);
+            verify(persistencePort).saveCharge(captor.capture());
+            assertEquals(ChargeStatus.FAILED, captor.getValue().getStatus());
+            assertNotNull(captor.getValue().getFailureReason());
+            verify(walletPort, never()).commitReservation(anyString());
+            verify(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+        }
+
+        @Test
+        @DisplayName("should release reservation when wallet commit fails (SUB-001)")
+        void shouldReleaseReservationWhenCommitFails() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+            doThrow(new RuntimeException("wallet commit down"))
+                    .when(walletPort).commitReservation("reservation-1");
+
+            subscriptionService.processDueSubscriptions();
+
+            verify(walletPort).releaseReservation("reservation-1");
+            ArgumentCaptor<SubscriptionCharge> captor = ArgumentCaptor.forClass(SubscriptionCharge.class);
+            verify(persistencePort).saveCharge(captor.capture());
+            assertEquals(ChargeStatus.FAILED, captor.getValue().getStatus());
+            verify(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+        }
+
+        @Test
+        @DisplayName("should debit wallet before marking charge succeeded (SUB-001)")
+        void shouldDebitWalletBeforeMarkingSucceeded() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            subscriptionService.processDueSubscriptions();
+
+            verify(walletPort).reserveBalance(eq("acc-001"), eq(new BigDecimal("99000")), anyString());
+            verify(walletPort).commitReservation("reservation-1");
+            ArgumentCaptor<SubscriptionCharge> captor = ArgumentCaptor.forClass(SubscriptionCharge.class);
+            verify(persistencePort).saveCharge(captor.capture());
+            assertEquals(ChargeStatus.SUCCEEDED, captor.getValue().getStatus());
         }
     }
 

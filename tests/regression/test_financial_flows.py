@@ -11,7 +11,7 @@ import pytest
 import requests
 import time
 from typing import Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 
@@ -518,6 +518,79 @@ class TestAPICompatibility:
             response = requests.get(f"{service_url}/q/health/live")
             assert response.status_code == 200, \
                 f"Health check failed for {service_name}: {response.text}"
+
+
+# =============================================================================
+# VA Settlement Live E2E (CB-008 / MVP-003)
+# =============================================================================
+SIGNATURE_SECRET = b"local-development-callback-signature-secret"
+
+
+def _signed_va_callback(va_number, amount, pay_ref):
+    """Replicates the va-simulator's bank callback: HMAC-SHA256 signature over
+    '{timestamp}\\n{body}' with X-Timestamp / X-Signature / X-Idempotency-Key."""
+    import hashlib, hmac
+    body = json.dumps({
+        "vaNumber": va_number, "amount": amount, "currency": "IDR",
+        "paymentReference": pay_ref,
+        "paidAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "customerAccountNumber": "90000000000000000001", "customerAccountName": "E2E",
+    })
+    ts = str(int(time.time()))
+    signature = hmac.new(SIGNATURE_SECRET, f"{ts}\n{body}".encode(), hashlib.sha256).hexdigest()
+    ikey = str(uuid.uuid5(uuid.NAMESPACE_DNS, pay_ref))
+    return body, {"X-Timestamp": ts, "X-Signature": signature, "X-Idempotency-Key": ikey}
+
+
+@pytest.mark.regression
+class TestVirtualAccountSettlementE2E:
+
+    @pytest.mark.critical
+    def test_va_settlement_flow(self, auth_token):
+        """
+        CB-008/MVP-003: VA settlement live E2E.
+        Create VA (PENDING) -> bank callback -> PAID with paidAmount,
+        replay with the same Idempotency-Key does not double-charge.
+        """
+        headers = {"Authorization": f"Bearer {auth_token}", "Content-Type": "application/json"}
+        key = f"va-e2e-{uuid.uuid4()}"
+        response = requests.post(
+            f"{TRANSACTION_URL}/api/v1/payments/va",
+            headers={**headers, "Idempotency-Key": key},
+            json={
+                "settlementAccountId": "99999999-8888-7777-6666-555555555555",
+                "bankCode": "BCA", "partnerId": str(uuid.uuid4()),
+                "amount": "50000.0000", "currency": "IDR",
+                "description": "VA settlement E2E", "customerName": "E2E",
+                "externalId": key, "expiryHours": 24,
+            })
+        assert response.status_code in (200, 201), response.text
+        va = response.json()["data"]
+        assert va["status"] == "PENDING", va
+
+        pay_ref = f"PAY-{uuid.uuid4()}"
+        body, sig_headers = _signed_va_callback(va["vaNumber"], "50000.0000", pay_ref)
+        callback = requests.post(
+            f"{TRANSACTION_URL}/api/v1/payments/va/callback",
+            headers={**headers, **sig_headers},
+            json=json.loads(body))
+        assert callback.status_code == 200, callback.text
+        paid = callback.json()["data"]
+        assert paid["status"] == "PAID", paid
+        assert str(paid.get("paidAmount")) in ("50000.0", "50000.0000"), paid
+
+        # Replay the same bank payment — must stay PAID, never double-charged.
+        replay = requests.post(
+            f"{TRANSACTION_URL}/api/v1/payments/va/callback",
+            headers={**headers, **sig_headers},
+            json=json.loads(body))
+        assert replay.status_code == 200, replay.text
+        assert replay.json()["data"]["status"] == "PAID"
+
+        fetched = requests.get(
+            f"{TRANSACTION_URL}/api/v1/payments/va/{va['id']}", headers=headers).json()["data"]
+        assert fetched["status"] == "PAID"
+        assert fetched.get("paymentReference") == pay_ref
 
 
 # =============================================================================

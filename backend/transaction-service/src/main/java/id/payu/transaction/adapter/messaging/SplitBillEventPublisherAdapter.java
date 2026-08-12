@@ -43,7 +43,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", splitBill.getCreatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "SplitBillCreated", payload, null, TOPIC_SPLIT_BILLS + ".created");
+                "SplitBillCreated", payload, null, TOPIC_SPLIT_BILLS + ".created.v1");
         log.info("Created outbox event for split-bill-created: {}", splitBill.getId());
     }
 
@@ -58,7 +58,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", splitBill.getUpdatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "SplitBillActivated", payload, null, TOPIC_SPLIT_BILLS + ".activated");
+                "SplitBillActivated", payload, null, TOPIC_SPLIT_BILLS + ".activated.v1");
         log.info("Created outbox event for split-bill-activated: {}", splitBill.getId());
     }
 
@@ -73,7 +73,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", splitBill.getUpdatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "SplitBillCancelled", payload, null, TOPIC_SPLIT_BILLS + ".cancelled");
+                "SplitBillCancelled", payload, null, TOPIC_SPLIT_BILLS + ".cancelled.v1");
         log.info("Created outbox event for split-bill-cancelled: {}", splitBill.getId());
     }
 
@@ -92,7 +92,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", participant.getCreatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "ParticipantAdded", payload, null, TOPIC_SPLIT_BILLS + ".participant.added");
+                "ParticipantAdded", payload, null, TOPIC_SPLIT_BILLS + ".participant.added.v1");
         log.info("Created outbox event for participant-added: splitBillId={}, participantId={}",
                 splitBill.getId(), participant.getId());
     }
@@ -114,7 +114,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", participant.getUpdatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "PaymentMade", payload, null, TOPIC_SPLIT_BILLS + ".payment.made");
+                "PaymentMade", payload, null, TOPIC_SPLIT_BILLS + ".payment.made.v1");
         log.info("Created outbox event for payment-made: splitBillId={}, participantId={}, amount={}",
                 splitBill.getId(), participant.getId(), amount);
     }
@@ -133,7 +133,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", splitBill.getUpdatedAt());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "SplitBillCompleted", payload, null, TOPIC_SPLIT_BILLS + ".completed");
+                "SplitBillCompleted", payload, null, TOPIC_SPLIT_BILLS + ".completed.v1");
         log.info("Created outbox event for split-bill-completed: {}", splitBill.getId());
     }
 
@@ -155,7 +155,7 @@ public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPo
         payload.put("timestamp", java.time.Instant.now());
 
         outboxService.createEvent(AGGREGATE_TYPE, splitBill.getId().toString(),
-                "PaymentReminder", payload, null, TOPIC_SPLIT_BILLS + ".reminder");
+                "PaymentReminder", payload, null, TOPIC_SPLIT_BILLS + ".reminder.v1");
         log.info("Created outbox event for payment-reminder: splitBillId={}, participantId={}",
                 splitBill.getId(), participant.getId());
     }

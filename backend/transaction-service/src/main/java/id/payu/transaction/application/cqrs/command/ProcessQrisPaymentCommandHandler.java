@@ -58,6 +58,17 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
         // Verify the authenticated user owns the account being debited
         authorizationService.verifyAccountOwnership(command.accountId(), command.userId());
 
+        // CB-017: DB fallback for idempotency — replay protection survives cache
+        // expiry/eviction. The @Idempotent interceptor covers the fast path (cache
+        // TTL 24h); this covers anything that slips past it. Check runs in the
+        // same transaction that creates the row, so it cannot miss its own insert.
+        if (command.idempotencyKey() != null
+                && transactionPersistencePort.findByIdempotencyKey(command.idempotencyKey()).isPresent()) {
+            log.warn("Duplicate QRIS payment rejected, idempotency key: {}", command.idempotencyKey());
+            throw new id.payu.api.common.exception.BusinessException(
+                    "QRIS_001", "Duplicate QRIS payment: Idempotency-Key already used");
+        }
+
         String referenceNumber = generateReferenceNumber();
 
         TransactionEntity transaction = TransactionEntity.builder()
@@ -66,6 +77,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 .amount(command.amount())
                 .type(TransactionType.QRIS_PAYMENT)
                 .status(TransactionStatus.PENDING)
+                .idempotencyKey(command.idempotencyKey())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

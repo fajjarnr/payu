@@ -64,6 +64,21 @@ class FinancialEventConsumerTest {
     }
 
     @Test
+    @DisplayName("should map versioned split-bills topics (TX-001)")
+    void shouldMapVersionedSplitBillsTopics() {
+        assertEquals("split-bill.created",
+                consumer.deriveEventType("payu.split-bills.created.v1", record("payu.split-bills.created.v1", "{}")));
+        assertEquals("split-bill.activated",
+                consumer.deriveEventType("payu.split-bills.activated.v1", record("payu.split-bills.activated.v1", "{}")));
+        assertEquals("split-bill.cancelled",
+                consumer.deriveEventType("payu.split-bills.cancelled.v1", record("payu.split-bills.cancelled.v1", "{}")));
+        assertEquals("split-bill.payment.made",
+                consumer.deriveEventType("payu.split-bills.payment.made.v1", record("payu.split-bills.payment.made.v1", "{}")));
+        assertEquals("split-bill.completed",
+                consumer.deriveEventType("payu.split-bills.completed.v1", record("payu.split-bills.completed.v1", "{}")));
+    }
+
+    @Test
     @DisplayName("should rethrow on malformed payload so the record reaches the DLQ")
     void shouldRethrowOnMalformedPayload() {
         assertThrows(Exception.class,

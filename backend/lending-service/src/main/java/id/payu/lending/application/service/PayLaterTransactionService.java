@@ -5,6 +5,7 @@ import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.port.in.PayLaterTransactionUseCase;
 import id.payu.lending.domain.port.out.PayLaterPersistencePort;
 import id.payu.lending.domain.port.out.PayLaterTransactionPersistencePort;
+import id.payu.lending.domain.port.out.WalletPaymentPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,20 +26,43 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
 
     private final PayLaterPersistencePort payLaterPersistencePort;
     private final PayLaterTransactionPersistencePort transactionPersistencePort;
+    private final WalletPaymentPort walletPaymentPort;
 
     public PayLaterTransactionService(PayLaterPersistencePort payLaterPersistencePort, 
-                                      PayLaterTransactionPersistencePort transactionPersistencePort) {
+                                      PayLaterTransactionPersistencePort transactionPersistencePort,
+                                      WalletPaymentPort walletPaymentPort) {
         this.payLaterPersistencePort = payLaterPersistencePort;
         this.transactionPersistencePort = transactionPersistencePort;
+        this.walletPaymentPort = walletPaymentPort;
     }
 
     @Override
     @Transactional
     public PayLaterTransaction recordPurchase(UUID userId, String merchantName, BigDecimal amount, String description) {
+        return recordPurchase(userId, merchantName, amount, description, null);
+    }
+
+    @Override
+    @Transactional
+    public PayLaterTransaction recordPurchase(UUID userId, String merchantName, BigDecimal amount,
+                                              String description, String externalId) {
         validateAmount(amount);
         log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, merchantName);
 
-        PayLater payLater = payLaterPersistencePort.findByUserId(userId)
+        // PAYLATER-001: replay protection — the caller's idempotency key is the
+        // unique external_id, so a replay returns the original record instead of
+        // double-charging. The unique constraint on external_id is the backstop.
+        if (externalId != null && !externalId.isBlank()) {
+            java.util.Optional<PayLaterTransaction> existing = transactionPersistencePort.findByExternalId(externalId);
+            if (existing.isPresent()) {
+                log.info("Replay detected for PayLater purchase, returning existing: {}", existing.get().getId());
+                return existing.get();
+            }
+        }
+
+        // PAYLATER-001: pessimistic write lock serializes concurrent purchases
+        // so read-modify-write of usedCredit cannot lose updates.
+        PayLater payLater = payLaterPersistencePort.findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new IllegalArgumentException("PayLater account not found for user: " + userId));
 
         if (payLater.getStatus() != PayLaterStatus.ACTIVE) {
@@ -58,7 +82,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         payLaterPersistencePort.save(payLater);
 
         PayLaterTransaction transaction = new PayLaterTransaction();
-        transaction.setExternalId(generateExternalId());
+        transaction.setExternalId(externalId != null && !externalId.isBlank() ? externalId : generateExternalId());
         transaction.setPayLaterAccountId(payLater.getId());
         transaction.setType(TransactionType.PURCHASE);
         transaction.setAmount(amount);
@@ -71,6 +95,16 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
 
         PayLaterTransaction savedTransaction = transactionPersistencePort.save(transaction);
 
+        // PAYLATER-001: money movement — disbursement of the purchase amount into
+        // the user's wallet. Failure rolls the whole transaction back so the
+        // paylater record and usedCredit never exist without the wallet credit.
+        walletPaymentPort.creditAccount(
+                payLater.getUserId().toString(),
+                amount,
+                "IDR",
+                savedTransaction.getExternalId(),
+                "PayLater purchase disbursement");
+
         log.info("Recorded PayLater purchase transaction: {} for user: {}", savedTransaction.getId(), userId);
         return savedTransaction;
     }
@@ -78,10 +112,24 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
     @Override
     @Transactional
     public PayLaterTransaction recordPayment(UUID userId, BigDecimal amount) {
+        return recordPayment(userId, amount, null);
+    }
+
+    @Override
+    @Transactional
+    public PayLaterTransaction recordPayment(UUID userId, BigDecimal amount, String externalId) {
         validateAmount(amount);
         log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
 
-        PayLater payLater = payLaterPersistencePort.findByUserId(userId)
+        if (externalId != null && !externalId.isBlank()) {
+            java.util.Optional<PayLaterTransaction> existing = transactionPersistencePort.findByExternalId(externalId);
+            if (existing.isPresent()) {
+                log.info("Replay detected for PayLater payment, returning existing: {}", existing.get().getId());
+                return existing.get();
+            }
+        }
+
+        PayLater payLater = payLaterPersistencePort.findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new IllegalArgumentException("PayLater account not found for user: " + userId));
 
         BigDecimal newUsedCredit = payLater.getUsedCredit().subtract(amount);
@@ -97,7 +145,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         payLaterPersistencePort.save(payLater);
 
         PayLaterTransaction transaction = new PayLaterTransaction();
-        transaction.setExternalId(generateExternalId());
+        transaction.setExternalId(externalId != null && !externalId.isBlank() ? externalId : generateExternalId());
         transaction.setPayLaterAccountId(payLater.getId());
         transaction.setType(TransactionType.PAYMENT);
         transaction.setAmount(amount);
@@ -108,6 +156,12 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
         transaction.setUpdatedAt(LocalDateTime.now());
 
         PayLaterTransaction savedTransaction = transactionPersistencePort.save(transaction);
+
+        // PAYLATER-001: money movement — repayment debits the wallet. Failure
+        // rolls back the paylater record and usedCredit.
+        walletPaymentPort.collectRepayment(
+                payLater.getId(), userId, amount, "IDR",
+                savedTransaction.getExternalId(), "PayLater payment");
 
         log.info("Recorded PayLater payment transaction: {} for user: {}", savedTransaction.getId(), userId);
         return savedTransaction;

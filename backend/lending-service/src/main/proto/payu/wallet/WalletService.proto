@@ -9,6 +9,7 @@ option java_outer_classname = "WalletServiceProto";
 
 service WalletService {
   rpc RepayLoan(LoanRepaymentRequest) returns (TransactionResponse);
+  rpc Credit(CreditRequest) returns (TransactionResponse);
 }
 
 message LoanRepaymentRequest {
@@ -18,6 +19,14 @@ message LoanRepaymentRequest {
   string reference_id = 4;
   string loan_id = 5;
   string description = 6;
+}
+
+message CreditRequest {
+  string wallet_id = 1;
+  string account_id = 2;
+  payu.common.Money amount = 3;
+  string reference_id = 4;
+  string description = 5;
 }
 
 message TransactionResponse {

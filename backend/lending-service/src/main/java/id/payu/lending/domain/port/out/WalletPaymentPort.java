@@ -6,4 +6,11 @@ import java.util.UUID;
 public interface WalletPaymentPort {
     String collectRepayment(UUID loanId, UUID userId, BigDecimal amount, String currency,
                             String referenceId, String description);
+
+    /**
+     * Credit a user's wallet — PayLater purchase disburses the loan amount
+     * into the wallet. Idempotent by referenceId on the wallet side.
+     */
+    String creditAccount(String accountId, BigDecimal amount, String currency,
+                         String referenceId, String description);
 }

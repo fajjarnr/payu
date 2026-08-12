@@ -334,22 +334,19 @@ public class StatementService {
             .map(TransactionRecord::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Derive historical closing balance by reversing post-period transactions
+        // IMP-3: closing balance = ledger balance_after snapshot at period end,
+        // not a derivation from post-period transactions. Fall back to the old
+        // derivation only when the ledger has no entries up to the cutoff.
         BigDecimal closingBalance = currentBalance;
         if (endDate.isBefore(today)) {
-            List<TransactionRecord> postPeriodTransactions = transactionServiceClient.getTransactions(
-                customerId, endDate.plusDays(1), today);
-            for (TransactionRecord t : postPeriodTransactions) {
-                if (t.getType() == TransactionType.CREDIT) {
-                    closingBalance = closingBalance.subtract(t.getAmount());
-                } else {
-                    closingBalance = closingBalance.add(t.getAmount());
-                }
-            }
+            closingBalance = walletServiceClient.getBalanceAsOf(customerId, endDate)
+                .orElseGet(() -> deriveClosingFromPostPeriod(currentBalance, customerId, endDate, today));
         }
 
-        // Derive opening balance by reversing in-period transactions from closing balance
-        BigDecimal openingBalance = closingBalance.subtract(totalCredits).add(totalDebits);
+        // IMP-3: opening balance = ledger balance_after at the end of the day
+        // before the period; derived only as fallback.
+        BigDecimal openingBalance = walletServiceClient.getBalanceAsOf(customerId, startDate.minusDays(1))
+            .orElse(closingBalance.subtract(totalCredits).add(totalDebits));
 
         return StatementData.builder()
             .customerId(customerId)
@@ -361,6 +358,21 @@ public class StatementService {
             .transactionCount(transactions.size())
             .transactions(transactions)
             .build();
+    }
+
+    private BigDecimal deriveClosingFromPostPeriod(BigDecimal currentBalance, String customerId,
+                                                   LocalDate endDate, LocalDate today) {
+        BigDecimal closingBalance = currentBalance;
+        List<TransactionRecord> postPeriodTransactions = transactionServiceClient.getTransactions(
+            customerId, endDate.plusDays(1), today);
+        for (TransactionRecord t : postPeriodTransactions) {
+            if (t.getType() == TransactionType.CREDIT) {
+                closingBalance = closingBalance.subtract(t.getAmount());
+            } else {
+                closingBalance = closingBalance.add(t.getAmount());
+            }
+        }
+        return closingBalance;
     }
 
     /**

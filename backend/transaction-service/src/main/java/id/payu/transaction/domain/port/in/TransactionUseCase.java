@@ -102,6 +102,15 @@ public interface TransactionUseCase {
     }
 
     /**
+     * Process a QRIS payment with the Idempotency-Key header for DB-backed dedupe.
+     */
+    default void processQrisPayment(
+            id.payu.transaction.dto.ProcessQrisPaymentRequest request, String userId, String idempotencyKey) {
+        ProcessQrisPaymentCommand command = ProcessQrisPaymentCommand.from(request, userId, idempotencyKey);
+        processQrisPayment(command);
+    }
+
+    /**
      * @deprecated Use {@link #getTransaction(GetTransactionQuery)} instead
      */
     @Deprecated

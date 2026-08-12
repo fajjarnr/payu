@@ -83,6 +83,27 @@ class FxConversionServiceTest {
     }
 
     @Test
+    void createConversion_shouldNormalizeToAmountToScale4() {
+        FxConversion conversion = FxConversion.builder()
+                .id(UUID.randomUUID())
+                .accountId("account-123")
+                .fromCurrency("IDR")
+                .toCurrency("USD")
+                .fromAmount(new BigDecimal("1000000"))
+                .build();
+
+        when(fxRateUseCase.getCurrentRate("IDR", "USD")).thenReturn(testRate);
+        when(conversionRepository.save(any(FxConversion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(walletServicePort.debit(any(), any(), any(), any())).thenReturn(true);
+        when(walletServicePort.credit(any(), any(), any(), any())).thenReturn(true);
+
+        FxConversion result = fxConversionService.createConversion(conversion);
+
+        assertThat(result.getToAmount().scale()).isEqualTo(4);
+        assertThat(result.getToAmount().toPlainString()).isEqualTo("65.0000");
+    }
+
+    @Test
     void getConversion_shouldReturnConversion_whenExists() {
         UUID conversionId = UUID.randomUUID();
         FxConversion conversion = FxConversion.builder()

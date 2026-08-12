@@ -405,11 +405,12 @@ public class TransactionController extends BaseController {
     @Idempotent(required = true)
     @PreAuthorize("hasAuthority('write:payment')")
     public ResponseEntity<ApiResponse<Void>> processQrisPayment(
-            @Valid @RequestBody ProcessQrisPaymentRequest request
+            @Valid @RequestBody ProcessQrisPaymentRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
         try {
             String userId = extractUserId();
-            transactionUseCase.processQrisPayment(request, userId);
+            transactionUseCase.processQrisPayment(request, userId, idempotencyKey);
             return ResponseEntity.accepted()
                     .body(ApiResponse.<Void>success(null));
         } catch (BusinessException e) {

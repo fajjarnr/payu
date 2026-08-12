@@ -2,6 +2,25 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-234: podman-compose up Dependency Resolution + Stale-Image Restart Traps (2026-08-12)
+
+**Context**: CB-008/011/017/022/024/025/031/036 batch — full podman-compose redeploy. `podman-compose up -d --profile apps` hung for 30+ min and then **removed the core infra containers** (kafka/artemis/keycloak) while failing dependency resolution (`"payu-kafka" is not a valid container`) because the python provider resolves `depends_on` against container names, not service names.
+
+**Lesson**:
+- `podman-compose up` can tear down project containers before failing on a later dependency — start infra explicitly (`manage-podman.sh core`) and add `--no-deps` for app services; never let one long `up` own the whole project.
+- Containers on a compose network resolve each other by **container name** (`payu-kafka`) — the compose `service` name (`payu-kafka-kafka-bootstrap`) is only a DNS alias when the provider registers it. Hand-created containers need `--network-alias` matching the service name or JVM/Kafka clients get DNS resolution failures.
+- `podman restart` keeps the **old image** — a rebuilt image requires `podman rm` + `podman run` (or `--force-recreate`).
+- Image builds that `COPY target/app.jar` silently ship a stale jar when the host `mvn package` predates the source fix — rebuild the jar, then the image, then recreate the container.
+
+## L-235: Migration + Spring-Data Gotchas Surfaced by Live Boot (2026-08-12)
+
+**Context**: three services crash-looped on the fresh stack, all caught only by a real container boot, not by unit tests: promotion `V11__dedup_cashback_transaction_id.sql` failed with `function min(uuid) does not exist`; lending `findByUserIdForUpdate` was parsed as a property path; backoffice failed `Could not resolve placeholder 'BLIND_INDEX_KEY'`.
+
+**Lesson**:
+- PostgreSQL has **no `min(uuid)` aggregate** — dedup-keep-one-row must use `DISTINCT ON (...)` with an `ORDER BY` (earliest row).
+- A derived query named `findByUserIdForUpdate` is interpreted as property `userIdForUpdate`; a pessimistic-lock lookup needs an explicit `@Query("select p from ... where p.userId = :userId")` + `@Lock(PESSIMISTIC_WRITE)`. Repository method-name parsing only fails at context load, so unit tests mocking the port never catch it.
+- `@ConditionalOnProperty` values containing `${BLIND_INDEX_KEY}` are resolved at condition-evaluation time; a missing env kills the whole context. Shared security envs belong in one compose anchor (`x-local-security-environment`), not copy-pasted per service.
+
 ## L-233: Realm Policy Drift + podman run DNS/Hosts Traps (2026-08-12)
 
 **Context**: CB-007 — registration 500'd with an opaque `invalidPasswordMinLengthMessage` because the Keycloak realm enforced length(12) while auth-service validated min 8; then the rebuilt auth-service container couldn't reach Keycloak or resolve its own name.

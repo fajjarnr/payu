@@ -67,4 +67,29 @@ public class WalletGrpcPaymentAdapter implements WalletPaymentPort {
             throw new IllegalStateException("Wallet repayment call failed: " + e.getStatus(), e);
         }
     }
+
+    @Override
+    public String creditAccount(String accountId, BigDecimal amount, String currency,
+                                String referenceId, String description) {
+        try {
+            TransactionResponse response = walletStub
+                    .withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .credit(id.payu.wallet.grpc.CreditRequest.newBuilder()
+                            .setWalletId(accountId)
+                            .setAccountId(accountId)
+                            .setAmount(Money.newBuilder()
+                                    .setCurrency(currency)
+                                    .setAmount(amount.toPlainString())
+                                    .build())
+                            .setReferenceId(referenceId)
+                            .setDescription(description)
+                            .build());
+            if (!response.getSuccess()) {
+                throw new IllegalStateException("Wallet rejected PayLater credit");
+            }
+            return response.getTransactionId();
+        } catch (StatusRuntimeException e) {
+            throw new IllegalStateException("Wallet credit call failed: " + e.getStatus(), e);
+        }
+    }
 }

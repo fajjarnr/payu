@@ -272,10 +272,11 @@ public class LendingController extends BaseController {
     // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPurchase(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Valid @RequestBody PayLaterPurchaseRequest request) {
+            @Valid @RequestBody PayLaterPurchaseRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
         log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, request.merchantName());
         PayLaterTransaction transaction = payLaterTransactionService.recordPurchase(
-                userId, request.merchantName(), request.amount(), request.description());
+                userId, request.merchantName(), request.amount(), request.description(), idempotencyKey);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -298,9 +299,10 @@ public class LendingController extends BaseController {
     // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPayment(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Valid @RequestBody PayLaterPaymentRequest request) {
+            @Valid @RequestBody PayLaterPaymentRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
         log.info("Recording PayLater payment for user: {} with amount: {}", userId, request.amount());
-        PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, request.amount());
+        PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, request.amount(), idempotencyKey);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()

@@ -52,6 +52,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     private final SubscriptionPersistencePort persistencePort;
     private final SubscriptionEventPort eventPort;
     private final JmsTemplate jmsTemplate;
+    private final id.payu.billing.domain.port.out.WalletPort walletPort;
 
     // ═══════════════════════════════════════════════════════
     //  Plan Management
@@ -395,9 +396,25 @@ public class SubscriptionService implements SubscriptionUseCase {
         charge.setBillingPeriodEnd(sub.getCurrentPeriodEnd());
 
         try {
-            // In a full implementation, this would call WalletPort to debit the account.
-            // For now, we record the charge as succeeded (integration with wallet-service
-            // will be wired in a future story).
+            // SUB-001: mark succeeded ONLY after the wallet debit is committed.
+            // Reserve-then-commit keeps the charge idempotent via the charge's
+            // own idempotency key as the wallet reference.
+            id.payu.billing.domain.port.out.WalletPort.ReserveResult reservation =
+                    walletPort.reserveBalance(sub.getAccountId(), charge.getAmount(), idempotencyKey);
+            if (reservation == null || !"RESERVED".equals(reservation.status()) || reservation.reservationId() == null) {
+                throw new IllegalStateException("Insufficient balance or wallet reserve failed");
+            }
+            try {
+                walletPort.commitReservation(reservation.reservationId());
+            } catch (Exception commitError) {
+                try {
+                    walletPort.releaseReservation(reservation.reservationId());
+                } catch (Exception releaseError) {
+                    log.error("CRITICAL: failed to release reservation {} after commit failure: {}",
+                            reservation.reservationId(), releaseError.getMessage());
+                }
+                throw commitError;
+            }
             charge.markSucceeded();
             persistencePort.saveCharge(charge);
 

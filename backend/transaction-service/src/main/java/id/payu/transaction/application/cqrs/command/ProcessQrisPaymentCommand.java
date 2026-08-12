@@ -37,7 +37,11 @@ public record ProcessQrisPaymentCommand(
         String userId,
 
         @NotNull(message = "Account ID is required")
-        UUID accountId
+        UUID accountId,
+
+        @Size(max = 100, message = "Idempotency key is too long")
+        @Pattern(regexp = "^[a-zA-Z0-9\\-]+$", message = "Idempotency key contains invalid characters")
+        String idempotencyKey
 ) implements Command<Void> {
 
     /**
@@ -58,6 +62,13 @@ public record ProcessQrisPaymentCommand(
      * Factory method to create command from DTO.
      */
     public static ProcessQrisPaymentCommand from(ProcessQrisPaymentRequest request, String userId) {
+        return from(request, userId, null);
+    }
+
+    /**
+     * Factory method to create command from DTO and the Idempotency-Key header.
+     */
+    public static ProcessQrisPaymentCommand from(ProcessQrisPaymentRequest request, String userId, String idempotencyKey) {
         Money money = request.getCurrency() != null
                 ? Money.of(request.getAmount(), request.getCurrency())
                 : Money.idr(request.getAmount());
@@ -66,7 +77,8 @@ public record ProcessQrisPaymentCommand(
                 request.getQrisCode(),
                 money,
                 userId,
-                request.getAccountId()
+                request.getAccountId(),
+                idempotencyKey
         );
     }
 }

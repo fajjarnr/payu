@@ -3,6 +3,7 @@ package id.payu.statement.adapter.client;
 import id.payu.statement.domain.port.out.WalletServicePort;
 import id.payu.wallet.grpc.BalanceResponse;
 import id.payu.wallet.grpc.GetBalanceRequest;
+import id.payu.wallet.grpc.GetHistoryRequest;
 import id.payu.wallet.grpc.WalletServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -86,6 +87,38 @@ public class WalletGrpcAdapter implements WalletServicePort {
             log.error("gRPC getCurrentBalance error: customerId={}, status={}, message={}",
                     customerId, e.getStatus(), e.getMessage());
             throw new RuntimeException("Failed to fetch balance via gRPC for customer " + customerId + ": " + e.getStatus(), e);
+        }
+    }
+
+    @Override
+    public java.util.Optional<BigDecimal> getBalanceAsOf(String customerId, java.time.LocalDate endDate) {
+        log.info("gRPC getBalanceAsOf: customerId={}, endDate={}", customerId, endDate);
+        try {
+            GetHistoryRequest request = GetHistoryRequest.newBuilder()
+                    .setWalletId(customerId)
+                    .setAccountId(customerId)
+                    .build();
+
+            // Ledger entries are returned newest-first; the first entry at or
+            // before the cutoff is the balance_after snapshot at period end.
+            long cutoffSeconds = endDate.atTime(23, 59, 59)
+                    .atZone(java.time.ZoneId.systemDefault()).toEpochSecond();
+
+            java.util.Iterator<id.payu.wallet.grpc.LedgerEntry> entries = walletStub.getHistory(request);
+            while (entries.hasNext()) {
+                id.payu.wallet.grpc.LedgerEntry entry = entries.next();
+                if (entry.hasTimestamp() && entry.getTimestamp().getSeconds() <= cutoffSeconds) {
+                    if (entry.hasBalanceAfter() && !entry.getBalanceAfter().getAmount().isEmpty()) {
+                        return java.util.Optional.of(new BigDecimal(entry.getBalanceAfter().getAmount()));
+                    }
+                    return java.util.Optional.empty();
+                }
+            }
+            return java.util.Optional.empty();
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC getBalanceAsOf error: customerId={}, status={}, message={}",
+                    customerId, e.getStatus(), e.getMessage());
+            throw new RuntimeException("Failed to fetch balance-as-of via gRPC for customer " + customerId + ": " + e.getStatus(), e);
         }
     }
 }

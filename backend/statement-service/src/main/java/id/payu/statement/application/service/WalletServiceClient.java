@@ -48,6 +48,18 @@ public class WalletServiceClient implements WalletServicePort {
         }
     }
 
+    @Override
+    public java.util.Optional<BigDecimal> getBalanceAsOf(String customerId, LocalDate endDate) {
+        // IMP-3: ledger snapshot is served over gRPC (WalletGrpcAdapter, @Primary).
+        // This deprecated REST fallback has no balance-as-of endpoint — report
+        // empty so the service falls back to its derivation path.
+        log.warn("getBalanceAsOf not supported by REST wallet client (gRPC is primary); customerId={}", customerId);
+        return java.util.Optional.empty();
+    }
+
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(WalletServiceClient.class);
+
     @Data
     private static class WalletBalanceResponse {
         private BigDecimal balance;

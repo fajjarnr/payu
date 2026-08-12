@@ -69,7 +69,9 @@ public class FxConversion {
     public BigDecimal getFromAmount() { return fromAmount; }
     public void setFromAmount(BigDecimal fromAmount) { this.fromAmount = fromAmount; }
     public BigDecimal getToAmount() { return toAmount; }
-    public void setToAmount(BigDecimal toAmount) { this.toAmount = toAmount; }
+    public void setToAmount(BigDecimal toAmount) {
+        this.toAmount = toAmount == null ? null : toAmount.setScale(4, java.math.RoundingMode.HALF_EVEN);
+    }
     public BigDecimal getExchangeRate() { return exchangeRate; }
     public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
     public BigDecimal getFee() { return fee; }

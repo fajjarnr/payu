@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.63] - 2026-08-12
+
+### Added
+
+- **P2 backlog aksi selesai (CB-008/011/017/022/024/025/031/036)**: seluruh item P2 (ADR-0023) di `docs/roadmap/TODOS.md` closed.
+  - **CB-025 fx (FX-002)**: `FxConversion.setToAmount` dinormalisasi `setScale(4, HALF_EVEN)` — semua jalur konversi (create/estimate/reverse) kini menyimpan `DECIMAL(19,4)`-parity; guard reverse COMPLETED→REVERSED sudah ter-cover test. `FxConversionServiceTest` scale-4 test.
+  - **CB-011 transaction (TX-001)**: topic split-bills di-version → `payu.split-bills.<event>.v1` (publisher + partner `FinancialEventConsumer` mapping + test). Outbox-starter sudah menolak topic non-canonical, jadi publish lama akan runtime-fail.
+  - **CB-031 transaction (TX-004)**: scheduled transfer pakai idempotency key deterministik `SCH-<id>-<executedCount>` per eksekusi — replay/overlap tidak double-debit (dedupe di `InitiateTransferCommandHandler.findByIdempotencyKey`). `ScheduledTransferServiceTest`.
+  - **CB-017 transaction (QRIS-001/IMP-6)**: idempotency QRIS kini punya **DB fallback + fail-closed** — `findByIdempotencyKey` di-query dalam transaksi yang sama sebelum debit, key di-persist di `transactions.idempotency_key`; replay → `QRIS_001` BusinessException, tidak double-charge walau cache TTL 24h habis. Header `Idempotency-Key` di-thread controller→command→handler. `ProcessQrisPaymentCommandHandlerTest`.
+  - **CB-022 billing (SUB-001)**: subscription charge **hanya sukses setelah wallet debit** — reserve→commit via `WalletPort`; commit gagal → release + dunning; reserve gagal → charge FAILED + `publishChargeFailed`. `SubscriptionServiceTest` (reserve-fail / commit-fail-release / debit-before-succeeded).
+  - **CB-024 lending (PAYLATER-001)**: PayLater purchase/payment sekarang **money movement nyata** — purchase credit wallet (gRPC `Credit` RPC, disburse), payment debit wallet (`collectRepayment`); **pessimistic lock** `findByUserIdForUpdate` (@Query+@Lock PESSIMISTIC_WRITE) menutup race read-modify-write usedCredit; **idempotency** via `X-Idempotency-Key` → `externalId` (unique constraint backstop, replay return existing). Proto `Credit` ditambahkan ke lending copy; `@Version` di-wire lewat adapter mapping. `PayLaterTransactionServiceTest` 9 test.
+  - **CB-036 statement (IMP-3)**: opening/closing balance statement = **ledger `balance_after` snapshot** (`WalletGrpcAdapter.getBalanceAsOf` via gRPC `GetHistory`, filter ≤ cutoff, fallback ke derivasi lama bila ledger kosong) — bukan derive transaksi pasca-periode. `StatementServiceTest` (ledger-snapshot + fallback).
+  - **CB-008 transaction (MVP-003)**: **VA settlement live E2E green** di podman stack — create VA PENDING → bank callback (HMAC-signed, replika va-simulator) → PAID + paidAmount, replay callback tidak double-charge, `payment.completed` outbox event ter-publish. Ditambahkan ke suite sebagai `TestVirtualAccountSettlementE2E`.
+
+- **Regression suite live: 16/16 passed / 0 failed** (`tests/regression/test_financial_flows.py`) terhadap podman stack 1.10.63 (15 money-safety + 1 VA settlement E2E).
+
+- **Local podman stack + semver image tag**: semua image `localhost/payu-*` di `infrastructure/local/podman/podman-compose.yml` kini `:${PAYU_VERSION:-1.10.63}` (sebelumnya `:local` + stale `:1.10.52`). 37 containers up; infra core (kafka/artemis/keycloak) + 31 service healthy.
+
+### Fixed
+
+- **promotion-service migration `V11__dedup_cashback_transaction_id.sql`**: `MIN(id)` pada kolom UUID tidak ada di PostgreSQL (crash-loop tiap boot). Ganti ke `DISTINCT ON (transaction_id) ... ORDER BY transaction_id, created_at` (keep earliest). Flyway v11 sukses.
+- **lending-service crash-loop**: `PayLaterRepository.findByUserIdForUpdate` di-parse sebagai property path (`userIdForUpdate`); diubah ke `@Query` + `@Lock(PESSIMISTIC_WRITE)`.
+- **backoffice-service crash-loop**: env `BLIND_INDEX_KEY` (+VERSION/PREVIOUS_KEYS) dipindah ke anchor `x-local-security-environment` di podman-compose — semua service yang memakai anchor kini fail-closed-consistent.
+- **Local compose ops**: `podman-compose up --profile apps` (python 1.5.0) memecah dependency core; workaround didokumentasikan di `LESSONS.md` L-234 (start core eksplisit + `--no-deps`, recreate bukan restart).
+
 ## [1.10.62] - 2026-08-12
 
 ### Added

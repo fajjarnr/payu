@@ -28,6 +28,12 @@ public interface PayLaterPersistencePort {
     Optional<PayLater> findByUserId(UUID userId);
 
     /**
+     * Find PayLater account by user ID with a pessimistic write lock,
+     * protecting read-modify-write of usedCredit against concurrent charges.
+     */
+    Optional<PayLater> findByUserIdForUpdate(UUID userId);
+
+    /**
      * Find PayLater account by ID.
      *
      * @param id the PayLater account ID

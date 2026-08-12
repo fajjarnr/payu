@@ -23,6 +23,7 @@ public class PayLater {
     private BigDecimal interestRate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long version;
 
     public PayLater() {}
 
@@ -109,6 +110,10 @@ public class PayLater {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    public Long getVersion() { return version; }
+
+    public void setVersion(Long version) { this.version = version; }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;

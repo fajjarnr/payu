@@ -31,6 +31,11 @@ public class PayLaterPersistenceAdapter implements PayLaterPersistencePort {
     }
 
     @Override
+    public Optional<PayLater> findByUserIdForUpdate(UUID userId) {
+        return payLaterRepository.findByUserIdForUpdate(userId).map(this::toDomain);
+    }
+
+    @Override
     public Optional<PayLater> findById(UUID id) {
         return payLaterRepository.findById(id).map(this::toDomain);
     }
@@ -48,6 +53,7 @@ public class PayLaterPersistenceAdapter implements PayLaterPersistencePort {
         payLater.setInterestRate(entity.getInterestRate());
         payLater.setCreatedAt(entity.getCreatedAt());
         payLater.setUpdatedAt(entity.getUpdatedAt());
+        payLater.setVersion(entity.getVersion());
         return payLater;
     }
 
@@ -64,6 +70,7 @@ public class PayLaterPersistenceAdapter implements PayLaterPersistencePort {
         entity.setInterestRate(payLater.getInterestRate());
         entity.setCreatedAt(payLater.getCreatedAt());
         entity.setUpdatedAt(payLater.getUpdatedAt());
+        entity.setVersion(payLater.getVersion());
         return entity;
     }
 }

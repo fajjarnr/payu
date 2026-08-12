@@ -140,6 +140,11 @@
 
 ## 🏁 Current Status Snapshot
 
+> ✅ **2026-08-12 — Seluruh P2 backlog aksi CLOSED + podman stack live (CB-008/011/017/022/024/025/031/036)**:
+> - **CB-025 fx** toAmount `setScale(4, HALF_EVEN)` (FX-002); **CB-011** split-bills topic `payu.split-bills.<event>.v1` (TX-001); **CB-031** scheduled transfer idempotency `SCH-<id>-<executedCount>` (TX-004); **CB-017** QRIS idempotency DB fallback + fail-closed (QRIS-001); **CB-022** subscription charge hanya setelah wallet debit (SUB-001); **CB-024** PayLater pessimistic lock + idempotency + money movement gRPC Credit/RepayLoan (PAYLATER-001); **CB-036** statement opening/closing = ledger `balance_after` snapshot (IMP-3); **CB-008** VA settlement live E2E green (MVP-003).
+> - Verification: backend full build `BUILD SUCCESS`; seluruh modul **3142 tests green (0 fail/0 error)**; regression suite live **16/16 passed** (15 money-safety + VA settlement E2E: create PENDING → HMAC-signed callback → PAID + paidAmount, replay no double-charge, `payment.completed` outbox event); podman stack **37 containers up** dengan image semver `:1.10.63`.
+> - **3 startup bug fixed saat deploy lokal**: promotion `V11` `min(uuid)` → `DISTINCT ON`; lending `findByUserIdForUpdate` → `@Query`+`@Lock`; backoffice `BLIND_INDEX_KEY` → anchor `x-local-security-environment`.
+
 > ✅ **2026-08-04 — PROD-022 live replay and dev runtime stabilization**:
 > - Existing repayment/schedule/payment IDs now remain managed by JPA repositories, wallet ledger account IDs accept the durable `LOAN_RECEIVABLE:<UUID>` reference, and the lending/wallet images were rebuilt and applied declaratively.
 > - Verification: lending persistence/messaging tests and wallet journal/schema tests passed; lending `1.8.113` and wallet `1.8.109` are Ready. Authenticated repayment replay returned 200 twice with the same idempotency key; wallet ledger debit/credit were both `341141.4100`, payment was `COMPLETED`, schedule was `FULLY_PAID`, and the lending outbox event was published with retry `0`.

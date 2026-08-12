@@ -225,9 +225,9 @@ class LendingControllerSecurityTest {
         assertXIdempotencyKey("processRepayment", UUID.class, String.class,
                 id.payu.lending.interfaces.dto.RepaymentRequest.class);
         assertXIdempotencyKey("recordPurchase", UUID.class,
-                id.payu.lending.interfaces.dto.PayLaterPurchaseRequest.class);
+                id.payu.lending.interfaces.dto.PayLaterPurchaseRequest.class, String.class);
         assertXIdempotencyKey("recordPayment", UUID.class,
-                id.payu.lending.interfaces.dto.PayLaterPaymentRequest.class);
+                id.payu.lending.interfaces.dto.PayLaterPaymentRequest.class, String.class);
     }
 
     @Test

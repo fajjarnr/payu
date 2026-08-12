@@ -50,6 +50,9 @@ class StatementServiceTest {
     @Mock
     private TransactionServiceClient transactionServiceClient;
 
+    @Mock
+    private id.payu.statement.adapter.storage.S3StorageAdapter s3StorageAdapter;
+
     @InjectMocks
     private StatementService statementService;
 
@@ -160,6 +163,79 @@ class StatementServiceTest {
             Page<StatementResponse> result = statementService.listStatements(testUserId.toString(), pageable);
 
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("generateStatement (ledger balance_after — IMP-3)")
+    class GenerateStatementLedgerBalances {
+
+        private StatementGenerationRequest request;
+
+        @BeforeEach
+        void init() {
+            org.springframework.test.util.ReflectionTestUtils.setField(statementService, "companyName", "PayU");
+            org.springframework.test.util.ReflectionTestUtils.setField(statementService, "companyAddress", "Jakarta");
+            org.springframework.test.util.ReflectionTestUtils.setField(statementService, "storagePath", "/tmp/statements");
+            request = new StatementGenerationRequest(testUserId.toString(), testAccountNumber, 2024, 1);
+            when(statementRepository.existsByCustomerIdAndStatementPeriod(testUserId.toString(), LocalDate.of(2024, 1, 1)))
+                    .thenReturn(false);
+            when(statementRepository.save(any(StatementEntity.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            when(s3StorageAdapter.isEnabled()).thenReturn(true);
+            when(s3StorageAdapter.uploadPdf(any(), any())).thenReturn("/s3/statement.pdf");
+        }
+
+        @Test
+        @DisplayName("should use ledger balance_after snapshot for closing and opening balance")
+        void shouldUseLedgerBalanceAfterForPastPeriodBalances() {
+            LocalDate period = LocalDate.of(2024, 1, 1);
+            LocalDate endDate = period.plusMonths(1).minusDays(1);
+            when(walletServiceClient.getCurrentBalance(testUserId.toString()))
+                    .thenReturn(new BigDecimal("25000000"));
+            when(transactionServiceClient.getTransactions(testUserId.toString(), period, endDate))
+                    .thenReturn(List.of());
+            when(walletServiceClient.getBalanceAsOf(testUserId.toString(), endDate))
+                    .thenReturn(Optional.of(new BigDecimal("15000000")));
+            when(walletServiceClient.getBalanceAsOf(testUserId.toString(), period.minusDays(1)))
+                    .thenReturn(Optional.of(new BigDecimal("10000000")));
+
+            statementService.generateStatement(request);
+
+            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            verify(statementRepository, atLeast(2)).save(captor.capture());
+            StatementEntity saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertThat(saved.getClosingBalance()).isEqualByComparingTo("15000000");
+            assertThat(saved.getOpeningBalance()).isEqualByComparingTo("10000000");
+            verify(transactionServiceClient, never()).getTransactions(
+                    eq(testUserId.toString()), eq(endDate.plusDays(1)), any());
+        }
+
+        @Test
+        @DisplayName("should fall back to derivation when no ledger snapshot exists")
+        void shouldFallBackToDerivationWithoutLedgerSnapshot() {
+            LocalDate period = LocalDate.of(2024, 1, 1);
+            LocalDate endDate = period.plusMonths(1).minusDays(1);
+            when(walletServiceClient.getCurrentBalance(testUserId.toString()))
+                    .thenReturn(new BigDecimal("15000000"));
+            when(transactionServiceClient.getTransactions(testUserId.toString(), period, endDate))
+                    .thenReturn(List.of(new StatementService.TransactionRecord(
+                            LocalDate.of(2024, 1, 15), "topup", new BigDecimal("2000000"),
+                            id.payu.statement.application.service.TransactionType.CREDIT)));
+            when(transactionServiceClient.getTransactions(testUserId.toString(), endDate.plusDays(1), LocalDate.now()))
+                    .thenReturn(List.of(new StatementService.TransactionRecord(
+                            LocalDate.of(2024, 2, 5), "purchase", new BigDecimal("5000000"),
+                            id.payu.statement.application.service.TransactionType.DEBIT)));
+            when(walletServiceClient.getBalanceAsOf(anyString(), any()))
+                    .thenReturn(Optional.empty());
+
+            statementService.generateStatement(request);
+
+            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            verify(statementRepository, atLeast(2)).save(captor.capture());
+            StatementEntity saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertThat(saved.getClosingBalance()).isEqualByComparingTo("20000000");
+            assertThat(saved.getOpeningBalance()).isEqualByComparingTo("18000000");
         }
     }
 
