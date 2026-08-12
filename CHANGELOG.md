@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.58] - 2026-08-12
+
+### Added
+
+- **Referral web↔backend contract aligned (PROD-046)**: web `Referral`/`ReferralSummaryResponse`/`CreateReferralRequest` types now match the backend contract (`code`→`referralCode`, `rewardAmount`→`referrerReward` + `refereeReward`/`rewardType`, `referralDate`/`completedDate`/`expiresAt`→`completedAt`/`expiryDate`, request now carries `referrerReward`/`refereeReward`/`rewardType`/`expiryDate`). `ReferralSummaryResponse` gains `totalEarnings` (backend: sum of COMPLETED `referrerReward`, `DECIMAL(19,4)` HALF_EVEN) — the web "poin dari referral" claim is now backed by a real figure, and the rewards page shows the summary `referralCode` instead of a hardcoded `-`.
+
+### Validation
+
+- `promotion-service` 252 tests / 0 failures — summary test asserts `totalEarnings = 50.0000` for one completed 50.00 referral.
+- `web-app` 31 referral/rewards tests / 0 failures, `tsc --noEmit` clean.
+
 ## [1.10.57] - 2026-08-12
 
 ### Added
