@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.54] - 2026-08-12
+
+### Added
+
+- **Cashback dedup by unique transaction_id (CB-026 / PROMO-001)**: `V11__dedup_cashback_transaction_id.sql` creates `uq_cashback_transaction_id` on `cashbacks(transaction_id)` (after de-duplicating existing rows) — the durable replay guard for at-least-once event delivery. `CashbackSagaOrchestrator.recordCashbackStep` catches the resulting `DataIntegrityViolationException` as a deterministic no-op: it returns the existing record as success (`replay=true`) instead of failing the saga; the wallet credit stays idempotent because it is already keyed by `transaction_id` as the wallet reference. New `CashbackPersistencePort.findByTransactionId` + repository lookup for the replay path.
+
+### Validation
+
+- `promotion-service` 251 tests / 0 failures — new `testSaga_Replay_DuplicateTransactionRecordIsNoOp` (duplicate insert → COMPLETED with existing cashback id, exactly one record for one transaction).
+
 ## [1.10.53] - 2026-08-12
 
 ### Added

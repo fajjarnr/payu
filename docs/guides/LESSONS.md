@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-227: Unique Index + DataIntegrityViolation Catch = Deterministic Replay No-Op (2026-08-12)
+
+**Context**: CB-026/PROMO-001 — cashback saga replayed for the same source transaction produced a second cashback record (at-least-once delivery + saga retry). The fix: `CREATE UNIQUE INDEX uq_cashback_transaction_id` + catch `DataIntegrityViolationException` in the record step and return the existing row as success.
+
+**Lesson**:
+- The DB unique index is the durable guard; the exception handler only decides the response shape. Never rely on app-level check-then-insert for replay dedup — a concurrent replay can pass the check.
+- On replay no-op, return the *existing* record (`replay=true`) rather than failing — the saga then completes with the original cashback id, and the wallet credit must already be idempotent by reference (key the credit by the same `transaction_id`).
+- If the duplicate insert fires but the lookup finds nothing, fail loudly (`orElseGet` failure) — silent success on "duplicate but no row" hides a lost-write bug.
+
+**Applied evidence**: promotion-service 251/251 tests, new replay test asserts COMPLETED + existing id; CHANGELOG 1.10.54; CB-026 closed.
+
 ## L-226: extra_hosts Is Not Enough for the JVM — localhost Must Not Resolve to Loopback (2026-08-12)
 
 **Context**: CB-034 deploy — after recreating the wallet/transaction/partner containers on the local podman stack, every authenticated call came back `401` with no log line, and the first 500s showed `JWT decode I/O error ... http://localhost:8099/.../certs: Connection refused`. `curl http://localhost:8099` from INSIDE the same container returned 200. A `java Resolve.java` probe inside the container proved it: the JDK resolves the literal name `localhost` to `[127.0.0.1, 169.254.1.2]` — loopback FIRST regardless of `/etc/hosts` order — and `Socket.connect` (used by RestTemplate/HttpURLConnection) never falls back, so it hit the container's own loopback where nothing listens on 8099.
