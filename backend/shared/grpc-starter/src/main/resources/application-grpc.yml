@@ -54,12 +54,14 @@ spring:
       enabled: false  # grpc-starter owns the Netty server lifecycle
       port: ${payu.grpc.server.port:9090}
     client:
-      wallet-service:
-        address: ${payu.grpc.clients.wallet-service.address:static://localhost:9090}
-        negotiation-type: ${payu.grpc.clients.wallet-service.negotiation-type:PLAINTEXT}
-      account-service:
-        address: ${payu.grpc.clients.account-service.address:static://localhost:9091}
-        negotiation-type: ${payu.grpc.clients.account-service.negotiation-type:PLAINTEXT}
-      transaction-service:
-        address: ${payu.grpc.clients.transaction-service.address:static://localhost:9092}
-        negotiation-type: ${payu.grpc.clients.transaction-service.negotiation-type:PLAINTEXT}
+      # GRPC-017: spring-grpc binds channels under spring.grpc.client.channels.<name>
+      channels:
+        wallet-service:
+          address: ${payu.grpc.clients.wallet-service.address:static://localhost:9090}
+          negotiation-type: ${payu.grpc.clients.wallet-service.negotiation-type:PLAINTEXT}
+        account-service:
+          address: ${payu.grpc.clients.account-service.address:static://localhost:9091}
+          negotiation-type: ${payu.grpc.clients.account-service.negotiation-type:PLAINTEXT}
+        transaction-service:
+          address: ${payu.grpc.clients.transaction-service.address:static://localhost:9092}
+          negotiation-type: ${payu.grpc.clients.transaction-service.negotiation-type:PLAINTEXT}

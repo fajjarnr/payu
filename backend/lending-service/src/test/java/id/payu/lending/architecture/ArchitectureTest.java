@@ -104,10 +104,12 @@ class ArchitectureTest {
                 .layer("Adapter").definedBy("..adapter..")
                 .layer("Config").definedBy("..config..")
                 .layer("Exception").definedBy("..exception..")
+                .layer("SharedStarters").definedBy("id.payu.grpc..", "id.payu.outbox..", "id.payu.cache..", "id.payu.security..", "id.payu.events..", "id.payu.resilience..")
                 .whereLayer("Domain").mayNotAccessAnyLayer()
-                .whereLayer("Application").mayOnlyAccessLayers("Domain", "Adapter", "Exception") // Allow adapter for now
-                .whereLayer("Adapter").mayOnlyAccessLayers("Domain", "Application", "Exception")
-                .because("Hexagonal architecture dependencies must flow inward (with temporary adapter allowance in application)")
+                .whereLayer("Application").mayOnlyAccessLayers("Domain", "Adapter", "Exception", "SharedStarters") // Allow adapter for now
+                .whereLayer("Adapter").mayOnlyAccessLayers("Domain", "Application", "Exception", "SharedStarters")
+                .whereLayer("Config").mayOnlyAccessLayers("Domain", "Application", "Adapter", "Exception", "SharedStarters")
+                .because("Hexagonal architecture dependencies must flow inward (with temporary adapter allowance in application; shared PayU starters are infrastructure)")
                 .check(classes);
     }
 }

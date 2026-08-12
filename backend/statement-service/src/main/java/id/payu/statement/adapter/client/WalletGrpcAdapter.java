@@ -5,8 +5,13 @@ import id.payu.wallet.grpc.BalanceResponse;
 import id.payu.wallet.grpc.GetBalanceRequest;
 import id.payu.wallet.grpc.GetHistoryRequest;
 import id.payu.wallet.grpc.WalletServiceGrpc;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import id.payu.grpc.starter.config.GrpcChannelSupport;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -27,6 +32,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Primary
 @Component("walletGrpcAdapter")
+// GRPC-016: wallet calls are idempotent by referenceId, so retry is safe;
+// circuit breaker prevents cascading failures when wallet is down.
+@CircuitBreaker(name = "walletService")
+@Retry(name = "walletService")
 public class WalletGrpcAdapter implements WalletServicePort {
 
     private static final Logger log = LoggerFactory.getLogger(WalletGrpcAdapter.class);
@@ -44,10 +53,10 @@ public class WalletGrpcAdapter implements WalletServicePort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
-        channel = ManagedChannelBuilder.forAddress(host, port)
-                .usePlaintext()
-                .build();
-        walletStub = WalletServiceGrpc.newBlockingStub(channel);
+        channel = GrpcChannelSupport.channel(walletServiceAddress);
+        walletStub = GrpcChannelSupport.withDeadline(
+                WalletServiceGrpc.newBlockingStub(channel),
+                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
     }
 

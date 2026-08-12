@@ -5,8 +5,13 @@ import id.payu.lending.domain.port.out.WalletPaymentPort;
 import id.payu.wallet.grpc.LoanRepaymentRequest;
 import id.payu.wallet.grpc.TransactionResponse;
 import id.payu.wallet.grpc.WalletServiceGrpc;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import id.payu.grpc.starter.config.GrpcChannelSupport;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -18,6 +23,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Component
+// GRPC-016: wallet calls are idempotent by referenceId, so retry is safe.
+@CircuitBreaker(name = "walletService")
+@Retry(name = "walletService")
 public class WalletGrpcPaymentAdapter implements WalletPaymentPort {
 
     @Value("${payu.grpc.clients.wallet-service.address:static://wallet-service:9090}")
@@ -28,11 +36,10 @@ public class WalletGrpcPaymentAdapter implements WalletPaymentPort {
 
     @PostConstruct
     void init() {
-        String[] parts = walletServiceAddress.replace("static://", "").split(":");
-        channel = ManagedChannelBuilder.forAddress(parts[0], parts.length > 1 ? Integer.parseInt(parts[1]) : 9090)
-                .usePlaintext()
-                .build();
-        walletStub = WalletServiceGrpc.newBlockingStub(channel);
+        channel = GrpcChannelSupport.channel(walletServiceAddress);
+        walletStub = GrpcChannelSupport.withDeadline(
+                WalletServiceGrpc.newBlockingStub(channel),
+                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
     }
 
     @PreDestroy

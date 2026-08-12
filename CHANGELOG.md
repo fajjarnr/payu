@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.70] - 2026-08-12
+
+### Fixed
+
+- **GRPC-011 (shared, 🔴)**: semua client gRPC wallet (transaction/billing/fx/investment/promotion/statement/lending) kini membangun channel via `GrpcChannelSupport` (grpc-starter) dengan **deadline 30s** di stub — sebelumnya `ManagedChannelBuilder` raw tanpa deadline → call bisa hang tanpa batas di money path.
+- **GRPC-016 (shared, 🔴)**: 8 adapter gRPC wallet diberi `@CircuitBreaker(name="walletService")` + `@Retry` (retry aman karena semua op wallet idempotent by referenceId; CB mencegah cascade saat wallet down) — parity dengan REST deprecated.
+- **GRPC-007 (wallet)**: `spring.grpc.server.enabled: false` di application.yml wallet — spring-grpc tidak lagi register `WalletGrpcService` kedua (in-process/servlet); hanya Netty 9090 milik grpc-starter.
+- **GRPC-017 (shared)**: prefix client di `application-grpc.yml` diperbaiki — `spring.grpc.client.wallet-service.*` → `spring.grpc.client.channels.<name>.*` (binding benar spring-grpc 1.0.3).
+
 ## [1.10.69] - 2026-08-12
 
 ### Removed

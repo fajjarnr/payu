@@ -9,6 +9,11 @@ spring:
     active: ${SPRING_PROFILE:local}
   application:
     name: wallet-service
+  grpc:
+    server:
+      # GRPC-007: spring-grpc's own server (in-process/servlet) would register
+      # WalletGrpcService a second time — grpc-starter owns the Netty 9090 server.
+      enabled: false
   datasource:
     # Primary datasource for write operations
     primary:
