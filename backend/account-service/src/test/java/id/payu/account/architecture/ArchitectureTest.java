@@ -55,6 +55,7 @@ class ArchitectureTest {
                     .layer("Adapter.Web").definedBy("..adapter.web..")
                     .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
                     .layer("Adapter.Client").definedBy("..adapter.client..")
+                    .layer("Adapter.Grpc").definedBy("..adapter.grpc..")
                     .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
                     .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
@@ -62,7 +63,7 @@ class ArchitectureTest {
                     .layer("Dto").definedBy("..dto..")
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers(
                             "Application", "Adapter.Web", "Adapter.Persistence",
-                            "Adapter.Client", "Adapter.Messaging", "Config", "Dto")
+                            "Adapter.Client", "Adapter.Grpc", "Adapter.Messaging", "Config", "Dto")
                     .allowEmptyShould(true)
                     .check(importedClasses);
         }

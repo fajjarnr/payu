@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.72] - 2026-08-12
+
+### Added
+
+- **GRPC-001 (account, 🔴)**: `AccountGrpcService` — server gRPC AccountService (GetAccount/GetAccountsByUser/VerifyAccount/GetAccountByNumber/AccountExists; CreateAccount/UpdateAccount UNIMPLEMENTED fail-closed) + grpc-starter + protobuf plugin + port `findByUserId`/`findByAccountNumber`; `AccountGrpcServiceTest` 6 test; live di podman (9090).
+- **GRPC-002 (transaction, 🔴)**: `TransactionGrpcService` — server gRPC TransactionService (GetTransaction/GetByReference/GetHistory/GetByAccount/ExistsByReference; CreateTransaction/UpdateStatus UNIMPLEMENTED fail-closed — money writes butuh idempotency); `TransactionGrpcServiceTest` 6 test; live di podman (9090).
+
+### Changed
+
+- **GRPC-003 (shared)**: conditional `payu.grpc.enabled` dihapus dari transaction `WalletGrpcAdapter` — gRPC jalur default di semua service (parity), REST fallback tetap.
+- Test config: `payu.grpc.server.enabled=false` di profile test account + transaction (server gRPC tidak bind 9090 saat unit test); ArchUnit account tambah layer `Adapter.Grpc`.
+
+### Deployed
+
+- Podman `1.10.72` (account + transaction): healthy, gRPC 9090 listening di kedua service, 0 ERROR/WARN.
+
 ## [1.10.71] - 2026-08-12
 
 ### Fixed

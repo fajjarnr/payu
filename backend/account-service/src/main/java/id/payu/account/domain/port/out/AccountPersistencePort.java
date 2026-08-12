@@ -15,4 +15,14 @@ public interface AccountPersistencePort {
     Optional<Account> findByExternalId(String externalId);
     boolean existsByAccountNumber(String accountNumber);
     Optional<Account> findByUserIdAndAllowPhoneLookupTrue(UUID userId);
+
+    /**
+     * GRPC-001: all accounts owned by a user (unfiltered).
+     */
+    java.util.List<Account> findByUserId(UUID userId);
+
+    /**
+     * GRPC-001: account lookup by account number.
+     */
+    Optional<Account> findByAccountNumber(String accountNumber);
 }

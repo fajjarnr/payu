@@ -47,6 +47,10 @@ spring.security.oauth2.resourceserver.jwt:
 
 # Disable caching
 payu:
+  grpc:
+    server:
+      enabled: false
+
   cache:
     enabled: false
 

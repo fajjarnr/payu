@@ -28,6 +28,11 @@ spring:
   flyway:
     enabled: false
 
+  # Disable gRPC server in test mode (GRPC-001: AccountGrpcService would bind 9090)
+  grpc:
+    server:
+      enabled: false
+
   # Disable Kafka for unit tests
   kafka:
     bootstrap-servers: localhost:9092
@@ -43,6 +48,9 @@ spring:
           issuer-uri: http://localhost:8080/realms/payu
 
 payu:
+  grpc:
+    server:
+      enabled: false
   security:
     blind-index-key: test-blind-index-key-at-least-32-chars!!
     blind-index-key-version: test-v1

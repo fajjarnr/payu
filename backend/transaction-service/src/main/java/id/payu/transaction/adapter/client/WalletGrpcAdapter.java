@@ -24,7 +24,6 @@ import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +37,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @since IMP-028
  */
-@ConditionalOnProperty(name = "payu.grpc.enabled", havingValue = "true", matchIfMissing = false)
+// GRPC-003: gRPC is the default path in every service (like the other 6);
+// the REST adapter stays registered as a fallback.
 @Primary
 @Component("walletGrpcAdapter")
 // GRPC-016: wallet calls are idempotent by referenceId, so retry is safe;

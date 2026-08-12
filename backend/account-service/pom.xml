@@ -129,6 +129,13 @@
             <artifactId>security-starter</artifactId>
         </dependency>
 
+        <!-- PayU gRPC Starter (GRPC-001: AccountService gRPC server) -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>grpc-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- PayU Outbox Starter — Transactional Outbox Pattern (MSG-007) -->
         <dependency>
             <groupId>id.payu</groupId>
@@ -300,6 +307,13 @@
     </dependencyManagement>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <plugins>
             <!-- Maven Compiler Plugin with Lombok -->
             <plugin>
@@ -317,6 +331,28 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Protobuf Maven Plugin (GRPC-001: generate AccountService gRPC stubs) -->
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:3.25.1:exe:${os.detected.classifier}</protocArtifact>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.83.1:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+                    <clearOutputDirectory>false</clearOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
