@@ -168,12 +168,6 @@
             <artifactId>quarkus-smallrye-openapi</artifactId>
         </dependency>
 
-        <!-- gRPC Client (IMP-033: REST-to-gRPC Bridge) -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-grpc</artifactId>
-        </dependency>
-
         <!-- Arc (CDI) -->
         <dependency>
             <groupId>io.quarkus</groupId>

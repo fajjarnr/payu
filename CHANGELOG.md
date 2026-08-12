@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.69] - 2026-08-12
+
+### Removed
+
+- **GRPC-019/013/010 (gateway, 🔴 security)**: bridge REST-to-gRPC `/api/internal/grpc/wallet/*` dihapus total — `GrpcBridgeResource` + `WalletGrpcBridge` + salinan `WalletService.proto` + dep `quarkus-grpc`. Bridge hanya validasi JWT (tanpa role/ownership check) dan membuka debit/credit/transfer wallet arbitrer oleh user terautentikasi; 0 pemanggil di seluruh repo. Wallet gRPC kini hanya bisa diakses service-to-service (mesh mTLS). Gateway build + 469 test jalan (79 failure pre-existing lingkungan: JWKS/redis tak tersedia di env test — terverifikasi gagal juga di HEAD tanpa perubahan ini).
+
 ## [1.10.68] - 2026-08-12
 
 ### Changed
