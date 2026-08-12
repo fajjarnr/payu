@@ -100,9 +100,10 @@ class ArchitectureTest {
                 .layer("Adapter").definedBy("..adapter..")
                 .layer("Config").definedBy("..config..")
                 .layer("DTO").definedBy("..dto..")
+                .layer("SharedStarters").definedBy("id.payu.grpc..")
                 .whereLayer("Domain").mayNotAccessAnyLayer()
-                .whereLayer("Application").mayOnlyAccessLayers("Domain", "DTO")
-                .whereLayer("Adapter").mayOnlyAccessLayers("Domain", "Application", "DTO")
+                .whereLayer("Application").mayOnlyAccessLayers("Domain", "DTO", "SharedStarters")
+                .whereLayer("Adapter").mayOnlyAccessLayers("Domain", "Application", "DTO", "SharedStarters")
                 .because("Hexagonal architecture dependencies must flow inward")
                 .check(classes);
     }

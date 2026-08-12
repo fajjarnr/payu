@@ -75,6 +75,15 @@ public class GrpcStarterAutoConfiguration {
     // ==================== Client Interceptors ====================
 
     @Bean
+    @ConditionalOnMissingBean(name = "grpcChannelFactory")
+    public GrpcChannelFactory grpcChannelFactory(
+            @Autowired(required = false) List<ClientInterceptor> clientInterceptors) {
+        log.info("Registering gRPC channel factory with {} client interceptors",
+                clientInterceptors == null ? 0 : clientInterceptors.size());
+        return new GrpcChannelFactory(clientInterceptors == null ? java.util.List.of() : clientInterceptors);
+    }
+
+    @Bean
     @ConditionalOnProperty(prefix = "payu.grpc.interceptors.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "grpcTracingClientInterceptor")
     public ClientInterceptor grpcTracingClientInterceptor() {

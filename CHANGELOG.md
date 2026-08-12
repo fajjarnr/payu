@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.76] - 2026-08-12
+
+### Changed
+
+- **GRPC-017 (shared)**: `GrpcChannelFactory` (grpc-starter) — bean yang meng-attach SEMUA client interceptor starter (tracing/auth/error-handling/retry) ke channel + deadline 30s; dipakai 6 `WalletGrpcAdapter` (transaction/billing/fx/investment/promotion/statement). Prefix `spring.grpc.client.channels.*` sudah benar (sebelumnya dead). `GrpcChannelFactoryTest` 2 test (starter total 12). `@GrpcClient` spring-grpc tidak diadopsi — client pakai factory starter (keputusan desain, documented). Semua suite green; ArchUnit fx tambah layer SharedStarters.
+
 ## [1.10.75] - 2026-08-12
 
 ### Added

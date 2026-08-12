@@ -11,6 +11,7 @@ import id.payu.wallet.grpc.WalletServiceGrpc;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
+import id.payu.grpc.starter.config.GrpcChannelFactory;
 import id.payu.grpc.starter.config.GrpcChannelSupport;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -47,6 +48,8 @@ public class WalletGrpcAdapter implements WalletPort {
     @Value("${payu.grpc.clients.wallet-service.address:static://wallet-service:9090}")
     private String walletServiceAddress;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private GrpcChannelFactory channelFactory;
     private ManagedChannel channel;
     private WalletServiceGrpc.WalletServiceBlockingStub walletStub;
 
@@ -57,8 +60,8 @@ public class WalletGrpcAdapter implements WalletPort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
-        channel = GrpcChannelSupport.channel(walletServiceAddress);
-        walletStub = GrpcChannelSupport.withDeadline(
+        channel = channelFactory.channel(walletServiceAddress);
+        walletStub = channelFactory.blockingStub(
                 WalletServiceGrpc.newBlockingStub(channel),
                 GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
