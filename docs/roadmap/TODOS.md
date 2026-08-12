@@ -63,7 +63,6 @@
 | CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
 | CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) — jalur SNAP in-scope | Replay tanpa duplikat |
 | CB-028 | dispute | Lock over-refund di `assertRefundable` (DISPUTE-001) | Concurrent partial refund aman |
-| CB-035 | transaction | **IMP-2 Atomic status transition** (FLOWS.md): callback/expire VA, payment link, QR merchant, checkout token pakai conditional UPDATE `WHERE status=ACTIVE` (anti race double-callback) | Double-callback/expire → 1 menang, test green |
 | CB-037 | notification | **IMP-4 Retry + fallback channel** (FLOWS.md): notification retry backoff + fallback push→email→SMS (pendamping CB-029 provider) | Gagal channel → fallback sukses, test green |
 | CB-038 | transaction | **IMP-5 Callback idempotency seragam** (FLOWS.md): lock row + terminal check di semua callback (VA, BI-FAST, disbursement, biller) | Double-callback tidak double-mutate, test green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
@@ -168,7 +167,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
-| IMP-2 | 🟠 | transaction | Flow improvement target: callback/expire check-then-act → conditional UPDATE atomik — CB-035 | FLOWS.md IMP-2 |
+| IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — CB-036 | FLOWS.md IMP-3 |
 | IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — CB-036 | FLOWS.md IMP-3 |
 | IMP-4 | 🟠 | notification | Flow improvement target: retry + fallback channel — CB-037 | FLOWS.md IMP-4 |
 | IMP-5 | 🟠 | transaction | Flow improvement target: callback idempotency seragam (lock + terminal check) — CB-038 | FLOWS.md IMP-5 |

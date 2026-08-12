@@ -2,6 +2,7 @@ package id.payu.partner.adapter.persistence.repository;
 
 import id.payu.partner.adapter.persistence.entity.MerchantQrPaymentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,19 @@ public interface MerchantQrPaymentRepository extends JpaRepository<MerchantQrPay
 
     @Query("SELECT qr FROM MerchantQrPaymentEntity qr WHERE qr.status = 'PENDING' AND qr.expiresAt < :now")
     List<MerchantQrPaymentEntity> findExpiredPendingPayments(@Param("now") LocalDateTime now);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE MerchantQrPaymentEntity qr SET qr.status = 'PAID', qr.paidAt = :paidAt, "
+            + "qr.payerAccountId = :payerAccountId, qr.paymentReference = :paymentReference "
+            + "WHERE qr.referenceId = :referenceId AND qr.status = 'PENDING' AND qr.expiresAt > :now")
+    int markPaidIfPending(@Param("referenceId") String referenceId,
+                          @Param("payerAccountId") String payerAccountId,
+                          @Param("paymentReference") String paymentReference,
+                          @Param("paidAt") LocalDateTime paidAt,
+                          @Param("now") LocalDateTime now);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE MerchantQrPaymentEntity qr SET qr.status = 'EXPIRED' "
+            + "WHERE qr.id = :id AND qr.status = 'PENDING'")
+    int markExpiredIfPending(@Param("id") Long id);
 }

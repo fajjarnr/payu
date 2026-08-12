@@ -103,14 +103,14 @@ public class VirtualAccountService {
     /**
      * Handle bank callback confirming VA payment.
      * Called when bank confirms customer has paid to the VA number.
+     *
+     * IMP-2: the PENDING → PAID transition is a conditional UPDATE, so of two
+     * concurrent callbacks (or a callback racing the expiry scheduler) exactly
+     * one wins; the loser returns the existing result as a deterministic no-op.
      */
     public VirtualAccountResponse handleBankCallback(VaCallbackRequest callback) {
         VirtualAccountEntity va = virtualAccountPersistencePort.findByVaNumber(callback.getVaNumber())
                 .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
-
-        if (!va.isPending()) {
-            throw new IllegalStateException("VA is not pending or has expired: " + va.getStatus());
-        }
 
         // Validate callback amount matches VA expected amount (if fixed amount VA)
         if (va.getAmount() != null && callback.getAmount() != null
@@ -121,8 +121,21 @@ public class VirtualAccountService {
         }
 
         requireSettlementAccount(va.getSettlementAccountId());
+
+        int transitioned = virtualAccountPersistencePort.markPaidIfPending(
+                va.getVaNumber(), callback.getAmount(), callback.getPaymentReference(), Instant.now());
+
+        if (transitioned == 0) {
+            VirtualAccountEntity current = virtualAccountPersistencePort.findByVaNumber(callback.getVaNumber())
+                    .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
+            if (current.getStatus() == VaStatus.PAID) {
+                log.info("Double callback for VA {} — already paid, returning existing result", va.getVaNumber());
+                return toResponse(current);
+            }
+            throw new IllegalStateException("VA is not pending or has expired: " + current.getStatus());
+        }
+
         va.markPaid(callback.getAmount(), callback.getPaymentReference());
-        va = virtualAccountPersistencePort.save(va);
 
         log.info("VA {} paid: amount={}, ref={}", va.getVaNumber(),
                 callback.getAmount(), callback.getPaymentReference());
@@ -171,7 +184,7 @@ public class VirtualAccountService {
                 "VirtualAccountPaymentCompleted",
                 event,
                 null,
-                "payu.transaction.va.paid.v1"
+                "payu.transaction.va-paid.v1"
         );
         log.info("Published payment.completed outbox event for VA {}", va.getVaNumber());
     }

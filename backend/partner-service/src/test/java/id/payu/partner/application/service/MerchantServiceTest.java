@@ -278,10 +278,10 @@ class MerchantServiceTest {
                     "Test", LocalDateTime.now().plusMinutes(30));
             qrPayment.setId(200L);
 
+            when(qrPaymentRepository.markPaidIfPending(eq(qrPayment.getReferenceId()), eq("payer-acc-123"),
+                    anyString(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1);
             when(qrPaymentRepository.findByReferenceId(qrPayment.getReferenceId()))
-                    .thenReturn(Optional.of(qrPayment));
-            when(qrPaymentRepository.save(any(MerchantQrPaymentEntity.class)))
-                    .thenAnswer(i -> i.getArgument(0));
+                    .thenReturn(Optional.of(qrPayment), Optional.of(qrPayment));
 
             QrPaymentResponse response = merchantService.confirmQrPayment(
                     qrPayment.getReferenceId(), "payer-acc-123");
@@ -290,6 +290,32 @@ class MerchantServiceTest {
             assertEquals("payer-acc-123", response.getPayerAccountId());
             assertNotNull(response.getPaymentReference());
             assertNotNull(response.getPaidAt());
+            verify(qrPaymentRepository, never()).save(any(MerchantQrPaymentEntity.class));
+        }
+
+        @Test
+        @DisplayName("double confirm on already-paid QR settles exactly once (IMP-2)")
+        void shouldSettleExactlyOnceOnDoubleConfirm() {
+            MerchantQrPaymentEntity qrPayment = new MerchantQrPaymentEntity(
+                    activeMerchant, BigDecimal.valueOf(50000), "IDR",
+                    "Test", LocalDateTime.now().plusMinutes(30));
+            qrPayment.setId(201L);
+            MerchantQrPaymentEntity paidQr = new MerchantQrPaymentEntity(
+                    activeMerchant, BigDecimal.valueOf(50000), "IDR",
+                    "Test", LocalDateTime.now().plusMinutes(30));
+            paidQr.setId(201L);
+            paidQr.markPaid("payer-acc-123", "QRIS-ABC123");
+
+            when(qrPaymentRepository.markPaidIfPending(eq(qrPayment.getReferenceId()), eq("payer-acc-123"),
+                    anyString(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(1, 0);
+            when(qrPaymentRepository.findByReferenceId(qrPayment.getReferenceId()))
+                    .thenReturn(Optional.of(qrPayment), Optional.of(paidQr));
+
+            merchantService.confirmQrPayment(qrPayment.getReferenceId(), "payer-acc-123");
+            QrPaymentResponse second = merchantService.confirmQrPayment(qrPayment.getReferenceId(), "payer-acc-123");
+
+            assertEquals("PAID", second.getStatus());
+            verify(webhookDispatcher, times(1)).dispatch(anyString(), anyMap());
         }
 
         @Test
@@ -300,6 +326,8 @@ class MerchantServiceTest {
                     "Test", LocalDateTime.now().minusMinutes(5));
             qrPayment.setId(201L);
 
+            when(qrPaymentRepository.markPaidIfPending(eq(qrPayment.getReferenceId()), eq("payer-acc"),
+                    anyString(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(0);
             when(qrPaymentRepository.findByReferenceId(qrPayment.getReferenceId()))
                     .thenReturn(Optional.of(qrPayment));
 
@@ -313,7 +341,7 @@ class MerchantServiceTest {
     class ExpireTests {
 
         @Test
-        @DisplayName("should expire pending QR payments")
+        @DisplayName("should expire pending QR payments via conditional transition (IMP-2)")
         void shouldExpirePendingPayments() {
             MerchantQrPaymentEntity qr = new MerchantQrPaymentEntity(
                     activeMerchant, BigDecimal.valueOf(10000), "IDR",
@@ -322,12 +350,12 @@ class MerchantServiceTest {
 
             when(qrPaymentRepository.findExpiredPendingPayments(any(LocalDateTime.class)))
                     .thenReturn(List.of(qr));
-            when(qrPaymentRepository.saveAll(anyList())).thenReturn(List.of(qr));
+            when(qrPaymentRepository.markExpiredIfPending(300L)).thenReturn(1);
 
             merchantService.expireQrPayments();
 
-            assertEquals(QrPaymentStatus.EXPIRED, qr.getStatus());
-            verify(qrPaymentRepository).saveAll(anyList());
+            verify(qrPaymentRepository).markExpiredIfPending(300L);
+            verify(qrPaymentRepository, never()).saveAll(anyList());
         }
     }
 }

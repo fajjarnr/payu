@@ -4,6 +4,7 @@ import id.payu.partner.adapter.persistence.entity.PaymentLinkEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,6 +23,19 @@ public interface PaymentLinkRepository extends JpaRepository<PaymentLinkEntity, 
 
     @Query("SELECT pl FROM PaymentLinkEntity pl WHERE pl.status = 'ACTIVE' AND pl.expiresAt < :now")
     List<PaymentLinkEntity> findExpiredActiveLinks(@Param("now") LocalDateTime now);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE PaymentLinkEntity pl SET pl.status = 'PAID', pl.paidAt = :paidAt, "
+            + "pl.paymentMethod = :paymentMethod, pl.paymentReference = :paymentReference "
+            + "WHERE pl.slug = :slug AND pl.status = 'ACTIVE'")
+    int markPaidIfActive(@Param("slug") String slug, @Param("paidAt") LocalDateTime paidAt,
+                         @Param("paymentMethod") String paymentMethod,
+                         @Param("paymentReference") String paymentReference);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE PaymentLinkEntity pl SET pl.status = 'EXPIRED' "
+            + "WHERE pl.id = :id AND pl.status = 'ACTIVE'")
+    int markExpiredIfActive(@Param("id") Long id);
 
     boolean existsByPartnerIdAndExternalId(Long partnerId, String externalId);
 

@@ -53,4 +53,15 @@ public class VirtualAccountPersistenceAdapter implements VirtualAccountPersisten
     public boolean existsByVaNumber(String vaNumber) {
         return virtualAccountRepository.existsByVaNumber(vaNumber);
     }
+
+    @Override
+    public int markPaidIfPending(String vaNumber, java.math.BigDecimal paidAmount,
+                                 String paymentReference, Instant paidAt) {
+        return virtualAccountRepository.markPaidIfPending(vaNumber, paidAmount, paymentReference, paidAt, Instant.now());
+    }
+
+    @Override
+    public int markExpiredIfPending(UUID id) {
+        return virtualAccountRepository.markExpiredIfPending(id);
+    }
 }

@@ -5,6 +5,7 @@ import id.payu.partner.adapter.persistence.repository.MerchantRepository;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.adapter.persistence.entity.MerchantEntity;
 import id.payu.partner.adapter.persistence.entity.MerchantQrPaymentEntity;
+import id.payu.partner.domain.QrPaymentStatus;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.dto.CreateMerchantRequest;
 import id.payu.partner.dto.CreateQrPaymentRequest;
@@ -214,18 +215,31 @@ public class MerchantService {
     /**
      * Confirm QR payment (called when payer scans and pays).
      * Triggers settlement to merchant wallet.
+     *
+     * IMP-2: PENDING → PAID is a conditional UPDATE — of two concurrent confirms
+     * (or a confirm racing the expiry scheduler) exactly one wins; the loser
+     * returns the existing result without settling again.
      */
     public QrPaymentResponse confirmQrPayment(String referenceId, String payerAccountId) {
         MerchantQrPaymentEntity qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
                 .orElseThrow(() -> new IllegalArgumentException("QR payment not found: " + referenceId));
 
-        if (!qrPayment.isPending()) {
+        String paymentRef = "QRIS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        int transitioned = qrPaymentRepository.markPaidIfPending(
+                referenceId, payerAccountId, paymentRef, LocalDateTime.now(), LocalDateTime.now());
+
+        if (transitioned == 0) {
+            MerchantQrPaymentEntity current = qrPaymentRepository.findByReferenceId(referenceId)
+                    .orElseThrow(() -> new IllegalArgumentException("QR payment not found: " + referenceId));
+            if (current.getStatus() == QrPaymentStatus.PAID) {
+                log.info("Double confirm for QR payment {} — already paid, returning existing result", referenceId);
+                return toQrResponse(current);
+            }
             throw new IllegalStateException("QR payment is not pending or has expired");
         }
 
-        String paymentRef = "QRIS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // Mirror the DB transition on the loaded entity (the @Modifying update already persisted it)
         qrPayment.markPaid(payerAccountId, paymentRef);
-        qrPayment = qrPaymentRepository.save(qrPayment);
 
         log.info("QR payment {} confirmed by payer {}, ref={}",
                 referenceId, payerAccountId, paymentRef);
@@ -389,10 +403,15 @@ public class MerchantService {
     public void expireQrPayments() {
         try {
             List<MerchantQrPaymentEntity> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
-            if (!expired.isEmpty()) {
-                expired.forEach(MerchantQrPaymentEntity::markExpired);
-                qrPaymentRepository.saveAll(expired);
-                log.info("Expired {} QR payments", expired.size());
+            int transitioned = 0;
+            for (MerchantQrPaymentEntity qr : expired) {
+                // IMP-2: conditional transition — a payment confirmed concurrently is not overwritten
+                if (qrPaymentRepository.markExpiredIfPending(qr.getId()) > 0) {
+                    transitioned++;
+                }
+            }
+            if (transitioned > 0) {
+                log.info("Expired {} QR payments", transitioned);
             }
         } catch (Exception e) {
             log.error("Unexpected error occurred while expiring QR payments", e);

@@ -90,19 +90,23 @@ public class PaymentExpiryScheduler {
      * Expire pending Virtual Accounts that have passed their TTL.
      * Publishes payment.expired Kafka event.
      * ITER-53: ShedLock prevents double-execution.
+     * IMP-2: PENDING → EXPIRED is a conditional UPDATE, so a VA a bank callback
+     * paid concurrently is never overwritten to EXPIRED and its event is skipped.
      */
     @SchedulerLock(name = "PaymentExpiryScheduler_expireVirtualAccounts", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {
         List<VirtualAccountEntity> expired = virtualAccountPersistencePort.findExpiredPendingVAs(Instant.now(clock));
-        if (!expired.isEmpty()) {
-            expired.forEach(va -> {
-                va.markExpired();
+        int transitioned = 0;
+        for (VirtualAccountEntity va : expired) {
+            if (virtualAccountPersistencePort.markExpiredIfPending(va.getId()) > 0) {
+                transitioned++;
                 publishVaExpiredEvent(va);
-            });
-            virtualAccountPersistencePort.saveAll(expired);
-            log.info("Auto-expired {} virtual accounts", expired.size());
+            }
+        }
+        if (transitioned > 0) {
+            log.info("Auto-expired {} virtual accounts", transitioned);
         }
     }
 

@@ -169,9 +169,14 @@ class PaymentLinkServiceTest {
             PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().minusHours(1));
             link.setId(1L);
+            PaymentLinkEntity expired = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
+                    "Test payment", LocalDateTime.now().minusHours(1));
+            expired.setId(1L);
+            expired.markExpired();
 
-            when(paymentLinkRepository.findBySlug("expired123")).thenReturn(Optional.of(link));
-            when(paymentLinkRepository.save(any(PaymentLinkEntity.class))).thenAnswer(i -> i.getArgument(0));
+            when(paymentLinkRepository.findBySlug("expired123"))
+                    .thenReturn(Optional.of(link), Optional.of(expired));
+            when(paymentLinkRepository.markExpiredIfActive(1L)).thenReturn(1);
 
             PaymentLinkResponse response = paymentLinkService.getBySlug("expired123");
 
@@ -199,8 +204,9 @@ class PaymentLinkServiceTest {
                     "Test payment", LocalDateTime.now().plusHours(24));
             link.setId(1L);
 
+            when(paymentLinkRepository.markPaidIfActive(eq("pay123"), any(LocalDateTime.class),
+                    eq("WALLET"), eq("ref-001"))).thenReturn(1);
             when(paymentLinkRepository.findBySlug("pay123")).thenReturn(Optional.of(link));
-            when(paymentLinkRepository.save(any(PaymentLinkEntity.class))).thenAnswer(i -> i.getArgument(0));
 
             PaymentLinkResponse response = paymentLinkService.confirmPayment("pay123", "WALLET", "ref-001");
 
@@ -208,6 +214,31 @@ class PaymentLinkServiceTest {
             assertEquals("WALLET", response.getPaymentMethod());
             assertEquals("ref-001", response.getPaymentReference());
             assertNotNull(response.getPaidAt());
+            verify(paymentLinkRepository, never()).save(any(PaymentLinkEntity.class));
+        }
+
+        @Test
+        @DisplayName("double confirm on already-paid link is a deterministic no-op (IMP-2)")
+        void shouldReturnExistingOnDoubleConfirm() {
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
+                    "Test payment", LocalDateTime.now().plusHours(24));
+            link.setId(2L);
+            PaymentLinkEntity paidLink = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
+                    "Test payment", LocalDateTime.now().plusHours(24));
+            paidLink.setId(2L);
+            paidLink.markPaid("WALLET", "ref-001");
+
+            when(paymentLinkRepository.markPaidIfActive(eq("pay123"), any(LocalDateTime.class),
+                    eq("WALLET"), eq("ref-001"))).thenReturn(0);
+            when(paymentLinkRepository.findBySlug("pay123"))
+                    .thenReturn(Optional.of(link), Optional.of(paidLink));
+
+            PaymentLinkResponse response = paymentLinkService.confirmPayment("pay123", "WALLET", "ref-001");
+
+            assertEquals("PAID", response.getStatus());
+            assertEquals("ref-001", response.getPaymentReference());
+            verify(webhookDispatcher, never()).dispatch(anyString(), anyMap());
+            verify(outboxService, never()).createEvent(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -217,6 +248,8 @@ class PaymentLinkServiceTest {
                     "Test payment", LocalDateTime.now().minusHours(1));
             link.setId(1L);
 
+            when(paymentLinkRepository.markPaidIfActive(eq("expired"), any(LocalDateTime.class),
+                    eq("WALLET"), eq("ref-001"))).thenReturn(0);
             when(paymentLinkRepository.findBySlug("expired")).thenReturn(Optional.of(link));
 
             assertThrows(IllegalStateException.class,
@@ -287,7 +320,7 @@ class PaymentLinkServiceTest {
     class ExpireTests {
 
         @Test
-        @DisplayName("should expire past-due active links")
+        @DisplayName("should expire past-due active links via conditional transition (IMP-2)")
         void shouldExpirePastDueActiveLinks() {
             PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Expired", LocalDateTime.now().minusHours(1));
@@ -295,12 +328,12 @@ class PaymentLinkServiceTest {
 
             when(paymentLinkRepository.findExpiredActiveLinks(any(LocalDateTime.class)))
                     .thenReturn(List.of(link));
-            when(paymentLinkRepository.saveAll(anyList())).thenReturn(List.of(link));
+            when(paymentLinkRepository.markExpiredIfActive(1L)).thenReturn(1);
 
             paymentLinkService.expirePaymentLinks();
 
-            assertEquals(PaymentLinkStatus.EXPIRED, link.getStatus());
-            verify(paymentLinkRepository).saveAll(anyList());
+            verify(paymentLinkRepository).markExpiredIfActive(1L);
+            verify(paymentLinkRepository, never()).saveAll(anyList());
         }
 
         @Test

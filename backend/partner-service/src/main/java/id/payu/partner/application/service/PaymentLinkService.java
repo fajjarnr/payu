@@ -98,11 +98,13 @@ public class PaymentLinkService {
         PaymentLinkEntity paymentLink = paymentLinkRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
 
-        // Auto-expire if past expiry
+        // Auto-expire if past expiry (IMP-2: conditional transition, so a
+        // concurrent confirm cannot be overwritten)
         if (paymentLink.getStatus() == PaymentLinkStatus.ACTIVE
                 && paymentLink.getExpiresAt().isBefore(LocalDateTime.now())) {
-            paymentLink.markExpired();
-            paymentLinkRepository.save(paymentLink);
+            paymentLinkRepository.markExpiredIfActive(paymentLink.getId());
+            paymentLink = paymentLinkRepository.findBySlug(slug)
+                    .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
         }
 
         return toResponse(paymentLink);
@@ -135,17 +137,30 @@ public class PaymentLinkService {
     /**
      * Mark a payment link as paid (called when payment is confirmed).
      * Dispatches webhook notification on payment completion.
+     *
+     * IMP-2: ACTIVE → PAID is a conditional UPDATE — of two concurrent confirms
+     * (or a confirm racing the expiry scheduler) exactly one wins; the loser
+     * returns the existing result as a deterministic no-op.
      */
     public PaymentLinkResponse confirmPayment(String slug, String paymentMethod, String paymentReference) {
         PaymentLinkEntity paymentLink = paymentLinkRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
 
-        if (!paymentLink.isActive()) {
+        int transitioned = paymentLinkRepository.markPaidIfActive(
+                slug, LocalDateTime.now(), paymentMethod, paymentReference);
+
+        if (transitioned == 0) {
+            PaymentLinkEntity current = paymentLinkRepository.findBySlug(slug)
+                    .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
+            if (current.getStatus() == PaymentLinkStatus.PAID) {
+                log.info("Double confirm for payment link {} — already paid, returning existing result", slug);
+                return toResponse(current);
+            }
             throw new IllegalStateException("Payment link is not active or has expired");
         }
 
+        // Mirror the DB transition on the loaded entity (the @Modifying update already persisted it)
         paymentLink.markPaid(paymentMethod, paymentReference);
-        paymentLink = paymentLinkRepository.save(paymentLink);
 
         log.info("Payment link {} (slug={}) paid via {} ref={}",
                 paymentLink.getId(), slug, paymentMethod, paymentReference);
@@ -182,13 +197,16 @@ public class PaymentLinkService {
     public void expirePaymentLinks() {
         try {
             List<PaymentLinkEntity> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
-            if (!expiredLinks.isEmpty()) {
-                expiredLinks.forEach(link -> {
-                    link.markExpired();
+            int transitioned = 0;
+            for (PaymentLinkEntity link : expiredLinks) {
+                // IMP-2: conditional transition — a link confirmed concurrently is not overwritten
+                if (paymentLinkRepository.markExpiredIfActive(link.getId()) > 0) {
+                    transitioned++;
                     dispatchPaymentLinkExpiredEvent(link);
-                });
-                paymentLinkRepository.saveAll(expiredLinks);
-                log.info("Expired {} payment links", expiredLinks.size());
+                }
+            }
+            if (transitioned > 0) {
+                log.info("Expired {} payment links", transitioned);
             }
         } catch (Exception e) {
             log.error("Unexpected error occurred while expiring payment links", e);

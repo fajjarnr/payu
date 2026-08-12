@@ -1678,7 +1678,9 @@ sequenceDiagram
 | `reserve→commit→credit` (3 call, window crash) → **satu atomic transfer** (primitive `WalletUseCase.transfer` sudah ada, belum dipakai) | Window kompensasi `:REFUND` & orphan detection jadi safety net, bukan kebutuhan; perilaku = transfer bank satu transaksi |
 | Berlaku untuk: internal transfer (flow #3), SNAP settle (flow #4), disbursement commit | Reduce hop antar service |
 
-## IMP-2. Callback & Expiry — Atomic Status Transition (flow #9, #19, #30, #33)
+## IMP-2. Callback & Expiry — Atomic Status Transition (flow #9, #19, #30, #33) ✅ DONE (CB-035, 1.10.53)
+
+> **Status**: implemented 2026-08-12 untuk VA callback + expiry (transaction-service), payment link confirm + expiry (partner-service), merchant QR confirm + expiry (partner-service) — semua via conditional UPDATE `WHERE status='PENDING'|'ACTIVE'`; loser jadi no-op 200 deterministik. Catatan: lending checkout token (flow #33) tidak punya transisi status terminal yang race — tidak diubah.
 
 ```mermaid
 sequenceDiagram
@@ -1794,4 +1796,4 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1 = DONE; IMP-2..6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*
+*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1 & IMP-2 = DONE; IMP-3..6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*
