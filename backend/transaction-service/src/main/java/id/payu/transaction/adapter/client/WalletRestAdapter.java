@@ -175,6 +175,30 @@ public class WalletRestAdapter implements WalletServicePort {
         log.warn("Circuit breaker fallback for creditBalance: {}", e.getMessage());
     }
 
+    @Override
+    public String transferBalance(String senderAccountId, String recipientAccountId,
+                                  BigDecimal amount, String referenceId) {
+        // ponytail: REST fallback stays 3-hop (reserve→commit→credit) because wallet-service
+        // exposes the atomic /transfer endpoint only to trusted-service tokens; gRPC is the
+        // prod path (payu.grpc.enabled=true). Replace when the REST adapter is removed.
+        ReserveBalanceResponse reserved = reserveBalance(UUID.fromString(senderAccountId), referenceId, amount);
+        if (!reserved.isSuccess() || reserved.getReservationId() == null) {
+            throw new IllegalStateException("Insufficient balance for internal transfer");
+        }
+        try {
+            commitBalance(UUID.fromString(senderAccountId), referenceId, reserved.getReservationId(), amount);
+        } catch (Exception commitFailure) {
+            try {
+                releaseBalance(UUID.fromString(senderAccountId), referenceId, reserved.getReservationId(), amount);
+            } catch (Exception releaseFailure) {
+                commitFailure.addSuppressed(releaseFailure);
+            }
+            throw commitFailure;
+        }
+        creditBalance(recipientAccountId, referenceId, amount);
+        return referenceId;
+    }
+
     private HttpHeaders authorizationHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

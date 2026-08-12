@@ -47,21 +47,23 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
     @Override
     public void settle(String sourceAccountId, String beneficiaryAccountId,
                        BigDecimal amount, String currency, String referenceId) {
-        String reservationId = reserve(sourceAccountId, amount, referenceId);
-        commit(reservationId, referenceId);
+        // IMP-1: single atomic wallet transfer (debit+credit in one transaction, idempotent by
+        // referenceId). The old reserve→commit→credit sequence had a crash window between
+        // commit and credit that required a source-credit compensation; no longer needed.
+        Map<String, Object> body = Map.of(
+                "senderAccountId", sourceAccountId,
+                "recipientAccountId", beneficiaryAccountId,
+                "amount", amount,
+                "currency", currency,
+                "referenceId", referenceId,
+                "description", "SNAP-BI payment settlement: " + referenceId);
 
-        try {
-            credit(beneficiaryAccountId, amount, referenceId,
-                    "SNAP-BI payment settlement: " + referenceId);
-        } catch (RuntimeException creditFailure) {
-            try {
-                credit(sourceAccountId, amount, referenceId + "-reversal",
-                        "SNAP-BI payment compensation: " + referenceId);
-            } catch (RuntimeException compensationFailure) {
-                creditFailure.addSuppressed(compensationFailure);
-            }
-            throw creditFailure;
-        }
+        walletClient.post()
+                .uri("/api/v1/wallets/transfer")
+                .headers(target -> target.addAll(headers("snap-transfer-" + referenceId)))
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     @Override
@@ -78,47 +80,6 @@ public class WalletSettlementAdapter implements WalletSettlementPort {
         walletClient.post()
                 .uri("/api/v1/wallets/transfer/reverse")
                 .headers(target -> target.addAll(headers("snap-refund-" + refundId)))
-                .body(body)
-                .retrieve()
-                .toBodilessEntity();
-    }
-
-    private String reserve(String accountId, BigDecimal amount, String referenceId) {
-        HttpHeaders headers = headers("snap-reserve-" + referenceId);
-        Map<String, Object> body = Map.of(
-                "amount", amount,
-                "referenceId", referenceId);
-
-        Map<?, ?> response = walletClient.post()
-                .uri("/api/v1/wallets/" + accountId + "/reserve")
-                .headers(target -> target.addAll(headers))
-                .body(body)
-                .retrieve()
-                .body(Map.class);
-        Map<?, ?> data = response == null ? null : (Map<?, ?>) response.get("data");
-        String reservationId = data == null ? null : String.valueOf(data.get("reservationId"));
-        if (reservationId == null || "null".equals(reservationId)) {
-            throw new IllegalStateException("Wallet reserve returned no reservation ID");
-        }
-        return reservationId;
-    }
-
-    private void commit(String reservationId, String referenceId) {
-        walletClient.post()
-                .uri("/api/v1/wallets/reservations/" + reservationId + "/commit")
-                .headers(target -> target.addAll(headers("snap-commit-" + referenceId)))
-                .retrieve()
-                .toBodilessEntity();
-    }
-
-    private void credit(String accountId, BigDecimal amount, String referenceId, String description) {
-        Map<String, Object> body = Map.of(
-                "amount", amount,
-                "referenceId", referenceId,
-                "description", description);
-        walletClient.post()
-                .uri("/api/v1/wallets/" + accountId + "/credit")
-                .headers(target -> target.addAll(headers("snap-credit-" + referenceId)))
                 .body(body)
                 .retrieve()
                 .toBodilessEntity();

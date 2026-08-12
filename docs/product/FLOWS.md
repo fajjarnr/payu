@@ -1651,7 +1651,9 @@ sequenceDiagram
 
 > Diagram target agar perilaku mirip bank/e-wallet produksi. Verifikasi implementasi = bandingkan diagram ini vs code (gap = pekerjaan). Referensi ADR-0022/0023.
 
-## IMP-1. Transfer Internal & SNAP Settle — Atomic 1-hop (menggantikan flow #3, #4)
+## IMP-1. Transfer Internal & SNAP Settle — Atomic 1-hop (menggantikan flow #3, #4) ✅ DONE (CB-034, 1.10.53)
+
+> **Status**: implemented 2026-08-12. Internal transfer (`InitiateTransferCommandHandler`) dan SNAP settle (`WalletSettlementAdapter.settle`) memakai satu call atomik ke wallet (`transferBalance` gRPC / `POST /api/v1/wallets/transfer` REST trusted-service). Kompensasi `:REFUND` dihapus dari jalur internal transfer — replay aman via reference-idempotency wallet. Catatan: disbursement commit (flow disbursement) masih memakai jalur reserve/commit — dapat dipindah ke 1-hop saat disentuh.
 
 ```mermaid
 sequenceDiagram
@@ -1792,4 +1794,4 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-11. Verifikasi code: release 1.10.51 (flow 1-45 = aktual; IMP-1..6 = TARGET belum diimplementasi). Catatan: login masih password grant (LOGIN-003 PKCE open — diagram akan berubah saat OIDC flow diimplementasikan; MFA di-defer per keputusan 2026-08-11).*
+*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1 = DONE; IMP-2..6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*

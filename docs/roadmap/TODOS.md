@@ -20,8 +20,8 @@
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.10.52` (2026-08-11) |
 | **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: ACCOUNT-005/006/007 (P1) + PROD-044/046 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 6 tickets + 33 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-11) |
-| **Last Updated** | 2026-08-11 (LOGIN-003/006/001 + CB-002 closed; Active Tickets urut P0→P1) |
+| **Backlog Aktif** | 5 tickets + 32 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-12) |
+| **Last Updated** | 2026-08-12 (CB-034 closed; Active Tickets urut P0→P1) |
 
 ---
 
@@ -63,7 +63,6 @@
 | CB-018 | shared | Outbox failed-event: archive + alert, bukan DELETE (OUTBOX-001) | Event tidak hilang tanpa alert |
 | CB-026 | promotion | Dedup cashback: unique transaction_id (PROMO-001) — jalur SNAP in-scope | Replay tanpa duplikat |
 | CB-028 | dispute | Lock over-refund di `assertRefundable` (DISPUTE-001) | Concurrent partial refund aman |
-| CB-034 | transaction | **IMP-1 Atomic 1-hop transfer** (FLOWS.md): internal transfer & SNAP settle pakai `WalletUseCase.transfer` atomik (debit+credit 1 tx, lock 2 wallet terurut) menggantikan reserve→commit→credit; kompensasi `:REFUND` jadi safety net bukan kebutuhan | Window crash hilang, E2E + race test green |
 | CB-035 | transaction | **IMP-2 Atomic status transition** (FLOWS.md): callback/expire VA, payment link, QR merchant, checkout token pakai conditional UPDATE `WHERE status=ACTIVE` (anti race double-callback) | Double-callback/expire → 1 menang, test green |
 | CB-037 | notification | **IMP-4 Retry + fallback channel** (FLOWS.md): notification retry backoff + fallback push→email→SMS (pendamping CB-029 provider) | Gagal channel → fallback sukses, test green |
 | CB-038 | transaction | **IMP-5 Callback idempotency seragam** (FLOWS.md): lock row + terminal check di semua callback (VA, BI-FAST, disbursement, biller) | Double-callback tidak double-mutate, test green |
@@ -169,7 +168,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) | RefundService.java:153-164 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
-| IMP-1 | 🟠 | transfer | Flow improvement target: settle 3-hop → atomic 1-hop (`WalletUseCase.transfer` sudah ada, belum dipakai) — CB-034 | FLOWS.md IMP-1 |
 | IMP-2 | 🟠 | transaction | Flow improvement target: callback/expire check-then-act → conditional UPDATE atomik — CB-035 | FLOWS.md IMP-2 |
 | IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — CB-036 | FLOWS.md IMP-3 |
 | IMP-4 | 🟠 | notification | Flow improvement target: retry + fallback channel — CB-037 | FLOWS.md IMP-4 |

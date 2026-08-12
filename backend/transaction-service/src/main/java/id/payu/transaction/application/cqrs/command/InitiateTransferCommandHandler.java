@@ -78,6 +78,14 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         transaction = transactionPersistencePort.save(transaction);
         eventPublisherPort.publishTransactionInitiated(transaction);
 
+        // IMP-1: internal transfers are atomic 1-hop on the wallet side (debit+credit in one
+        // transaction, idempotent by reference) — no reservation and no saga compensation needed.
+        if (command.type() == id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER) {
+            processInternalTransfer(transaction, command);
+            log.info("Transfer initiated successfully: {}", transaction.getId());
+            return buildResult(transaction);
+        }
+
         // Reserve balance from wallet
         ReserveBalanceResponse balanceResponse = walletServicePort.reserveBalance(
                 command.senderAccountId(),
@@ -102,7 +110,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         // Process based on transfer type (BUG-BE-007: handle all types, not just BIFAST)
         switch (command.type()) {
             case BIFAST_TRANSFER -> processBiFastTransfer(transaction, command, reservationId);
-            case INTERNAL_TRANSFER -> processInternalTransfer(transaction, command, reservationId);
+            case INTERNAL_TRANSFER -> throw new IllegalStateException(
+                    "INTERNAL_TRANSFER must take the atomic 1-hop path, not the reservation path");
             case SKN_TRANSFER, RTGS_TRANSFER -> processInterBankTransfer(transaction, command, reservationId);
             default -> {
                 transaction.setStatus(TransactionStatus.FAILED);
@@ -254,61 +263,25 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     }
 
     /**
-     * Process internal transfer — immediately completes by committing the reserved balance.
-     * BUG-BE-007 fix: Previously, INTERNAL_TRANSFER was left stuck in VALIDATING status.
+     * Process internal transfer — atomic 1-hop (IMP-1): wallet debits the sender and
+     * credits the recipient in one transaction, idempotent by reference, so a failure
+     * leaves no money moved and a replay cannot double-mutate. The pre-IMP-1
+     * reserve→commit→credit saga (with :REFUND compensation) is no longer needed.
      */
-    private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
-        boolean committed = false;
+    private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command) {
         try {
-            // For internal transfers, commit the reservation immediately
-            walletServicePort.commitBalance(
-                    command.senderAccountId(),
-                    transaction.getId().toString(),
-                    reservationId,
-                    command.amount().getAmount()
-            );
-            committed = true;
-
-            // Credit the recipient
-            walletServicePort.creditBalance(
+            walletServicePort.transferBalance(
+                    command.senderAccountId().toString(),
                     command.recipientAccountNumber(),
-                    transaction.getId().toString(),
-                    command.amount().getAmount()
+                    command.amount().getAmount(),
+                    transaction.getId().toString()
             );
-
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(java.time.Instant.now());
             eventPublisherPort.publishTransactionCompleted(transaction);
         } catch (Exception e) {
-            log.error("Internal transfer failed, initiating compensation. TransactionEntity: {}, Error: {}",
+            log.error("Internal transfer failed, no compensation needed (atomic 1-hop). TransactionEntity: {}, Error: {}",
                     transaction.getId(), e.getMessage());
-
-            try {
-                if (committed) {
-                    // SAGA COMPENSATION after commit: the reservation is gone, so releasing is a no-op
-                    // and the sender's money would be lost. Refund the sender with a deterministic
-                    // reference (suffix :REFUND) so a retry cannot double-credit.
-                    walletServicePort.creditBalance(
-                            command.senderAccountId().toString(),
-                            transaction.getId() + ":REFUND",
-                            command.amount().getAmount()
-                    );
-                } else {
-                    walletServicePort.releaseBalance(
-                            command.senderAccountId(),
-                            transaction.getId().toString(),
-                            reservationId,
-                            command.amount().getAmount()
-                    );
-                }
-                log.info("Balance refunded successfully for transaction: {}", transaction.getId());
-            } catch (Exception compensationError) {
-                log.error("Failed to refund balance during compensation for transaction: {}. Error: {}",
-                        transaction.getId(), compensationError.getMessage());
-                // ponytail: crash window between commit and credit leaves sender debited without
-                // recipient credit; recovery needs a scheduled reconciler (see TODOS CB-015)
-            }
-
             transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("Internal transfer failed: " + e.getMessage());
             eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());

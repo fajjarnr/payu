@@ -31,11 +31,17 @@ x-app-defaults: &app-defaults
   user: "1001"
   # Keycloak is pinned to http://localhost:8099 (KC_HOSTNAME_STRICT=true) so all
   # tokens carry one issuer. Containers reach it through the host's published
-  # port via the host-gateway mapping. Trade-off: in-container healthchecks that
-  # curl localhost:8080 hit the host-published port of the same stack instead of
-  # the container itself (harmless for local dev; do not copy to a cluster).
+  # port via the host-gateway mapping. Healthchecks target 127.0.0.1 explicitly
+  # (the minimal hosts file has no loopback entry for "localhost").
   extra_hosts:
     - "localhost:host-gateway"
+  # L-225: extra_hosts alone is NOT enough for the JVM — the JDK resolves
+  # "localhost" to 127.0.0.1 first (regardless of /etc/hosts order) and
+  # Socket.connect never falls back, so JWT validation against the pinned
+  # issuer would get "Connection refused". Bind-mount a minimal hosts file
+  # WITHOUT the loopback entry; curl still reaches the host-gateway.
+  volumes:
+    - ./config/hosts:/etc/hosts:ro,z
   read_only: true
   cap_drop:
     - ALL
@@ -329,7 +335,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -393,7 +399,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -448,7 +454,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -499,7 +505,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -549,7 +555,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -600,7 +606,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -651,7 +657,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -705,7 +711,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -756,7 +762,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -813,7 +819,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -870,7 +876,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -920,7 +926,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1016,7 +1022,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1066,7 +1072,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1126,7 +1132,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1175,7 +1181,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1224,7 +1230,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1313,7 +1319,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/q/health/live
+        - http://127.0.0.1:8080/q/health/live
       interval: 10s
       timeout: 5s
       retries: 3
@@ -1377,7 +1383,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1517,7 +1523,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1574,7 +1580,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1626,7 +1632,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1684,7 +1690,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1733,7 +1739,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/actuator/health/liveness
+        - http://127.0.0.1:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1769,7 +1775,7 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8080/api/health
+        - http://127.0.0.1:8080/api/health
       interval: 15s
       timeout: 5s
       retries: 3
@@ -1790,7 +1796,7 @@ services:
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
     healthcheck:
-      test: [CMD, curl, -f, http://localhost:8080/actuator/health/liveness]
+      test: [CMD, curl, -f, http://127.0.0.1:8080/actuator/health/liveness]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -1827,7 +1833,7 @@ services:
       lending-rules:
         condition: service_healthy
     healthcheck:
-      test: [CMD, curl, -f, http://localhost:8080/actuator/health/liveness]
+      test: [CMD, curl, -f, http://127.0.0.1:8080/actuator/health/liveness]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -1857,7 +1863,7 @@ services:
       payu-database-rw:
         condition: service_healthy
     healthcheck:
-      test: [CMD, curl, -f, http://localhost:8080/api/v1/biller/health]
+      test: [CMD, curl, -f, http://127.0.0.1:8080/api/v1/biller/health]
       interval: 10s
       timeout: 5s
       retries: 5

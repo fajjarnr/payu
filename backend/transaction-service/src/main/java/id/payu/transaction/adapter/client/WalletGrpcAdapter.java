@@ -9,6 +9,7 @@ import id.payu.wallet.grpc.ReleaseReservationRequest;
 import id.payu.wallet.grpc.ReservationResponse;
 import id.payu.wallet.grpc.ReserveBalanceRequest;
 import id.payu.wallet.grpc.TransactionResponse;
+import id.payu.wallet.grpc.TransferRequest;
 import id.payu.wallet.grpc.WalletServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -164,6 +165,37 @@ public class WalletGrpcAdapter implements WalletServicePort {
         } catch (StatusRuntimeException e) {
             log.error("gRPC releaseReservation error: status={}, message={}", e.getStatus(), e.getMessage());
             throw new RuntimeException("Failed to release reservation via gRPC: " + e.getStatus(), e);
+        }
+    }
+
+    @Override
+    public String transferBalance(String senderAccountId, String recipientAccountId,
+                                  BigDecimal amount, String referenceId) {
+        log.info("gRPC transferBalance: from={}, to={}, amount={}, ref={}",
+                senderAccountId, recipientAccountId, amount, referenceId);
+
+        try {
+            TransferRequest request = TransferRequest.newBuilder()
+                    .setFromAccountId(senderAccountId)
+                    .setToAccountId(recipientAccountId)
+                    .setAmount(Money.newBuilder()
+                            .setCurrency(DEFAULT_CURRENCY)
+                            .setAmount(amount.toPlainString())
+                            .build())
+                    .setReferenceId(referenceId)
+                    .setDescription("Atomic internal transfer")
+                    .build();
+
+            TransactionResponse response = walletStub.transfer(request);
+
+            if (response.getSuccess()) {
+                log.info("gRPC atomic transfer completed: txId={}", response.getTransactionId());
+                return response.getTransactionId();
+            }
+            throw new RuntimeException("Failed to transfer balance: " + response.getError().getMessage());
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC transferBalance error: status={}, message={}", e.getStatus(), e.getMessage());
+            throw new RuntimeException("Failed to transfer balance via gRPC: " + e.getStatus(), e);
         }
     }
 

@@ -1,0 +1,5 @@
+# Minimal /etc/hosts for app containers (L-225): the JDK resolves "localhost" to
+# the loopback FIRST regardless of file order and never falls back, so the
+# 127.0.0.1 line must not exist. Only the host-gateway entry is present so JVM
+# callers reach the host-published ports (Keycloak :8099 etc.).
+169.254.1.2 localhost

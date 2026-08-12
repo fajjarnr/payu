@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.53] - 2026-08-12
+
+### Added
+
+- **Atomic 1-hop internal transfer (CB-034 / IMP-1)**: internal transfers no longer run `reserve→commit→credit` (3 wallet calls with a crash window between commit and credit that required `:REFUND` saga compensation). `InitiateTransferCommandHandler` now sends the sender debit + recipient credit in ONE atomic wallet call (`WalletServicePort.transferBalance`) — wallet-side single DB transaction, ordered `FOR UPDATE` locks, idempotent by reference; on failure nothing moved, on replay nothing double-moves, so the `:REFUND` compensation is no longer needed. SNAP settle (`partner-service` `WalletSettlementAdapter.settle`) also switched to one atomic call via the new wallet REST endpoint `POST /api/v1/wallets/transfer` (trusted-service tokens only, `@Idempotent` + wallet reference-idempotency as the second layer). The deprecated REST fallback adapter in transaction-service keeps the 3-hop sequence (ponytail: no atomic REST endpoint it can call; gRPC is the prod path).
+- **Local podman stack: JVM-safe hosts file (L-225 completion)**: `infrastructure/local/podman/config/hosts` bind-mounted over `/etc/hosts` in every app container — the JDK resolves the literal name `localhost` to `127.0.0.1` FIRST regardless of `/etc/hosts` order and `Socket.connect` never falls back, so the `extra_hosts: localhost:host-gateway` mapping alone left every Spring JWT validator with `Connection refused` on the pinned issuer URL. The minimal file has only `169.254.1.2 localhost` (verified: curl 200 inside container while the JVM got refused). App healthchecks now curl `127.0.0.1:8080` explicitly (the minimal hosts file has no loopback name entry); the old "healthchecks hit the host-published port" trade-off is gone.
+
+### Validation
+
+- `transaction-service` 148 tests / 0 failures — rewritten internal-transfer tests: `usesAtomicTransferForInternalTransfer` (exactly one `transferBalance` call, no reserve/commit/credit/release), `marksInternalTransferFailedWhenAtomicTransferFails` (FAILED with no compensation calls); obsolete `:REFUND`-compensation tests deleted.
+- `wallet-service` 32 tests / 0 failures — new `WalletTransferControllerTest` (2: trusted-service atomic transfer invoked, untrusted caller denied).
+- `partner-service` 321 tests / 0 failures — `WalletSettlementAdapterTest.settleIsSingleAtomicTransferCall` (1 transfer call, 0 reserve/commit/credit).
+- Live on the local podman stack: `POST /api/v1/wallets/transfer` with a `payu-backend` token → 200 `TRANSFERRED`; ledger shows exactly DEBIT 100000 (balance_after 900000) + CREDIT 100000 (balance_after 600000) scale 4 under one reference; replay of the same reference returns the same transaction id with no second mutation; same reference with a different amount → 400 `Transfer reference was already used for a different command`.
+- Local stack infra fix verified: account/wallet/gateway JWT validation went from 401 (JVM `Connection refused` on `localhost:8099` JWKS) to 200 with the minimal hosts mount; healthchecks now hit `127.0.0.1:8080`.
+
 ## [1.10.52] - 2026-08-11
 
 ### Added

@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-226: extra_hosts Is Not Enough for the JVM — localhost Must Not Resolve to Loopback (2026-08-12)
+
+**Context**: CB-034 deploy — after recreating the wallet/transaction/partner containers on the local podman stack, every authenticated call came back `401` with no log line, and the first 500s showed `JWT decode I/O error ... http://localhost:8099/.../certs: Connection refused`. `curl http://localhost:8099` from INSIDE the same container returned 200. A `java Resolve.java` probe inside the container proved it: the JDK resolves the literal name `localhost` to `[127.0.0.1, 169.254.1.2]` — loopback FIRST regardless of `/etc/hosts` order — and `Socket.connect` (used by RestTemplate/HttpURLConnection) never falls back, so it hit the container's own loopback where nothing listens on 8099.
+
+**Lesson**:
+- The `extra_hosts: localhost:host-gateway` compose mapping puts `169.254.1.2 localhost` first in `/etc/hosts`, but that only helps resolvers that iterate/fall back (curl). The JDK special-cases the name `localhost` and returns the loopback first — so the mapping is silently useless for every Spring JWT validator. Bind-mount a minimal `/etc/hosts` with ONLY `169.254.1.2 localhost` (no `127.0.0.1 localhost` line) into app containers; verify with a Java probe, not curl.
+- In-container healthchecks that curl `localhost:8080` also follow the hosts file — after the minimal mount there is no loopback name, so point healthchecks at the literal `127.0.0.1:8080` (loopback interface needs no hosts entry) instead of the container-name-agnostic `localhost`.
+- Symptom pattern: 401s with empty bodies and no application logs after a container recreate are JWT-key-fetch failures, not auth-rule bugs — check the JVM's view of the issuer URL first.
+
+**Applied evidence**: red-first unit tests (transaction 148/148, wallet 32/32, partner 321/321); live atomic transfer E2E on the podman stack (ledger DEBIT/CREDIT scale 4, replay same-transaction-id, mismatched replay 400). CHANGELOG 1.10.53; CB-034 closed.
+
 ## L-225: Token Issuer Must Be Pinned, or Refresh Dies at Keycloak (2026-08-11)
 
 **Context**: LOGIN-003 — after moving the web login to OIDC authorization-code + PKCE, the browser got tokens with `iss=http://localhost:8099/realms/payu` (Keycloak derives the frontend URL from the *request's* Host with `KC_HOSTNAME_STRICT=false`). The gateway/auth-service rejected them (issuer mismatch, the L-116 trap), and once the validators were aligned, Keycloak itself rejected the refresh with `Invalid token issuer. Expected 'http://payu-keycloak-service:8080/realms/payu'` — the *issuance* host (browser, localhost:8099) and the *refresh* host (internal call, payu-keycloak-service:8080) produce different frontend URLs, so no per-request issuer can ever be refreshed.

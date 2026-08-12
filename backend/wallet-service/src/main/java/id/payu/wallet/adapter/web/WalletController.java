@@ -298,6 +298,29 @@ public class WalletController extends BaseController {
         return ok(Map.of("status", "REVERSED", "refundId", request.getRefundId().toString()));
     }
 
+    @PostMapping("/transfer")
+    @Audited(
+            operation = id.payu.security.annotation.AuditOperation.OTHER,
+            entityType = "Wallet",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
+    @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Atomic wallet transfer",
+            description = "Debit sender and credit recipient in one transaction (IMP-1); idempotent by referenceId")
+    public ResponseEntity<ApiResponse<Map<String, String>>> transfer(
+            @Valid @RequestBody TransferRequest request) {
+        if (!isTrustedServiceRequest()) {
+            throw new AccessDeniedException("Only trusted services may transfer between wallets");
+        }
+
+        String transactionId = walletUseCase.transfer(
+                request.getSenderAccountId(), request.getRecipientAccountId(), request.getAmount(),
+                request.getCurrency(), request.getReferenceId(), request.getDescription());
+        return ok(Map.of("status", "TRANSFERRED", "transactionId", transactionId));
+    }
+
     @GetMapping("/{accountId}/ledger")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get ledger entries", description = "Retrieve all ledger entries for an account")
