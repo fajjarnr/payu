@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.66] - 2026-08-12
+
+### Fixed
+
+- **GRPC-012 (wallet, 🔴 money path)**: gRPC `Debit` RPC kini melakukan debit nyata — `WalletGrpcService.debit()` memanggil use case baru `WalletService.debit` (balance berkurang, pessimistic lock, idempotent by referenceId, ledger DEBIT + wallet_transaction DEBIT, scale-4 guard) — sebelumnya memanggil `reserveBalance` sehingga caller mendapat `success=true` tanpa uang bergerak (jalur FX conversion mengandalkan debit ini). `WalletServiceDebitTest` 4 test: debit menurunkan balance, insufficient-balance reject tanpa state change, replay tidak double-debit, scale>4 reject.
+
+### Deployed
+
+- Podman stack `1.10.66` (wallet): healthy, live smoke balance 200, 0 ERROR/WARN di log.
+
 ## [1.10.65] - 2026-08-12
 
 ### Fixed

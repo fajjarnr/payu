@@ -124,11 +124,14 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
             }
 
             BigDecimal amount = new BigDecimal(request.getAmount().getAmount());
-            String transactionId = walletService.reserveBalance(
+            // GRPC-012: Debit must actually decrease the available balance.
+            // The previous implementation called reserveBalance — the caller got
+            // success=true while no money moved (FX conversion relied on it).
+            String transactionId = walletService.debit(
                     accountId,
                     amount,
-                    request.getReferenceId()
-            );
+                    request.getReferenceId(),
+                    request.getDescription());
 
             Wallet wallet = walletService.getWalletByAccountId(accountId)
                     .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));

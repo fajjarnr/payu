@@ -404,8 +404,86 @@ public class WalletService implements WalletUseCase {
         return transactionId.toString();
     }
 
-    private void validateReservationReplay(LedgerEntry reservation, String accountId, BigDecimal amount) {
-        if (!accountId.equals(reservation.getAccountId())
+    @Override
+    @Transactional
+    public String debit(String accountId, BigDecimal amount, String referenceId, String description) {
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("Debit amount must be positive with at most 4 decimals");
+        }
+        if (referenceId == null || referenceId.isBlank()) {
+            throw new IllegalArgumentException("Reference ID is required");
+        }
+
+        Optional<WalletTransaction> existingTransaction = walletPersistencePort.findTransactionByReference(referenceId);
+        if (existingTransaction.isPresent()) {
+            return validateDebitReplay(existingTransaction.get(), accountId, amount);
+        }
+
+        log.info("Debiting {} from account {} with reference {}", amount, accountId, referenceId);
+
+        // GRPC-012: pessimistic lock + real balance decrease (not a reserve)
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+
+        existingTransaction = walletPersistencePort.findTransactionByReference(referenceId);
+        if (existingTransaction.isPresent()) {
+            return validateDebitReplay(existingTransaction.get(), accountId, amount);
+        }
+
+        wallet.debit(amount);
+        walletPersistencePort.save(wallet);
+
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
+        cacheService.invalidate("wallet:id:" + wallet.getId());
+
+        UUID transactionId = UUID.randomUUID();
+
+        LedgerEntry debitEntry = LedgerEntry.builder()
+                .transactionId(transactionId)
+                .accountId(accountId)
+                .entryType(EntryType.DEBIT)
+                .amount(amount)
+                .currency(wallet.getCurrency())
+                .balanceAfter(wallet.getAvailableBalance())
+                .referenceType("DEBIT")
+                .referenceId(referenceId)
+                .createdAt(LocalDateTime.now())
+                .build();
+        walletPersistencePort.saveLedgerEntry(debitEntry);
+
+        WalletTransaction walletTransaction = WalletTransaction.builder()
+                .id(transactionId)
+                .walletId(wallet.getId())
+                .referenceId(referenceId)
+                .type(TransactionType.DEBIT)
+                .amount(amount)
+                .balanceAfter(wallet.getBalance())
+                .description(description)
+                .createdAt(LocalDateTime.now())
+                .build();
+        walletPersistencePort.saveTransaction(walletTransaction);
+
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+
+        log.info("Debited {} from account {}, transactionId: {}", amount, accountId, transactionId);
+        return transactionId.toString();
+    }
+
+    private String validateDebitReplay(WalletTransaction transaction, String accountId, BigDecimal amount) {
+        Wallet wallet = walletPersistencePort.findByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        if (!wallet.getId().equals(transaction.getWalletId())
+                || transaction.getType() != TransactionType.DEBIT
+                || transaction.getAmount() == null
+                || transaction.getAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException("Reference ID was already used for a different debit");
+        }
+        return transaction.getId().toString();
+    }
+
+    private void validateReservationReplay(LedgerEntry reservation, String accountId, BigDecimal amount) {        if (!accountId.equals(reservation.getAccountId())
                 || reservation.getAmount() == null
                 || reservation.getAmount().compareTo(amount) != 0) {
             throw new IllegalArgumentException("Reference ID was already used for a different reservation");

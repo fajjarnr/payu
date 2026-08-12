@@ -90,6 +90,17 @@ public interface WalletUseCase {
     String credit(String accountId, BigDecimal amount, String referenceId, String description);
 
     /**
+     * Debit amount from wallet available balance (outgoing spend).
+     * GRPC-012: distinct from reserveBalance — the balance actually decreases.
+     * @param accountId   account to debit
+     * @param amount      amount to debit
+     * @param referenceId external reference (idempotency)
+     * @param description transaction description
+     * @return            transaction ID
+     */
+    String debit(String accountId, BigDecimal amount, String referenceId, String description);
+
+    /**
      * Atomically debit one wallet and credit another.
      */
     String transfer(String senderAccountId, String recipientAccountId, BigDecimal amount,
