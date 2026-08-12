@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Uses mock beans for shared library dependencies that require external infrastructure.
  */
 @SpringBootTest(
+    classes = id.payu.monitoringtest.MonitoringTestConfiguration.class,
     properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
                 + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"

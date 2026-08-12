@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -32,6 +33,7 @@ import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
+@ActiveProfiles("test")
 @DisplayName("Onboarding Integration Test")
 @org.junit.jupiter.api.Tag("integration")
 class OnboardingIntegrationTest {
@@ -90,6 +92,8 @@ class OnboardingIntegrationTest {
                         "00",
                         "Success"
                 ));
+        given(identityProviderAdapter.provisionUser(any(), any(), any(), any()))
+                .willReturn("iam-" + request.username());
 
         // When
         User savedUser = userApplicationService.registerUser(request).get();
@@ -107,9 +111,14 @@ class OnboardingIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-         registry.add("spring.datasource.url", postgres::getJdbcUrl);
-         registry.add("spring.datasource.username", postgres::getUsername);
-         registry.add("spring.datasource.password", postgres::getPassword);
+         // INTEGRATION-CTX: the app binds datasource-starter prefix
+         // spring.datasource.primary.hikari.* — plain spring.datasource.url
+         // is ignored, which previously left the context without an EMF.
+         registry.add("spring.datasource.primary.hikari.jdbc-url", postgres::getJdbcUrl);
+         registry.add("spring.datasource.primary.hikari.username", postgres::getUsername);
+         registry.add("spring.datasource.primary.hikari.password", postgres::getPassword);
+         registry.add("spring.datasource.primary.hikari.driver-class-name", () -> "org.postgresql.Driver");
+         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
          registry.add("spring.flyway.enabled", () -> "true");
     }
 }

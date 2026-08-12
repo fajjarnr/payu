@@ -2,6 +2,15 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-238: A Scanned @SpringBootConfiguration in the App Package Tree Poisons Every Test Context (2026-08-12)
+
+**Context**: INTEGRATION-CTX — `OnboardingIntegrationTest`/`BlindIndexAndTenantIsolationIntegrationTest` failed with `No bean named 'entityManagerFactory'` even with Testcontainers + `@DynamicPropertySource`. Root cause: `MonitoringTestConfiguration` (a `@SpringBootConfiguration` with `@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration, DataSourceAutoConfiguration, FlywayAutoConfiguration, ...})`) lived in `id.payu.account.monitoring` — inside the application's component-scan path. Every full-context test that scanned the app silently lost JPA/DataSource/Flyway/Kafka/Security auto-configuration. The monitoring tests "worked" only because `@SpringBootTest` discovered that class as their configuration, while the integration tests (different package) discovered `AccountServiceApplication` and got the poisoned scan. `@ConditionalOnProperty`/`@Profile` gating did NOT help — `@EnableAutoConfiguration(exclude=...)` is processed by the import selector regardless of conditions on the hosting class.
+
+**Lesson**:
+- Test-only `@SpringBootConfiguration`/`@Configuration` classes with auto-configuration excludes must NEVER live inside the application package tree — put them in a dedicated test package (`id.payu.monitoringtest`) outside the app scan path and reference them explicitly with `@SpringBootTest(classes = ...)`.
+- When such a class is removed from scan, its implicit effects appear as NEW failures in unrelated tests (VaultConfigurationTest lost its Kafka exclusion) — grep the old excludes and fold them into the affected tests' own properties.
+- Symptom triage: "No bean named 'entityManagerFactory'" + a giant `spring.autoconfigure.exclude`-style Exclusions list in the condition report = a scanned config carrying `@EnableAutoConfiguration(exclude=...)`.
+
 ## L-237: Hand-Run Containers Must Replicate the Compose Security Env + Hosts Mount (2026-08-12)
 
 **Context**: GRPC-020/004/021 batch. After a `podman compose up` failure tore down core infra, services were recreated with bare `podman run`. Two hidden compose anchors were missing: the `local-security-environment` env block (`PAYU_SECURITY_ENCRYPTION_SALT`, `BLIND_INDEX_KEY`, `WEBHOOK_SECURITY_SECRET`, HotRod cache vars) and the `./config/hosts` bind mount (`169.254.1.2 localhost` — L-225 host-gateway trick). Result: apps failed to boot (`Production security requires payu.security.encryption.salt`) or JWT validation failed (`Connection refused` fetching JWKS from `http://localhost:8099` — inside the container localhost is itself).

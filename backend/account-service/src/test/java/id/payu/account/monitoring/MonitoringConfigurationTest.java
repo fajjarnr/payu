@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Includes TestConfiguration to set up PrometheusMeterRegistry for /actuator/prometheus endpoint.
  */
 @SpringBootTest(
+    classes = id.payu.monitoringtest.MonitoringTestConfiguration.class,
     properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
                 + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
