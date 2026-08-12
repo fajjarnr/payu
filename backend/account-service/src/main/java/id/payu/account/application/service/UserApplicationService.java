@@ -58,12 +58,16 @@ public class UserApplicationService implements RegisterUserUseCase {
             command.password(),
             command.fullName()
         );
-        String externalId = iamUserId;
-        if (externalId == null || externalId.isBlank()) {
-            log.warn("Falling back to request externalId for user {} because IAM user id was not returned",
+        // ACCOUNT-005: fail closed — never fall back to the client-supplied
+        // externalId (a public caller must not seed identity data). No IAM id,
+        // no registration.
+        if (iamUserId == null || iamUserId.isBlank()) {
+            log.error("IAM provisioning returned no user id for user {} — registration rejected",
                 command.username());
-            externalId = command.externalId();
+            throw new IllegalArgumentException(
+                "Identity provider did not return a user id; registration rejected");
         }
+        String externalId = iamUserId;
 
         // Step 2: Attempt KYC verification — if unavailable, register with PENDING status.
         // Simple try-catch replaces resilience4j annotations which caused double-fallback
@@ -100,20 +104,32 @@ public class UserApplicationService implements RegisterUserUseCase {
         User savedUser;
         try {
             savedUser = userPersistencePort.save(user);
-        } catch (DataIntegrityViolationException e) {
-            // BUG-BE-031: Handle race condition where concurrent registrations
-            // both pass existsBy checks but one fails at DB unique constraint
-            throw new IllegalStateException("Registration conflict: email or username already taken", e);
+            // Publish event (PII-minimized, ACCOUNT-004)
+            userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
+                    savedUser.getId(),
+                    savedUser.getExternalId(),
+                    savedUser.getCreatedAt()));
+        } catch (Exception e) {
+            // ACCOUNT-005: saga compensation — local persistence failed after IAM
+            // provisioning; remove the IAM identity so no orphan Keycloak user
+            // lingers. Best-effort: if cleanup fails, the ERROR line is the
+            // orphan alert for manual cleanup.
+            try {
+                identityProviderPort.deleteUser(iamUserId);
+            } catch (Exception cleanupFailure) {
+                log.error("IAM compensation failed for user {} (iamUserId={}) — manual cleanup required: {}",
+                        command.username(), iamUserId, cleanupFailure.getMessage());
+            }
+            if (e instanceof DataIntegrityViolationException) {
+                // BUG-BE-031: Handle race condition where concurrent registrations
+                // both pass existsBy checks but one fails at DB unique constraint
+                throw new IllegalStateException("Registration conflict: email or username already taken", e);
+            }
+            throw e;
         }
 
         log.info("User registered successfully with status={}, kycStatus={}: {}",
                 userStatus, kycStatus, savedUser.getId());
-
-        // Publish event (PII-minimized, ACCOUNT-004)
-        userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
-                savedUser.getId(),
-                savedUser.getExternalId(),
-                savedUser.getCreatedAt()));
 
         return CompletableFuture.completedFuture(savedUser);
     }

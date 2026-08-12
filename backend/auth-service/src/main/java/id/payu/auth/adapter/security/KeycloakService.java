@@ -209,6 +209,23 @@ public class KeycloakService {
         return userId;
     }
 
+    /**
+     * ACCOUNT-005: remove a user from Keycloak (saga compensation for
+     * provisioning). The admin client's {@code remove()} issues the REST
+     * DELETE and throws on non-2xx; idempotent server-side, so double
+     * compensation is harmless.
+     *
+     * @param userId the Keycloak user id to remove
+     */
+    public void deleteUser(String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("User ID is required");
+        }
+        keycloakAdmin.realm(keycloakConfig.getRealm())
+                .users().get(userId).remove();
+        log.info("Deleted user {} in Keycloak", userId);
+    }
+
     private void validatePassword(String password) {
         if (password == null || password.length() < passwordMinLength) {
             throw new IllegalArgumentException("Password must be at least " + passwordMinLength + " characters long");

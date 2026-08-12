@@ -24,6 +24,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -183,6 +186,44 @@ class AuthControllerTest {
                             .content(objectMapper.writeValueAsString(new LogoutRequest("rt-123"))))
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error.code").value("SERVICE_UNAVAILABLE"));
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/v1/auth/users/{userId}")
+    class DeleteUserEndpoint {
+
+        @Test
+        @DisplayName("200 and deletes the IAM user")
+        void deleteUserReturns200() throws Exception {
+            mockMvc.perform(delete("/api/v1/auth/users/user-1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.message").value("User deleted from IAM"));
+
+            verify(keycloakService).deleteUser("user-1");
+        }
+
+        @Test
+        @DisplayName("400 when the user id is blank")
+        void blankUserIdReturns400() throws Exception {
+            willThrow(new IllegalArgumentException("User ID is required"))
+                    .given(keycloakService).deleteUser("");
+
+            mockMvc.perform(delete("/api/v1/auth/users/"))
+                    .andExpect(status().is4xxClientError());
+        }
+
+        @Test
+        @DisplayName("500 when Keycloak deletion fails")
+        void deleteFailureReturns500() throws Exception {
+            willThrow(new RuntimeException("Failed to delete user in IAM"))
+                    .given(keycloakService).deleteUser("user-1");
+
+            mockMvc.perform(delete("/api/v1/auth/users/user-1"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.error.code").value("INTERNAL_ERROR"));
+
+            verify(keycloakService).deleteUser("user-1");
         }
     }
 }

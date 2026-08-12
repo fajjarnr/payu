@@ -15,4 +15,14 @@ public interface IdentityProviderPort {
      * @param fullName the user's full name
      */
     String provisionUser(String username, String email, String password, String fullName);
+
+    /**
+     * ACCOUNT-005: remove a provisioned identity (saga compensation).
+     * Called when local persistence fails after IAM provisioning, so no
+     * orphan Keycloak user is left behind. Best-effort: a failure here is
+     * logged loudly and requires manual cleanup.
+     *
+     * @param iamUserId the identity provider user id returned by {@link #provisionUser}
+     */
+    void deleteUser(String iamUserId);
 }

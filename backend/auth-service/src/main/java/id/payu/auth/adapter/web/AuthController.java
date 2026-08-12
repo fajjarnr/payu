@@ -33,7 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -405,6 +407,52 @@ public class AuthController extends BaseController {
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),
                             "Failed to register user in identity provider"
+                    ));
+        }
+    }
+
+    /**
+     * ACCOUNT-005: delete a provisioned IAM user (saga compensation from
+     * account-service when local persistence fails after provisioning).
+     * Internal-only like {@link #register(RegisterRequest)}.
+     *
+     * @param userId the IAM user id to delete
+     */
+    @DeleteMapping("/users/{userId}")
+    @Audited(
+            operation = AuditOperation.DELETE,
+            entityType = "User",
+            level = AuditLevel.INFO
+    )
+    @Operation(
+            summary = "Delete user in IAM",
+            description = "Removes a user from Keycloak. Called internally by account-service "
+                    + "as saga compensation when registration fails after IAM provisioning."
+    )
+    @SecurityRequirements
+    @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "delete-user")
+    public ResponseEntity<ApiResponse<?>> deleteUser(
+            @PathVariable String userId
+    ) {
+        try {
+            keycloakService.deleteUser(userId);
+            log.info("Deleted user in IAM: {}", userId);
+            return ResponseEntity.ok(ApiResponse.success(Map.of(
+                    "message", "User deleted from IAM"
+            )));
+        } catch (IllegalArgumentException e) {
+            log.warn("User deletion rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_001.getCode(),
+                            e.getMessage()
+                    ));
+        } catch (Exception e) {
+            log.error("IAM user deletion failed for {}: {}", userId, e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(
+                            ErrorCode.INTERNAL_ERROR.getCode(),
+                            "Failed to delete user in identity provider"
                     ));
         }
     }

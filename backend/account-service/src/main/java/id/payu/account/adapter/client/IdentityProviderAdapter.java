@@ -53,6 +53,21 @@ public class IdentityProviderAdapter implements IdentityProviderPort {
         );
     }
 
+    @Override
+    @CircuitBreaker(name = "authService", fallbackMethod = "deleteUserFallback")
+    public void deleteUser(String iamUserId) {
+        log.info("Deleting IAM identity: {}", iamUserId);
+        gatewayClient.deleteIdentity(iamUserId);
+        log.info("IAM identity deleted: {}", iamUserId);
+    }
+
+    private void deleteUserFallback(String iamUserId, Throwable throwable) {
+        // ACCOUNT-005: compensation is best-effort — the IAM user is left in
+        // place and the ERROR line is the orphan alert for manual cleanup.
+        log.error("Failed to delete IAM identity {} (orphan risk, manual cleanup required): {}",
+                iamUserId, throwable.getMessage());
+    }
+
     @SuppressWarnings("unchecked")
     private String extractUserId(Map<String, Object> response) {
         if (response == null) {

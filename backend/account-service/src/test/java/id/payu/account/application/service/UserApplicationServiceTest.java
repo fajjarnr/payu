@@ -9,6 +9,7 @@ import id.payu.account.domain.port.out.UserEventPublisherPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -174,6 +175,11 @@ class UserApplicationServiceTest {
 
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(identityProviderPort.provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName())).willReturn(UUID.randomUUID().toString());
             given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
                     .willReturn(failedKycResponse);
 
@@ -231,6 +237,11 @@ class UserApplicationServiceTest {
 
                 given(userPersistencePort.existsByEmail(request.email())).willReturn(false);
                 given(userPersistencePort.existsByUsername(request.username())).willReturn(false);
+                given(identityProviderPort.provisionUser(
+                        request.username(),
+                        request.email(),
+                        request.password(),
+                        request.fullName())).willReturn(UUID.randomUUID().toString());
                 given(kycVerificationPort.verifyNik(request.nik(), request.fullName()))
                         .willReturn(successfulKycResponse);
 
@@ -253,6 +264,11 @@ class UserApplicationServiceTest {
             // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(identityProviderPort.provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName())).willReturn(UUID.randomUUID().toString());
             given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
                     .willReturn(successfulKycResponse);
 
@@ -270,6 +286,53 @@ class UserApplicationServiceTest {
 
             // Then
             verify(userEventPublisherPort, times(1)).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
+        }
+
+        @Test
+        @DisplayName("ACCOUNT-005: registration is rejected when IAM returns no user id (fail-closed)")
+        void shouldFailClosedWhenIamReturnsNoUserId() {
+            // Given: IAM provisioned but the response carried no user id
+            given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
+            given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(identityProviderPort.provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName())).willReturn(null);
+
+            // When/Then: no fallback to the client-supplied externalId — reject
+            assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("did not return a user id");
+
+            verify(userPersistencePort, never()).save(any(User.class));
+            verify(identityProviderPort, never()).deleteUser(anyString());
+        }
+
+        @Test
+        @DisplayName("ACCOUNT-005: IAM user is deleted when local persistence fails (compensation)")
+        void shouldDeleteIamUserWhenLocalSaveFails() {
+            // Given: IAM provisioned, local save fails
+            String iamUserId = UUID.randomUUID().toString();
+            given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
+            given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(identityProviderPort.provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName())).willReturn(iamUserId);
+            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
+                    .willReturn(successfulKycResponse);
+            given(userPersistencePort.save(any(User.class)))
+                    .willThrow(new DataIntegrityViolationException("duplicate"));
+
+            // When/Then
+            assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Registration conflict");
+
+            verify(identityProviderPort).deleteUser(iamUserId);
+            verify(userEventPublisherPort, never()).publishUserCreated(any());
         }
 
         @Test

@@ -272,4 +272,60 @@ class KeycloakServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("deleteUser")
+    class DeleteUser {
+
+        private org.keycloak.admin.client.resource.RealmResource realmResource;
+        private org.keycloak.admin.client.resource.UsersResource usersResource;
+
+        @org.junit.jupiter.api.BeforeEach
+        void setUpRealm() {
+            realmResource = mock(org.keycloak.admin.client.resource.RealmResource.class);
+            usersResource = mock(org.keycloak.admin.client.resource.UsersResource.class);
+            lenient().when(keycloakAdmin.realm(keycloakConfig.getRealm())).thenReturn(realmResource);
+            lenient().when(realmResource.users()).thenReturn(usersResource);
+        }
+
+        @Test
+        @DisplayName("should remove the user from Keycloak")
+        void shouldDeleteUser() {
+            // Given
+            org.keycloak.admin.client.resource.UserResource userResource =
+                    mock(org.keycloak.admin.client.resource.UserResource.class);
+            given(usersResource.get("user-1")).willReturn(userResource);
+
+            // When
+            keycloakService.deleteUser("user-1");
+
+            // Then
+            verify(userResource).remove();
+        }
+
+        @Test
+        @DisplayName("should throw when user id is blank")
+        void shouldRejectBlankUserId() {
+            assertThatThrownBy(() -> keycloakService.deleteUser("  "))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("User ID is required");
+            verify(keycloakAdmin, never()).realm(anyString());
+        }
+
+        @Test
+        @DisplayName("should propagate Keycloak errors (orphan alert upstream)")
+        void shouldPropagateKeycloakError() {
+            // Given
+            org.keycloak.admin.client.resource.UserResource userResource =
+                    mock(org.keycloak.admin.client.resource.UserResource.class);
+            doThrow(new RuntimeException("Keycloak unreachable"))
+                    .when(userResource).remove();
+            given(usersResource.get("user-1")).willReturn(userResource);
+
+            // When/Then
+            assertThatThrownBy(() -> keycloakService.deleteUser("user-1"))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Keycloak unreachable");
+        }
+    }
+
 }

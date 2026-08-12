@@ -3,6 +3,8 @@ package id.payu.account.adapter.client;
 import id.payu.account.dto.VerifyNikRequest;
 import id.payu.account.dto.VerifyNikResponse;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -36,4 +38,12 @@ public interface GatewayClient {
      */
     @PostMapping("/api/v1/auth/register")
     Map<String, Object> registerIdentity(@RequestBody Map<String, String> request);
+
+    /**
+     * ACCOUNT-005: delete a provisioned IAM user (saga compensation).
+     *
+     * @param userId the IAM user id to remove
+     */
+    @DeleteMapping("/api/v1/auth/users/{userId}")
+    void deleteIdentity(@PathVariable("userId") String userId);
 }
