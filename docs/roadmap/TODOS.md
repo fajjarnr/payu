@@ -55,7 +55,7 @@
 | CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
 | CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — fail-closed DONE 2026-08-12; sisa provider nyata + delivery ID + E2E (butuh credential provider eksternal) | E2E terima; log tanpa PII |
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
-| CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) | Suite green di CI |
+| CB-007 | qa | Money-safety regression suite lintas core (idempotency, outbox, DECIMAL(19,4), reversal, DLQ) — **progress 2026-08-12**: suite runs lagi (auth client_credentials pasca LOGIN-003); sisa: modernisasi payload per flow ke kontrak API sekarang | Suite green di CI |
 | CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi | E2E green |
 | CB-037 | notification | **IMP-4 Retry + fallback channel** (FLOWS.md): notification retry backoff + fallback push→email→SMS (pendamping CB-029 provider) | Gagal channel → fallback sukses, test green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
