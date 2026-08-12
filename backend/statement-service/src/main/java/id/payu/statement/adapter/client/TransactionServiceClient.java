@@ -1,4 +1,7 @@
-package id.payu.statement.application.service;
+package id.payu.statement.adapter.client;
+
+import id.payu.statement.dto.TransactionRecord;
+import id.payu.statement.dto.TransactionType;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,7 +35,7 @@ public class TransactionServiceClient {
     /**
      * Get transactions for an account within a date range.
      */
-    public List<StatementService.TransactionRecord> getTransactions(String accountId, LocalDate startDate, LocalDate endDate) {
+    public List<TransactionRecord> getTransactions(String accountId, LocalDate startDate, LocalDate endDate) {
         String url = transactionServiceUrl + "/api/v1/transactions?accountId=" + accountId
             + "&startDate=" + startDate + "&endDate=" + endDate;
 
@@ -41,7 +44,7 @@ public class TransactionServiceClient {
 
             if (response != null && response.getData() != null) {
                 return response.getData().stream()
-                    .map(t -> new StatementService.TransactionRecord(
+                    .map(t -> new TransactionRecord(
                         toLocalDate(t.getCreatedAt()),
                         t.getDescription(),
                         t.getAmount(),
@@ -60,7 +63,7 @@ public class TransactionServiceClient {
     /**
      * Get single transaction by ID.
      */
-    public StatementService.TransactionRecord getTransaction(String transactionId) {
+    public TransactionRecord getTransaction(String transactionId) {
         String url = transactionServiceUrl + "/api/v1/transactions/" + transactionId;
 
         try {
@@ -68,7 +71,7 @@ public class TransactionServiceClient {
 
             if (response != null && response.getData() != null) {
                 TransactionDto t = response.getData();
-                return new StatementService.TransactionRecord(
+                return new TransactionRecord(
                     toLocalDate(t.getCreatedAt()),
                     t.getDescription(),
                     t.getAmount(),

@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **GRPC-005 (statement, partial)**: `TransactionServiceClient` + `WalletServiceClient` dipindah dari `application.service` ke `adapter.client`; `TransactionRecord`/`TransactionType` diekstrak ke `statement.dto` (dulu nested di `StatementService`) — adapter client tidak lagi bergantung ke application layer; ArchUnit layered green (56/56). Migrasi gRPC penuh menunggu GRPC-002.
+
+
+### Changed
+
 - **INTEGRATION-CTX (account qa)**: akar masalah context integration test ditemukan & diperbaiki — `MonitoringTestConfiguration` (yang membawa `@EnableAutoConfiguration(exclude=JPA/DataSource/Flyway/Kafka/Security/...)`) berada di dalam path component-scan aplikasi sehingga **setiap** test full-context kehilangan JPA auto-configuration (`No bean named 'entityManagerFactory'`). Dipindah ke package `id.payu.monitoringtest` (luar scan), monitoring tests pakai `classes = MonitoringTestConfiguration.class` eksplisit, `VaultConfigurationTest` mendapat exclusion Kafka yang sebelumnya di-supply scan. `OnboardingIntegrationTest` + `BlindIndexAndTenantIsolationIntegrationTest` kini boot Testcontainers PG via prefix `spring.datasource.primary.hikari.*` (sesuai binding app) — onboarding 1/1 green; 2 test cross-tenant di-`@Disabled` dengan reason (gap NYATA ACCOUNT-003-RLS: tenant filter belum enforce). Full suite account **134/134 green** (sebelumnya 2 test error).
 
 ## [1.10.67] - 2026-08-12

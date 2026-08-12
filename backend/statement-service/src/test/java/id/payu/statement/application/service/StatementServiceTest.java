@@ -1,5 +1,9 @@
 package id.payu.statement.application.service;
 
+import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.dto.TransactionRecord;
+import id.payu.statement.dto.TransactionType;
+import id.payu.statement.adapter.client.WalletServiceClient;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
@@ -219,13 +223,13 @@ class StatementServiceTest {
             when(walletServiceClient.getCurrentBalance(testUserId.toString()))
                     .thenReturn(new BigDecimal("15000000"));
             when(transactionServiceClient.getTransactions(testUserId.toString(), period, endDate))
-                    .thenReturn(List.of(new StatementService.TransactionRecord(
+                    .thenReturn(List.of(new TransactionRecord(
                             LocalDate.of(2024, 1, 15), "topup", new BigDecimal("2000000"),
-                            id.payu.statement.application.service.TransactionType.CREDIT)));
+                            TransactionType.CREDIT)));
             when(transactionServiceClient.getTransactions(testUserId.toString(), endDate.plusDays(1), LocalDate.now()))
-                    .thenReturn(List.of(new StatementService.TransactionRecord(
+                    .thenReturn(List.of(new TransactionRecord(
                             LocalDate.of(2024, 2, 5), "purchase", new BigDecimal("5000000"),
-                            id.payu.statement.application.service.TransactionType.DEBIT)));
+                            TransactionType.DEBIT)));
             when(walletServiceClient.getBalanceAsOf(anyString(), any()))
                     .thenReturn(Optional.empty());
 

@@ -1,5 +1,7 @@
 package id.payu.statement.application.service;
 
+import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.dto.TransactionRecord;
 import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.domain.model.Receipt;
 import id.payu.statement.domain.model.RecipientInfo;
@@ -276,7 +278,7 @@ public class ReceiptService {
      */
     private TransactionData fetchTransactionData(String transactionId) {
         try {
-            StatementService.TransactionRecord record = transactionServiceClient.getTransaction(transactionId);
+            TransactionRecord record = transactionServiceClient.getTransaction(transactionId);
             return TransactionData.builder()
                     .transactionId(transactionId)
                     .amount(record.getAmount())

@@ -1,5 +1,6 @@
 package id.payu.statement.application.service;
 
+import id.payu.statement.adapter.client.TransactionServiceClient;
 import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;

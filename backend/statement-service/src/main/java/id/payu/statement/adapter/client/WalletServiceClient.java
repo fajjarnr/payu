@@ -1,4 +1,4 @@
-package id.payu.statement.application.service;
+package id.payu.statement.adapter.client;
 
 import id.payu.statement.domain.port.out.WalletServicePort;
 import lombok.Data;

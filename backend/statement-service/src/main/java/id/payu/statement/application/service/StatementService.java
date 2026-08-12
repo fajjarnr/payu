@@ -1,8 +1,12 @@
 package id.payu.statement.application.service;
 
+import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.adapter.client.WalletServiceClient;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
+import id.payu.statement.dto.TransactionRecord;
+import id.payu.statement.dto.TransactionType;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.application.service.exception.StatementException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -716,15 +720,6 @@ public class StatementService {
         private BigDecimal totalDebits;
         private Integer transactionCount;
         private List<TransactionRecord> transactions;
-    }
-
-    @lombok.Data
-    @lombok.AllArgsConstructor
-    public static class TransactionRecord {
-        private LocalDate date;
-        private String description;
-        private BigDecimal amount;
-        private TransactionType type;
     }
 
     @lombok.Data
