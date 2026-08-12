@@ -116,6 +116,16 @@ public abstract class HexagonalArchitectureTest {
             HexagonalArchitectureRules.jpaEntitiesShouldBeInInfrastructure();
 
     /**
+     * Rule: raw HTTP clients (RestTemplate/WebClient) only in adapter.client.
+     *
+     * <p>GRPC-021: inter-service calls must cross the hexagonal boundary through
+     * adapter client ports.
+     */
+    @ArchTest
+    static final ArchRule httpClientsOnlyInClientAdapters =
+            HexagonalArchitectureRules.httpClientsOnlyInClientAdapters();
+
+    /**
      * Utility method to import classes for a specific package.
      *
      * <p>Useful for programmatic rule checking in custom tests.

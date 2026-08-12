@@ -149,8 +149,8 @@ public class WalletService implements WalletUseCase {
     @Override
     @Transactional
     public String reserveBalance(String accountId, BigDecimal amount, String referenceId) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("Reserve amount must be positive with at most 4 decimals");
         }
         if (referenceId == null || referenceId.isBlank()) {
             throw new IllegalArgumentException("Reference ID is required");
@@ -333,8 +333,8 @@ public class WalletService implements WalletUseCase {
     @Override
     @Transactional
     public String credit(String accountId, BigDecimal amount, String referenceId, String description) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 4) {
+            throw new IllegalArgumentException("Credit amount must be positive with at most 4 decimals");
         }
         if (referenceId == null || referenceId.isBlank()) {
             throw new IllegalArgumentException("Reference ID is required");

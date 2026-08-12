@@ -2,6 +2,15 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-237: Hand-Run Containers Must Replicate the Compose Security Env + Hosts Mount (2026-08-12)
+
+**Context**: GRPC-020/004/021 batch. After a `podman compose up` failure tore down core infra, services were recreated with bare `podman run`. Two hidden compose anchors were missing: the `local-security-environment` env block (`PAYU_SECURITY_ENCRYPTION_SALT`, `BLIND_INDEX_KEY`, `WEBHOOK_SECURITY_SECRET`, HotRod cache vars) and the `./config/hosts` bind mount (`169.254.1.2 localhost` — L-225 host-gateway trick). Result: apps failed to boot (`Production security requires payu.security.encryption.salt`) or JWT validation failed (`Connection refused` fetching JWKS from `http://localhost:8099` — inside the container localhost is itself).
+
+**Lesson**:
+- A compose service is NOT just its `environment:` block — `x-app-defaults`/`x-local-security-environment` anchors carry required env, `extra_hosts`, `/etc/hosts` mounts, read-only FS and cap drops. Read the full anchor chain before replicating a service with `podman run`.
+- Symptom triage: `Production security requires payu.security.encryption.salt` = missing security env; JWT `Connection refused` on the pinned issuer = missing host-gateway hosts mount.
+- The custom `/etc/hosts` (loopback-free) is load-bearing for JWT validation in this stack — do not "simplify" it away.
+
 ## L-236: Datasource Prefix Drift + Migration/Entity Drift Hide Behind Hand-Patched Live DBs (2026-08-12)
 
 **Context**: WALLET-001/WALLET-002 + GRPC-008 batch. Two wallet "verified live" bugs were invisible to the running stack: (1) `application-local.yml` (the default profile!) placed credentials under `spring.datasource.primary.*` while `datasource-starter` binds `spring.datasource.primary.hikari.*` — so the starter bean backed off and Boot fell back to a pool with `autoCommit=true`, which combined with `hibernate.connection.provider_disables_autocommit` produces `Cannot commit when autoCommit is true` on every transaction; (2) V10 DDL created `split_recipients.type` + `split_payment_legs.credited_at` while entities map `recipient_type`/`settled_at` — fresh installs fail Hibernate validate, but the live DB was hand-patched so the app booted fine.

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.10.65] - 2026-08-12
+
+### Fixed
+
+- **GRPC-020 (wallet)**: `reserveBalance` + `credit` kini enforce scale-4 (sama seperti `transfer`) — amount `0.00001` ditolak sebelum state change; `WalletScaleValidationTest` (reject scale>4 tanpa save/ledger/event; accept scale 4).
+- **GRPC-004 (transaction)**: `PaymentExpiryScheduler` memanggil wallet lewat `WalletServicePort.releaseBalance` (gRPC adapter) — sebelumnya raw `RestTemplate` ke `/wallets/{accountId}/release` yang **tidak ada** (404 diam-diam tiap 5 menit) + bypass hexagonal boundary; `PaymentExpirySchedulerTest.releasesReservedBalanceThroughWalletPort`.
+
+### Changed
+
+- **GRPC-021 (shared)**: rule ArchUnit `httpClientsOnlyInClientAdapters` (RestTemplate/WebClient/RestClient/OkHttpClient hanya di `adapter.client`, config exempt) di `HexagonalArchitectureRules` + base test; di-wire ke wallet & transaction ArchitectureTest. grpc-starter kini punya test pertama: `GrpcStarterPropertiesTest` (binding `payu.grpc.*`).
+- **PROMO-001 (promotion)**: verified closed — replay saga no-op via unique index + `findByTransactionId` (test 7/7).
+
+### Deployed
+
+- Podman stack `1.10.65` (wallet + transaction): 34 container healthy, live smoke balance 200 (JWT via keycloak valid), summary security-wired, 0 ERROR/WARN di log.
+
 ## [1.10.64] - 2026-08-12
 
 ### Fixed

@@ -102,6 +102,12 @@ public class ArchitectureTest {
     }
 
     @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("GRPC-021: raw HTTP clients only in adapter.client")
+    void httpClientsOnlyInClientAdapters() {
+        id.payu.archunit.HexagonalArchitectureRules.httpClientsOnlyInClientAdapters().check(importedClasses);
+    }
+
+    @org.junit.jupiter.api.Test
     @org.junit.jupiter.api.DisplayName("ITER-55: domain layer should not depend on JPA")
     void domainShouldNotDependOnJpa() {
         // Domain must be JPA-free (entities live in adapter/persistence/entity/)

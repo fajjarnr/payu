@@ -29,6 +29,12 @@ class ArchitectureTest {
     class HexagonalArchitectureRules {
 
         @Test
+        @DisplayName("GRPC-021: raw HTTP clients only in adapter.client")
+        void httpClientsOnlyInClientAdapters() {
+            id.payu.archunit.HexagonalArchitectureRules.httpClientsOnlyInClientAdapters().check(importedClasses);
+        }
+
+        @Test
         @DisplayName("should follow hexagonal architecture layers")
         void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()

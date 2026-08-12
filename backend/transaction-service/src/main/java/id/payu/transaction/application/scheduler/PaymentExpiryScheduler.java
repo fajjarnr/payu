@@ -4,17 +4,14 @@ import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
+import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.outbox.service.OutboxService;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -35,28 +32,21 @@ public class PaymentExpiryScheduler {
     private final TransactionPersistencePort transactionPersistencePort;
     private final VirtualAccountPersistencePort virtualAccountPersistencePort;
     private final OutboxService outboxService;
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    private final WalletServicePort walletServicePort;
     private final java.time.Clock clock;
 
     public PaymentExpiryScheduler(TransactionPersistencePort transactionPersistencePort,
                                    VirtualAccountPersistencePort virtualAccountPersistencePort,
                                    OutboxService outboxService,
-                                   ObjectMapper objectMapper,
+                                   WalletServicePort walletServicePort,
                                    java.time.Clock clock) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.virtualAccountPersistencePort = virtualAccountPersistencePort;
         this.outboxService = outboxService;
-        this.objectMapper = objectMapper;
+        this.walletServicePort = walletServicePort;
         this.clock = clock;
-        // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
-        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(10000);
-        this.restTemplate = new RestTemplate(factory);
     }
 
-    private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
     private static final String PAYMENT_EXPIRED_TOPIC = "payu.transaction.payment-expired.v1";
 
     /**
@@ -111,19 +101,18 @@ public class PaymentExpiryScheduler {
     }
 
     /**
-     * Release reserved balance for expired transaction.
+     * Release reserved balance for expired transaction via the wallet port (gRPC).
+     * GRPC-004: the previous raw RestTemplate call hit a non-existent endpoint
+     * (`/wallets/{accountId}/release`) and was silently swallowed.
      */
     private void releaseReservedBalance(TransactionEntity tx) {
         try {
             if (tx.getSourceAccountId() != null && tx.getAmount() != null) {
-                // Call wallet-service to release reserved balance
-                String url = WALLET_SERVICE_URL + "/" + tx.getSourceAccountId() + "/release";
-                Map<String, Object> request = new HashMap<>();
-                request.put("amount", tx.getAmount());
-                request.put("transactionId", tx.getId().toString());
-                request.put("reason", "Payment expired");
-
-                restTemplate.postForEntity(url, request, Void.class);
+                walletServicePort.releaseBalance(
+                        tx.getSourceAccountId(),
+                        tx.getId().toString(),
+                        tx.getReservationId(),
+                        tx.getAmountValue());
                 log.info("Released reserved balance for transaction {}: amount={}",
                     tx.getId(), tx.getAmount());
             }

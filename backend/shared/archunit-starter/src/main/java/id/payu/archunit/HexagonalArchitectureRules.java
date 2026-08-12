@@ -452,6 +452,37 @@ public final class HexagonalArchitectureRules {
     }
 
     /**
+     * GRPC-021(a): inter-service HTTP clients (RestTemplate/WebClient) must only
+     * live in the client adapter package. Application/scheduler code that talks
+     * to another service directly over HTTP bypasses the hexagonal boundary and
+     * the resilience/correlation handling of the adapter layer.
+     *
+     * @return ArchRule forbidding raw HTTP clients outside adapter.client
+     */
+    public static ArchRule httpClientsOnlyInClientAdapters() {
+        return noClasses()
+                .that()
+                .resideOutsideOfPackage("..adapter.client..")
+                .and()
+                .resideOutsideOfPackage("..config..")
+                .should()
+                .dependOnClassesThat()
+                .haveSimpleName("RestTemplate")
+                .orShould()
+                .dependOnClassesThat()
+                .haveSimpleName("WebClient")
+                .orShould()
+                .dependOnClassesThat()
+                .haveSimpleName("RestClient")
+                .orShould()
+                .dependOnClassesThat()
+                .haveSimpleName("OkHttpClient")
+                .because("GRPC-021: inter-service calls must go through adapter client ports, "
+                        + "not raw RestTemplate/WebClient from application or domain code "
+                        + "(config classes may wire client beans)");
+    }
+
+    /**
      * Combined rule set for comprehensive hexagonal architecture validation.
      *
      * @return List of all core hexagonal architecture rules
