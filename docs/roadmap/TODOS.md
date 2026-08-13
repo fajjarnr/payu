@@ -39,7 +39,7 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
+| ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. **PROGRESS 2026-08-13**: core domain 55.2%→95.6% (Budget/User/Account lifecycle tests — `BudgetTest` 21, `UserTest` 4, `AccountLifecycleTest` 10), CI workflow `.github/workflows/account-tests.yml` (test+jacoco report artifact). Sisa: overall ≥80% (masih ~21%), jacoco `verify` gate merah sampai overall naik. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | PROD-044 | P1 | Notification false success — **PARTIAL 2026-08-12**: fail-closed live (SMS/PUSH default NONE → false, LOG hanya eksplisit, `mailer.mock` tidak diwariskan ke prod, `KEYCLOAK_REALM` default). Sisa (butuh credential provider eksternal): provider nyata + delivery ID + E2E terima. | 🟠 Fail-closed live — provider pending |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
