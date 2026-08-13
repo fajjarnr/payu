@@ -66,7 +66,7 @@
 | QAMVP-006 | platform | PRD launch criteria tracker: prod deploy OCP, app stores, legal ToS, security hardening (lanjut CB-006) | Checklist PRD §12 hijau |
 | QAMVP-007 | wallet | ~~Escrow test: unit domain + integration + E2E (sekarang 0 test semua layer)~~ **unit + integration DONE 2026-08-13** — `EscrowTransactionTest` (8: state machine CREATED→HELD→RELEASED→SETTLED, refund/expiry, illegal transitions, net amount), `EscrowServiceIntegrationTest` (2: hold→release→settle + refund release-reservation, real PG Testcontainers). Bonus fix: `EscrowPersistenceAdapter`/entity `@GeneratedValue`+`@Version` bikin insert crash (PropertyValue/StaleObject) — dipakai `Persistable` + version-preserving update. Sisa: E2E blackbox | Escrow money journey hijau |
 | QAMVP-008 | transaction | Split-bill test: unit + integration + E2E (sekarang 0) + fix topic (ARCH-TXN-002) | Split-bill journey hijau |
-| QAMVP-009 | transaction | BI-FAST transfer integration test (Testcontainers PG+Kafka + simulator) + E2E blackbox | BI-FAST journey hijau |
+| QAMVP-009 | transaction | ~~BI-FAST transfer integration test (Testcontainers PG+Kafka + simulator) + E2E blackbox~~ **integration DONE 2026-08-13** — `BifastTransferIntegrationTest` (2: BI-FAST transfer persist tx+outbox atomically vs real PG; provider failure → kompensasi release reservation + FAILED). Sisa: E2E blackbox | BI-FAST journey hijau |
 | QAMVP-010 | transaction, loan-origination | Disbursement integration + E2E; wajib setelah ARCH-LOAN-001 fix | Disbursement journey hijau |
 | QAMVP-011 | wallet, transaction, billing, partner | ~~Test idempotency concurrency: 10 thread key sama → 1 mutasi, 1 ledger, 1 outbox~~ **CLOSED 2026-08-13** — 4 service: `WalletControllerConcurrencyIdempotencyTest` (credit), `TransactionControllerConcurrencyIdempotencyTest` (transfer), `PaymentControllerConcurrencyIdempotencyTest` (bill payment), `MerchantControllerConcurrencyIdempotencyTest` (QR) — 10 thread X-Idempotency-Key sama → 1 mutasi, 1 successful atomic claim, 0 5xx, 0 throw; 5× run stabil | Test thread lulus CI |
 | QAMVP-012 | wallet, transaction, billing, partner | ~~Test same-key + different-payload ditolak (conflict, bukan replay)~~ **CLOSED 2026-08-13** — `sameKeyDifferentPayloadIsConflict` di 4 service (wallet/transaction/billing/partner): 409 conflict, 1 mutasi | Test lulus CI |
@@ -224,7 +224,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 |:---|:---|:---:|
 | 16 Escrow (wallet) | unit (8) + integration (2) **ADDED 2026-08-13** (real PG); sisa E2E blackbox | 🟡 |
 | 11 Split Bill (transaction) | **0 test semua layer** | 🔴 |
-| 7 Transfer Interbank BI-FAST | Tanpa E2E + tanpa integration test (fitur flagship MVP) | 🔴 |
+| 7 Transfer Interbank BI-FAST | integration test **ADDED 2026-08-13** (real PG + outbox); sisa E2E blackbox | 🟡 |
 | 10 Disbursement | Tanpa E2E + IT; ditambah ARCH-LOAN-001 (idempotency/ref random) | 🔴 |
 | 9 VA Payment | Tanpa E2E + IT | 🟠 |
 | 22 Settlement Batch | Tanpa E2E + IT | 🟠 |
