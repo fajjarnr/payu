@@ -241,6 +241,13 @@ public class Rfc9457GlobalExceptionHandler {
         };
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFound(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex, HttpServletRequest request) {
+        return respondWith(HttpStatus.NOT_FOUND, "Resource not found",
+                ex.getMessage(), "NOT_FOUND", request);
+    }
+
     private HttpStatus determineHttpStatus(BusinessException ex) {
         if (ex instanceof ResourceNotFoundException) return HttpStatus.NOT_FOUND;
         if (ex instanceof ConflictException) return HttpStatus.CONFLICT;
