@@ -197,79 +197,7 @@ public class OutboxPublisher {
         String topic = Optional.ofNullable(event.getDestinationTopic()).orElse(defaultTopic);
 
         try {
-            Map<String, Object> payloadMap = event.getPayload();
-            String payloadJson;
-            String specVersion = "1.0.2";
-            String eventId = event.getId().toString();
-            String source = "/services/" + event.getAggregateType().toLowerCase() + "-service";
-            String eventType = event.getEventType();
-            String timeStr = java.time.OffsetDateTime.now().toString();
-
-            if (payloadMap != null && (payloadMap.containsKey("specversion") || payloadMap.containsKey("specVersion"))) {
-                // Already wrapped in CloudEvent
-                payloadJson = serializePayload(payloadMap);
-                if (payloadMap.containsKey("specversion")) {
-                    specVersion = String.valueOf(payloadMap.get("specversion"));
-                } else if (payloadMap.containsKey("specVersion")) {
-                    specVersion = String.valueOf(payloadMap.get("specVersion"));
-                }
-                if (payloadMap.get("id") != null) {
-                    eventId = String.valueOf(payloadMap.get("id"));
-                }
-                if (payloadMap.get("source") != null) {
-                    source = String.valueOf(payloadMap.get("source"));
-                }
-                if (payloadMap.get("type") != null) {
-                    eventType = String.valueOf(payloadMap.get("type"));
-                }
-                if (payloadMap.get("time") != null) {
-                    timeStr = String.valueOf(payloadMap.get("time"));
-                }
-            } else {
-                // Wrap in CloudEventEnvelope
-                id.payu.events.cloudevents.CloudEventEnvelope<Map<String, Object>> envelope =
-                        id.payu.events.cloudevents.CloudEventEnvelope.<Map<String, Object>>builder()
-                                .id(event.getId())
-                                .source(java.net.URI.create(source))
-                                .type(eventType)
-                                .subject(event.getAggregateId())
-                                .data(payloadMap)
-                                .time(java.time.OffsetDateTime.now())
-                                .build();
-                
-                payloadJson = OUTBOX_MAPPER.writeValueAsString(envelope);
-            }
-
-            // Create Kafka record with event ID as key for ordering
-            ProducerRecord<String, String> record = new ProducerRecord<>(
-                    topic,
-                    null, // partition (null for default partitioning)
-                    event.getCreatedAt().toEpochMilli(),
-                    event.getAggregateId(), // Use aggregate ID as key for ordering within aggregate
-                    payloadJson
-            );
-
-            // Add standard outbox headers
-            record.headers().add(new RecordHeader("eventId", event.getId().toString().getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("eventType", event.getEventType().getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("aggregateType", event.getAggregateType().getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("sequenceNum", event.getSequenceNum().toString().getBytes(StandardCharsets.UTF_8)));
-
-            // Add CloudEvents headers
-            record.headers().add(new RecordHeader("ce-specversion", specVersion.getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("ce-id", eventId.getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("ce-source", source.getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("ce-type", eventType.getBytes(StandardCharsets.UTF_8)));
-            record.headers().add(new RecordHeader("ce-time", timeStr.getBytes(StandardCharsets.UTF_8)));
-
-            // Add custom headers if present
-            if (event.getHeaders() != null) {
-                event.getHeaders().forEach((key, value) -> {
-                    if (value != null) {
-                        record.headers().add(new RecordHeader(key, value.toString().getBytes(StandardCharsets.UTF_8)));
-                    }
-                });
-            }
+            ProducerRecord<String, String> record = buildRecord(event, topic);
 
             // Send to Kafka with callback
             CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(record);
@@ -316,6 +244,98 @@ public class OutboxPublisher {
 
             throw new OutboxPublishException("Failed to publish event " + event.getId(), e);
         }
+    }
+
+    /**
+     * Builds the Kafka {@link ProducerRecord} for an event on the given topic,
+     * wrapping the payload in a CloudEvents envelope and attaching standard
+     * outbox + CloudEvents headers.
+     */
+    private ProducerRecord<String, String> buildRecord(OutboxEvent event, String topic) {
+        try {
+            return buildRecordInternal(event, topic);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new OutboxSerializationException("Failed to serialize payload", e);
+        }
+    }
+
+    private ProducerRecord<String, String> buildRecordInternal(OutboxEvent event, String topic)
+            throws com.fasterxml.jackson.core.JsonProcessingException {
+        Map<String, Object> payloadMap = event.getPayload();
+        String payloadJson;
+        String specVersion = "1.0.2";
+        String eventId = event.getId().toString();
+        String source = "/services/" + event.getAggregateType().toLowerCase() + "-service";
+        String eventType = event.getEventType();
+        String timeStr = java.time.OffsetDateTime.now().toString();
+
+        if (payloadMap != null && (payloadMap.containsKey("specversion") || payloadMap.containsKey("specVersion"))) {
+            // Already wrapped in CloudEvent
+            payloadJson = serializePayload(payloadMap);
+            if (payloadMap.containsKey("specversion")) {
+                specVersion = String.valueOf(payloadMap.get("specversion"));
+            } else if (payloadMap.containsKey("specVersion")) {
+                specVersion = String.valueOf(payloadMap.get("specVersion"));
+            }
+            if (payloadMap.get("id") != null) {
+                eventId = String.valueOf(payloadMap.get("id"));
+            }
+            if (payloadMap.get("source") != null) {
+                source = String.valueOf(payloadMap.get("source"));
+            }
+            if (payloadMap.get("type") != null) {
+                eventType = String.valueOf(payloadMap.get("type"));
+            }
+            if (payloadMap.get("time") != null) {
+                timeStr = String.valueOf(payloadMap.get("time"));
+            }
+        } else {
+            // Wrap in CloudEventEnvelope
+            id.payu.events.cloudevents.CloudEventEnvelope<Map<String, Object>> envelope =
+                    id.payu.events.cloudevents.CloudEventEnvelope.<Map<String, Object>>builder()
+                            .id(event.getId())
+                            .source(java.net.URI.create(source))
+                            .type(eventType)
+                            .subject(event.getAggregateId())
+                            .data(payloadMap)
+                            .time(java.time.OffsetDateTime.now())
+                            .build();
+
+            payloadJson = OUTBOX_MAPPER.writeValueAsString(envelope);
+        }
+
+        // Create Kafka record with event ID as key for ordering
+        ProducerRecord<String, String> record = new ProducerRecord<>(
+                topic,
+                null, // partition (null for default partitioning)
+                event.getCreatedAt().toEpochMilli(),
+                event.getAggregateId(), // Use aggregate ID as key for ordering within aggregate
+                payloadJson
+        );
+
+        // Add standard outbox headers
+        record.headers().add(new RecordHeader("eventId", event.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("eventType", event.getEventType().getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("aggregateType", event.getAggregateType().getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("sequenceNum", event.getSequenceNum().toString().getBytes(StandardCharsets.UTF_8)));
+
+        // Add CloudEvents headers
+        record.headers().add(new RecordHeader("ce-specversion", specVersion.getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("ce-id", eventId.getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("ce-source", source.getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("ce-type", eventType.getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("ce-time", timeStr.getBytes(StandardCharsets.UTF_8)));
+
+        // Add custom headers if present
+        if (event.getHeaders() != null) {
+            event.getHeaders().forEach((key, value) -> {
+                if (value != null) {
+                    record.headers().add(new RecordHeader(key, value.toString().getBytes(StandardCharsets.UTF_8)));
+                }
+            });
+        }
+
+        return record;
     }
 
     /**
@@ -394,6 +414,25 @@ public class OutboxPublisher {
                     .tag("eventType", event.getEventType())
                     .register(meterRegistry)
                     .increment();
+            sendToDlq(event);
+        }
+    }
+
+    /**
+     * Best-effort copy of a permanently failed event to its {@code .dlq} topic
+     * so operators can replay it without scanning the DB (ARCH-DLQ-001).
+     * Never throws — the event stays archived in outbox_events as the audit
+     * record when the DLQ is unreachable.
+     */
+    private void sendToDlq(OutboxEvent event) {
+        String baseTopic = Optional.ofNullable(event.getDestinationTopic()).orElse(defaultTopic);
+        String dlqTopic = baseTopic + ".dlq";
+        try {
+            kafkaTemplate.send(buildRecord(event, dlqTopic)).get(10, TimeUnit.SECONDS);
+            log.info("Outbox event {} moved to DLQ topic {}", event.getId(), dlqTopic);
+        } catch (Exception e) {
+            log.error("Failed to move outbox event {} to DLQ topic {}: {}",
+                    event.getId(), dlqTopic, e.getMessage());
         }
     }
 

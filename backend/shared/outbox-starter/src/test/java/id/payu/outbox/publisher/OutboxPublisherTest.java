@@ -512,5 +512,24 @@ class OutboxPublisherTest {
 
             assertThat(meterRegistry.find("outbox.publish.permanent.failure").counter()).isNotNull();
         }
+
+        @Test
+        @DisplayName("should route permanently failed event to the .dlq topic")
+        void shouldRoutePermanentFailureToDlqTopic() {
+            // Event with retryCount = 2 (maxRetries=3) => permanent after this attempt
+            OutboxEvent event = createTestEvent("payu.wallet.transfer.v1");
+            event.setRetryCount(2);
+
+            when(outboxRepository.findWithLockById(event.getId())).thenReturn(Optional.of(event));
+            when(kafkaTemplate.send(any(ProducerRecord.class)))
+                    .thenReturn(CompletableFuture.failedFuture(new RuntimeException("fail")));
+
+            publisher.publishEventById(event.getId());
+
+            verify(kafkaTemplate, times(2)).send(recordCaptor.capture());
+            assertThat(recordCaptor.getAllValues().get(1).topic())
+                    .as("permanently failed event must be sent to destinationTopic + .dlq")
+                    .isEqualTo("payu.wallet.transfer.v1.dlq");
+        }
     }
 }

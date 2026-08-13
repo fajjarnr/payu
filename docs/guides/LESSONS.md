@@ -5191,3 +5191,7 @@ ARCH-PROD-001 tried to give the outbox starter durable producer defaults (`acks=
 ### L-217: MockMvc standalone tests need the production request/response caching filters to exercise real idempotency (2026-08-13)
 
 QAMVP-011 (10 threads, same key → 1 mutation) initially failed because the test harness missed two production filters. The `IdempotencyRequestBodyFilter` makes the body replayable — without it the controller sees an empty body (400) after the interceptor fingerprints it. And `storeSuccessfulResponse` only caches when the response is a `ContentCachingResponseWrapper` — without it the entry stays `IN_PROGRESS` forever and replays 409. Replicate both in `MockMvcBuilders.standaloneSetup().addFilters(...)`; the body filter is package-private in api-commons, so instantiate it via reflection. Also count `successfulClaims` (`putIfAbsent` wins), not `saveIfAbsent` calls — every concurrent request invokes the claim, only one wins.
+
+### L-218: Permanent outbox failures need a .dlq copy, not just an archived row + log alert (2026-08-13)
+
+ARCH-DLQ-001: events that exceeded max retries were only archived and logged, so operators had to scan the DB to replay them. Extract `buildRecord(event, topic)` from `sendToKafka`, then on permanent failure best-effort send the same CloudEvents record to `destinationTopic + .dlq`. Keep it non-throwing — a dead DLQ must not corrupt the retry bookkeeping; the archived row stays the audit record. Guard with a unit test asserting the second `kafkaTemplate.send` targets `<topic>.dlq`.
