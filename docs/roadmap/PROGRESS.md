@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Web-app redeploy (2026-08-13, 1.11.1)
+
+- Rebuild + recreate `payu-web-app` dengan halaman `/statements` baru (QAMVP-019). `localhost:3001` root 200, `/en/statements` 200 (konten E-Statement termuat).
+
 ## Redeploy 1.11.1 (2026-08-13, v2)
 
 - Semua jar dibangun ulang (`mvn clean package -DskipTests`) dengan perubahan produksi sesi ini (escrow Persistable, split-bill @Transient participants, RevenueSplit scale 4, api-commons idempotency, outbox DLQ, rest-assured 5.5.7) + 33 image di-tag ulang `1.11.1` + `--force-recreate`.
