@@ -5227,3 +5227,7 @@ Escrow creation failed with `PropertyValueException: Detached entity with genera
 ### L-226: Enabling Testcontainers reuse fixes Broken-pipe container churn (2026-08-13)
 
 Running the full transaction-service suite (4 Testcontainers tests, each starting its own postgres:16-alpine) intermittently failed with `Could not start container ... java.io.IOException: Broken pipe` on the podman socket after several container creates/removes. Standalone runs passed. Fix: `printf 'testcontainers.reuse.enable=true\n' > ~/.testcontainers.properties` so matching containers are reused instead of re-created per context. After that the suite runs 184/184 green.
+
+### L-227: Jacoco's BUNDLE and per-CLASS rules use different excludes — align them (2026-08-13)
+
+ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.1%, because the jacoco BUNDLE rule counted generated `grpc` (4708 lines at ~14%) and `dto`/`entity`/`config`/`domain.model` packages while the per-CLASS rule excluded them. Add the same `<excludes>` (grpc, dto, entity, config, domain/model) at the `check` execution level so the BUNDLE denominator matches what is realistically coverable, then keep per-CLASS ≥ threshold. Also verify with `mvn verify` (not just `test` + jacoco:report): only `check` actually enforces the gate.
