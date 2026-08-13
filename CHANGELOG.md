@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.1] - 2026-08-13
+
+### Changed
+
+- **ARCH-INTG-001 (integration)**: route SWIFT/OJK tidak lagi publish langsung via Camel `kafka:` endpoint (bypass outbox, tanpa CloudEvents, tanpa `.dlq`) — kini lewat `MessagePublisherPort`/`MessagePublisherAdapter` (transactional outbox, topic `payu.integration.swift-processed.v1` / `payu.integration.swift-errors.v1` / `payu.integration.ojk-errors.v1`). Port tambah method `publishEvent(...)` untuk error handler tanpa `IntegrationMessage`. `camel-kafka-starter` dep + `kafka.bootstrap-servers` field dihapus. Guard `NoDirectKafkaEndpointTest` (2 test, TDD) + ArchUnit tetap hijau. 48 test green.
+
 ## [1.11.0] - 2026-08-13
 
 ### Added

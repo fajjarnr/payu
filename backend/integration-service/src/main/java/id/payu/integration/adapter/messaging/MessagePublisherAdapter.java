@@ -51,6 +51,12 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
     }
 
     @Override
+    public void publishEvent(String aggregateType, String aggregateId, String eventType,
+                             Map<String, Object> payload, String topic) {
+        outboxService.createEvent(aggregateType, aggregateId, eventType, payload, null, topic);
+    }
+
+    @Override
     public String sendHttp(String url, String payload) {
         log.debug("Sending HTTP request to: {}", url);
         try {

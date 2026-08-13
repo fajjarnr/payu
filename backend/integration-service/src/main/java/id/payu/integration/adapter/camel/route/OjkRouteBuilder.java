@@ -2,6 +2,7 @@ package id.payu.integration.adapter.camel.route;
 
 import id.payu.integration.adapter.camel.transformer.OjkTransformer;
 import id.payu.integration.adapter.camel.validator.OjkValidator;
+import id.payu.integration.application.port.out.MessagePublisherPort;
 import id.payu.integration.domain.model.IntegrationMessage;
 import id.payu.integration.domain.model.MessageDirection;
 import id.payu.integration.domain.model.MessageStatus;
@@ -23,27 +24,22 @@ import java.util.UUID;
 /**
  * Camel routes for OJK regulatory reporting.
  * Handles daily and monthly report generation and submission.
+ *
+ * <p>ARCH-INTG-001: error events are published via
+ * {@link MessagePublisherPort} (transactional outbox) — no direct
+ * {@code kafka:} endpoints.</p>
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class OjkRouteBuilder extends RouteBuilder {
 
-    /**
-     * Kafka bootstrap servers for outbound Kafka routes (AUDIT-053 fix).
-     *
-     * <p>Driven by Spring {@code @Value} so the value can be overridden via
-     * {@code application.yml}, {@code SPRING_APPLICATION_JSON}, or
-     * {@code @TestPropertySource}. Backward-compatible default preserves the
-     * previous {@code System.getenv("KAFKA_BOOTSTRAP", "localhost:9092")}
-     * behavior.</p>
-     */
-    @Value("${kafka.bootstrap-servers:localhost:9092}")
-    private String kafkaBootstrapServers;
+    private static final String OJK_ERRORS_TOPIC = "payu.integration.ojk-errors.v1";
 
     private final OjkValidator ojkValidator;
     private final OjkTransformer ojkTransformer;
     private final MessageProcessingService messageProcessingService;
+    private final MessagePublisherPort messagePublisherPort;
 
     @Value("${payu.integration.ojk.daily-report.enabled:true}")
     private boolean dailyReportEnabled;
@@ -229,15 +225,16 @@ public class OjkRouteBuilder extends RouteBuilder {
                 Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
                 log.error("OJK report processing error: {}", exception.getMessage());
 
-                // Send alert/notification
-                exchange.getIn().setBody(Map.of(
-                        "error", exception.getMessage() != null ? exception.getMessage() : exception.getClass().getName(),
-                        "timestamp", LocalDate.now().toString(),
-                        "service", "integration-service"
-                ));
-            })
-            .marshal().json()
-            .to(String.format("kafka:payu.integration.ojk-errors.v1?brokers=%s",
-                    kafkaBootstrapServers));
+                // Send alert/notification via transactional outbox
+                messagePublisherPort.publishEvent(
+                        "IntegrationMessage",
+                        exchange.getExchangeId(),
+                        "OjkReportFailed",
+                        Map.of(
+                                "error", exception.getMessage() != null ? exception.getMessage() : exception.getClass().getName(),
+                                "timestamp", LocalDate.now().toString(),
+                                "service", "integration-service"),
+                        OJK_ERRORS_TOPIC);
+            });
     }
 }

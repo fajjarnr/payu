@@ -162,7 +162,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
 | ARCH-DECIMAL-001 | 🔴 | promotion | `discount_value DECIMAL(10,4)` — kolom money wajib (19,4); widening migration + cek cast | promotion V4:9 |
-| ARCH-INTG-001 | 🔴 | integration | Publish Kafka langsung via Camel `kafka:` (3 route swift/ojk), bypass outbox, tanpa CloudEvents, tanpa `.dlq`; adapter outbox `MessagePublisherAdapter` tidak dipakai | SwiftRouteBuilder.java:112,145; OjkRouteBuilder.java:240 |
+| ARCH-INTG-001 | 🔴 | integration | ~~Route swift/ojk → outbox-starter; hapus `kafka:` endpoint; pakai `MessagePublisherAdapter`~~ **CLOSED 2026-08-13** — SwiftRouteBuilder/OjkRouteBuilder publish via `MessagePublisherPort` (outbox), 0 `.to("kafka:")`, camel-kafka-starter dihapus | SwiftRouteBuilder.java, OjkRouteBuilder.java |
 | ARCH-TOPIC-002 | 🔴 | platform | Hanya 10 KafkaTopic deklaratif (`transaction.*.v1`, dispute, lending-repayment, partner-refunded + 3 dlq); ~30 topic dari kode auto-create tanpa RF/partisi eksplisit (risiko data-loss event finansial); resource legacy `account-events`/`wallet-events`/`notification-events`/`transaction-events` tanpa `topicName: payu.*` | kafka-amqstreams.yaml:98-345 |
 
 ### 🟠 Sistematis (lintas-service)

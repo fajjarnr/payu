@@ -8,6 +8,13 @@ public interface MessagePublisherPort {
 
     void publishToKafka(String topic, IntegrationMessage message);
 
+    /**
+     * Publish a generic outbox event with an explicit payload.
+     * Used by route error handlers where no {@link IntegrationMessage} exists.
+     */
+    void publishEvent(String aggregateType, String aggregateId, String eventType,
+                      Map<String, Object> payload, String topic);
+
     String sendHttp(String url, String payload);
 
     /**

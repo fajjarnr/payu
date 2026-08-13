@@ -2,6 +2,7 @@ package id.payu.integration.adapter.camel.route;
 
 import id.payu.integration.adapter.camel.transformer.SwiftTransformer;
 import id.payu.integration.adapter.camel.validator.SwiftValidator;
+import id.payu.integration.application.port.out.MessagePublisherPort;
 import id.payu.integration.application.service.IntegrationService;
 import id.payu.integration.domain.model.IntegrationMessage;
 import id.payu.integration.domain.model.MessageDirection;
@@ -13,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.dataformat.JsonLibrary;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -22,27 +21,23 @@ import java.util.Map;
 /**
  * Camel routes for SWIFT message processing.
  * Handles inbound and outbound SWIFT MT messages.
+ *
+ * <p>ARCH-INTG-001: outbound events are published via
+ * {@link MessagePublisherPort} (transactional outbox) — no direct
+ * {@code kafka:} endpoints.</p>
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class SwiftRouteBuilder extends RouteBuilder {
 
-    /**
-     * Kafka bootstrap servers for outbound Kafka routes (AUDIT-053 fix).
-     *
-     * <p>Driven by Spring {@code @Value} so the value can be overridden via
-     * {@code application.yml}, {@code SPRING_APPLICATION_JSON}, or
-     * {@code @TestPropertySource}. Backward-compatible default preserves the
-     * previous {@code System.getenv("KAFKA_BOOTSTRAP", "localhost:9092")}
-     * behavior.</p>
-     */
-    @Value("${kafka.bootstrap-servers:localhost:9092}")
-    private String kafkaBootstrapServers;
+    private static final String SWIFT_PROCESSED_TOPIC = "payu.integration.swift-processed.v1";
+    private static final String SWIFT_ERRORS_TOPIC = "payu.integration.swift-errors.v1";
 
     private final SwiftValidator swiftValidator;
     private final SwiftTransformer swiftTransformer;
     private final MessageProcessingService messageProcessingService;
+    private final MessagePublisherPort messagePublisherPort;
 
     @Override
     public void configure() throws Exception {
@@ -108,9 +103,10 @@ public class SwiftRouteBuilder extends RouteBuilder {
                 message.setTransformedPayload(transformed);
                 exchange.getIn().setBody(message);
             })
-            .marshal().json(JsonLibrary.Jackson)
-            .to(String.format("kafka:payu.integration.swift-processed.v1?brokers=%s",
-                    kafkaBootstrapServers))
+            .process(exchange -> {
+                IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
+                messagePublisherPort.publishToKafka(SWIFT_PROCESSED_TOPIC, message);
+            })
             .process(exchange -> {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 messageProcessingService.markSent(message.getMessageId());
@@ -141,9 +137,16 @@ public class SwiftRouteBuilder extends RouteBuilder {
                     messageProcessingService.markFailed(messageId, exception.getMessage());
                 }
                 log.error("SWIFT processing error for message {}: {}", messageId, exception.getMessage());
-            })
-            .to(String.format("kafka:payu.integration.swift-errors.v1?brokers=%s",
-                    kafkaBootstrapServers));
+                messagePublisherPort.publishEvent(
+                        "IntegrationMessage",
+                        messageId != null ? messageId : exchange.getExchangeId(),
+                        "SwiftProcessingFailed",
+                        Map.of(
+                                "error", exception.getMessage() != null
+                                        ? exception.getMessage() : exception.getClass().getName(),
+                                "service", "integration-service"),
+                        SWIFT_ERRORS_TOPIC);
+            });
     }
 
     private MessageType parseMessageType(String messageTypeStr) {

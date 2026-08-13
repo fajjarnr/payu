@@ -40,7 +40,6 @@ class OjkRouteBuilderIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("camel.component.kafka.brokers", () -> "localhost:9092");
         registry.add("payu.integration.ojk.upload-url", () -> "http://localhost:" + wireMockServer.port() + "/api/v1/upload");
     }
 
