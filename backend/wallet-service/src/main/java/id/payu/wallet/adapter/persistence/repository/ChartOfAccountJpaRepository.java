@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface ChartOfAccountJpaRepository extends JpaRepository<ChartOfAccountEntity, UUID> {
 
+    long countByCode(String code);
+
     Optional<ChartOfAccountEntity> findByCode(String code);
 
     List<ChartOfAccountEntity> findByAccountType(String accountType);

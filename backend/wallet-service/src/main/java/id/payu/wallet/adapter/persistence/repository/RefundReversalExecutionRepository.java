@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RefundReversalExecutionRepository extends JpaRepository<RefundReversalExecutionEntity, UUID> {
+
+    long countByRefundId(UUID refundId);
     Optional<RefundReversalExecutionEntity> findByRefundId(UUID refundId);
     List<RefundReversalExecutionEntity> findByStatusIn(Collection<RefundReversalStatus> statuses);
 }

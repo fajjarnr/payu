@@ -29,6 +29,11 @@ import java.util.UUID;
 public interface OutboxRepository extends JpaRepository<OutboxEvent, UUID> {
 
     /**
+     * Finds all events for an aggregate (used by atomicity/audit tests).
+     */
+    java.util.List<OutboxEvent> findByAggregateId(String aggregateId);
+
+    /**
      * Finds all unpublished events (events where published_at is null)
      * ordered by sequence number for strict ordering guarantees.
      *

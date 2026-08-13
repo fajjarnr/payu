@@ -5207,3 +5207,7 @@ ARCH-PROD-001's starter ProducerFactory first failed in production (`APPLICATION
 ### L-221: Rebuilding an image under the same tag does not trigger podman-compose recreate (2026-08-13)
 
 After rebuilding all 1.11.1 images (with a fix), `podman-compose up -d` considered containers current (same tag) and left crash-looping containers on the OLD image. Also, `podman rm` fails with "has dependent containers" for compose-managed stacks. Correct sequence: `podman-compose --profile apps up -d --force-recreate`, or remove dependents first then `up`. Verify with `podman ps --format "{{.Names}} {{.CreatedAt}}"` that CreatedAt is fresh, not a stale container from the previous deploy.
+
+### L-222: Testcontainers works against the podman socket — start podman.socket first (2026-08-13)
+
+The wallet Testcontainers integration tests failed with "Could not find a valid Docker environment" until `systemctl --user start podman.socket` (rootless socket at `/run/user/1000/podman/podman.sock`). Run Maven with `DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`. That unblocked QAMVP-013 (outbox atomicity vs real PostgreSQL) and the two pre-existing wallet integration tests. When an integration test binds a gRPC server, the running local stack occupies 9090 — set `payu.grpc.server.port=0` in test properties. Pick a business entity with no `@Version` and no FK for atomicity probes (`RefundReversalExecutionEntity` with `refundId` as natural key) — `@Version` entities throw merge/stale-object surprises on plain inserts.
