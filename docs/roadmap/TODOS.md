@@ -144,10 +144,10 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID — **PARTIAL 2026-08-12** (fail-closed live, lihat PROD-044); sisa provider nyata + delivery ID butuh credential eksternal | SmsSender.java:26-54 |
-| PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
-| PROMO-003 | 🟠 | promotion | `claimPromotion` tanpa dedup by transactionId — replay/double-submit → 2 reward AWARDED (maxRedemptions atomik ✓, tapi per-user/per-transaction tidak ada guard) | PromotionService.java:139-180 |
+| PROMO-002 | 🟢 | promotion | ~~Loyalty redeem tanpa dedup~~ **VERIFIED FIXED 2026-08-13** — dedup by accountId+transactionId+REDEEMED + unique index + pessimistic lock | LoyaltyPointsService.java:87-98 |
+| PROMO-003 | 🟢 | promotion | ~~`claimPromotion` tanpa dedup by transactionId~~ **VERIFIED FIXED 2026-08-13** — replay check by transactionId + unique index `uq_rewards_account_transaction` | PromotionService.java:152-159 |
 | PROMO-004 | 🟠 | promotion | ~~`calculateRewardAmount` PERCENTAGE `divide(..., 2, HALF_EVEN)` — scale 2, melanggar ADR-0022 (scale 4 wajib)~~ **CLOSED 2026-08-13** dengan ARCH-DECIMAL-001 — `PromoCode.calculateDiscount` + `PromoUsagePersistenceMapper.normalizeAmount` kini scale 4 | PromoCode.java:116 |
-| REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
+| REFERRAL-001 | 🟢 | promotion | ~~completeReferral tanpa lock~~ **VERIFIED FIXED 2026-08-13** — pessimistic lock `findByReferralCodeForUpdate` + status guard | ReferralService.java:81-88 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
 | INTEGRATION-CTX | 🟠 | qa | Account-service integration test context: **VaultConfigurationTest FIXED** (2026-08-12: mock DataSource di TestJpaConfig) → default suite 132/132. Sisa: OnboardingIntegrationTest + BlindIndexAndTenantIsolationIntegrationTest masih `No bean named 'entityManagerFactory'` — test tanpa `@ActiveProfiles("test")` (activeProfiles=[]), dan app pakai multi-DS custom (`spring.datasource.primary.*`, bukan `spring.datasource.*`) sehingga dynamic property + `@ServiceConnection` tidak di-honor; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
 | — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
