@@ -247,7 +247,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-011 | Idempotency concurrency: **FIXED 2026-08-13** 4 service (wallet/transaction/billing/partner, 10 thread → 1 mutasi). Bonus: bug in-progress duplicate → 500 (ConflictException uncaught) di `IdempotencyInterceptor` → kini clean 409 | 🟢 |
 | QAMVP-012 | Same-key + different-payload rejection: **FIXED 2026-08-13** semua 4 money service (409 conflict) | 🟢 |
 | QAMVP-013 | Outbox atomicity: wallet **FIXED 2026-08-13** (`OutboxAtomicityIntegrationTest` commit+rollback, real PG); `TestcontainersConfig` wallet kini terpakai; sisa transaction | 🟡 |
-| QAMVP-014 | Security test: wallet/billing/transaction/backoffice/cms/kyc **FIXED 2026-08-13**; sisa analytics (Python); api-portal tanpa endpoint terproteksi (public portal, gateway-enforced) | 🟡 |
+| QAMVP-014 | Security test: **FIXED 2026-08-13** — 7 service (wallet/billing/transaction/backoffice/cms/kyc/analytics); api-portal public-by-design | 🟢 |
 | QAMVP-015 | Contract test: 3 happy-path, **0 error case** (401/422), tidak dijalankan CI; README klaim 4 pair padahal 3 file | 🟠 |
 | QAMVP-016 | Coverage: jacoco goal tidak di-bound (Makefile malah hapus jacoco.exec); kyc 65% < gate 80%; READY-022 unresolved | 🟠 |
 | QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
