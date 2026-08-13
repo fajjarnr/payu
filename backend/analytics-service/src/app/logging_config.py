@@ -40,6 +40,22 @@ def _rename_timestamp_key(_, __, event_dict):
     return event_dict
 
 
+# ARCH-LOG-001: fields that must never appear in logs verbatim.
+_PII_FIELDS = frozenset({
+    "nik", "phone", "phone_number", "mobile", "email", "account_number",
+    "account_no", "card_number", "pin", "password", "token", "access_token",
+    "refresh_token", "client_secret", "secret", "full_name",
+})
+
+
+def _mask_pii(_, __, event_dict):
+    """Mask PII field values before the value reaches the renderer."""
+    for key, value in list(event_dict.items()):
+        if key in _PII_FIELDS and value is not None:
+            event_dict[key] = "***"
+    return event_dict
+
+
 def configure_logging() -> structlog.stdlib.BoundLogger:
     """Configure structured logging once at application startup.
 
@@ -71,6 +87,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     # ------------------------------------------------------------------
     shared_processors = [
         structlog.contextvars.merge_contextvars,
+        _mask_pii,
         _add_otel_context,
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
