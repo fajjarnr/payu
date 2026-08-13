@@ -5183,3 +5183,7 @@ integration-service published SWIFT/OJK events via direct Camel `kafka:` URIs (A
 ### L-215: Idempotent replay and fresh compute must share the same money scale (2026-08-13)
 
 While fixing ARCH-DECIMAL-001 (widening `discount_value` to DECIMAL(19,4)), the fresh-compute path returned scale-4 discounts but the idempotent replay path returned scale-2 (`expected: <10000.0000> but was: <10000.00>`). Root cause: `PromoUsagePersistenceMapper.normalizeAmount` used `Math.max(2, ...)` as a floor. BigDecimal `equals` includes scale, so the same business value asserted differently on each path. Money normalization must use the ADR-0022 floor (`Math.max(4, ...)`) — never `2` — and a money test must cover the replay branch, not only first application.
+
+### L-216: A starter's @ConditionalOnMissingBean ProducerFactory must run BEFORE KafkaAutoConfiguration (2026-08-13)
+
+ARCH-PROD-001 tried to give the outbox starter durable producer defaults (`acks=all`, idempotence, retries). First attempt kept `@AutoConfiguration(after = KafkaAutoConfiguration.class)` — useless: KafkaAutoConfiguration had already registered its own `ProducerFactory`, so the starter's `@ConditionalOnMissingBean` silently backed off. Also, don't inject `KafkaProperties` into the factory: it only exists when `KafkaAutoConfiguration` is enabled, which the starter's own tests exclude. Use `@AutoConfiguration(before = KafkaAutoConfiguration.class)` so the starter's factory is the one KafkaAuto wraps into a `KafkaTemplate`, and read bootstrap servers via `@Value` with a localhost fallback.

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **ARCH-INTG-001 (integration)**: route SWIFT/OJK tidak lagi publish langsung via Camel `kafka:` endpoint (bypass outbox, tanpa CloudEvents, tanpa `.dlq`) — kini lewat `MessagePublisherPort`/`MessagePublisherAdapter` (transactional outbox, topic `payu.integration.swift-processed.v1` / `payu.integration.swift-errors.v1` / `payu.integration.ojk-errors.v1`). Port tambah method `publishEvent(...)` untuk error handler tanpa `IntegrationMessage`. `camel-kafka-starter` dep + `kafka.bootstrap-servers` field dihapus. Guard `NoDirectKafkaEndpointTest` (2 test, TDD) + ArchUnit tetap hijau. 48 test green.
+- **ARCH-PROD-001 (platform)**: outbox-starter kini mendefinisikan `outboxProducerFactory` default — `acks=all`, `enable.idempotence=true`, `retries=5` — untuk SEMUA service pemakai starter (sebelumnya ikut client default `acks=1` tanpa idempotence; hanya wallet yang set manual). Auto-config di-pindah `before = KafkaAutoConfiguration` + `@ConditionalOnMissingBean(ProducerFactory)` sehingga factory custom service (billing/cms/lending) tetap menang. Guard `OutboxProducerFactoryTest` (TDD). outbox-starter 104 test green, backend full package green.
 
 ## [1.11.0] - 2026-08-13
 
