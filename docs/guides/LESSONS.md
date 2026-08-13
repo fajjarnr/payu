@@ -5215,3 +5215,7 @@ The wallet Testcontainers integration tests failed with "Could not find a valid 
 ### L-223: security-starter is @Profile("!test") — PreAuthorize tests need a replica config (2026-08-13)
 
 `WebSecurityAutoConfiguration` in security-starter is `@Profile("!test")`, so any `@ActiveProfiles("test")` context silently falls back to Spring Boot's default deny-all chain: `@PreAuthorize` is NOT enforced, and an unauthenticated request still 401s (default chain) while an unauthorized one reaches the controller (404 instead of 403). QAMVP-014 for backoffice only became real after importing a test `SecurityFilterChain` that replicates production (`@EnableWebSecurity` + `@EnableMethodSecurity` + `oauth2ResourceServer(jwt)`). Note Boot 4 / Spring Security 7: `oauth2ResourceServer().jwt()` requires a `Customizer` argument.
+
+### L-224: @Version entities + JpaRepository.save() throw StaleObjectState on fresh insert (2026-08-13)
+
+For QAMVP-013 outbox-atomicity probes, a NEW entity with `@Version` cannot be inserted via `repository.save()` (merge): a zero-version row is treated as detached, so merge issues an UPDATE → `StaleObjectStateException: Row was already updated or deleted`. Setting the version field via reflection made it worse. Fix: use `EntityManager.persist(entity)` (no merge) or pick a `@Version`-free entity (`RefundReversalExecutionEntity`, `VaPaymentRecordEntity`). Set `spring.jpa.hibernate.ddl-auto=none` in these tests — Flyway vs entity drift (e.g. `metadata` jsonb-vs-text) fails schema validation otherwise.

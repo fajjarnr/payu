@@ -10,6 +10,8 @@ import java.util.UUID;
 @Repository
 public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPlanEntity, UUID> {
 
+    long countByPlanName(String planName);
+
     List<SubscriptionPlanEntity> findByPartnerIdAndActiveTrue(String partnerId);
 
     List<SubscriptionPlanEntity> findByPartnerIdOrderByCreatedAtDesc(String partnerId);

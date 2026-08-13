@@ -17,6 +17,8 @@ import java.util.Optional;
 @Repository
 public interface SnapBiRefundRepository extends JpaRepository<SnapBiRefundEntity, Long> {
 
+    long countByPayuRefundNo(String payuRefundNo);
+
     Optional<SnapBiRefundEntity> findByPayuRefundNo(String payuRefundNo);
 
     List<SnapBiRefundEntity> findByPayuReferenceNo(String payuReferenceNo);
