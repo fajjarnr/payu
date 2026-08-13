@@ -5,13 +5,16 @@
 -- every other DB role is now tenant-scoped. FORCE RLS can be enabled later.
 
 ALTER TABLE dispute_evidence ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_dispute_evidence ON dispute_evidence;
 CREATE POLICY tenant_isolation_dispute_evidence ON dispute_evidence
     USING (tenant_id = current_setting('app.tenant_id', true));
 
 ALTER TABLE disputes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_disputes ON disputes;
 CREATE POLICY tenant_isolation_disputes ON disputes
     USING (tenant_id = current_setting('app.tenant_id', true));
 
 ALTER TABLE refunds ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_refunds ON refunds;
 CREATE POLICY tenant_isolation_refunds ON refunds
     USING (tenant_id = current_setting('app.tenant_id', true));

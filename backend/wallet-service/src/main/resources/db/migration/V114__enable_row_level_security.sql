@@ -13,17 +13,21 @@
 --    (connection init SQL), FORCE ROW LEVEL SECURITY can be enabled.
 
 ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_wallets ON wallets;
 CREATE POLICY tenant_isolation_wallets ON wallets
     USING (tenant_id = current_setting('app.tenant_id', true));
 
 ALTER TABLE cards ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_cards ON cards;
 CREATE POLICY tenant_isolation_cards ON cards
     USING (tenant_id = current_setting('app.tenant_id', true));
 
 ALTER TABLE ledger_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_ledger_entries ON ledger_entries;
 CREATE POLICY tenant_isolation_ledger_entries ON ledger_entries
     USING (tenant_id = current_setting('app.tenant_id', true));
 
 ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation_wallet_transactions ON wallet_transactions;
 CREATE POLICY tenant_isolation_wallet_transactions ON wallet_transactions
     USING (tenant_id = current_setting('app.tenant_id', true));
