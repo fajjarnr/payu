@@ -142,7 +142,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
 
-| ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
+| ACCOUNT-003-RLS | 🟢 | account | ~~PostgreSQL RLS belum aktif~~ **DONE 2026-08-13** — RLS migration V114 (wallet) + V27/V9/V20/V6/V10 (transaction/billing/partner/dispute/lending); policy `tenant_id = current_setting('app.tenant_id')` fail-closed, app BYPASSRLS; diverifikasi live di podman PG (analyst tanpa tenant = 0 row) | V114 + V27/V9/V20/V6/V10 |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID — **PARTIAL 2026-08-12** (fail-closed live, lihat PROD-044); sisa provider nyata + delivery ID butuh credential eksternal | SmsSender.java:26-54 |
 | PROMO-002 | 🟢 | promotion | ~~Loyalty redeem tanpa dedup~~ **VERIFIED FIXED 2026-08-13** — dedup by accountId+transactionId+REDEEMED + unique index + pessimistic lock | LoyaltyPointsService.java:87-98 |
 | PROMO-003 | 🟢 | promotion | ~~`claimPromotion` tanpa dedup by transactionId~~ **VERIFIED FIXED 2026-08-13** — replay check by transactionId + unique index `uq_rewards_account_transaction` | PromotionService.java:152-159 |
@@ -184,7 +184,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | ARCH-CONS-001 | 🟠 | platform | Consumer manual ack cuma integration-service; lain auto-commit default. Dedup konsumen belum merata (wallet `RefundRequestedConsumer` tanpa claim/dedup layer) | integration application.yml:38; RefundRequestedConsumer.java:21 |
 | ARCH-CDC-001 | 🟢 | platform | Tanpa Debezium; relay outbox = polling dispatcher `SKIP LOCKED` (legal pola). Note: evaluasi CDC bila throughput naik | OutboxPublisher.java:119-121 |
 | ARCH-CE-002 | 🟠 | account, billing, fx, transaction | 4 publisher kirim payload plain Map tanpa atribut CloudEvents (id/source/type/time) — hanya wallet/transaction-main/billing-subscription pakai `CloudEventBuilder` | KafkaUserEventPublisherAdapter.java:44; SplitBillEventPublisherAdapter.java:33-49 |
-| ARCH-RLS-001 | 🟠 | billing, dispute, lending, transaction, wallet | RLS: 0 migrasi semua service — isolasi tenant cuma app-filter; RLS defense-in-depth belum (lanjutan ACCOUNT-003-RLS/PARTNER-PROD-006) | grep ROW LEVEL SECURITY = 0 |
+| ARCH-RLS-001 | 🟢 | billing, dispute, lending, transaction, wallet | ~~RLS: 0 migrasi~~ **DONE 2026-08-13** — RLS migration wallet/transaction/billing/partner/dispute/lending + verifikasi live (fail-closed) | V114 + V27/V9/V20/V6/V10 |
 | ARCH-DEDUP-001 | 🟠 | partner, promotion | Migrasi dedup DELETE baris finansial pre-constraint (`snap_bi_payments`/`refunds`/`cashbacks`/`rewards`) — legal hanya jika belum pernah jalan di prod; perlu bukti env + policy | partner V16/V17; promotion V11/V12 |
 | ARCH-FLYWAY-001 | 🟠 | account | Destruktif historis `DROP COLUMN` + `RENAME COLUMN` di migrasi ter-aplikasi — anti-pattern, risiko fresh-restore; jangan diulang | account V10:16-27 |
 | ARCH-PAGE-001 | 🟠 | transaction, wallet | Pagination Pageable = OFFSET default; history finansial besar butuh keyset cursor `(created_at, id)` | TransactionJpaRepository.java:53 |
