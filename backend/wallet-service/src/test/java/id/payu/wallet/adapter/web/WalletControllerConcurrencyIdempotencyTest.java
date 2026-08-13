@@ -151,6 +151,49 @@ class WalletControllerConcurrencyIdempotencyTest {
     }
 
     @Test
+    @DisplayName("same key with different payload is a conflict, not a replay")
+    void sameKeyDifferentPayloadIsConflict() throws Exception {
+        ThreadSafeInMemoryRepository repository = new ThreadSafeInMemoryRepository();
+        IdempotencyService service = new IdempotencyService(repository, new ObjectMapper());
+        IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
+
+        WalletUseCase useCase = mock(WalletUseCase.class);
+        AtomicInteger mutations = new AtomicInteger();
+        doAnswer(invocation -> {
+            mutations.incrementAndGet();
+            return null;
+        }).when(useCase).credit(any(), any(), any(), any());
+
+        MockMvc mockMvc = buildMockMvc(useCase, interceptor);
+
+        String idempotencyKey = UUID.randomUUID().toString();
+        AtomicInteger firstStatus = new AtomicInteger();
+        AtomicInteger secondStatus = new AtomicInteger();
+        withAuthenticatedWalletOwner(() -> {
+            try {
+                firstStatus.set(mockMvc.perform(post("/api/v1/wallets/{accountId}/credit", ACCOUNT_ID)
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json")
+                                .content("{\"amount\":10000,\"referenceId\":\"ref-1\",\"description\":\"topup\"}"))
+                        .andReturn().getResponse().getStatus());
+                secondStatus.set(mockMvc.perform(post("/api/v1/wallets/{accountId}/credit", ACCOUNT_ID)
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json")
+                                .content("{\"amount\":99999,\"referenceId\":\"ref-1\",\"description\":\"topup\"}"))
+                        .andReturn().getResponse().getStatus());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        assertThat(firstStatus.get()).isEqualTo(200);
+        assertThat(secondStatus.get())
+                .as("same key with a different payload must be rejected as a conflict, never replayed")
+                .isEqualTo(409);
+        assertThat(mutations.get()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("10 concurrent duplicate keys: exactly 1 mutation, 1 atomic claim, 0 double-save")
     void tenConcurrentDuplicateKeysProduceExactlyOneMutation() throws Exception {
         ThreadSafeInMemoryRepository repository = new ThreadSafeInMemoryRepository();
