@@ -250,7 +250,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-014 | Security test: **FIXED 2026-08-13** — 7 service (wallet/billing/transaction/backoffice/cms/kyc/analytics); api-portal public-by-design | 🟢 |
 | QAMVP-015 | Contract test: **FIXED 2026-08-13** — 3 error case RFC 9457 (transaction 400, wallet 404, auth 400) + CI workflow + README akurat; verifier jalan di CI via `-Pcontract-test` | 🟢 |
 | QAMVP-016 | Coverage: jacoco goal tidak di-bound (Makefile malah hapus jacoco.exec); kyc 65% < gate 80%; READY-022 unresolved | 🟠 |
-| QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
+| QAMVP-017 | Pitest **ALIVE 2026-08-13** — 1.15.0 → 1.25.9 (1.15 gagal baca class Java 25, major 69) + junit5 plugin 1.2.3; `-Pmutation-testing org.pitest:pitest-maven:mutationCoverage` jalan (wallet domain: 627 mutasi, score 9%). Sisa: score < 60% threshold (butuh domain tests) — gate opt-in, tidak pecahkan CI | 🟠 |
 | QAMVP-018 | ZAP + Schemathesis cuma di Tekton SIT, tidak ada di GitHub CI per-PR | 🟠 |
 | QAMVP-019 | Frontend: halaman statement **tidak ada** (cuma service test); budget tanpa E2E; a11y filter color-contrast/button-name keluar ("design debt") → bukan WCAG strict; refresh-token expiry tanpa E2E; `forgot-password` + `not-found` spec = stub | 🟠 |
 | QAMVP-020 | Money test: **wallet + billing DONE 2026-08-13** — `RevenueSplitTest` (HALF_EVEN half-way + scale 4, fix `RevenueSplit` divide scale 2→4 ADR-0022), RFC 9457 problem+json test di wallet + billing (`WalletSecurityTest`, `PaymentSecurityTest`); `LedgerInvariantTest` (double-entry) sudah ada 4 test. Sisa: billing/partner HALF_EVEN spesifik + partner RFC 9457 sudah ada | 🟡 |
