@@ -80,7 +80,9 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
             CacheProperties properties) {
         this.properties = properties;
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModules(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        this.objectMapper.registerModules(
+                new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule(),
+                new com.fasterxml.jackson.datatype.jdk8.Jdk8Module());
         this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         this.hotRodCacheSupplier = hotRodCacheSupplier;
 

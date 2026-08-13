@@ -44,3 +44,12 @@ management:
   zipkin:
     tracing:
       endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
+
+# OJK report timers target the real regulator endpoint; disabled outside prod.
+payu:
+  integration:
+    ojk:
+      daily-report:
+        enabled: false
+      monthly-report:
+        enabled: false

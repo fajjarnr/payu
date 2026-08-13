@@ -79,6 +79,12 @@ payu:
       password: ${ENCRYPTION_KEY}
     masking-enabled: true
     audit-enabled: true
+  integration:
+    ojk:
+      daily-report:
+        enabled: false
+      monthly-report:
+        enabled: false
   jms:
     broker-url: tcp://${ARTEMIS_HOST:artemis}:${ARTEMIS_PORT:61616}
     username: ${ARTEMIS_USERNAME:admin}
