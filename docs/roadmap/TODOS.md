@@ -253,7 +253,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
 | QAMVP-018 | ZAP + Schemathesis cuma di Tekton SIT, tidak ada di GitHub CI per-PR | 🟠 |
 | QAMVP-019 | Frontend: halaman statement **tidak ada** (cuma service test); budget tanpa E2E; a11y filter color-contrast/button-name keluar ("design debt") → bukan WCAG strict; refresh-token expiry tanpa E2E; `forgot-password` + `not-found` spec = stub | 🟠 |
-| QAMVP-020 | Money test: HALF_EVEN half-way cuma transaction `MoneyTest`; wallet cuma validasi scale; billing/partner nol; double-entry numerik cuma `LedgerInvariantTest`; RFC 9457 test cuma partner | 🟠 |
+| QAMVP-020 | Money test: **wallet + billing DONE 2026-08-13** — `RevenueSplitTest` (HALF_EVEN half-way + scale 4, fix `RevenueSplit` divide scale 2→4 ADR-0022), RFC 9457 problem+json test di wallet + billing (`WalletSecurityTest`, `PaymentSecurityTest`); `LedgerInvariantTest` (double-entry) sudah ada 4 test. Sisa: billing/partner HALF_EVEN spesifik + partner RFC 9457 sudah ada | 🟡 |
 
 ### Positif terverifikasi (isi test)
 

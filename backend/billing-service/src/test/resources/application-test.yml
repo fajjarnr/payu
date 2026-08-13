@@ -10,3 +10,7 @@ spring:
   # Disable Vault for tests
   autoconfigure:
     exclude: org.springframework.cloud.vault.core.VaultAutoConfiguration
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -74,5 +75,18 @@ class PaymentSecurityTest {
         mockMvc.perform(get("/api/v1/payments/{id}", p.getId())
                         .with(jwt().jwt(j -> j.claim("account_id", ACCOUNT_ID))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("validation failure returns RFC 9457 problem+json (400)")
+    void validationFailureIsRfc9457() throws Exception {
+        mockMvc.perform(post("/api/v1/payments")
+                        .header("X-Idempotency-Key", java.util.UUID.randomUUID().toString())
+                        .with(jwt().jwt(j -> j.claim("account_id", ACCOUNT_ID)))
+                        .contentType("application/json")
+                        .content("{\"accountId\":\"acct-001\",\"billerCode\":\"PLN\",\"customerId\":\"CUST-1\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentType("application/problem+json"));
     }
 }
