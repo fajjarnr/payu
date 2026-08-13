@@ -18,6 +18,8 @@ import java.util.UUID;
 @Repository
 public interface DisbursementJpaRepository extends JpaRepository<DisbursementEntity, UUID>, DisbursementJpaRepositoryCustom {
 
+    long countByIdempotencyKey(String idempotencyKey);
+
     Optional<DisbursementEntity> findByIdempotencyKey(String idempotencyKey);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
