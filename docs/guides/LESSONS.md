@@ -5199,3 +5199,11 @@ ARCH-DLQ-001: events that exceeded max retries were only archived and logged, so
 ### L-219: In-progress idempotency duplicates must map to 409, not an uncaught 500 (2026-08-13)
 
 A concurrent duplicate that arrives while the winner's entry is still IN_PROGRESS makes `IdempotencyService.get()` throw `ConflictException`, which `IdempotencyInterceptor.preHandle` did not catch → 500 instead of a clean 409. It surfaced as an intermittent QAMVP-011 flake (`no request may throw`): under load a loser thread hit the in-progress window, and `mockMvc.perform` propagated the exception. Wrap the `get()` call, translate to `sendErrorResponse(response, CONFLICT, ...)` and return false. The 10-thread concurrency tests in all four money services then run stable.
+
+### L-220: Boot 4 KafkaAutoConfiguration's kafkaTemplate needs ProducerFactory<Object,Object>, not <String,String> (2026-08-13)
+
+ARCH-PROD-001's starter ProducerFactory first failed in production (`APPLICATION FAILED TO START` in every outbox-starter service) with "candidates found but could not be injected": Spring Boot 4's `KafkaAutoConfiguration.kafkaTemplate(ProducerFactory<Object,Object>, ProducerListener<Object,Object>, ...)` requires the exact generic type. A `<String,String>` factory passes unit tests (direct method call, no container generic resolution) but breaks every full context. Declare `ProducerFactory<Object, Object>` with String serializers; unit-test the config map, and boot one real service context (or the container) to catch generic mismatches.
+
+### L-221: Rebuilding an image under the same tag does not trigger podman-compose recreate (2026-08-13)
+
+After rebuilding all 1.11.1 images (with a fix), `podman-compose up -d` considered containers current (same tag) and left crash-looping containers on the OLD image. Also, `podman rm` fails with "has dependent containers" for compose-managed stacks. Correct sequence: `podman-compose --profile apps up -d --force-recreate`, or remove dependents first then `up`. Verify with `podman ps --format "{{.Names}} {{.CreatedAt}}"` that CreatedAt is fresh, not a stale container from the previous deploy.

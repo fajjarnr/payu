@@ -64,10 +64,12 @@ public class OutboxAutoConfiguration {
      * retries safe against duplicates; acks=all survives broker failover.
      * Registered before {@link KafkaAutoConfiguration} so it wins for
      * services that do not define their own {@link ProducerFactory}.
+     * Must be {@code ProducerFactory<Object, Object>}: Boot 4's
+     * KafkaAutoConfiguration.kafkaTemplate requires exactly that type.
      */
     @Bean
     @ConditionalOnMissingBean(ProducerFactory.class)
-    public ProducerFactory<String, String> outboxProducerFactory(
+    public ProducerFactory<Object, Object> outboxProducerFactory(
             @org.springframework.beans.factory.annotation.Value("${spring.kafka.bootstrap-servers:localhost:9092}")
             String bootstrapServers) {
         Map<String, Object> props = new HashMap<>();

@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deployed
 
+- 1.11.1 — 30/30 service containers sehat via podman-compose (profile `apps`, image tag `1.11.1`); deploy memakai `--force-recreate` (tag sama tidak memicu recreate otomatis); scan log: 0 error loop / 0 `APPLICATION FAILED`.
 - 1.11.0 — 37/37 service containers up (34 healthy via compose + 3 verified UP via health endpoint), Flyway V26 applied, kafka/artemis/keycloak running. Log scan: hanya noise startup transient (Kafka metadata, Artemis reconnect, Gauge re-registration) — tidak ada error loop.
 
 ## [1.10.76] - 2026-08-12

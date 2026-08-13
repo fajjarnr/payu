@@ -21,12 +21,12 @@ class OutboxProducerFactoryTest {
     @Test
     @DisplayName("should default to acks=all, idempotence and bounded retries")
     void shouldDefaultToDurableProducerConfig() {
-        ProducerFactory<String, String> factory = new OutboxAutoConfiguration()
+        ProducerFactory<Object, Object> factory = new OutboxAutoConfiguration()
                 .outboxProducerFactory("localhost:9092");
 
         assertThat(factory).isInstanceOf(DefaultKafkaProducerFactory.class);
         @SuppressWarnings("unchecked")
-        Map<String, Object> config = ((DefaultKafkaProducerFactory<String, String>) factory).getConfigurationProperties();
+        Map<String, Object> config = ((DefaultKafkaProducerFactory<Object, Object>) factory).getConfigurationProperties();
 
         assertThat(config.get(ProducerConfig.ACKS_CONFIG))
                 .as("acks must be all, never the client default of 1")
