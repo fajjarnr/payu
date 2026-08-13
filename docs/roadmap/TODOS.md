@@ -71,7 +71,7 @@
 | QAMVP-011 | wallet, transaction, billing, partner | ~~Test idempotency concurrency: 10 thread key sama → 1 mutasi, 1 ledger, 1 outbox~~ **CLOSED 2026-08-13** — 4 service: `WalletControllerConcurrencyIdempotencyTest` (credit), `TransactionControllerConcurrencyIdempotencyTest` (transfer), `PaymentControllerConcurrencyIdempotencyTest` (bill payment), `MerchantControllerConcurrencyIdempotencyTest` (QR) — 10 thread X-Idempotency-Key sama → 1 mutasi, 1 successful atomic claim, 0 5xx, 0 throw; 5× run stabil | Test thread lulus CI |
 | QAMVP-012 | wallet, transaction, billing, partner | ~~Test same-key + different-payload ditolak (conflict, bukan replay)~~ **CLOSED 2026-08-13** — `sameKeyDifferentPayloadIsConflict` di 4 service (wallet/transaction/billing/partner): 409 conflict, 1 mutasi | Test lulus CI |
 | QAMVP-013 | wallet, transaction | ~~Test outbox atomicity dengan Testcontainers PG+Kafka: business row + outbox row commit/rollback bersama~~ **wallet DONE 2026-08-13** — `OutboxAtomicityIntegrationTest` (PostgreSQL real via Testcontainers + podman socket): commit → business row + outbox row ada; rollback → 0 keduanya. Sisa: transaction | Test lulus CI |
-| QAMVP-014 | wallet, kyc, analytics, billing, backoffice, cms, api-portal | ~~Security test (401/403/RBAC) — sekarang 0 di 7 service~~ **wallet + billing DONE 2026-08-13** — `WalletSecurityTest` (401/403/RBAC real security chain, `payu.grpc.server.port=0`), `PaymentSecurityTest` (401 + ownership). Sisa: kyc/analytics (Python), api-portal (Quarkus) | Test lulus CI |
+| QAMVP-014 | wallet, kyc, analytics, billing, backoffice, cms, api-portal | ~~Security test (401/403/RBAC) — sekarang 0 di 7 service~~ **wallet + billing DONE 2026-08-13** — `WalletSecurityTest` (401/403/RBAC real security chain, `payu.grpc.server.port=0`), `PaymentSecurityTest` (401 + ownership). Sisa: analytics (Python); api-portal = public-by-design (tanpa endpoint terproteksi, auth di gateway) | Test lulus CI |
 | QAMVP-015 | platform | Contract test error case (401/422 RFC 9457) + wiring CI + fix README stale | `tests/contract` hijau di CI |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
@@ -247,7 +247,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-011 | Idempotency concurrency: **FIXED 2026-08-13** 4 service (wallet/transaction/billing/partner, 10 thread → 1 mutasi). Bonus: bug in-progress duplicate → 500 (ConflictException uncaught) di `IdempotencyInterceptor` → kini clean 409 | 🟢 |
 | QAMVP-012 | Same-key + different-payload rejection: **FIXED 2026-08-13** semua 4 money service (409 conflict) | 🟢 |
 | QAMVP-013 | Outbox atomicity: wallet **FIXED 2026-08-13** (`OutboxAtomicityIntegrationTest` commit+rollback, real PG); `TestcontainersConfig` wallet kini terpakai; sisa transaction | 🟡 |
-| QAMVP-014 | Security test: wallet/billing/transaction/backoffice/cms **FIXED 2026-08-13**; sisa kyc/analytics (Python) + api-portal (Quarkus) | 🟡 |
+| QAMVP-014 | Security test: wallet/billing/transaction/backoffice/cms/kyc **FIXED 2026-08-13**; sisa analytics (Python); api-portal tanpa endpoint terproteksi (public portal, gateway-enforced) | 🟡 |
 | QAMVP-015 | Contract test: 3 happy-path, **0 error case** (401/422), tidak dijalankan CI; README klaim 4 pair padahal 3 file | 🟠 |
 | QAMVP-016 | Coverage: jacoco goal tidak di-bound (Makefile malah hapus jacoco.exec); kyc 65% < gate 80%; READY-022 unresolved | 🟠 |
 | QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
