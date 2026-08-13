@@ -335,11 +335,11 @@ class TopUpResourceTest {
 
     @Test
     @DisplayName("GET /api/v1/topup/{id} - should return 500 for non-existent top-up")
-    void shouldReturn500ForNonExistentTopUp() throws Exception {
+    void shouldReturn404ForNonExistentTopUp() throws Exception {
         mockAuth("ACC-001");
 
         mockMvc.perform(get("/api/v1/topup/00000000-0000-0000-0000-000000000000")
                         .header(AUTH_HEADER, AUTH_TOKEN))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 }

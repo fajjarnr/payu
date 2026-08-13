@@ -164,11 +164,11 @@ class PaymentResourceTest {
 
     @Test
     @DisplayName("GET /api/v1/payments/{id} - should return 500 for non-existent payment")
-    void shouldReturn500ForNonExistentPayment() throws Exception {
+    void shouldReturn404ForNonExistentPayment() throws Exception {
         mockAuth("ACC-001");
 
         mockMvc.perform(get("/api/v1/payments/00000000-0000-0000-0000-000000000000")
                         .header(AUTH_HEADER, AUTH_TOKEN))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 }

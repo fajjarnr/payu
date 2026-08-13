@@ -255,7 +255,7 @@ public class Rfc9457GlobalExceptionHandler {
         if (code.contains("_VAL_") || code.contains("VALIDATION")) return HttpStatus.BAD_REQUEST;
         if (code.contains("_BUS_")) return HttpStatus.UNPROCESSABLE_ENTITY;
         if (code.contains("_EXT_")) return HttpStatus.BAD_GATEWAY;
-        if (code.contains("NOT_FOUND")) return HttpStatus.NOT_FOUND;
+        if (code.contains("NOT_FOUND") || code.endsWith("_404")) return HttpStatus.NOT_FOUND;
         if (code.contains("FORBIDDEN")) return HttpStatus.FORBIDDEN;
         if (code.contains("UNAUTHORIZED")) return HttpStatus.UNAUTHORIZED;
         return HttpStatus.INTERNAL_SERVER_ERROR;
