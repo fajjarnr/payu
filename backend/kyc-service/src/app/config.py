@@ -33,8 +33,10 @@ class Settings(BaseSettings):
     # Artemis / STOMP
     artemis_host: str = os.getenv("ARTEMIS_HOST", "localhost")
     artemis_stomp_port: int = int(os.getenv("ARTEMIS_STOMP_PORT", "61613"))
-    artemis_username: str = os.getenv("ARTEMIS_USERNAME", "admin")
-    artemis_password: str = os.getenv("ARTEMIS_PASSWORD", "admin")
+    # ARCH-SECRET-001: no hardcoded default credentials — empty defaults are
+    # fail-closed; get_settings() rejects a missing ARTEMIS_PASSWORD.
+    artemis_username: str = os.getenv("ARTEMIS_USERNAME", "")
+    artemis_password: str = os.getenv("ARTEMIS_PASSWORD", "")
     artemis_kyc_queue: str = "payu.kyc.commands"
     artemis_heartbeat_send_ms: int = int(os.getenv("ARTEMIS_HEARTBEAT_SEND_MS", "30000"))
     artemis_heartbeat_receive_ms: int = int(os.getenv("ARTEMIS_HEARTBEAT_RECEIVE_MS", "30000"))
@@ -88,4 +90,6 @@ def get_settings() -> Settings:
     settings = Settings()
     if not settings.secret_key:
         raise ValueError("SECRET_KEY environment variable must be set. Never run without it.")
+    if not settings.artemis_password or not settings.artemis_username:
+        raise ValueError("ARTEMIS_USERNAME/ARTEMIS_PASSWORD must be set. Never run with default credentials.")
     return settings

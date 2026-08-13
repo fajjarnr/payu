@@ -27,6 +27,8 @@ jobs:
       PYTHONPATH: src
       SECRET_KEY: ci-test-${{ github.run_id }}-${{ github.sha }}
       ENCRYPTION_KEY: ci-test-encryption-key
+      ARTEMIS_USERNAME: ci-test
+      ARTEMIS_PASSWORD: ci-test-password
       ENABLE_TRACING: "false"
       ENABLE_METRICS: "false"
     steps:
