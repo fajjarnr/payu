@@ -47,4 +47,41 @@ class RefundReversalExecutorTest {
         verify(executionRepository, times(2)).saveAndFlush(saved.capture());
         assertThat(saved.getAllValues().get(1).getStatus()).isEqualTo(RefundReversalStatus.COMPLETED);
     }
+
+    @Test
+    void execute_replayAfterCompletion_doesNotReverseMoneyAgain() {
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase);
+        RefundReversalExecutionEntity completed = new RefundReversalExecutionEntity();
+        completed.setRefundId(REFUND_ID);
+        completed.setTransactionId(TRANSACTION_ID);
+        completed.setStatus(RefundReversalStatus.COMPLETED);
+        when(executionRepository.findByRefundId(REFUND_ID)).thenReturn(Optional.of(completed));
+
+        RefundRequestedEvent event = new RefundRequestedEvent(
+                REFUND_ID, TRANSACTION_ID, new BigDecimal("100.00"), "IDR", "customer refund", "sender", "recipient");
+
+        executor.execute(event);
+
+        verify(walletUseCase, never()).reverseTransfer(any(), any(), any(), any(), any(), any());
+        verify(executionRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void execute_invalidEvent_marksReconciliationRequired() {
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase);
+        when(executionRepository.findByRefundId(REFUND_ID)).thenReturn(Optional.empty());
+        when(executionRepository.saveAndFlush(any(RefundReversalExecutionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RefundRequestedEvent event = new RefundRequestedEvent(
+                REFUND_ID, TRANSACTION_ID, null, "IDR", "reason", "sender", "recipient");
+
+        executor.execute(event);
+
+        verify(walletUseCase, never()).reverseTransfer(any(), any(), any(), any(), any(), any());
+        ArgumentCaptor<RefundReversalExecutionEntity> saved = ArgumentCaptor.forClass(RefundReversalExecutionEntity.class);
+        verify(executionRepository, atLeastOnce()).saveAndFlush(saved.capture());
+        assertThat(saved.getAllValues().get(saved.getAllValues().size() - 1).getStatus())
+                .isEqualTo(RefundReversalStatus.RECONCILIATION_REQUIRED);
+    }
 }
