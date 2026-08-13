@@ -12,7 +12,7 @@ Contract.make {
         }
         body([
             code: $(anyNonBlankString()),
-            codeVerifier: $(anyNonBlankString()),
+            codeVerifier: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._",
             redirectUri: $(anyNonBlankString())
         ])
     }

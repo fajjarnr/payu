@@ -20,7 +20,8 @@ import static org.mockito.BDDMockito.given;
  * Provides MockMvc setup and mocks KeycloakService since the real
  * Keycloak instance is not available during contract verification.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        properties = "payu.grpc.server.port=0")
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureMessageVerifier
 @ActiveProfiles("test")

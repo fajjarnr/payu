@@ -34,7 +34,8 @@ import static org.mockito.BDDMockito.given;
  * Also mocks {@link TransactionUseCase} since external dependencies (wallet-service, BI-FAST)
  * are not available during contract verification.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        properties = "payu.grpc.server.port=0")
 @AutoConfigureMockMvc(addFilters = false) // Bypass security filter chain; auth set via @BeforeEach
 @AutoConfigureMessageVerifier
 @ActiveProfiles("test")

@@ -1,28 +1,33 @@
-## Contract Testing with Spring Cloud Contract
+# Contract Testing with Spring Cloud Contract
 
-This directory contains contract tests for critical service pairs in the PayU platform.
+Reference copies of the Spring Cloud Contract verifier contracts. The
+authoritative sources live in each provider's
+`src/test/resources/contracts/` (service poms bind `spring-cloud-contract-maven-plugin`
+with a `contract-test` Maven profile that runs the generated `ContractVerifierTest`).
 
-### Strategy
+## Contracts (2026-08-13)
 
-We use **Spring Cloud Contract** for provider-driven contract testing between:
-- `transaction-service` ↔ `wallet-service` (balance operations)
-- `auth-service` ↔ `account-service` (user registration)
-- `billing-service` ↔ `transaction-service` (payment processing)
-- `lending-service` ↔ `wallet-service` (loan disbursement)
+| Service | Happy path | Error case (RFC 9457 `application/problem+json`) |
+| :--- | :--- | :--- |
+| transaction-service | `createTransfer` (201) | `createTransferInvalidAmount` (400 — validation) |
+| wallet-service | `getBalance` (200) | `getBalanceNotFound` (404) |
+| auth-service | `loginUser` (200) | `loginUserMissingCode` (400 — validation) |
 
-### How it works
+401 cases are exercised by the service security suites (QAMVP-014), not the
+verifier: `ContractVerifierBase` classes set a JWT principal and disable the
+security filter chain, so unauthenticated flows are out of scope for the
+provider-side verifier.
 
-1. **Provider** defines contracts in Groovy DSL (`src/test/resources/contracts/`)
-2. **Maven plugin** generates tests from contracts → runs against provider
-3. **Stubs JAR** is published to Maven local/repo
-4. **Consumer** uses `@AutoConfigureStubRunner` to test against stubs
-
-### Running
+## Running
 
 ```bash
-# Generate & run provider tests
-mvn test -pl transaction-service -Dspring.cloud.contract.verifier.enabled=true
+# Transaction (also runs -am reactor deps)
+mvn -B -f backend/pom.xml -pl transaction-service -am test \
+  -Pcontract-test -Dtest=ContractVerifierTest -Dsurefire.failIfNoSpecifiedTests=false
 
-# Consumer side (auto-downloads stubs)
-mvn test -pl billing-service -Dspring.cloud.contract.stubrunner.enabled=true
+# Wallet / auth: same command with the respective service id
 ```
+
+CI: `.github/workflows/contract-tests.yml` runs the verifier for the three
+services on push/PR touching contracts, poms, or the workflow. Requires
+Rest Assured ≥ 5.5.7 (Spring 7 compatibility — see parent `pom.xml`).

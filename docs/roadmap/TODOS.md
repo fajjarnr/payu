@@ -72,7 +72,7 @@
 | QAMVP-012 | wallet, transaction, billing, partner | ~~Test same-key + different-payload ditolak (conflict, bukan replay)~~ **CLOSED 2026-08-13** — `sameKeyDifferentPayloadIsConflict` di 4 service (wallet/transaction/billing/partner): 409 conflict, 1 mutasi | Test lulus CI |
 | QAMVP-013 | wallet, transaction | ~~Test outbox atomicity dengan Testcontainers PG+Kafka: business row + outbox row commit/rollback bersama~~ **wallet DONE 2026-08-13** — `OutboxAtomicityIntegrationTest` (PostgreSQL real via Testcontainers + podman socket): commit → business row + outbox row ada; rollback → 0 keduanya. Sisa: transaction | Test lulus CI |
 | QAMVP-014 | wallet, kyc, analytics, billing, backoffice, cms, api-portal | ~~Security test (401/403/RBAC) — sekarang 0 di 7 service~~ **wallet + billing DONE 2026-08-13** — `WalletSecurityTest` (401/403/RBAC real security chain, `payu.grpc.server.port=0`), `PaymentSecurityTest` (401 + ownership). Sisa: analytics (Python); api-portal = public-by-design (tanpa endpoint terproteksi, auth di gateway) | Test lulus CI |
-| QAMVP-015 | platform | Contract test error case (401/422 RFC 9457) + wiring CI + fix README stale | `tests/contract` hijau di CI |
+| QAMVP-015 | platform | ~~Contract test error case (401/422 RFC 9457) + wiring CI + fix README stale~~ **CLOSED 2026-08-13** — error-case contracts (400/404 RFC 9457 problem+json) untuk transaction/wallet/auth; profile `contract-test` (override surefire exclude); CI `.github/workflows/contract-tests.yml`; rest-assured 5.5.2→5.5.7 (Spring 7 `header()` incompat); verifier 2/2 hijau per service; 401 ditutup QAMVP-014 (verifier bypass filter chain) | `tests/contract` hijau di CI |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
@@ -248,7 +248,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-012 | Same-key + different-payload rejection: **FIXED 2026-08-13** semua 4 money service (409 conflict) | 🟢 |
 | QAMVP-013 | Outbox atomicity: **FIXED 2026-08-13** — 4 service (wallet/transaction/billing/partner) commit+rollback vs real PG | 🟢 |
 | QAMVP-014 | Security test: **FIXED 2026-08-13** — 7 service (wallet/billing/transaction/backoffice/cms/kyc/analytics); api-portal public-by-design | 🟢 |
-| QAMVP-015 | Contract test: 3 happy-path, **0 error case** (401/422), tidak dijalankan CI; README klaim 4 pair padahal 3 file | 🟠 |
+| QAMVP-015 | Contract test: **FIXED 2026-08-13** — 3 error case RFC 9457 (transaction 400, wallet 404, auth 400) + CI workflow + README akurat; verifier jalan di CI via `-Pcontract-test` | 🟢 |
 | QAMVP-016 | Coverage: jacoco goal tidak di-bound (Makefile malah hapus jacoco.exec); kyc 65% < gate 80%; READY-022 unresolved | 🟠 |
 | QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
 | QAMVP-018 | ZAP + Schemathesis cuma di Tekton SIT, tidak ada di GitHub CI per-PR | 🟠 |
