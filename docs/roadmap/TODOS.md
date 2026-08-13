@@ -39,7 +39,7 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. **PROGRESS 2026-08-13**: core domain 55.2%→95.6%; gate-facing coverage (excl generated `grpc`/dto/entity/config/domain) 24.7%→30.2% — `HealthIndicatorTest` (4) + jacoco check exclude generated `**/grpc/**` (tanpa itu gate 80% mustahil: grpc 4708 baris ~13.6%). CI workflow ada. Sisa: gate-facing ≥80% (butuh ~830 baris lagi di adapter/service/web), jacoco `verify` merah sampai naik. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
+| ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. **PROGRESS 2026-08-13**: core domain 55.2%→95.6%; gate-facing coverage (excl generated `grpc`/dto/entity/config/domain) 24.7%→37.0% — `HealthIndicatorTest` (4), `CachedAccountQueryServiceTest` (8), `BudgetServiceTest` (11) + jacoco check exclude generated `**/grpc/**` (tanpa itu gate 80% mustahil: grpc 4708 baris ~13.6%). CI workflow ada. Sisa: gate-facing ≥80% (butuh ~720 baris lagi di adapter/service/web), jacoco `verify` merah sampai naik. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | PROD-044 | P1 | Notification false success — **PARTIAL 2026-08-12**: fail-closed live (SMS/PUSH default NONE → false, LOG hanya eksplisit, `mailer.mock` tidak diwariskan ke prod, `KEYCLOAK_REALM` default). Sisa (butuh credential provider eksternal): provider nyata + delivery ID + E2E terima. | 🟠 Fail-closed live — provider pending |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
