@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **QAMVP-011 (wallet)**: `WalletControllerConcurrencyIdempotencyTest` — 10 request konkuren dengan X-Idempotency-Key sama terhadap `/credit` menghasilkan tepat 1 mutasi (invocation use-case terhitung), 1 successful atomic claim (`putIfAbsent`), 0 5xx. Drive `IdempotencyInterceptor` + `IdempotencyService` asli dengan repository in-memory thread-safe; filter body-caching (`IdempotencyRequestBodyFilter` via reflection) + response-caching direplikasi dari produksi. 5× run stabil.
 - **ARCH-DECIMAL-001 (promotion)**: `promo_codes.discount_value` widened `DECIMAL(10,4)` → `DECIMAL(19,4)` (V13, widening-only) + entity `precision = 19`. Domain scale disinkronkan ke 4 (ADR-0022): `PromoCode.calculateDiscount` PERCENTAGE `divide(..., 4, HALF_EVEN)` (PROMO-004) dan `PromoUsagePersistenceMapper.normalizeAmount` floor scale 4 — idempotent replay kini konsisten scale 4 dengan hitung segar. Test scale-4 ditambah (TDD); 3 assert lama disesuaikan. 261 test green.
 
 ### Changed
