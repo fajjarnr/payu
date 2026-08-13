@@ -1,5 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Final sweep 2026-08-13 (1.11.1)
+
+- 37/37 container sehat, scan log 0 `APPLICATION FAILED` / 0 error loop.
+- Turn ini: ACCOUNT-006 jacoco `verify` gate GREEN (gate-facing 80.1%), QAMVP-002 CLOSED (transfer integration), QAMVP-019 (not-found page + forgot-password tests), QAMVP-016 account part green.
+
 ## Web-app redeploy (2026-08-13, 1.11.1)
 
 - Rebuild + recreate `payu-web-app` dengan halaman `/statements` baru (QAMVP-019). `localhost:3001` root 200, `/en/statements` 200 (konten E-Statement termuat).
