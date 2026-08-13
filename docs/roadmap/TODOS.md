@@ -59,7 +59,7 @@
 | ARCH-PROD-001 | platform | ~~Producer default `acks=all` + `enable.idempotence=true` + retries di outbox-starter (satu tempat semua service)~~ **CLOSED 2026-08-13** — `outboxProducerFactory` sebelum `KafkaAutoConfiguration` (`@ConditionalOnMissingBean`); guard `OutboxProducerFactoryTest` | Property terverifikasi di producer config |
 | ARCH-DECIMAL-001 | promotion | ~~Widening `discount_value` → DECIMAL(19,4) + sync domain scale 4~~ **CLOSED 2026-08-13** — V13, entity precision 19, scale 4 (PROMO-004 + normalizeAmount floor 4), 261 test green | Kolom 19,4 + test |
 | QAMVP-001 | platform | CI backend: workflow PR changed-service — unit + integration semua service (sekarang 0) | PR status red/green per service |
-| QAMVP-002 | transaction, wallet | Integration test Testcontainers (PG+Kafka) money journey: transfer, reserve/commit, outbox atomic | Suite jalan di CI |
+| QAMVP-002 | transaction, wallet | ~~Integration test Testcontainers (PG+Kafka) money journey: transfer, reserve/commit, outbox atomic~~ **wallet DONE 2026-08-13** — `WalletReservationIntegrationTest` (reserve→commit: balance debit, ledger RESERVATION, outbox event; reserve idempotent replay). Transfer + outbox atomic ditutup QAMVP-011/013/007/009. Sisa: transfer integration eksplisit | Suite jalan di CI |
 | QAMVP-003 | billing, partner | Contract test: billing payment, SNAP-BI payment/refund/auth-token + CloudEvents contract | `tests/contract` bertambah |
 | QAMVP-004 | kyc | Security test (auth/RBAC) + integration test kyc; provider OCR/liveness nyata gate (analog PROD-002) | Test + live evidence |
 | QAMVP-005 | platform | k6 smoke+load di pipeline staging + SLO threshold per service | Laporan k6 di CI |
