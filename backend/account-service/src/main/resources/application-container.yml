@@ -48,11 +48,7 @@ spring:
       retries: 3
       acks: all
 
-  data:
-    redis:
-      host: ${REDIS_HOST:payu-datagrid}
-      port: ${REDIS_PORT:11222}
-
+  # ADR-0017: cache via Infinispan Hot Rod (cache-starter); no Redis/RESP config.
   security:
     oauth2:
       resourceserver:
@@ -70,8 +66,6 @@ management:
     health:
       show-details: when-authorized
   health:
-    redis:
-      enabled: true
     kafka:
       enabled: true
     db:
