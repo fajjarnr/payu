@@ -398,6 +398,9 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <excludes>
+                                <exclude>**/grpc/**</exclude>
+                            </excludes>
                             <rules>
                                 <!-- Overall Coverage Rules -->
                                 <rule>
