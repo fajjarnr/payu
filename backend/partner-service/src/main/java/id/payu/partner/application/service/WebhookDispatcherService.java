@@ -47,29 +47,31 @@ public class WebhookDispatcherService {
     private final WebhookDeliveryRepository deliveryRepository;
     private final WebhookUrlValidatorService webhookUrlValidator;
     private final HttpClient httpClient;
+    private final java.util.List<id.payu.api.common.webhook.WebhookHandler> webhookHandlers;
 
     @Autowired
     public WebhookDispatcherService(WebhookSubscriptionRepository subscriptionRepository,
                                     WebhookDeliveryRepository deliveryRepository,
-                                    WebhookUrlValidatorService webhookUrlValidator) {
-        this.subscriptionRepository = subscriptionRepository;
-        this.deliveryRepository = deliveryRepository;
-        this.webhookUrlValidator = webhookUrlValidator;
-        this.httpClient = HttpClient.newBuilder()
+                                    WebhookUrlValidatorService webhookUrlValidator,
+                                    org.springframework.beans.factory.ObjectProvider<java.util.List<id.payu.api.common.webhook.WebhookHandler>> webhookHandlersProvider) {
+        this(subscriptionRepository, deliveryRepository, HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .followRedirects(HttpClient.Redirect.NEVER)
-                .build();
+                .build(), webhookUrlValidator,
+                webhookHandlersProvider.getIfAvailable(java.util.Collections::emptyList));
     }
 
     // Visible for testing
     WebhookDispatcherService(WebhookSubscriptionRepository subscriptionRepository,
                              WebhookDeliveryRepository deliveryRepository,
                              HttpClient httpClient,
-                             WebhookUrlValidatorService webhookUrlValidator) {
+                             WebhookUrlValidatorService webhookUrlValidator,
+                             java.util.List<id.payu.api.common.webhook.WebhookHandler> webhookHandlers) {
         this.subscriptionRepository = subscriptionRepository;
         this.deliveryRepository = deliveryRepository;
-        this.httpClient = httpClient;
         this.webhookUrlValidator = webhookUrlValidator;
+        this.httpClient = httpClient;
+        this.webhookHandlers = webhookHandlers != null ? webhookHandlers : java.util.List.of();
     }
 
     /**
@@ -99,17 +101,32 @@ public class WebhookDispatcherService {
         List<WebhookSubscriptionEntity> subscriptions =
                 subscriptionRepository.findActiveByEventType(eventType);
 
-        if (subscriptions.isEmpty()) {
-            log.debug("No webhook subscriptions found for event type: {}", eventType);
-            return;
-        }
-
-        log.info("Dispatching event {} ({}) to {} subscription(s)",
-                eventType, eventId, subscriptions.size());
-
         // Build the webhook payload envelope
         Map<String, Object> envelope = buildEnvelope(eventId, eventType, payload);
         String payloadJson = toJson(envelope);
+
+        // ARCH-PARTNER-001: route the event to internal handlers (e.g. payment
+        // state updates) whose supportedEventTypes match, regardless of whether
+        // any external webhook subscription exists.
+        for (id.payu.api.common.webhook.WebhookHandler handler : webhookHandlers) {
+            String[] supportedTypes = handler.supportedEventTypes();
+            if (supportedTypes == null) {
+                continue;
+            }
+            for (String supported : supportedTypes) {
+                if (supported.equals(eventType)) {
+                    try {
+                        handler.processWebhook(eventId, payloadJson);
+                        handler.onSuccess(eventId, envelope);
+                    } catch (Exception e) {
+                        log.error("Webhook handler {} failed for event {}: {}",
+                                handler.getClass().getSimpleName(), eventId, e.getMessage());
+                        handler.onError(eventId, e);
+                    }
+                    break;
+                }
+            }
+        }
 
         for (WebhookSubscriptionEntity subscription : subscriptions) {
             if (!subscription.matchesEvent(eventType)) continue;

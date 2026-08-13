@@ -39,13 +39,15 @@ class WebhookDispatcherServiceTest {
     private HttpClient httpClient;
 
     private WebhookDispatcherService dispatcher;
+    private id.payu.api.common.webhook.WebhookHandler webhookHandler;
     private PartnerEntity partner;
     private WebhookSubscriptionEntity subscription;
 
     @BeforeEach
     void setUp() {
+        webhookHandler = org.mockito.Mockito.mock(id.payu.api.common.webhook.WebhookHandler.class);
         dispatcher = new WebhookDispatcherService(subscriptionRepository, deliveryRepository,
-                httpClient, new WebhookUrlValidatorService());
+                httpClient, new WebhookUrlValidatorService(), java.util.List.of(webhookHandler));
 
         partner = new PartnerEntity();
         partner.setId(1L);
@@ -104,9 +106,22 @@ class WebhookDispatcherServiceTest {
     @DisplayName("Event Dispatch")
     class EventDispatch {
 
-        @Test
-        @DisplayName("should skip dispatch when no subscriptions match")
-        void shouldSkipWhenNoSubscriptions() {
+    @Test
+    @DisplayName("should invoke matching webhook handler on dispatch")
+    void shouldInvokeMatchingWebhookHandlerOnDispatch() throws Exception {
+        org.mockito.Mockito.when(webhookHandler.supportedEventTypes())
+                .thenReturn(new String[]{"payment.completed"});
+        subscriptionRepository.deleteAll();
+        dispatcher.dispatch("payment.completed", "evt_handler001", Map.of("amount", 1000));
+
+        org.mockito.Mockito.verify(webhookHandler).processWebhook(
+                org.mockito.ArgumentMatchers.eq("evt_handler001"),
+                org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    @DisplayName("should skip dispatch when no subscriptions match")
+    void shouldSkipWhenNoSubscriptions() {
             when(subscriptionRepository.findActiveByEventType("payment.refunded"))
                     .thenReturn(List.of());
 
