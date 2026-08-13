@@ -60,6 +60,38 @@ class IdempotencyInterceptorTest {
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
+    @Test
+    void inProgressDuplicateShouldReturnConflictNotThrow() throws Exception {
+        IdempotencyService service = mock(IdempotencyService.class);
+        IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/transfers");
+        request.addHeader("X-Idempotency-Key", KEY);
+        request.setContent("{ \"amount\": 100 }".getBytes());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        Method method = TestController.class.getMethod("create", Map.class);
+        HandlerMethod handler = new HandlerMethod(new TestController(), method);
+
+        // Concurrent duplicate: another request is in progress → get() throws
+        when(service.get(eq(KEY), any())).thenThrow(
+                new id.payu.api.common.exception.ConflictException(
+                        "IDEMPOTENCY_IN_PROGRESS",
+                        "A request with this Idempotency-Key is currently being processed"));
+
+        new IdempotencyRequestBodyFilter().doFilter(request, response,
+                (wrapped, ignored) -> {
+                    try {
+                        boolean proceed = interceptor.preHandle((HttpServletRequest) wrapped, response, handler);
+                        assertThat(proceed).as("in-progress duplicate must not proceed to the controller").isFalse();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        assertThat(response.getStatus())
+                .as("in-progress duplicate must map to a clean 409, never a 500")
+                .isEqualTo(409);
+    }
+
     @RestController
     static class TestController {
         @PostMapping

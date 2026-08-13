@@ -127,7 +127,15 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         request.setAttribute(IDEMPOTENCY_KEY_ATTR, idempotencyKey);
 
         // Check for existing entry
-        Optional<IdempotencyEntry> existingEntry = idempotencyService.get(idempotencyKey, requestBody);
+        Optional<IdempotencyEntry> existingEntry;
+        try {
+            existingEntry = idempotencyService.get(idempotencyKey, requestBody);
+        } catch (id.payu.api.common.exception.ConflictException e) {
+            // Concurrent duplicate already in progress — clean 409, never 500
+            log.warn("Idempotency conflict for key '{}': {}", idempotencyKey, e.getMessage());
+            sendErrorResponse(response, HttpStatus.CONFLICT, e.getMessage());
+            return false;
+        }
 
         if (existingEntry.isPresent()) {
             IdempotencyEntry entry = existingEntry.get();

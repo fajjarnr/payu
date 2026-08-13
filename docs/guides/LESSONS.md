@@ -5195,3 +5195,7 @@ QAMVP-011 (10 threads, same key → 1 mutation) initially failed because the tes
 ### L-218: Permanent outbox failures need a .dlq copy, not just an archived row + log alert (2026-08-13)
 
 ARCH-DLQ-001: events that exceeded max retries were only archived and logged, so operators had to scan the DB to replay them. Extract `buildRecord(event, topic)` from `sendToKafka`, then on permanent failure best-effort send the same CloudEvents record to `destinationTopic + .dlq`. Keep it non-throwing — a dead DLQ must not corrupt the retry bookkeeping; the archived row stays the audit record. Guard with a unit test asserting the second `kafkaTemplate.send` targets `<topic>.dlq`.
+
+### L-219: In-progress idempotency duplicates must map to 409, not an uncaught 500 (2026-08-13)
+
+A concurrent duplicate that arrives while the winner's entry is still IN_PROGRESS makes `IdempotencyService.get()` throw `ConflictException`, which `IdempotencyInterceptor.preHandle` did not catch → 500 instead of a clean 409. It surfaced as an intermittent QAMVP-011 flake (`no request may throw`): under load a loser thread hit the in-progress window, and `mockMvc.perform` propagated the exception. Wrap the `get()` call, translate to `sendErrorResponse(response, CONFLICT, ...)` and return false. The 10-thread concurrency tests in all four money services then run stable.
