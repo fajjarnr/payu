@@ -82,7 +82,7 @@
 
 | Key | Domain | Item |
 |:---|:---|:---|
-| CB-009 | lending | Lending financial E2E fixture + integration test lending/fx/statement (defer) |
+| CB-009 | lending | ~~Lending financial E2E fixture + integration test~~ **CLOSED 2026-08-13** — `LendingFinancialE2ETest` (full lifecycle apply→schedule→pay→idempotent replay, amortization invariants HALF_EVEN, sum(principal)==principal, final outstanding==last principal); rewrite 4 stale integration classes (PayLater/LoanApplication/RepaymentSchedule/CreditScore) ke MockMvc + current contract (Boot 4: WebTestClient→MockMvc, jsonPath `.value()`, async dispatch, `X-Idempotency-Key`, `X-Tenant-Id`). Fix **2 real prod bugs**: (1) `PayLaterPersistenceAdapter.toEntity` drop tenantId → paylater purchase UPDATE `TENANT_ID NULL` → 500; (2) `CreditScorePersistenceAdapter.toEntity` detached-merge @Version null → re-calculate score 500. Fix jacoco drools DRL6Lexer MethodTooLarge (agent excludes). `LendingSecurityServiceTest` (9) baru. Total 136/136. Gate `verify` masih red pada ~22 class pre-existing (entities/controllers/adapters) — baseline sudah red sebelum sesi; debt tercatat. Deployed 1.11.1 healthy | 136/136 |
 | READY-022 | qa | 80% coverage audited 4-22% (4 service) |
 | READY-060 | card | Card tokenization + 3DS |
 | READY-062 | ml | ONNX fraud detection model |

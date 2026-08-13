@@ -2,6 +2,13 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
+
+- **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.
+- **JPA `save()` + `@Version` merge trap pada adapter yang selalu `new Entity`**: `toEntity()` harus load existing managed entity (`repo.findById(id)`) saat `id != null` — mempertahankan `version` + `tenantId`, menghindari `Detached entity ... uninitialized version 'null'` (CreditScore re-calculate) dan `TENANT_ID NULL` pada UPDATE (PayLater purchase).
+- **JaCoCo gagal instrument drools `DRL6Lexer.mID()`** (method >64KB, `MethodTooLargeException`) → Spring context crash saat init credit scoring. Fix: `prepare-agent` `<excludes>org/drools/**, org/kie/**, org/antlr/**</excludes>`.
+- **Test-state lintas kelas**: `user_id UNIQUE` global + tenant filter → dua kelas test dengan tenant berbeda (default vs `test-tenant`) pada userId sama = duplicate-key. Standarkan satu tenant per suite (`X-Tenant-Id`).
+
 ## L-240: podman-compose Stale-Image Pinning + SmallRye Multi-Topic Traps (2026-08-13)
 
 **Context**: 1.11.0 deploy — `payu-transaction-service` crash-looped on a Flyway `Found more than one migration with version 21` even after the source fix, and `payu-notification-service` spammed `InvalidTopicException` for the split-bill topics.
