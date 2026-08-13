@@ -56,19 +56,16 @@ public class DependencyHealthIndicator {
             dependencySummary.put("overall", "UNHEALTHY");
         }
 
-        // Extract individual dependency status
+        // Extract individual dependency status. DeepHealthIndicator stores each
+        // dependency's Health in its own details map (Health.down()/.up() are
+        // the values), so read the status via a fresh Health check is wrong —
+        // deepHealth.getDetails() returns Map<String, Object> with the Health
+        // objects directly as values.
         var deepDetails = deepHealth.getDetails();
-        if (deepDetails.containsKey("database")) {
-            var dbHealth = (Health) deepDetails.get("database");
-            dependencySummary.put("database", dbHealth.getStatus().toString());
-        }
-        if (deepDetails.containsKey("redis")) {
-            var redisHealth = (Health) deepDetails.get("redis");
-            dependencySummary.put("redis", redisHealth.getStatus().toString());
-        }
-        if (deepDetails.containsKey("kafka")) {
-            var kafkaHealth = (Health) deepDetails.get("kafka");
-            dependencySummary.put("kafka", kafkaHealth.getStatus().toString());
+        for (String dep : java.util.List.of("database", "redis", "kafka")) {
+            if (deepDetails.get(dep) instanceof Health depHealth) {
+                dependencySummary.put(dep, depHealth.getStatus().toString());
+            }
         }
 
         details.put("dependencies", dependencySummary);

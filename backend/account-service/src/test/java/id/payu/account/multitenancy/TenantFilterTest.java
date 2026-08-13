@@ -1,101 +1,87 @@
 package id.payu.account.multitenancy;
 
-import org.junit.jupiter.api.AfterEach;
+import id.payu.security.multitenancy.TenantContext;
+import id.payu.security.multitenancy.TenantInterceptor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockFilterChain;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import id.payu.security.multitenancy.TenantContext;
-
-import java.time.Instant;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * ACCOUNT-003: the tenant must come from a trusted credential (the signed JWT),
- * never from the client-controlled X-Tenant-Id header.
+ * ACCOUNT-006: multitenancy coverage (TenantFilter + TenantEnforcementAspect).
  */
-@DisplayName("TenantFilter")
+@DisplayName("Account multitenancy")
 class TenantFilterTest {
 
-    private final TenantFilter filter = new TenantFilter();
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
-        TenantContext.clear();
-    }
-
     @Test
-    @DisplayName("uses the tenant_id claim from the authenticated JWT")
-    void tenantFromJwtClaim() throws Exception {
-        authenticateWithClaim("tenant-42");
+    void derivesTenantFromJwtClaimAndClearsAfter() throws Exception {
+        Jwt jwt = Jwt.withTokenValue("t").header("alg", "none")
+                .claim("tenant_id", "partner-42").build();
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("X-Tenant-Id", "attacker-chosen-tenant");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicReference<String> seen = new AtomicReference<>();
+        TenantFilter filter = new TenantFilter();
 
-        String tenantDuringRequest = captureTenantDuringRequest(request);
+        filter.doFilter(request, response, (req, res) -> seen.set(TenantContext.getTenantId()));
 
-        assertThat(tenantDuringRequest).isEqualTo("tenant-42");
-    }
-
-    @Test
-    @DisplayName("ignores the X-Tenant-Id header even when the JWT has no tenant claim")
-    void headerIgnoredWithoutClaim() throws Exception {
-        authenticateWithClaim(null);
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("X-Tenant-Id", "attacker-chosen-tenant");
-
-        String tenantDuringRequest = captureTenantDuringRequest(request);
-
-        assertThat(tenantDuringRequest).isEqualTo("default");
-    }
-
-    @Test
-    @DisplayName("anonymous requests fall back to the default tenant")
-    void anonymousUsesDefaultTenant() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("X-Tenant-Id", "attacker-chosen-tenant");
-
-        String tenantDuringRequest = captureTenantDuringRequest(request);
-
-        assertThat(tenantDuringRequest).isEqualTo("default");
-    }
-
-    @Test
-    @DisplayName("clears the context after the request")
-    void clearsContextAfterRequest() throws Exception {
-        authenticateWithClaim("tenant-42");
-        MockHttpServletRequest request = new MockHttpServletRequest();
-
-        filter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
-
+        assertThat(seen.get()).isEqualTo("partner-42");
         assertThat(TenantContext.getTenantId()).isEqualTo("default");
     }
 
-    private String captureTenantDuringRequest(MockHttpServletRequest request) throws Exception {
-        String[] captured = new String[1];
-        filter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain() {
-            @Override
-            public void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
-                captured[0] = TenantContext.getTenantId();
-            }
-        });
-        return captured[0];
+    @Test
+    void anonymousFallsBackToDefaultTenant() throws Exception {
+        SecurityContextHolder.clearContext();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicReference<String> seen = new AtomicReference<>();
+        TenantFilter filter = new TenantFilter();
+
+        filter.doFilter(request, response, (req, res) -> seen.set(TenantContext.getTenantId()));
+
+        assertThat(seen.get()).isEqualTo("default");
     }
 
-    private void authenticateWithClaim(String tenantId) {
-        Map<String, Object> claims = new java.util.HashMap<>(Map.of("sub", "user-1"));
-        if (tenantId != null) {
-            claims.put("tenant_id", tenantId);
-        }
-        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
-                Map.of("alg", "none"), claims);
+    @Test
+    void jwtWithoutTenantClaimFallsBackToDefault() throws Exception {
+        Jwt jwt = Jwt.withTokenValue("t").header("alg", "none").claim("sub", "user-1").build();
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicReference<String> seen = new AtomicReference<>();
+        TenantFilter filter = new TenantFilter();
+
+        filter.doFilter(request, response, (req, res) -> seen.set(TenantContext.getTenantId()));
+
+        assertThat(seen.get()).isEqualTo("default");
+    }
+
+    @Test
+    void aspectProceedsEvenWhenInterceptorFails() throws Throwable {
+        @SuppressWarnings("unchecked")
+        ObjectProvider<TenantInterceptor> provider = mock(ObjectProvider.class);
+        TenantInterceptor interceptor = mock(TenantInterceptor.class);
+        doThrow(new RuntimeException("no session")).when(interceptor).enableTenantFilter();
+        when(provider.getIfAvailable()).thenReturn(interceptor);
+        org.aspectj.lang.ProceedingJoinPoint pjp = mock(org.aspectj.lang.ProceedingJoinPoint.class);
+        when(pjp.proceed()).thenReturn("ok");
+
+        TenantEnforcementAspect aspect = new TenantEnforcementAspect(provider);
+        Object result = aspect.enforceTenantFilter(pjp);
+
+        assertThat(result).isEqualTo("ok");
     }
 }

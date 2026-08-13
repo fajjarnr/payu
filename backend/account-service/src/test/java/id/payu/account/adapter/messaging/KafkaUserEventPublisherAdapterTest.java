@@ -53,4 +53,36 @@ class KafkaUserEventPublisherAdapterTest {
         assertThat(payload).doesNotContainKeys("email", "fullName", "phoneNumber", "username", "nik");
         assertThat(payload.get("externalId")).isEqualTo("iam-external-id");
     }
+
+    @Test
+    @DisplayName("publishUserUpdated targets user-updated topic with UserUpdated type")
+    void publishUserUpdatedUsesCorrectTopicAndType() {
+        UUID userId = UUID.randomUUID();
+        adapter.publishUserUpdated(new UserCreatedEvent(
+                userId, "iam-external-id", LocalDateTime.of(2026, 8, 11, 10, 0)));
+
+        verify(outboxService).createEvent(
+                org.mockito.ArgumentMatchers.eq("User"),
+                org.mockito.ArgumentMatchers.eq(userId.toString()),
+                org.mockito.ArgumentMatchers.eq("UserUpdated"),
+                org.mockito.ArgumentMatchers.anyMap(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq("payu.account.user-updated.v1"));
+    }
+
+    @Test
+    @DisplayName("publishKycCompleted targets kyc-completed topic with KycCompleted type")
+    void publishKycCompletedUsesCorrectTopicAndType() {
+        UUID userId = UUID.randomUUID();
+        adapter.publishKycCompleted(new UserCreatedEvent(
+                userId, "iam-external-id", LocalDateTime.of(2026, 8, 11, 10, 0)));
+
+        verify(outboxService).createEvent(
+                org.mockito.ArgumentMatchers.eq("User"),
+                org.mockito.ArgumentMatchers.eq(userId.toString()),
+                org.mockito.ArgumentMatchers.eq("KycCompleted"),
+                org.mockito.ArgumentMatchers.anyMap(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq("payu.account.kyc-completed.v1"));
+    }
 }

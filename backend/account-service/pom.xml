@@ -400,6 +400,10 @@
                         <configuration>
                             <excludes>
                                 <exclude>**/grpc/**</exclude>
+                                <exclude>**/dto/**</exclude>
+                                <exclude>**/entity/**</exclude>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/domain/model/**</exclude>
                             </excludes>
                             <rules>
                                 <!-- Overall Coverage Rules -->

@@ -91,6 +91,46 @@ class AccountWebControllersTest {
     }
 
     @Test
+    void healthDownWhenDatabaseValidationFails() throws Exception {
+        DataSource ds = mock(DataSource.class);
+        Connection conn = mock(Connection.class);
+        when(conn.isValid(5)).thenReturn(false);
+        when(ds.getConnection()).thenReturn(conn);
+        when(registry.getListenerContainerIds()).thenReturn(java.util.Set.of());
+
+        healthMvc(ds, rcm, registry).perform(get("/api/v1/accounts/public/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(jsonPath("$.details.database").value("DOWN"));
+    }
+
+    @Test
+    void healthDownWhenDataGridFails() throws Exception {
+        RemoteCacheManager bad = mock(RemoteCacheManager.class);
+        when(bad.getConfiguration()).thenThrow(new RuntimeException("hotrod down"));
+        when(registry.getListenerContainerIds()).thenReturn(java.util.Set.of());
+
+        healthMvc(dataSource, bad, registry).perform(get("/api/v1/accounts/public/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(jsonPath("$.details.datagrid").value("DOWN"));
+    }
+
+    @Test
+    void healthDownWhenKafkaListenerNotRunning() throws Exception {
+        when(registry.getListenerContainerIds()).thenReturn(java.util.Set.of("listener-1"));
+        org.springframework.kafka.listener.MessageListenerContainer container =
+                mock(org.springframework.kafka.listener.MessageListenerContainer.class);
+        when(container.isRunning()).thenReturn(false);
+        when(registry.getListenerContainer("listener-1")).thenReturn(container);
+
+        healthMvc(dataSource, rcm, registry).perform(get("/api/v1/accounts/public/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(jsonPath("$.details.kafka").value("DOWN"));
+    }
+
+    @Test
     void lookupByPhoneFoundMasksAccountNumber() throws Exception {
         User user = new User();
         user.setId(UUID.randomUUID());

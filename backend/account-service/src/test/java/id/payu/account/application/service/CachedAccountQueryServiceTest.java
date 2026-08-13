@@ -121,4 +121,28 @@ class CachedAccountQueryServiceTest {
         when(cacheService.exists("account:id:" + id)).thenReturn(true);
         assertThat(service.accountExists(id)).isTrue();
     }
+
+    @Test
+    void getAccountByExternalIdThrowsWhenPortMisses() {
+        UUID id = UUID.randomUUID();
+        when(accountPort.findByExternalId("missing")).thenReturn(Optional.empty());
+        when(cacheService.get(eq("account:external:missing"), eq(Account.class), any()))
+                .thenAnswer(inv -> ((java.util.function.Supplier<?>) inv.getArgument(2)).get());
+
+        assertThatThrownBy(() -> service.getAccountByExternalId("missing"))
+                .isInstanceOf(CachedAccountQueryService.AccountNotFoundException.class);
+    }
+
+    @Test
+    void getAccountBalanceThrowsWhenPortMisses() {
+        UUID id = UUID.randomUUID();
+        when(accountPort.findById(id)).thenReturn(Optional.empty());
+        when(cacheService.getWithStaleWhileRevalidate(
+                eq("account:balance:" + id), eq(BigDecimal.class), any(),
+                eq(Duration.ofSeconds(15)), eq(Duration.ofSeconds(30))))
+                .thenAnswer(inv -> ((java.util.function.Supplier<?>) inv.getArgument(2)).get());
+
+        assertThatThrownBy(() -> service.getAccountBalance(id))
+                .isInstanceOf(CachedAccountQueryService.AccountNotFoundException.class);
+    }
 }
