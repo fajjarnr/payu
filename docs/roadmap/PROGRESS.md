@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Redeploy 1.11.1 (2026-08-13, v2)
+
+- Semua jar dibangun ulang (`mvn clean package -DskipTests`) dengan perubahan produksi sesi ini (escrow Persistable, split-bill @Transient participants, RevenueSplit scale 4, api-commons idempotency, outbox DLQ, rest-assured 5.5.7) + 33 image di-tag ulang `1.11.1` + `--force-recreate`.
+- 36/36 container sehat, scan log: 0 `APPLICATION FAILED` / 0 error loop; smoke health UP (account 8001, wallet 8004, transaction 8003).
+
+# 📈 PayU Platform — Progress & Engineering Scorecard
+
 > **Dokumen ini adalah historical record & status snapshot PayU Platform.**
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
