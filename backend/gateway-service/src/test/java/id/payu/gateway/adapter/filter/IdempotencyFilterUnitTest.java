@@ -40,8 +40,8 @@ class IdempotencyFilterUnitTest {
         cache = mock(HotRodCacheClient.class);
         when(config.idempotency()).thenReturn(idempotencyConfig);
         when(idempotencyConfig.enabled()).thenReturn(true);
-        when(idempotencyConfig.headerName()).thenReturn("Idempotency-Key");
-        when(idempotencyConfig.legacyHeaderName()).thenReturn("X-Idempotency-Key");
+        when(idempotencyConfig.headerName()).thenReturn("X-Idempotency-Key");
+        when(idempotencyConfig.legacyHeaderName()).thenReturn("Idempotency-Key");
         when(idempotencyConfig.ttl()).thenReturn(Duration.ofHours(24));
         filter = new IdempotencyFilter();
         filter.config = config;
@@ -112,8 +112,8 @@ class IdempotencyFilterUnitTest {
         when(uriInfo.getPath()).thenReturn(path);
         when(uriInfo.getRequestUri()).thenReturn(URI.create(path));
         when(request.getMethod()).thenReturn("POST");
-        when(request.getHeaderString("Idempotency-Key")).thenReturn(KEY);
-        when(request.getHeaderString("X-Idempotency-Key")).thenReturn(null);
+        when(request.getHeaderString("X-Idempotency-Key")).thenReturn(KEY);
+        when(request.getHeaderString("Idempotency-Key")).thenReturn(null);
         when(request.hasEntity()).thenReturn(true);
         when(request.getEntityStream()).thenReturn(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
         when(request.getSecurityContext()).thenReturn(securityContext);

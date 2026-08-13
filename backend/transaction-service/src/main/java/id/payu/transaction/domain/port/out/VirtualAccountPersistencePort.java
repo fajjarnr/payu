@@ -1,5 +1,6 @@
 package id.payu.transaction.domain.port.out;
 
+import id.payu.transaction.adapter.persistence.entity.VaPaymentRecordEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 
 import java.time.Instant;
@@ -16,12 +17,17 @@ public interface VirtualAccountPersistencePort {
     boolean existsByVaNumber(String vaNumber);
 
     /**
-     * IMP-2: atomic PENDING → PAID transition. Returns 1 when this caller won
-     * the transition, 0 when the VA is already PAID/EXPIRED (double callback
-     * or expiry raced us) — side effects must run only for the winner.
+     * ARCH-TXN-001: locks the VA row (PESSIMISTIC_WRITE) for the PENDING → PAID
+     * transition — of two concurrent callbacks exactly one wins; the loser
+     * observes status PAID and must be a no-op.
      */
-    int markPaidIfPending(String vaNumber, java.math.BigDecimal paidAmount,
-                          String paymentReference, Instant paidAt);
+    Optional<VirtualAccountEntity> findWithLockByVaNumber(String vaNumber);
+
+    /**
+     * ARCH-TXN-001: appends an immutable payment record (va_payment_records).
+     * Insert-only; never updated or deleted.
+     */
+    VaPaymentRecordEntity savePaymentRecord(VaPaymentRecordEntity record);
 
     /**
      * IMP-2: atomic PENDING → EXPIRED transition (expiry scheduler).

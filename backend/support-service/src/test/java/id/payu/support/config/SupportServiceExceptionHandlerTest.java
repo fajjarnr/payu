@@ -63,7 +63,8 @@ class SupportServiceExceptionHandlerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.error_code").value("SUP_400"))
+                .andExpect(content().contentTypeCompatibleWith("application/problem+json"));
     }
 
     @Test

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
         "payu.transactions.initiated",
         "payu.transactions.completed",
         "payu.transactions.failed",
-        "payu.kyc.verified"
+        "payu.kyc.verified.v1"
     ]
 
     # TimescaleDB Configuration

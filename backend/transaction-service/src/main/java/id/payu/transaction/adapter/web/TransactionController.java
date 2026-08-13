@@ -435,7 +435,7 @@ public class TransactionController extends BaseController {
     @PreAuthorize("hasAuthority('write:payment')")
     public ResponseEntity<ApiResponse<Void>> processQrisPayment(
             @Valid @RequestBody ProcessQrisPaymentRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey
     ) {
         try {
             String userId = extractUserId();

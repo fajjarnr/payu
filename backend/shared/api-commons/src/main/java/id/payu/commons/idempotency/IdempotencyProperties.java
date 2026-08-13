@@ -29,8 +29,9 @@ public class IdempotencyProperties {
 
     /**
      * Header name for the idempotency key.
+     * Platform standard (ARCH-IDM-001): X-Idempotency-Key.
      */
-    private String headerName = "Idempotency-Key";
+    private String headerName = "X-Idempotency-Key";
 
     /**
      * Redis configuration.

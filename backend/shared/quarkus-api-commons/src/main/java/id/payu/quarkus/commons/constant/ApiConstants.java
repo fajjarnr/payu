@@ -25,7 +25,7 @@ public final class ApiConstants {
     public static final long DEFAULT_RETRY_DELAY_MS = 1000;
     public static final long MAX_RETRY_DELAY_MS = 10000;
 
-    public static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    public static final String IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
     public static final long IDEMPOTENCY_KEY_EXPIRATION_SECONDS = 86400;
 
     public static final String REQUEST_ID_HEADER = "X-Request-ID";

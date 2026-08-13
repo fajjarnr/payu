@@ -218,10 +218,10 @@ public class InstallmentService implements InstallmentUseCase {
      */
     private InstallmentOption calculateOption(BigDecimal principal, int tenor, BigDecimal annualRate) {
         BigDecimal monthlyRate = annualRate.divide(BigDecimal.valueOf(12), 8, RoundingMode.HALF_EVEN);
-        BigDecimal monthlyInterest = principal.multiply(monthlyRate).setScale(2, RoundingMode.HALF_EVEN);
-        BigDecimal monthlyPrincipal = principal.divide(BigDecimal.valueOf(tenor), 2, RoundingMode.HALF_EVEN);
+        BigDecimal monthlyInterest = principal.multiply(monthlyRate).setScale(4, RoundingMode.HALF_EVEN);
+        BigDecimal monthlyPrincipal = principal.divide(BigDecimal.valueOf(tenor), 4, RoundingMode.HALF_EVEN);
         BigDecimal monthlyPayment = monthlyPrincipal.add(monthlyInterest);
-        BigDecimal totalInterest = monthlyInterest.multiply(BigDecimal.valueOf(tenor)).setScale(2, RoundingMode.HALF_EVEN);
+        BigDecimal totalInterest = monthlyInterest.multiply(BigDecimal.valueOf(tenor)).setScale(4, RoundingMode.HALF_EVEN);
         BigDecimal totalPayment = principal.add(totalInterest);
 
         return new InstallmentOption(tenor, monthlyPayment, totalPayment, totalInterest, annualRate);
@@ -235,7 +235,7 @@ public class InstallmentService implements InstallmentUseCase {
 
         for (int i = 1; i <= loan.getTenureMonths(); i++) {
             BigDecimal interest = loan.getPrincipalAmount().multiply(monthlyRate)
-                    .setScale(2, RoundingMode.HALF_EVEN);
+                    .setScale(4, RoundingMode.HALF_EVEN);
             outstanding = outstanding.subtract(monthlyPrincipal);
             if (outstanding.compareTo(BigDecimal.ZERO) < 0) {
                 outstanding = BigDecimal.ZERO;

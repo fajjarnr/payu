@@ -102,7 +102,7 @@ def test_unpack_cloud_event_preserves_identity_and_payload():
     payload, source, event_id, event_type = _unpack_event(
         "payu.transactions.completed",
         {
-            "specversion": "1.0",
+            "specversion": "1.0.2",
             "id": "evt-123",
             "source": "transaction-service",
             "type": "id.payu.transaction.completed",
@@ -119,7 +119,7 @@ def test_unpack_cloud_event_preserves_identity_and_payload():
 @pytest.mark.asyncio
 async def test_replayed_cloud_event_is_processed_once(kafka_consumer, mock_session):
     event = {
-        "specversion": "1.0",
+        "specversion": "1.0.2",
         "id": "evt-replay-1",
         "source": "transaction-service",
         "type": "id.payu.transaction.completed",

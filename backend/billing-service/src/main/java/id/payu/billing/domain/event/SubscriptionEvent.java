@@ -24,6 +24,16 @@ public class SubscriptionEvent {
     public static final String SUBSCRIPTION_CREATED = "subscription.created";
     public static final String CHARGE_SUCCEEDED = "charge.succeeded";
     public static final String CHARGE_FAILED = "charge.failed";
+    public static final String SUBSCRIPTION_DUE = "subscription.due";
+
+    @Data
+    @Builder
+    public static class DuePayload {
+        private String subscriptionId;
+        private String partnerId;
+        private String accountId;
+        private Instant dueAt;
+    }
 
     @Data
     @Builder
@@ -158,6 +168,31 @@ public class SubscriptionEvent {
                 .source(URI.create("/billing-service/charges"))
                 .type(CHARGE_FAILED)
                 .subject(chargeId.toString())
+                .time(OffsetDateTime.now())
+                .data(payload)
+                .payuCorrelationId(UUID.randomUUID().toString())
+                .build();
+    }
+
+    /**
+     * ARCH-BILL-001: delayed-trigger replacement for the Artemis scheduled
+     * queue. The consumer (billing itself) re-checks due-ness before charging.
+     */
+    public static CloudEventEnvelope<DuePayload> createSubscriptionDueEvent(
+            UUID subscriptionId, String partnerId, String accountId, LocalDateTime dueAt) {
+
+        DuePayload payload = DuePayload.builder()
+                .subscriptionId(subscriptionId.toString())
+                .partnerId(partnerId)
+                .accountId(accountId)
+                .dueAt(toInstant(dueAt))
+                .build();
+
+        return CloudEventEnvelope.<DuePayload>builder()
+                .id(UUID.randomUUID())
+                .source(URI.create("/billing-service/subscriptions"))
+                .type(SUBSCRIPTION_DUE)
+                .subject(subscriptionId.toString())
                 .time(OffsetDateTime.now())
                 .data(payload)
                 .payuCorrelationId(UUID.randomUUID().toString())

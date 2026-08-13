@@ -78,11 +78,13 @@ public class LoanOriginationProcessService {
         process.setApprovedBy(approverId);
         process.setComment(comment);
         if (approved) {
-            String reference = disbursement.execute(
+            String reference = "LOAN-" + process.getId();
+            disbursement.execute(
                     process.getUserId(),
                     process.getPrincipalAmount(),
                     process.getLoanType(),
-                    process.getTenureMonths());
+                    process.getTenureMonths(),
+                    reference);
             process.setDisbursementReference(reference);
             process.setStatus("APPROVED");
         } else {

@@ -91,7 +91,7 @@ class ApiClient {
 
         // Add idempotency key if provided
         if (config.idempotencyKey) {
-          config.headers['Idempotency-Key'] = config.idempotencyKey;
+          config.headers['X-Idempotency-Key'] = config.idempotencyKey;
 
           // Track pending idempotency keys for duplicate prevention
           if (!config.skipIdempotencyCheck) {

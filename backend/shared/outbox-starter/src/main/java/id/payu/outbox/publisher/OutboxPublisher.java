@@ -199,7 +199,7 @@ public class OutboxPublisher {
         try {
             Map<String, Object> payloadMap = event.getPayload();
             String payloadJson;
-            String specVersion = "1.0";
+            String specVersion = "1.0.2";
             String eventId = event.getId().toString();
             String source = "/services/" + event.getAggregateType().toLowerCase() + "-service";
             String eventType = event.getEventType();

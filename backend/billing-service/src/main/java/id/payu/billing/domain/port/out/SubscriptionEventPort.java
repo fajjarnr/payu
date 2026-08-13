@@ -7,4 +7,5 @@ public interface SubscriptionEventPort {
     void publishSubscriptionCreated(Subscription subscription);
     void publishChargeSucceeded(Subscription subscription, SubscriptionCharge charge);
     void publishChargeFailed(Subscription subscription, SubscriptionCharge charge);
+    void publishSubscriptionDue(Subscription subscription);
 }

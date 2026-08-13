@@ -2,6 +2,19 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-240: podman-compose Stale-Image Pinning + SmallRye Multi-Topic Traps (2026-08-13)
+
+**Context**: 1.11.0 deploy — `payu-transaction-service` crash-looped on a Flyway `Found more than one migration with version 21` even after the source fix, and `payu-notification-service` spammed `InvalidTopicException` for the split-bill topics.
+
+**Lesson**:
+- `podman-compose up` (python provider 1.5.0) **pins the container to the image ID it resolved at first create** — after rebuilding the SAME tag (`1.11.0`), `up -d`, `--force-recreate`, even `rm` + `up` kept creating containers from the old dangling image ID. `podman inspect <ctr> --format '{{.Image}}'` vs `podman image inspect <tag> --format '{{.Id}}'` proves the drift; the only reliable escape is `podman rm` + manual `podman run` with the compose-equivalent env (`podman compose config` resolves anchors) + `--network <net> --network-alias <service-name>` + `--dns <pod-dns> --dns-search dns.podman` (or the standalone-network pattern used for infra containers).
+- **SmallRye Kafka multi-topic**: `mp.messaging.incoming.<ch>.topic` is a SINGLE string; a YAML list under `topic:` or a comma-joined string becomes ONE topic NAME with commas → the broker rejects it with `INVALID_TOPIC_EXCEPTION` (commas are invalid in topic names). The correct attribute is `topics:` (plural, YAML list) — verified against smallrye.io docs; the error text prints the joined list as a single map key, which is the giveaway.
+- **Flyway version collisions**: before adding a migration, `ls src/main/resources/db/migration | tail` — this repo already had V21 (`add_shedlock_table`) AND V22-V25; my V21 collided and my first rename to V22 collided again. Also: a container that crash-loops on a migration bug keeps running the STALE jar/image — rebuild jar → image → recreate container in that order (L-225/234 again).
+- **AsyncMock `side_effect` on the PARENT mock does not reach child attributes** — `AsyncMock(side_effect=boom)` with `mock.publish_event` auto-created child never raises; set `mock.publish_event.side_effect = boom`.
+- **pytest-asyncio 0.25 + session-scoped async fixtures**: an async-generator fixture (conftest `test_session_maker`) resolves to the generator object itself in some versions (`'async_generator' object is not callable`) — a function-scoped local fixture building its own in-memory engine sidesteps it.
+
+**Applied evidence**: 1.11.0 deployed 37/37 (34 healthy + 3 UP), V26 applied, notification 0 topic errors after `topics:` fix; CHANGELOG 1.11.0.
+
 ## L-239: Phantom gRPC Protos + Test-Context gRPC Server Bind (2026-08-12)
 
 **Context**: GRPC-001/002 — AccountService/TransactionService protos existed with zero server implementations; services fell back to REST silently. Also, once real `@GrpcService` servers were added, every `@SpringBootTest` context started a real Netty server on 9090 and failed with `Failed to bind to address 0.0.0.0:9090` when the port was taken.

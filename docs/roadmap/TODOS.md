@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.10.64` (2026-08-12) |
+| **Last Release** | `1.11.0` (2026-08-13) |
 | **Core Banking MVP** | 🔴 Belum MVP — blocker tersisa: ACCOUNT-006/007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 3 tickets + 18 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*) + gates partner/platform (2026-08-12) |
-| **Last Updated** | 2026-08-12 (WALLET-002/WALLET-001/GRPC-008 + CB-027/030/032/033 closed; stack podman live 34 containers, image semver `1.10.64`) |
+| **Backlog Aktif** | 3 tickets + 46 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-13) |
+| **Last Updated** | 2026-08-13 (audit QA v3 deep: test content 4 money service + kyc/analytics + frontend + contract/coverage/security — 10 gap baru QAMVP-011..020; 29 fix di P1) |
 
 ---
 
@@ -41,7 +41,6 @@
 |:---|:---:|:---|:---|
 | ACCOUNT-006 | P1 | Coverage account ~21% line/19% branch; integration test tidak required di CI. Done: ≥80% overall, 100% core domain, required CI. | 🟠 Test gate insufficient |
 | PROD-044 | P1 | Notification false success — **PARTIAL 2026-08-12**: fail-closed live (SMS/PUSH default NONE → false, LOG hanya eksplisit, `mailer.mock` tidak diwariskan ke prod, `KEYCLOAK_REALM` default). Sisa (butuh credential provider eksternal): provider nyata + delivery ID + E2E terima. | 🟠 Fail-closed live — provider pending |
-| PROD-046 | P1 | Kontrak referral web↔backend tidak cocok (referralCode/totalEarnings). Done: DTO selaras + E2E — CLOSED 2026-08-12 (totalEarnings real di backend summary, tipe web selaras, UI pakai referralCode). | ✅ Closed |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink (INFRA-011) + verifikasi log arrival. | 🟢 Live — sink pending |
 
 ---
@@ -52,13 +51,28 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-005 | qa | Coverage gate: account ≥80% + integration tests wajib (ACCOUNT-006) | JaCoCo gate di CI |
-| CB-029 | notification | Provider nyata fail-closed + delivery ID (PROD-044) — fail-closed DONE 2026-08-12; sisa provider nyata + delivery ID + E2E (butuh credential provider eksternal) | E2E terima; log tanpa PII |
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
-| CB-007 | qa | Money-safety regression suite lintas core — **CLOSED 2026-08-12** (13 passed / 2 skipped live: atomic transfer + replay idempotency + ledger double-entry + register + statement + ownership guard). Wiring pipeline ikut fase platform Tekton (DEPLOY-009), bukan GH Actions (project pindah dari GH Actions); billing coverage nunggu podman-compose parser fixed (L-225); QRIS positive case saat provider tersedia | Suite green (live) |
-| CB-015 | transaction | E2E transfer hop-by-hop incl. kompensasi — **E2E green 2026-08-12** (atomic 1-hop CB-034 + replay idempotency + ledger DEBIT/CREDIT legs + balance after) | E2E green |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` SUDAH ada (push/PR paths + workflow_dispatch); sisa = setting GitHub branch protection (butuh `gh`/admin repo, belum tersedia di sesi ini) | CI gate aktif via GitHub settings |
+| ARCH-INTG-001 | integration | Route swift/ojk → outbox-starter; hapus `kafka:` endpoint; pakai `MessagePublisherAdapter` | 0 `.to("kafka:")` |
+| ARCH-TOPIC-002 | platform | KafkaTopic deklaratif untuk semua topic kode (RF 3, partisi sesuai consumer); hapus resource legacy `*-events`; audit auto-create off | `oc get kafkatopic` lengkap vs EVENT_CATALOG |
+| ARCH-PROD-001 | platform | Producer default `acks=all` + `enable.idempotence=true` + retries di outbox-starter (satu tempat semua service) | Property terverifikasi di producer config |
+| ARCH-DECIMAL-001 | promotion | Widening `discount_value` → DECIMAL(19,4) + sync domain scale 4 | Kolom 19,4 + test |
+| QAMVP-001 | platform | CI backend: workflow PR changed-service — unit + integration semua service (sekarang 0) | PR status red/green per service |
+| QAMVP-002 | transaction, wallet | Integration test Testcontainers (PG+Kafka) money journey: transfer, reserve/commit, outbox atomic | Suite jalan di CI |
+| QAMVP-003 | billing, partner | Contract test: billing payment, SNAP-BI payment/refund/auth-token + CloudEvents contract | `tests/contract` bertambah |
+| QAMVP-004 | kyc | Security test (auth/RBAC) + integration test kyc; provider OCR/liveness nyata gate (analog PROD-002) | Test + live evidence |
+| QAMVP-005 | platform | k6 smoke+load di pipeline staging + SLO threshold per service | Laporan k6 di CI |
+| QAMVP-006 | platform | PRD launch criteria tracker: prod deploy OCP, app stores, legal ToS, security hardening (lanjut CB-006) | Checklist PRD §12 hijau |
+| QAMVP-007 | wallet | Escrow test: unit domain + integration + E2E (sekarang 0 test semua layer) | Escrow money journey hijau |
+| QAMVP-008 | transaction | Split-bill test: unit + integration + E2E (sekarang 0) + fix topic (ARCH-TXN-002) | Split-bill journey hijau |
+| QAMVP-009 | transaction | BI-FAST transfer integration test (Testcontainers PG+Kafka + simulator) + E2E blackbox | BI-FAST journey hijau |
+| QAMVP-010 | transaction, loan-origination | Disbursement integration + E2E; wajib setelah ARCH-LOAN-001 fix | Disbursement journey hijau |
+| QAMVP-011 | wallet, transaction, billing, partner | Test idempotency concurrency: 10 thread key sama → 1 mutasi, 1 ledger, 1 outbox | Test thread lulus CI |
+| QAMVP-012 | wallet, transaction, billing, partner | Test same-key + different-payload ditolak (conflict, bukan replay) | Test lulus CI |
+| QAMVP-013 | wallet, transaction | Test outbox atomicity dengan Testcontainers PG+Kafka: business row + outbox row commit/rollback bersama | Test lulus CI |
+| QAMVP-014 | wallet, kyc, analytics, billing, backoffice, cms, api-portal | Security test (401/403/RBAC) — sekarang 0 di 7 service | Test lulus CI |
+| QAMVP-015 | platform | Contract test error case (401/422 RFC 9457) + wiring CI + fix README stale | `tests/contract` hijau di CI |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
@@ -129,52 +143,123 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 |:---|:---:|:---|:---|:---|
 
 | ACCOUNT-003-RLS | 🟠 | account | ACCOUNT-003 closed via trusted-credential tenant + Hibernate filter + cross-tenant tests; PostgreSQL RLS (defense-in-depth) belum aktif — sama seperti remaining PARTNER-PROD-006 | V105/V106, TenantEnforcementAspect |
-| SUB-001 | 🔴 | billing | Subscription charge `markSucceeded()` tanpa debit — **CLOSED (CB-022, 2026-08-12)**: reserve→commit wallet sebelum markSucceeded; commit gagal → release + dunning; test release-on-commit-failure | SubscriptionService.processCharge |
-| PAYLATER-001 | 🔴 | lending | Race + non-idempotent + tanpa money movement — **CLOSED (CB-024, 2026-08-12)**: pessimistic lock `findByUserIdForUpdate` (@Query+@Lock) + idempotency via `X-Idempotency-Key`/externalId (unique) + wallet credit (purchase) / collectRepayment (payment) | PayLaterRepository, PayLaterTransactionService, WalletGrpcPaymentAdapter |
 | NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID — **PARTIAL 2026-08-12** (fail-closed live, lihat PROD-044); sisa provider nyata + delivery ID butuh credential eksternal | SmsSender.java:26-54 |
-| OUTBOX-001 | 🔴 | shared | Failed event di-DELETE setelah 7 hari tanpa DLQ/alert — CLOSED (CB-018, 2026-08-12): archive in-place + ERROR alert `OUTBOX-001 ALERT`, tidak pernah delete. Sisa: sink alert nyata (Slack/PagerDuty) via Vault (DEVSECOPS-017 drift alert) + auto-move ke `.dlq` | OutboxCleanupScheduler |
-
-| FX-002 | 🟠 | fx | Reverse tanpa status REVERSED; toAmount tanpa setScale — **CLOSED (CB-025, 2026-08-12)**: reverse guard COMPLETED→REVERSED (sudah ada, di-test) + `FxConversion.setToAmount` setScale(4) HALF_EVEN (test scale 4) | FxConversion.java:46,72; FxConversionServiceTest |
-| GRPC-001 | 🔴 | account | Proto `AccountService` defined tapi **0 implementasi server** — **CLOSED penuh 2026-08-12**: server `AccountGrpcService` live (9090) + RPC baru `GetUserProfile` (kycStatus/createdAt untuk credit scoring, 8 test) + SEMUA pemanggil REST bermigrasi gRPC: transaction `AccountServiceAdapter` (account-ids), lending `AccountGrpcClient` (account-ids + profile) — Feign `AccountClient` dihapus. Deployed 1.10.75 | AccountGrpcService; AccountGrpcClient |
-| GRPC-002 | 🔴 | transaction | Proto `TransactionService` defined tapi **0 implementasi server** — **CLOSED 2026-08-12**: `TransactionGrpcService` (GetTransaction/GetByReference/GetHistory/GetByAccount/ExistsByReference; Create/Update UNIMPLEMENTED fail-closed — money writes butuh idempotency dulu) + `TransactionGrpcServiceTest` 6 test; live: gRPC 9090 listening di podman. Sisa: migrasi statement client (GRPC-005) | TransactionGrpcService; TransactionGrpcServiceTest |
-| GRPC-003 | 🔴 | shared | `payu.grpc.enabled` **hanya** menggating `WalletGrpcAdapter` transaction-service — **CLOSED 2026-08-12**: conditional dihapus — gRPC jadi jalur default di SEMUA service (parity); REST adapter tetap ada sebagai fallback | WalletGrpcAdapter transaction |
-| GRPC-004 | 🟠 | transaction | `PaymentExpiryScheduler` panggil wallet-service **raw `RestTemplate` langsung ke URL** — **CLOSED 2026-08-12**: endpoint yang dipanggil (`/wallets/{accountId}/release`) tidak ada di wallet (404 diam-diam per 5 menit); kini lewat `WalletServicePort.releaseBalance` (gRPC adapter, reservationId) — hexagonal boundary dipulihkan, test `PaymentExpirySchedulerTest.releasesReservedBalanceThroughWalletPort` | PaymentExpiryScheduler.java:59,120-126 → WalletServicePort |
-| GRPC-005 | 🟠 | statement | `TransactionServiceClient` REST — **CLOSED 2026-08-12**: client kini **gRPC** (`TransactionServiceGrpc` + `GrpcChannelSupport` deadline 30s) ke server GRPC-002 (live 9090); filter tanggal di client (semantik statement); REST dihapus; API class/DTO tidak berubah → StatementService/ReceiptService/test 56/56 green; live podman 1.10.73 healthy 0 ERROR/WARN | TransactionServiceClient (gRPC) |
-| GRPC-006 | 🟡 | integration | `grpc-starter` di pom tapi **0 proto + 0 kode gRPC** — **CLOSED 2026-08-12**: dependency mati dihapus dari pom (0 usage Java/config/proto; build + test green tanpa starter) | integration-service/pom.xml |
-| GRPC-007 | 🟡 | wallet | Server gRPC 9090 di-start **grpc-starter sendiri**, spring-grpc aktif parallel (in-process/servlet) → WalletGrpcService diregister 2× — **CLOSED 2026-08-12**: `spring.grpc.server.enabled: false` di application.yml wallet; hanya Netty 9090 starter yang serve | wallet application.yml |
-| GRPC-009 | 🟡 | billing | Dua bean REST mati sekaligus: `WalletAdapter` (`walletRestAdapter`) + `WalletClient` — **CLOSED 2026-08-12**: keduanya dihapus (hanya dirujuk javadoc; service pakai `WalletPort` → gRPC @Primary); `BillingIntegrationTest` kini mock `WalletPort` (mock `WalletClient` sebelumnya tidak efektif) | deleted |
-| GRPC-010 | 🟡 | gateway | Gateway (Quarkus) punya **salinan proto wallet sendiri** — **CLOSED 2026-08-12**: dihapus bersama bridge (GRPC-019/013) — gateway tidak lagi konsumsi gRPC wallet | deleted |
-| GRPC-011 | 🔴 | shared | **Semua client gRPC pakai `ManagedChannelBuilder` raw** — **CLOSED 2026-08-12**: `GrpcChannelSupport` (grpc-starter) dipakai 8 adapter (7 service) — channel + stub blocking dengan deadline 30s (default); call tidak bisa hang tanpa batas. Sisa (tak dikerjakan): migrasi `@GrpcClient` spring-grpc + interceptor starter di channel | GrpcChannelSupport |
-| GRPC-016 | 🔴 | shared | **0 resilience di semua 7 gRPC client adapter** — **CLOSED 2026-08-12**: `@CircuitBreaker("walletService")` + `@Retry` class-level di 8 adapter (retry aman — op wallet idempotent by referenceId). Sisa: fallback per-metode (read path) bila perlu | WalletGrpcAdapter* @CircuitBreaker |
-| GRPC-017 | 🟡 | shared | **Config client gRPC di `application-grpc.yml` dead** — **CLOSED 2026-08-12**: (a) prefix `spring.grpc.client.channels.<name>.*` dibetulkan; (b) `GrpcChannelFactory` (starter) meng-attach SEMUA client interceptor (tracing/auth/error-handling/retry) ke channel — dipakai 6 `WalletGrpcAdapter`; (c) `@GrpcClient` spring-grpc tidak diadopsi (client pakai factory starter — keputusan desain, documented). `GrpcChannelFactoryTest` 2 test; starter 12 test | GrpcChannelFactory; application-grpc.yml |
-| GRPC-018 | 🟡 | shared | **grpc-java 1.69.0 outdated** — **CLOSED 2026-08-12**: bump ke **1.83.1** (Context7: Java 8+, backward compat; protoc-gen-grpc-java 1.83.1 + protoc 3.25.x OK) — starter + 8 service suite green | grpc-starter pom grpc.version |
-| GRPC-019 | 🔴 | gateway | **Bridge `/api/internal/grpc/wallet/*` authz = valid JWT saja** — **CLOSED 2026-08-12**: bridge dihapus total (0 pemanggil, GRPC-013) bersama `WalletGrpcBridge` + salinan proto wallet (GRPC-010) + dep `quarkus-grpc` — tidak ada lagi path explotable debit/credit/transfer wallet arbitrer; wallet gRPC hanya bisa diakses service-to-service (mesh) | GrpcBridgeResource/WalletGrpcBridge deleted |
-| GRPC-020 | 🟡 | wallet | Validasi scale 4 tidak konsisten di jalur gRPC — **CLOSED 2026-08-12**: `reserveBalance` + `credit` kini enforce `scale() > 4` (sama dengan `transfer`); reject sebelum state change; test `WalletScaleValidationTest` (reject scale>4 tanpa save/ledger/event, accept scale 4) | WalletService.java:152,336 vs 438,517; WalletScaleValidationTest |
-| GRPC-021 | 🟡 | shared | **Tidak ada enforcement rule** — **CLOSED 2026-08-12**: (a) rule ArchUnit `httpClientsOnlyInClientAdapters` (RestTemplate/WebClient/RestClient/OkHttpClient hanya di `adapter.client`, config exempt) ditambahkan ke `HexagonalArchitectureRules` + base test + di-wire ke wallet & transaction ArchitectureTest — PaymentExpiryScheduler pelanggaran terakhir sudah diperbaiki (GRPC-004); (b) grpc-starter kini punya test (`GrpcStarterPropertiesTest` — binding `payu.grpc.*` server/clients/interceptors) | HexagonalArchitectureRules.httpClientsOnlyInClientAdapters; GrpcStarterPropertiesTest |
-| GRPC-022 | 🟡 | shared | **Proto multi-source drift**: 7 service salin `WalletService.proto` sendiri — **CLOSED 2026-08-12**: `WalletProtoContractTest` (snapshot field-number wire contract: Debit/ReserveBalance/Credit/Transfer/GetBalance + subset lending RepayLoan/Credit) dipasang di 8 service — rename/renumber di copy mana pun sekarang memecah build, bukan wire. Terverifikasi: semua copy saat ini wire-identik | WalletProtoContractTest (8 service) |
-| WALLET-001 | 🔴 | wallet | **Runtime bug transaksional (verified live)** — **CLOSED 2026-08-12**: `application-local.yml` prefix `spring.datasource.primary.*` tanpa `.hikari` → pool autoCommit=true + `provider_disables_autocommit` → `Cannot commit when autoCommit is true`; fix prefix + regression `TransactionalPoolAutoCommitTest` (assert pool autoCommit=false + tx commit bersih vs Testcontainers PG; red bila auto-commit=true) | application-local.yml; TransactionalPoolAutoCommitTest |
-| WALLET-002 | 🔴 | wallet | **Migration gap (verified live)** — **CLOSED 2026-08-12**: `split_payment_legs.settled_at` tidak pernah ada di migrasi (V10 pakai `credited_at`) + `split_recipients.recipient_type` beda nama dgn kolom `type` di V10 → Hibernate validation fail pada fresh DB (live DB hand-patched). Fix: migration idempotent **V113** + `SchemaMigrationIntegrityTest` (boot context fresh DB + Flyway + validate) | V113__align_split_payment_schema_with_entities.sql; SchemaMigrationIntegrityTest |
-| GRPC-012 | 🔴 | wallet | **Proto `Debit` salah implementasi** — **CLOSED 2026-08-12**: `WalletGrpcService.debit()` kini memanggil use case `WalletService.debit` (balance berkurang nyata, pessimistic lock, idempotent by referenceId, ledger DEBIT + wallet_transaction DEBIT, scale-4 guard) — sebelumnya `reserveBalance` (balance tidak bergerak, caller dapat reservationId sebagai transactionId; jalur FX conversion mengandalkannya). Test `WalletServiceDebitTest` (debit mengurangi balance, insufficient balance reject tanpa state change, replay idempotent, scale>4 reject) | WalletService.debit; WalletServiceDebitTest |
-| GRPC-013 | 🟠 | gateway | **Bridge `/api/internal/grpc/wallet/*` = 0 pemanggil** — **CLOSED 2026-08-12**: dihapus bersama GRPC-019 (dead code) | deleted |
-| GRPC-014 | 🟠 | shared | **`GrpcAuthInterceptor.ServerInterceptor` ALLOW anonymous** — **CLOSED 2026-08-12**: enforcement configurable `payu.grpc.interceptors.auth.require-token` (default false — client belum kirim token, mesh mTLS tetap kontrol live; aktifkan per-server setelah client kirim token); anonymous ditolak `UNAUTHENTICATED` saat flag on; `GrpcAuthInterceptorEnforcementTest` 2 test (default allow + enforce reject). Starter kini punya 8 test | GrpcAuthInterceptor; GrpcAuthInterceptorEnforcementTest |
-| GRPC-015 | 🟡 | wallet | `getHistory` ignore `PageRequest` — **CLOSED 2026-08-12**: getHistory kini honor page/size (default = semua bila PageRequest kosong, clamp di luar range → kosong); `WalletGrpcServiceGetHistoryPagingTest` 3 test. Sisa (tak dikerjakan): konsistensi status error NOT_FOUND vs INVALID_ARGUMENT | WalletGrpcService.getHistory; WalletGrpcServiceGetHistoryPagingTest |
-| GRPC-008 | 🔴 | lending/statement | **Kontrak REST internal sudah drift** — **CLOSED 2026-08-12**: (a) statement client di-align ke `GET /api/v1/transactions?accountId=` + envelope `ApiResponse.data` + `createdAt`→LocalDate; (b) lending `TransactionClient`/`AccountClient` di-align ke endpoint nyata + endpoint baru `GET /api/v1/transactions/accounts/{accountId}/summary` (transaction-service, `AccountTransactionSummaryService`) + `GET /api/v1/accounts/users/{userId}` (account-service, `UserProfileController`/UserAccountController) — credit scoring kini resolve account-ids dulu lalu summary per-account; live smoke: profile 200, account-ids 200, summary 403 (realm client-scope belum `read:transaction`) | TransactionServiceClient.java:30,58; TransactionClient.java:16-22; AccountClient.java:13,16; TransactionController.java:90 |
-| TX-004 | 🟠 | transaction | Scheduled transfer tanpa idempotency key — **CLOSED (CB-031, 2026-08-12)**: key deterministik `SCH-<id>-<executedCount>` per eksekusi; replay/overlap dedupe via handler `findByIdempotencyKey` | ScheduledTransferService |
-| QRIS-001 | 🟠 | transaction | Idempotency cache-only fail-open (TTL 24h) — **CLOSED (CB-017, 2026-08-12)**: DB fallback `findByIdempotencyKey` sebelum debit + persist key di `transactions.idempotency_key`; replay → `QRIS_001` BusinessException, tidak double-charge | ProcessQrisPaymentCommandHandler |
-| PROMO-001 | 🟠 | promotion | Cashback record duplikat saat replay — **CLOSED (verified 2026-08-12)**: saga `recordCashbackStep` menangkap `DataIntegrityViolationException` (unique index `uq_cashback_transaction_id` V11) → no-op deterministik via `findByTransactionId`; wallet credit idempotent by reference (tidak ada money move ganda); `CashbackSagaOrchestratorTest.testSaga_Replay_DuplicateTransactionRecordIsNoOp` 7/7 green | CashbackSagaOrchestrator.java:119-140 |
 | PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
 | PROMO-003 | 🟠 | promotion | `claimPromotion` tanpa dedup by transactionId — replay/double-submit → 2 reward AWARDED (maxRedemptions atomik ✓, tapi per-user/per-transaction tidak ada guard) | PromotionService.java:139-180 |
 | PROMO-004 | 🟠 | promotion | `calculateRewardAmount` PERCENTAGE `divide(..., 2, HALF_EVEN)` — scale 2, melanggar ADR-0022 (scale 4 wajib) | PromotionService.java:184-191 |
-| DISPUTE-001 | 🟠 | dispute | Over-refund race (sum-then-check tanpa lock) — CLOSED via advisory lock (CB-028, 2026-08-12) | RefundService.java:153-164 |
-| DISPUTE-002 | 🟠 | dispute | DisputeService persistence defects — CLOSED 2026-08-12: (a) `save` update managed entity in-place (bukan persist baru, @Version); (b) `dispute_evidence` bidirectional @ManyToOne (FK di INSERT, bukan UPDATE terpisah); (c) resolve auto-refund butuh mock lookup di integration test. DisputeControllerIntegrationTest 6/6 | DisputePersistenceAdapter.save |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
-| IMP-3 | 🟠 | statement | Flow improvement target: closing balance derive → ledger `balance_after` — **CB-036 CLOSED 2026-08-12**: opening/closing = ledger snapshot (`getBalanceAsOf` via gRPC `GetHistory` balance_after, fallback derive) | FLOWS.md IMP-3 |
-| IMP-4 | 🟠 | notification | Flow improvement target: retry + fallback channel — CB-037 CLOSED 2026-08-12 (fallback chain PUSH→EMAIL→SMS + backoff retry; sama-recipient cross-channel = ponytail ceiling) | FLOWS.md IMP-4 |
-| IMP-6 | 🟠 | transaction | Flow improvement target: QRIS idempotency DB — CB-017 | FLOWS.md IMP-6 |
 | INTEGRATION-CTX | 🟠 | qa | Account-service integration test context: **VaultConfigurationTest FIXED** (2026-08-12: mock DataSource di TestJpaConfig) → default suite 132/132. Sisa: OnboardingIntegrationTest + BlindIndexAndTenantIsolationIntegrationTest masih `No bean named 'entityManagerFactory'` — test tanpa `@ActiveProfiles("test")` (activeProfiles=[]), dan app pakai multi-DS custom (`spring.datasource.primary.*`, bukan `spring.datasource.*`) sehingga dynamic property + `@ServiceConnection` tidak di-honor; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
 | — | 🟢 | wallet | Reserve/commit flow solid; escrow & split-payment state machine solid | WalletService, EscrowTransaction |
 | — | 🟢 | partner | Refund concurrency, callback HMAC, SNAP signature | SnapBiPaymentService, CallbackSignatureFilter |
+
+## 📋 Open Findings — Audit Arsitektur 2026-08-13 (26 service vs AGENTS.md rules + ADR)
+
+> Audit hexagonal/ArchUnit/money/idempotency/events/RFC 9457/DTO/container. Verifikasi berbasis source code.
+
+### 🔴 Kritis (money/PII/event integrity)
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| ARCH-DECIMAL-001 | 🔴 | promotion | `discount_value DECIMAL(10,4)` — kolom money wajib (19,4); widening migration + cek cast | promotion V4:9 |
+| ARCH-INTG-001 | 🔴 | integration | Publish Kafka langsung via Camel `kafka:` (3 route swift/ojk), bypass outbox, tanpa CloudEvents, tanpa `.dlq`; adapter outbox `MessagePublisherAdapter` tidak dipakai | SwiftRouteBuilder.java:112,145; OjkRouteBuilder.java:240 |
+| ARCH-TOPIC-002 | 🔴 | platform | Hanya 10 KafkaTopic deklaratif (`transaction.*.v1`, dispute, lending-repayment, partner-refunded + 3 dlq); ~30 topic dari kode auto-create tanpa RF/partisi eksplisit (risiko data-loss event finansial); resource legacy `account-events`/`wallet-events`/`notification-events`/`transaction-events` tanpa `topicName: payu.*` | kafka-amqstreams.yaml:98-345 |
+
+### 🟠 Sistematis (lintas-service)
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| ARCH-DTO-001 | 🟠 | semua | 20+ service menaruh DTO di `dto/` root / `domain.dto` / `adapter.web.dto`, bukan `interfaces.dto` | dto/QrisPaymentRequest.java, dto/TopUpRequest.java, dsb. |
+| ARCH-TOPIC-001 | 🟠 | investment, partner, notification, promotion, lending | Topic generik/off-standard: `payu.investment.event.v1`, `payu.partner.payment-link-event.v1`; konsumsi `transaction.completed`, `payu.transactions.*`, `subscription.events`, `payu.kyc.verified` (tanpa `.v<n>`); bean dead `loan.approved`/`loan.rejected` | KafkaInvestmentEventPublisherAdapter.java:27; application.yml |
+| ARCH-DLQ-001 | 🟠 | promotion, cms, dispute, statement, platform | Tanpa `.dlq` wiring; outbox event gagal-permanen cuma di-archive/log, tidak pernah ke `.dlq` | OutboxCleanupScheduler.java:77-85 |
+| ARCH-DEAD-001 | 🟠 | platform | `resilience-starter` 0 pemakaian di 18 service (tim pakai resilience4j langsung); KafkaTemplate bean tak terpakai (billing/cms/lending); `EmitterPlaceholder` di promotion | NikVerificationService.java:9-12 |
+| ARCH-ADR17-001 | 🟠 | account, api-portal, auth | Sisa config Redis/RESP pasca ADR-0017 (Infinispan HotRod) masih aktif | account-service application.yaml:100,118-121 |
+| ARCH-SECRET-001 | 🟠 | kyc, auth, compliance, gateway | Default secret hardcoded: `ARTEMIS_PASSWORD: "admin"`; Keycloak client-secret di application-local/dev.yml; `payu_secret` gateway local | kyc config.py:32 |
+| ARCH-LOG-001 | 🟠 | analytics | Structlog tanpa PII-masking processor | logging_config.py:72-79 |
+| ARCH-HEX-001 | 🟠 | statement, support, auth, loan-origination, api-portal, kyc, lending-rules | Hex bocor: application import adapter langsung (statement/support/auth); JPA entity bocor ke controller + `Map.of("error")` (loan-origination); tanpa domain layer (api-portal, kyc, lending-rules); tanpa ArchUnit (loan-origination, api-portal, lending-rules); lending-rules 0 test | StatementService.java:3-6; LoanOriginationController.java:41 |
+| ARCH-STATEMENT-001 | 🟠 | statement | Endpoint partner `/v1/partner/statements` (ADR-0019) tidak ada sama sekali | src/main code |
+| ARCH-PARTNER-001 | 🟠 | partner | API unversioned (`/merchants`, `/partners`, `/webhooks`, `/payment-links`); inbound webhook HMAC handler (PaymentWebhookHandler) tidak di-wire ke mana pun | MerchantController.java:31 |
+| ARCH-TOPIC-003 | 🟠 | wallet, transaction, billing | Consumer pakai topic off-standard: `fx-rates-updated` (default, bukan `payu.fx.rates-updated.v1`), `disbursement-batch`; orphan consumer billing `payu.billing.subscription-due.v1` tanpa publisher | FxRateEventConsumer.java:27; BatchDisbursementService.java:174 |
+| ARCH-PROD-001 | 🟠 | platform | Producer config tidak seragam: `acks=all` + retries 3 cuma wallet; `enable.idempotence` tidak dideklarasi di mana pun; outbox-starter tidak set producer props (ikut default client acks=1) | wallet application.yml:84 |
+| ARCH-CONS-001 | 🟠 | platform | Consumer manual ack cuma integration-service; lain auto-commit default. Dedup konsumen belum merata (wallet `RefundRequestedConsumer` tanpa claim/dedup layer) | integration application.yml:38; RefundRequestedConsumer.java:21 |
+| ARCH-CDC-001 | 🟢 | platform | Tanpa Debezium; relay outbox = polling dispatcher `SKIP LOCKED` (legal pola). Note: evaluasi CDC bila throughput naik | OutboxPublisher.java:119-121 |
+| ARCH-CE-002 | 🟠 | account, billing, fx, transaction | 4 publisher kirim payload plain Map tanpa atribut CloudEvents (id/source/type/time) — hanya wallet/transaction-main/billing-subscription pakai `CloudEventBuilder` | KafkaUserEventPublisherAdapter.java:44; SplitBillEventPublisherAdapter.java:33-49 |
+| ARCH-RLS-001 | 🟠 | billing, dispute, lending, transaction, wallet | RLS: 0 migrasi semua service — isolasi tenant cuma app-filter; RLS defense-in-depth belum (lanjutan ACCOUNT-003-RLS/PARTNER-PROD-006) | grep ROW LEVEL SECURITY = 0 |
+| ARCH-DEDUP-001 | 🟠 | partner, promotion | Migrasi dedup DELETE baris finansial pre-constraint (`snap_bi_payments`/`refunds`/`cashbacks`/`rewards`) — legal hanya jika belum pernah jalan di prod; perlu bukti env + policy | partner V16/V17; promotion V11/V12 |
+| ARCH-FLYWAY-001 | 🟠 | account | Destruktif historis `DROP COLUMN` + `RENAME COLUMN` di migrasi ter-aplikasi — anti-pattern, risiko fresh-restore; jangan diulang | account V10:16-27 |
+| ARCH-PAGE-001 | 🟠 | transaction, wallet | Pagination Pageable = OFFSET default; history finansial besar butuh keyset cursor `(created_at, id)` | TransactionJpaRepository.java:53 |
+| ARCH-PROJ-001 | 🟠 | wallet | Materialized views (V5) tanpa dokumentasi refresh lag; butuh reconcile job terjadwal vs ledger | wallet V5__Create_materialized_views.sql |
+
+---
+
+## 📋 MVP Feature Readiness — Audit QA 2026-08-13 (PRD Phase 1 vs bukti test)
+
+> PRD Phase 1 MVP: account opening + eKYC, transfer (internal/BI-FAST), bill payment, single pocket, virtual debit card, integrasi TokoBapak (SNAP-BI). Verdict: **belum MVP production ready** — bukti test layer tidak lengkap di jalur uang + CI tidak ada.
+
+| Fitur MVP | Status | Blocker |
+|:---|:---:|:---|
+| Account opening + eKYC | 🔴 | ARCH-KYC-001 (NIK plaintext), ARCH-KYC-002 (event), INTEGRATION-CTX (integration broken), kyc 0 security test |
+| Transfer internal + BI-FAST | 🟡 | 0 integration test transaction/wallet (TEST-GAP), ARCH-TXN-002, ARCH-IDM-001 |
+| Bill payment | 🟡 | ARCH-BILL-001 (JMS), 0 contract test billing |
+| Single pocket | 🟢 | Unit solid (LedgerInvariantTest), 0 integration test |
+| Virtual debit card | 🟡 | Freeze/unfreeze ada; 0 integration; tokenization/3DS deferred (READY-060) |
+| TokoBapak (SNAP-BI) | 🟠 | PARTNER-PROD-008 (PG HA/PITR) + 010 (contract/k6/pentest/sign-off) P0 belum |
+
+### Bukti QA layer (2026-08-13)
+
+| Layer | Status | Bukti |
+|:---|:---:|:---|
+| CI backend | 🔴 | Hanya 3 workflow: `analytics-tests`, `drift-detection`, `login-gate`. Tidak ada CI unit/integration backend di PR |
+| Unit test core domain | 🟡 | account 26, transaction 27, wallet 25, billing 16, partner 35, lending 20, investment 12, kyc 18 file — ada; lending-rules 0 |
+| Integration test (Testcontainers PG/Kafka) | 🔴 | transaction 0, wallet 0, kyc 0, billing 1, partner 2, account 2 (context broken), lending 4, investment 3 |
+| Contract test (tests/contract) | 🔴 | Cuma 3: wallet getBalance, transaction createTransfer, auth loginUser. Billing/QRIS/SNAP-BI/CloudEvents tidak ada |
+| E2E blackbox | 🟢 | 20 journey file (onboarding, transfer, bill payment, QRIS, dll) |
+| Frontend | 🟢 | 91 test file + login gate live; tapi Vitest tidak dijalankan CI |
+| Performance | 🟠 | k6 suite + baseline ada; tidak jalan di CI; load/soak deferred (READY-029/030); SLO belum (PARTNER-PROD-009) |
+| PRD launch criteria | 🔴 | Belum: production deploy OCP (CB-006), app stores, legal ToS, security hardening |
+
+### Gap per flow (FLOWS.md 47 flow; MVP 22 flow di-map ke bukti test — 2026-08-13)
+
+| Flow | Gap | Sev |
+|:---|:---|:---:|
+| 16 Escrow (wallet) | **0 test semua layer** — money movement tanpa bukti | 🔴 |
+| 11 Split Bill (transaction) | **0 test semua layer** | 🔴 |
+| 7 Transfer Interbank BI-FAST | Tanpa E2E + tanpa integration test (fitur flagship MVP) | 🔴 |
+| 10 Disbursement | Tanpa E2E + IT; ditambah ARCH-LOAN-001 (idempotency/ref random) | 🔴 |
+| 9 VA Payment | Tanpa E2E + IT | 🟠 |
+| 22 Settlement Batch | Tanpa E2E + IT | 🟠 |
+| 5 SNAP Refund | Tanpa E2E | 🟠 |
+| 14 Investment Jual | Tanpa E2E + IT | 🟠 |
+| 19 Payment Link | Tanpa E2E + IT | 🟠 |
+| 3 Transfer Internal / 8 QRIS / 12 Top-up | Ada E2E, tanpa integration test | 🟠 |
+
+### Bukti tambahan (2026-08-13)
+
+| Temuan | Status | Bukti |
+|:---|:---:|:---|
+| Pentest report | 🟠 | `PENTEST_REPORT.md` SIGNED OFF **2025-01-22** — stale; mayoritas fitur live setelah tanggal itu; re-pentest = PARTNER-PROD-010 |
+| E2E blackbox run evidence | 🟠 | 20 file ada; tidak ada hasil run otomatis di CI; run manual, bukti terakhir di PROGRESS.md (luar cluster via APIcast) |
+
+### Deep test content audit (2026-08-13) — kedalaman isi, bukan jumlah file
+
+| Key | Temuan | Sev |
+|:---|:---|:---:|
+| QAMVP-011 | Idempotency concurrency: **0 test thread** (CountDownLatch/Executor) di wallet/transaction/billing/partner — "10 request konkuren = 1 mutasi" tak terbukti; `VirtualAccountServiceTest` 2 callback cuma sekuensial | 🔴 |
+| QAMVP-012 | Same-key + different-payload rejection: **0 test** di 4 money service (replay test semua same-payload) | 🔴 |
+| QAMVP-013 | Outbox atomicity: **0 test** commit/rollback bersama (semua mock); `TestcontainersConfig` wallet (postgres+kafka) tidak dipakai test manapun; transaction/partner tanpa TC | 🔴 |
+| QAMVP-014 | Security test: wallet (money) **0**; kyc **0**; analytics **0**; billing/backoffice/cms/api-portal **0**. Yang ada: gateway 10, account 6, partner 5 | 🔴 |
+| QAMVP-015 | Contract test: 3 happy-path, **0 error case** (401/422), tidak dijalankan CI; README klaim 4 pair padahal 3 file | 🟠 |
+| QAMVP-016 | Coverage: jacoco goal tidak di-bound (Makefile malah hapus jacoco.exec); kyc 65% < gate 80%; READY-022 unresolved | 🟠 |
+| QAMVP-017 | Pitest 1.15.0 dikonfigurasi, **0 bukti eksekusi** (dead config, threshold 60% mutation di doc) | 🟠 |
+| QAMVP-018 | ZAP + Schemathesis cuma di Tekton SIT, tidak ada di GitHub CI per-PR | 🟠 |
+| QAMVP-019 | Frontend: halaman statement **tidak ada** (cuma service test); budget tanpa E2E; a11y filter color-contrast/button-name keluar ("design debt") → bukan WCAG strict; refresh-token expiry tanpa E2E; `forgot-password` + `not-found` spec = stub | 🟠 |
+| QAMVP-020 | Money test: HALF_EVEN half-way cuma transaction `MoneyTest`; wallet cuma validasi scale; billing/partner nol; double-entry numerik cuma `LedgerInvariantTest`; RFC 9457 test cuma partner | 🟠 |
+
+### Positif terverifikasi (isi test)
+
+- kyc: `test_nik_crypto.py` (enc:v1 prefix, nonce unik), liveness threshold, OCR parse, outbox envelope CE.
+- analytics: fraud score deterministik (==50.0), consumer replay dedup (`rowcount=0`), money Decimal 1 test.
+- frontend: `currency.test.ts` 423 baris (format IDR, decimal-string arithmetic), axe-core real di 4 halaman + keyboard/SR, login E2E PKCE+CSRF+httpOnly cookie.
 
 ---
 

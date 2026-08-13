@@ -11,7 +11,8 @@ from app.models.schemas import KycVerification, KycStatus, KtpOcrResult, Livenes
 from app.ml.liveness_service import LivenessService
 from app.ml.face_service import FaceService
 from app.adapters.dukcapil_client import DukcapilClient
-from app.messaging.kafka_producer import KafkaProducerService
+from app.crypto import encrypt_json_nik, decrypt_json_nik
+from app.messaging.kyc_outbox import KycOutboxService
 
 logger = get_logger(__name__)
 
@@ -23,7 +24,6 @@ class KycService:
         self.liveness_service = LivenessService()
         self.face_service = FaceService()
         self.dukcapil_client = DukcapilClient()
-        self.kafka_producer = KafkaProducerService()
 
     @property
     def ocr_service(self):
@@ -78,21 +78,23 @@ class KycService:
             raise ValueError("KTP image quality too low. Please upload a clearer image.")
 
         verification.ktp_image_url = f"/uploads/ktp/{verification_id}.jpg"
-        verification.ktp_ocr_result = ocr_result.model_dump()
+        verification.ktp_ocr_result = encrypt_json_nik(ocr_result.model_dump())
         verification.status = KycStatus.PROCESSING.value
         verification.updated_at = datetime.utcnow()
 
-        await self.db.commit()
-
-        await self.kafka_producer.publish_event(
-            topic="payu.kyc.ktp_uploaded",
-            event={
+        KycOutboxService.create_event(
+            self.db,
+            aggregate_id=verification_id,
+            event_type="kyc.ktp-uploaded",
+            destination_topic="payu.kyc.ktp-uploaded.v1",
+            payload={
                 "verification_id": verification_id,
                 "user_id": verification.user_id,
                 "nik": mask_nik(ocr_result.nik),
                 "name": ocr_result.name
-            }
+            },
         )
+        await self.db.commit()
 
         return {
             "status": verification.status,
@@ -127,7 +129,7 @@ class KycService:
                 "liveness_result": liveness_result.model_dump(),
             }
 
-        ocr_data = KtpOcrResult(**verification.ktp_ocr_result)
+        ocr_data = KtpOcrResult(**decrypt_json_nik(verification.ktp_ocr_result))
 
         face_match_result = await self.face_service.match_face(
             ktp_image_path=verification.ktp_image_url,
@@ -164,23 +166,25 @@ class KycService:
         verification.selfie_image_url = f"/uploads/selfie/{verification_id}.jpg"
         verification.liveness_result = liveness_result.model_dump()
         verification.face_match_result = face_match_result.model_dump()
-        verification.dukcapil_result = dukcapil_result.model_dump()
+        verification.dukcapil_result = encrypt_json_nik(dukcapil_result.model_dump())
         verification.status = KycStatus.VERIFIED.value
         verification.completed_at = datetime.utcnow()
         verification.updated_at = datetime.utcnow()
 
-        await self.db.commit()
-
-        await self.kafka_producer.publish_event(
-            topic="payu.kyc.verified",
-            event={
+        KycOutboxService.create_event(
+            self.db,
+            aggregate_id=verification_id,
+            event_type="kyc.verified",
+            destination_topic="payu.kyc.verified.v1",
+            payload={
                 "verification_id": verification_id,
                 "user_id": verification.user_id,
                 "nik": mask_nik(ocr_data.nik),
                 "name": ocr_data.name,
                 "status": "VERIFIED"
-            }
+            },
         )
+        await self.db.commit()
 
         logger.info(
             "KYC verification completed successfully",
@@ -224,17 +228,19 @@ class KycService:
         verification.completed_at = datetime.utcnow()
         verification.updated_at = datetime.utcnow()
 
-        await self.db.commit()
-
-        await self.kafka_producer.publish_event(
-            topic="payu.kyc.failed",
-            event={
+        KycOutboxService.create_event(
+            self.db,
+            aggregate_id=verification_id,
+            event_type="kyc.failed",
+            destination_topic="payu.kyc.failed.v1",
+            payload={
                 "verification_id": verification_id,
                 "user_id": verification.user_id,
                 "status": "REJECTED",
                 "reason": reason
-            }
+            },
         )
+        await self.db.commit()
 
         logger.warning(
             "KYC verification rejected",

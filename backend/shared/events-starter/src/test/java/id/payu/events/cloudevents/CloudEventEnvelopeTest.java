@@ -23,14 +23,14 @@ class CloudEventEnvelopeTest {
     class BuilderDefaults {
 
         @Test
-        @DisplayName("should set specVersion to 1.0 by default")
+        @DisplayName("should set specVersion to 1.0.2 by default")
         void defaultSpecVersion() {
             CloudEventEnvelope<String> envelope = CloudEventEnvelope.<String>builder()
                     .source(URI.create("/test"))
                     .type("test.event")
                     .build();
 
-            assertThat(envelope.getSpecVersion()).isEqualTo("1.0");
+            assertThat(envelope.getSpecVersion()).isEqualTo("1.0.2");
         }
 
         @Test
@@ -200,7 +200,7 @@ class CloudEventEnvelopeTest {
 
             String json = mapper.writeValueAsString(envelope);
 
-            assertThat(json).contains("\"specversion\":\"1.0\"");
+            assertThat(json).contains("\"specversion\":\"1.0.2\"");
             assertThat(json).contains("\"datacontenttype\":\"application/json\"");
             assertThat(json).contains("\"payucorrelationid\":\"corr-001\"");
             assertThat(json).contains("\"id\":\"550e8400-e29b-41d4-a716-446655440000\"");
@@ -226,7 +226,7 @@ class CloudEventEnvelopeTest {
         void deserializeFromJson() throws Exception {
             String json = """
                     {
-                        "specversion": "1.0",
+                        "specversion": "1.0.2",
                         "id": "550e8400-e29b-41d4-a716-446655440000",
                         "source": "/services/test",
                         "type": "id.payu.test.created",
@@ -238,7 +238,7 @@ class CloudEventEnvelopeTest {
             @SuppressWarnings("unchecked")
             CloudEventEnvelope<String> envelope = mapper.readValue(json, CloudEventEnvelope.class);
 
-            assertThat(envelope.getSpecVersion()).isEqualTo("1.0");
+            assertThat(envelope.getSpecVersion()).isEqualTo("1.0.2");
             assertThat(envelope.getType()).isEqualTo("id.payu.test.created");
             assertThat(envelope.getSource()).isEqualTo(URI.create("/services/test"));
         }

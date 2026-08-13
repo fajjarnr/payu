@@ -482,19 +482,19 @@ public interface GatewayConfig {
 
         /**
          * Primary idempotency key header name.
-         * Default is "Idempotency-Key" following RFC 7239 and industry standards.
+         * Platform standard (ARCH-IDM-001): "X-Idempotency-Key".
          */
         @WithName("header-name")
-        @WithDefault("Idempotency-Key")
+        @WithDefault("X-Idempotency-Key")
         String headerName();
 
         /**
          * Legacy header name for backward compatibility.
          * If primary header is not present, this header will be checked.
-         * Default is "X-Idempotency-Key" for backward compatibility.
+         * Default is "Idempotency-Key" for backward compatibility.
          */
         @WithName("legacy-header-name")
-        @WithDefault("X-Idempotency-Key")
+        @WithDefault("Idempotency-Key")
         String legacyHeaderName();
 
         @WithDefault("24h")

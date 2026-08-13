@@ -133,6 +133,27 @@ class SubscriptionEventAdapterTest {
         assertEquals(SubscriptionEvent.CHARGE_FAILED, payload.getType());
     }
 
+    @Test
+    @DisplayName("should publish subscription.due event to payu.billing.subscription-due.v1 via Outbox")
+    void shouldPublishSubscriptionDueEvent() {
+        Subscription subscription = createSampleSubscription();
+
+        adapter.publishSubscriptionDue(subscription);
+
+        ArgumentCaptor<CloudEventEnvelope> eventCaptor = ArgumentCaptor.forClass(CloudEventEnvelope.class);
+        verify(outboxService).createEventFromObject(
+                eq("Subscription"),
+                eq(subscription.getId().toString()),
+                eq(SubscriptionEvent.SUBSCRIPTION_DUE),
+                eventCaptor.capture(),
+                eq(Map.of("X-Partner-Id", subscription.getPartnerId())),
+                eq("payu.billing.subscription-due.v1")
+        );
+        CloudEventEnvelope payload = eventCaptor.getValue();
+        assertNotNull(payload);
+        assertEquals(SubscriptionEvent.SUBSCRIPTION_DUE, payload.getType());
+    }
+
     // Helper methods
 
     private Subscription createSampleSubscription() {

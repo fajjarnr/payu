@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 public class CloudEventBuilder<T> {
 
-    private String specVersion = "1.0";
+    private String specVersion = "1.0.2";
     // BUG-BE-105: Generate id and time lazily in build() to avoid stale values
     private UUID id;
     private URI source;

@@ -45,12 +45,20 @@ async def lifespan(app: FastAPI):
     await init_db()
     startup_logger.info("Database initialized")
 
+    from app.messaging.kyc_outbox import KycOutboxPublisher
+    outbox_publisher = KycOutboxPublisher(
+        poll_interval_sec=settings.kyc_outbox_poll_interval_sec,
+    )
+    outbox_publisher.start()
+    startup_logger.info("KYC outbox publisher started")
+
     artemis_consumer = ArtemisConsumerService()
     artemis_consumer.start()
     startup_logger.info("Artemis command consumer started")
 
     yield
 
+    outbox_publisher.stop()
     artemis_consumer.stop()
     await close_db()
     startup_logger.info("Shutting down KYC Service")

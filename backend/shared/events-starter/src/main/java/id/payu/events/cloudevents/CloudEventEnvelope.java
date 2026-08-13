@@ -30,12 +30,12 @@ public class CloudEventEnvelope<T> {
 
     /**
      * CloudEvents specification version.
-     * Default: "1.0"
+     * Default: "1.0.2" (platform standard, ARCH-CE-001)
      */
     @NotBlank
     @Builder.Default
     @JsonProperty("specversion")
-    private String specVersion = "1.0";
+    private String specVersion = "1.0.2";
 
     /**
      * Unique identifier for the event.

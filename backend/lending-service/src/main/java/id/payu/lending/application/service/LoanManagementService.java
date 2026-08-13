@@ -264,7 +264,7 @@ public class LoanManagementService implements LoanManagementUseCase {
         for (int i = 1; i <= loan.getTenureMonths(); i++) {
             BigDecimal interestAmount = outstandingPrincipal
                     .multiply(monthlyRate)
-                    .setScale(2, RoundingMode.HALF_EVEN);
+                    .setScale(4, RoundingMode.HALF_EVEN);
 
             BigDecimal principalAmount = loan.getMonthlyInstallment().subtract(interestAmount);
 

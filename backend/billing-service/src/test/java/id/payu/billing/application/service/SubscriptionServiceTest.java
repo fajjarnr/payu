@@ -49,9 +49,6 @@ class SubscriptionServiceTest {
     SubscriptionEventPort eventPort;
 
     @Mock
-    org.springframework.jms.core.JmsTemplate jmsTemplate;
-
-    @Mock
     id.payu.billing.domain.port.out.WalletPort walletPort;
 
     private SubscriptionPlan samplePlan;
@@ -429,7 +426,19 @@ class SubscriptionServiceTest {
             subscriptionService.processScheduledCharge(subscriptionId);
 
             verify(persistencePort).saveCharge(any(SubscriptionCharge.class));
-            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
+            verify(eventPort).publishSubscriptionDue(any(Subscription.class));
+        }
+
+        @Test
+        @DisplayName("should skip charge when subscription-due event arrives early (ARCH-BILL-001)")
+        void shouldSkipChargeWhenNotDueYet() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().plusDays(2));
+            when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.of(sub));
+
+            subscriptionService.processScheduledCharge(subscriptionId);
+
+            verify(persistencePort, never()).saveCharge(any(SubscriptionCharge.class));
         }
 
         @Test
@@ -472,7 +481,7 @@ class SubscriptionServiceTest {
             subscriptionService.processScheduledCharge(subscriptionId);
 
             verify(persistencePort, never()).saveCharge(any(SubscriptionCharge.class));
-            verify(jmsTemplate, never()).convertAndSend(anyString(), anyString(), any(org.springframework.jms.core.MessagePostProcessor.class));
+            verify(eventPort, never()).publishSubscriptionDue(any(Subscription.class));
         }
 
         @Test
@@ -499,7 +508,7 @@ class SubscriptionServiceTest {
 
             subscriptionService.processDueSubscriptions();
 
-            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
+            verify(eventPort).publishSubscriptionDue(any(Subscription.class));
         }
 
         @Test
@@ -526,7 +535,7 @@ class SubscriptionServiceTest {
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
             // Dunning retry should be scheduled with 5 min delay
-            verify(jmsTemplate).convertAndSend(eq("payu.billing.scheduled"), eq(subscriptionId.toString()), any(org.springframework.jms.core.MessagePostProcessor.class));
+            verify(eventPort).publishSubscriptionDue(any(Subscription.class));
         }
 
         @Test
@@ -541,10 +550,10 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
             when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
 
-            doThrow(new RuntimeException("Artemis unavailable"))
-                    .when(jmsTemplate).convertAndSend(anyString(), anyString(), any(org.springframework.jms.core.MessagePostProcessor.class));
+            doThrow(new RuntimeException("Outbox unavailable"))
+                    .when(eventPort).publishSubscriptionDue(any(Subscription.class));
 
-            // Should not throw — Artemis is fire-and-forget
+            // Should not throw — outbox scheduling is fire-and-forget
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
             verify(persistencePort).saveCharge(any(SubscriptionCharge.class));

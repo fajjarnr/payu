@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.jms.core.JmsTemplate;
 
 /**
  * Application service for subscription and recurring billing.
@@ -51,7 +50,6 @@ public class SubscriptionService implements SubscriptionUseCase {
 
     private final SubscriptionPersistencePort persistencePort;
     private final SubscriptionEventPort eventPort;
-    private final JmsTemplate jmsTemplate;
     private final id.payu.billing.domain.port.out.WalletPort walletPort;
 
     // ═══════════════════════════════════════════════════════
@@ -162,8 +160,8 @@ public class SubscriptionService implements SubscriptionUseCase {
         Subscription saved = persistencePort.saveSubscription(sub);
         log.info("Subscription created: id={}, status={}", saved.getId(), saved.getStatus());
 
-        // Schedule next charge via Artemis delayed delivery
-        scheduleArtemisCharge(saved);
+        // Schedule next charge via outbox (ARCH-BILL-001)
+        scheduleSubscriptionDue(saved);
 
         // Publish webhook event asynchronously
         try {
@@ -430,8 +428,8 @@ public class SubscriptionService implements SubscriptionUseCase {
             log.info("Charge succeeded: subscription={}, amount={} {}", sub.getId(),
                     charge.getAmount(), charge.getCurrency());
 
-            // Schedule next recurring charge via Artemis
-            scheduleArtemisCharge(sub);
+            // Schedule next recurring charge via outbox (ARCH-BILL-001)
+            scheduleSubscriptionDue(sub);
 
             // Publish webhook event for successful charge
             try {
@@ -452,15 +450,12 @@ public class SubscriptionService implements SubscriptionUseCase {
                 log.warn("Subscription suspended after dunning exhaustion: {}", sub.getId());
             } else {
                 persistencePort.saveSubscription(sub);
-                // Schedule next dunning retry via Artemis (delay 5 mins for dunning retry)
+                // Schedule next dunning retry via outbox (ARCH-BILL-001)
                 log.info("Scheduling dunning retry for subscription {} (dunning attempt {})", sub.getId(), sub.getDunningAttempts());
                 try {
-                    jmsTemplate.convertAndSend("payu.billing.scheduled", sub.getId().toString(), m -> {
-                        m.setLongProperty("_AMQ_SCHED_DELIVERY", System.currentTimeMillis() + 300000L);
-                        return m;
-                    });
+                    eventPort.publishSubscriptionDue(sub);
                 } catch (Exception ex) {
-                    log.error("Failed to schedule Artemis dunning retry: {}", ex.getMessage());
+                    log.error("Failed to schedule outbox dunning retry: {}", ex.getMessage());
                 }
             }
 
@@ -474,37 +469,37 @@ public class SubscriptionService implements SubscriptionUseCase {
     }
 
     /**
-     * Helper to schedule subscription billing command to Artemis with delay.
+     * Helper to schedule subscription billing command via the outbox
+     * (ARCH-BILL-001). The consumer re-checks due-ness before charging, so
+     * an early event is a no-op rather than an early debit.
      */
-    private void scheduleArtemisCharge(Subscription sub) {
+    private void scheduleSubscriptionDue(Subscription sub) {
         if (sub.getStatus() == SubscriptionStatus.CANCELLED || sub.getStatus() == SubscriptionStatus.SUSPENDED) {
             return;
         }
-        LocalDateTime nextBilling = sub.getNextBillingAt();
-        if (nextBilling != null) {
-            long delayMs = java.time.Duration.between(LocalDateTime.now(), nextBilling).toMillis();
-            final long finalDelayMs = delayMs < 0 ? 0 : delayMs;
-            log.info("Scheduling charge for subscription {} at {} (delay: {}ms)", sub.getId(), nextBilling, finalDelayMs);
-            try {
-                jmsTemplate.convertAndSend("payu.billing.scheduled", sub.getId().toString(), m -> {
-                    m.setLongProperty("_AMQ_SCHED_DELIVERY", System.currentTimeMillis() + finalDelayMs);
-                    return m;
-                });
-            } catch (Exception e) {
-                log.error("Failed to schedule Artemis charge for subscription: {}", sub.getId(), e);
-            }
+        log.info("Scheduling charge for subscription {} at {}", sub.getId(), sub.getNextBillingAt());
+        try {
+            eventPort.publishSubscriptionDue(sub);
+        } catch (Exception e) {
+            log.error("Failed to schedule outbox charge for subscription: {}", sub.getId(), e);
         }
     }
 
     /**
-     * Entry point to charge a subscription from an Artemis scheduled event.
+     * Entry point to charge a subscription from a subscription.due event.
      */
     @Transactional
     public void processScheduledCharge(UUID subscriptionId) {
-        log.info("Processing scheduled charge from Artemis for subscription: {}", subscriptionId);
+        log.info("Processing scheduled charge for subscription: {}", subscriptionId);
         persistencePort.findSubscriptionById(subscriptionId).ifPresentOrElse(
             sub -> {
                 if (sub.getStatus() == SubscriptionStatus.ACTIVE || sub.getStatus() == SubscriptionStatus.TRIAL) {
+                    LocalDateTime dueAt = sub.getNextBillingAt();
+                    if (dueAt != null && dueAt.isAfter(LocalDateTime.now())) {
+                        log.info("Subscription {} not due yet (nextBillingAt={}), skipping charge",
+                                sub.getId(), dueAt);
+                        return;
+                    }
                     processCharge(sub);
                 } else if (sub.getStatus() == SubscriptionStatus.PAST_DUE) {
                     if (sub.isDunningExhausted()) {

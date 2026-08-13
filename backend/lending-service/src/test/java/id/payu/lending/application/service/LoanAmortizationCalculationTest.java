@@ -339,7 +339,7 @@ class LoanAmortizationCalculationTest {
             for (RepaymentSchedule s : schedules) {
                 BigDecimal expectedInterest = s.getOutstandingPrincipal()
                         .multiply(monthlyRate)
-                        .setScale(2, RoundingMode.HALF_EVEN);
+                        .setScale(4, RoundingMode.HALF_EVEN);
                 assertThat(s.getInterestAmount())
                         .as("installment %d interest", s.getInstallmentNumber())
                         .isEqualByComparingTo(expectedInterest);
@@ -367,10 +367,10 @@ class LoanAmortizationCalculationTest {
         }
 
         @Test
-        @DisplayName("first installment has interest 140,000.00 (12M × 14%/12)")
+        @DisplayName("first installment has interest 140,000.0004 (12M × 14%/12, scale 4 ADR-0022)")
         void firstInstallmentInterest() {
             assertThat(schedules.get(0).getInterestAmount())
-                    .isEqualByComparingTo(new BigDecimal("140000.00"));
+                    .isEqualByComparingTo(new BigDecimal("140000.0004"));
         }
 
         @Test

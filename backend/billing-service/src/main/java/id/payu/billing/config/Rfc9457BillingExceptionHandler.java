@@ -17,6 +17,6 @@ public class Rfc9457BillingExceptionHandler extends Rfc9457GlobalExceptionHandle
             DataIntegrityViolationException ex, HttpServletRequest request) {
         log.warn("Data integrity violation in {}: {}", request.getRequestURI(), ex.getMessage());
         return respondWith(HttpStatus.CONFLICT, "Conflict",
-                "Resource already exists or constraint violated", "CONFLICT", request);
+                "Resource already exists or constraint violated", "BIL_409", request);
     }
 }

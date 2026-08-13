@@ -138,7 +138,7 @@ public class EventsAutoConfiguration {
     public static class CloudEventsInitializer {
         @jakarta.annotation.PostConstruct
         public void init() {
-            log.info("PayU CloudEvents Starter initialized - specVersion: 1.0");
+            log.info("PayU CloudEvents Starter initialized - specVersion: 1.0.2");
         }
     }
 }

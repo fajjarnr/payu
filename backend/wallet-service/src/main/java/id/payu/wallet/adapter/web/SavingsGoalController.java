@@ -122,7 +122,7 @@ public class SavingsGoalController {
     }
 
     @PostMapping("/{goalId}/pause")
-    @Idempotent(required = false)
+    @Idempotent(required = true)
     @Operation(summary = "Pause a savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> pauseSavingsGoal(
@@ -138,7 +138,7 @@ public class SavingsGoalController {
     }
 
     @PostMapping("/{goalId}/resume")
-    @Idempotent(required = false)
+    @Idempotent(required = true)
     @Operation(summary = "Resume a paused savings goal")
     @PreAuthorize("hasAuthority('write:wallet')")
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> resumeSavingsGoal(

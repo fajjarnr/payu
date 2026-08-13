@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.0] - 2026-08-13
+
+### Added
+
+- **ARCH-LOAN-001 (loan-origination)**: disbursement reference deterministik (`LOAN-<processId>`) + dedup via outbox row (`findFirstByAggregateTypeAndAggregateIdAndEventType`) — double-submit tidak pernah membuat event kedua. `DisbursementServiceTest` 2 test (TDD).
+- **ARCH-BILL-001 (billing)**: trigger recurring charge pindah dari Artemis JMS queue (`payu.billing.scheduled`) ke outbox event CloudEvents `payu.billing.subscription-due.v1` + Kafka consumer `SubscriptionDueEventListener` (re-check due-ness sebelum charge; event dini = no-op). JMS listener + `jms-starter` dep dihapus, 0 `convertAndSend` tersisa. 129 test green.
+- **ARCH-KYC-001 (kyc)**: NIK di `ktp_ocr_result`/`dukcapil_result` dienkripsi AES-GCM at-rest (`enc:v1:` prefix, key `KYC_NIK_ENCRYPTION_KEY`) + `scripts/backfill_nik_encryption.py` (idempotent, 0 plaintext). `create_all` di init_db (pola analytics).
+- **ARCH-KYC-002 (kyc)**: transactional outbox (`kyc_outbox` table + `KycOutboxPublisher` asyncio loop) — event kyc via CloudEvents 1.0.2 ke topic `payu.kyc.verified.v1` / `payu.kyc.failed.v1` / `payu.kyc.ktp-uploaded.v1`, retry 3x lalu archived in-place. Consumer notification + analytics disinkronkan ke `.v1`.
+- **ARCH-TXN-001 (transaction)**: ledger VA append-only — `va_payment_records` table (V26, insert-only repository, no update/delete) + transisi PENDING→PAID via row lock (`findWithLockByVaNumber`) menggantikan `@Modifying` UPDATE in-place `paidAmount`. Double-callback tetap no-op deterministik.
+- **ARCH-ERR-001**: support-service + backoffice-service error handler → RFC 9457 `ProblemDetail` (`application/problem+json`, code `SUP_*`/`BO_*`); billing code generik `CONFLICT` → `BIL_409`. Quarkus (notification/api-portal) diverifikasi: shared `GlobalExceptionMapper` aktif (structured `ApiResponse.error` + unique code).
+
+### Changed
+
+- **ARCH-CE-001 (platform)**: CloudEvents `specversion` default `1.0` → `1.0.2` di `CloudEventEnvelope`, `CloudEventBuilder`, `OutboxPublisher` (header `ce-specversion`) + consumer analytics menerima `1.0.*`.
+- **ARCH-IDM-001 (platform)**: default idempotency header `Idempotency-Key` → `X-Idempotency-Key` (api-commons properties + annotation default + `ApiConstants` Spring & Quarkus); gateway standard header ikut pindah (legacy fallback dipertahankan); `@Idempotent.required()` default jadi `true`; endpoint money non-required tersisa ditutup: QRIS header, Pocket freeze/unfreeze/close, SavingsGoal pause/resume; loan-origination approve masuk `FINANCIAL_PATHS` gateway.
+- **ARCH-TXN-002 (transaction)**: topic split-bill `payu.split-bills.*.v1` → `payu.transaction.<event>.v1` (3 segmen, lolos regex outbox GAP-31) — created/activated/cancelled/participant-added/payment-made/completed/payment-reminder; consumer partner + notification disinkronkan (SmallRye `topics` list).
+- **ARCH-SCALE-001 (lending)**: money path `setScale(2)` → `setScale(4, HALF_EVEN)` (ADR-0022) di InstallmentService + LoanManagementService; test amortisasi disesuaikan (140000.0004).
+- **Local stack**: `pull_policy: always` → `missing`; image infra digest-pinned RH registry di-retag `:local` (kredensial registry kedaluwarsa); `PAYU_VERSION` default 1.11.0.
+
+### Deployed
+
+- 1.11.0 — 37/37 service containers up (34 healthy via compose + 3 verified UP via health endpoint), Flyway V26 applied, kafka/artemis/keycloak running. Log scan: hanya noise startup transient (Kafka metadata, Artemis reconnect, Gauge re-registration) — tidak ada error loop.
+
 ## [1.10.76] - 2026-08-12
 
 ### Changed

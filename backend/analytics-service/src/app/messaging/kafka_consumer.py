@@ -46,7 +46,7 @@ def _unpack_event(
 ) -> tuple[Dict[str, Any], str, str, str]:
     is_cloud_event = (
         isinstance(message.get("data"), dict)
-        and (message.get("specversion") == "1.0" or "source" in message)
+        and (str(message.get("specversion") or "").startswith("1.0") or "source" in message)
     )
     payload = message.get("data") if is_cloud_event else message
     if not isinstance(payload, dict):
@@ -180,7 +180,7 @@ class KafkaConsumerService:
                 await self._handle_fraud_detection(session, payload)
             elif topic == "payu.wallet.balance.changed":
                 await self._handle_wallet_balance_changed(session, payload, event_id)
-            elif topic == "payu.kyc.verified":
+            elif topic == "payu.kyc.verified.v1":
                 await self._handle_kyc_verified(session, payload)
 
             await session.commit()

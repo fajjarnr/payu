@@ -1,10 +1,10 @@
 package id.payu.loanorigination.service;
 
 import id.payu.loanorigination.domain.DisbursementEvent;
+import id.payu.outbox.repository.OutboxRepository;
 import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,19 +15,33 @@ public class DisbursementService {
 
     private static final Logger log = LoggerFactory.getLogger(DisbursementService.class);
 
-    private final OutboxService outboxService;
+    private static final String AGGREGATE_TYPE = "LoanOrigination";
+    private static final String EVENT_TYPE = "LoanDisbursed";
 
-    public DisbursementService(OutboxService outboxService) {
+    private final OutboxService outboxService;
+    private final OutboxRepository outboxRepository;
+
+    public DisbursementService(OutboxService outboxService, OutboxRepository outboxRepository) {
         this.outboxService = outboxService;
+        this.outboxRepository = outboxRepository;
     }
 
-    public String execute(String userId, BigDecimal amount, String loanType, int tenureMonths) {
-        var ref = UUID.randomUUID().toString();
-        log.info("Disbursement: userId={}, amount={}, type={}, tenure={}, ref={}", userId, amount, loanType, tenureMonths, ref);
-        var event = new DisbursementEvent(userId, amount, loanType, tenureMonths, ref);
+    /**
+     * Publishes a loan disbursement event with a deterministic reference derived
+     * from the loan process id (ARCH-LOAN-001 / ADR-0022). Replaying the same
+     * process id never creates a second event: the outbox row is the dedup guard.
+     */
+    public String execute(String userId, BigDecimal amount, String loanType, int tenureMonths, String reference) {
+        if (outboxRepository.findFirstByAggregateTypeAndAggregateIdAndEventType(
+                AGGREGATE_TYPE, reference, EVENT_TYPE).isPresent()) {
+            log.info("Disbursement already published for reference {}, skipping duplicate", reference);
+            return reference;
+        }
+        log.info("Disbursement: userId={}, amount={}, type={}, tenure={}, ref={}", userId, amount, loanType, tenureMonths, reference);
+        var event = new DisbursementEvent(userId, amount, loanType, tenureMonths, reference);
         outboxService.createEventFromObject(
-                "LoanOrigination", ref, "LoanDisbursed", event, null,
+                AGGREGATE_TYPE, reference, EVENT_TYPE, event, null,
                 "payu.lending.loan-disbursed.v1");
-        return ref;
+        return reference;
     }
 }

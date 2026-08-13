@@ -49,10 +49,10 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
     private static final String IDEMPOTENCY_REDIS_KEY_PROPERTY = "idempotency-redis-key";
     private static final String IDEMPOTENCY_FINGERPRINT_PROPERTY = "idempotency-fingerprint";
 
-    // Standard header name as per RFC 7239 and industry best practices
-    private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    // Standard header name per platform standard ARCH-IDM-001
+    private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
     // Legacy header name for backward compatibility
-    private static final String LEGACY_IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
+    private static final String LEGACY_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
 
     // Financial operation paths that require idempotency key.
     // Covers ALL write endpoints annotated with @Idempotent(required=true) across services.
@@ -76,6 +76,7 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
 
         // --- Lending service: loans, repayments, PayLater ---
         "/api/v1/lending",
+        "/api/v1/loan-origination",
 
         // --- FX service: currency conversions ---
         "/api/v1/fx",

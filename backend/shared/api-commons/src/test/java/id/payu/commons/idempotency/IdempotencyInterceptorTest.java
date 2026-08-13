@@ -31,7 +31,7 @@ class IdempotencyInterceptorTest {
         IdempotencyService service = mock(IdempotencyService.class);
         IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/transfers");
-        request.addHeader("Idempotency-Key", KEY);
+        request.addHeader("X-Idempotency-Key", KEY);
         request.setContent("{ \"amount\": 100, \"account\": \"ACC-1\" }".getBytes());
         request.setUserPrincipal((Principal) () -> "user-1");
         MockHttpServletResponse response = new MockHttpServletResponse();

@@ -1,5 +1,14 @@
-import pytest
+import os
 import sys
+
+import pytest
+
+# Test environment defaults — set before any app import so Settings picks them up.
+os.environ.setdefault("SECRET_KEY", "test-secret-key-0123456789abcdef")
+os.environ.setdefault(
+    "KYC_NIK_ENCRYPTION_KEY",
+    "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+)
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")  # noqa: E402
 

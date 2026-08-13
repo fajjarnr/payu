@@ -97,4 +97,22 @@ public class SubscriptionEventAdapter implements SubscriptionEventPort {
         );
         log.info("Created outbox event for charge.failed: {}", charge.getId());
     }
+
+    @Override
+    public void publishSubscriptionDue(Subscription subscription) {
+        CloudEventEnvelope<SubscriptionEvent.DuePayload> event =
+                SubscriptionEvent.createSubscriptionDueEvent(
+                        subscription.getId(), subscription.getPartnerId(),
+                        subscription.getAccountId(), subscription.getNextBillingAt());
+
+        outboxService.createEventFromObject(
+                "Subscription",
+                subscription.getId().toString(),
+                SubscriptionEvent.SUBSCRIPTION_DUE,
+                event,
+                Map.of("X-Partner-Id", subscription.getPartnerId()),
+                "payu.billing.subscription-due.v1"
+        );
+        log.info("Created outbox event for subscription.due: {}", subscription.getId());
+    }
 }

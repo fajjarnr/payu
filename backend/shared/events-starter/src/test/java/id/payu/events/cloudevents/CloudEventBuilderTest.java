@@ -141,12 +141,12 @@ class CloudEventBuilderTest {
         }
 
         @Test
-        @DisplayName("should set specVersion to 1.0")
+        @DisplayName("should set specVersion to 1.0.2")
         void defaultSpecVersion() {
             CloudEventEnvelope<String> envelope = new CloudEventBuilder<String>()
                     .source("/test").type("test.event").build();
 
-            assertThat(envelope.getSpecVersion()).isEqualTo("1.0");
+            assertThat(envelope.getSpecVersion()).isEqualTo("1.0.2");
         }
 
         @Test

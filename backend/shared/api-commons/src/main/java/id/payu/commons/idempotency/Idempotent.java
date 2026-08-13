@@ -25,18 +25,11 @@ import java.lang.annotation.Target;
  * public class TransferController {
  *
  *     &#64;PostMapping
- *     &#64;Idempotent(required = true)  // Idempotency-Key header is mandatory
+ *     &#64;Idempotent(required = true)  // X-Idempotency-Key header is mandatory
  *     public ResponseEntity&lt;TransferResponse&gt; createTransfer(
  *             &#64;RequestBody TransferRequest request) {
  *         // Method implementation
- *         // Idempotency-Key header is handled automatically
- *     }
- *
- *     &#64;PostMapping("/internal")
- *     &#64;Idempotent(required = false)  // Idempotency-Key is optional
- *     public ResponseEntity&lt;InternalResponse&gt; internalOperation(
- *             &#64;RequestBody InternalRequest request) {
- *         // Method implementation
+ *         // X-Idempotency-Key header is handled automatically
  *     }
  * }
  * </pre>
@@ -55,12 +48,12 @@ public @interface Idempotent {
     /**
      * Specifies whether the Idempotency-Key header is required.
      * <p>
-     * If true and the header is missing, a 400 Bad Request will be returned.
-     * If false, idempotency is only applied when the header is present.
+     * Default is true (ARCH-IDM-001): every money mutation endpoint must
+     * carry the X-Idempotency-Key header.
      *
      * @return true if Idempotency-Key header is mandatory
      */
-    boolean required() default false;
+    boolean required() default true;
 
     /**
      * Specifies the TTL (time-to-live) for the idempotency entry in hours.
@@ -73,12 +66,11 @@ public @interface Idempotent {
 
     /**
      * Specifies the header name for the idempotency key.
-     * <p>
-     * Default is "Idempotency-Key" as per standard convention.
+     * Platform standard (ARCH-IDM-001): "X-Idempotency-Key".
      *
      * @return the header name
      */
-    String headerName() default "Idempotency-Key";
+    String headerName() default "X-Idempotency-Key";
 
     /**
      * Specifies which HTTP methods should be considered for idempotency.

@@ -448,10 +448,10 @@ gateway:
   # Idempotency
   idempotency:
     enabled: true
-    # Primary header name following RFC 7239 and industry standards
-    header-name: "Idempotency-Key"
+    # Primary header name per platform standard ARCH-IDM-001
+    header-name: "X-Idempotency-Key"
     # Legacy header name for backward compatibility
-    legacy-header-name: "X-Idempotency-Key"
+    legacy-header-name: "Idempotency-Key"
     ttl: "24h" # Keep idempotency records for 24 hours
     applicable-methods:
       - "POST"

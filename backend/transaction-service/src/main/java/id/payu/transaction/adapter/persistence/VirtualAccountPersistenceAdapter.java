@@ -1,6 +1,8 @@
 package id.payu.transaction.adapter.persistence;
 
+import id.payu.transaction.adapter.persistence.entity.VaPaymentRecordEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
+import id.payu.transaction.adapter.persistence.repository.VaPaymentRecordRepository;
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
 import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
 import org.springframework.stereotype.Component;
@@ -17,9 +19,12 @@ public class VirtualAccountPersistenceAdapter implements VirtualAccountPersisten
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VirtualAccountPersistenceAdapter.class);
 
     private final VirtualAccountRepository virtualAccountRepository;
+    private final VaPaymentRecordRepository vaPaymentRecordRepository;
 
-    public VirtualAccountPersistenceAdapter(VirtualAccountRepository virtualAccountRepository) {
+    public VirtualAccountPersistenceAdapter(VirtualAccountRepository virtualAccountRepository,
+                                            VaPaymentRecordRepository vaPaymentRecordRepository) {
         this.virtualAccountRepository = virtualAccountRepository;
+        this.vaPaymentRecordRepository = vaPaymentRecordRepository;
     }
 
     @Override
@@ -55,9 +60,14 @@ public class VirtualAccountPersistenceAdapter implements VirtualAccountPersisten
     }
 
     @Override
-    public int markPaidIfPending(String vaNumber, java.math.BigDecimal paidAmount,
-                                 String paymentReference, Instant paidAt) {
-        return virtualAccountRepository.markPaidIfPending(vaNumber, paidAmount, paymentReference, paidAt, Instant.now());
+    public Optional<VirtualAccountEntity> findWithLockByVaNumber(String vaNumber) {
+        return virtualAccountRepository.findWithLockByVaNumber(vaNumber);
+    }
+
+    @Override
+    @Transactional
+    public VaPaymentRecordEntity savePaymentRecord(VaPaymentRecordEntity record) {
+        return vaPaymentRecordRepository.save(record);
     }
 
     @Override

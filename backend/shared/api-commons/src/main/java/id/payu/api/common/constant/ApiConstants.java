@@ -102,7 +102,7 @@ public final class ApiConstants {
     /**
      * Idempotency key header name.
      */
-    public static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    public static final String IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
 
     /**
      * Idempotency key expiration in seconds (24 hours).

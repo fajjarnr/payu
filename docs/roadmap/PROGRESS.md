@@ -4,6 +4,13 @@
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)
 > Untuk arsitektur gateway & integrasi → lihat [`GATEWAY_ARCH.md`](./GATEWAY_ARCH.md)
 
+> ✅ **2026-08-13 — Release 1.11.0 — Backlog P1 (idempotency/events/ledger/kyc/RFC 9457) CLOSED**:
+> - **ARCH-IDM-001**: default idempotency header `Idempotency-Key` → `X-Idempotency-Key` (api-commons + gateway standard, legacy fallback), `@Idempotent.required()` default true, endpoint money non-required ditutup (QRIS header, Pocket freeze/unfreeze/close, SavingsGoal pause/resume, loan-origination approve masuk FINANCIAL_PATHS gateway).
+> - **ARCH-CE-001**: CloudEvents `specversion` 1.0.2 di envelope/builder/outbox publisher + consumer analytics menerima `1.0.*`.
+> - **ARCH-TXN-002**: topic split-bill → `payu.transaction.<event>.v1` (3 segmen, lolos regex outbox); consumer partner + notification disinkronkan (SmallRye `topics` list).
+> - **ARCH-LOAN-001**: disbursement reference deterministik `LOAN-<processId>` + dedup via outbox row; **ARCH-BILL-001**: JMS trigger → outbox `payu.billing.subscription-due.v1` + Kafka consumer (0 `convertAndSend`); **ARCH-KYC-001/002**: NIK AES-GCM at-rest + backfill script, transactional outbox `kyc_outbox` + CloudEvents ke `.v1` topics; **ARCH-TXN-001**: VA ledger append-only `va_payment_records` (V26, row-lock transition, no `@Modifying` finansial); **ARCH-ERR-001**: support/backoffice → RFC 9457 ProblemDetail, billing `BIL_409`, Quarkus mapper diverifikasi aktif; **ARCH-SCALE-001**: lending money path scale 4.
+> - Deployed 1.11.0: 37/37 containers up (34 healthy + 3 UP via health endpoint), Flyway V26 applied, log scan tanpa error loop (hanya noise startup transient). Local stack: `pull_policy: missing` + retag infra digest-pinned `:local` (RH registry creds expired).
+
 > ✅ **2026-08-11 — Login web LIVE end-to-end (LOGIN-001/003/006 + CB-002 closed, release 1.10.52)**:
 > - Web login migrated from password grant to **OIDC Authorization Code + PKCE** (MFA deferred per ADR-0023): auth-service `POST /api/v1/auth/callback` (exchange via confidential `payu-web-app` client), BFF `GET /api/auth/authorize` + `GET /api/auth/callback` (state + verifier httpOnly cookies, S256), login page → Keycloak redirect. Password-grant endpoint + cache lockout removed.
 > - Keycloak issuer pinned (`KC_HOSTNAME=http://localhost:8099`, strict) — token issuer kini stabil, refresh/revoke jalan; semua `OIDC_ISSUER`/`OIDC_JWK_SET_URI`/`KEYCLOAK_URL` di compose mengarah ke URL yang sama (pola L-116 lokal).

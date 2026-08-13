@@ -67,15 +67,15 @@ class FinancialEventConsumerTest {
     @DisplayName("should map versioned split-bills topics (TX-001)")
     void shouldMapVersionedSplitBillsTopics() {
         assertEquals("split-bill.created",
-                consumer.deriveEventType("payu.split-bills.created.v1", record("payu.split-bills.created.v1", "{}")));
+                consumer.deriveEventType("payu.transaction.split-bill-created.v1", record("payu.transaction.split-bill-created.v1", "{}")));
         assertEquals("split-bill.activated",
-                consumer.deriveEventType("payu.split-bills.activated.v1", record("payu.split-bills.activated.v1", "{}")));
+                consumer.deriveEventType("payu.transaction.split-bill-activated.v1", record("payu.transaction.split-bill-activated.v1", "{}")));
         assertEquals("split-bill.cancelled",
-                consumer.deriveEventType("payu.split-bills.cancelled.v1", record("payu.split-bills.cancelled.v1", "{}")));
+                consumer.deriveEventType("payu.transaction.split-bill-cancelled.v1", record("payu.transaction.split-bill-cancelled.v1", "{}")));
         assertEquals("split-bill.payment.made",
-                consumer.deriveEventType("payu.split-bills.payment.made.v1", record("payu.split-bills.payment.made.v1", "{}")));
+                consumer.deriveEventType("payu.transaction.payment-made.v1", record("payu.transaction.payment-made.v1", "{}")));
         assertEquals("split-bill.completed",
-                consumer.deriveEventType("payu.split-bills.completed.v1", record("payu.split-bills.completed.v1", "{}")));
+                consumer.deriveEventType("payu.transaction.split-bill-completed.v1", record("payu.transaction.split-bill-completed.v1", "{}")));
     }
 
     @Test

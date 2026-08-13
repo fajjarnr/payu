@@ -1,5 +1,6 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.adapter.persistence.entity.VaPaymentRecordEntity;
 import id.payu.transaction.adapter.persistence.entity.VirtualAccountEntity;
 import id.payu.transaction.domain.port.out.VirtualAccountPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
@@ -104,12 +105,15 @@ public class VirtualAccountService {
      * Handle bank callback confirming VA payment.
      * Called when bank confirms customer has paid to the VA number.
      *
-     * IMP-2: the PENDING → PAID transition is a conditional UPDATE, so of two
-     * concurrent callbacks (or a callback racing the expiry scheduler) exactly
-     * one wins; the loser returns the existing result as a deterministic no-op.
+     * ARCH-TXN-001: the PENDING → PAID transition happens on the row-locked
+     * entity (findWithLockByVaNumber) and each payment fact is appended to the
+     * immutable va_payment_records table instead of an in-place @Modifying
+     * UPDATE. Of two concurrent callbacks (or a callback racing the expiry
+     * scheduler) exactly one wins; the loser returns the existing result as a
+     * deterministic no-op.
      */
     public VirtualAccountResponse handleBankCallback(VaCallbackRequest callback) {
-        VirtualAccountEntity va = virtualAccountPersistencePort.findByVaNumber(callback.getVaNumber())
+        VirtualAccountEntity va = virtualAccountPersistencePort.findWithLockByVaNumber(callback.getVaNumber())
                 .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
 
         // Validate callback amount matches VA expected amount (if fixed amount VA)
@@ -120,22 +124,21 @@ public class VirtualAccountService {
                     "Callback amount " + callback.getAmount() + " does not match VA expected amount " + va.getAmount());
         }
 
-        requireSettlementAccount(va.getSettlementAccountId());
-
-        int transitioned = virtualAccountPersistencePort.markPaidIfPending(
-                va.getVaNumber(), callback.getAmount(), callback.getPaymentReference(), Instant.now());
-
-        if (transitioned == 0) {
-            VirtualAccountEntity current = virtualAccountPersistencePort.findByVaNumber(callback.getVaNumber())
-                    .orElseThrow(() -> new IllegalArgumentException("VA not found: " + callback.getVaNumber()));
-            if (current.getStatus() == VaStatus.PAID) {
+        if (!va.isPending()) {
+            if (va.getStatus() == VaStatus.PAID) {
                 log.info("Double callback for VA {} — already paid, returning existing result", va.getVaNumber());
-                return toResponse(current);
+                return toResponse(va);
             }
-            throw new IllegalStateException("VA is not pending or has expired: " + current.getStatus());
+            throw new IllegalStateException("VA is not pending or has expired: " + va.getStatus());
         }
 
+        requireSettlementAccount(va.getSettlementAccountId());
+
         va.markPaid(callback.getAmount(), callback.getPaymentReference());
+        virtualAccountPersistencePort.savePaymentRecord(VaPaymentRecordEntity.of(
+                va.getId(), va.getVaNumber(), va.getPaidAmount(),
+                va.getPaymentReference(), va.getPaidAt()));
+        virtualAccountPersistencePort.save(va);
 
         log.info("VA {} paid: amount={}, ref={}", va.getVaNumber(),
                 callback.getAmount(), callback.getPaymentReference());

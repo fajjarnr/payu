@@ -22,8 +22,13 @@ class Settings(BaseSettings):
 
     # Kafka
     kafka_bootstrap_servers: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-    kafka_topic_kyc_verified: str = "payu.kyc.verified"
-    kafka_topic_kyc_failed: str = "payu.kyc.failed"
+    kafka_topic_kyc_verified: str = "payu.kyc.verified.v1"
+    kafka_topic_kyc_failed: str = "payu.kyc.failed.v1"
+    kafka_topic_kyc_ktp_uploaded: str = "payu.kyc.ktp-uploaded.v1"
+
+    # ARCH-KYC-002: transactional outbox publisher
+    kyc_outbox_poll_interval_sec: float = float(os.getenv("KYC_OUTBOX_POLL_INTERVAL_SEC", "2"))
+    kyc_outbox_batch_size: int = int(os.getenv("KYC_OUTBOX_BATCH_SIZE", "50"))
 
     # Artemis / STOMP
     artemis_host: str = os.getenv("ARTEMIS_HOST", "localhost")
@@ -64,6 +69,9 @@ class Settings(BaseSettings):
     secret_key: str = os.getenv("SECRET_KEY", "")
     algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
     access_token_expire_minutes: int = 30
+
+    # ARCH-KYC-001: AES-GCM key (64 hex chars) for NIK encryption at-rest
+    nik_encryption_key: str = os.getenv("KYC_NIK_ENCRYPTION_KEY", "")
 
     # Logging
     log_level: str = "INFO"

@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("Idempotency Filter Enforcement Tests")
 public class IdempotencyFilterEnforcedTest {
 
-    private static final String STANDARD_HEADER = "Idempotency-Key";
+    private static final String STANDARD_HEADER = "X-Idempotency-Key";
 
     @Test
     @DisplayName("Should accept request without idempotency key for non-financial path")

@@ -122,22 +122,29 @@ mp:
         dead-letter-queue.topic: payu.transaction.payment-expired.v1.dlq
       split-bill-events:
         connector: smallrye-kafka
-        topic: payu.wallet.split-bill-event.v1
+        topics:
+          - payu.transaction.split-bill-created.v1
+          - payu.transaction.split-bill-activated.v1
+          - payu.transaction.split-bill-cancelled.v1
+          - payu.transaction.participant-added.v1
+          - payu.transaction.payment-made.v1
+          - payu.transaction.split-bill-completed.v1
+          - payu.transaction.payment-reminder.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: payu.wallet.split-bill-event.v1.dlq
+        dead-letter-queue.topic: payu.transaction.split-bill-events.v1.dlq
       kyc-verified-events:
         connector: smallrye-kafka
-        topic: payu.kyc.verified
+        topic: payu.kyc.verified.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: payu.kyc.verified.dlq
+        dead-letter-queue.topic: payu.kyc.verified.v1.dlq
       kyc-failed-events:
         connector: smallrye-kafka
-        topic: payu.kyc.failed
+        topic: payu.kyc.failed.v1
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
-        dead-letter-queue.topic: payu.kyc.failed.dlq
+        dead-letter-queue.topic: payu.kyc.failed.v1.dlq

@@ -75,9 +75,7 @@ class VirtualAccountServiceTest {
             BigDecimal amount = new BigDecimal("100000.00");
             VirtualAccountEntity va = pendingVa(vaNumber, "ACC-SETTLE-01", amount);
 
-            when(virtualAccountPersistencePort.findByVaNumber(vaNumber)).thenReturn(Optional.of(va));
-            when(virtualAccountPersistencePort.markPaidIfPending(
-                    eq(vaNumber), eq(amount), eq("PAID-REF-1"), any(Instant.class))).thenReturn(1);
+            when(virtualAccountPersistencePort.findWithLockByVaNumber(vaNumber)).thenReturn(Optional.of(va));
 
             virtualAccountService.handleBankCallback(
                     VaCallbackRequest.builder()
@@ -88,6 +86,10 @@ class VirtualAccountServiceTest {
 
             verify(walletServicePort).creditBalance(eq("ACC-SETTLE-01"), eq(va.getId().toString()), eq(amount));
             verify(outboxService).createEvent(any(), any(), eq("VirtualAccountPaymentCompleted"), any(), any(), eq("payu.transaction.va-paid.v1"));
+            verify(virtualAccountPersistencePort).savePaymentRecord(argThat(record ->
+                    record.getVaNumber().equals(vaNumber)
+                            && record.getAmount().compareTo(amount) == 0
+                            && "PAID-REF-1".equals(record.getPaymentReference())));
             assertThat(va.getStatus()).isEqualTo(VaStatus.PAID);
         }
 
@@ -98,7 +100,7 @@ class VirtualAccountServiceTest {
             BigDecimal amount = new BigDecimal("50000.00");
             VirtualAccountEntity va = pendingVa(vaNumber, null, amount);
 
-            when(virtualAccountPersistencePort.findByVaNumber(vaNumber)).thenReturn(Optional.of(va));
+            when(virtualAccountPersistencePort.findWithLockByVaNumber(vaNumber)).thenReturn(Optional.of(va));
 
             assertThatThrownBy(() -> virtualAccountService.handleBankCallback(
                     VaCallbackRequest.builder()
@@ -109,7 +111,7 @@ class VirtualAccountServiceTest {
                     .isInstanceOf(IllegalStateException.class);
 
             verify(walletServicePort, never()).creditBalance(any(), any(), any());
-            verify(virtualAccountPersistencePort, never()).markPaidIfPending(any(), any(), any(), any());
+            verify(virtualAccountPersistencePort, never()).savePaymentRecord(any());
             verifyNoInteractions(outboxService);
             assertThat(va.getStatus()).isEqualTo(VaStatus.PENDING);
         }
@@ -121,9 +123,7 @@ class VirtualAccountServiceTest {
             BigDecimal amount = new BigDecimal("25000.00");
             VirtualAccountEntity va = pendingVa(vaNumber, "ACC-SETTLE-03", amount);
 
-            when(virtualAccountPersistencePort.findByVaNumber(vaNumber)).thenReturn(Optional.of(va));
-            when(virtualAccountPersistencePort.markPaidIfPending(
-                    eq(vaNumber), eq(amount), eq("PAID-REF-4"), any(Instant.class))).thenReturn(1);
+            when(virtualAccountPersistencePort.findWithLockByVaNumber(vaNumber)).thenReturn(Optional.of(va));
             when(outboxService.createEvent(
                     eq("VirtualAccount"), eq(va.getId().toString()),
                     eq("VirtualAccountPaymentCompleted"), anyMap(), isNull(),
@@ -140,6 +140,9 @@ class VirtualAccountServiceTest {
                     .hasMessage("outbox unavailable");
 
             verify(walletServicePort, never()).creditBalance(any(), any(), any());
+            // The payment record insert is same-tx with the outbox row — the
+            // rollback discards both when the outbox publish fails.
+            verify(virtualAccountPersistencePort).savePaymentRecord(any());
         }
 
         @Test
@@ -151,10 +154,7 @@ class VirtualAccountServiceTest {
             VirtualAccountEntity paidVa = pendingVa(vaNumber, "ACC-SETTLE-02", amount);
             paidVa.markPaid(amount, "PAID-REF-3");
 
-            when(virtualAccountPersistencePort.findByVaNumber(vaNumber))
-                    .thenReturn(Optional.of(va), Optional.of(paidVa));
-            when(virtualAccountPersistencePort.markPaidIfPending(
-                    eq(vaNumber), eq(amount), eq("PAID-REF-3"), any(Instant.class))).thenReturn(0);
+            when(virtualAccountPersistencePort.findWithLockByVaNumber(vaNumber)).thenReturn(Optional.of(paidVa));
 
             VirtualAccountResponse response = virtualAccountService.handleBankCallback(
                     VaCallbackRequest.builder()
@@ -166,6 +166,7 @@ class VirtualAccountServiceTest {
             assertThat(response.getStatus()).isEqualTo(VaStatus.PAID.name());
             verify(walletServicePort, never()).creditBalance(any(), any(), any());
             verify(outboxService, never()).createEvent(any(), any(), any(), any(), any(), any());
+            verify(virtualAccountPersistencePort, never()).savePaymentRecord(any());
         }
 
         @Test
@@ -177,11 +178,8 @@ class VirtualAccountServiceTest {
             VirtualAccountEntity paidVa = pendingVa(vaNumber, "ACC-SETTLE-04", amount);
             paidVa.markPaid(amount, "PAID-REF-5");
 
-            when(virtualAccountPersistencePort.findByVaNumber(vaNumber))
+            when(virtualAccountPersistencePort.findWithLockByVaNumber(vaNumber))
                     .thenReturn(Optional.of(va), Optional.of(paidVa));
-            when(virtualAccountPersistencePort.markPaidIfPending(
-                    eq(vaNumber), eq(amount), eq("PAID-REF-5"), any(Instant.class)))
-                    .thenReturn(1, 0);
 
             virtualAccountService.handleBankCallback(
                     VaCallbackRequest.builder().vaNumber(vaNumber).amount(amount).paymentReference("PAID-REF-5").build());
@@ -190,6 +188,7 @@ class VirtualAccountServiceTest {
 
             verify(walletServicePort, times(1)).creditBalance(any(), any(), any());
             verify(outboxService, times(1)).createEvent(any(), any(), any(), any(), any(), any());
+            verify(virtualAccountPersistencePort, times(1)).savePaymentRecord(any());
         }
     }
 }
