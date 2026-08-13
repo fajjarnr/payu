@@ -12,4 +12,6 @@ import java.util.UUID;
  */
 @Repository
 public interface VaPaymentRecordRepository extends JpaRepository<VaPaymentRecordEntity, UUID> {
+
+    long countByPaymentReference(String paymentReference);
 }
