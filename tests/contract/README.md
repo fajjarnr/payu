@@ -12,11 +12,19 @@ with a `contract-test` Maven profile that runs the generated `ContractVerifierTe
 | transaction-service | `createTransfer` (201) | `createTransferInvalidAmount` (400 — validation) |
 | wallet-service | `getBalance` (200) | `getBalanceNotFound` (404) |
 | auth-service | `loginUser` (200) | `loginUserMissingCode` (400 — validation) |
+| billing-service | `getPayment` (200) | `getPaymentNotFound` (404) |
+| partner-service (SNAP-BI) | — (butuh HMAC live) | `snapBiAuthTokenExpiredTimestamp` / `snapBiPaymentExpiredTimestamp` / `snapBiRefundExpiredTimestamp` (4002508) |
 
 401 cases are exercised by the service security suites (QAMVP-014), not the
 verifier: `ContractVerifierBase` classes set a JWT principal and disable the
 security filter chain, so unauthenticated flows are out of scope for the
 provider-side verifier.
+
+SNAP-BI happy paths need a live HMAC signature + a within-5-minutes
+`X-TIMESTAMP`, which cannot be frozen in a contract; the deterministic
+contracts cover the SNAP request/error wire shape (expired timestamp →
+`4002508`). CloudEvents wire contract lives in outbox-starter
+(`CloudEventsContractTest`, ce-specversion 1.0.2).
 
 ## Running
 
