@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.11.1] - 2026-08-13
 
+### Added
+
+- **ARCH-DECIMAL-001 (promotion)**: `promo_codes.discount_value` widened `DECIMAL(10,4)` → `DECIMAL(19,4)` (V13, widening-only) + entity `precision = 19`. Domain scale disinkronkan ke 4 (ADR-0022): `PromoCode.calculateDiscount` PERCENTAGE `divide(..., 4, HALF_EVEN)` (PROMO-004) dan `PromoUsagePersistenceMapper.normalizeAmount` floor scale 4 — idempotent replay kini konsisten scale 4 dengan hitung segar. Test scale-4 ditambah (TDD); 3 assert lama disesuaikan. 261 test green.
+
 ### Changed
 
 - **ARCH-INTG-001 (integration)**: route SWIFT/OJK tidak lagi publish langsung via Camel `kafka:` endpoint (bypass outbox, tanpa CloudEvents, tanpa `.dlq`) — kini lewat `MessagePublisherPort`/`MessagePublisherAdapter` (transactional outbox, topic `payu.integration.swift-processed.v1` / `payu.integration.swift-errors.v1` / `payu.integration.ojk-errors.v1`). Port tambah method `publishEvent(...)` untuk error handler tanpa `IntegrationMessage`. `camel-kafka-starter` dep + `kafka.bootstrap-servers` field dihapus. Guard `NoDirectKafkaEndpointTest` (2 test, TDD) + ArchUnit tetap hijau. 48 test green.

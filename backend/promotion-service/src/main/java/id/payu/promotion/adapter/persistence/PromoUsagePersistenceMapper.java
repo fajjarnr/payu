@@ -45,7 +45,7 @@ public class PromoUsagePersistenceMapper {
         if (amount == null) {
             return null;
         }
-        int scale = Math.max(2, amount.stripTrailingZeros().scale());
+        int scale = Math.max(4, amount.stripTrailingZeros().scale());
         return amount.setScale(scale, RoundingMode.HALF_EVEN);
     }
 }

@@ -57,7 +57,7 @@
 | ARCH-INTG-001 | integration | Route swift/ojk → outbox-starter; hapus `kafka:` endpoint; pakai `MessagePublisherAdapter` | 0 `.to("kafka:")` |
 | ARCH-TOPIC-002 | platform | KafkaTopic deklaratif untuk semua topic kode (RF 3, partisi sesuai consumer); hapus resource legacy `*-events`; audit auto-create off | `oc get kafkatopic` lengkap vs EVENT_CATALOG |
 | ARCH-PROD-001 | platform | Producer default `acks=all` + `enable.idempotence=true` + retries di outbox-starter (satu tempat semua service) | Property terverifikasi di producer config |
-| ARCH-DECIMAL-001 | promotion | Widening `discount_value` → DECIMAL(19,4) + sync domain scale 4 | Kolom 19,4 + test |
+| ARCH-DECIMAL-001 | promotion | ~~Widening `discount_value` → DECIMAL(19,4) + sync domain scale 4~~ **CLOSED 2026-08-13** — V13, entity precision 19, scale 4 (PROMO-004 + normalizeAmount floor 4), 261 test green | Kolom 19,4 + test |
 | QAMVP-001 | platform | CI backend: workflow PR changed-service — unit + integration semua service (sekarang 0) | PR status red/green per service |
 | QAMVP-002 | transaction, wallet | Integration test Testcontainers (PG+Kafka) money journey: transfer, reserve/commit, outbox atomic | Suite jalan di CI |
 | QAMVP-003 | billing, partner | Contract test: billing payment, SNAP-BI payment/refund/auth-token + CloudEvents contract | `tests/contract` bertambah |
@@ -146,7 +146,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | NOTIF-001 | 🔴 | notification | LOG-mode false success tanpa delivery ID — **PARTIAL 2026-08-12** (fail-closed live, lihat PROD-044); sisa provider nyata + delivery ID butuh credential eksternal | SmsSender.java:26-54 |
 | PROMO-002 | 🟠 | promotion | Loyalty redeem tanpa dedup | LoyaltyPointsService.java:82-109 |
 | PROMO-003 | 🟠 | promotion | `claimPromotion` tanpa dedup by transactionId — replay/double-submit → 2 reward AWARDED (maxRedemptions atomik ✓, tapi per-user/per-transaction tidak ada guard) | PromotionService.java:139-180 |
-| PROMO-004 | 🟠 | promotion | `calculateRewardAmount` PERCENTAGE `divide(..., 2, HALF_EVEN)` — scale 2, melanggar ADR-0022 (scale 4 wajib) | PromotionService.java:184-191 |
+| PROMO-004 | 🟠 | promotion | ~~`calculateRewardAmount` PERCENTAGE `divide(..., 2, HALF_EVEN)` — scale 2, melanggar ADR-0022 (scale 4 wajib)~~ **CLOSED 2026-08-13** dengan ARCH-DECIMAL-001 — `PromoCode.calculateDiscount` + `PromoUsagePersistenceMapper.normalizeAmount` kini scale 4 | PromoCode.java:116 |
 | REFERRAL-001 | 🟠 | promotion | completeReferral tanpa lock | ReferralService.java:79-107 |
 | TEST-GAP | 🟠 | qa | 6/8 core banking tanpa integration test; wallet 31 @Test | src/test structure |
 | INTEGRATION-CTX | 🟠 | qa | Account-service integration test context: **VaultConfigurationTest FIXED** (2026-08-12: mock DataSource di TestJpaConfig) → default suite 132/132. Sisa: OnboardingIntegrationTest + BlindIndexAndTenantIsolationIntegrationTest masih `No bean named 'entityManagerFactory'` — test tanpa `@ActiveProfiles("test")` (activeProfiles=[]), dan app pakai multi-DS custom (`spring.datasource.primary.*`, bukan `spring.datasource.*`) sehingga dynamic property + `@ServiceConnection` tidak di-honor; workaround sementara: verifikasi DB langsung (podman postgres) | surefire context load errors |
@@ -161,7 +161,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| ARCH-DECIMAL-001 | 🔴 | promotion | `discount_value DECIMAL(10,4)` — kolom money wajib (19,4); widening migration + cek cast | promotion V4:9 |
+| ARCH-DECIMAL-001 | 🔴 | promotion | ~~`discount_value DECIMAL(10,4)` — kolom money wajib (19,4); widening migration + cek cast~~ **CLOSED 2026-08-13** — V13 widening + domain scale 4 (PROMO-004) | promotion V13 |
 | ARCH-INTG-001 | 🔴 | integration | ~~Route swift/ojk → outbox-starter; hapus `kafka:` endpoint; pakai `MessagePublisherAdapter`~~ **CLOSED 2026-08-13** — SwiftRouteBuilder/OjkRouteBuilder publish via `MessagePublisherPort` (outbox), 0 `.to("kafka:")`, camel-kafka-starter dihapus | SwiftRouteBuilder.java, OjkRouteBuilder.java |
 | ARCH-TOPIC-002 | 🔴 | platform | Hanya 10 KafkaTopic deklaratif (`transaction.*.v1`, dispute, lending-repayment, partner-refunded + 3 dlq); ~30 topic dari kode auto-create tanpa RF/partisi eksplisit (risiko data-loss event finansial); resource legacy `account-events`/`wallet-events`/`notification-events`/`transaction-events` tanpa `topicName: payu.*` | kafka-amqstreams.yaml:98-345 |
 

@@ -55,8 +55,8 @@ class PromoCodeTest {
 
         // Then
         assertTrue(result.isSuccess(), "Promo should be applied successfully");
-        assertEquals(new BigDecimal("10.00"), result.getDiscountAmount(), "Discount should be 10% of 100");
-        assertEquals(new BigDecimal("90.00"), result.getFinalAmount(), "Final amount should be 90 after discount");
+        assertEquals(new BigDecimal("10.0000"), result.getDiscountAmount(), "Discount should be 10% of 100");
+        assertEquals(new BigDecimal("90.0000"), result.getFinalAmount(), "Final amount should be 90 after discount");
         assertEquals("DISCOUNT10", result.getPromoCode());
     }
 
@@ -164,9 +164,24 @@ class PromoCodeTest {
     }
 
     @Test
+    @DisplayName("percentage discount amount must be scale 4 (ADR-0022, PROMO-004)")
+    void percentageDiscountShouldBeScaleFour() {
+        PromoCode promo = PromoCode.builder()
+                .code("HALFOFF")
+                .discountValue(discount("33.3333"))
+                .discountType(DiscountType.PERCENTAGE)
+                .build();
+
+        PromoResult result = promo.apply(createContext(new BigDecimal("9999.9999")));
+
+        assertTrue(result.isSuccess());
+        assertEquals(4, result.getDiscountAmount().scale(),
+                "percentage discount must keep scale 4 (HALF_EVEN), not truncate to 2");
+    }
+
+    @Test
     @DisplayName("should not exceed maximum discount cap for percentage discount")
-    void shouldRespectMaxDiscountCap() {
-        // Given - 50% discount with 10000 max cap
+    void shouldRespectMaxDiscountCap() {        // Given - 50% discount with 10000 max cap
         PromoCode promo = PromoCode.builder()
                 .code("BIGDISCOUNT")
                 .discountValue(discount("50"))
@@ -228,8 +243,8 @@ class PromoCodeTest {
         // Then
         assertTrue(result1.isSuccess());
         assertTrue(result2.isSuccess());
-        assertEquals(new BigDecimal("5.00"), result1.getDiscountAmount());
-        assertEquals(new BigDecimal("10.00"), result2.getDiscountAmount());
+        assertEquals(new BigDecimal("5.0000"), result1.getDiscountAmount());
+        assertEquals(new BigDecimal("10.0000"), result2.getDiscountAmount());
     }
 
     @Test
@@ -291,8 +306,8 @@ class PromoCodeTest {
 
         // Then
         assertTrue(result.isSuccess());
-        // Should round to 2 decimal places
-        assertEquals(new BigDecimal("33.33"), result.getDiscountAmount());
+        // Should round to 4 decimal places (ADR-0022)
+        assertEquals(new BigDecimal("33.3300"), result.getDiscountAmount());
     }
 
     @Test

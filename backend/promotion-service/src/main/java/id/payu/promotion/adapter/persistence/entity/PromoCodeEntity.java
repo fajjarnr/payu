@@ -28,7 +28,7 @@ public class PromoCodeEntity {
     @Column(name = "code", nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(name = "discount_value", nullable = false, precision = 10, scale = 4)
+    @Column(name = "discount_value", nullable = false, precision = 19, scale = 4)
     private BigDecimal discountValue;
 
     @Enumerated(EnumType.STRING)
