@@ -339,6 +339,15 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <!-- JaCoCo cannot instrument drools' generated ANTLR lexer
+                                     (DRL6Lexer has an oversized method) → context load fails -->
+                                <exclude>org/drools/**</exclude>
+                                <exclude>org/kie/**</exclude>
+                                <exclude>org/antlr/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>
@@ -386,6 +395,9 @@
                                         <exclude>*Dto</exclude>
                                         <exclude>*Request</exclude>
                                         <exclude>*Response</exclude>
+                                        <!-- generated gRPC bindings -->
+                                        <exclude>id.payu.account.grpc.*</exclude>
+                                        <exclude>id.payu.grpc.common.*</exclude>
                                     </excludes>
                                 </rule>
                             </rules>

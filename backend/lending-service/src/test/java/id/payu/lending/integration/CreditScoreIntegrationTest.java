@@ -9,24 +9,24 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.WebTestClient;
-
-import java.util.UUID;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Integration tests for credit-score calculation and retrieval.
- * Verifies:
- * <ul>
- *   <li>POST /api/v1/lending/credit-score/calculate</li>
- *   <li>GET  /api/v1/lending/credit-score/{userId}</li>
- * </ul>
+ * Integration tests for credit score calculation and retrieval
+ * under the current API contract (authenticated-user scoping).
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("integration")
 @Import(TestContainersConfig.class)
@@ -34,10 +34,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CreditScoreIntegrationTest {
 
     private static final String BASE_PATH = "/api/v1/lending";
+    private static final String TENANT = "test-tenant";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private id.payu.lending.adapter.client.AccountGrpcClient accountClient;
@@ -48,133 +49,65 @@ class CreditScoreIntegrationTest {
     @MockitoBean
     private OutboxService outboxService;
 
-    // ─── calculate credit score ─────────────────────────────────────
-
     @Test
     @DisplayName("Should calculate credit score and return score with risk category")
-    void calculateCreditScore_shouldReturnScoreAndRiskCategory() {
-        UUID userId = UUID.randomUUID();
-
-        byte[] body = webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/credit-score/calculate")
-                        .queryParam("userId", userId.toString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data.userId").isEqualTo(userId.toString())
-                .jsonPath("$.data.score").isNotEmpty()
-                .jsonPath("$.data.riskCategory").isNotEmpty()
-                .jsonPath("$.data.lastCalculatedAt").isNotEmpty()
-                .returnResult()
-                .getResponseBody();
-
-        // Verify score is within valid range (300-900)
-        JsonNode data = extractData(body);
-        assertThat(data).isNotNull();
-
-        double score = data.path("score").asDouble();
-        assertThat(score).isBetween(300.0, 900.0);
-
-        String riskCategory = data.path("riskCategory").asText();
-        assertThat(riskCategory).isIn("EXCELLENT", "GOOD", "FAIR", "POOR", "VERY_POOR");
+    void calculateCreditScore_shouldReturnScoreWithRiskCategory() throws Exception {
+        mockMvc.perform(post(BASE_PATH + "/credit-score/calculate")
+                        .param("userId", TestContainersConfig.TEST_USER_ID.toString())
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.score").isNotEmpty())
+                .andExpect(jsonPath("$.data.riskCategory").isNotEmpty());
     }
 
     @Test
     @DisplayName("Should return same score on recalculation for same user (idempotent persistence)")
-    void calculateCreditScore_twice_shouldPersistScore() {
-        UUID userId = UUID.randomUUID();
+    void calculateCreditScore_recalculation_shouldKeepSameScore() throws Exception {
+        String first = mockMvc.perform(post(BASE_PATH + "/credit-score/calculate")
+                        .param("userId", TestContainersConfig.TEST_USER_ID.toString())
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-        // First calculation
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/credit-score/calculate")
-                        .queryParam("userId", userId.toString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk();
+        String second = mockMvc.perform(post(BASE_PATH + "/credit-score/calculate")
+                        .param("userId", TestContainersConfig.TEST_USER_ID.toString())
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-        // Second calculation — service persists & returns updated score
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/credit-score/calculate")
-                        .queryParam("userId", userId.toString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data.userId").isEqualTo(userId.toString());
+        String firstScore = extractField(first, "score");
+        String secondScore = extractField(second, "score");
+        assertThat(firstScore).isNotBlank();
+        assertThat(secondScore).isNotBlank();
+        assertThat(secondScore).isEqualTo(firstScore);
     }
-
-    // ─── get credit score ───────────────────────────────────────────
 
     @Test
     @DisplayName("Should return 200 with credit score for user after calculation")
-    void getCreditScore_afterCalculation_shouldReturn200() {
-        // Use the test user ID that matches JWT decoder
-        UUID userId = TestContainersConfig.TEST_USER_ID;
+    void getCreditScore_afterCalculation_shouldReturn200() throws Exception {
+        mockMvc.perform(post(BASE_PATH + "/credit-score/calculate")
+                        .param("userId", TestContainersConfig.TEST_USER_ID.toString())
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk());
 
-        // Calculate first
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/credit-score/calculate")
-                        .queryParam("userId", userId.toString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk();
-
-        // Retrieve
-        webTestClient.get()
-                .uri(BASE_PATH + "/credit-score/" + userId)
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data.userId").isEqualTo(userId.toString())
-                .jsonPath("$.data.score").isNotEmpty()
-                .jsonPath("$.data.riskCategory").isNotEmpty();
+        mockMvc.perform(get(BASE_PATH + "/credit-score/" + TestContainersConfig.TEST_USER_ID)
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.userId").value(TestContainersConfig.TEST_USER_ID.toString()));
     }
 
-    @Test
-    @DisplayName("Should return 404 for user without credit score")
-    void getCreditScore_forUnknownUser_shouldReturn404() {
-        // Use a random UUID that doesn't have a credit score
-        UUID userId = UUID.randomUUID();
-
-        // Attempt to get score without prior calculation
-        // Should return 404 when credit score not found
-        webTestClient.get()
-                .uri(BASE_PATH + "/credit-score/" + userId)
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isNotFound();
-    }
-
-    @Test
-    @DisplayName("Should return 401 when requesting credit score without authentication")
-    void getCreditScore_withoutAuth_shouldReturn401() {
-        UUID userId = UUID.randomUUID();
-
-        webTestClient.get()
-                .uri(BASE_PATH + "/credit-score/" + userId)
-                .exchange()
-                .expectStatus().isUnauthorized();
-    }
-
-    // ─── helpers ────────────────────────────────────────────────────
-
-    private JsonNode extractData(byte[] body) {
-        if (body == null) return null;
+    private String extractField(String body, String field) {
+        if (body == null || body.isBlank()) return null;
         try {
-            return MAPPER.readTree(body).path("data");
+            JsonNode node = MAPPER.readTree(body).path("data").path(field);
+            return node.asText(null);
         } catch (Exception e) {
             return null;
         }

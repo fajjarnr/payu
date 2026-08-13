@@ -58,8 +58,13 @@ public class PayLaterPersistenceAdapter implements PayLaterPersistencePort {
     }
 
     private PayLaterEntity toEntity(PayLater payLater) {
-        PayLaterEntity entity = new PayLaterEntity();
-        entity.setId(payLater.getId());
+        // Reload the existing managed entity when the ID is set to preserve
+        // tenantId + version and keep the pessimistic lock from findByUserIdForUpdate
+        PayLaterEntity entity = payLater.getId() == null
+                ? new PayLaterEntity()
+                : payLaterRepository.findById(payLater.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "PayLater not found: " + payLater.getId()));
         entity.setExternalId(payLater.getExternalId());
         entity.setUserId(payLater.getUserId());
         entity.setCreditLimit(payLater.getCreditLimit());

@@ -3,9 +3,9 @@ package id.payu.lending.integration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.lending.adapter.external.TransactionClient;
-import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.LoanType;
 import id.payu.lending.dto.LoanApplicationRequest;
+import id.payu.lending.interfaces.dto.RepaymentRequest;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,28 +13,35 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Integration tests for repayment schedule creation and payment processing.
- * Verifies:
- * <ul>
- *   <li>POST /api/v1/lending/loans/{loanId}/repayment-schedule</li>
- *   <li>GET  /api/v1/lending/loans/{loanId}/repayment-schedule</li>
- *   <li>POST /api/v1/lending/repayment-schedules/{scheduleId}/pay</li>
- * </ul>
+ * Integration tests for repayment schedule creation and payment processing
+ * under the current API contract (body-based amounts + idempotency keys).
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("integration")
 @Import(TestContainersConfig.class)
@@ -42,10 +49,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class RepaymentScheduleIntegrationTest {
 
     private static final String BASE_PATH = "/api/v1/lending";
+    private static final String TENANT = "test-tenant";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private id.payu.lending.adapter.client.AccountGrpcClient accountClient;
@@ -56,11 +64,14 @@ class RepaymentScheduleIntegrationTest {
     @MockitoBean
     private OutboxService outboxService;
 
+    @MockitoBean
+    private id.payu.lending.domain.port.out.WalletPaymentPort walletPaymentPort;
+
     private String loanId;
     private int loanTenureMonths;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         loanTenureMonths = 6;
         loanId = createTestLoan(loanTenureMonths);
     }
@@ -69,25 +80,19 @@ class RepaymentScheduleIntegrationTest {
 
     @Test
     @DisplayName("Should create repayment schedule with correct number of installments matching tenure")
-    void createRepaymentSchedule_shouldReturnInstallmentsMatchingTenure() {
-        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
-
-        byte[] responseBody = webTestClient.post()
-                .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data").isArray()
-                .returnResult()
-                .getResponseBody();
+    void createRepaymentSchedule_shouldReturnInstallmentsMatchingTenure() throws Exception {
+        String responseBody = mockMvc.perform(post(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andReturn().getResponse().getContentAsString();
 
         JsonNode data = extractDataArray(responseBody);
         assertThat(data).isNotNull();
         assertThat(data.size()).isEqualTo(loanTenureMonths);
 
-        // Verify first installment has expected structure
         JsonNode first = data.get(0);
         assertThat(first.path("installmentNumber").asInt()).isEqualTo(1);
         assertThat(first.path("status").asText()).isEqualTo("PENDING");
@@ -96,145 +101,94 @@ class RepaymentScheduleIntegrationTest {
 
     @Test
     @DisplayName("Should retrieve empty repayment schedule for loan without schedules")
-    void getRepaymentSchedule_forLoanWithoutSchedules_shouldReturnEmptyList() {
-        String freshLoanId = createTestLoan(3);
-        assumeTrue(freshLoanId != null, "freshLoanId required — loan creation failed");
-
-        webTestClient.get()
-                .uri(BASE_PATH + "/loans/" + freshLoanId + "/repayment-schedule")
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data").isArray();
+    void getRepaymentSchedule_forLoanWithoutSchedules_shouldReturnEmptyList() throws Exception {
+        mockMvc.perform(get(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray());
     }
 
     // ─── process repayment ──────────────────────────────────────────
 
     @Test
     @DisplayName("Should mark installment as FULLY_PAID when repayment covers installment amount")
-    void processRepayment_withFullAmount_shouldMarkFullyPaid() {
-        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
-
-        // Create schedule and extract first installment
-        byte[] scheduleResponse = webTestClient.post()
-                .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .returnResult()
-                .getResponseBody();
-
-        JsonNode schedules = extractDataArray(scheduleResponse);
-        assumeTrue(schedules != null && !schedules.isEmpty(),
-                "repayment schedule creation must succeed before testing payment");
-
+    void processRepayment_withFullAmount_shouldMarkFullyPaid() throws Exception {
+        JsonNode schedules = createSchedule();
         String scheduleId = schedules.get(0).path("id").asText();
-        BigDecimal installmentAmount = new BigDecimal(schedules.get(0).path("installmentAmount").asText());
+        String installmentAmount = schedules.get(0).path("installmentAmount").asText();
 
-        // Pay full installment
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
-                        .queryParam("amount", installmentAmount.toPlainString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data.status").isEqualTo("FULLY_PAID")
-                .jsonPath("$.data.paidDate").isNotEmpty();
+        mockMvc.perform(post(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT)
+                        .header("X-Idempotency-Key", "pay-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(MAPPER.writeValueAsString(new RepaymentRequest(new BigDecimal(installmentAmount)))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("FULLY_PAID"))
+                .andExpect(jsonPath("$.data.paidDate").isNotEmpty());
     }
 
     @Test
     @DisplayName("Should mark installment as PARTIALLY_PAID when repayment is less than full amount")
-    void processRepayment_withPartialAmount_shouldMarkPartiallyPaid() {
-        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
-
-        byte[] scheduleResponse = webTestClient.post()
-                .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .returnResult()
-                .getResponseBody();
-
-        JsonNode schedules = extractDataArray(scheduleResponse);
-        assumeTrue(schedules != null && !schedules.isEmpty(),
-                "repayment schedule creation must succeed before testing partial payment");
-
-        // Pick second installment to avoid collision with other tests
+    void processRepayment_withPartialAmount_shouldMarkPartiallyPaid() throws Exception {
+        JsonNode schedules = createSchedule();
         JsonNode target = schedules.size() > 1 ? schedules.get(1) : schedules.get(0);
         String scheduleId = target.path("id").asText();
 
-        // Pay a small partial amount
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
-                        .queryParam("amount", "10000.00")
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.data.status").isEqualTo("PARTIALLY_PAID");
+        mockMvc.perform(post(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT)
+                        .header("X-Idempotency-Key", "pay-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(MAPPER.writeValueAsString(new RepaymentRequest(new BigDecimal("10000.00")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("PARTIALLY_PAID"));
     }
 
     @Test
     @DisplayName("Should return error when processing repayment for already fully-paid installment")
-    void processRepayment_forAlreadyPaidInstallment_shouldReturnError() {
-        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
-
-        // Create schedule
-        byte[] scheduleResponse = webTestClient.post()
-                .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .returnResult()
-                .getResponseBody();
-
-        JsonNode schedules = extractDataArray(scheduleResponse);
-        assumeTrue(schedules != null && !schedules.isEmpty(),
-                "repayment schedule creation must succeed before testing duplicate payment");
-
-        // Use last installment to avoid conflicts
+    void processRepayment_forAlreadyPaidInstallment_shouldReturnError() throws Exception {
+        JsonNode schedules = createSchedule();
         JsonNode target = schedules.get(schedules.size() - 1);
         String scheduleId = target.path("id").asText();
-        BigDecimal installmentAmount = new BigDecimal(target.path("installmentAmount").asText());
+        String installmentAmount = target.path("installmentAmount").asText();
 
-        // First payment — marks FULLY_PAID
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
-                        .queryParam("amount", installmentAmount.toPlainString())
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(post(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT)
+                        .header("X-Idempotency-Key", "pay-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(MAPPER.writeValueAsString(new RepaymentRequest(new BigDecimal(installmentAmount)))))
+                .andExpect(status().isOk());
 
-        // Second payment on same installment — should fail with business error
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
-                        .queryParam("amount", "100000.00")
-                        .build())
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .exchange()
-                // Business rule: already-paid installment should be 4xx, not 5xx
-                // TODO: Service should throw BusinessException mapped to 400/409/422
-                .expectStatus().is4xxClientError();
+        mockMvc.perform(post(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT)
+                        .header("X-Idempotency-Key", "pay-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(MAPPER.writeValueAsString(new RepaymentRequest(new BigDecimal("100000.00")))))
+                .andExpect(status().is4xxClientError());
     }
 
     // ─── helpers ────────────────────────────────────────────────────
 
-    private String createTestLoan(int tenureMonths) {
+    private JsonNode createSchedule() throws Exception {
+        String body = mockMvc.perform(post(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode schedules = extractDataArray(body);
+        assertThat(schedules).isNotNull();
+        assertThat(schedules).isNotEmpty();
+        return schedules;
+    }
+
+    private String createTestLoan(int tenureMonths) throws Exception {
         UUID userId = TestContainersConfig.TEST_USER_ID;
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId,
@@ -245,35 +199,63 @@ class RepaymentScheduleIntegrationTest {
                 "Repayment test"
         );
 
-        byte[] body = webTestClient.post()
-                .uri(BASE_PATH + "/loans")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", TestContainersConfig.bearerToken())
-                .bodyValue(request)
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .returnResult()
-                .getResponseBody();
+        seedCreditScore(userId);
 
-        return extractField(body, "id");
+        MvcResult applied = mockMvc.perform(post(BASE_PATH + "/loans")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT)
+                        .header("X-Idempotency-Key", "apply-" + UUID.randomUUID())
+                        .content(MAPPER.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        return extractField(mockMvc.perform(asyncDispatch(applied))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "id");
     }
 
-    private String extractField(byte[] body, String field) {
-        if (body == null) return null;
+    private void seedCreditScore(UUID userId) throws Exception {
+        id.payu.lending.dto.UserResponse user = new id.payu.lending.dto.UserResponse(
+                userId, "EXT-USER", "user", "u@test.dev", "+62812", "Test User", "1234567890123456",
+                "ACTIVE", "APPROVED", LocalDateTime.now().minusYears(2));
+        UUID accountId = UUID.randomUUID();
+        when(accountClient.getUserProfile(userId.toString())).thenReturn(user);
+        when(accountClient.getAccountIdsByUserId(userId.toString())).thenReturn(List.of(accountId));
+
+        id.payu.lending.dto.TransactionSummaryResponse summary =
+                new id.payu.lending.dto.TransactionSummaryResponse(
+                        accountId, 200L, new BigDecimal("20000000.00"),
+                        new BigDecimal("15000000.00"), new BigDecimal("5000000.00"),
+                        198L, 2L, null, null);
+        when(transactionClient.getTransactionSummary(accountId)).thenReturn(
+                id.payu.api.common.response.ApiResponse.success(summary));
+        when(walletPaymentPort.collectRepayment(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                anyString(), anyString(), anyString()))
+                .thenReturn("wallet-tx-" + UUID.randomUUID());
+
+        mockMvc.perform(post(BASE_PATH + "/credit-score/calculate")
+                        .param("userId", userId.toString())
+                        .header("Authorization", TestContainersConfig.bearerToken())
+                        .header("X-Tenant-Id", TENANT))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    private String extractField(String body, String field) {
+        if (body == null || body.isBlank()) return null;
         try {
-            JsonNode root = MAPPER.readTree(body);
-            return root.path("data").path(field).asText(null);
+            return MAPPER.readTree(body).path("data").path(field).asText(null);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private JsonNode extractDataArray(byte[] body) {
-        if (body == null) return null;
+    private JsonNode extractDataArray(String body) {
+        if (body == null || body.isBlank()) return null;
         try {
-            JsonNode root = MAPPER.readTree(body);
-            JsonNode data = root.path("data");
+            JsonNode data = MAPPER.readTree(body).path("data");
             return data.isArray() ? data : null;
         } catch (Exception e) {
             return null;

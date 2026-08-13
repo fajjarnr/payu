@@ -43,8 +43,13 @@ public class CreditScorePersistenceAdapter implements CreditScorePersistencePort
     }
 
     private CreditScoreEntity toEntity(CreditScore creditScore) {
-        CreditScoreEntity entity = new CreditScoreEntity();
-        entity.setId(creditScore.getId());
+        // Reload the existing managed entity when the ID is set to preserve
+        // version + tenantId (avoids detached-merge crashes on re-calculation)
+        CreditScoreEntity entity = creditScore.getId() == null
+                ? new CreditScoreEntity()
+                : creditScoreRepository.findById(creditScore.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "CreditScore not found: " + creditScore.getId()));
         entity.setUserId(creditScore.getUserId());
         entity.setScore(creditScore.getScore());
         entity.setRiskCategory(creditScore.getRiskCategory());
